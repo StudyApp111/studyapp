@@ -11,64 +11,22 @@ import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
 
 const questions = [
   {
-    id: "learning_style",
-    question: "How do you learn best?",
-    type: "single",
-    options: ["Visual (images, diagrams)", "Auditory (listening, discussion)", "Kinesthetic (hands-on, practice)"]
-  },
-  {
-    id: "experience_level",
-    question: "What's your current experience level?",
-    type: "single",
-    options: ["Beginner - Just starting out", "Intermediate - Some knowledge", "Advanced - Experienced learner"]
-  },
-  {
-    id: "study_time",
-    question: "How much time can you dedicate per week?",
-    type: "single",
-    options: ["1-3 hours", "4-7 hours", "8-12 hours", "12+ hours"]
-  },
-  {
-    id: "preferred_pace",
-    question: "What's your preferred learning pace?",
-    type: "single",
-    options: ["Slow and steady", "Moderate pace", "Fast-paced and intensive"]
-  },
-  {
-    id: "goals",
-    question: "What are your main learning goals?",
+    id: "school",
+    question: "What school do you attend?",
     type: "text",
-    placeholder: "e.g., Career advancement, personal development, exam preparation..."
+    placeholder: "e.g., Lincoln High School"
   },
   {
-    id: "interests",
-    question: "What subjects interest you most?",
-    type: "multiple",
-    options: ["Technology", "Business", "Science", "Arts", "Mathematics", "Languages", "Health", "Other"]
-  },
-  {
-    id: "challenges",
-    question: "What challenges do you face when learning?",
-    type: "text",
-    placeholder: "e.g., Time management, staying motivated, understanding complex concepts..."
-  },
-  {
-    id: "motivation",
-    question: "What motivates you to learn?",
+    id: "grade",
+    question: "What grade are you in?",
     type: "single",
-    options: ["Career growth", "Personal satisfaction", "Certification/Degree", "Problem-solving", "Curiosity"]
+    options: ["Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12", "College/University", "Other"]
   },
   {
-    id: "preferred_format",
-    question: "Which content format do you prefer?",
-    type: "single",
-    options: ["Video lessons", "Text and reading", "Interactive exercises", "Mixed formats"]
-  },
-  {
-    id: "background",
-    question: "Tell us about your educational background",
+    id: "city",
+    question: "What city do you live in?",
     type: "text",
-    placeholder: "e.g., High school, Bachelor's degree, Self-taught..."
+    placeholder: "e.g., New York City"
   }
 ];
 
@@ -102,16 +60,9 @@ export default function Onboarding() {
     setIsSubmitting(true);
     try {
       const profileData = {
-        learning_style: answers.learning_style,
-        experience_level: answers.experience_level,
-        study_time: answers.study_time,
-        preferred_pace: answers.preferred_pace,
-        goals: answers.goals,
-        interests: answers.interests || [],
-        challenges: answers.challenges,
-        motivation: answers.motivation,
-        preferred_format: answers.preferred_format,
-        background: answers.background
+        school: answers.school,
+        grade: answers.grade,
+        city: answers.city
       };
 
       const profile = await base44.entities.LearningProfile.create(profileData);
@@ -131,29 +82,29 @@ export default function Onboarding() {
   const isAnswered = answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== "";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
       <div className="w-full max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-4">
-            <Sparkles className="w-5 h-5 text-indigo-600" />
-            <span className="text-sm font-medium text-slate-700">Personalized Learning Journey</span>
+          <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-4">
+            <Sparkles className="w-5 h-5 text-purple-600" />
+            <span className="text-sm font-medium text-slate-700">Get Started</span>
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome to LearnSmart</h1>
-          <p className="text-slate-600">Let's personalize your learning experience</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome to StudyApp.AI</h1>
+          <p className="text-slate-600">Tell us a bit about yourself</p>
         </motion.div>
 
-        <Card className="bg-white/80 backdrop-blur-sm shadow-2xl border-0">
+        <Card className="bg-white/90 backdrop-blur-sm shadow-2xl border-0">
           <CardContent className="p-8">
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-slate-600">
                   Question {currentStep + 1} of {questions.length}
                 </span>
-                <span className="text-sm font-medium text-indigo-600">{Math.round(progress)}%</span>
+                <span className="text-sm font-medium text-purple-600">{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
@@ -187,7 +138,7 @@ export default function Onboarding() {
               <Button
                 onClick={handleNext}
                 disabled={!isAnswered || isSubmitting}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 gap-2"
+                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 gap-2"
               >
                 {currentStep === questions.length - 1 ? (
                   isSubmitting ? "Creating Profile..." : "Complete"

@@ -122,12 +122,12 @@ Be specific and tailored to the learner's profile.
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
       <div className="max-w-3xl mx-auto">
         <Button
           variant="ghost"
           onClick={() => navigate(createPageUrl("Home"))}
-          className="mb-6"
+          className="mb-6 hover:bg-purple-100"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
@@ -135,7 +135,7 @@ Be specific and tailored to the learner's profile.
 
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg mb-4">
-            <Sparkles className="w-5 h-5 text-indigo-600" />
+            <Sparkles className="w-5 h-5 text-purple-600" />
             <span className="text-sm font-medium text-slate-700">AI-Powered Curriculum</span>
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Create New Lesson</h1>
@@ -168,10 +168,10 @@ Be specific and tailored to the learner's profile.
               <div className="space-y-4">
                 <Label>How would you like to provide lesson content? *</Label>
                 <RadioGroup value={inputType} onValueChange={setInputType}>
-                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 transition-all cursor-pointer">
+                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all cursor-pointer">
                     <RadioGroupItem value="description" id="description" />
                     <Label htmlFor="description" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <FileText className="w-5 h-5 text-indigo-600" />
+                      <FileText className="w-5 h-5 text-purple-600" />
                       <div>
                         <p className="font-medium">Write Description</p>
                         <p className="text-sm text-slate-500">Describe what you want to learn</p>
@@ -179,10 +179,10 @@ Be specific and tailored to the learner's profile.
                     </Label>
                   </div>
 
-                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 transition-all cursor-pointer">
+                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all cursor-pointer">
                     <RadioGroupItem value="url" id="url" />
                     <Label htmlFor="url" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <LinkIcon className="w-5 h-5 text-purple-600" />
+                      <LinkIcon className="w-5 h-5 text-purple-700" />
                       <div>
                         <p className="font-medium">Provide URL</p>
                         <p className="text-sm text-slate-500">Link to a course or article</p>
@@ -190,10 +190,10 @@ Be specific and tailored to the learner's profile.
                     </Label>
                   </div>
 
-                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 transition-all cursor-pointer">
+                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all cursor-pointer">
                     <RadioGroupItem value="file" id="file" />
                     <Label htmlFor="file" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <Upload className="w-5 h-5 text-teal-600" />
+                      <Upload className="w-5 h-5 text-yellow-600" />
                       <div>
                         <p className="font-medium">Upload File</p>
                         <p className="text-sm text-slate-500">PDF, image, or document</p>
@@ -233,8 +233,8 @@ Be specific and tailored to the learner's profile.
               {inputType === "file" && (
                 <div className="space-y-2">
                   <Label htmlFor="file">Upload File *</Label>
-                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-indigo-400 transition-colors">
-                    <Upload className="w-12 h-12 mx-auto text-slate-400 mb-3" />
+                  <div className="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center hover:border-purple-400 transition-colors bg-purple-50/30">
+                    <Upload className="w-12 h-12 mx-auto text-purple-500 mb-3" />
                     <Input
                       id="file"
                       type="file"
@@ -263,7 +263,7 @@ Be specific and tailored to the learner's profile.
               <Button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 py-6 text-lg shadow-xl"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 py-6 text-lg shadow-xl"
               >
                 {isProcessing ? (
                   <>

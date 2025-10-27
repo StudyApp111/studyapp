@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -150,14 +151,14 @@ For each lesson, provide:
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-10"
         >
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-2xl">
+          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-2xl">
             <Award className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Worksheet Complete! 🎉</h1>
@@ -168,13 +169,13 @@ For each lesson, provide:
           <Card className="shadow-2xl border-0">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-indigo-600" />
+                <TrendingUp className="w-5 h-5 text-purple-600" />
                 Your Score
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center py-6">
-                <div className="text-6xl font-bold text-indigo-600 mb-2">
+                <div className="text-6xl font-bold text-purple-600 mb-2">
                   {Math.round(worksheet.total_score)}%
                 </div>
                 <div className={`inline-block px-6 py-3 rounded-full bg-gradient-to-r ${getGradeColor(worksheet.predicted_grade)} shadow-xl mb-4`}>
@@ -262,14 +263,14 @@ For each lesson, provide:
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-indigo-600" />
+                <Sparkles className="w-5 h-5 text-purple-600" />
                 Suggested Next Steps
               </CardTitle>
               {suggestedLessons.length === 0 && (
                 <Button
                   onClick={generateSuggestedLessons}
                   disabled={isGeneratingSuggestions}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                  className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
                 >
                   {isGeneratingSuggestions ? (
                     <>

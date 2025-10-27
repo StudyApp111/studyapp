@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -215,12 +216,12 @@ Also provide:
 
   if (isGenerating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
         <Card className="w-full max-w-md text-center p-8 shadow-2xl">
-          <FileText className="w-16 h-16 mx-auto text-indigo-600 mb-4 animate-pulse" />
+          <FileText className="w-16 h-16 mx-auto text-purple-600 mb-4 animate-pulse" />
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Generating Your Worksheet</h2>
           <p className="text-slate-600 mb-6">Creating a personalized exam based on your diagnostic results...</p>
-          <Loader2 className="w-8 h-8 mx-auto animate-spin text-indigo-600" />
+          <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
         </Card>
       </div>
     );
@@ -233,7 +234,7 @@ Also provide:
   const canProceed = userAnswers[currentQuestion]?.trim() !== "";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
       <div className="max-w-4xl mx-auto">
         <Card className="mb-6 shadow-xl">
           <CardContent className="p-6">
@@ -285,7 +286,7 @@ Also provide:
             <Button
               onClick={handleNext}
               disabled={!canProceed}
-              className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
             >
               Next Question
             </Button>

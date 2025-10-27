@@ -8,8 +8,8 @@ import { BookOpen, CheckCircle, Clock, PlayCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 const statusConfig = {
-  created: { label: "Start Diagnostic", color: "bg-blue-100 text-blue-700", icon: PlayCircle },
-  diagnostic_completed: { label: "Start Worksheet", color: "bg-purple-100 text-purple-700", icon: PlayCircle },
+  created: { label: "Start Diagnostic", color: "bg-purple-100 text-purple-700", icon: PlayCircle },
+  diagnostic_completed: { label: "Start Worksheet", color: "bg-yellow-100 text-yellow-700", icon: PlayCircle },
   worksheet_completed: { label: "View Feedback", color: "bg-amber-100 text-amber-700", icon: PlayCircle },
   completed: { label: "Completed", color: "bg-emerald-100 text-emerald-700", icon: CheckCircle }
 };
@@ -37,7 +37,7 @@ export default function LessonCard({ lesson }) {
       <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between mb-2">
-            <BookOpen className="w-8 h-8 text-indigo-600" />
+            <BookOpen className="w-8 h-8 text-purple-600" />
             <Badge className={status.color}>
               {status.label}
             </Badge>
@@ -63,7 +63,7 @@ export default function LessonCard({ lesson }) {
             {lesson.status !== "completed" && (
               <Button
                 onClick={handleContinue}
-                className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
               >
                 <status.icon className="w-4 h-4 mr-2" />
                 {status.label}

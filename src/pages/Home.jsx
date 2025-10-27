@@ -53,7 +53,7 @@ export default function Home() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
       </div>
     );
   }
@@ -72,26 +72,26 @@ export default function Home() {
           title="Completed Lessons"
           value={completedLessons}
           icon={Award}
-          gradient="from-emerald-400 to-teal-500"
+          gradient="from-purple-500 to-purple-700"
           trend="+12% this week"
         />
         <StatCard
           title="In Progress"
           value={inProgressLessons}
           icon={Clock}
-          gradient="from-amber-400 to-orange-500"
+          gradient="from-yellow-400 to-yellow-600"
         />
         <StatCard
           title="Quizzes Taken"
           value={totalQuizzes}
           icon={Zap}
-          gradient="from-purple-400 to-pink-500"
+          gradient="from-purple-600 to-purple-800"
         />
         <StatCard
           title="Average Score"
           value={`${avgScore}%`}
           icon={TrendingUp}
-          gradient="from-indigo-400 to-blue-500"
+          gradient="from-yellow-500 to-amber-600"
           trend={avgScore >= 70 ? "Great job!" : "Keep practicing"}
         />
       </div>
@@ -101,7 +101,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold text-slate-900">Your Lessons</h2>
           <Button
             onClick={() => navigate(createPageUrl("CreateLesson"))}
-            className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg shadow-indigo-500/30"
+            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-500/30"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create New Lesson
@@ -122,14 +122,14 @@ export default function Home() {
             ))}
           </div>
         ) : lessons.length === 0 ? (
-          <Card className="text-center py-16 bg-gradient-to-br from-slate-50 to-slate-100 border-dashed border-2">
+          <Card className="text-center py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-purple-300">
             <CardContent>
-              <BookOpen className="w-16 h-16 mx-auto text-slate-400 mb-4" />
+              <BookOpen className="w-16 h-16 mx-auto text-purple-500 mb-4" />
               <h3 className="text-xl font-semibold text-slate-700 mb-2">No lessons yet</h3>
               <p className="text-slate-500 mb-6">Create your first lesson to begin your learning journey</p>
               <Button
                 onClick={() => navigate(createPageUrl("CreateLesson"))}
-                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Your First Lesson

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -147,12 +148,12 @@ The questions should accurately diagnose the learner's current knowledge level.
 
   if (isGenerating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
         <Card className="w-full max-w-md text-center p-8 shadow-2xl">
-          <Brain className="w-16 h-16 mx-auto text-indigo-600 mb-4 animate-pulse" />
+          <Brain className="w-16 h-16 mx-auto text-purple-600 mb-4 animate-pulse" />
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Generating Your Diagnostic Quiz</h2>
           <p className="text-slate-600 mb-6">Our AI is analyzing the curriculum and creating personalized questions...</p>
-          <Loader2 className="w-8 h-8 mx-auto animate-spin text-indigo-600" />
+          <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
         </Card>
       </div>
     );
@@ -162,7 +163,7 @@ The questions should accurately diagnose the learner's current knowledge level.
 
   if (showResults) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -170,14 +171,14 @@ The questions should accurately diagnose the learner's current knowledge level.
         >
           <Card className="shadow-2xl">
             <CardHeader className="text-center pb-6">
-              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-10 h-10 text-white" />
               </div>
               <CardTitle className="text-3xl">Diagnostic Complete!</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
-                <div className="text-5xl font-bold text-indigo-600 mb-2">{Math.round(score)}%</div>
+                <div className="text-5xl font-bold text-purple-600 mb-2">{Math.round(score)}%</div>
                 <p className="text-slate-600">Your diagnostic score</p>
               </div>
 
@@ -209,7 +210,7 @@ The questions should accurately diagnose the learner's current knowledge level.
 
               <Button
                 onClick={proceedToWorksheet}
-                className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 py-6 text-lg"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 py-6 text-lg"
               >
                 Continue to Worksheet
               </Button>
@@ -223,7 +224,7 @@ The questions should accurately diagnose the learner's current knowledge level.
   const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
       <div className="max-w-4xl mx-auto">
         <Card className="mb-6 shadow-xl">
           <CardContent className="p-6">
@@ -259,7 +260,7 @@ The questions should accurately diagnose the learner's current knowledge level.
           <Button
             onClick={handleNext}
             disabled={userAnswers[currentQuestion] === null}
-            className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
           >
             {currentQuestion === quiz.questions.length - 1 ? "Submit Quiz" : "Next Question"}
           </Button>
