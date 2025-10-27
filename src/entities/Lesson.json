@@ -29,21 +29,53 @@
     },
     "curriculum_map": {
       "type": "object",
-      "description": "AI-generated curriculum structure",
+      "description": "AI-generated comprehensive curriculum profile",
       "properties": {
-        "topics": {
+        "core_competencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "competency_weightings": {
+          "type": "object",
+          "description": "Percentage weightings for each competency"
+        },
+        "question_formats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "frequency": {
+                "type": "string"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "high_yield_focal_points": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "difficulty": {
-          "type": "string"
-        },
-        "estimated_duration": {
-          "type": "string"
-        },
-        "key_concepts": {
+        "common_misconceptions": {
           "type": "array",
           "items": {
             "type": "string"

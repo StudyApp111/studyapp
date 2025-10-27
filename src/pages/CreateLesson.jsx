@@ -60,52 +60,145 @@ export default function CreateLesson() {
         created_by: user.email 
       });
 
+      const learningProfile = profile[0] || {};
+
       let lessonData = {
         course_name: courseName,
         input_type: inputType,
         status: "created"
       };
 
-      let contentForAI = "";
+      let processedLessonContent = "N/A";
+      let studentDescription = "N/A";
 
       if (inputType === "description") {
         lessonData.description = description;
-        contentForAI = description;
+        studentDescription = description;
       } else if (inputType === "url") {
         lessonData.url = url;
-        contentForAI = `Content from URL: ${url}`;
+        // TODO: In the future, parse URL content via API
+        processedLessonContent = `Content from URL: ${url} (To be parsed in future implementation)`;
       } else if (inputType === "file") {
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         lessonData.file_url = file_url;
-        contentForAI = `Uploaded file: ${file.name}`;
+        // TODO: In the future, OCR the file content via API
+        processedLessonContent = `Uploaded file: ${file.name} (To be OCR'd in future implementation)`;
       }
 
-      const aiPrompt = `
-You are an educational curriculum designer. Based on the following information, create a comprehensive curriculum map.
+      const aiPrompt = `Objective: You are an expert curriculum and pedagogical analyst. Your mission is to meticulously analyze the provided inputs (including any student-written description and/or uploaded materials) and scour the web to construct the most accurate and comprehensive curriculum profile. This profile is foundational for generating personalized learning materials. If student-provided inputs (StudentWrittenDescriptionText or StudentUploadedMaterialsText) are available, they are primary resources for understanding the specific focus, wording, emphasis, and perceived needs related to their course. All other sources should then be used to validate, supplement, and contextualize this primary information.
 
-Course Name: ${courseName}
-Content: ${contentForAI}
-Learner Profile: ${JSON.stringify(profile[0] || {})}
+Input Educational Context:
+Grade Level: ${learningProfile.grade || "N/A"} (e.g., Grade 9, 1st Year University. N/A if not applicable)
+Course/Unit: ${courseName} (e.g., Mathematics, Introduction to Psychology, AP Calculus BC - Unit 3)
+School: ${learningProfile.school || "N/A"} (e.g., FFCA High School, University of Calgary, specific professional body)
+City/Region: ${learningProfile.city || "N/A"} (e.g., Calgary, Alberta; California; Ontario)
+StudentWrittenDescriptionText (Optional): ${studentDescription} (Text directly written by the student describing their course, what they need help with, specific topics, or questions. If empty, "N/A", or not provided, proceed without it.)
+StudentUploadedMaterialsText (Optional): ${processedLessonContent} (Text content from student's notes, PowerPoints, OCR'd documents. If empty, "N/A", or not provided, proceed without it.)
 
-Generate a curriculum map with:
-1. Key topics (array of 5-8 main topics)
-2. Difficulty level (Beginner/Intermediate/Advanced)
-3. Estimated duration (e.g., "4-6 weeks")
-4. Key concepts (array of 8-12 important concepts to master)
+You are expected to actively use online search (Google Search) to find the most current and relevant official documents for the following steps, especially when student-provided materials are insufficient or unavailable.
 
-Be specific and tailored to the learner's profile.
-`;
+Information Sourcing & Synthesis Strategy (Prioritized):
+
+Primary Analysis - Student-Provided Inputs (If Available):
+If StudentWrittenDescriptionText and/or StudentUploadedMaterialsText are available and contain relevant content:
+- Thoroughly analyze these inputs first.
+- From StudentWrittenDescriptionText, extract the student's stated needs, topics of focus, areas of confusion, specific questions, and the language they use.
+- From StudentUploadedMaterialsText, identify core topics, concepts, learning objectives, specific terminology, wording, difficulty, question styles/examples, and areas of emphasis (e.g., recurring themes, depth of coverage).
+- Insights from these student-provided inputs should form the foundational layer and heavily influence all sections of the "Required Curriculum Profile Output," especially regarding the nuances of the student's specific class experience and perceived needs.
+
+Secondary Analysis - Direct Institutional Information (Validation & Supplementation):
+Next, search for official curriculum documents, course outlines, syllabi, or learning objectives directly from the specified School for the Course/Unit (and Grade Level).
+Use this information to:
+- Validate and corroborate findings from the student-provided inputs (Step 1).
+- Supplement areas where student inputs might be incomplete or less detailed.
+- Provide the official framework and broader context for the course.
+- If no student inputs (description or materials) were provided, this step becomes the primary information gathering phase.
+
+Tertiary Analysis - Regional Standards (K-12 Fallback / Broader Context):
+If sufficient detail is not available from Steps 1 and 2 (especially for K-12): Use City/Region to consult official regional (e.g., Ministry/Department of Education, District) curriculum standards for the Grade Level and Course/Unit.
+Use this to ensure alignment with broader educational requirements and to fill any remaining gaps, always synthesizing with information from prior steps.
+
+Post-Secondary & Professional Course Contextualization:
+For post-secondary/professional courses, the official School syllabus/outline (from Step 2) is paramount. Student-provided inputs (description or materials like lecture notes) (Step 1) provide critical class-specific detail.
+City/Region can help disambiguate the institution or identify related professional accreditation standards or common resources, used to further contextualize the information from Steps 1 and 2.
+
+Required Curriculum Profile Output:
+The content should strongly reflect insights from StudentUploadedMaterialsText if provided, using other official sources for validation, completion, and official terminology. Based on the most authoritative source(s) identified through the strategy above, provide the following:
+
+A. Core Competencies / Learning Outcomes:
+Identify and list 6-10 major, clearly defined core competencies or overarching learning outcomes for the Course/Unit.
+For each, provide a concise 1-2 sentence description clarifying its scope.
+Note: If the official source provides a significantly different number of core/major outcomes (e.g., only 4, or perhaps 12 essential ones), reflect that. If the source lists many granular outcomes, synthesize them into broader competency statements, perhaps noting that each encompasses several sub-skills.
+
+B. Competency Weightings / Emphasis:
+Actively calculate or infer estimated percentage weightings for each core competency, ensuring a sum of 100%. Prioritize evidence of emphasis from student-provided inputs (StudentWrittenDescriptionText, StudentUploadedMaterialsText), then official document structures, or typical Course/Unit patterns.
+If percentages cannot be reliably determined after these attempts, indicate relative importance (High, Medium, Low focus). As a final resort, state "Weightings not specified or inferable."
+
+C. Typical Assessment Question Formats & Patterns:
+List the common question formats used in assessments (e.g., Multiple Choice Questions (MCQ), Short Answer Questions (SAQ), Extended Response/Essay, Problem-Solving Sets, Document-Based Questions (DBQ), Lab Reports, Practical Demonstrations, Oral Exams) for the Course/Unit.
+For the 3-4 most significant formats, estimate their frequency distribution (e.g., MCQ: 40-50%, SAQ: 20-30%, Problem-Solving: 30-40%).
+Provide one illustrative example for each of these key question formats, reflecting typical wording, style, and difficulty level.
+
+D. High-Yield Focal Points (Key Topics/Skills):
+Identify and briefly describe 3-5 critical concepts, topics, or skills that are:
+- Frequently tested or heavily weighted.
+- Fundamental for success in subsequent units or courses.
+- Known to be particularly challenging for students.
+
+E. Common Student Misconceptions & Difficulties:
+Describe at least 3-4 specific and common student misconceptions, typical errors, or areas of difficulty directly related to the core competencies or high-yield focal points of the Course/Unit.
+(Source these from curriculum support documents, teacher guides, educational research on the subject, or commonly acknowledged pedagogical knowledge for teaching this specific course/subject at the given level.)
+
+Present the analysis precisely in the structured JSON format with the exact structure specified.
+Ensure specificity, alignment with official regional curriculum standards, predictive relevance to actual exam outcomes, and avoid generic responses.`;
 
       const curriculumMap = await base44.integrations.Core.InvokeLLM({
         prompt: aiPrompt,
+        add_context_from_internet: true,
         response_json_schema: {
           type: "object",
           properties: {
-            topics: { type: "array", items: { type: "string" } },
-            difficulty: { type: "string" },
-            estimated_duration: { type: "string" },
-            key_concepts: { type: "array", items: { type: "string" } }
-          }
+            core_competencies: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" }
+                },
+                required: ["name", "description"]
+              }
+            },
+            competency_weightings: {
+              type: "object",
+              additionalProperties: { type: "string" },
+              description: "Competency name as key, percentage weight as value"
+            },
+            question_formats: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  type: { type: "string" },
+                  frequency: { type: "string" },
+                  examples: {
+                    type: "array",
+                    items: { type: "string" }
+                  }
+                },
+                required: ["type", "frequency", "examples"]
+              }
+            },
+            high_yield_focal_points: {
+              type: "array",
+              items: { type: "string" }
+            },
+            common_misconceptions: {
+              type: "array",
+              items: { type: "string" }
+            }
+          },
+          required: ["core_competencies", "competency_weightings", "question_formats", "high_yield_focal_points", "common_misconceptions"]
         }
       });
 
@@ -268,7 +361,7 @@ Be specific and tailored to the learner's profile.
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Creating Your Personalized Lesson...
+                    Analyzing Curriculum & Creating Lesson...
                   </>
                 ) : (
                   <>
