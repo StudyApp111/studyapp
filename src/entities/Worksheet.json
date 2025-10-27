@@ -1,0 +1,88 @@
+{
+  "name": "Worksheet",
+  "type": "object",
+  "properties": {
+    "lesson_id": {
+      "type": "string",
+      "description": "Associated lesson ID"
+    },
+    "diagnostic_quiz_id": {
+      "type": "string",
+      "description": "Associated diagnostic quiz ID"
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "multiple_choice",
+              "true_false",
+              "short_answer",
+              "long_answer"
+            ]
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "correct_answer": {
+            "type": "string"
+          },
+          "points": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Generated worksheet questions"
+    },
+    "user_answers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User's answers"
+    },
+    "feedback": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_index": {
+            "type": "integer"
+          },
+          "is_correct": {
+            "type": "boolean"
+          },
+          "feedback": {
+            "type": "string"
+          },
+          "points_earned": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "predicted_grade": {
+      "type": "string",
+      "description": "AI-predicted grade"
+    },
+    "total_score": {
+      "type": "number"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "lesson_id"
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "name": "Lesson",
+  "type": "object",
+  "properties": {
+    "course_name": {
+      "type": "string",
+      "description": "Name of the course"
+    },
+    "description": {
+      "type": "string",
+      "description": "Lesson description"
+    },
+    "url": {
+      "type": "string",
+      "description": "External resource URL"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Uploaded file URL"
+    },
+    "input_type": {
+      "type": "string",
+      "enum": [
+        "description",
+        "url",
+        "file"
+      ],
+      "description": "Type of lesson input"
+    },
+    "curriculum_map": {
+      "type": "object",
+      "description": "AI-generated curriculum structure",
+      "properties": {
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "difficulty": {
+          "type": "string"
+        },
+        "estimated_duration": {
+          "type": "string"
+        },
+        "key_concepts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "created",
+        "diagnostic_completed",
+        "worksheet_completed",
+        "completed"
+      ],
+      "default": "created"
+    }
+  },
+  "required": [
+    "course_name"
+  ]
+}

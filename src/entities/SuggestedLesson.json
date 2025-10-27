@@ -1,0 +1,36 @@
+{
+  "name": "SuggestedLesson",
+  "type": "object",
+  "properties": {
+    "worksheet_id": {
+      "type": "string",
+      "description": "Associated worksheet ID"
+    },
+    "lesson_title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "difficulty": {
+      "type": "string"
+    },
+    "estimated_duration": {
+      "type": "string"
+    },
+    "key_topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "why_suggested": {
+      "type": "string",
+      "description": "AI reasoning for suggestion"
+    }
+  },
+  "required": [
+    "worksheet_id",
+    "lesson_title"
+  ]
+}

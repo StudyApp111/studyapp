@@ -1,0 +1,56 @@
+{
+  "name": "DiagnosticQuiz",
+  "type": "object",
+  "properties": {
+    "lesson_id": {
+      "type": "string",
+      "description": "Associated lesson ID"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Smart summary of the curriculum"
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "correct_answer": {
+            "type": "integer"
+          },
+          "explanation": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "5 multiple choice questions"
+    },
+    "user_answers": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "User's selected answers"
+    },
+    "score": {
+      "type": "number",
+      "description": "Quiz score percentage"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "lesson_id"
+  ]
+}

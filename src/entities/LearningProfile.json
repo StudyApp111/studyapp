@@ -1,0 +1,50 @@
+{
+  "name": "LearningProfile",
+  "type": "object",
+  "properties": {
+    "learning_style": {
+      "type": "string",
+      "description": "Visual, Auditory, or Kinesthetic"
+    },
+    "experience_level": {
+      "type": "string",
+      "description": "Beginner, Intermediate, Advanced"
+    },
+    "study_time": {
+      "type": "string",
+      "description": "Hours per week available for study"
+    },
+    "preferred_pace": {
+      "type": "string",
+      "description": "Slow and steady, Moderate, Fast-paced"
+    },
+    "goals": {
+      "type": "string",
+      "description": "Learning goals"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Areas of interest"
+    },
+    "challenges": {
+      "type": "string",
+      "description": "Learning challenges faced"
+    },
+    "motivation": {
+      "type": "string",
+      "description": "What motivates the learner"
+    },
+    "preferred_format": {
+      "type": "string",
+      "description": "Video, Text, Interactive, Mixed"
+    },
+    "background": {
+      "type": "string",
+      "description": "Educational background"
+    }
+  },
+  "required": []
+}

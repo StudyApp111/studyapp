@@ -1,0 +1,35 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "onboarding_completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "learning_profile_id": {
+      "type": "string",
+      "description": "Reference to learning profile"
+    },
+    "total_lessons_completed": {
+      "type": "number",
+      "default": 0
+    },
+    "total_quizzes_taken": {
+      "type": "number",
+      "default": 0
+    },
+    "average_score": {
+      "type": "number",
+      "default": 0
+    },
+    "current_streak": {
+      "type": "number",
+      "default": 0
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": []
+}
