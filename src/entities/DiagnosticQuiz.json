@@ -6,16 +6,36 @@
       "type": "string",
       "description": "Associated lesson ID"
     },
-    "summary": {
-      "type": "string",
-      "description": "Smart summary of the curriculum"
+    "smart_summary": {
+      "type": "object",
+      "description": "Smart summary of curriculum with rich text",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "content_markdown": {
+          "type": "string"
+        }
+      }
     },
     "questions": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "question": {
+          "question_number": {
+            "type": "integer"
+          },
+          "question_type": {
+            "type": "string"
+          },
+          "difficulty_index": {
+            "type": "string"
+          },
+          "targeted_misconception": {
+            "type": "string"
+          },
+          "question_text": {
             "type": "string"
           },
           "options": {
@@ -25,19 +45,16 @@
             }
           },
           "correct_answer": {
-            "type": "integer"
-          },
-          "explanation": {
             "type": "string"
           }
         }
       },
-      "description": "5 multiple choice questions"
+      "description": "5 diagnostic quiz questions"
     },
     "user_answers": {
       "type": "array",
       "items": {
-        "type": "integer"
+        "type": "string"
       },
       "description": "User's selected answers"
     },
