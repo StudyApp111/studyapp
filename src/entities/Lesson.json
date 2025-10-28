@@ -46,8 +46,18 @@
           }
         },
         "competency_weightings": {
-          "type": "object",
-          "description": "Percentage weightings for each competency"
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "competency_name": {
+                "type": "string"
+              },
+              "weight_percentage": {
+                "type": "string"
+              }
+            }
+          }
         },
         "question_formats": {
           "type": "array",

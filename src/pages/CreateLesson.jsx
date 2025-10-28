@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -129,8 +130,8 @@ For each, provide a concise 1-2 sentence description clarifying its scope.
 Note: If the official source provides a significantly different number of core/major outcomes (e.g., only 4, or perhaps 12 essential ones), reflect that. If the source lists many granular outcomes, synthesize them into broader competency statements, perhaps noting that each encompasses several sub-skills.
 
 B. Competency Weightings / Emphasis:
-Actively calculate or infer estimated percentage weightings for each core competency, ensuring a sum of 100%. Prioritize evidence of emphasis from student-provided inputs (StudentWrittenDescriptionText, StudentUploadedMaterialsText), then official document structures, or typical Course/Unit patterns.
-If percentages cannot be reliably determined after these attempts, indicate relative importance (High, Medium, Low focus). As a final resort, state "Weightings not specified or inferable."
+Provide estimated percentage weightings for each core competency as an array of objects with competency_name and weight_percentage fields. Ensure the total sums to 100%. Prioritize evidence of emphasis from student-provided inputs (StudentWrittenDescriptionText, StudentUploadedMaterialsText), then official document structures, or typical Course/Unit patterns.
+If percentages cannot be reliably determined, indicate relative importance (High, Medium, Low focus). As a final resort, state "Weightings not specified or inferable."
 
 C. Typical Assessment Question Formats & Patterns:
 List the common question formats used in assessments (e.g., Multiple Choice Questions (MCQ), Short Answer Questions (SAQ), Extended Response/Essay, Problem-Solving Sets, Document-Based Questions (DBQ), Lab Reports, Practical Demonstrations, Oral Exams) for the Course/Unit.
@@ -169,9 +170,15 @@ Ensure specificity, alignment with official regional curriculum standards, predi
               }
             },
             competency_weightings: {
-              type: "object",
-              additionalProperties: { type: "string" },
-              description: "Competency name as key, percentage weight as value"
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  competency_name: { type: "string" },
+                  weight_percentage: { type: "string" }
+                },
+                required: ["competency_name", "weight_percentage"]
+              }
             },
             question_formats: {
               type: "array",
