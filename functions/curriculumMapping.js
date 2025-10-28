@@ -1,3 +1,4 @@
+
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 
 Deno.serve(async (req) => {
@@ -43,9 +44,9 @@ Deno.serve(async (req) => {
             requestBody.generationConfig.responseSchema = response_json_schema;
         }
 
-        // Call Gemini API
+        // Call Gemini API with gemini-2.5-flash
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {
