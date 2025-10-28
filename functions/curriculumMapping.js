@@ -20,11 +20,15 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
         }
 
+        // Enhanced prompt to request JSON format
+        const enhancedPrompt = prompt + "\n\nIMPORTANT: You must respond with ONLY valid JSON matching the exact schema provided. Do not include any explanatory text before or after the JSON. Start your response with { and end with }.";
+
         // Prepare the request body for Gemini API with Google Search grounding
+        // Note: Cannot use responseMimeType with tools, so we request JSON in the prompt
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: prompt
+                    text: enhancedPrompt
                 }]
             }],
             generationConfig: {
@@ -36,12 +40,6 @@ Deno.serve(async (req) => {
                 googleSearch: {}
             }]
         };
-
-        // Add response schema if provided
-        if (response_json_schema) {
-            requestBody.generationConfig.responseMimeType = "application/json";
-            requestBody.generationConfig.responseSchema = response_json_schema;
-        }
 
         // Call Gemini 2.5 Flash API
         const response = await fetch(
@@ -77,21 +75,26 @@ Deno.serve(async (req) => {
             }, { status: 500 });
         }
 
-        // Parse JSON response if schema was provided
-        if (response_json_schema) {
-            try {
-                const parsedResponse = JSON.parse(generatedText);
-                return Response.json(parsedResponse);
-            } catch (parseError) {
-                console.error('Failed to parse JSON:', parseError);
-                return Response.json({ 
-                    error: 'Failed to parse JSON response', 
-                    raw_text: generatedText 
-                }, { status: 500 });
+        // Parse JSON response
+        try {
+            // Clean the response - remove markdown code blocks if present
+            let cleanedText = generatedText.trim();
+            if (cleanedText.startsWith('```json')) {
+                cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+            } else if (cleanedText.startsWith('```')) {
+                cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
             }
+            
+            const parsedResponse = JSON.parse(cleanedText);
+            return Response.json(parsedResponse);
+        } catch (parseError) {
+            console.error('Failed to parse JSON:', parseError);
+            console.error('Raw text:', generatedText);
+            return Response.json({ 
+                error: 'Failed to parse JSON response', 
+                raw_text: generatedText 
+            }, { status: 500 });
         }
-
-        return Response.json({ text: generatedText });
 
     } catch (error) {
         console.error('Error in curriculumMapping:', error);

@@ -21,6 +21,7 @@ Deno.serve(async (req) => {
         }
 
         // Prepare the request body for Gemini API (NO Google Search grounding)
+        // Can use JSON mode since we're not using tools
         const requestBody = {
             contents: [{
                 parts: [{
@@ -34,7 +35,7 @@ Deno.serve(async (req) => {
             }
         };
 
-        // Add response schema if provided
+        // Add response schema if provided (works without tools)
         if (response_json_schema) {
             requestBody.generationConfig.responseMimeType = "application/json";
             requestBody.generationConfig.responseSchema = response_json_schema;
