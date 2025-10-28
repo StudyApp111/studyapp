@@ -150,7 +150,9 @@ Describe at least 3-4 specific and common student misconceptions, typical errors
 Present the analysis precisely in the structured JSON format with the exact structure specified.
 Ensure specificity, alignment with official regional curriculum standards, predictive relevance to actual exam outcomes, and avoid generic responses.`;
 
-      const { data: curriculumMap } = await base44.functions.invoke('curriculumMapping', {
+      console.log("Calling curriculumMapping function...");
+      
+      const response = await base44.functions.invoke('curriculumMapping', {
         prompt: aiPrompt,
         response_json_schema: {
           type: "object",
@@ -199,14 +201,20 @@ Ensure specificity, alignment with official regional curriculum standards, predi
         }
       });
 
-      lessonData.curriculum_map = curriculumMap;
+      console.log("Function response:", response);
+
+      if (!response || !response.data) {
+        throw new Error("Invalid response from curriculumMapping function");
+      }
+
+      lessonData.curriculum_map = response.data;
 
       const lesson = await base44.entities.Lesson.create(lessonData);
 
       navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lesson.id}`);
     } catch (error) {
       console.error("Error creating lesson:", error);
-      setError("Failed to create lesson. Please try again.");
+      setError(`Failed to create lesson: ${error.message || "Please try again."}`);
       setIsProcessing(false);
     }
   };

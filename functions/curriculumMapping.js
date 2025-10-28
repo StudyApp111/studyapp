@@ -1,4 +1,3 @@
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 
 Deno.serve(async (req) => {
@@ -21,7 +20,7 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
         }
 
-        // Prepare the request body for Gemini API
+        // Prepare the request body for Gemini API with Google Search grounding
         const requestBody = {
             contents: [{
                 parts: [{
@@ -44,7 +43,7 @@ Deno.serve(async (req) => {
             requestBody.generationConfig.responseSchema = response_json_schema;
         }
 
-        // Call Gemini API with gemini-2.5-flash
+        // Call Gemini 2.5 Flash API
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
@@ -71,6 +70,7 @@ Deno.serve(async (req) => {
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
+            console.error('No content generated from Gemini:', data);
             return Response.json({ 
                 error: 'No content generated', 
                 details: data 
@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
                 const parsedResponse = JSON.parse(generatedText);
                 return Response.json(parsedResponse);
             } catch (parseError) {
+                console.error('Failed to parse JSON:', parseError);
                 return Response.json({ 
                     error: 'Failed to parse JSON response', 
                     raw_text: generatedText 
