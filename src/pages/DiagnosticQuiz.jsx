@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -111,9 +112,8 @@ Clarity & Appropriateness: Ensure all questions are clearly worded, unambiguous,
 Output Format:
 Provide your response as a single, valid JSON object with the following structure. Ensure the content_markdown field uses proper markdown formatting including ## for headings, ** for bold, * for italic, and - for lists.`;
 
-      const quizData = await base44.integrations.Core.InvokeLLM({
+      const { data: quizData } = await base44.functions.invoke('smartSummaryQuiz', {
         prompt: aiPrompt,
-        add_context_from_internet: false,
         response_json_schema: {
           type: "object",
           properties: {

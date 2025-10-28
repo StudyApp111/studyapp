@@ -76,12 +76,10 @@ export default function CreateLesson() {
         studentDescription = description;
       } else if (inputType === "url") {
         lessonData.url = url;
-        // TODO: In the future, parse URL content via API
         processedLessonContent = `Content from URL: ${url} (To be parsed in future implementation)`;
       } else if (inputType === "file") {
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         lessonData.file_url = file_url;
-        // TODO: In the future, OCR the file content via API
         processedLessonContent = `Uploaded file: ${file.name} (To be OCR'd in future implementation)`;
       }
 
@@ -152,9 +150,8 @@ Describe at least 3-4 specific and common student misconceptions, typical errors
 Present the analysis precisely in the structured JSON format with the exact structure specified.
 Ensure specificity, alignment with official regional curriculum standards, predictive relevance to actual exam outcomes, and avoid generic responses.`;
 
-      const curriculumMap = await base44.integrations.Core.InvokeLLM({
+      const { data: curriculumMap } = await base44.functions.invoke('curriculumMapping', {
         prompt: aiPrompt,
-        add_context_from_internet: true,
         response_json_schema: {
           type: "object",
           properties: {
