@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -30,10 +29,10 @@ export default function DiagnosticQuiz() {
       return;
     }
 
-    generateDiagnosticQuiz(lessonId);
+    loadOrGenerateQuiz(lessonId);
   }, [navigate]);
 
-  const generateDiagnosticQuiz = async (lessonId) => {
+  const loadOrGenerateQuiz = async (lessonId) => {
     setIsGenerating(true);
     try {
       const lessonData = await base44.entities.Lesson.filter({ id: lessonId });
@@ -43,6 +42,39 @@ export default function DiagnosticQuiz() {
       }
       setLesson(lessonData[0]);
 
+      // Check if a quiz already exists for this lesson
+      const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ 
+        lesson_id: lessonId 
+      });
+
+      if (existingQuiz.length > 0) {
+        // Load existing quiz
+        console.log("Loading existing diagnostic quiz");
+        const loadedQuiz = existingQuiz[0];
+        setQuiz(loadedQuiz);
+        
+        // Check if quiz was already completed
+        if (loadedQuiz.completed) {
+          setUserAnswers(loadedQuiz.user_answers || []);
+          setScore(loadedQuiz.score || 0);
+          setShowResults(true);
+        } else {
+          // Quiz exists but not completed - resume where they left off
+          setUserAnswers(loadedQuiz.user_answers || new Array(loadedQuiz.questions.length).fill(null));
+        }
+      } else {
+        // Generate new quiz
+        console.log("Generating new diagnostic quiz");
+        await generateDiagnosticQuiz(lessonId, lessonData[0]);
+      }
+    } catch (error) {
+      console.error("Error loading quiz:", error);
+    }
+    setIsGenerating(false);
+  };
+
+  const generateDiagnosticQuiz = async (lessonId, lessonData) => {
+    try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
         id: user.learning_profile_id 
@@ -61,11 +93,11 @@ This entire experience should be warm, ${learningProfile.grade || 'student'}-fri
 Input Educational Context:
 
 Student's Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${lessonData[0].course_name}
+Course/Unit Name: ${lessonData.course_name}
 School: ${learningProfile.school || "N/A"}
 City/Region: ${learningProfile.city || "N/A"}
-Detailed Curriculum Profile: ${JSON.stringify(lessonData[0].curriculum_map)}
-Student Description: ${lessonData[0].description || "N/A"}
+Detailed Curriculum Profile: ${JSON.stringify(lessonData.curriculum_map)}
+Student Description: ${lessonData.description || "N/A"}
 
 Task 1: Create the Smart Summary
 
@@ -168,7 +200,6 @@ Provide your response as a single, valid JSON object with the following structur
     } catch (error) {
       console.error("Error generating quiz:", error);
     }
-    setIsGenerating(false);
   };
 
   const handleAnswer = (answer) => {
@@ -215,13 +246,26 @@ Provide your response as a single, valid JSON object with the following structur
     navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
   };
 
+  const retakeQuiz = () => {
+    setCurrentQuestion(0);
+    setUserAnswers(new Array(quiz.questions.length).fill(null));
+    setShowResults(false);
+    setScore(0);
+  };
+
   if (isGenerating) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
         <Card className="w-full max-w-md text-center p-8 shadow-2xl">
           <Brain className="w-16 h-16 mx-auto text-purple-600 mb-4 animate-pulse" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Generating Your Diagnostic Quiz</h2>
-          <p className="text-slate-600 mb-6">Our AI is analyzing the curriculum and creating personalized questions...</p>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+            {quiz ? "Loading Your Diagnostic Quiz" : "Generating Your Diagnostic Quiz"}
+          </h2>
+          <p className="text-slate-600 mb-6">
+            {quiz 
+              ? "Retrieving your saved quiz..."
+              : "Our AI is analyzing the curriculum and creating personalized questions..."}
+          </p>
           <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
         </Card>
       </div>
@@ -277,12 +321,21 @@ Provide your response as a single, valid JSON object with the following structur
                 })}
               </div>
 
-              <Button
-                onClick={proceedToWorksheet}
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 py-6 text-lg"
-              >
-                Continue to Worksheet
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  onClick={retakeQuiz}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Retake Quiz
+                </Button>
+                <Button
+                  onClick={proceedToWorksheet}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+                >
+                  Continue to Worksheet
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
