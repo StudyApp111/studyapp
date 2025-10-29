@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -80,17 +81,18 @@ export default function Feedback() {
     const correctAnswers = worksheetData.feedback.filter(f => f.is_correct);
     const incorrectAnswers = worksheetData.feedback.filter(f => !f.is_correct);
 
-    // Identify strengths (correct answers)
-    const strengthList = correctAnswers.slice(0, 3).map((f, idx) => {
+    // Identify strengths from assessed competencies of correct answers
+    const strengthList = correctAnswers.slice(0, 3).map((f) => {
       const question = worksheetData.questions[f.question_index];
-      return `Mastered ${question.type.replace('_', ' ')} questions`;
+      return question.assessed_competencies?.[0] || `Mastered ${question.question_type}`;
     });
 
-    // Identify weaknesses (incorrect or low-scoring answers)
-    const weaknessList = incorrectAnswers.slice(0, 3).map((f, idx) => {
+    // Identify weaknesses from misconceptions and assessed competencies
+    const weaknessList = incorrectAnswers.slice(0, 3).map((f) => {
       const question = worksheetData.questions[f.question_index];
-      return worksheetData.analysis_summary?.key_gaps_or_misconceptions_addressed?.[idx] || 
-             `Need improvement in ${question.type.replace('_', ' ')} questions`;
+      return question.targeted_misconception || 
+             question.assessed_competencies?.[0] || 
+             `Need improvement in ${question.question_type}`;
     });
 
     setStrengths([...new Set(strengthList)]);
@@ -455,23 +457,27 @@ For each lesson, provide:
                           <div className="flex items-start justify-between mb-3">
                             <div>
                               <h4 className="font-semibold text-slate-900 text-lg mb-1">
-                                Question {feedback.question_index + 1}
+                                Question {question.question_number}
                               </h4>
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 flex-wrap">
                                 <Badge variant="outline">
-                                  {question.type.replace('_', ' ')}
+                                  {question.question_type}
                                 </Badge>
                                 <Badge variant="outline">
-                                  {feedback.points_earned}/{question.points} pts
+                                  {question.difficulty_index}
+                                </Badge>
+                                <Badge variant="outline">
+                                  {feedback.points_earned}/10 pts
                                 </Badge>
                               </div>
                             </div>
                           </div>
                           
                           <div className="bg-white rounded-lg p-4 border border-slate-200 mb-3">
-                            <p className="text-slate-800 font-medium mb-2">{question.question}</p>
+                            <p className="text-slate-800 font-medium mb-3">{question.question_text}</p>
                             {question.options && question.options.length > 0 && (
-                              <div className="mt-2 space-y-1">
+                              <div className="mt-3 space-y-1 bg-slate-50 p-3 rounded">
+                                <p className="text-xs font-semibold text-slate-600 mb-2">Options:</p>
                                 {question.options.map((opt, i) => (
                                   <div key={i} className="text-sm text-slate-600">
                                     {String.fromCharCode(65 + i)}. {opt}
@@ -479,15 +485,42 @@ For each lesson, provide:
                                 ))}
                               </div>
                             )}
+                            <div className="mt-3 grid grid-cols-2 gap-3">
+                              <div className="bg-blue-50 p-3 rounded">
+                                <p className="text-xs font-semibold text-blue-700 mb-1">Your Answer:</p>
+                                <p className="text-sm text-slate-700">{question.user_answer || "No answer"}</p>
+                              </div>
+                              <div className="bg-emerald-50 p-3 rounded">
+                                <p className="text-xs font-semibold text-emerald-700 mb-1">Correct Answer:</p>
+                                <p className="text-sm text-slate-700">{question.correct_answer}</p>
+                              </div>
+                            </div>
                           </div>
 
-                          <div className={`p-4 rounded-lg ${
+                          <div className={`p-4 rounded-lg mb-3 ${
                             feedback.is_correct ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
                           }`}>
                             <p className="text-sm font-semibold mb-2 text-slate-800">
                               {feedback.is_correct ? '✓ Excellent work!' : 'Learning Opportunity:'}
                             </p>
                             <p className="text-sm text-slate-700 leading-relaxed">{feedback.feedback}</p>
+                          </div>
+
+                          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                            <p className="text-xs font-semibold text-purple-700 mb-2">📚 Explanation & Key Concepts:</p>
+                            <p className="text-sm text-slate-700 mb-3">{question.explanation}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {question.assessed_competencies?.map((comp, i) => (
+                                <Badge key={i} className="bg-purple-100 text-purple-800 border-purple-200">
+                                  {comp}
+                                </Badge>
+                              ))}
+                            </div>
+                            {question.targeted_misconception && question.targeted_misconception !== "N/A" && (
+                              <p className="text-xs text-amber-700 mt-3 italic">
+                                💡 Common misconception: {question.targeted_misconception}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>

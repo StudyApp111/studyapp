@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -17,7 +16,6 @@ export default function Worksheet() {
   const [worksheet, setWorksheet] = useState(null);
   const [isGenerating, setIsGenerating] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [userAnswers, setUserAnswers] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -49,13 +47,11 @@ export default function Worksheet() {
       }
       setQuiz(quizData[0]);
 
-      // Check if worksheet already exists
       const existingWorksheet = await base44.entities.Worksheet.filter({ 
         lesson_id: lessonId 
       });
 
       if (existingWorksheet.length > 0) {
-        // Load existing worksheet
         console.log("Loading existing worksheet");
         const loadedWorksheet = existingWorksheet[0];
         setWorksheet(loadedWorksheet);
@@ -63,11 +59,8 @@ export default function Worksheet() {
         if (loadedWorksheet.completed) {
           navigate(createPageUrl("Feedback") + `?lessonId=${lessonId}`);
           return;
-        } else {
-          setUserAnswers(loadedWorksheet.user_answers || new Array(loadedWorksheet.questions.length).fill(""));
         }
       } else {
-        // Generate new worksheet
         console.log("Generating new worksheet");
         await generateWorksheet(lessonId, lessonData[0], quizData[0]);
       }
@@ -86,7 +79,6 @@ export default function Worksheet() {
 
       const learningProfile = profile[0] || {};
 
-      // Format diagnostic quiz results for the prompt
       const diagnosticResults = quizData.questions.map((q, index) => ({
         QuestionText: q.question_text,
         QuestionType: q.question_type,
@@ -149,27 +141,26 @@ Subject-Specific Question Design & Content:
 
 Scaffolding & Assigned Worksheet Difficulty:
 - While emulating overall exam difficulty as per the curriculum map, aim for a slight progression in cognitive demand or complexity across the worksheet.
-- For each question you generate, assign it a Worksheet Difficulty Index from these categories: "Moderate Exam-Level," "Challenging Exam-Level," or "High Challenge Exam-Level."
+- For each question you generate, assign it a difficulty_index from these categories: "Moderate Exam-Level," "Challenging Exam-Level," or "High Challenge Exam-Level."
 
 Grade-Appropriate Language:
 - Use clear, precise, and unambiguous language suitable for the student's grade level.
 
-Task 3: Generate a Detailed Answer Key
-For each of the 10 worksheet questions, provide the following:
-- Correct Answer(s): The definitive, accurate solution. For MCQs, state the correct option text (the full option text, not just the letter). For open-ended or problem-solving questions, provide a model/ideal answer or the final numerical result with units.
-- Detailed Explanation: A clear, step-by-step explanation of how to arrive at the correct answer. Emphasize the underlying concepts from the core competencies.
-- Linked Competency Name(s): Explicitly list the name(s) of the primary core competencies that this question assesses.
-- Targeted Misconception / Predicted Common Errors: If the question was specifically designed to address a common misconception, state it. Otherwise, briefly note potential common errors students might make on this specific question.
+Task 3: Provide Complete Answer Key Details
+For each of the 10 worksheet questions, include within the same question object:
+- correct_answer: The definitive, accurate solution. For MCQs, state the full correct option text (not just the letter). For open-ended or problem-solving questions, provide a model/ideal answer or the final numerical result with units.
+- explanation: A clear, step-by-step explanation of how to arrive at the correct answer. Emphasize the underlying concepts from the core competencies.
+- assessed_competencies: Array of strings explicitly listing the name(s) of the primary core competencies that this question assesses.
+- targeted_misconception: If the question was specifically designed to address a common misconception from the curriculum map, state it. Otherwise, briefly note potential common errors students might make on this specific question.
 
 Output Format:
-Provide your response as a single, valid JSON object with the structure specified.`;
+Provide your response as a single, valid JSON object with the structure specified. Each question should be a complete, self-contained object with all details including the answer key information.`;
 
       const { data: worksheetData } = await base44.functions.invoke('generateWorksheet', {
         prompt: aiPrompt,
         response_json_schema: {
           type: "object",
           properties: {
-            worksheet_title: { type: "string" },
             analysis_summary_for_worksheet_design: {
               type: "object",
               properties: {
@@ -195,81 +186,56 @@ Provide your response as a single, valid JSON object with the structure specifie
                 properties: {
                   question_number: { type: "integer" },
                   question_type: { type: "string" },
-                  worksheet_difficulty_index: { type: "string" },
+                  difficulty_index: { type: "string" },
                   question_text: { type: "string" },
                   options: {
                     type: "array",
                     items: { type: "string" }
                   },
-                  answer_key_details: {
-                    type: "object",
-                    properties: {
-                      correct_answer: { type: "string" },
-                      detailed_explanation: { type: "string" },
-                      linked_competency_names: {
-                        type: "array",
-                        items: { type: "string" }
-                      },
-                      targeted_misconception_or_predicted_errors: { type: "string" }
-                    },
-                    required: ["correct_answer", "detailed_explanation", "linked_competency_names", "targeted_misconception_or_predicted_errors"]
-                  }
+                  correct_answer: { type: "string" },
+                  explanation: { type: "string" },
+                  assessed_competencies: {
+                    type: "array",
+                    items: { type: "string" }
+                  },
+                  targeted_misconception: { type: "string" }
                 },
-                required: ["question_number", "question_type", "worksheet_difficulty_index", "question_text", "answer_key_details"]
+                required: ["question_number", "question_type", "difficulty_index", "question_text", "correct_answer", "explanation", "assessed_competencies", "targeted_misconception"]
               }
             }
           },
-          required: ["worksheet_title", "analysis_summary_for_worksheet_design", "worksheet_questions"]
+          required: ["analysis_summary_for_worksheet_design", "worksheet_questions"]
         }
       });
 
-      // Convert the AI-generated format to match our Worksheet entity schema
-      const formattedQuestions = worksheetData.worksheet_questions.map(q => {
-        // Determine question type based on the worksheet question type
-        let questionType = "long_answer";
-        if (q.question_type.toLowerCase().includes("multiple choice") || q.question_type.toLowerCase().includes("mcq")) {
-          questionType = "multiple_choice";
-        } else if (q.question_type.toLowerCase().includes("true") && q.question_type.toLowerCase().includes("false")) {
-          questionType = "true_false";
-        } else if (q.question_type.toLowerCase().includes("short")) {
-          questionType = "short_answer";
-        }
-
-        // Extract options if it's MCQ - they should now be simple strings
-        let options = [];
-        if (questionType === "multiple_choice" && q.options && q.options.length > 0) {
-          options = q.options;
-        }
-
-        return {
-          question: q.question_text,
-          type: questionType,
-          options: options,
-          correct_answer: q.answer_key_details.correct_answer,
-          points: questionType === "multiple_choice" ? 5 : questionType === "true_false" ? 3 : questionType === "short_answer" ? 8 : 15
-        };
-      });
+      // Add user_answer placeholder to each question
+      const questionsWithPlaceholder = worksheetData.worksheet_questions.map(q => ({
+        ...q,
+        user_answer: ""
+      }));
 
       const createdWorksheet = await base44.entities.Worksheet.create({
         lesson_id: lessonId,
         diagnostic_quiz_id: quizData.id,
-        questions: formattedQuestions,
-        completed: false,
+        questions: questionsWithPlaceholder,
         analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
-        answer_key: worksheetData.worksheet_questions.map(q => q.answer_key_details)
+        completed: false
       });
 
       setWorksheet(createdWorksheet);
-      setUserAnswers(new Array(formattedQuestions.length).fill(""));
     } catch (error) {
       console.error("Error generating worksheet:", error);
     }
   };
 
   const handleAnswer = (answer) => {
-    const newAnswers = [...userAnswers];
-    newAnswers[currentQuestion] = answer;
-    setUserAnswers(newAnswers);
+    const updatedQuestions = [...worksheet.questions];
+    updatedQuestions[currentQuestion].user_answer = answer;
+    
+    setWorksheet({
+      ...worksheet,
+      questions: updatedQuestions
+    });
   };
 
   const handleNext = () => {
@@ -291,27 +257,61 @@ Provide your response as a single, valid JSON object with the structure specifie
       const profile = await base44.entities.LearningProfile.filter({ 
         id: user.learning_profile_id 
       });
+      const learningProfile = profile[0] || {};
 
       const gradingPrompt = `
 You are an expert educator. Grade this worksheet and provide detailed feedback.
 
-Questions and Answers:
-${worksheet.questions.map((q, idx) => `
-Question ${idx + 1} (${q.type}, ${q.points} points):
-${q.question}
-Correct Answer: ${q.correct_answer}
-Student Answer: ${userAnswers[idx] || "No answer"}
-`).join('\n')}
+**Student Context:**
+- Grade Level: ${learningProfile.grade || "N/A"}
+- School: ${learningProfile.school || "N/A"}
+- City/Region: ${learningProfile.city || "N/A"}
 
-For each question, provide:
-1. Whether it's correct (for objective questions) or a partial score
-2. Detailed, constructive feedback
-3. Points earned
+**Lesson & Curriculum Details:**
+- Course/Unit Name: ${lesson.course_name}
+- Full Curriculum Map (from Step 1):
+${JSON.stringify(lesson.curriculum_map, null, 2)}
 
-Also provide:
-- Total score as a percentage
-- Predicted grade (A+, A, B+, B, C+, C, D, F)
-- Overall performance summary
+**Diagnostic Quiz Performance (Summary from Step 2):**
+- Diagnostic Score: ${quiz.score}%
+- Diagnostic Questions and User Answers:
+${JSON.stringify(quiz.questions.map((q, idx) => ({
+  question_text: q.question_text,
+  question_type: q.question_type,
+  difficulty_index: q.difficulty_index,
+  targeted_misconception: q.targeted_misconception,
+  user_answer: quiz.user_answers?.[idx],
+  is_correct: quiz.user_answers?.[idx] === q.correct_answer
+})), null, 2)}
+
+**Completed Worksheet Data (Current Performance):**
+- Worksheet Analysis Summary:
+${JSON.stringify(worksheet.analysis_summary, null, 2)}
+
+- Worksheet Questions with Student Answers:
+${JSON.stringify(worksheet.questions.map((q, idx) => ({
+  question_number: q.question_number,
+  question_text: q.question_text,
+  question_type: q.question_type,
+  difficulty_index: q.difficulty_index,
+  correct_answer: q.correct_answer,
+  student_answer: q.user_answer || "No answer provided",
+  explanation: q.explanation,
+  assessed_competencies: q.assessed_competencies,
+  targeted_misconception: q.targeted_misconception
+})), null, 2)}
+
+**Instructions for AI Grader:**
+Based on ALL the above data, provide:
+1. Predicted Final Grade (e.g., "A+", "B", "C-")
+2. Total Score (percentage)
+3. Detailed Question Feedback Array with:
+   - question_index (0-based)
+   - is_correct (boolean)
+   - feedback (detailed constructive feedback)
+   - points_earned (out of 10 points per question)
+
+Ensure your output matches the specified JSON schema.
 `;
 
       const grading = await base44.integrations.Core.InvokeLLM({
@@ -338,7 +338,7 @@ Also provide:
       });
 
       await base44.entities.Worksheet.update(worksheet.id, {
-        user_answers: userAnswers,
+        questions: worksheet.questions,
         feedback: grading.feedback,
         total_score: grading.total_score,
         predicted_grade: grading.predicted_grade,
@@ -349,7 +349,6 @@ Also provide:
         status: "worksheet_completed"
       });
 
-      const totalLessons = (user.total_lessons_completed || 0);
       const totalQuizzes = (user.total_quizzes_taken || 0) + 1;
       const currentAvg = user.average_score || 0;
       const newAvg = ((currentAvg * (totalQuizzes - 1)) + grading.total_score) / totalQuizzes;
@@ -389,7 +388,8 @@ Also provide:
 
   const progress = ((currentQuestion + 1) / worksheet.questions.length) * 100;
   const isLastQuestion = currentQuestion === worksheet.questions.length - 1;
-  const canProceed = userAnswers[currentQuestion]?.trim() !== "";
+  const currentQ = worksheet.questions[currentQuestion];
+  const canProceed = currentQ.user_answer?.trim() !== "";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
@@ -410,9 +410,8 @@ Also provide:
         <AnimatePresence mode="wait">
           <WorksheetQuestion
             key={currentQuestion}
-            question={worksheet.questions[currentQuestion]}
-            questionNumber={currentQuestion + 1}
-            answer={userAnswers[currentQuestion]}
+            question={currentQ}
+            answer={currentQ.user_answer}
             onAnswer={handleAnswer}
           />
         </AnimatePresence>

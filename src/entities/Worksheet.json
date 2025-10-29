@@ -34,46 +34,23 @@
         }
       }
     },
-    "answer_key": {
-      "type": "array",
-      "description": "Detailed answer key with explanations",
-      "items": {
-        "type": "object",
-        "properties": {
-          "correct_answer": {
-            "type": "string"
-          },
-          "detailed_explanation": {
-            "type": "string"
-          },
-          "linked_competency_names": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "targeted_misconception_or_predicted_errors": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "questions": {
       "type": "array",
+      "description": "Generated worksheet questions with full answer key details",
       "items": {
         "type": "object",
         "properties": {
-          "question": {
+          "question_number": {
+            "type": "integer"
+          },
+          "question_type": {
             "type": "string"
           },
-          "type": {
-            "type": "string",
-            "enum": [
-              "multiple_choice",
-              "true_false",
-              "short_answer",
-              "long_answer"
-            ]
+          "difficulty_index": {
+            "type": "string"
+          },
+          "question_text": {
+            "type": "string"
           },
           "options": {
             "type": "array",
@@ -81,25 +58,30 @@
               "type": "string"
             }
           },
+          "user_answer": {
+            "type": "string"
+          },
           "correct_answer": {
             "type": "string"
           },
-          "points": {
-            "type": "number"
+          "explanation": {
+            "type": "string"
+          },
+          "assessed_competencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "targeted_misconception": {
+            "type": "string"
           }
         }
-      },
-      "description": "Generated worksheet questions"
-    },
-    "user_answers": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "User's answers"
+      }
     },
     "feedback": {
       "type": "array",
+      "description": "AI grading feedback for each question",
       "items": {
         "type": "object",
         "properties": {
