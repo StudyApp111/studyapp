@@ -60,7 +60,7 @@ export default function Feedback() {
       }
       setWorksheet(worksheetData[0]);
 
-      // Analyze strengths and weaknesses
+      // Analyze strengths and weaknesses from AI feedback
       analyzePerformance(worksheetData[0]);
 
       await base44.entities.Lesson.update(lessonId, {
@@ -78,28 +78,58 @@ export default function Feedback() {
   };
 
   const analyzePerformance = (worksheetData) => {
-    const correctAnswers = worksheetData.feedback.filter(f => f.is_correct);
-    const incorrectAnswers = worksheetData.feedback.filter(f => !f.is_correct);
+    // Use AI feedback if available
+    if (worksheetData.ai_feedback) {
+      setStrengths(worksheetData.ai_feedback.identified_strengths_list || []);
+      setWeaknesses(worksheetData.ai_feedback.key_areas_for_improvement_list || []);
+    } else {
+      // Fallback to basic analysis
+      const correctAnswers = worksheetData.feedback.filter(f => f.is_correct);
+      const incorrectAnswers = worksheetData.feedback.filter(f => !f.is_correct);
 
-    // Identify strengths from assessed competencies of correct answers
-    const strengthList = correctAnswers.slice(0, 3).map((f) => {
-      const question = worksheetData.questions[f.question_index];
-      return question.assessed_competencies?.[0] || `Mastered ${question.question_type}`;
-    });
+      const strengthList = correctAnswers.slice(0, 3).map((f) => {
+        const question = worksheetData.questions[f.question_index];
+        return question.assessed_competencies?.[0] || `Mastered ${question.question_type}`;
+      });
 
-    // Identify weaknesses from misconceptions and assessed competencies
-    const weaknessList = incorrectAnswers.slice(0, 3).map((f) => {
-      const question = worksheetData.questions[f.question_index];
-      return question.targeted_misconception || 
-             question.assessed_competencies?.[0] || 
-             `Need improvement in ${question.question_type}`;
-    });
+      const weaknessList = incorrectAnswers.slice(0, 3).map((f) => {
+        const question = worksheetData.questions[f.question_index];
+        return question.targeted_misconception || 
+               question.assessed_competencies?.[0] || 
+               `Need improvement in ${question.question_type}`;
+      });
 
-    setStrengths([...new Set(strengthList)]);
-    setWeaknesses([...new Set(weaknessList)]);
+      setStrengths([...new Set(strengthList)]);
+      setWeaknesses([...new Set(weaknessList)]);
+    }
   };
 
   const generateSuggestedLessons = async () => {
+    // Check if AI already generated sessions
+    if (worksheet.ai_feedback?.suggested_future_sessions_plan) {
+      const existingSessions = worksheet.ai_feedback.suggested_future_sessions_plan;
+      
+      // Convert AI sessions to SuggestedLesson entities
+      const createdSuggestions = await Promise.all(
+        existingSessions.map(session =>
+          base44.entities.SuggestedLesson.create({
+            worksheet_id: worksheet.id,
+            lesson_title: session.session_name,
+            description: session.session_focus_description,
+            difficulty: "Targeted Practice",
+            estimated_duration: "45-60 minutes",
+            key_topics: [],
+            why_suggested: `Session ${session.session_number}: ${session.session_focus_description}`
+          })
+        )
+      );
+      
+      setSuggestedLessons(createdSuggestions);
+      setIsGeneratingSuggestions(false); // Ensure loading state is reset
+      return;
+    }
+
+    // Fallback: generate if not available
     setIsGeneratingSuggestions(true);
     try {
       const user = await base44.auth.me();
@@ -220,9 +250,31 @@ For each lesson, provide:
             <div className="text-8xl font-bold text-white mb-2">
               {worksheet.predicted_grade} {getGradeEmoji(worksheet.predicted_grade)}
             </div>
+            <div className="text-2xl text-white font-semibold">
+              {worksheet.ai_feedback?.predicted_exam_score_percentage || worksheet.total_score}%
+            </div>
           </motion.div>
 
-          <div className="flex items-center justify-center gap-6 text-slate-600 text-lg">
+          {worksheet.ai_feedback?.overall_performance_summary_text && (
+            <p className="text-lg text-slate-700 max-w-3xl mx-auto mt-6">
+              {worksheet.ai_feedback.overall_performance_summary_text}
+            </p>
+          )}
+
+          {worksheet.ai_feedback?.prediction_calculation_rationale && (
+            <div className="mt-6 max-w-3xl mx-auto">
+              <details className="bg-white rounded-lg p-4 shadow">
+                <summary className="cursor-pointer font-semibold text-purple-700 hover:text-purple-900">
+                  How was this grade calculated?
+                </summary>
+                <p className="mt-3 text-sm text-slate-600 text-left">
+                  {worksheet.ai_feedback.prediction_calculation_rationale}
+                </p>
+              </details>
+            </div>
+          )}
+
+          <div className="flex items-center justify-center gap-6 text-slate-600 text-lg mt-6">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-purple-600" />
               <span className="font-semibold">{Math.round(worksheet.total_score)}%</span>
@@ -342,7 +394,7 @@ For each lesson, provide:
                       </DialogDescription>
                     </DialogHeader>
                     
-                    {suggestedLessons.length === 0 ? (
+                    {suggestedLessons.length === 0 && isGeneratingSuggestions ? (
                       <div className="text-center py-12">
                         <Loader2 className="w-12 h-12 mx-auto animate-spin text-purple-600 mb-4" />
                         <p className="text-slate-600">Generating personalized learning path...</p>

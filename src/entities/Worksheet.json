@@ -75,13 +75,16 @@
           },
           "targeted_misconception": {
             "type": "string"
+          },
+          "is_correct": {
+            "type": "boolean"
           }
         }
       }
     },
     "feedback": {
       "type": "array",
-      "description": "AI grading feedback for each question",
+      "description": "Simple per-question feedback for display",
       "items": {
         "type": "object",
         "properties": {
@@ -100,12 +103,60 @@
         }
       }
     },
+    "ai_feedback": {
+      "type": "object",
+      "description": "Comprehensive AI-generated feedback from Step 4",
+      "properties": {
+        "feedback_session_title": {
+          "type": "string"
+        },
+        "predicted_exam_score_percentage": {
+          "type": "string"
+        },
+        "prediction_calculation_rationale": {
+          "type": "string"
+        },
+        "overall_performance_summary_text": {
+          "type": "string"
+        },
+        "identified_strengths_list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "key_areas_for_improvement_list": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "suggested_future_sessions_plan": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "session_number": {
+                "type": "integer"
+              },
+              "session_name": {
+                "type": "string"
+              },
+              "session_focus_description": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
     "predicted_grade": {
       "type": "string",
-      "description": "AI-predicted grade"
+      "description": "Letter grade (A+, B, C-, etc.)"
     },
     "total_score": {
-      "type": "number"
+      "type": "number",
+      "description": "Numerical score percentage"
     },
     "completed": {
       "type": "boolean",
