@@ -20,11 +20,14 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
         }
 
+        // Enhance prompt to ensure valid JSON output
+        const enhancedPrompt = prompt + `\n\nCRITICAL: Ensure all text fields (question_text, explanation, etc.) have properly escaped quotes and special characters. Use single quotes within text or escape double quotes as \\". Do not use unescaped newlines within string values.`;
+
         // Prepare the request body for Gemini API (NO Google Search grounding)
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: prompt
+                    text: enhancedPrompt
                 }]
             }],
             generationConfig: {
@@ -77,14 +80,48 @@ Deno.serve(async (req) => {
         // Parse JSON response if schema was provided
         if (response_json_schema) {
             try {
-                const parsedResponse = JSON.parse(generatedText);
+                // Clean the response - remove markdown code blocks if present
+                let cleanedText = generatedText.trim();
+                if (cleanedText.startsWith('```json')) {
+                    cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                } else if (cleanedText.startsWith('```')) {
+                    cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                }
+                
+                const parsedResponse = JSON.parse(cleanedText);
                 return Response.json(parsedResponse);
             } catch (parseError) {
                 console.error('Failed to parse JSON:', parseError);
-                return Response.json({ 
-                    error: 'Failed to parse JSON response', 
-                    raw_text: generatedText 
-                }, { status: 500 });
+                console.error('Raw text (first 1000 chars):', generatedText.substring(0, 1000));
+                console.error('Raw text (last 500 chars):', generatedText.substring(Math.max(0, generatedText.length - 500)));
+                
+                // Try to fix common JSON issues
+                try {
+                    // Replace unescaped newlines within strings
+                    let fixedText = generatedText
+                        .replace(/\\n/g, ' ')  // Replace literal \n with space
+                        .replace(/\n/g, ' ')   // Replace actual newlines with space
+                        .replace(/\r/g, ' ')   // Replace carriage returns
+                        .replace(/\t/g, ' ')   // Replace tabs
+                        .trim();
+                    
+                    // Try to remove markdown if present
+                    if (fixedText.startsWith('```')) {
+                        fixedText = fixedText.replace(/^```json?\s*/, '').replace(/\s*```$/, '');
+                    }
+                    
+                    const retryParsed = JSON.parse(fixedText);
+                    console.log('Successfully parsed after cleanup');
+                    return Response.json(retryParsed);
+                } catch (retryError) {
+                    console.error('Retry parse also failed:', retryError);
+                    return Response.json({ 
+                        error: 'Failed to parse JSON response after cleanup', 
+                        raw_text_preview: generatedText.substring(0, 500),
+                        parse_error: parseError.message,
+                        retry_error: retryError.message
+                    }, { status: 500 });
+                }
             }
         }
 

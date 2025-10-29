@@ -67,6 +67,8 @@ export default function Worksheet() {
       }
     } catch (error) {
       console.error("Error loading worksheet:", error);
+      alert("Failed to load or generate worksheet. Please try again. Error: " + error.message);
+      navigate(createPageUrl("Home"));
     }
     setIsGenerating(false);
   };
@@ -150,9 +152,15 @@ Grade-Appropriate Language:
 Task 3: Provide Complete Answer Key Details
 For each of the 10 worksheet questions, include within the same question object:
 - correct_answer: The definitive, accurate solution. For MCQs, state the full correct option text (not just the letter). For open-ended or problem-solving questions, provide a model/ideal answer or the final numerical result with units.
-- explanation: A clear, step-by-step explanation of how to arrive at the correct answer. Emphasize the underlying concepts from the core competencies.
+- explanation: A clear, step-by-step explanation of how to arrive at the correct answer. Keep it concise (2-3 sentences max). Use simple language without complex punctuation.
 - assessed_competencies: Array of strings explicitly listing the name(s) of the primary core competencies that this question assesses.
-- targeted_misconception: If the question was specifically designed to address a common misconception from the curriculum map, state it. Otherwise, briefly note potential common errors students might make on this specific question.
+- targeted_misconception: If the question was specifically designed to address a common misconception from the curriculum map, state it briefly. Otherwise use "N/A".
+
+IMPORTANT JSON FORMATTING:
+- Keep all text fields concise and avoid unnecessary quotes within text
+- Use simple language in explanations
+- Avoid complex punctuation or special characters
+- Keep question_text clear and straightforward
 
 Output Format:
 Provide your response as a single, valid JSON object with the structure specified. Each question should be a complete, self-contained object with all details including the answer key information.`;
@@ -209,6 +217,11 @@ Provide your response as a single, valid JSON object with the structure specifie
         }
       });
 
+      // Validate the response
+      if (!worksheetData || !worksheetData.worksheet_questions || worksheetData.worksheet_questions.length === 0) {
+        throw new Error("Invalid worksheet data received from AI");
+      }
+
       // Add user_answer placeholder to each question
       const questionsWithPlaceholder = worksheetData.worksheet_questions.map(q => ({
         ...q,
@@ -226,6 +239,8 @@ Provide your response as a single, valid JSON object with the structure specifie
       setWorksheet(createdWorksheet);
     } catch (error) {
       console.error("Error generating worksheet:", error);
+      alert("Failed to generate worksheet. Please try again. Error: " + error.message);
+      navigate(createPageUrl("Home"));
     }
   };
 
@@ -461,6 +476,7 @@ Provide your response as a single, valid JSON object matching the exact structur
       navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}`);
     } catch (error) {
       console.error("Error submitting worksheet:", error);
+      alert("Failed to submit worksheet. Please try again. Error: " + error.message);
     }
     setIsSubmitting(false);
   };
