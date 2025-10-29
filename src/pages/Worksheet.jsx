@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -138,7 +139,7 @@ Targeted Question Distribution:
 Exact Alignment with Exam Style, Wording, Type & Difficulty (Crucial):
 - The distribution of question types (e.g., % MCQs, % Short Answer) in this 10-question worksheet must proportionally mirror the frequency specified for each format in the curriculum map's question formats.
 - For each question generated, its specific question type, exact wording, overall style, and intrinsic difficulty must closely emulate the provided examples and descriptions within the curriculum map. This mimicry is paramount for the worksheet's predictive accuracy.
-- For MCQs, provide at least 4 distinct and plausible options (A, B, C, D).
+- For MCQs, provide at least 4 distinct and plausible options as an array of strings (e.g., ["Option A text", "Option B text", "Option C text", "Option D text"]).
 
 Subject-Specific Question Design & Content:
 - The task required by each question must be appropriate for the subject matter implied by the course name.
@@ -155,7 +156,7 @@ Grade-Appropriate Language:
 
 Task 3: Generate a Detailed Answer Key
 For each of the 10 worksheet questions, provide the following:
-- Correct Answer(s): The definitive, accurate solution. For MCQs, state the correct option letter (e.g., "C"). For open-ended or problem-solving questions, provide a model/ideal answer or the final numerical result with units.
+- Correct Answer(s): The definitive, accurate solution. For MCQs, state the correct option text (the full option text, not just the letter). For open-ended or problem-solving questions, provide a model/ideal answer or the final numerical result with units.
 - Detailed Explanation: A clear, step-by-step explanation of how to arrive at the correct answer. Emphasize the underlying concepts from the core competencies.
 - Linked Competency Name(s): Explicitly list the name(s) of the primary core competencies that this question assesses.
 - Targeted Misconception / Predicted Common Errors: If the question was specifically designed to address a common misconception, state it. Otherwise, briefly note potential common errors students might make on this specific question.
@@ -198,10 +199,7 @@ Provide your response as a single, valid JSON object with the structure specifie
                   question_text: { type: "string" },
                   options: {
                     type: "array",
-                    items: {
-                      type: "object",
-                      additionalProperties: { type: "string" }
-                    }
+                    items: { type: "string" }
                   },
                   answer_key_details: {
                     type: "object",
@@ -237,16 +235,10 @@ Provide your response as a single, valid JSON object with the structure specifie
           questionType = "short_answer";
         }
 
-        // Extract options if it's MCQ
+        // Extract options if it's MCQ - they should now be simple strings
         let options = [];
         if (questionType === "multiple_choice" && q.options && q.options.length > 0) {
-          options = q.options.map(opt => {
-            // Handle both {"A": "text"} and direct string formats
-            if (typeof opt === 'object') {
-              return Object.values(opt)[0];
-            }
-            return opt;
-          });
+          options = q.options;
         }
 
         return {
