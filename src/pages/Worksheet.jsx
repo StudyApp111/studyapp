@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -29,10 +28,10 @@ export default function Worksheet() {
       return;
     }
 
-    generateWorksheet(lessonId);
+    loadOrGenerateWorksheet(lessonId);
   }, [navigate]);
 
-  const generateWorksheet = async (lessonId) => {
+  const loadOrGenerateWorksheet = async (lessonId) => {
     setIsGenerating(true);
     try {
       const lessonData = await base44.entities.Lesson.filter({ id: lessonId });
@@ -49,69 +48,230 @@ export default function Worksheet() {
       }
       setQuiz(quizData[0]);
 
+      // Check if worksheet already exists
+      const existingWorksheet = await base44.entities.Worksheet.filter({ 
+        lesson_id: lessonId 
+      });
+
+      if (existingWorksheet.length > 0) {
+        // Load existing worksheet
+        console.log("Loading existing worksheet");
+        const loadedWorksheet = existingWorksheet[0];
+        setWorksheet(loadedWorksheet);
+        
+        if (loadedWorksheet.completed) {
+          navigate(createPageUrl("Feedback") + `?lessonId=${lessonId}`);
+          return;
+        } else {
+          setUserAnswers(loadedWorksheet.user_answers || new Array(loadedWorksheet.questions.length).fill(""));
+        }
+      } else {
+        // Generate new worksheet
+        console.log("Generating new worksheet");
+        await generateWorksheet(lessonId, lessonData[0], quizData[0]);
+      }
+    } catch (error) {
+      console.error("Error loading worksheet:", error);
+    }
+    setIsGenerating(false);
+  };
+
+  const generateWorksheet = async (lessonId, lessonData, quizData) => {
+    try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
         id: user.learning_profile_id 
       });
 
-      const aiPrompt = `
-You are an expert exam creator. Generate a comprehensive mock exam worksheet.
+      const learningProfile = profile[0] || {};
 
-Course: ${lessonData[0].course_name}
-Curriculum: ${JSON.stringify(lessonData[0].curriculum_map)}
-Diagnostic Quiz Score: ${quizData[0].score}%
-Learner Profile: ${JSON.stringify(profile[0] || {})}
+      // Format diagnostic quiz results for the prompt
+      const diagnosticResults = quizData.questions.map((q, index) => ({
+        QuestionText: q.question_text,
+        QuestionType: q.question_type,
+        AssignedDifficultyIndex: q.difficulty_index,
+        TargetedMisconception: q.targeted_misconception || "N/A",
+        StudentAnswer: quizData.user_answers?.[index] || "No answer provided",
+        IsCorrect: quizData.user_answers?.[index] === q.correct_answer
+      }));
 
-Create a mock exam with 10-12 questions in varied formats:
-- 40% Multiple Choice (4 options each)
-- 20% True/False
-- 20% Short Answer (1-2 sentence responses)
-- 20% Long Answer (paragraph responses)
+      const aiPrompt = `Context
+You are a master assessment designer and expert tutor (simulated 180 IQ). Your primary function is to create a 10-question worksheet that is highly predictive of a student's performance on their actual exam for the specified course. This worksheet must be meticulously crafted by leveraging:
+a. The detailed curriculum map (output from Step 1).
+b. The student's performance on the diagnostic quiz (output from Step 2).
+Your generated questions must mirror the exact style, type, wording nuances, and difficulty levels typically encountered in the student's school for this course, as detailed in the curriculum map.
 
-Questions should:
-- Cover all key concepts from the curriculum
-- Be appropriate for the learner's diagnostic score
-- Progress from easier to harder
-- Include point values (multiple choice=5, true/false=3, short=8, long=15)
+Input Educational Context
+Student's Grade Level: ${learningProfile.grade || "N/A"}
+Course/Unit Name: ${lessonData.course_name}
+School (for context): ${learningProfile.school || "N/A"}
+City/Region (for context): ${learningProfile.city || "N/A"}
 
-For each question, include the correct answer and type.
-`;
+Detailed Curriculum Profile (JSON object - output from Step 1):
+${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
-      const worksheetData = await base44.integrations.Core.InvokeLLM({
+Diagnostic Quiz Results:
+${JSON.stringify(diagnosticResults, null, 2)}
+
+Task 1: Analyze Student Performance & Curriculum Profile
+Based on the provided curriculum map and diagnostic quiz results, perform the following analysis to strategically inform worksheet design:
+
+Identify Weak Competencies:
+- Pinpoint core competencies where the student answered diagnostic questions incorrectly.
+- Pay special attention to errors on diagnostic questions that had an AssignedDifficultyIndex of "Conceptual" or "Applied/Multi-step," as these indicate deeper misunderstandings.
+
+Note Gaps & Misconceptions:
+- Identify if the student struggled with diagnostic questions specifically designed to test TargetedMisconception, especially where answers were incorrect.
+- Correlate errors with common misconceptions from the curriculum map.
+
+Prioritize Key & Differentiating Competencies for Assessment:
+- From core competencies, select those that are heavily weighted AND/OR where the diagnostic results indicate weakness or uncertainty. These are critical for predicting overall exam success.
+
+Task 2: Generate the 10-Question Predictive Worksheet
+Create 10 unique questions. Adhere strictly to the following criteria:
+
+Targeted Question Distribution:
+- Focus the majority of questions (approx. 6-7) on the identified Weak Competencies and confirmed Gaps/Misconceptions.
+- Include questions (approx. 2-3) on Key & Differentiating Competencies to gauge mastery of high-stakes material.
+- Ensure comprehensive coverage of the facets of the curriculum most critical for exam prediction.
+
+Exact Alignment with Exam Style, Wording, Type & Difficulty (Crucial):
+- The distribution of question types (e.g., % MCQs, % Short Answer) in this 10-question worksheet must proportionally mirror the frequency specified for each format in the curriculum map's question formats.
+- For each question generated, its specific question type, exact wording, overall style, and intrinsic difficulty must closely emulate the provided examples and descriptions within the curriculum map. This mimicry is paramount for the worksheet's predictive accuracy.
+- For MCQs, provide at least 4 distinct and plausible options (A, B, C, D).
+
+Subject-Specific Question Design & Content:
+- The task required by each question must be appropriate for the subject matter implied by the course name.
+- For humanities/social sciences subjects: Questions may require analysis of short provided texts/excerpts, construction of arguments, interpretation of sources/data, or concise written explanations.
+- For STEM subjects: Questions will likely involve problem-solving, application of formulas/theories, data interpretation, calculations, or conceptual explanations of models.
+- Always refer to the curriculum map's question format examples for definitive guidance on authentic tasks and styles.
+
+Scaffolding & Assigned Worksheet Difficulty:
+- While emulating overall exam difficulty as per the curriculum map, aim for a slight progression in cognitive demand or complexity across the worksheet.
+- For each question you generate, assign it a Worksheet Difficulty Index from these categories: "Moderate Exam-Level," "Challenging Exam-Level," or "High Challenge Exam-Level."
+
+Grade-Appropriate Language:
+- Use clear, precise, and unambiguous language suitable for the student's grade level.
+
+Task 3: Generate a Detailed Answer Key
+For each of the 10 worksheet questions, provide the following:
+- Correct Answer(s): The definitive, accurate solution. For MCQs, state the correct option letter (e.g., "C"). For open-ended or problem-solving questions, provide a model/ideal answer or the final numerical result with units.
+- Detailed Explanation: A clear, step-by-step explanation of how to arrive at the correct answer. Emphasize the underlying concepts from the core competencies.
+- Linked Competency Name(s): Explicitly list the name(s) of the primary core competencies that this question assesses.
+- Targeted Misconception / Predicted Common Errors: If the question was specifically designed to address a common misconception, state it. Otherwise, briefly note potential common errors students might make on this specific question.
+
+Output Format:
+Provide your response as a single, valid JSON object with the structure specified.`;
+
+      const { data: worksheetData } = await base44.functions.invoke('generateWorksheet', {
         prompt: aiPrompt,
         response_json_schema: {
           type: "object",
           properties: {
-            questions: {
+            worksheet_title: { type: "string" },
+            analysis_summary_for_worksheet_design: {
+              type: "object",
+              properties: {
+                targeted_weak_competencies: {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                key_gaps_or_misconceptions_addressed: {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                focused_differentiating_competencies: {
+                  type: "array",
+                  items: { type: "string" }
+                }
+              },
+              required: ["targeted_weak_competencies", "key_gaps_or_misconceptions_addressed", "focused_differentiating_competencies"]
+            },
+            worksheet_questions: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
-                  question: { type: "string" },
-                  type: { type: "string", enum: ["multiple_choice", "true_false", "short_answer", "long_answer"] },
-                  options: { type: "array", items: { type: "string" } },
-                  correct_answer: { type: "string" },
-                  points: { type: "number" }
-                }
+                  question_number: { type: "integer" },
+                  question_type: { type: "string" },
+                  worksheet_difficulty_index: { type: "string" },
+                  question_text: { type: "string" },
+                  options: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: { type: "string" }
+                    }
+                  },
+                  answer_key_details: {
+                    type: "object",
+                    properties: {
+                      correct_answer: { type: "string" },
+                      detailed_explanation: { type: "string" },
+                      linked_competency_names: {
+                        type: "array",
+                        items: { type: "string" }
+                      },
+                      targeted_misconception_or_predicted_errors: { type: "string" }
+                    },
+                    required: ["correct_answer", "detailed_explanation", "linked_competency_names", "targeted_misconception_or_predicted_errors"]
+                  }
+                },
+                required: ["question_number", "question_type", "worksheet_difficulty_index", "question_text", "answer_key_details"]
               }
             }
-          }
+          },
+          required: ["worksheet_title", "analysis_summary_for_worksheet_design", "worksheet_questions"]
         }
+      });
+
+      // Convert the AI-generated format to match our Worksheet entity schema
+      const formattedQuestions = worksheetData.worksheet_questions.map(q => {
+        // Determine question type based on the worksheet question type
+        let questionType = "long_answer";
+        if (q.question_type.toLowerCase().includes("multiple choice") || q.question_type.toLowerCase().includes("mcq")) {
+          questionType = "multiple_choice";
+        } else if (q.question_type.toLowerCase().includes("true") && q.question_type.toLowerCase().includes("false")) {
+          questionType = "true_false";
+        } else if (q.question_type.toLowerCase().includes("short")) {
+          questionType = "short_answer";
+        }
+
+        // Extract options if it's MCQ
+        let options = [];
+        if (questionType === "multiple_choice" && q.options && q.options.length > 0) {
+          options = q.options.map(opt => {
+            // Handle both {"A": "text"} and direct string formats
+            if (typeof opt === 'object') {
+              return Object.values(opt)[0];
+            }
+            return opt;
+          });
+        }
+
+        return {
+          question: q.question_text,
+          type: questionType,
+          options: options,
+          correct_answer: q.answer_key_details.correct_answer,
+          points: questionType === "multiple_choice" ? 5 : questionType === "true_false" ? 3 : questionType === "short_answer" ? 8 : 15
+        };
       });
 
       const createdWorksheet = await base44.entities.Worksheet.create({
         lesson_id: lessonId,
-        diagnostic_quiz_id: quizData[0].id,
-        questions: worksheetData.questions,
-        completed: false
+        diagnostic_quiz_id: quizData.id,
+        questions: formattedQuestions,
+        completed: false,
+        analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
+        answer_key: worksheetData.worksheet_questions.map(q => q.answer_key_details)
       });
 
       setWorksheet(createdWorksheet);
-      setUserAnswers(new Array(worksheetData.questions.length).fill(""));
+      setUserAnswers(new Array(formattedQuestions.length).fill(""));
     } catch (error) {
       console.error("Error generating worksheet:", error);
     }
-    setIsGenerating(false);
   };
 
   const handleAnswer = (answer) => {
@@ -219,8 +379,14 @@ Also provide:
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
         <Card className="w-full max-w-md text-center p-8 shadow-2xl">
           <FileText className="w-16 h-16 mx-auto text-purple-600 mb-4 animate-pulse" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Generating Your Worksheet</h2>
-          <p className="text-slate-600 mb-6">Creating a personalized exam based on your diagnostic results...</p>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+            {worksheet ? "Loading Your Worksheet" : "Generating Your Worksheet"}
+          </h2>
+          <p className="text-slate-600 mb-6">
+            {worksheet 
+              ? "Retrieving your saved worksheet..."
+              : "Creating a personalized exam based on your diagnostic results..."}
+          </p>
           <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
         </Card>
       </div>

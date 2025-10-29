@@ -10,6 +10,54 @@
       "type": "string",
       "description": "Associated diagnostic quiz ID"
     },
+    "analysis_summary": {
+      "type": "object",
+      "description": "AI analysis of student's weak areas and targeted competencies",
+      "properties": {
+        "targeted_weak_competencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "key_gaps_or_misconceptions_addressed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "focused_differentiating_competencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "answer_key": {
+      "type": "array",
+      "description": "Detailed answer key with explanations",
+      "items": {
+        "type": "object",
+        "properties": {
+          "correct_answer": {
+            "type": "string"
+          },
+          "detailed_explanation": {
+            "type": "string"
+          },
+          "linked_competency_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "targeted_misconception_or_predicted_errors": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "questions": {
       "type": "array",
       "items": {
