@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, GraduationCap, TrendingUp, LogOut } from "lucide-react";
+import { Home, BookOpen, GraduationCap, History, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +23,11 @@ const navigationItems = [
     title: "Home",
     url: createPageUrl("Home"),
     icon: Home,
+  },
+  {
+    title: "Lesson History",
+    url: createPageUrl("LessonHistory"),
+    icon: History,
   },
   {
     title: "Create Lesson",

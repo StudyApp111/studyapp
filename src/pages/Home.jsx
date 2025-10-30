@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Brain, FileText, Target } from "lucide-react";
+import { BookOpen, Plus, TrendingUp, Award, Clock, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -70,65 +70,15 @@ export default function Home() {
     );
   }
 
-  const LessonCard = ({ lesson }) => {
+  const SimpleLessonCard = ({ lesson }) => {
     const worksheets = (lessonWorksheets[lesson.id] || []).sort((a, b) => a.worksheet_number - b.worksheet_number);
     const completedCount = worksheets.filter(w => w.completed).length;
     const totalWorksheets = 6;
     const latestCompletedWorksheet = worksheets.filter(w => w.completed).pop();
-    const nextWorksheet = worksheets.find(w => !w.completed);
-    
-    // Determine lesson status
-    let status = "not_started";
-    let statusLabel = "Start Diagnostic Quiz";
-    let statusIcon = Brain;
-    let statusColor = "bg-purple-100 text-purple-700";
-    let progress = 0;
-
-    if (lesson.status === "created" || !nextWorksheet) {
-      // No worksheets yet - need to do diagnostic
-      status = "not_started";
-      statusLabel = "Start Diagnostic Quiz";
-      statusIcon = Brain;
-      statusColor = "bg-purple-100 text-purple-700";
-      progress = 0;
-    } else if (nextWorksheet) {
-      if (completedCount === 0) {
-        // Started diagnostic but not completed first worksheet
-        status = "diagnostic_only";
-        statusLabel = "Start Worksheet 1";
-        statusIcon = FileText;
-        statusColor = "bg-yellow-100 text-yellow-700";
-        progress = 5;
-      } else {
-        // Has completed at least one worksheet
-        status = "in_progress";
-        statusLabel = `Continue Worksheet ${nextWorksheet.worksheet_number}`;
-        statusIcon = FileText;
-        statusColor = "bg-amber-100 text-amber-700";
-        progress = (completedCount / totalWorksheets) * 100;
-      }
-    } else if (completedCount === totalWorksheets) {
-      status = "completed";
-      statusLabel = "Review Results";
-      statusIcon = Award;
-      statusColor = "bg-emerald-100 text-emerald-700";
-      progress = 100;
-    }
-
-    const StatusIcon = statusIcon;
+    const progress = (completedCount / totalWorksheets) * 100;
 
     const handleClick = () => {
-      if (status === "not_started") {
-        navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lesson.id}`);
-      } else if (nextWorksheet) {
-        if (nextWorksheet.status === "not_started") {
-          navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}&worksheet=${nextWorksheet.worksheet_number}`);
-        } else {
-          navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}&worksheet=${nextWorksheet.worksheet_number}`);
-        }
-      } else if (latestCompletedWorksheet) {
-        navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${latestCompletedWorksheet.worksheet_number}`);
-      }
+      navigate(createPageUrl("LessonDetail") + `?lessonId=${lesson.id}`);
     };
 
     return (
@@ -136,15 +86,16 @@ export default function Home() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
+        onClick={handleClick}
+        className="cursor-pointer"
       >
-        <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 shadow-lg relative overflow-hidden">
+        <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 shadow-lg relative overflow-hidden hover:scale-105">
           {/* Progress Bar */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-slate-200">
             <div 
               className={`h-full transition-all duration-500 ${
-                status === 'completed' ? 'bg-emerald-500' : 
-                status === 'in_progress' ? 'bg-amber-500' :
-                status === 'diagnostic_only' ? 'bg-yellow-500' :
+                completedCount === totalWorksheets ? 'bg-emerald-500' : 
+                completedCount > 0 ? 'bg-amber-500' :
                 'bg-purple-500'
               }`}
               style={{ width: `${progress}%` }}
@@ -153,93 +104,54 @@ export default function Home() {
 
           <CardHeader className="pb-4 pt-6">
             <div className="flex items-start justify-between mb-3">
-              <StatusIcon className={`w-8 h-8 ${
-                status === 'completed' ? 'text-emerald-600' :
-                status === 'in_progress' ? 'text-amber-600' :
-                status === 'diagnostic_only' ? 'text-yellow-600' :
+              <BookOpen className={`w-8 h-8 ${
+                completedCount === totalWorksheets ? 'text-emerald-600' :
+                completedCount > 0 ? 'text-amber-600' :
                 'text-purple-600'
               }`} />
-              <Badge className={`${statusColor} border`}>
-                {completedCount > 0 ? `${completedCount}/6 Complete` : 'Not Started'}
+              <Badge className={`${
+                completedCount === totalWorksheets ? 'bg-emerald-100 text-emerald-700' :
+                completedCount > 0 ? 'bg-amber-100 text-amber-700' :
+                'bg-purple-100 text-purple-700'
+              } border`}>
+                {completedCount}/{totalWorksheets}
               </Badge>
             </div>
             <CardTitle className="text-xl text-slate-900">{lesson.course_name}</CardTitle>
-            {completedCount === 0 && <p className="text-sm text-slate-500 mt-1">Begin your learning journey</p>}
-            {completedCount > 0 && completedCount < totalWorksheets && (
-              <p className="text-sm text-slate-500 mt-1">Continue to reach 90%+ mastery</p>
-            )}
-            {completedCount === totalWorksheets && (
-              <p className="text-sm text-emerald-600 mt-1 font-medium">All worksheets complete!</p>
-            )}
           </CardHeader>
           
           <CardContent>
             <div className="space-y-4">
-              {lesson.description && (
-                <p className="text-sm text-slate-600 line-clamp-2">{lesson.description}</p>
-              )}
-
-              {completedCount > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">Progress</span>
-                    <span className="font-semibold text-slate-900">{completedCount} / {totalWorksheets} worksheets</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-600">Progress</span>
+                  <span className="font-semibold text-slate-900">{completedCount} / {totalWorksheets} worksheets</span>
                 </div>
-              )}
+                <Progress value={progress} className="h-2" />
+              </div>
 
-              {latestCompletedWorksheet && (
-                <div className="p-3 bg-gradient-to-r from-purple-50 to-yellow-50 rounded-lg border border-purple-200">
+              {latestCompletedWorksheet ? (
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-yellow-50 rounded-lg border border-purple-200">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-semibold text-slate-600 mb-1">Latest Grade</p>
-                      <p className="text-2xl font-bold text-slate-900">{latestCompletedWorksheet.predicted_grade}</p>
+                      <p className="text-xs font-semibold text-slate-600 mb-1">Current Predicted Grade</p>
+                      <p className="text-3xl font-bold text-slate-900">{latestCompletedWorksheet.predicted_grade}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-600">Score</p>
-                      <p className="text-lg font-bold text-purple-600">{Math.round(latestCompletedWorksheet.total_score)}%</p>
+                      <p className="text-xl font-bold text-purple-600">{Math.round(latestCompletedWorksheet.total_score)}%</p>
                     </div>
                   </div>
                 </div>
-              )}
-
-              {nextWorksheet && nextWorksheet.focus_description && (
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-xs font-semibold text-blue-900 mb-1">
-                    <Target className="w-3 h-3 inline mr-1" />
-                    Next Focus
-                  </p>
-                  <p className="text-xs text-slate-700 line-clamp-2">{nextWorksheet.focus_description}</p>
-                </div>
-              )}
-              
-              {lesson.curriculum_map?.core_competencies && completedCount === 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {lesson.curriculum_map.core_competencies.slice(0, 2).map((comp, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {comp.name}
-                    </Badge>
-                  ))}
-                  {lesson.curriculum_map.core_competencies.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{lesson.curriculum_map.core_competencies.length - 2} more
-                    </Badge>
-                  )}
+              ) : (
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                  <p className="text-sm text-slate-500">No grade yet - start your first worksheet</p>
                 </div>
               )}
 
-              <Button
-                onClick={handleClick}
-                className={`w-full ${
-                  status === 'completed' 
-                    ? 'bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900'
-                    : 'bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900'
-                }`}
-              >
-                <StatusIcon className="w-4 h-4 mr-2" />
-                {statusLabel}
-              </Button>
+              <div className="pt-2 text-center">
+                <p className="text-xs text-slate-500">Click to view details →</p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -286,7 +198,7 @@ export default function Home() {
 
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-slate-900">Your Lessons</h2>
+          <h2 className="text-2xl font-bold text-slate-900">Active Lessons</h2>
           <Button
             onClick={() => navigate(createPageUrl("CreateLesson"))}
             className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-500/30"
@@ -327,7 +239,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {lessons.map(lesson => (
-              <LessonCard key={lesson.id} lesson={lesson} />
+              <SimpleLessonCard key={lesson.id} lesson={lesson} />
             ))}
           </div>
         )}

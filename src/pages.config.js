@@ -4,6 +4,8 @@ import CreateLesson from './pages/CreateLesson';
 import DiagnosticQuiz from './pages/DiagnosticQuiz';
 import Worksheet from './pages/Worksheet';
 import Feedback from './pages/Feedback';
+import LessonDetail from './pages/LessonDetail';
+import LessonHistory from './pages/LessonHistory';
 import Layout from './Layout.jsx';
 
 
@@ -14,6 +16,8 @@ export const PAGES = {
     "DiagnosticQuiz": DiagnosticQuiz,
     "Worksheet": Worksheet,
     "Feedback": Feedback,
+    "LessonDetail": LessonDetail,
+    "LessonHistory": LessonHistory,
 }
 
 export const pagesConfig = {
