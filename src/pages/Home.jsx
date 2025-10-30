@@ -5,10 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Sparkles } from "lucide-react";
+import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Brain, FileText, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import StatCard from "../components/home/StatCard";
-import LessonCard from "../components/home/LessonCard";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -37,29 +39,28 @@ export default function Home() {
     initialData: [],
   });
 
-  const { data: worksheets = [] } = useQuery({
+  const { data: allWorksheets = [] } = useQuery({
     queryKey: ['worksheets'],
     queryFn: () => base44.entities.Worksheet.list('-created_date'),
     initialData: [],
   });
 
-  const { data: suggestedLessons = [] } = useQuery({
-    queryKey: ['suggestedLessons'],
-    queryFn: () => base44.entities.SuggestedLesson.list('-created_date', 10),
-    initialData: [],
-    enabled: !!user,
+  // Group worksheets by lesson
+  const lessonWorksheets = {};
+  allWorksheets.forEach(w => {
+    if (!lessonWorksheets[w.lesson_id]) {
+      lessonWorksheets[w.lesson_id] = [];
+    }
+    lessonWorksheets[w.lesson_id].push(w);
   });
 
-  const completedLessons = lessons.filter(l => l.status === 'completed').length;
-  const inProgressLessons = lessons.filter(l => l.status !== 'completed').length;
-  const totalQuizzes = worksheets.length;
-  const avgScore = worksheets.length > 0 
-    ? Math.round(worksheets.reduce((sum, w) => sum + (w.total_score || 0), 0) / worksheets.length)
+  // Calculate stats
+  const completedWorksheets = allWorksheets.filter(w => w.completed).length;
+  const inProgressWorksheets = allWorksheets.filter(w => w.status === "in_progress").length;
+  const totalQuizzes = allWorksheets.filter(w => w.completed).length;
+  const avgScore = totalQuizzes > 0
+    ? Math.round(allWorksheets.filter(w => w.completed).reduce((sum, w) => sum + (w.total_score || 0), 0) / totalQuizzes)
     : 0;
-
-  // Group lessons by status for better organization
-  const activeLessons = lessons.filter(l => l.status !== 'completed');
-  const completedLessonsList = lessons.filter(l => l.status === 'completed');
 
   if (!user) {
     return (
@@ -68,6 +69,183 @@ export default function Home() {
       </div>
     );
   }
+
+  const LessonCard = ({ lesson }) => {
+    const worksheets = (lessonWorksheets[lesson.id] || []).sort((a, b) => a.worksheet_number - b.worksheet_number);
+    const completedCount = worksheets.filter(w => w.completed).length;
+    const totalWorksheets = 6;
+    const latestCompletedWorksheet = worksheets.filter(w => w.completed).pop();
+    const nextWorksheet = worksheets.find(w => !w.completed);
+    
+    // Determine lesson status
+    let status = "not_started";
+    let statusLabel = "Start Diagnostic Quiz";
+    let statusIcon = Brain;
+    let statusColor = "bg-purple-100 text-purple-700";
+    let progress = 0;
+
+    if (lesson.status === "created" || !nextWorksheet) {
+      // No worksheets yet - need to do diagnostic
+      status = "not_started";
+      statusLabel = "Start Diagnostic Quiz";
+      statusIcon = Brain;
+      statusColor = "bg-purple-100 text-purple-700";
+      progress = 0;
+    } else if (nextWorksheet) {
+      if (completedCount === 0) {
+        // Started diagnostic but not completed first worksheet
+        status = "diagnostic_only";
+        statusLabel = "Start Worksheet 1";
+        statusIcon = FileText;
+        statusColor = "bg-yellow-100 text-yellow-700";
+        progress = 5;
+      } else {
+        // Has completed at least one worksheet
+        status = "in_progress";
+        statusLabel = `Continue Worksheet ${nextWorksheet.worksheet_number}`;
+        statusIcon = FileText;
+        statusColor = "bg-amber-100 text-amber-700";
+        progress = (completedCount / totalWorksheets) * 100;
+      }
+    } else if (completedCount === totalWorksheets) {
+      status = "completed";
+      statusLabel = "Review Results";
+      statusIcon = Award;
+      statusColor = "bg-emerald-100 text-emerald-700";
+      progress = 100;
+    }
+
+    const StatusIcon = statusIcon;
+
+    const handleClick = () => {
+      if (status === "not_started") {
+        navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lesson.id}`);
+      } else if (nextWorksheet) {
+        if (nextWorksheet.status === "not_started") {
+          navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}&worksheet=${nextWorksheet.worksheet_number}`);
+        } else {
+          navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}&worksheet=${nextWorksheet.worksheet_number}`);
+        }
+      } else if (latestCompletedWorksheet) {
+        navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${latestCompletedWorksheet.worksheet_number}`);
+      }
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 shadow-lg relative overflow-hidden">
+          {/* Progress Bar */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-slate-200">
+            <div 
+              className={`h-full transition-all duration-500 ${
+                status === 'completed' ? 'bg-emerald-500' : 
+                status === 'in_progress' ? 'bg-amber-500' :
+                status === 'diagnostic_only' ? 'bg-yellow-500' :
+                'bg-purple-500'
+              }`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          <CardHeader className="pb-4 pt-6">
+            <div className="flex items-start justify-between mb-3">
+              <StatusIcon className={`w-8 h-8 ${
+                status === 'completed' ? 'text-emerald-600' :
+                status === 'in_progress' ? 'text-amber-600' :
+                status === 'diagnostic_only' ? 'text-yellow-600' :
+                'text-purple-600'
+              }`} />
+              <Badge className={`${statusColor} border`}>
+                {completedCount > 0 ? `${completedCount}/6 Complete` : 'Not Started'}
+              </Badge>
+            </div>
+            <CardTitle className="text-xl text-slate-900">{lesson.course_name}</CardTitle>
+            {completedCount === 0 && <p className="text-sm text-slate-500 mt-1">Begin your learning journey</p>}
+            {completedCount > 0 && completedCount < totalWorksheets && (
+              <p className="text-sm text-slate-500 mt-1">Continue to reach 90%+ mastery</p>
+            )}
+            {completedCount === totalWorksheets && (
+              <p className="text-sm text-emerald-600 mt-1 font-medium">All worksheets complete!</p>
+            )}
+          </CardHeader>
+          
+          <CardContent>
+            <div className="space-y-4">
+              {lesson.description && (
+                <p className="text-sm text-slate-600 line-clamp-2">{lesson.description}</p>
+              )}
+
+              {completedCount > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-600">Progress</span>
+                    <span className="font-semibold text-slate-900">{completedCount} / {totalWorksheets} worksheets</span>
+                  </div>
+                  <Progress value={progress} className="h-2" />
+                </div>
+              )}
+
+              {latestCompletedWorksheet && (
+                <div className="p-3 bg-gradient-to-r from-purple-50 to-yellow-50 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-600 mb-1">Latest Grade</p>
+                      <p className="text-2xl font-bold text-slate-900">{latestCompletedWorksheet.predicted_grade}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-slate-600">Score</p>
+                      <p className="text-lg font-bold text-purple-600">{Math.round(latestCompletedWorksheet.total_score)}%</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {nextWorksheet && nextWorksheet.focus_description && (
+                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-xs font-semibold text-blue-900 mb-1">
+                    <Target className="w-3 h-3 inline mr-1" />
+                    Next Focus
+                  </p>
+                  <p className="text-xs text-slate-700 line-clamp-2">{nextWorksheet.focus_description}</p>
+                </div>
+              )}
+              
+              {lesson.curriculum_map?.core_competencies && completedCount === 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {lesson.curriculum_map.core_competencies.slice(0, 2).map((comp, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {comp.name}
+                    </Badge>
+                  ))}
+                  {lesson.curriculum_map.core_competencies.length > 2 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{lesson.curriculum_map.core_competencies.length - 2} more
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              <Button
+                onClick={handleClick}
+                className={`w-full ${
+                  status === 'completed' 
+                    ? 'bg-gradient-to-r from-slate-600 to-slate-800 hover:from-slate-700 hover:to-slate-900'
+                    : 'bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900'
+                }`}
+              >
+                <StatusIcon className="w-4 h-4 mr-2" />
+                {statusLabel}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto">
@@ -80,20 +258,19 @@ export default function Home() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
         <StatCard
-          title="Completed Lessons"
-          value={completedLessons}
+          title="Worksheets Completed"
+          value={completedWorksheets}
           icon={Award}
           gradient="from-purple-500 to-purple-700"
-          trend="+12% this week"
         />
         <StatCard
           title="In Progress"
-          value={inProgressLessons}
+          value={inProgressWorksheets}
           icon={Clock}
           gradient="from-yellow-400 to-yellow-600"
         />
         <StatCard
-          title="Quizzes Taken"
+          title="Total Assessments"
           value={totalQuizzes}
           icon={Zap}
           gradient="from-purple-600 to-purple-800"
@@ -107,82 +284,9 @@ export default function Home() {
         />
       </div>
 
-      {/* Suggested Next Lessons Section */}
-      {suggestedLessons.length > 0 && (
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <Sparkles className="w-6 h-6 text-purple-600" />
-                Recommended for You
-              </h2>
-              <p className="text-slate-600 mt-1">AI-suggested lessons to reach 90%+ mastery</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {suggestedLessons.slice(0, 3).map(suggestion => (
-              <Card key={suggestion.id} className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white hover:shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-2">
-                    <Sparkles className="w-8 h-8 text-purple-600" />
-                    <span className="text-xs font-semibold text-purple-700 bg-purple-100 px-2 py-1 rounded-full">
-                      Recommended
-                    </span>
-                  </div>
-                  <CardTitle className="text-xl text-slate-900">{suggestion.lesson_title}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-slate-600 line-clamp-3">{suggestion.description}</p>
-                  
-                  <div className="flex gap-2 text-xs text-slate-500">
-                    <span className="px-2 py-1 bg-slate-100 rounded">{suggestion.difficulty}</span>
-                    <span className="px-2 py-1 bg-slate-100 rounded">{suggestion.estimated_duration}</span>
-                  </div>
-
-                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <p className="text-xs text-amber-900">
-                      <strong>Why?</strong> {suggestion.why_suggested}
-                    </p>
-                  </div>
-
-                  <Button
-                    onClick={() => navigate(createPageUrl("CreateLesson") + `?suggested=${suggestion.id}`)}
-                    className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-                  >
-                    Start This Lesson
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Active/In-Progress Lessons */}
-      {activeLessons.length > 0 && (
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">Continue Learning</h2>
-              <p className="text-slate-600 mt-1">Pick up where you left off</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activeLessons.map(lesson => (
-              <LessonCard key={lesson.id} lesson={lesson} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* All Lessons Section */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-slate-900">
-            {completedLessonsList.length > 0 ? 'Completed Lessons' : 'Your Lessons'}
-          </h2>
+          <h2 className="text-2xl font-bold text-slate-900">Your Lessons</h2>
           <Button
             onClick={() => navigate(createPageUrl("CreateLesson"))}
             className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-500/30"
@@ -220,14 +324,12 @@ export default function Home() {
               </Button>
             </CardContent>
           </Card>
-        ) : completedLessonsList.length > 0 ? (
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {completedLessonsList.map(lesson => (
+            {lessons.map(lesson => (
               <LessonCard key={lesson.id} lesson={lesson} />
             ))}
           </div>
-        ) : (
-          <p className="text-center text-slate-500 py-8">Complete a lesson to see it here!</p>
         )}
       </div>
     </div>

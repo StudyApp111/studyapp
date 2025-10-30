@@ -34,6 +34,9 @@ export default function Worksheet() {
   const loadOrGenerateWorksheet = async (lessonId) => {
     setIsGenerating(true);
     try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const worksheetNum = parseInt(urlParams.get('worksheet')) || 1;
+      
       const lessonData = await base44.entities.Lesson.filter({ id: lessonId });
       if (lessonData.length === 0) {
         navigate(createPageUrl("Home"));
@@ -49,21 +52,22 @@ export default function Worksheet() {
       setQuiz(quizData[0]);
 
       const existingWorksheet = await base44.entities.Worksheet.filter({ 
-        lesson_id: lessonId 
+        lesson_id: lessonId,
+        worksheet_number: worksheetNum
       });
 
       if (existingWorksheet.length > 0) {
-        console.log("Loading existing worksheet");
+        console.log("Loading existing worksheet", worksheetNum);
         const loadedWorksheet = existingWorksheet[0];
         setWorksheet(loadedWorksheet);
         
         if (loadedWorksheet.completed) {
-          navigate(createPageUrl("Feedback") + `?lessonId=${lessonId}`);
+          navigate(createPageUrl("Feedback") + `?lessonId=${lessonId}&worksheet=${worksheetNum}`);
           return;
         }
       } else {
-        console.log("Generating new worksheet");
-        await generateWorksheet(lessonId, lessonData[0], quizData[0]);
+        console.log("Generating new worksheet", worksheetNum);
+        await generateWorksheet(lessonId, lessonData[0], quizData[0], worksheetNum);
       }
     } catch (error) {
       console.error("Error loading worksheet:", error);
@@ -73,7 +77,7 @@ export default function Worksheet() {
     setIsGenerating(false);
   };
 
-  const generateWorksheet = async (lessonId, lessonData, quizData) => {
+  const generateWorksheet = async (lessonId, lessonData, quizData, worksheetNum) => {
     try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
@@ -82,20 +86,39 @@ export default function Worksheet() {
 
       const learningProfile = profile[0] || {};
 
-      const diagnosticResults = quizData.questions.map((q, index) => ({
-        QuestionText: q.question_text,
-        QuestionType: q.question_type,
-        AssignedDifficultyIndex: q.difficulty_index,
-        TargetedMisconception: q.targeted_misconception || "N/A",
-        StudentAnswer: quizData.user_answers?.[index] || "No answer provided",
-        IsCorrect: quizData.user_answers?.[index] === q.correct_answer
-      }));
+      // For worksheet 1, use diagnostic results
+      // For worksheets 2-6, use previous worksheet performance
+      let contextData = "";
+      if (worksheetNum === 1) {
+        const diagnosticResults = quizData.questions.map((q, index) => ({
+          QuestionText: q.question_text,
+          QuestionType: q.question_type,
+          AssignedDifficultyIndex: q.difficulty_index,
+          TargetedMisconception: q.targeted_misconception || "N/A",
+          StudentAnswer: quizData.user_answers?.[index] || "No answer provided",
+          IsCorrect: quizData.user_answers?.[index] === q.correct_answer
+        }));
+        contextData = `Diagnostic Quiz Results:\n${JSON.stringify(diagnosticResults, null, 2)}`;
+      } else {
+        // Get previous worksheet for context
+        const prevWorksheets = await base44.entities.Worksheet.filter({ 
+          lesson_id: lessonId,
+          completed: true
+        });
+        if (prevWorksheets.length > 0) {
+          const latest = prevWorksheets[prevWorksheets.length - 1];
+          contextData = `Previous Worksheet Performance:\n${JSON.stringify({
+            worksheet_number: latest.worksheet_number,
+            predicted_grade: latest.predicted_grade,
+            total_score: latest.total_score,
+            strengths: latest.ai_feedback?.identified_strengths_list,
+            areas_for_improvement: latest.ai_feedback?.key_areas_for_improvement_list
+          }, null, 2)}`;
+        }
+      }
 
       const aiPrompt = `Context
-You are a master assessment designer and expert tutor (simulated 180 IQ). Your primary function is to create a 10-question worksheet that is highly predictive of a student's performance on their actual exam for the specified course. This worksheet must be meticulously crafted by leveraging:
-a. The detailed curriculum map (output from Step 1).
-b. The student's performance on the diagnostic quiz (output from Step 2).
-Your generated questions must mirror the exact style, type, wording nuances, and difficulty levels typically encountered in the student's school for this course, as detailed in the curriculum map.
+You are a master assessment designer creating Worksheet ${worksheetNum} of 6 for ${lessonData.course_name}.
 
 Input Educational Context
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -103,67 +126,33 @@ Course/Unit Name: ${lessonData.course_name}
 School (for context): ${learningProfile.school || "N/A"}
 City/Region (for context): ${learningProfile.city || "N/A"}
 
-Detailed Curriculum Profile (JSON object - output from Step 1):
+Detailed Curriculum Profile:
 ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
-Diagnostic Quiz Results:
-${JSON.stringify(diagnosticResults, null, 2)}
+${contextData}
+
+${worksheetNum > 1 ? `Focus for Worksheet ${worksheetNum}: Target the areas of weakness identified in previous worksheets while building toward 90%+ mastery.` : ''}
 
 Task 1: Analyze Student Performance & Curriculum Profile
-Based on the provided curriculum map and diagnostic quiz results, perform the following analysis to strategically inform worksheet design:
-
-Identify Weak Competencies:
-- Pinpoint core competencies where the student answered diagnostic questions incorrectly.
-- Pay special attention to errors on diagnostic questions that had an AssignedDifficultyIndex of "Conceptual" or "Applied/Multi-step," as these indicate deeper misunderstandings.
-
-Note Gaps & Misconceptions:
-- Identify if the student struggled with diagnostic questions specifically designed to test TargetedMisconception, especially where answers were incorrect.
-- Correlate errors with common misconceptions from the curriculum map.
-
-Prioritize Key & Differentiating Competencies for Assessment:
-- From core competencies, select those that are heavily weighted AND/OR where the diagnostic results indicate weakness or uncertainty. These are critical for predicting overall exam success.
+${worksheetNum === 1 ? 'Based on diagnostic quiz results' : 'Based on previous worksheet performance'}, identify:
+- Weak Competencies
+- Gaps & Misconceptions
+- Key & Differentiating Competencies for Assessment
 
 Task 2: Generate the 10-Question Predictive Worksheet
-Create 10 unique questions. Adhere strictly to the following criteria:
-
-Targeted Question Distribution:
-- Focus the majority of questions (approx. 6-7) on the identified Weak Competencies and confirmed Gaps/Misconceptions.
-- Include questions (approx. 2-3) on Key & Differentiating Competencies to gauge mastery of high-stakes material.
-- Ensure comprehensive coverage of the facets of the curriculum most critical for exam prediction.
-
-Exact Alignment with Exam Style, Wording, Type & Difficulty (Crucial):
-- The distribution of question types (e.g., % MCQs, % Short Answer) in this 10-question worksheet must proportionally mirror the frequency specified for each format in the curriculum map's question formats.
-- For each question generated, its specific question type, exact wording, overall style, and intrinsic difficulty must closely emulate the provided examples and descriptions within the curriculum map. This mimicry is paramount for the worksheet's predictive accuracy.
-- For MCQs, provide at least 4 distinct and plausible options as an array of strings (e.g., ["Option A text", "Option B text", "Option C text", "Option D text"]).
-
-Subject-Specific Question Design & Content:
-- The task required by each question must be appropriate for the subject matter implied by the course name.
-- For humanities/social sciences subjects: Questions may require analysis of short provided texts/excerpts, construction of arguments, interpretation of sources/data, or concise written explanations.
-- For STEM subjects: Questions will likely involve problem-solving, application of formulas/theories, data interpretation, calculations, or conceptual explanations of models.
-- Always refer to the curriculum map's question format examples for definitive guidance on authentic tasks and styles.
-
-Scaffolding & Assigned Worksheet Difficulty:
-- While emulating overall exam difficulty as per the curriculum map, aim for a slight progression in cognitive demand or complexity across the worksheet.
-- For each question you generate, assign it a difficulty_index from these categories: "Moderate Exam-Level," "Challenging Exam-Level," or "High Challenge Exam-Level."
-
-Grade-Appropriate Language:
-- Use clear, precise, and unambiguous language suitable for the student's grade level.
+Create 10 unique questions following the curriculum map's style and difficulty distribution.
 
 Task 3: Provide Complete Answer Key Details
-For each of the 10 worksheet questions, include within the same question object:
-- correct_answer: The definitive, accurate solution. For MCQs, state the full correct option text (not just the letter). For open-ended or problem-solving questions, provide a model/ideal answer or the final numerical result with units.
-- explanation: A clear, step-by-step explanation of how to arrive at the correct answer. Keep it concise (2-3 sentences max). Use simple language without complex punctuation.
-- assessed_competencies: Array of strings explicitly listing the name(s) of the primary core competencies that this question assesses.
-- targeted_misconception: If the question was specifically designed to address a common misconception from the curriculum map, state it briefly. Otherwise use "N/A".
+For each question include: correct_answer, explanation (2-3 sentences), assessed_competencies, targeted_misconception.
 
 IMPORTANT JSON FORMATTING:
-- Keep all text fields concise and avoid unnecessary quotes within text
+- Keep all text fields concise
 - Use simple language in explanations
-- Avoid complex punctuation or special characters
-- Keep question_text clear and straightforward
+- Avoid complex punctuation
+- Keep question_text clear
 
 Output Format:
-Provide your response as a single, valid JSON object with the structure specified. Each question should be a complete, self-contained object with all details including the answer key information.`;
+Provide your response as a single, valid JSON object with the structure specified.`;
 
       const { data: worksheetData } = await base44.functions.invoke('generateWorksheet', {
         prompt: aiPrompt,
@@ -222,7 +211,6 @@ Provide your response as a single, valid JSON object with the structure specifie
         throw new Error("Invalid worksheet data received from AI");
       }
 
-      // Add user_answer placeholder to each question
       const questionsWithPlaceholder = worksheetData.worksheet_questions.map(q => ({
         ...q,
         user_answer: ""
@@ -230,9 +218,11 @@ Provide your response as a single, valid JSON object with the structure specifie
 
       const createdWorksheet = await base44.entities.Worksheet.create({
         lesson_id: lessonId,
-        diagnostic_quiz_id: quizData.id,
+        worksheet_number: worksheetNum,
+        diagnostic_quiz_id: worksheetNum === 1 ? quizData.id : undefined,
         questions: questionsWithPlaceholder,
         analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
+        status: "in_progress",
         completed: false
       });
 
@@ -296,19 +286,31 @@ Provide your response as a single, valid JSON object with the structure specifie
         is_correct: q.is_correct
       }));
 
-      const feedbackPrompt = `Context: You are an experienced teacher and assessment specialist for ${lesson.course_name} at ${learningProfile.grade || "N/A"}, operating within the educational standards of ${learningProfile.school || "N/A"} and ${learningProfile.city || "N/A"}. You have a deep understanding of the curriculum (defined below) and how it's assessed. The student has just completed a 10-question worksheet that was meticulously designed to mirror actual exam conditions in terms of style, question types, wording, and difficulty, based on the curriculum map. Your primary task is to analyze their worksheet performance to provide an accurate predicted exam grade, insightful feedback, and actionable recommendations for future study.
+      const feedbackPrompt = `Context: You are an experienced teacher grading Worksheet ${worksheet.worksheet_number} of 6 for ${lesson.course_name} at ${learningProfile.grade || "N/A"}. You operate within the educational standards of ${learningProfile.school || "N/A"} and ${learningProfile.city || "N/A"}. You have a deep understanding of the curriculum and how it's assessed. The student has just completed a 10-question worksheet that was meticulously designed to mirror actual exam conditions in terms of style, question types, wording, and difficulty, based on the curriculum map. Your primary task is to analyze their worksheet performance to provide an accurate predicted exam grade, insightful feedback, and actionable recommendations for future study.
 
 Input Data:
-
 Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${lesson.course_name}
-School (for context): ${learningProfile.school || "N/A"}
-City/Region (for context): ${learningProfile.city || "N/A"}
+School: ${learningProfile.school || "N/A"}
+City/Region: ${learningProfile.city || "N/A"}
+Worksheet Number: ${worksheet.worksheet_number} of 6
 
-Detailed Curriculum Profile (JSON object from Step 1):
+Detailed Curriculum Profile (JSON object):
 ${JSON.stringify(lesson.curriculum_map, null, 2)}
 
-Worksheet Performance Data (Array of JSON objects from student's interaction with the worksheet):
+Diagnostic Quiz Performance:
+- Diagnostic Score: ${quiz.score || 'N/A'}%
+- Diagnostic Results:
+${JSON.stringify(quiz.questions.map((q, idx) => ({
+  question_text: q.question_text,
+  user_answer: quiz.user_answers?.[idx],
+  is_correct: quiz.user_answers?.[idx] === q.correct_answer
+})), null, 2)}
+
+Worksheet ${worksheet.worksheet_number} Performance:
+- Analysis Summary:
+${JSON.stringify(worksheet.analysis_summary, null, 2)}
+- Questions with Student Answers:
 ${JSON.stringify(worksheetPerformanceData, null, 2)}
 
 Mission: Deliver a comprehensive performance analysis, including an accurate predicted exam grade (with clear calculation reasoning), constructive feedback, and targeted future session plans.
@@ -374,10 +376,13 @@ D. Key Areas for Improvement (2-3 specific, actionable bullet points):
 
 E. Suggested Future Sessions (3-5 tailored sessions):
 Must be directly relevant to the course, targeting 90%+ mastery.
+${worksheet.worksheet_number === 1 ? `
 - Session 1: Focus on the most critical weak area/competency
 - Session 2: Address the next gap or build on a strength
 - Session 3: Exam question strategy with targeted question types
-- Sessions 4-5 (optional): Comprehensive review or mixed practice
+- Sessions 4-5 (optional): Comprehensive review or mixed practice` : `
+These recommendations build on previous performance and aim to move you towards 90%+ mastery.`}
+
 
 Output Format:
 Provide your response as a single, valid JSON object matching the exact structure specified.`;
@@ -457,8 +462,26 @@ Provide your response as a single, valid JSON object matching the exact structur
         total_score: isNaN(scoreNum) ? 0 : scoreNum,
         predicted_grade: letterGrade,
         ai_feedback: feedbackData,
+        status: "completed",
         completed: true
       });
+
+      // If this is worksheet 1, create placeholders for worksheets 2-6
+      if (worksheet.worksheet_number === 1 && feedbackData.suggested_future_sessions_plan) {
+        await Promise.all(
+          feedbackData.suggested_future_sessions_plan.map((session, idx) =>
+            base44.entities.Worksheet.create({
+              lesson_id: lesson.id,
+              worksheet_number: idx + 2, // Start from worksheet 2
+              focus_description: session.session_focus_description,
+              status: "not_started",
+              completed: false,
+              questions: [],
+              feedback: []
+            })
+          )
+        );
+      }
 
       await base44.entities.Lesson.update(lesson.id, {
         status: "worksheet_completed"
@@ -473,7 +496,7 @@ Provide your response as a single, valid JSON object matching the exact structur
         average_score: Math.round(newAvg)
       });
 
-      navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}`);
+      navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
     } catch (error) {
       console.error("Error submitting worksheet:", error);
       alert("Failed to submit worksheet. Please try again. Error: " + error.message);
@@ -491,7 +514,7 @@ Provide your response as a single, valid JSON object matching the exact structur
           </h2>
           <p className="text-slate-600 mb-6">
             {worksheet 
-              ? "Retrieving your saved worksheet..."
+              ? `Retrieving your saved Worksheet ${worksheet.worksheet_number || ''}...`
               : "Creating a personalized exam based on your diagnostic results..."}
           </p>
           <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
@@ -500,7 +523,7 @@ Provide your response as a single, valid JSON object matching the exact structur
     );
   }
 
-  if (!worksheet) return null;
+  if (!worksheet || !lesson) return null; // Ensure lesson is loaded before attempting to access its properties
 
   const progress = ((currentQuestion + 1) / worksheet.questions.length) * 100;
   const isLastQuestion = currentQuestion === worksheet.questions.length - 1;
@@ -512,7 +535,9 @@ Provide your response as a single, valid JSON object matching the exact structur
       <div className="max-w-4xl mx-auto">
         <Card className="mb-6 shadow-xl">
           <CardContent className="p-6">
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">Mock Exam: {lesson.course_name}</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">
+              {lesson.course_name} - Worksheet {worksheet?.worksheet_number || 1}
+            </h2>
             <p className="text-slate-600 mb-4">Answer all questions to the best of your ability</p>
             <div className="flex items-center gap-3">
               <Progress value={progress} className="flex-1 h-3" />
