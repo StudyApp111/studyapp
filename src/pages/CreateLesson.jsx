@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -21,6 +21,32 @@ export default function CreateLesson() {
   const [file, setFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [suggestedLesson, setSuggestedLesson] = useState(null);
+
+  useEffect(() => {
+    // Check if we're creating from a suggested lesson
+    const urlParams = new URLSearchParams(window.location.search);
+    const suggestedId = urlParams.get('suggested');
+
+    if (suggestedId) {
+      loadSuggestedLesson(suggestedId);
+    }
+  }, []);
+
+  const loadSuggestedLesson = async (suggestedId) => {
+    try {
+      const lessons = await base44.entities.SuggestedLesson.filter({ id: suggestedId });
+      if (lessons.length > 0) {
+        const suggested = lessons[0];
+        setSuggestedLesson(suggested);
+        setCourseName(suggested.lesson_title);
+        setDescription(suggested.description + "\n\nKey Topics: " + (suggested.key_topics?.join(", ") || ""));
+        setInputType("description"); // Automatically set to description input type when pre-filling
+      }
+    } catch (error) {
+      console.error("Error loading suggested lesson:", error);
+    }
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -32,7 +58,7 @@ export default function CreateLesson() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
+
     if (!courseName.trim()) {
       setError("Please enter a course name");
       return;
@@ -57,8 +83,8 @@ export default function CreateLesson() {
 
     try {
       const user = await base44.auth.me();
-      const profile = await base44.entities.LearningProfile.filter({ 
-        created_by: user.email 
+      const profile = await base44.entities.LearningProfile.filter({
+        created_by: user.email
       });
 
       const learningProfile = profile[0] || {};
@@ -152,7 +178,7 @@ Present the analysis precisely in the structured JSON format with the exact stru
 Ensure specificity, alignment with official regional curriculum standards, predictive relevance to actual exam outcomes, and avoid generic responses.`;
 
       console.log("Calling curriculumMapping function...");
-      
+
       const response = await base44.functions.invoke('curriculumMapping', {
         prompt: aiPrompt,
         response_json_schema: {
@@ -218,6 +244,11 @@ Ensure specificity, alignment with official regional curriculum standards, predi
 
       const lesson = await base44.entities.Lesson.create(lessonData);
 
+      // If this was from a suggested lesson, mark it as used (optional)
+      if (suggestedLesson) {
+        // Could add a "used" or "created_lesson_id" field to SuggestedLesson if needed
+      }
+
       navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lesson.id}`);
     } catch (error) {
       console.error("Error creating lesson:", error);
@@ -241,7 +272,9 @@ Ensure specificity, alignment with official regional curriculum standards, predi
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg mb-4">
             <Sparkles className="w-5 h-5 text-purple-600" />
-            <span className="text-sm font-medium text-slate-700">AI-Powered Curriculum</span>
+            <span className="text-sm font-medium text-slate-700">
+              {suggestedLesson ? 'Recommended Lesson' : 'AI-Powered Curriculum'}
+            </span>
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Create New Lesson</h1>
           <p className="text-slate-600 text-lg">Tell us about what you want to learn</p>
