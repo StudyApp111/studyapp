@@ -6,8 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Brain, FileText, CheckCircle, Lock, TrendingUp, Award } from "lucide-react";
+import { ArrowLeft, Brain, FileText, CheckCircle, Lock, TrendingUp, Award, Trash2, MoreVertical } from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function LessonDetail() {
   const navigate = useNavigate();
@@ -15,6 +30,8 @@ export default function LessonDetail() {
   const [worksheets, setWorksheets] = useState([]);
   const [quiz, setQuiz] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -49,6 +66,31 @@ export default function LessonDetail() {
     setIsLoading(false);
   };
 
+  const handleDeleteLesson = async () => {
+    setIsDeleting(true);
+    try {
+      // Delete all worksheets for this lesson
+      await Promise.all(
+        worksheets.map(worksheet => base44.entities.Worksheet.delete(worksheet.id))
+      );
+
+      // Delete diagnostic quiz if exists
+      if (quiz) {
+        await base44.entities.DiagnosticQuiz.delete(quiz.id);
+      }
+
+      // Delete the lesson
+      await base44.entities.Lesson.delete(lesson.id);
+
+      // Navigate back to home
+      navigate(createPageUrl("Home"));
+    } catch (error) {
+      console.error("Error deleting lesson:", error);
+      alert("Failed to delete lesson. Please try again.");
+    }
+    setIsDeleting(false);
+  };
+
   if (isLoading || !lesson) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -73,13 +115,10 @@ export default function LessonDetail() {
 
   const handleWorksheetClick = (worksheet) => {
     if (worksheet.completed) {
-      // Go to feedback page
       navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
     } else if (worksheet.status === "in_progress") {
-      // Continue worksheet
       navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
     } else if (worksheet.status === "not_started") {
-      // Generate/start worksheet
       navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
     }
   };
@@ -177,14 +216,57 @@ export default function LessonDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
       <div className="max-w-6xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(createPageUrl("Home"))}
-          className="mb-6 hover:bg-purple-100"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Button>
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(createPageUrl("Home"))}
+            className="hover:bg-purple-100"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Lesson
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Lesson</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{lesson.course_name}"? This will permanently delete all worksheets, quizzes, and progress for this lesson. This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteLesson}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete Lesson"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Header Section */}
         <div className="mb-10">
@@ -270,7 +352,6 @@ export default function LessonDetail() {
               if (worksheet) {
                 return <WorksheetCard key={num} worksheet={worksheet} isLocked={isLocked} />;
               } else {
-                // Placeholder for worksheets that don't exist yet
                 return (
                   <motion.div
                     key={num}

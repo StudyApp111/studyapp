@@ -11,11 +11,30 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
   const renderQuestionInput = () => {
     const questionType = question.question_type.toLowerCase();
     
+    // Check if it's a multiple choice question
     if (questionType.includes("multiple choice") || questionType.includes("mcq")) {
+      // Ensure options exist and have at least 2 items
+      if (!question.options || question.options.length < 2) {
+        // Fallback to text input if no valid options
+        return (
+          <div className="space-y-2">
+            <Label htmlFor="answer">Your Answer</Label>
+            <Input
+              id="answer"
+              value={answer}
+              onChange={(e) => onAnswer(e.target.value)}
+              placeholder="Type your answer here..."
+              className="text-base"
+            />
+            <p className="text-xs text-amber-600">Note: This question appears to be missing options. Please provide a written answer.</p>
+          </div>
+        );
+      }
+
       return (
         <RadioGroup value={answer} onValueChange={onAnswer}>
           <div className="space-y-3">
-            {question.options?.map((option, idx) => (
+            {question.options.map((option, idx) => (
               <div
                 key={idx}
                 className={`flex items-start space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
@@ -95,12 +114,31 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
   };
 
   const getDifficultyColor = () => {
+    const difficulty = question.difficulty_index;
     const colors = {
-      "Moderate Exam-Level": "bg-blue-100 text-blue-700",
-      "Challenging Exam-Level": "bg-purple-100 text-purple-700",
-      "High Challenge Exam-Level": "bg-amber-100 text-amber-700"
+      "Moderate Exam-Level": "bg-blue-50 text-blue-700 border-blue-200",
+      "Challenging Exam-Level": "bg-purple-50 text-purple-700 border-purple-200",
+      "High Challenge Exam-Level": "bg-amber-50 text-amber-700 border-amber-200",
+      "Foundational": "bg-emerald-50 text-emerald-700 border-emerald-200",
+      "Conceptual": "bg-cyan-50 text-cyan-700 border-cyan-200",
+      "Applied/Multi-step": "bg-orange-50 text-orange-700 border-orange-200",
+      "Applied": "bg-orange-50 text-orange-700 border-orange-200"
     };
-    return colors[question.difficulty_index] || "bg-gray-100 text-gray-700";
+    return colors[difficulty] || "bg-slate-50 text-slate-700 border-slate-200";
+  };
+
+  const getQuestionTypeColor = () => {
+    const type = question.question_type;
+    const colors = {
+      "Multiple Choice": "bg-indigo-50 text-indigo-700 border-indigo-200",
+      "MCQ": "bg-indigo-50 text-indigo-700 border-indigo-200",
+      "True/False": "bg-teal-50 text-teal-700 border-teal-200",
+      "Short Answer": "bg-violet-50 text-violet-700 border-violet-200",
+      "Fill-in-the-Blank": "bg-pink-50 text-pink-700 border-pink-200",
+      "Problem-Solving": "bg-rose-50 text-rose-700 border-rose-200",
+      "Long Answer": "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200"
+    };
+    return colors[type] || "bg-slate-50 text-slate-700 border-slate-200";
   };
 
   return (
@@ -119,11 +157,13 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
               </div>
               <div>
                 <CardTitle className="text-xl">Question {question.question_number}</CardTitle>
-                <div className="flex gap-2 mt-1">
-                  <Badge className={getDifficultyColor()}>
+                <div className="flex gap-2 mt-2">
+                  <Badge className={`${getDifficultyColor()} border`}>
                     {question.difficulty_index}
                   </Badge>
-                  <Badge variant="outline">{question.question_type}</Badge>
+                  <Badge className={`${getQuestionTypeColor()} border`}>
+                    {question.question_type}
+                  </Badge>
                 </div>
               </div>
             </div>
