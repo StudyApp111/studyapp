@@ -144,7 +144,8 @@ export default function Feedback() {
     if (grade.startsWith('A')) return '🎉';
     if (grade.startsWith('B')) return '👍';
     if (grade.startsWith('C')) return '📚';
-    return '💪';
+    if (grade.startsWith('D')) return '📈';
+    return '🎯';
   };
 
   // Parse predicted score - handle both "85%" and "85" formats
