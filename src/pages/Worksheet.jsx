@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -44,7 +43,7 @@ export default function Worksheet() {
       }
       setLesson(lessonData[0]);
 
-      // Only load quiz data if worksheetNum is 1, otherwise it might not exist or be relevant for context
+      // Only load quiz data if worksheetNum is 1
       let quizData = null;
       if (worksheetNum === 1) {
         const diagnosticQuizData = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
@@ -55,14 +54,13 @@ export default function Worksheet() {
         setQuiz(diagnosticQuizData[0]);
         quizData = diagnosticQuizData[0];
       } else {
-        // For adaptive worksheets, quiz data isn't directly used for prompt, but quiz state might be needed for feedback later.
+        // For adaptive worksheets, load quiz for potential reference
         const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
         if (existingQuiz.length > 0) {
           setQuiz(existingQuiz[0]);
           quizData = existingQuiz[0];
         }
       }
-
 
       const existingWorksheet = await base44.entities.Worksheet.filter({ 
         lesson_id: lessonId,
@@ -72,11 +70,20 @@ export default function Worksheet() {
       if (existingWorksheet.length > 0) {
         console.log("Loading existing worksheet", worksheetNum);
         const loadedWorksheet = existingWorksheet[0];
-        setWorksheet(loadedWorksheet);
         
+        // Check if worksheet is completed - redirect to feedback
         if (loadedWorksheet.completed) {
           navigate(createPageUrl("Feedback") + `?lessonId=${lessonId}&worksheet=${worksheetNum}`);
           return;
+        }
+        
+        // CRITICAL FIX: Check if this is just a placeholder (empty or no questions)
+        if (!loadedWorksheet.questions || loadedWorksheet.questions.length === 0) {
+          console.log("Worksheet is a placeholder, generating questions now");
+          await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum, loadedWorksheet.id);
+        } else {
+          // Worksheet has questions, use it
+          setWorksheet(loadedWorksheet);
         }
       } else {
         console.log("Generating new worksheet", worksheetNum);
@@ -90,7 +97,7 @@ export default function Worksheet() {
     setIsGenerating(false);
   };
 
-  const generateWorksheet = async (lessonId, lessonData, quizData, worksheetNum) => {
+  const generateWorksheet = async (lessonId, lessonData, quizData, worksheetNum, existingWorksheetId = null) => {
     try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
@@ -149,7 +156,7 @@ IMPORTANT JSON FORMATTING:
 Output Format:
 Provide your response as a single, valid JSON object with the structure specified.`;
       } else {
-        // NEW: Adaptive prompt for Worksheets 2-6
+        // Adaptive prompt for Worksheets 2-6
         const prevWorksheets = await base44.entities.Worksheet.filter({ 
           lesson_id: lessonId,
           completed: true
@@ -184,14 +191,14 @@ Provide your response as a single, valid JSON object with the structure specifie
           weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
         };
 
-        // Get the current worksheet info from the placeholder
-        const currentWorksheetPlaceholder = await base44.entities.Worksheet.filter({
-          lesson_id: lessonId,
-          worksheet_number: worksheetNum
-        });
-        
-        const currentWorksheetDescription = currentWorksheetPlaceholder[0]?.focus_description || 
-          `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
+        // Get the current worksheet description
+        let currentWorksheetDescription = `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
+        if (existingWorksheetId) {
+          const placeholderData = await base44.entities.Worksheet.filter({ id: existingWorksheetId });
+          if (placeholderData.length > 0 && placeholderData[0].focus_description) {
+            currentWorksheetDescription = placeholderData[0].focus_description;
+          }
+        }
 
         aiPrompt = `Context
 You are a master assessment designer and expert tutor (simulated 180 IQ). Your primary function is to create the next 10-question adaptive worksheet for the student in ${lessonData.course_name}. This worksheet must continue to be highly predictive of exam performance by iteratively building upon the student's performance on the previous worksheet and aligning with the curriculum map. The questions must precisely mirror the style, type, wording, and difficulty detailed in the curriculum map.
@@ -326,17 +333,29 @@ Provide your response as a single, valid JSON object with this exact structure.`
         user_answer: ""
       }));
 
-      const createdWorksheet = await base44.entities.Worksheet.create({
-        lesson_id: lessonId,
-        worksheet_number: worksheetNum,
-        diagnostic_quiz_id: worksheetNum === 1 ? quizData?.id : undefined, // quizData can be null if worksheetNum > 1
-        questions: questionsWithPlaceholder,
-        analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
-        status: "in_progress",
-        completed: false
-      });
+      let updatedWorksheet;
+      
+      if (existingWorksheetId) {
+        // Update existing placeholder worksheet with generated questions
+        updatedWorksheet = await base44.entities.Worksheet.update(existingWorksheetId, {
+          questions: questionsWithPlaceholder,
+          analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
+          status: "in_progress"
+        });
+      } else {
+        // Create new worksheet
+        updatedWorksheet = await base44.entities.Worksheet.create({
+          lesson_id: lessonId,
+          worksheet_number: worksheetNum,
+          diagnostic_quiz_id: worksheetNum === 1 ? quizData?.id : undefined,
+          questions: questionsWithPlaceholder,
+          analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
+          status: "in_progress",
+          completed: false
+        });
+      }
 
-      setWorksheet(createdWorksheet);
+      setWorksheet(updatedWorksheet);
     } catch (error) {
       console.error("Error generating worksheet:", error);
       alert("Failed to generate worksheet. Please try again. Error: " + error.message);
@@ -493,7 +512,6 @@ ${worksheet.worksheet_number === 1 ? `
 - Sessions 4-5 (optional): Comprehensive review or mixed practice` : `
 These recommendations build on previous performance and aim to move you towards 90%+ mastery.`}
 
-
 Output Format:
 Provide your response as a single, valid JSON object matching the exact structure specified.`;
 
@@ -565,7 +583,6 @@ Provide your response as a single, valid JSON object matching the exact structur
         else if (scoreNum >= 50) letterGrade = "D";
       }
 
-
       await base44.entities.Worksheet.update(worksheet.id, {
         questions: questionsWithGrading,
         feedback: questionFeedback,
@@ -582,7 +599,7 @@ Provide your response as a single, valid JSON object matching the exact structur
           feedbackData.suggested_future_sessions_plan.map((session, idx) =>
             base44.entities.Worksheet.create({
               lesson_id: lesson.id,
-              worksheet_number: idx + 2, // Start from worksheet 2
+              worksheet_number: idx + 2,
               focus_description: session.session_focus_description,
               status: "not_started",
               completed: false,
@@ -633,7 +650,7 @@ Provide your response as a single, valid JSON object matching the exact structur
     );
   }
 
-  if (!worksheet || !lesson) return null; // Ensure lesson is loaded before attempting to access its properties
+  if (!worksheet || !lesson) return null;
 
   const progress = ((currentQuestion + 1) / worksheet.questions.length) * 100;
   const isLastQuestion = currentQuestion === worksheet.questions.length - 1;
