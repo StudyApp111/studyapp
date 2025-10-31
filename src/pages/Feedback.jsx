@@ -147,6 +147,13 @@ export default function Feedback() {
     return '💪';
   };
 
+  // Parse predicted score - handle both "85%" and "85" formats
+  const getPredictedScore = () => {
+    const scoreValue = worksheet.ai_feedback?.predicted_exam_score_percentage || worksheet.total_score.toString();
+    // If it already has %, return as is, otherwise add %
+    return scoreValue.toString().includes('%') ? scoreValue : `${scoreValue}%`;
+  };
+
   const nextWorksheet = allWorksheets.find(w => w.worksheet_number === worksheet.worksheet_number + 1);
   const hasNextWorksheet = nextWorksheet && nextWorksheet.status === "not_started";
   const currentWorksheetIndex = allWorksheets.findIndex(w => w.worksheet_number === worksheet.worksheet_number);
@@ -163,7 +170,7 @@ export default function Feedback() {
         >
           <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg mb-6">
             <Award className="w-5 h-5 text-purple-600" />
-            <span className="text-sm font-medium text-slate-700">Worksheet {worksheet.worksheet_number} Complete</span> {/* Changed text */}
+            <span className="text-sm font-medium text-slate-700">Worksheet {worksheet.worksheet_number} Complete</span>
           </div>
           
           <h1 className="text-5xl font-bold text-slate-900 mb-4">
@@ -180,7 +187,7 @@ export default function Feedback() {
               {worksheet.predicted_grade} {getGradeEmoji(worksheet.predicted_grade)}
             </div>
             <div className="text-2xl text-white font-semibold">
-              {worksheet.ai_feedback?.predicted_exam_score_percentage || worksheet.total_score}%
+              {getPredictedScore()}
             </div>
           </motion.div>
 
@@ -209,7 +216,7 @@ export default function Feedback() {
               <span className="font-semibold">{Math.round(worksheet.total_score)}%</span>
             </div>
             <div className="w-1 h-6 bg-slate-300 rounded-full" />
-            <span>Worksheet {worksheet.worksheet_number} of {totalWorksheets}</span> {/* Changed text */}
+            <span>Worksheet {worksheet.worksheet_number} of {totalWorksheets}</span>
             <div className="w-1 h-6 bg-slate-300 rounded-full" />
             <span>{worksheet.feedback.filter(f => f.is_correct).length} Correct</span>
           </div>
