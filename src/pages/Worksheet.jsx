@@ -44,12 +44,25 @@ export default function Worksheet() {
       }
       setLesson(lessonData[0]);
 
-      const quizData = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
-      if (quizData.length === 0) {
-        navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lessonId}`);
-        return;
+      // Only load quiz data if worksheetNum is 1, otherwise it might not exist or be relevant for context
+      let quizData = null;
+      if (worksheetNum === 1) {
+        const diagnosticQuizData = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
+        if (diagnosticQuizData.length === 0) {
+          navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lessonId}`);
+          return;
+        }
+        setQuiz(diagnosticQuizData[0]);
+        quizData = diagnosticQuizData[0];
+      } else {
+        // For adaptive worksheets, quiz data isn't directly used for prompt, but quiz state might be needed for feedback later.
+        const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
+        if (existingQuiz.length > 0) {
+          setQuiz(existingQuiz[0]);
+          quizData = existingQuiz[0];
+        }
       }
-      setQuiz(quizData[0]);
+
 
       const existingWorksheet = await base44.entities.Worksheet.filter({ 
         lesson_id: lessonId,
@@ -67,7 +80,7 @@ export default function Worksheet() {
         }
       } else {
         console.log("Generating new worksheet", worksheetNum);
-        await generateWorksheet(lessonId, lessonData[0], quizData[0], worksheetNum);
+        await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum);
       }
     } catch (error) {
       console.error("Error loading worksheet:", error);
@@ -86,10 +99,11 @@ export default function Worksheet() {
 
       const learningProfile = profile[0] || {};
 
-      // For worksheet 1, use diagnostic results
-      // For worksheets 2-6, use previous worksheet performance
+      let aiPrompt = "";
       let contextData = "";
+
       if (worksheetNum === 1) {
+        // Original prompt for Worksheet 1 (based on diagnostic)
         const diagnosticResults = quizData.questions.map((q, index) => ({
           QuestionText: q.question_text,
           QuestionType: q.question_type,
@@ -99,25 +113,8 @@ export default function Worksheet() {
           IsCorrect: quizData.user_answers?.[index] === q.correct_answer
         }));
         contextData = `Diagnostic Quiz Results:\n${JSON.stringify(diagnosticResults, null, 2)}`;
-      } else {
-        // Get previous worksheet for context
-        const prevWorksheets = await base44.entities.Worksheet.filter({ 
-          lesson_id: lessonId,
-          completed: true
-        });
-        if (prevWorksheets.length > 0) {
-          const latest = prevWorksheets[prevWorksheets.length - 1];
-          contextData = `Previous Worksheet Performance:\n${JSON.stringify({
-            worksheet_number: latest.worksheet_number,
-            predicted_grade: latest.predicted_grade,
-            total_score: latest.total_score,
-            strengths: latest.ai_feedback?.identified_strengths_list,
-            areas_for_improvement: latest.ai_feedback?.key_areas_for_improvement_list
-          }, null, 2)}`;
-        }
-      }
 
-      const aiPrompt = `Context
+        aiPrompt = `Context
 You are a master assessment designer creating Worksheet ${worksheetNum} of 6 for ${lessonData.course_name}.
 
 Input Educational Context
@@ -131,10 +128,8 @@ ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
 ${contextData}
 
-${worksheetNum > 1 ? `Focus for Worksheet ${worksheetNum}: Target the areas of weakness identified in previous worksheets while building toward 90%+ mastery.` : ''}
-
 Task 1: Analyze Student Performance & Curriculum Profile
-${worksheetNum === 1 ? 'Based on diagnostic quiz results' : 'Based on previous worksheet performance'}, identify:
+Based on diagnostic quiz results, identify:
 - Weak Competencies
 - Gaps & Misconceptions
 - Key & Differentiating Competencies for Assessment
@@ -153,12 +148,127 @@ IMPORTANT JSON FORMATTING:
 
 Output Format:
 Provide your response as a single, valid JSON object with the structure specified.`;
+      } else {
+        // NEW: Adaptive prompt for Worksheets 2-6
+        const prevWorksheets = await base44.entities.Worksheet.filter({ 
+          lesson_id: lessonId,
+          completed: true
+        });
+        
+        if (prevWorksheets.length === 0) {
+          throw new Error("No previous worksheet found. Cannot generate adaptive worksheet.");
+        }
+
+        const latestWorksheet = prevWorksheets.sort((a, b) => b.worksheet_number - a.worksheet_number)[0];
+        
+        // Prepare previous worksheet performance data
+        const previousWorksheetPerformance = latestWorksheet.questions.map(q => ({
+          question_number: q.question_number,
+          question_type: q.question_type,
+          difficulty_index: q.difficulty_index,
+          question_text: q.question_text,
+          options: q.options || [],
+          correct_answer: q.correct_answer,
+          assessed_competencies: q.assessed_competencies,
+          targeted_misconception: q.targeted_misconception,
+          student_answer: q.user_answer || "No answer provided",
+          is_correct: q.is_correct || false
+        }));
+
+        // Prepare cumulative performance summary
+        const cumulativePerformance = {
+          worksheet_number: latestWorksheet.worksheet_number,
+          predicted_grade: latestWorksheet.predicted_grade,
+          total_score: latestWorksheet.total_score,
+          strengths: latestWorksheet.ai_feedback?.identified_strengths_list || [],
+          weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
+        };
+
+        // Get the current worksheet info from the placeholder
+        const currentWorksheetPlaceholder = await base44.entities.Worksheet.filter({
+          lesson_id: lessonId,
+          worksheet_number: worksheetNum
+        });
+        
+        const currentWorksheetDescription = currentWorksheetPlaceholder[0]?.focus_description || 
+          `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
+
+        aiPrompt = `Context
+You are a master assessment designer and expert tutor (simulated 180 IQ). Your primary function is to create the next 10-question adaptive worksheet for the student in ${lessonData.course_name}. This worksheet must continue to be highly predictive of exam performance by iteratively building upon the student's performance on the previous worksheet and aligning with the curriculum map. The questions must precisely mirror the style, type, wording, and difficulty detailed in the curriculum map.
+
+Input Educational Context
+Student's Grade Level: ${learningProfile.grade || "N/A"}
+Course/Unit Name: ${lessonData.course_name}
+School (for context): ${learningProfile.school || "N/A"}
+City/Region (for context): ${learningProfile.city || "N/A"}
+Current Iteration/Worksheet Number and Description: ${currentWorksheetDescription}
+
+Detailed Curriculum Profile (JSON object):
+${JSON.stringify(lessonData.curriculum_map, null, 2)}
+
+Previous Worksheet Performance Data (Worksheet ${latestWorksheet.worksheet_number}):
+${JSON.stringify(previousWorksheetPerformance, null, 2)}
+
+Cumulative Performance Summary:
+${JSON.stringify(cumulativePerformance, null, 2)}
+
+Task 1: Analyze Previous Performance to Guide Current Worksheet Design
+Based on the curriculum map, previous worksheet performance, and cumulative performance summary:
+
+1. Identify Current Weak Competencies: Pinpoint core competencies where the student answered questions incorrectly in the previous worksheet, especially those with a higher difficulty_index or those reflecting cumulative trends of persistent weakness.
+
+2. Identify Competencies Showing Improvement: Note competencies where previous worksheet indicates recent success, especially if they were previously weak.
+
+3. Identify Mastered/Consistently Strong Competencies: Note competencies where the student performed well on higher-difficulty questions.
+
+4. Track Persistent Misconceptions: Note if previous worksheet shows continued errors on questions targeting common misconceptions.
+
+Task 2: Generate the Next Iterative 10-Question Predictive Worksheet
+Create 10 unique questions. Adhere strictly to the following criteria:
+
+Adaptive & Targeted Question Distribution:
+- Primary Focus (approx. 5-6 questions): Target Current Weak Competencies and Persistent Misconceptions. Select appropriate difficulty_index for these questions (e.g., if a student struggles with "Moderate Exam-Level," provide more "Moderate Exam-Level" or even a "Foundational" review question before retrying "Moderate Exam-Level").
+- Reinforce & Solidify (approx. 2-3 questions): For Competencies Showing Improvement, provide questions at a similar or slightly increased difficulty_index to solidify understanding and build confidence.
+- Review & Extend (approx. 1-2 questions): For Mastered/Consistently Strong Competencies, include a question to ensure retention (spaced repetition) OR to extend understanding (e.g., a "High Challenge Exam-Level" question, a novel application, or integration with another competency).
+
+Exact Alignment with Exam Style:
+- Question distribution must mirror the curriculum map's question_formats frequency
+- Type, wording, style, difficulty must emulate the curriculum map's question_formats examples
+- All Multiple Choice Questions MUST have exactly 4 options as a simple array of strings
+
+Assigned Difficulty Index (Per Question):
+For each question, assign a difficulty_index from: "Foundational", "Conceptual", "Moderate Exam-Level", "Challenging Exam-Level", or "High Challenge Exam-Level"
+This assignment must be adaptive based on your analysis in Task 1.
+
+Grade-Appropriate Language:
+Use language appropriate for ${learningProfile.grade || "the student's grade level"}.
+
+Task 3: Provide Complete Answer Key Details
+For each question include:
+- correct_answer: The correct answer
+- explanation: Detailed explanation (2-3 sentences)
+- assessed_competencies: Array of competency names being assessed
+- targeted_misconception: The specific misconception this question addresses (or "N/A" if not applicable)
+
+CRITICAL JSON FORMATTING RULES:
+1. All text fields must have properly escaped quotes and special characters
+2. For Multiple Choice questions: ALWAYS provide exactly 4 options as a simple array of strings
+   Example: "options": ["First option", "Second option", "Third option", "Fourth option"]
+3. NEVER leave the "options" array empty for Multiple Choice questions
+4. If you cannot create valid multiple choice options, use a different question_type instead
+5. Use simple, clear language in all fields
+6. Keep question_text concise and unambiguous
+
+Output Format:
+Provide your response as a single, valid JSON object with this exact structure.`;
+      }
 
       const { data: worksheetData } = await base44.functions.invoke('generateWorksheet', {
         prompt: aiPrompt,
         response_json_schema: {
           type: "object",
           properties: {
+            worksheet_title: { type: "string" },
             analysis_summary_for_worksheet_design: {
               type: "object",
               properties: {
@@ -202,7 +312,7 @@ Provide your response as a single, valid JSON object with the structure specifie
               }
             }
           },
-          required: ["analysis_summary_for_worksheet_design", "worksheet_questions"]
+          required: ["worksheet_title", "analysis_summary_for_worksheet_design", "worksheet_questions"]
         }
       });
 
@@ -219,7 +329,7 @@ Provide your response as a single, valid JSON object with the structure specifie
       const createdWorksheet = await base44.entities.Worksheet.create({
         lesson_id: lessonId,
         worksheet_number: worksheetNum,
-        diagnostic_quiz_id: worksheetNum === 1 ? quizData.id : undefined,
+        diagnostic_quiz_id: worksheetNum === 1 ? quizData?.id : undefined, // quizData can be null if worksheetNum > 1
         questions: questionsWithPlaceholder,
         analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
         status: "in_progress",
@@ -299,13 +409,13 @@ Detailed Curriculum Profile (JSON object):
 ${JSON.stringify(lesson.curriculum_map, null, 2)}
 
 Diagnostic Quiz Performance:
-- Diagnostic Score: ${quiz.score || 'N/A'}%
+- Diagnostic Score: ${quiz?.score || 'N/A'}%
 - Diagnostic Results:
-${JSON.stringify(quiz.questions.map((q, idx) => ({
+${JSON.stringify(quiz?.questions.map((q, idx) => ({
   question_text: q.question_text,
   user_answer: quiz.user_answers?.[idx],
   is_correct: quiz.user_answers?.[idx] === q.correct_answer
-})), null, 2)}
+})) || [], null, 2)}
 
 Worksheet ${worksheet.worksheet_number} Performance:
 - Analysis Summary:
