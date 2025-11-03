@@ -132,14 +132,19 @@ Question Characteristics (FOR EACH of the 5 questions):
 
 a. Question Type: Select appropriate types (e.g., MCQ, Short Answer, True/False, Fill-in-the-Blank, simple Problem-Solving).
    - For MCQs, provide 3-4 plausible distractors and clearly indicate the correct answer choice.
-   - For other types, provide the ideal correct answer.
+   - CRITICAL: All answer options MUST use proper capitalization and maintain original case (e.g., "Fought" not "fought", "Brave" not "brave")
+   - For other types, provide the ideal correct answer with proper capitalization.
 
-b. Difficulty Index: Assign one label from:
+b. Question Text Formatting:
+   - Use markdown for formatting: **bold** for emphasis, *italic* for special terms, and regular text otherwise
+   - Example: "In the sentence, 'The brave knight **fought** the dragon fiercely,' which word is a verb?"
+
+c. Difficulty Index: Assign one label from:
    - "Foundational": Basic recall, definitions, essential facts, or core prerequisite skills.
    - "Conceptual": Understanding of concepts, relationships between ideas, interpretations, or simple applications.
    - "Applied/Multi-step": Application to new scenarios, or involves multiple steps/concepts.
 
-c. Targeted Misconception (Optional): If this question specifically tests a known common misconception, briefly state it. Otherwise use null.
+d. Targeted Misconception (Optional): If this question specifically tests a known common misconception, briefly state it. Otherwise use null.
 
 Clarity & Appropriateness: Ensure all questions are clearly worded, unambiguous, and entirely appropriate for the specified grade level.
 

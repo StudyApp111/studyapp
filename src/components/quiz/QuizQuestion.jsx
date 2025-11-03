@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 export default function QuizQuestion({ question, questionNumber, selectedAnswer, onSelectAnswer }) {
   const [showSuccess, setShowSuccess] = useState(false);
@@ -217,7 +218,21 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
               {question.question_type}
             </Badge>
           </div>
-          <p className="text-lg text-slate-700">{question.question_text}</p>
+          
+          {/* Use ReactMarkdown for rich text support */}
+          <div className="text-lg text-slate-700 prose prose-slate max-w-none">
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <span>{children}</span>,
+                strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
+                em: ({ children }) => <em className="italic">{children}</em>,
+                code: ({ children }) => <code className="px-1.5 py-0.5 bg-slate-100 rounded text-sm">{children}</code>
+              }}
+            >
+              {question.question_text}
+            </ReactMarkdown>
+          </div>
+
           {question.targeted_misconception && question.targeted_misconception !== "null" && (
             <p className="text-sm text-slate-500 mt-2 italic">
               💡 This question addresses a common misconception

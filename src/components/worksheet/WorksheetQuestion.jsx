@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, Sparkles } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 export default function WorksheetQuestion({ question, answer, onAnswer }) {
   const [showSuccess, setShowSuccess] = useState(false);
@@ -228,7 +229,20 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
               </div>
             </div>
           </div>
-          <p className="text-lg text-slate-700 leading-relaxed">{question.question_text}</p>
+          
+          {/* Use ReactMarkdown for rich text support */}
+          <div className="text-lg text-slate-700 prose prose-slate max-w-none leading-relaxed">
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <span>{children}</span>, // Render p as span to prevent extra margin if it's the only child. Tailwind's prose handles top-level paragraph spacing.
+                strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
+                em: ({ children }) => <em className="italic">{children}</em>,
+                code: ({ children }) => <code className="px-1.5 py-0.5 bg-slate-100 rounded text-sm">{children}</code>
+              }}
+            >
+              {question.question_text}
+            </ReactMarkdown>
+          </div>
         </CardHeader>
         <CardContent>
           {renderQuestionInput()}

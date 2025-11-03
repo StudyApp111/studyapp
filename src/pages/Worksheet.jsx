@@ -149,6 +149,12 @@ Based on diagnostic quiz results, identify:
 Task 2: Generate the 10-Question Predictive Worksheet
 Create 10 unique questions following the curriculum map's style and difficulty distribution.
 
+CRITICAL FORMATTING REQUIREMENTS:
+1. Question Text: Use markdown formatting - **bold** for emphasis, *italic* for special terms
+   Example: "Read the sentence: 'The ancient scroll was **fragile**, so the historian handled it with extreme care.' What does the word 'fragile' most likely mean in this sentence?"
+2. Answer Options: MUST use proper capitalization (e.g., "Fought" not "fought", "Brave" not "brave")
+3. Correct Answer: Must match one of the options EXACTLY, with same capitalization
+
 Task 3: Provide Complete Answer Key Details
 For each question include: correct_answer, explanation (2-3 sentences), assessed_competencies, targeted_misconception.
 
@@ -157,11 +163,13 @@ IMPORTANT JSON FORMATTING:
 - Use simple language in explanations
 - Avoid complex punctuation
 - Keep question_text clear
+- Maintain proper capitalization in all answer options
 
 Output Format:
 Provide your response as a single, valid JSON object with the structure specified.`;
       } else {
         // Adaptive prompt for Worksheets 2-6
+        
         const prevWorksheets = await base44.entities.Worksheet.filter({ 
           lesson_id: lessonId,
           completed: true
@@ -248,6 +256,12 @@ Exact Alignment with Exam Style:
 - Type, wording, style, difficulty must emulate the curriculum map's question_formats examples
 - All Multiple Choice Questions MUST have exactly 4 options as a simple array of strings
 
+CRITICAL FORMATTING REQUIREMENTS:
+1. Question Text: Use markdown formatting - **bold** for emphasis, *italic* for special terms
+   Example: "Which of the following sentences uses **proper capitalization** for a title?"
+2. Answer Options: MUST use proper capitalization (e.g., "California" not "california", "The Great Gatsby" not "the great gatsby")
+3. Correct Answer: Must match one of the options EXACTLY, with same capitalization
+
 Assigned Difficulty Index (Per Question):
 For each question, assign a difficulty_index from: "Foundational", "Conceptual", "Moderate Exam-Level", "Challenging Exam-Level", or "High Challenge Exam-Level"
 This assignment must be adaptive based on your analysis in Task 1.
@@ -257,19 +271,20 @@ Use language appropriate for ${learningProfile.grade || "the student's grade lev
 
 Task 3: Provide Complete Answer Key Details
 For each question include:
-- correct_answer: The correct answer
+- correct_answer: The correct answer (with proper capitalization matching the option)
 - explanation: Detailed explanation (2-3 sentences)
 - assessed_competencies: Array of competency names being assessed
 - targeted_misconception: The specific misconception this question addresses (or "N/A" if not applicable)
 
 CRITICAL JSON FORMATTING RULES:
 1. All text fields must have properly escaped quotes and special characters
-2. For Multiple Choice questions: ALWAYS provide exactly 4 options as a simple array of strings
-   Example: "options": ["First option", "Second option", "Third option", "Fourth option"]
+2. For Multiple Choice questions: ALWAYS provide exactly 4 options as a simple array of strings with proper capitalization
+   Example: "options": ["California", "New York", "Texas", "Florida"]
 3. NEVER leave the "options" array empty for Multiple Choice questions
 4. If you cannot create valid multiple choice options, use a different question_type instead
 5. Use simple, clear language in all fields
 6. Keep question_text concise and unambiguous
+7. Correct answer MUST match one of the options exactly
 
 Output Format:
 Provide your response as a single, valid JSON object with this exact structure.`;
@@ -518,7 +533,7 @@ ${worksheet.worksheet_number === 1 ? `
 These recommendations build on previous performance and aim to move you towards 90%+ mastery.`}
 
 Output Format:
-Provide your response as a single, valid JSON object matching the exact structure specified.`;
+Provide your response as a single, valid JSON object with this exact structure.`;
 
       const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
         prompt: feedbackPrompt,
