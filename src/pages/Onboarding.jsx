@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +11,12 @@ import { ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
 import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
 
 const questions = [
+  {
+    id: "display_name",
+    question: "What would you like to be called on the leaderboard?",
+    type: "text",
+    placeholder: "e.g., Alex the Great, MathWizard, etc."
+  },
   {
     id: "school",
     question: "What school do you attend?",
@@ -27,6 +34,12 @@ const questions = [
     question: "What city do you live in?",
     type: "text",
     placeholder: "e.g., New York City"
+  },
+  {
+    id: "country",
+    question: "What country do you live in?",
+    type: "text",
+    placeholder: "e.g., United States, Canada, United Kingdom"
   }
 ];
 
@@ -62,13 +75,15 @@ export default function Onboarding() {
       const profileData = {
         school: answers.school,
         grade: answers.grade,
-        city: answers.city
+        city: answers.city,
+        country: answers.country
       };
 
       const profile = await base44.entities.LearningProfile.create(profileData);
       await base44.auth.updateMe({
         onboarding_completed: true,
-        learning_profile_id: profile.id
+        learning_profile_id: profile.id,
+        display_name: answers.display_name
       });
 
       navigate(createPageUrl("Home"));

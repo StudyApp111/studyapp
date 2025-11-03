@@ -10,6 +10,7 @@ import Settings from './pages/Settings';
 import ProfileInformation from './pages/ProfileInformation';
 import ChangePassword from './pages/ChangePassword';
 import PricingPlans from './pages/PricingPlans';
+import Leaderboard from './pages/Leaderboard';
 import Layout from './Layout.jsx';
 
 
@@ -26,6 +27,7 @@ export const PAGES = {
     "ProfileInformation": ProfileInformation,
     "ChangePassword": ChangePassword,
     "PricingPlans": PricingPlans,
+    "Leaderboard": Leaderboard,
 }
 
 export const pagesConfig = {

@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, GraduationCap, History, LogOut, Settings, Plus, Trophy, Flame } from "lucide-react";
+import { Home, BookOpen, GraduationCap, History, LogOut, Settings, Plus, Trophy, Flame, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -25,6 +25,11 @@ const navigationItems = [
     title: "Home",
     url: createPageUrl("Home"),
     icon: Home,
+  },
+  {
+    title: "Leaderboard",
+    url: createPageUrl("Leaderboard"),
+    icon: Trophy,
   },
   {
     title: "Lesson History",
@@ -234,7 +239,7 @@ export default function Layout({ children, currentPageName }) {
             <div className="flex items-center justify-around max-w-lg mx-auto relative">
               <Link
                 to={createPageUrl("Home")}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
                   location.pathname === createPageUrl("Home")
                     ? 'text-purple-700 bg-purple-50'
                     : 'text-slate-600'
@@ -242,6 +247,18 @@ export default function Layout({ children, currentPageName }) {
               >
                 <Home className="w-5 h-5" />
                 <span className="text-xs font-medium">Home</span>
+              </Link>
+
+              <Link
+                to={createPageUrl("Leaderboard")}
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
+                  location.pathname === createPageUrl("Leaderboard")
+                    ? 'text-purple-700 bg-purple-50'
+                    : 'text-slate-600'
+                }`}
+              >
+                <Trophy className="w-5 h-5" />
+                <span className="text-xs font-medium">Ranks</span>
               </Link>
 
               {/* Elevated CTA Button */}
@@ -254,7 +271,7 @@ export default function Layout({ children, currentPageName }) {
 
               <Link
                 to={createPageUrl("LessonHistory")}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
                   location.pathname === createPageUrl("LessonHistory")
                     ? 'text-purple-700 bg-purple-50'
                     : 'text-slate-600'
