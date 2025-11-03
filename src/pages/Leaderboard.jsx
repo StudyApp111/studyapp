@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -96,57 +97,51 @@ export default function Leaderboard() {
 
   return (
     <div className="p-4 md:p-10 max-w-6xl mx-auto">
-      <div className="mb-8 text-center md:text-left">
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center justify-center md:justify-start gap-3">
+      <div className="mb-6 md:mb-8 text-center md:text-left">
+        <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center justify-center md:justify-start gap-2 md:gap-3">
           <Trophy className="w-8 h-8 md:w-10 md:h-10 text-yellow-500" />
           Global Leaderboard
         </h1>
-        <p className="text-slate-600 text-base md:text-lg">Compete with learners worldwide</p>
+        <p className="text-slate-600 text-sm md:text-lg">Compete with learners worldwide</p>
       </div>
 
       {/* Current User Stats Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-6 md:mb-8"
       >
         <Card className="border-2 border-purple-300 shadow-xl bg-gradient-to-r from-purple-50 to-indigo-50">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-base md:text-xl">
                     {currentUser.full_name?.[0]?.toUpperCase() || 'U'}
                   </span>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base md:text-xl font-bold text-slate-900 truncate">
                     {currentUser.display_name || currentUser.full_name || 'You'}
                   </h3>
-                  <p className="text-sm text-slate-600">Your Stats</p>
+                  <p className="text-xs md:text-sm text-slate-600">Your Stats</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 md:gap-6">
+              <div className="grid grid-cols-3 gap-3 md:gap-6">
                 <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <Trophy className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-slate-900">#{currentUserRank || '-'}</p>
+                  <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-600 mx-auto mb-1" />
+                  <p className="text-xl md:text-2xl font-bold text-slate-900">#{currentUserRank || '-'}</p>
                   <p className="text-xs text-slate-600">Rank</p>
                 </div>
                 <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <TrendingUp className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-purple-700">{currentUser.level || 1}</p>
+                  <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-purple-600 mx-auto mb-1" />
+                  <p className="text-xl md:text-2xl font-bold text-purple-700">{currentUser.level || 1}</p>
                   <p className="text-xs text-slate-600">Level</p>
                 </div>
                 <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 mb-1">
-                    <Zap className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-amber-600">{currentUser.total_points || 0}</p>
+                  <Zap className="w-4 h-4 md:w-5 md:h-5 text-amber-600 mx-auto mb-1" />
+                  <p className="text-xl md:text-2xl font-bold text-amber-600">{currentUser.total_points || 0}</p>
                   <p className="text-xs text-slate-600">Points</p>
                 </div>
               </div>
@@ -157,10 +152,10 @@ export default function Leaderboard() {
 
       {/* Leaderboard List */}
       <Card className="shadow-xl border-0">
-        <CardHeader>
-          <CardTitle className="text-2xl">Top 100 Learners</CardTitle>
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="text-lg md:text-2xl">Top 100 Learners</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6">
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map(i => (
@@ -168,9 +163,9 @@ export default function Leaderboard() {
               ))}
             </div>
           ) : allUsers.length === 0 ? (
-            <div className="text-center py-12">
-              <Trophy className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-              <p className="text-slate-500">No users on the leaderboard yet</p>
+            <div className="text-center py-8 md:py-12">
+              <Trophy className="w-12 h-12 md:w-16 md:h-16 mx-auto text-slate-300 mb-4" />
+              <p className="text-sm md:text-base text-slate-500">No users on the leaderboard yet</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -184,48 +179,48 @@ export default function Leaderboard() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`p-3 md:p-4 rounded-xl border-2 transition-all ${
                       isCurrentUser 
                         ? 'border-purple-400 bg-purple-50 shadow-md' 
                         : getRankBg(rank)
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 flex items-center justify-center">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+                        <div className="w-8 md:w-12 flex items-center justify-center flex-shrink-0">
                           {getRankIcon(rank)}
                         </div>
                         
-                        <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold text-sm">
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-semibold text-xs md:text-sm">
                             {(user.display_name || user.full_name)?.[0]?.toUpperCase() || '?'}
                           </span>
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-slate-900 truncate">
+                            <h4 className="font-bold text-sm md:text-base text-slate-900 truncate">
                               {user.display_name || user.full_name || `User ${rank}`}
                             </h4>
                             {isCurrentUser && (
-                              <Badge className="bg-purple-600 text-white text-xs">You</Badge>
+                              <Badge className="bg-purple-600 text-white text-xs flex-shrink-0">You</Badge>
                             )}
                           </div>
-                          <p className="text-sm text-slate-600 flex items-center gap-1">
+                          <p className="text-xs md:text-sm text-slate-600 flex items-center gap-1">
                             <span>{getCountryFlag(user.country)}</span>
-                            <span>{user.country}</span>
+                            <span className="truncate">{user.country}</span>
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-4 md:gap-6">
+                      <div className="flex items-center gap-2 md:gap-6 flex-shrink-0">
                         <div className="text-center hidden md:block">
-                          <p className="text-sm text-slate-600">Level</p>
-                          <p className="text-lg font-bold text-purple-700">{user.level || 1}</p>
+                          <p className="text-xs md:text-sm text-slate-600">Level</p>
+                          <p className="text-base md:text-lg font-bold text-purple-700">{user.level || 1}</p>
                         </div>
                         <div className="text-center">
-                          <p className="text-sm text-slate-600">Points</p>
-                          <p className="text-lg font-bold text-amber-600">{user.total_points || 0}</p>
+                          <p className="text-xs md:text-sm text-slate-600">Points</p>
+                          <p className="text-base md:text-lg font-bold text-amber-600">{user.total_points || 0}</p>
                         </div>
                       </div>
                     </div>
