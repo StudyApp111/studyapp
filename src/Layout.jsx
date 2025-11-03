@@ -239,14 +239,24 @@ export default function Layout({ children, currentPageName }) {
             <div className="flex items-center justify-between max-w-lg mx-auto relative">
               <Link
                 to={createPageUrl("Home")}
-                className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
+                className={`flex items-center justify-center p-3 rounded-lg transition-all ${
                   location.pathname === createPageUrl("Home")
                     ? 'text-purple-700 bg-purple-50'
                     : 'text-slate-600'
                 }`}
               >
-                <Home className="w-5 h-5" />
-                <span className="text-xs font-medium">Home</span>
+                <Home className="w-6 h-6" />
+              </Link>
+
+              <Link
+                to={createPageUrl("Leaderboard")}
+                className={`flex items-center justify-center p-3 rounded-lg transition-all ${
+                  location.pathname === createPageUrl("Leaderboard")
+                    ? 'text-purple-700 bg-purple-50'
+                    : 'text-slate-600'
+                }`}
+              >
+                <Trophy className="w-6 h-6" />
               </Link>
 
               {/* Elevated CTA Button - Centered with clear space below */}
@@ -257,31 +267,27 @@ export default function Layout({ children, currentPageName }) {
                 <Plus className="w-6 h-6 text-white" />
               </button>
 
-              <div className="flex items-center gap-2">
-                <Link
-                  to={createPageUrl("Leaderboard")}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
-                    location.pathname === createPageUrl("Leaderboard")
-                      ? 'text-purple-700 bg-purple-50'
-                      : 'text-slate-600'
-                  }`}
-                >
-                  <Trophy className="w-5 h-5" />
-                  <span className="text-xs font-medium">Board</span>
-                </Link>
+              <Link
+                to={createPageUrl("LessonHistory")}
+                className={`flex items-center justify-center p-3 rounded-lg transition-all ${
+                  location.pathname === createPageUrl("LessonHistory")
+                    ? 'text-purple-700 bg-purple-50'
+                    : 'text-slate-600'
+                }`}
+              >
+                <History className="w-6 h-6" />
+              </Link>
 
-                <Link
-                  to={createPageUrl("LessonHistory")}
-                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
-                    location.pathname === createPageUrl("LessonHistory")
-                      ? 'text-purple-700 bg-purple-50'
-                      : 'text-slate-600'
-                  }`}
-                >
-                  <History className="w-5 h-5" />
-                  <span className="text-xs font-medium">History</span>
-                </Link>
-              </div>
+              <button
+                onClick={() => navigate(createPageUrl("Settings"))}
+                className={`flex items-center justify-center p-3 rounded-lg transition-all ${
+                  location.pathname === createPageUrl("Settings")
+                    ? 'text-purple-700 bg-purple-50'
+                    : 'text-slate-600'
+                }`}
+              >
+                <Settings className="w-6 h-6" />
+              </button>
             </div>
           </nav>
         </main>
