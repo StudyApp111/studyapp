@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -5,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Brain, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Brain } from "lucide-react"; // Removed CheckCircle, XCircle as they are no longer used
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import QuizQuestion from "../components/quiz/QuizQuestion";
@@ -17,13 +18,12 @@ export default function DiagnosticQuiz() {
   const [isGenerating, setIsGenerating] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
-  const [showResults, setShowResults] = useState(false);
-  const [score, setScore] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Added isSubmitting state
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const lessonId = urlParams.get('lessonId');
-    
+
     if (!lessonId) {
       navigate(createPageUrl("Home"));
       return;
@@ -43,8 +43,8 @@ export default function DiagnosticQuiz() {
       setLesson(lessonData[0]);
 
       // Check if a quiz already exists for this lesson
-      const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ 
-        lesson_id: lessonId 
+      const existingQuiz = await base44.entities.DiagnosticQuiz.filter({
+        lesson_id: lessonId
       });
 
       if (existingQuiz.length > 0) {
@@ -52,12 +52,12 @@ export default function DiagnosticQuiz() {
         console.log("Loading existing diagnostic quiz");
         const loadedQuiz = existingQuiz[0];
         setQuiz(loadedQuiz);
-        
+
         // Check if quiz was already completed
         if (loadedQuiz.completed) {
-          setUserAnswers(loadedQuiz.user_answers || []);
-          setScore(loadedQuiz.score || 0);
-          setShowResults(true);
+          // If completed, directly navigate to worksheet
+          navigate(createPageUrl("Worksheet") + `?lessonId=${lessonId}`);
+          return; // Important: exit early after navigating
         } else {
           // Quiz exists but not completed - resume where they left off
           setUserAnswers(loadedQuiz.user_answers || new Array(loadedQuiz.questions.length).fill(null));
@@ -69,6 +69,8 @@ export default function DiagnosticQuiz() {
       }
     } catch (error) {
       console.error("Error loading quiz:", error);
+      // Optionally navigate to home or show an error on failure to load/generate
+      navigate(createPageUrl("Home"));
     }
     setIsGenerating(false);
   };
@@ -76,8 +78,8 @@ export default function DiagnosticQuiz() {
   const generateDiagnosticQuiz = async (lessonId, lessonData) => {
     try {
       const user = await base44.auth.me();
-      const profile = await base44.entities.LearningProfile.filter({ 
-        id: user.learning_profile_id 
+      const profile = await base44.entities.LearningProfile.filter({
+        id: user.learning_profile_id
       });
 
       const learningProfile = profile[0] || {};
@@ -199,6 +201,7 @@ Provide your response as a single, valid JSON object with the following structur
       setUserAnswers(new Array(quizData.diagnostic_quiz.questions.length).fill(null));
     } catch (error) {
       console.error("Error generating quiz:", error);
+      navigate(createPageUrl("Home"));
     }
   };
 
@@ -211,9 +214,8 @@ Provide your response as a single, valid JSON object with the following structur
   const handleNext = () => {
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
-    } else {
-      submitQuiz();
     }
+    // The submitQuiz logic is now handled directly by the button when it's the last question
   };
 
   const handlePrevious = () => {
@@ -223,34 +225,34 @@ Provide your response as a single, valid JSON object with the following structur
   };
 
   const submitQuiz = async () => {
-    const correctAnswers = userAnswers.filter((answer, idx) => 
-      answer === quiz.questions[idx].correct_answer
-    ).length;
-    const finalScore = (correctAnswers / quiz.questions.length) * 100;
-    
-    setScore(finalScore);
-    setShowResults(true);
+    setIsSubmitting(true); // Set submitting state to true
+    try {
+      // Improved validation - trim whitespace and case-insensitive comparison
+      const correctAnswers = userAnswers.filter((answer, idx) => {
+        const userAnswer = String(answer || "").trim().toLowerCase();
+        const correctAnswer = String(quiz.questions[idx].correct_answer || "").trim().toLowerCase();
+        return userAnswer === correctAnswer;
+      }).length;
 
-    await base44.entities.DiagnosticQuiz.update(quiz.id, {
-      user_answers: userAnswers,
-      score: finalScore,
-      completed: true
-    });
+      const finalScore = (correctAnswers / quiz.questions.length) * 100;
 
-    await base44.entities.Lesson.update(lesson.id, {
-      status: "diagnostic_completed"
-    });
-  };
+      await base44.entities.DiagnosticQuiz.update(quiz.id, {
+        user_answers: userAnswers,
+        score: finalScore,
+        completed: true
+      });
 
-  const proceedToWorksheet = () => {
-    navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
-  };
+      await base44.entities.Lesson.update(lesson.id, {
+        status: "diagnostic_completed"
+      });
 
-  const retakeQuiz = () => {
-    setCurrentQuestion(0);
-    setUserAnswers(new Array(quiz.questions.length).fill(null));
-    setShowResults(false);
-    setScore(0);
+      // Directly proceed to worksheet - don't show results
+      navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
+    } catch (error) {
+      console.error("Error submitting quiz:", error);
+      alert("Failed to submit quiz. Please try again.");
+      setIsSubmitting(false); // Reset submitting state on error
+    }
   };
 
   if (isGenerating) {
@@ -262,7 +264,7 @@ Provide your response as a single, valid JSON object with the following structur
             {quiz ? "Loading Your Diagnostic Quiz" : "Generating Your Diagnostic Quiz"}
           </h2>
           <p className="text-slate-600 mb-6">
-            {quiz 
+            {quiz
               ? "Retrieving your saved quiz..."
               : "Our AI is analyzing the curriculum and creating personalized questions..."}
           </p>
@@ -274,76 +276,11 @@ Provide your response as a single, valid JSON object with the following structur
 
   if (!quiz) return null;
 
-  if (showResults) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-2xl"
-        >
-          <Card className="shadow-2xl">
-            <CardHeader className="text-center pb-6">
-              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-10 h-10 text-white" />
-              </div>
-              <CardTitle className="text-3xl">Diagnostic Complete!</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-center">
-                <div className="text-5xl font-bold text-purple-600 mb-2">{Math.round(score)}%</div>
-                <p className="text-slate-600">Your diagnostic score</p>
-              </div>
-
-              <div className="space-y-3">
-                {quiz.questions.map((q, idx) => {
-                  const isCorrect = userAnswers[idx] === q.correct_answer;
-                  return (
-                    <div key={idx} className={`p-4 rounded-lg border-2 ${isCorrect ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'}`}>
-                      <div className="flex items-start gap-3">
-                        {isCorrect ? (
-                          <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5" />
-                        ) : (
-                          <XCircle className="w-5 h-5 text-red-600 mt-0.5" />
-                        )}
-                        <div className="flex-1">
-                          <p className="font-medium text-slate-900 mb-1">Question {idx + 1}</p>
-                          <p className="text-sm text-slate-700">{q.question_text}</p>
-                          {!isCorrect && (
-                            <p className="text-xs text-slate-600 mt-2">
-                              <strong>Correct:</strong> {q.correct_answer}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  onClick={retakeQuiz}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Retake Quiz
-                </Button>
-                <Button
-                  onClick={proceedToWorksheet}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-                >
-                  Continue to Worksheet
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
+  // showResults block was removed from here.
 
   const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
+  const canProceed = userAnswers[currentQuestion] !== null && userAnswers[currentQuestion] !== "";
+  const isLastQuestion = currentQuestion === quiz.questions.length - 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
@@ -351,7 +288,7 @@ Provide your response as a single, valid JSON object with the following structur
         <Card className="mb-6 shadow-xl sticky top-6 z-10 bg-white/95 backdrop-blur-sm">
           <CardContent className="p-6">
             <h2 className="text-2xl font-bold text-slate-900 mb-3">{lesson.course_name}</h2>
-            
+
             {quiz.smart_summary && (
               <div className="mb-4 p-4 bg-purple-50/50 rounded-lg border border-purple-200">
                 <h3 className="font-semibold text-purple-900 mb-2">{quiz.smart_summary.title}</h3>
@@ -388,13 +325,30 @@ Provide your response as a single, valid JSON object with the following structur
           >
             Previous
           </Button>
-          <Button
-            onClick={handleNext}
-            disabled={userAnswers[currentQuestion] === null || userAnswers[currentQuestion] === ""}
-            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-          >
-            {currentQuestion === quiz.questions.length - 1 ? "Submit Quiz" : "Next Question"}
-          </Button>
+          {isLastQuestion ? (
+            <Button
+              onClick={submitQuiz}
+              disabled={!canProceed || isSubmitting}
+              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Complete & Continue"
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleNext}
+              disabled={!canProceed}
+              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+            >
+              Next Question
+            </Button>
+          )}
         </div>
       </div>
     </div>
