@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -9,7 +10,7 @@ import { BookOpen, Plus, TrendingUp, Award, Clock, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import StatCard from "../components/home/StatCard";
+// StatCard import removed as it's no longer used
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -160,48 +161,115 @@ export default function Home() {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto">
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">
+    <div className="p-4 md:p-10 max-w-7xl mx-auto">
+      <div className="mb-6 md:mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
           Welcome back, {user.full_name?.split(' ')[0] || 'Learner'}! 👋
         </h1>
-        <p className="text-slate-600 text-lg">Ready to continue your learning journey?</p>
+        <p className="text-slate-600 text-base md:text-lg">Ready to continue your learning journey?</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <StatCard
-          title="Worksheets Completed"
-          value={completedWorksheets}
-          icon={Award}
-          gradient="from-purple-500 to-purple-700"
-        />
-        <StatCard
-          title="In Progress"
-          value={inProgressWorksheets}
-          icon={Clock}
-          gradient="from-yellow-400 to-yellow-600"
-        />
-        <StatCard
-          title="Total Assessments"
-          value={totalQuizzes}
-          icon={Zap}
-          gradient="from-purple-600 to-purple-800"
-        />
-        <StatCard
-          title="Average Score"
-          value={`${avgScore}%`}
-          icon={TrendingUp}
-          gradient="from-yellow-500 to-amber-600"
-          trend={avgScore >= 70 ? "Great job!" : "Keep practicing"}
-        />
+      {/* Mobile-Optimized Stats - 2x2 Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-700 opacity-10" />
+            <CardContent className="p-4 md:p-6 relative">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">
+                    <Award className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Completed</p>
+                  <p className="text-2xl md:text-3xl font-bold text-slate-900">{completedWorksheets}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-yellow-600 opacity-10" />
+            <CardContent className="p-4 md:p-6 relative">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg">
+                    <Clock className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">In Progress</p>
+                  <p className="text-2xl md:text-3xl font-bold text-slate-900">{inProgressWorksheets}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-800 opacity-10" />
+            <CardContent className="p-4 md:p-6 relative">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-purple-600 to-purple-800 shadow-lg">
+                    <Zap className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Total Tests</p>
+                  <p className="text-2xl md:text-3xl font-bold text-slate-900">{totalQuizzes}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+        >
+          <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 to-amber-600 opacity-10" />
+            <CardContent className="p-4 md:p-6 relative">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 shadow-lg">
+                    <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Avg Score</p>
+                  <p className="text-2xl md:text-3xl font-bold text-slate-900">{avgScore}%</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-slate-900">Active Lessons</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900">Active Lessons</h2>
           <Button
             onClick={() => navigate(createPageUrl("CreateLesson"))}
-            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-500/30"
+            className="hidden md:flex bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-500/30"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create New Lesson
@@ -209,7 +277,7 @@ export default function Home() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {[1, 2, 3].map(i => (
               <Card key={i}>
                 <CardHeader>
@@ -222,11 +290,11 @@ export default function Home() {
             ))}
           </div>
         ) : lessons.length === 0 ? (
-          <Card className="text-center py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-purple-300">
+          <Card className="text-center py-12 md:py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-purple-300">
             <CardContent>
-              <BookOpen className="w-16 h-16 mx-auto text-purple-500 mb-4" />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">No lessons yet</h3>
-              <p className="text-slate-500 mb-6">Create your first lesson to begin your learning journey</p>
+              <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto text-purple-500 mb-4" />
+              <h3 className="text-lg md:text-xl font-semibold text-slate-700 mb-2">No lessons yet</h3>
+              <p className="text-sm md:text-base text-slate-500 mb-6">Create your first lesson to begin your learning journey</p>
               <Button
                 onClick={() => navigate(createPageUrl("CreateLesson"))}
                 className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
@@ -237,7 +305,7 @@ export default function Home() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {lessons.map(lesson => (
               <SimpleLessonCard key={lesson.id} lesson={lesson} />
             ))}

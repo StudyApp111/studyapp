@@ -51,8 +51,16 @@ export default function Layout({ children, currentPageName }) {
             --secondary: 45 100% 85%;
             --accent: 280 60% 60%;
           }
+          
+          /* Hide desktop sidebar on mobile */
+          @media (max-width: 768px) {
+            aside[data-sidebar] {
+              display: none;
+            }
+          }
         `}</style>
         
+        {/* Desktop Sidebar */}
         <Sidebar className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl">
           <SidebarHeader className="border-b border-purple-200/60 p-6">
             <div className="flex items-center gap-3">
@@ -153,15 +161,66 @@ export default function Layout({ children, currentPageName }) {
 
         <main className="flex-1 flex flex-col">
           <header className="bg-white/90 backdrop-blur-xl border-b border-purple-200/60 px-6 py-4 md:hidden">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger className="hover:bg-purple-100 p-2 rounded-lg transition-colors" />
-              <h1 className="text-xl font-bold text-slate-900">StudyApp.AI</h1>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center">
+                  <GraduationCap className="w-5 h-5 text-white" />
+                </div>
+                <h1 className="text-xl font-bold text-slate-900">StudyApp.AI</h1>
+              </div>
+              {user && (
+                <button
+                  onClick={() => navigate(createPageUrl("Settings"))}
+                  className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center"
+                >
+                  <span className="text-white font-semibold text-xs">
+                    {user.full_name?.[0]?.toUpperCase() || 'U'}
+                  </span>
+                </button>
+              )}
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto pb-20 md:pb-0">
             {children}
           </div>
+
+          {/* Mobile Bottom Navigation */}
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-4 py-3 safe-area-inset-bottom z-50">
+            <div className="flex items-center justify-around max-w-lg mx-auto relative">
+              <Link
+                to={createPageUrl("Home")}
+                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                  location.pathname === createPageUrl("Home")
+                    ? 'text-purple-700 bg-purple-50'
+                    : 'text-slate-600'
+                }`}
+              >
+                <Home className="w-5 h-5" />
+                <span className="text-xs font-medium">Home</span>
+              </Link>
+
+              {/* Elevated CTA Button */}
+              <button
+                onClick={() => navigate(createPageUrl("CreateLesson"))}
+                className="absolute -top-8 left-1/2 -translate-x-1/2 w-14 h-14 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 rounded-full shadow-xl shadow-purple-500/30 flex items-center justify-center transition-transform hover:scale-110"
+              >
+                <Plus className="w-6 h-6 text-white" />
+              </button>
+
+              <Link
+                to={createPageUrl("LessonHistory")}
+                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${
+                  location.pathname === createPageUrl("LessonHistory")
+                    ? 'text-purple-700 bg-purple-50'
+                    : 'text-slate-600'
+                }`}
+              >
+                <History className="w-5 h-5" />
+                <span className="text-xs font-medium">History</span>
+              </Link>
+            </div>
+          </nav>
         </main>
       </div>
     </SidebarProvider>
