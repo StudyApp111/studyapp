@@ -6,12 +6,13 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, TrendingUp, Award, Clock, Zap } from "lucide-react";
+import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Trophy, Flame } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 // StatCard import removed as it's no longer used
 import { motion } from "framer-motion";
+import BadgeDisplay from "@/components/gamification/BadgeDisplay"; // Updated path to components
 
 export default function Home() {
   const navigate = useNavigate();
@@ -167,6 +168,31 @@ export default function Home() {
           Welcome back, {user.full_name?.split(' ')[0] || 'Learner'}! 👋
         </h1>
         <p className="text-slate-600 text-base md:text-lg">Ready to continue your learning journey?</p>
+        
+        {/* Gamification Summary */}
+        {(user.total_points > 0 || (user.current_streak || 0) > 0 || (user.badges && user.badges.length > 0)) && (
+          <div className="flex items-center gap-4 mt-4 flex-wrap">
+            {user.total_points > 0 && (
+              <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-amber-50 px-4 py-2 rounded-full border border-yellow-200">
+                <Trophy className="w-5 h-5 text-yellow-600" />
+                <span className="text-sm font-semibold text-slate-700">Level {user.level || 1}</span>
+                <span className="text-xs text-slate-500">• {user.total_points || 0} pts</span>
+              </div>
+            )}
+            {(user.current_streak || 0) > 0 && (
+              <div className="flex items-center gap-2 bg-gradient-to-r from-orange-50 to-red-50 px-4 py-2 rounded-full border border-orange-200">
+                <Flame className="w-5 h-5 text-orange-500" />
+                <span className="text-sm font-semibold text-slate-700">{user.current_streak} day streak</span>
+              </div>
+            )}
+            {user.badges && user.badges.length > 0 && (
+              <div className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-indigo-50 px-4 py-2 rounded-full border border-purple-200">
+                <Award className="w-5 h-5 text-purple-600" />
+                <span className="text-sm font-semibold text-slate-700">{user.badges.length} {user.badges.length === 1 ? 'badge' : 'badges'}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Mobile-Optimized Stats - 2x2 Grid */}
@@ -263,6 +289,14 @@ export default function Home() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Badges Section */}
+      {user.badges && user.badges.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-4">Your Badges</h2>
+          <BadgeDisplay badges={user.badges} size="compact" />
+        </div>
+      )}
 
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -6,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, FileText } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion"; // Added 'motion' here
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
+import ConfettiEffect from "../components/gamification/ConfettiEffect";
+import { Sparkles } from "lucide-react";
 
 export default function Worksheet() {
   const navigate = useNavigate();
@@ -17,6 +20,8 @@ export default function Worksheet() {
   const [isGenerating, setIsGenerating] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfetti, setShowConfetti] = React.useState(false);
+  const [newBadges, setNewBadges] = React.useState([]);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -557,7 +562,6 @@ Provide your response as a single, valid JSON object matching the exact structur
         }
       });
 
-      // Generate simple per-question feedback for display
       const questionFeedback = questionsWithGrading.map((q, idx) => ({
         question_index: idx,
         is_correct: q.is_correct,
@@ -567,7 +571,6 @@ Provide your response as a single, valid JSON object matching the exact structur
         points_earned: q.is_correct ? 10 : 0
       }));
 
-      // Convert predicted score to letter grade
       const scoreNum = parseInt(feedbackData.predicted_exam_score_percentage);
       let letterGrade = "F";
       if (!isNaN(scoreNum)) {
@@ -593,7 +596,6 @@ Provide your response as a single, valid JSON object matching the exact structur
         completed: true
       });
 
-      // If this is worksheet 1, create placeholders for worksheets 2-6
       if (worksheet.worksheet_number === 1 && feedbackData.suggested_future_sessions_plan) {
         await Promise.all(
           feedbackData.suggested_future_sessions_plan.map((session, idx) =>
@@ -614,21 +616,189 @@ Provide your response as a single, valid JSON object matching the exact structur
         status: "worksheet_completed"
       });
 
+      // GAMIFICATION: Calculate points and badges
+      const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
+      let pointsEarned = 0;
+      
+      // Base points for completion
+      pointsEarned += 50;
+      
+      // Points per correct answer (scaled by difficulty)
+      questionsWithGrading.forEach(q => {
+        if (q.is_correct) {
+          const difficultyMultiplier = {
+            "Foundational": 5,
+            "Conceptual": 10,
+            "Moderate Exam-Level": 15,
+            "Challenging Exam-Level": 20,
+            "High Challenge Exam-Level": 25
+          }[q.difficulty_index] || 10;
+          pointsEarned += difficultyMultiplier;
+        }
+      });
+
+      // Bonus for perfect score
+      if (correctCount === 10) {
+        pointsEarned += 100;
+      }
+
+      // Bonus for high grades
+      if (letterGrade.startsWith('A')) {
+        pointsEarned += 50;
+      }
+
+      // Update streak
+      const today = new Date().toDateString();
+      const lastActivity = user.last_activity_date ? new Date(user.last_activity_date).toDateString() : null;
+      const yesterday = new Date(Date.now() - 86400000).toDateString(); // 24 hours in milliseconds
+      
+      let newStreak = user.current_streak || 0;
+      if (lastActivity === yesterday) { // Continued streak
+        newStreak += 1;
+      } else if (lastActivity !== today) { // New activity, reset streak unless it's the same day
+        newStreak = 1;
+      } else { // Activity on the same day, don't change streak, just update last_activity_date
+        // newStreak remains as is
+      }
+      // If no activity at all, newStreak will be 0 and then set to 1 below.
+      if (!lastActivity) {
+          newStreak = 1; // First activity ever starts streak at 1
+      }
+
+
+      const longestStreak = Math.max(newStreak, user.longest_streak || 0);
+
+      // Award badges
+      const earnedBadges = [...(user.badges || [])];
+      const badgeIds = earnedBadges.map(b => b.badge_id);
+      const earnedNow = [];
+
+      // First lesson completion
+      if (!badgeIds.includes('first_lesson') && worksheet.worksheet_number === 1) {
+        const badge = {
+          badge_id: 'first_lesson',
+          badge_name: 'First Steps',
+          badge_description: 'Completed your first worksheet!',
+          badge_icon: '📚',
+          earned_date: new Date().toISOString()
+        };
+        earnedBadges.push(badge);
+        earnedNow.push(badge);
+      }
+
+      // Perfect score
+      if (!badgeIds.includes('perfect_score') && correctCount === 10) {
+        const badge = {
+          badge_id: 'perfect_score',
+          badge_name: 'Perfect Score',
+          badge_description: 'Got 100% on a worksheet!',
+          badge_icon: '🏆',
+          earned_date: new Date().toISOString()
+        };
+        earnedBadges.push(badge);
+        earnedNow.push(badge);
+      }
+
+      // A+ grade
+      if (!badgeIds.includes('grade_a') && letterGrade === 'A+') {
+        const badge = {
+          badge_id: 'grade_a',
+          badge_name: 'Excellence',
+          badge_description: 'Achieved an A+ grade!',
+          badge_icon: '🌟',
+          earned_date: new Date().toISOString()
+        };
+        earnedBadges.push(badge);
+        earnedNow.push(badge);
+      }
+
+      // 7-day streak
+      if (!badgeIds.includes('seven_day_streak') && newStreak >= 7) {
+        const badge = {
+          badge_id: 'seven_day_streak',
+          badge_name: 'Week Warrior',
+          badge_description: '7-day study streak!',
+          badge_icon: '🔥',
+          earned_date: new Date().toISOString()
+        };
+        earnedBadges.push(badge);
+        earnedNow.push(badge);
+      }
+
+      // 30-day streak
+      if (!badgeIds.includes('thirty_day_streak') && newStreak >= 30) {
+        const badge = {
+          badge_id: 'thirty_day_streak',
+          badge_name: 'Month Master',
+          badge_description: '30-day study streak!',
+          badge_icon: '🔥',
+          earned_date: new Date().toISOString()
+        };
+        earnedBadges.push(badge);
+        earnedNow.push(badge);
+      }
+
+      // 5 worksheets completed
+      const allCompletedWorksheets = await base44.entities.Worksheet.filter({ completed: true });
+      if (!badgeIds.includes('five_worksheets') && allCompletedWorksheets.length >= 5) {
+        const badge = {
+          badge_id: 'five_worksheets',
+          badge_name: 'Dedicated Learner',
+          badge_description: 'Completed 5 worksheets!',
+          badge_icon: '🎯',
+          earned_date: new Date().toISOString()
+        };
+        earnedBadges.push(badge);
+        earnedNow.push(badge);
+      }
+
+      // 10 worksheets completed
+      if (!badgeIds.includes('ten_worksheets') && allCompletedWorksheets.length >= 10) {
+        const badge = {
+          badge_id: 'ten_worksheets',
+          badge_name: 'Knowledge Seeker',
+          badge_description: 'Completed 10 worksheets!',
+          badge_icon: '⭐',
+          earned_date: new Date().toISOString()
+        };
+        earnedBadges.push(badge);
+        earnedNow.push(badge);
+      }
+
+      // Calculate level (100 points per level)
+      const newTotalPoints = (user.total_points || 0) + pointsEarned;
+      const newLevel = Math.floor(newTotalPoints / 100) + 1;
+
       const totalQuizzes = (user.total_quizzes_taken || 0) + 1;
       const currentAvg = user.average_score || 0;
       const newAvg = isNaN(scoreNum) ? currentAvg : ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
 
       await base44.auth.updateMe({
         total_quizzes_taken: totalQuizzes,
-        average_score: Math.round(newAvg)
+        average_score: Math.round(newAvg),
+        total_points: newTotalPoints,
+        level: newLevel,
+        badges: earnedBadges,
+        current_streak: newStreak,
+        longest_streak: longestStreak,
+        last_activity_date: today
       });
 
-      navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
+      // Show confetti and badges
+      if (earnedNow.length > 0 || correctCount >= 8) {
+        setShowConfetti(true);
+        setNewBadges(earnedNow);
+      }
+
+      // Navigate after a short delay to show confetti
+      setTimeout(() => {
+        navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
+      }, earnedNow.length > 0 ? 2000 : 500);
     } catch (error) {
       console.error("Error submitting worksheet:", error);
       alert("Failed to submit worksheet. Please try again. Error: " + error.message);
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   if (isGenerating) {
@@ -659,6 +829,33 @@ Provide your response as a single, valid JSON object matching the exact structur
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
+      <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
+      {/* New Badges Toast */}
+      {newBadges.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -100 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-2xl p-6 max-w-md"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <Sparkles className="w-8 h-8 text-yellow-500" />
+            <h3 className="text-xl font-bold text-slate-900">New Badge{newBadges.length > 1 ? 's' : ''} Earned!</h3>
+          </div>
+          <div className="space-y-2">
+            {newBadges.map((badge, idx) => (
+              <div key={idx} className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                <span className="text-2xl">{badge.badge_icon}</span>
+                <div>
+                  <p className="font-semibold text-slate-900">{badge.badge_name}</p>
+                  <p className="text-sm text-slate-600">{badge.badge_description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       <div className="max-w-4xl mx-auto">
         <Card className="mb-6 shadow-xl">
           <CardContent className="p-6">

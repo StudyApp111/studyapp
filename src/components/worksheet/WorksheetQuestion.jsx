@@ -1,13 +1,24 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, Sparkles } from "lucide-react";
 
 export default function WorksheetQuestion({ question, answer, onAnswer }) {
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleAnswerChange = (newAnswer) => {
+    onAnswer(newAnswer);
+    // Show success animation briefly
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 800);
+  };
+
   const renderQuestionInput = () => {
     const questionType = question.question_type.toLowerCase();
     
@@ -22,7 +33,7 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
             <Input
               id="answer"
               value={answer}
-              onChange={(e) => onAnswer(e.target.value)}
+              onChange={(e) => handleAnswerChange(e.target.value)}
               placeholder="Type your answer here..."
               className="text-base"
             />
@@ -32,18 +43,29 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
       }
 
       return (
-        <RadioGroup value={answer} onValueChange={onAnswer}>
+        <RadioGroup value={answer} onValueChange={handleAnswerChange}>
           <div className="space-y-3">
             {question.options.map((option, idx) => (
-              <div
+              <motion.div
                 key={idx}
-                className={`flex items-start space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex items-start space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer relative overflow-hidden ${
                   answer === option
                     ? 'border-indigo-500 bg-indigo-50'
                     : 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30'
                 }`}
-                onClick={() => onAnswer(option)}
+                onClick={() => handleAnswerChange(option)}
               >
+                {answer === option && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-2 right-2"
+                  >
+                    <CheckCircle className="w-5 h-5 text-indigo-600" />
+                  </motion.div>
+                )}
                 <RadioGroupItem value={option} id={`option-${idx}`} className="mt-0.5" />
                 <Label
                   htmlFor={`option-${idx}`}
@@ -51,7 +73,7 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
                 >
                   {option}
                 </Label>
-              </div>
+              </motion.div>
             ))}
           </div>
         </RadioGroup>
@@ -60,23 +82,34 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
 
     if (questionType.includes("true") && questionType.includes("false")) {
       return (
-        <RadioGroup value={answer} onValueChange={onAnswer}>
+        <RadioGroup value={answer} onValueChange={handleAnswerChange}>
           <div className="space-y-3">
             {["True", "False"].map((option) => (
-              <div
+              <motion.div
                 key={option}
-                className={`flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer relative ${
                   answer === option
                     ? 'border-indigo-500 bg-indigo-50'
                     : 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30'
                 }`}
-                onClick={() => onAnswer(option)}
+                onClick={() => handleAnswerChange(option)}
               >
+                {answer === option && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute top-2 right-2"
+                  >
+                    <CheckCircle className="w-5 h-5 text-indigo-600" />
+                  </motion.div>
+                )}
                 <RadioGroupItem value={option} id={option} />
                 <Label htmlFor={option} className="flex-1 cursor-pointer text-slate-700 font-medium">
                   {option}
                 </Label>
-              </div>
+              </motion.div>
             ))}
           </div>
         </RadioGroup>
@@ -90,7 +123,7 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
           <Input
             id="answer"
             value={answer}
-            onChange={(e) => onAnswer(e.target.value)}
+            onChange={(e) => handleAnswerChange(e.target.value)}
             placeholder="Type your answer here..."
             className="text-base"
           />
@@ -105,7 +138,7 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
         <Textarea
           id="answer"
           value={answer}
-          onChange={(e) => onAnswer(e.target.value)}
+          onChange={(e) => handleAnswerChange(e.target.value)}
           placeholder="Provide a detailed answer..."
           className="min-h-[200px] text-base"
         />
@@ -147,14 +180,41 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.3 }}
+      className="relative"
     >
+      {/* Success Animation Overlay */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+            className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
+          >
+            <motion.div
+              animate={{
+                scale: [1, 1.2, 1],
+                rotate: [0, 10, -10, 0]
+              }}
+              transition={{ duration: 0.6 }}
+              className="bg-white rounded-full p-6 shadow-2xl"
+            >
+              <Sparkles className="w-12 h-12 text-yellow-500" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Card className="shadow-2xl">
         <CardHeader>
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center">
+              <motion.div 
+                className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
                 <span className="text-white font-bold">{question.question_number}</span>
-              </div>
+              </motion.div>
               <div>
                 <CardTitle className="text-xl">Question {question.question_number}</CardTitle>
                 <div className="flex gap-2 mt-2">

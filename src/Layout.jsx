@@ -1,7 +1,8 @@
+
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, GraduationCap, History, LogOut, Settings, Plus } from "lucide-react";
+import { Home, BookOpen, GraduationCap, History, LogOut, Settings, Plus, Trophy, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -112,27 +113,70 @@ export default function Layout({ children, currentPageName }) {
             </SidebarGroup>
 
             {user && (
-              <SidebarGroup className="mt-4">
-                <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-3">
-                  Your Progress
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <div className="px-4 py-3 space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Lessons</span>
-                      <span className="font-bold text-purple-600">{user.total_lessons_completed || 0}</span>
+              <>
+                <SidebarGroup className="mt-4">
+                  <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-3">
+                    Your Progress
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <div className="px-4 py-3 space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Lessons</span>
+                        <span className="font-bold text-purple-600">{user.total_lessons_completed || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Quizzes</span>
+                        <span className="font-bold text-purple-700">{user.total_quizzes_taken || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Avg Score</span>
+                        <span className="font-bold text-purple-800">{user.average_score || 0}%</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Quizzes</span>
-                      <span className="font-bold text-purple-700">{user.total_quizzes_taken || 0}</span>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+
+                {/* Gamification Stats */}
+                <SidebarGroup className="mt-4">
+                  <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-3">
+                    Achievements
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <div className="px-4 py-3 space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border border-yellow-200">
+                        <div className="flex items-center gap-2">
+                          <Trophy className="w-5 h-5 text-yellow-600" />
+                          <div>
+                            <p className="text-xs text-slate-600">Level</p>
+                            <p className="font-bold text-yellow-700">{user.level || 1}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-slate-600">Points</p>
+                          <p className="font-bold text-yellow-700">{user.total_points || 0}</p>
+                        </div>
+                      </div>
+                      
+                      {(user.current_streak || 0) > 0 && (
+                        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+                          <Flame className="w-6 h-6 text-orange-500" />
+                          <div>
+                            <p className="text-xs text-slate-600">Study Streak</p>
+                            <p className="font-bold text-orange-600">{user.current_streak} {user.current_streak === 1 ? 'day' : 'days'}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {user.badges && user.badges.length > 0 && (
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-600">Badges</span>
+                          <span className="font-bold text-purple-600">{user.badges.length}</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Avg Score</span>
-                      <span className="font-bold text-purple-800">{user.average_score || 0}%</span>
-                    </div>
-                  </div>
-                </SidebarGroupContent>
-              </SidebarGroup>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              </>
             )}
           </SidebarContent>
 
