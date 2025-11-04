@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, FileText } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion"; // Added 'motion' here
+import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 import { Sparkles } from "lucide-react";
@@ -22,6 +22,9 @@ export default function Worksheet() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfetti, setShowConfetti] = React.useState(false);
   const [newBadges, setNewBadges] = React.useState([]);
+  const [isGrading, setIsGrading] = useState(false);
+  const gradingTimeoutRef = useRef(null);
+  const lastGradedAnswerRef = useRef({});
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -48,7 +51,6 @@ export default function Worksheet() {
       }
       setLesson(lessonData[0]);
 
-      // Only load quiz data if worksheetNum is 1
       let quizData = null;
       if (worksheetNum === 1) {
         const diagnosticQuizData = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
@@ -59,7 +61,6 @@ export default function Worksheet() {
         setQuiz(diagnosticQuizData[0]);
         quizData = diagnosticQuizData[0];
       } else {
-        // For adaptive worksheets, load quiz for potential reference
         const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
         if (existingQuiz.length > 0) {
           setQuiz(existingQuiz[0]);
@@ -76,18 +77,15 @@ export default function Worksheet() {
         console.log("Loading existing worksheet", worksheetNum);
         const loadedWorksheet = existingWorksheet[0];
         
-        // Check if worksheet is completed - redirect to feedback
         if (loadedWorksheet.completed) {
           navigate(createPageUrl("Feedback") + `?lessonId=${lessonId}&worksheet=${worksheetNum}`);
           return;
         }
         
-        // CRITICAL FIX: Check if this is just a placeholder (empty or no questions)
         if (!loadedWorksheet.questions || loadedWorksheet.questions.length === 0) {
           console.log("Worksheet is a placeholder, generating questions now");
           await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum, loadedWorksheet.id);
         } else {
-          // Worksheet has questions, use it
           setWorksheet(loadedWorksheet);
         }
       } else {
@@ -115,7 +113,6 @@ export default function Worksheet() {
       let contextData = "";
 
       if (worksheetNum === 1) {
-        // Original prompt for Worksheet 1 (based on diagnostic)
         const diagnosticResults = quizData.questions.map((q, index) => ({
           QuestionText: q.question_text,
           QuestionType: q.question_type,
@@ -168,8 +165,6 @@ IMPORTANT JSON FORMATTING:
 Output Format:
 Provide your response as a single, valid JSON object with the structure specified.`;
       } else {
-        // Adaptive prompt for Worksheets 2-6
-        
         const prevWorksheets = await base44.entities.Worksheet.filter({ 
           lesson_id: lessonId,
           completed: true
@@ -181,7 +176,6 @@ Provide your response as a single, valid JSON object with the structure specifie
 
         const latestWorksheet = prevWorksheets.sort((a, b) => b.worksheet_number - a.worksheet_number)[0];
         
-        // Prepare previous worksheet performance data
         const previousWorksheetPerformance = latestWorksheet.questions.map(q => ({
           question_number: q.question_number,
           question_type: q.question_type,
@@ -195,7 +189,6 @@ Provide your response as a single, valid JSON object with the structure specifie
           is_correct: q.is_correct || false
         }));
 
-        // Prepare cumulative performance summary
         const cumulativePerformance = {
           worksheet_number: latestWorksheet.worksheet_number,
           predicted_grade: latestWorksheet.predicted_grade,
@@ -204,7 +197,6 @@ Provide your response as a single, valid JSON object with the structure specifie
           weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
         };
 
-        // Get the current worksheet description
         let currentWorksheetDescription = `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
         if (existingWorksheetId) {
           const placeholderData = await base44.entities.Worksheet.filter({ id: existingWorksheetId });
@@ -343,7 +335,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         }
       });
 
-      // Validate the response
       if (!worksheetData || !worksheetData.worksheet_questions || worksheetData.worksheet_questions.length === 0) {
         throw new Error("Invalid worksheet data received from AI");
       }
@@ -356,14 +347,12 @@ Provide your response as a single, valid JSON object with this exact structure.`
       let updatedWorksheet;
       
       if (existingWorksheetId) {
-        // Update existing placeholder worksheet with generated questions
         updatedWorksheet = await base44.entities.Worksheet.update(existingWorksheetId, {
           questions: questionsWithPlaceholder,
           analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
           status: "in_progress"
         });
       } else {
-        // Create new worksheet
         updatedWorksheet = await base44.entities.Worksheet.create({
           lesson_id: lessonId,
           worksheet_number: worksheetNum,
@@ -383,14 +372,104 @@ Provide your response as a single, valid JSON object with this exact structure.`
     }
   };
 
-  const handleAnswer = (answer) => {
+  // Helper function to determine if question needs AI grading
+  const needsAIGrading = (questionType) => {
+    const type = questionType.toLowerCase();
+    return type.includes("short answer") || 
+           type.includes("long answer") || 
+           type.includes("fill-in-the-blank") ||
+           type.includes("problem-solving");
+  };
+
+  // AI Grading function
+  const gradeAnswerWithAI = async (question, answer) => {
+    if (!answer || answer.trim() === "") {
+      return null;
+    }
+
+    try {
+      const user = await base44.auth.me();
+      const profile = await base44.entities.LearningProfile.filter({ 
+        id: user.learning_profile_id 
+      });
+      const learningProfile = profile[0] || {};
+
+      const { data: gradingResult } = await base44.functions.invoke('gradeShortAnswer', {
+        question_text: question.question_text,
+        question_type: question.question_type,
+        difficulty_index: question.difficulty_index,
+        correct_answer: question.correct_answer,
+        explanation: question.explanation,
+        assessed_competencies: question.assessed_competencies,
+        targeted_misconception: question.targeted_misconception,
+        student_answer: answer,
+        student_grade_level: learningProfile.grade,
+        course_name: lesson.course_name
+      });
+
+      return gradingResult;
+    } catch (error) {
+      console.error("Error grading answer with AI:", error);
+      return null;
+    }
+  };
+
+  // Update answer and trigger AI grading if needed
+  const handleAnswer = async (answer) => {
     const updatedQuestions = [...worksheet.questions];
-    updatedQuestions[currentQuestion].user_answer = answer;
+    const currentQ = updatedQuestions[currentQuestion];
+    currentQ.user_answer = answer;
     
+    // Update worksheet immediately with new answer
     setWorksheet({
       ...worksheet,
       questions: updatedQuestions
     });
+
+    // Save to database
+    await base44.entities.Worksheet.update(worksheet.id, {
+      questions: updatedQuestions
+    });
+
+    // Check if this question needs AI grading
+    if (needsAIGrading(currentQ.question_type)) {
+      // Clear any existing timeout
+      if (gradingTimeoutRef.current) {
+        clearTimeout(gradingTimeoutRef.current);
+      }
+
+      // Only grade if answer has changed
+      const answerKey = `${currentQuestion}_${answer}`;
+      if (lastGradedAnswerRef.current[currentQuestion] === answerKey) {
+        return; // Same answer, don't re-grade
+      }
+
+      // Set a timeout to grade after user stops typing (debounce)
+      gradingTimeoutRef.current = setTimeout(async () => {
+        setIsGrading(true);
+        const gradingResult = await gradeAnswerWithAI(currentQ, answer);
+        
+        if (gradingResult) {
+          // Update the question with AI grading
+          const questionsWithGrading = [...updatedQuestions];
+          questionsWithGrading[currentQuestion].ai_grading = gradingResult;
+          
+          setWorksheet({
+            ...worksheet,
+            questions: questionsWithGrading
+          });
+
+          // Save to database
+          await base44.entities.Worksheet.update(worksheet.id, {
+            questions: questionsWithGrading
+          });
+
+          // Mark this answer as graded
+          lastGradedAnswerRef.current[currentQuestion] = answerKey;
+        }
+        setIsGrading(false);
+      }, 1500); // Wait 1.5 seconds after user stops typing
+    }
   };
 
   const handleNext = () => {
@@ -414,10 +493,53 @@ Provide your response as a single, valid JSON object with this exact structure.`
       });
       const learningProfile = profile[0] || {};
 
-      // First, do a quick grade check for each question
-      const questionsWithGrading = worksheet.questions.map((q) => ({
-        ...q,
-        is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
+      // Grade each question appropriately
+      const questionsWithGrading = await Promise.all(worksheet.questions.map(async (q) => {
+        const questionType = q.question_type.toLowerCase();
+        
+        // For MCQ and T/F, use exact matching
+        if (questionType.includes("multiple choice") || 
+            questionType.includes("mcq") || 
+            (questionType.includes("true") && questionType.includes("false"))) {
+          return {
+            ...q,
+            is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
+          };
+        }
+        
+        // For short/long answer or fill-in-blank, use AI grading if available
+        if (needsAIGrading(q.question_type)) {
+          // If we already have AI grading, use it
+          if (q.ai_grading && q.ai_grading.score_out_of_10 !== undefined) {
+            // Score >= 7.0 is considered correct
+            return {
+              ...q,
+              is_correct: q.ai_grading.score_out_of_10 >= 7.0
+            };
+          }
+          
+          // If no AI grading yet (shouldn't happen, but fallback), grade now
+          const gradingResult = await gradeAnswerWithAI(q, q.user_answer);
+          if (gradingResult) {
+            return {
+              ...q,
+              ai_grading: gradingResult,
+              is_correct: gradingResult.score_out_of_10 >= 7.0
+            };
+          }
+          
+          // Fallback to exact match if AI grading fails or question type is not strictly graded by AI
+          return {
+            ...q,
+            is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
+          };
+        }
+        
+        // Default: exact match
+        return {
+          ...q,
+          is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
+        };
       }));
 
       // Prepare worksheet performance data for the AI
@@ -432,10 +554,13 @@ Provide your response as a single, valid JSON object with this exact structure.`
         explanation: q.explanation,
         assessed_competencies: q.assessed_competencies,
         targeted_misconception: q.targeted_misconception,
-        is_correct: q.is_correct
+        is_correct: q.is_correct,
+        ai_grading: q.ai_grading || null
       }));
 
       const feedbackPrompt = `Context: You are an experienced teacher grading Worksheet ${worksheet.worksheet_number} of 6 for ${lesson.course_name} at ${learningProfile.grade || "N/A"}. You operate within the educational standards of ${learningProfile.school || "N/A"} and ${learningProfile.city || "N/A"}. You have a deep understanding of the curriculum and how it's assessed. The student has just completed a 10-question worksheet that was meticulously designed to mirror actual exam conditions in terms of style, question types, wording, and difficulty, based on the curriculum map. Your primary task is to analyze their worksheet performance to provide an accurate predicted exam grade, insightful feedback, and actionable recommendations for future study.
+
+IMPORTANT: Some questions have been AI-graded for short/long answers. These questions include an "ai_grading" object with detailed scoring. Use this AI grading data in your analysis.
 
 Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -469,7 +594,10 @@ Part 1: Performance Analysis & Grade Prediction Calculation
 (If WorksheetPerformanceData shows 0 correct answers out of 10, do NOT perform steps 1-6. Instead, directly populate the "Predicted Grade & Rationale" section in Part 2 with the specific 0/10 guidance. Similarly, handle 10/10 performance with adjusted narrative as outlined in Part 2.)
 
 1. Initialize Per-Question Score:
-For each question: If is_correct is true, assign a base score of 0.9 (strong indication of knowledge). If false, assign 0.2 (acknowledging some exposure but incorrect application).
+For each question: 
+- If ai_grading exists, use (ai_grading.score_out_of_10 / 10) as the base score (normalized to 0-1).
+- Else if is_correct is true, assign a base score of 0.9 (strong indication of knowledge). 
+- Else (if false and no ai_grading), assign 0.2 (acknowledging some exposure but incorrect application).
 
 2. Adjust Score Based on Worksheet Question Difficulty:
 Modify the base score using the difficulty_index for each question:
@@ -512,7 +640,7 @@ If 10/10 Correct on Worksheet:
 
 (Standard Case: 1-9/10 Correct)
 - predicted_exam_score_percentage: [Output score from Part 1]
-- prediction_calculation_rationale: "This prediction is based on your detailed performance on the 10-question exam-style worksheet. It considers the difficulty of each question you answered, your demonstrated mastery of core competencies (weighted by their exam importance), and your effectiveness with different exam question formats. Strengths and areas for targeted improvement are outlined below."
+- prediction_calculation_rationale: "This prediction is based on your detailed performance on the 10-question exam-style worksheet. It considers the difficulty of each question you answered, your demonstrated mastery of core competencies (weighted by their exam importance), and your effectiveness with different exam question formats. For questions with AI grading, nuanced partial credit was awarded. Strengths and areas for targeted improvement are outlined below."
 
 B. Concise Overall Performance Summary (1-2 empathetic sentences):
 [Tailor to performance. E.g., "This worksheet provided a good challenge! It shows you're building a solid understanding of [Competency X], while areas like [Competency Y] and handling [Question Type Z] are good next steps for focus."]
@@ -577,14 +705,30 @@ Provide your response as a single, valid JSON object with this exact structure.`
         }
       });
 
-      const questionFeedback = questionsWithGrading.map((q, idx) => ({
-        question_index: idx,
-        is_correct: q.is_correct,
-        feedback: q.is_correct 
-          ? `Excellent! Your answer demonstrates strong understanding of ${q.assessed_competencies?.[0] || 'this concept'}.`
-          : `This question assessed ${q.assessed_competencies?.[0] || 'key concepts'}. Review the explanation provided to strengthen your understanding.`,
-        points_earned: q.is_correct ? 10 : 0
-      }));
+      // Calculate points for feedback based on AI grading where available
+      const questionFeedback = questionsWithGrading.map((q, idx) => {
+        let pointsEarned = 0;
+        let feedback = "";
+        
+        if (q.ai_grading) {
+          // Use AI grading score (out of 10)
+          pointsEarned = q.ai_grading.score_out_of_10;
+          feedback = q.ai_grading.rationale_short;
+        } else {
+          // Use binary scoring for MCQ/T/F
+          pointsEarned = q.is_correct ? 10 : 0;
+          feedback = q.is_correct 
+            ? `Excellent! Your answer demonstrates strong understanding of ${q.assessed_competencies?.[0] || 'this concept'}.`
+            : `This question assessed ${q.assessed_competencies?.[0] || 'key concepts'}. Review the explanation provided to strengthen your understanding.`;
+        }
+        
+        return {
+          question_index: idx,
+          is_correct: q.is_correct,
+          feedback: feedback,
+          points_earned: pointsEarned
+        };
+      });
 
       const scoreNum = parseInt(feedbackData.predicted_exam_score_percentage);
       let letterGrade = "F";
@@ -631,14 +775,11 @@ Provide your response as a single, valid JSON object with this exact structure.`
         status: "worksheet_completed"
       });
 
-      // GAMIFICATION: Calculate points and badges
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
       let pointsEarned = 0;
       
-      // Base points for completion
       pointsEarned += 50;
       
-      // Points per correct answer (scaled by difficulty)
       questionsWithGrading.forEach(q => {
         if (q.is_correct) {
           const difficultyMultiplier = {
@@ -652,43 +793,34 @@ Provide your response as a single, valid JSON object with this exact structure.`
         }
       });
 
-      // Bonus for perfect score
       if (correctCount === 10) {
         pointsEarned += 100;
       }
 
-      // Bonus for high grades
       if (letterGrade.startsWith('A')) {
         pointsEarned += 50;
       }
 
-      // Update streak
       const today = new Date().toDateString();
       const lastActivity = user.last_activity_date ? new Date(user.last_activity_date).toDateString() : null;
-      const yesterday = new Date(Date.now() - 86400000).toDateString(); // 24 hours in milliseconds
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
       
       let newStreak = user.current_streak || 0;
-      if (lastActivity === yesterday) { // Continued streak
+      if (lastActivity === yesterday) {
         newStreak += 1;
-      } else if (lastActivity !== today) { // New activity, reset streak unless it's the same day
+      } else if (lastActivity !== today) {
         newStreak = 1;
-      } else { // Activity on the same day, don't change streak, just update last_activity_date
-        // newStreak remains as is
       }
-      // If no activity at all, newStreak will be 0 and then set to 1 below.
       if (!lastActivity) {
-          newStreak = 1; // First activity ever starts streak at 1
+          newStreak = 1;
       }
-
 
       const longestStreak = Math.max(newStreak, user.longest_streak || 0);
 
-      // Award badges
       const earnedBadges = [...(user.badges || [])];
       const badgeIds = earnedBadges.map(b => b.badge_id);
       const earnedNow = [];
 
-      // First lesson completion
       if (!badgeIds.includes('first_lesson') && worksheet.worksheet_number === 1) {
         const badge = {
           badge_id: 'first_lesson',
@@ -701,7 +833,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         earnedNow.push(badge);
       }
 
-      // Perfect score
       if (!badgeIds.includes('perfect_score') && correctCount === 10) {
         const badge = {
           badge_id: 'perfect_score',
@@ -714,7 +845,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         earnedNow.push(badge);
       }
 
-      // A+ grade
       if (!badgeIds.includes('grade_a') && letterGrade === 'A+') {
         const badge = {
           badge_id: 'grade_a',
@@ -727,7 +857,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         earnedNow.push(badge);
       }
 
-      // 7-day streak
       if (!badgeIds.includes('seven_day_streak') && newStreak >= 7) {
         const badge = {
           badge_id: 'seven_day_streak',
@@ -740,7 +869,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         earnedNow.push(badge);
       }
 
-      // 30-day streak
       if (!badgeIds.includes('thirty_day_streak') && newStreak >= 30) {
         const badge = {
           badge_id: 'thirty_day_streak',
@@ -753,7 +881,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         earnedNow.push(badge);
       }
 
-      // 5 worksheets completed
       const allCompletedWorksheets = await base44.entities.Worksheet.filter({ completed: true });
       if (!badgeIds.includes('five_worksheets') && allCompletedWorksheets.length >= 5) {
         const badge = {
@@ -767,7 +894,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         earnedNow.push(badge);
       }
 
-      // 10 worksheets completed
       if (!badgeIds.includes('ten_worksheets') && allCompletedWorksheets.length >= 10) {
         const badge = {
           badge_id: 'ten_worksheets',
@@ -780,7 +906,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         earnedNow.push(badge);
       }
 
-      // Calculate level (100 points per level)
       const newTotalPoints = (user.total_points || 0) + pointsEarned;
       const newLevel = Math.floor(newTotalPoints / 100) + 1;
 
@@ -799,13 +924,11 @@ Provide your response as a single, valid JSON object with this exact structure.`
         last_activity_date: today
       });
 
-      // Show confetti and badges
       if (earnedNow.length > 0 || correctCount >= 8) {
         setShowConfetti(true);
         setNewBadges(earnedNow);
       }
 
-      // Navigate after a short delay to show confetti
       setTimeout(() => {
         navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
       }, earnedNow.length > 0 ? 2000 : 500);
@@ -846,7 +969,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
-      {/* New Badges Toast */}
       {newBadges.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -100 }}
@@ -884,6 +1006,14 @@ Provide your response as a single, valid JSON object with this exact structure.`
                 {currentQuestion + 1} / {worksheet.questions.length}
               </span>
             </div>
+            
+            {/* Show grading indicator */}
+            {isGrading && (
+              <div className="mt-3 flex items-center gap-2 text-sm text-purple-600">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Grading your answer...</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
