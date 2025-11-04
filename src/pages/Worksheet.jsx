@@ -6,11 +6,12 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, FileText } from "lucide-react";
+import { Loader2, FileText, AlertCircle, RefreshCw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 import { Sparkles } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Worksheet() {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function Worksheet() {
   const [showConfetti, setShowConfetti] = React.useState(false);
   const [newBadges, setNewBadges] = React.useState([]);
   const [isGrading, setIsGrading] = useState(false);
+  const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const gradingTimeoutRef = useRef(null);
   const lastGradedAnswerRef = useRef({});
 
@@ -36,17 +39,24 @@ export default function Worksheet() {
     }
 
     loadOrGenerateWorksheet(lessonId);
-  }, [navigate]);
+  }, [navigate, retryCount]); // Added retryCount as dependency for re-attempting on retry
 
   const loadOrGenerateWorksheet = async (lessonId) => {
     setIsGenerating(true);
+    setError(null);
+    
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const worksheetNum = parseInt(urlParams.get('worksheet')) || 1;
       
       const lessonData = await base44.entities.Lesson.filter({ id: lessonId });
       if (lessonData.length === 0) {
-        navigate(createPageUrl("Home"));
+        setError({
+          title: "Lesson Not Found",
+          message: "The lesson you're looking for doesn't exist.",
+          canRetry: false
+        });
+        setIsGenerating(false);
         return;
       }
       setLesson(lessonData[0]);
@@ -94,8 +104,12 @@ export default function Worksheet() {
       }
     } catch (error) {
       console.error("Error loading worksheet:", error);
-      alert("Failed to load or generate worksheet. Please try again. Error: " + error.message);
-      navigate(createPageUrl("Home"));
+      setError({
+        title: "Failed to Load Worksheet",
+        message: error.message || "An unexpected error occurred while loading the worksheet.",
+        canRetry: true,
+        details: error.toString()
+      });
     }
     setIsGenerating(false);
   };
@@ -367,8 +381,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
       setWorksheet(updatedWorksheet);
     } catch (error) {
       console.error("Error generating worksheet:", error);
-      alert("Failed to generate worksheet. Please try again. Error: " + error.message);
-      navigate(createPageUrl("Home"));
+      throw error; // Re-throw to be caught by loadOrGenerateWorksheet
     }
   };
 
@@ -486,6 +499,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
 
   const submitWorksheet = async () => {
     setIsSubmitting(true);
+    setError(null);
+    
     try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
@@ -974,10 +989,72 @@ Generate 3-5 tailored sessions based on current weak areas.
       }, earnedNow.length > 0 ? 2000 : 500);
     } catch (error) {
       console.error("Error submitting worksheet:", error);
-      alert("Failed to submit worksheet. Please try again. Error: " + error.message);
+      setError({
+        title: "Failed to Submit Worksheet",
+        message: error.message || "An unexpected error occurred while submitting your worksheet.",
+        canRetry: false,
+        details: error.toString()
+      });
       setIsSubmitting(false);
     }
   };
+
+  const handleRetry = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lessonId = urlParams.get('lessonId');
+    setRetryCount(prev => prev + 1);
+    // Explicitly call loadOrGenerateWorksheet to re-attempt
+    loadOrGenerateWorksheet(lessonId); 
+  };
+
+  // Error Display
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
+        <Card className="w-full max-w-md shadow-2xl">
+          <CardContent className="p-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <AlertCircle className="w-8 h-8 text-red-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">{error.title}</h2>
+              <p className="text-slate-600 mb-6">{error.message}</p>
+              
+              {error.details && (
+                <details className="w-full mb-6 text-left">
+                  <summary className="cursor-pointer text-sm text-slate-500 hover:text-slate-700">
+                    Technical Details
+                  </summary>
+                  <pre className="mt-2 p-3 bg-slate-100 rounded text-xs overflow-auto max-h-40">
+                    {error.details}
+                  </pre>
+                </details>
+              )}
+              
+              <div className="flex gap-3 w-full">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(createPageUrl("Home"))}
+                  className="flex-1"
+                >
+                  Go Home
+                </Button>
+                {error.canRetry && (
+                  <Button
+                    onClick={handleRetry}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Retry
+                  </Button>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isGenerating) {
     return (
