@@ -6,12 +6,11 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, FileText, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 import { Sparkles } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Worksheet() {
   const navigate = useNavigate();
@@ -26,8 +25,6 @@ export default function Worksheet() {
   const [isGrading, setIsGrading] = useState(false);
   const gradingTimeoutRef = useRef(null);
   const lastGradedAnswerRef = useRef({});
-  const [error, setError] = useState(null);
-  const [generationProgress, setGenerationProgress] = useState("");
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -43,34 +40,26 @@ export default function Worksheet() {
 
   const loadOrGenerateWorksheet = async (lessonId) => {
     setIsGenerating(true);
-    setError(null);
-    setGenerationProgress("Loading lesson data...");
-    
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const worksheetNum = parseInt(urlParams.get('worksheet')) || 1;
       
-      console.log(`[Worksheet] Loading worksheet ${worksheetNum} for lesson ${lessonId}`);
-      
       const lessonData = await base44.entities.Lesson.filter({ id: lessonId });
       if (lessonData.length === 0) {
-        throw new Error("Lesson not found. It may have been deleted.");
+        navigate(createPageUrl("Home"));
+        return;
       }
       setLesson(lessonData[0]);
-      console.log("[Worksheet] Lesson loaded:", lessonData[0].course_name);
 
       let quizData = null;
       if (worksheetNum === 1) {
-        setGenerationProgress("Checking diagnostic quiz...");
         const diagnosticQuizData = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
         if (diagnosticQuizData.length === 0) {
-          console.log("[Worksheet] No diagnostic quiz found, redirecting...");
           navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lessonId}`);
           return;
         }
         setQuiz(diagnosticQuizData[0]);
         quizData = diagnosticQuizData[0];
-        console.log("[Worksheet] Diagnostic quiz loaded");
       } else {
         const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
         if (existingQuiz.length > 0) {
@@ -79,51 +68,39 @@ export default function Worksheet() {
         }
       }
 
-      setGenerationProgress("Loading worksheet data...");
       const existingWorksheet = await base44.entities.Worksheet.filter({ 
         lesson_id: lessonId,
         worksheet_number: worksheetNum
       });
 
       if (existingWorksheet.length > 0) {
-        console.log(`[Worksheet] Found existing worksheet ${worksheetNum}`);
+        console.log("Loading existing worksheet", worksheetNum);
         const loadedWorksheet = existingWorksheet[0];
         
         if (loadedWorksheet.completed) {
-          console.log("[Worksheet] Worksheet already completed, redirecting to feedback");
           navigate(createPageUrl("Feedback") + `?lessonId=${lessonId}&worksheet=${worksheetNum}`);
           return;
         }
         
         if (!loadedWorksheet.questions || loadedWorksheet.questions.length === 0) {
-          console.log("[Worksheet] Worksheet exists but has no questions, generating...");
+          console.log("Worksheet is a placeholder, generating questions now");
           await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum, loadedWorksheet.id);
         } else {
-          console.log("[Worksheet] Worksheet loaded successfully with", loadedWorksheet.questions.length, "questions");
           setWorksheet(loadedWorksheet);
         }
       } else {
-        console.log(`[Worksheet] No existing worksheet ${worksheetNum} found, generating new one`);
+        console.log("Generating new worksheet", worksheetNum);
         await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum);
       }
     } catch (error) {
-      console.error("[Worksheet] Error in loadOrGenerateWorksheet:", error);
-      setError({
-        title: "Failed to Load Worksheet",
-        message: error.message || "An unexpected error occurred while loading the worksheet.",
-        details: error.stack,
-        canRetry: true
-      });
-    } finally {
-      setIsGenerating(false);
-      setGenerationProgress("");
+      console.error("Error loading worksheet:", error);
+      alert("Failed to load or generate worksheet. Please try again. Error: " + error.message);
+      navigate(createPageUrl("Home"));
     }
+    setIsGenerating(false);
   };
 
   const generateWorksheet = async (lessonId, lessonData, quizData, worksheetNum, existingWorksheetId = null) => {
-    setGenerationProgress(`Generating worksheet ${worksheetNum} questions with AI...`);
-    console.log(`[Worksheet] Starting generation for worksheet ${worksheetNum}`);
-    
     try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
@@ -305,9 +282,6 @@ Output Format:
 Provide your response as a single, valid JSON object with this exact structure.`;
       }
 
-      console.log("[Worksheet] Calling generateWorksheet function with", aiPrompt.length, "character prompt");
-      setGenerationProgress("Calling AI to generate questions (this may take 30-60 seconds)...");
-
       const { data: worksheetData } = await base44.functions.invoke('generateWorksheet', {
         prompt: aiPrompt,
         response_json_schema: {
@@ -361,14 +335,9 @@ Provide your response as a single, valid JSON object with this exact structure.`
         }
       });
 
-      console.log("[Worksheet] Received response from AI");
-
       if (!worksheetData || !worksheetData.worksheet_questions || worksheetData.worksheet_questions.length === 0) {
-        throw new Error("AI returned invalid or empty worksheet data. Please try generating again.");
+        throw new Error("Invalid worksheet data received from AI");
       }
-
-      console.log("[Worksheet] Valid worksheet data received with", worksheetData.worksheet_questions.length, "questions");
-      setGenerationProgress("Saving worksheet to database...");
 
       const questionsWithPlaceholder = worksheetData.worksheet_questions.map(q => ({
         ...q,
@@ -383,7 +352,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
           analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
           status: "in_progress"
         });
-        console.log("[Worksheet] Updated existing worksheet placeholder");
       } else {
         updatedWorksheet = await base44.entities.Worksheet.create({
           lesson_id: lessonId,
@@ -394,14 +362,13 @@ Provide your response as a single, valid JSON object with this exact structure.`
           status: "in_progress",
           completed: false
         });
-        console.log("[Worksheet] Created new worksheet");
       }
 
       setWorksheet(updatedWorksheet);
-      console.log("[Worksheet] Worksheet generation completed successfully");
     } catch (error) {
-      console.error("[Worksheet] Error in generateWorksheet:", error);
-      throw new Error(`Failed to generate worksheet: ${error.message}`);
+      console.error("Error generating worksheet:", error);
+      alert("Failed to generate worksheet. Please try again. Error: " + error.message);
+      navigate(createPageUrl("Home"));
     }
   };
 
@@ -779,7 +746,8 @@ Generate 3-5 tailored sessions based on current weak areas.
           pointsEarned = q.ai_grading.score_out_of_10;
           feedback = q.ai_grading.rationale_short;
         } else {
-          pointsEarned = q.is_correct 
+          pointsEarned = q.is_correct ? 10 : 0;
+          feedback = q.is_correct 
             ? `Excellent! Your answer demonstrates strong understanding of ${q.assessed_competencies?.[0] || 'this concept'}.`
             : `This question assessed ${q.assessed_competencies?.[0] || 'key concepts'}. Review the explanation provided to strengthen your understanding.`;
         }
@@ -1011,63 +979,6 @@ Generate 3-5 tailored sessions based on current weak areas.
     }
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
-        <Card className="w-full max-w-2xl shadow-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-red-600">
-              <AlertCircle className="w-8 h-8" />
-              Error Loading Worksheet
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>{error.title}</AlertTitle>
-              <AlertDescription className="mt-2">{error.message}</AlertDescription>
-            </Alert>
-
-            {error.details && (
-              <details className="mt-4">
-                <summary className="cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-900">
-                  View Technical Details
-                </summary>
-                <pre className="mt-2 p-3 bg-slate-100 rounded text-xs overflow-auto max-h-40">
-                  {error.details}
-                </pre>
-              </details>
-            )}
-
-            <div className="flex gap-3 pt-4">
-              {error.canRetry && (
-                <Button
-                  onClick={() => {
-                    setError(null);
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const lessonId = urlParams.get('lessonId');
-                    loadOrGenerateWorksheet(lessonId);
-                  }}
-                  className="flex-1"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Try Again
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => navigate(createPageUrl("Home"))}
-                className="flex-1"
-              >
-                Back to Home
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   if (isGenerating) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
@@ -1076,13 +987,12 @@ Generate 3-5 tailored sessions based on current weak areas.
           <h2 className="text-2xl font-bold text-slate-900 mb-2">
             {worksheet ? "Loading Your Worksheet" : "Generating Your Worksheet"}
           </h2>
-          <p className="text-slate-600 mb-4">
-            {generationProgress || "Please wait..."}
+          <p className="text-slate-600 mb-6">
+            {worksheet 
+              ? `Retrieving your saved Worksheet ${worksheet.worksheet_number || ''}...`
+              : "Creating a personalized exam based on your diagnostic results..."}
           </p>
           <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
-          <p className="text-xs text-slate-500 mt-4">
-            This may take up to 60 seconds for complex worksheets
-          </p>
         </Card>
       </div>
     );
