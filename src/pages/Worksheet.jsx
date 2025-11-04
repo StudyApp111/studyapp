@@ -528,7 +528,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
             };
           }
           
-          // Fallback to exact match if AI grading fails or question type is not strictly graded by AI
+          // Fallback to exact match if AI grading fails
           return {
             ...q,
             is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
@@ -542,145 +542,174 @@ Provide your response as a single, valid JSON object with this exact structure.`
         };
       }));
 
-      // Prepare worksheet performance data for the AI
-      const worksheetPerformanceData = questionsWithGrading.map((q, idx) => ({
-        question_number: q.question_number,
-        question_type: q.question_type,
-        difficulty_index: q.difficulty_index,
-        question_text: q.question_text,
-        options: q.options || [],
-        student_answer: q.user_answer || "No answer provided",
-        correct_answer: q.correct_answer,
-        explanation: q.explanation,
-        assessed_competencies: q.assessed_competencies,
-        targeted_misconception: q.targeted_misconception,
-        is_correct: q.is_correct,
-        ai_grading: q.ai_grading || null
-      }));
+      // Prepare worksheet performance data for the AI - UPDATED FORMAT
+      const worksheetPerformanceData = questionsWithGrading.map((q) => {
+        // Calculate score_out_of_10 for the new prompt format
+        let scoreOutOf10;
+        if (q.ai_grading && q.ai_grading.score_out_of_10 !== undefined) {
+          scoreOutOf10 = q.ai_grading.score_out_of_10;
+        } else {
+          // For MCQ/T/F, convert binary to 0 or 10
+          scoreOutOf10 = q.is_correct ? 10 : 0;
+        }
 
-      const feedbackPrompt = `Context: You are an experienced teacher grading Worksheet ${worksheet.worksheet_number} of 6 for ${lesson.course_name} at ${learningProfile.grade || "N/A"}. You operate within the educational standards of ${learningProfile.school || "N/A"} and ${learningProfile.city || "N/A"}. You have a deep understanding of the curriculum and how it's assessed. The student has just completed a 10-question worksheet that was meticulously designed to mirror actual exam conditions in terms of style, question types, wording, and difficulty, based on the curriculum map. Your primary task is to analyze their worksheet performance to provide an accurate predicted exam grade, insightful feedback, and actionable recommendations for future study.
+        return {
+          question_number: q.question_number,
+          question_type: q.question_type,
+          worksheet_difficulty_index: q.difficulty_index, // Renamed to match new prompt
+          question_text: q.question_text,
+          assessed_competencies: q.assessed_competencies || [],
+          student_answer: q.user_answer || "No answer provided",
+          score_out_of_10: scoreOutOf10, // New format - score at top level
+          targeted_misconception: q.targeted_misconception || "N/A"
+        };
+      });
 
-IMPORTANT: Some questions have been AI-graded for short/long answers. These questions include an "ai_grading" object with detailed scoring. Use this AI grading data in your analysis.
+      const feedbackPrompt = `You are an experienced teacher and assessment specialist for ${lesson.course_name} at ${learningProfile.grade || "N/A"},
+operating within the academic standards of ${learningProfile.school || "N/A"} in ${learningProfile.city || "N/A"}.
+You have a deep understanding of the curriculum (defined in Lesson.curriculum_map) and how it is assessed.
 
-Input Data:
-Student's Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${lesson.course_name}
+The student has just completed a 10-question worksheet that mirrors real exam conditions.
+Your mission is to analyze their worksheet performance to provide:
+1. An accurate predicted exam grade.
+2. Insightful feedback grounded in the curriculum map.
+3. Actionable, data-driven next-step recommendations aligned with key competencies.
+
+---
+
+### Input Data
+
+Course / Unit Name: ${lesson.course_name}
+Student Written Description: ${lesson.description || "N/A"}
+Grade Level: ${learningProfile.grade || "N/A"}
 School: ${learningProfile.school || "N/A"}
-City/Region: ${learningProfile.city || "N/A"}
-Worksheet Number: ${worksheet.worksheet_number} of 6
+City / Region: ${learningProfile.city || "N/A"}
 
-Detailed Curriculum Profile (JSON object):
-${JSON.stringify(lesson.curriculum_map, null, 2)}
-
-Diagnostic Quiz Performance:
-- Diagnostic Score: ${quiz?.score || 'N/A'}%
-- Diagnostic Results:
-${JSON.stringify(quiz?.questions.map((q, idx) => ({
+Diagnostic Quiz Results:
+${quiz ? JSON.stringify(quiz.questions.map((q, idx) => ({
   question_text: q.question_text,
   user_answer: quiz.user_answers?.[idx],
   is_correct: quiz.user_answers?.[idx] === q.correct_answer
-})) || [], null, 2)}
+}))) : "N/A"}
 
-Worksheet ${worksheet.worksheet_number} Performance:
-- Analysis Summary:
-${JSON.stringify(worksheet.analysis_summary, null, 2)}
-- Questions with Student Answers:
+Detailed Curriculum Profile:
+${JSON.stringify(lesson.curriculum_map, null, 2)}
+
+Worksheet ${worksheet.worksheet_number} Performance Data:
 ${JSON.stringify(worksheetPerformanceData, null, 2)}
 
-Mission: Deliver a comprehensive performance analysis, including an accurate predicted exam grade (with clear calculation reasoning), constructive feedback, and targeted future session plans.
+---
 
-Part 1: Performance Analysis & Grade Prediction Calculation
+## Part 1: Performance Analysis & Grade Prediction Calculation
 
-(If WorksheetPerformanceData shows 0 correct answers out of 10, do NOT perform steps 1-6. Instead, directly populate the "Predicted Grade & Rationale" section in Part 2 with the specific 0/10 guidance. Similarly, handle 10/10 performance with adjusted narrative as outlined in Part 2.)
+(If WorksheetPerformanceData shows all scores = 0 / 10, skip calculations and directly fill "Predicted Grade & Rationale" in Part 2 with the 0 / 10 guidance.  
+If all = 10 / 10, handle with the exceptional-performance narrative.)
 
-1. Initialize Per-Question Score:
-For each question: 
-- If ai_grading exists, use (ai_grading.score_out_of_10 / 10) as the base score (normalized to 0-1).
-- Else if is_correct is true, assign a base score of 0.9 (strong indication of knowledge). 
-- Else (if false and no ai_grading), assign 0.2 (acknowledging some exposure but incorrect application).
+### 1️⃣ Initialize Per-Question Score  
+For each question in WorksheetPerformanceData: convert score_out_of_10 to base score = (score_out_of_10 ÷ 10).
 
-2. Adjust Score Based on Worksheet Question Difficulty:
-Modify the base score using the difficulty_index for each question:
-- Correct on "High Challenge Exam-Level": Multiply score by 1.05 (max score 0.98).
-- Correct on "Challenging Exam-Level": Multiply score by 1.02 (max score 0.96).
-- Correct on "Moderate Exam-Level": No change or multiply score by 1.01 (max score 0.92).
-- Incorrect on "Moderate Exam-Level": Multiply score by 0.7 (min score 0.05).
-- Incorrect on "Challenging Exam-Level": Multiply score by 0.8 (min score 0.08).
-- Incorrect on "High Challenge Exam-Level": Multiply score by 0.9 (min score 0.1).
+### 2️⃣ Adjust Score by Question Difficulty  
+Modify each base score using worksheet_difficulty_index:
+- High Challenge Exam-Level → × 1.05 (max 1.00)  
+- Challenging Exam-Level → × 1.02 (max 0.98)  
+- Moderate Exam-Level → × 1.00 (max 0.95)
 
-3. Calculate Weighted Competency Mastery:
-For each core_competency in the curriculum map:
-- Identify all worksheet questions linked to this competency via assessed_competencies.
-- Calculate the average adjusted score for these questions. This is the "MasteryScore" for that competency.
-- Calculate a preliminary aggregate score: Sum of (MasteryScore_for_Competency_X * Weight_of_Competency_X). Normalize to be out of 100.
+If base score is very low (< 0.25), scale slightly higher (× 0.7–0.9) to acknowledge minimal exposure.  
+Clamp all adjusted scores within 0.05–1.00.
 
-4. Adjust for Performance on Exam Question Styles:
-Analyze student's average scores for each question_type present in the worksheet.
-Compare this performance against the frequency of those types in the curriculum map's question_formats.
-If significant underperformance (<40% average score) on a question_type with high exam frequency (>30%), apply a small negative modifier to the aggregate score (e.g., -3 to -6 points). Conversely, strong performance on high-frequency types might warrant a smaller positive modifier (+0 to +2 points).
+### 3️⃣ Calculate Weighted Competency Mastery  
+For each competency in the curriculum map core_competencies:
+- Identify all questions linked via assessed_competencies.  
+- Compute average adjusted score → MasteryScore.  
+- Weight by that competency's weight from competency_weightings.
 
-5. Finalize Predicted Exam Score:
-The result is the PredictedExamScorePercentage. Round to the nearest whole number.
+If a competency was not tested, set to "not assessed," neutral (0.5), or infer from related competencies.  
+Sum (MasteryScore × Weight) for all competencies → preliminary aggregate (0–1 scale).
 
-Part 2: Feedback Generation
+### 4️⃣ Adjust for Performance by Question Format  
+Compare average performance by question_type with expected frequencies in curriculum map question_formats.  
+If a high-frequency type (> 30%) shows low mastery (< 0.4), apply −3 to −6 points.  
+If strong on high-frequency types, add +0 to +2 points.
 
-(Adopt a supportive, constructive, and experienced teacher persona. Use grade-appropriate language.)
+### 5️⃣ Finalize Predicted Exam Score  
+Multiply weighted aggregate by 100 to get percentage.  
+Apply any format-based adjustments from Step 4.  
+Round to nearest whole number → PredictedExamScorePercentage.
 
-A. Predicted Grade & Rationale:
+---
 
-(Handle Edge Cases First)
+## Part 2: Feedback Generation
 
-If 0/10 Correct on Worksheet:
-- predicted_exam_score_percentage: "Not Calculable"
-- prediction_calculation_rationale: "With 0 correct answers on this predictive worksheet, a numerical exam prediction is not meaningful. This indicates a critical need to revisit foundational concepts across the curriculum before focusing on exam-style performance."
+Use professional, supportive language appropriate for ${learningProfile.grade || "the student's grade level"}.  
+All comments should connect directly to competencies in the curriculum map.
 
-If 10/10 Correct on Worksheet:
-- predicted_exam_score_percentage: [Output score from Part 1; likely 95-100%]
-- prediction_calculation_rationale: "Exceptional performance (10/10 correct) on this challenging, exam-style worksheet demonstrates outstanding mastery across all assessed competencies and question types, leading to this high predicted score."
+### A. Predicted Grade & Rationale  
+- predicted_exam_score_percentage: [from Part 1 Step 5]  
+- prediction_rationale: "This score reflects competency-weighted mastery adjusted for difficulty and alignment with curriculum question formats."
 
-(Standard Case: 1-9/10 Correct)
-- predicted_exam_score_percentage: [Output score from Part 1]
-- prediction_calculation_rationale: "This prediction is based on your detailed performance on the 10-question exam-style worksheet. It considers the difficulty of each question you answered, your demonstrated mastery of core competencies (weighted by their exam importance), and your effectiveness with different exam question formats. For questions with AI grading, nuanced partial credit was awarded. Strengths and areas for targeted improvement are outlined below."
+Edge cases: if all ≤ 1 / 10 → "Not Calculable. Foundational review required." If all ≥ 9 / 10 → "Exceptional performance demonstrating exam-level mastery."
 
-B. Concise Overall Performance Summary (1-2 empathetic sentences):
-[Tailor to performance. E.g., "This worksheet provided a good challenge! It shows you're building a solid understanding of [Competency X], while areas like [Competency Y] and handling [Question Type Z] are good next steps for focus."]
+### B. Overall Performance Summary (≤ 2 sentences)  
+Provide an empathetic summary of patterns and readiness.
 
-C. Identified Strengths (2-3 specific bullet points):
-[Reference specific competencies where performance was strong. E.g., "Strong problem-solving in 'Algebraic Manipulations', correctly answering challenging multi-step questions."]
+### C. Identified Strengths (2–3 points)  
+Reference competencies with strong mastery (≥ 0.8).
 
-D. Key Areas for Improvement (2-3 specific, actionable bullet points):
-[Reference specific competencies or misconceptions linked to incorrect answers. E.g., "Focus on 'Interpreting Figurative Language': the worksheet questions for this competency proved tricky."]
+### D. Key Areas for Improvement (2–3 points)  
+List weaker competencies (< 0.6) or recurring misconceptions.
 
-E. Suggested Future Sessions (3-5 tailored sessions):
-Must be directly relevant to the course, targeting 90%+ mastery.
+---
+
+### E. Suggested Future Sessions (5 sessions)
+
 ${worksheet.worksheet_number === 1 ? `
-- Session 1: Focus on the most critical weak area/competency
-- Session 2: Address the next gap or build on a strength
-- Session 3: Exam question strategy with targeted question types
-- Sessions 4-5 (optional): Comprehensive review or mixed practice` : `
-These recommendations build on previous performance and aim to move you towards 90%+ mastery.`}
+Generate 5 adaptive learning sessions. Each session is generated from competency-level data and directly addresses weak areas.
 
-Output Format:
-Provide your response as a single, valid JSON object with this exact structure.`;
+#### Session 1 – Foundations First: [Most Critical Weak Area / Competency]  
+Purpose: Repair the competency with lowest mastery or frequent misconceptions.  
+session_focus_description: Re-teach core concepts through simplified examples and guided practice.
+
+#### Session 2 – Bridging the Gap: [Secondary Weakness / Linked Competency]  
+Purpose: Strengthen the next-most-affected competency.  
+session_focus_description: Provide guided practice on near-miss questions and error-analysis tasks.
+
+#### Session 3 – Exam Question Strategy: [Challenging Format / Question Type]  
+Purpose: Develop exam-style fluency on formats that caused difficulty.  
+session_focus_description: Replicate real exam conditions with timed practice on high-frequency types.
+
+#### Session 4 – Applied Competency Integration: [Cross-Linking Concepts]  
+Purpose: Transfer learning between related competencies.  
+session_focus_description: Design tasks that blend two or more competencies.
+
+#### Session 5 – Mastery Simulation & Feedback Loop  
+Purpose: Measure growth and reinforce learning.  
+session_focus_description: Deliver a mini exam with revisited misconceptions to test retention.
+` : `
+These recommendations build on previous performance and aim to move towards 90%+ mastery.
+Generate 3-5 tailored sessions based on current weak areas.
+`}
+
+---
+
+### Output (JSON-Only)`;
 
       const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
         prompt: feedbackPrompt,
         response_json_schema: {
           type: "object",
           properties: {
-            feedback_session_title: { type: "string" },
-            predicted_exam_score_percentage: { type: "string" },
-            prediction_calculation_rationale: { type: "string" },
-            overall_performance_summary_text: { type: "string" },
-            identified_strengths_list: {
+            predicted_exam_score_percentage: { type: "integer" },
+            prediction_rationale: { type: "string" },
+            performance_summary: { type: "string" },
+            strengths: {
               type: "array",
               items: { type: "string" }
             },
-            key_areas_for_improvement_list: {
+            areas_for_improvement: {
               type: "array",
               items: { type: "string" }
             },
-            suggested_future_sessions_plan: {
+            suggested_next_sessions: {
               type: "array",
               items: {
                 type: "object",
@@ -691,16 +720,19 @@ Provide your response as a single, valid JSON object with this exact structure.`
                 },
                 required: ["session_number", "session_name", "session_focus_description"]
               }
+            },
+            competency_mastery_breakdown: {
+              type: "object",
+              additionalProperties: { type: "number" }
             }
           },
           required: [
-            "feedback_session_title",
             "predicted_exam_score_percentage",
-            "prediction_calculation_rationale",
-            "overall_performance_summary_text",
-            "identified_strengths_list",
-            "key_areas_for_improvement_list",
-            "suggested_future_sessions_plan"
+            "prediction_rationale",
+            "performance_summary",
+            "strengths",
+            "areas_for_improvement",
+            "suggested_next_sessions"
           ]
         }
       });
@@ -711,11 +743,9 @@ Provide your response as a single, valid JSON object with this exact structure.`
         let feedback = "";
         
         if (q.ai_grading) {
-          // Use AI grading score (out of 10)
           pointsEarned = q.ai_grading.score_out_of_10;
           feedback = q.ai_grading.rationale_short;
         } else {
-          // Use binary scoring for MCQ/T/F
           pointsEarned = q.is_correct ? 10 : 0;
           feedback = q.is_correct 
             ? `Excellent! Your answer demonstrates strong understanding of ${q.assessed_competencies?.[0] || 'this concept'}.`
@@ -730,34 +760,44 @@ Provide your response as a single, valid JSON object with this exact structure.`
         };
       });
 
-      const scoreNum = parseInt(feedbackData.predicted_exam_score_percentage);
+      const scoreNum = feedbackData.predicted_exam_score_percentage;
       let letterGrade = "F";
-      if (!isNaN(scoreNum)) {
-        if (scoreNum >= 90) letterGrade = "A+";
-        else if (scoreNum >= 85) letterGrade = "A";
-        else if (scoreNum >= 80) letterGrade = "A-";
-        else if (scoreNum >= 77) letterGrade = "B+";
-        else if (scoreNum >= 73) letterGrade = "B";
-        else if (scoreNum >= 70) letterGrade = "B-";
-        else if (scoreNum >= 67) letterGrade = "C+";
-        else if (scoreNum >= 63) letterGrade = "C";
-        else if (scoreNum >= 60) letterGrade = "C-";
-        else if (scoreNum >= 50) letterGrade = "D";
-      }
+      if (scoreNum >= 90) letterGrade = "A+";
+      else if (scoreNum >= 85) letterGrade = "A";
+      else if (scoreNum >= 80) letterGrade = "A-";
+      else if (scoreNum >= 77) letterGrade = "B+";
+      else if (scoreNum >= 73) letterGrade = "B";
+      else if (scoreNum >= 70) letterGrade = "B-";
+      else if (scoreNum >= 67) letterGrade = "C+";
+      else if (scoreNum >= 63) letterGrade = "C";
+      else if (scoreNum >= 60) letterGrade = "C-";
+      else if (scoreNum >= 50) letterGrade = "D";
+
+      // Map new response format to existing ai_feedback structure
+      const mappedAiFeedback = {
+        feedback_session_title: `Worksheet ${worksheet.worksheet_number} Feedback`,
+        predicted_exam_score_percentage: scoreNum.toString(), // Convert back to string for consistency with old type
+        prediction_calculation_rationale: feedbackData.prediction_rationale,
+        overall_performance_summary_text: feedbackData.performance_summary,
+        identified_strengths_list: feedbackData.strengths,
+        key_areas_for_improvement_list: feedbackData.areas_for_improvement,
+        suggested_future_sessions_plan: feedbackData.suggested_next_sessions,
+        competency_mastery_breakdown: feedbackData.competency_mastery_breakdown || {}
+      };
 
       await base44.entities.Worksheet.update(worksheet.id, {
         questions: questionsWithGrading,
         feedback: questionFeedback,
-        total_score: isNaN(scoreNum) ? 0 : scoreNum,
+        total_score: scoreNum,
         predicted_grade: letterGrade,
-        ai_feedback: feedbackData,
+        ai_feedback: mappedAiFeedback,
         status: "completed",
         completed: true
       });
 
-      if (worksheet.worksheet_number === 1 && feedbackData.suggested_future_sessions_plan) {
+      if (worksheet.worksheet_number === 1 && feedbackData.suggested_next_sessions) {
         await Promise.all(
-          feedbackData.suggested_future_sessions_plan.map((session, idx) =>
+          feedbackData.suggested_next_sessions.map((session, idx) =>
             base44.entities.Worksheet.create({
               lesson_id: lesson.id,
               worksheet_number: idx + 2,
@@ -911,7 +951,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
 
       const totalQuizzes = (user.total_quizzes_taken || 0) + 1;
       const currentAvg = user.average_score || 0;
-      const newAvg = isNaN(scoreNum) ? currentAvg : ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
+      const newAvg = ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
 
       await base44.auth.updateMe({
         total_quizzes_taken: totalQuizzes,
