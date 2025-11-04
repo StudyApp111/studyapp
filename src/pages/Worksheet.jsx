@@ -6,12 +6,11 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, FileText, AlertCircle } from "lucide-react"; // Added AlertCircle
+import { Loader2, FileText } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 import { Sparkles } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert"; // Added Alert, AlertDescription
 
 export default function Worksheet() {
   const navigate = useNavigate();
@@ -26,7 +25,6 @@ export default function Worksheet() {
   const [isGrading, setIsGrading] = useState(false);
   const gradingTimeoutRef = useRef(null);
   const lastGradedAnswerRef = useRef({});
-  const [error, setError] = useState(null); // Added error state
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -42,15 +40,13 @@ export default function Worksheet() {
 
   const loadOrGenerateWorksheet = async (lessonId) => {
     setIsGenerating(true);
-    setError(null); // Clear any previous errors
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const worksheetNum = parseInt(urlParams.get('worksheet')) || 1;
       
       const lessonData = await base44.entities.Lesson.filter({ id: lessonId });
       if (lessonData.length === 0) {
-        setError("Lesson not found."); // Set specific error message
-        setIsGenerating(false);
+        navigate(createPageUrl("Home"));
         return;
       }
       setLesson(lessonData[0]);
@@ -98,7 +94,8 @@ export default function Worksheet() {
       }
     } catch (error) {
       console.error("Error loading worksheet:", error);
-      setError(`Failed to load or generate worksheet: ${error.message}. Please try again.`); // Set error state
+      alert("Failed to load or generate worksheet. Please try again. Error: " + error.message);
+      navigate(createPageUrl("Home"));
     }
     setIsGenerating(false);
   };
@@ -208,7 +205,6 @@ Provide your response as a single, valid JSON object with the structure specifie
           }
         }
 
-        // Retain detailed adaptive prompt for better AI performance
         aiPrompt = `Context
 You are a master assessment designer and expert tutor (simulated 180 IQ). Your primary function is to create the next 10-question adaptive worksheet for the student in ${lessonData.course_name}. This worksheet must continue to be highly predictive of exam performance by iteratively building upon the student's performance on the previous worksheet and aligning with the curriculum map. The questions must precisely mirror the style, type, wording, and difficulty detailed in the curriculum map.
 
@@ -286,8 +282,6 @@ Output Format:
 Provide your response as a single, valid JSON object with this exact structure.`;
       }
 
-      console.log("Calling generateWorksheet function...");
-      
       const { data: worksheetData } = await base44.functions.invoke('generateWorksheet', {
         prompt: aiPrompt,
         response_json_schema: {
@@ -341,8 +335,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         }
       });
 
-      console.log("Worksheet data received:", worksheetData ? "Success" : "Failed");
-
       if (!worksheetData || !worksheetData.worksheet_questions || worksheetData.worksheet_questions.length === 0) {
         throw new Error("Invalid worksheet data received from AI");
       }
@@ -373,10 +365,10 @@ Provide your response as a single, valid JSON object with this exact structure.`
       }
 
       setWorksheet(updatedWorksheet);
-      console.log("Worksheet created/updated successfully");
     } catch (error) {
       console.error("Error generating worksheet:", error);
-      throw error; // Re-throw to be caught by loadOrGenerateWorksheet
+      alert("Failed to generate worksheet. Please try again. Error: " + error.message);
+      navigate(createPageUrl("Home"));
     }
   };
 
@@ -494,7 +486,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
 
   const submitWorksheet = async () => {
     setIsSubmitting(true);
-    setError(null); // Clear any previous errors
     try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
@@ -574,7 +565,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         };
       });
 
-      // Retain detailed feedback prompt for better AI performance
       const feedbackPrompt = `You are an experienced teacher and assessment specialist for ${lesson.course_name} at ${learningProfile.grade || "N/A"},
 operating within the academic standards of ${learningProfile.school || "N/A"} in ${learningProfile.city || "N/A"}.
 You have a deep understanding of the curriculum (defined in Lesson.curriculum_map) and how it is assessed.
@@ -984,42 +974,10 @@ Generate 3-5 tailored sessions based on current weak areas.
       }, earnedNow.length > 0 ? 2000 : 500);
     } catch (error) {
       console.error("Error submitting worksheet:", error);
-      setError(`Failed to submit worksheet: ${error.message}. Please try again.`); // Set error state
+      alert("Failed to submit worksheet. Please try again. Error: " + error.message);
       setIsSubmitting(false);
     }
   };
-
-  // Error display block
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md p-8 shadow-2xl">
-          <AlertCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2 text-center">
-            Something Went Wrong
-          </h2>
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-          <div className="flex gap-3">
-            <Button
-              onClick={() => navigate(createPageUrl("Home"))}
-              variant="outline"
-              className="flex-1"
-            >
-              Go Home
-            </Button>
-            <Button
-              onClick={() => window.location.reload()}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
-            >
-              Try Again
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   if (isGenerating) {
     return (
@@ -1032,10 +990,9 @@ Generate 3-5 tailored sessions based on current weak areas.
           <p className="text-slate-600 mb-6">
             {worksheet 
               ? `Retrieving your saved Worksheet ${worksheet.worksheet_number || ''}...`
-              : "Creating a personalized exam based on your diagnostic results... This may take up to 30 seconds."}
+              : "Creating a personalized exam based on your diagnostic results..."}
           </p>
           <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
-          <p className="text-sm text-slate-500 mt-4">Please don't close this page</p>
         </Card>
       </div>
     );
