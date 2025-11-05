@@ -11,7 +11,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 import { Sparkles } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Worksheet() {
   const navigate = useNavigate();
@@ -25,7 +24,6 @@ export default function Worksheet() {
   const [newBadges, setNewBadges] = React.useState([]);
   const [isGrading, setIsGrading] = useState(false);
   const [error, setError] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
   const gradingTimeoutRef = useRef(null);
   const lastGradedAnswerRef = useRef({});
 
@@ -33,15 +31,19 @@ export default function Worksheet() {
     const urlParams = new URLSearchParams(window.location.search);
     const lessonId = urlParams.get('lessonId');
     
+    console.log('[Worksheet] Starting with lessonId:', lessonId);
+    
     if (!lessonId) {
+      console.log('[Worksheet] No lessonId, navigating to Home');
       navigate(createPageUrl("Home"));
       return;
     }
 
     loadOrGenerateWorksheet(lessonId);
-  }, [navigate, retryCount]); // Added retryCount as dependency for re-attempting on retry
+  }, [navigate]);
 
   const loadOrGenerateWorksheet = async (lessonId) => {
+    console.log('[Worksheet] loadOrGenerateWorksheet called for:', lessonId);
     setIsGenerating(true);
     setError(null);
     
@@ -49,8 +51,10 @@ export default function Worksheet() {
       const urlParams = new URLSearchParams(window.location.search);
       const worksheetNum = parseInt(urlParams.get('worksheet')) || 1;
       
+      console.log('[Worksheet] Loading lesson data...');
       const lessonData = await base44.entities.Lesson.filter({ id: lessonId });
       if (lessonData.length === 0) {
+        console.error('[Worksheet] Lesson not found');
         setError({
           title: "Lesson Not Found",
           message: "The lesson you're looking for doesn't exist.",
@@ -59,17 +63,21 @@ export default function Worksheet() {
         setIsGenerating(false);
         return;
       }
+      console.log('[Worksheet] Lesson loaded:', lessonData[0].course_name);
       setLesson(lessonData[0]);
 
       let quizData = null;
       if (worksheetNum === 1) {
+        console.log('[Worksheet] Loading diagnostic quiz for worksheet 1...');
         const diagnosticQuizData = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
         if (diagnosticQuizData.length === 0) {
+          console.log('[Worksheet] No quiz found, redirecting to DiagnosticQuiz');
           navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lessonId}`);
           return;
         }
         setQuiz(diagnosticQuizData[0]);
         quizData = diagnosticQuizData[0];
+        console.log('[Worksheet] Quiz loaded');
       } else {
         const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
         if (existingQuiz.length > 0) {
@@ -78,40 +86,46 @@ export default function Worksheet() {
         }
       }
 
+      console.log('[Worksheet] Loading worksheet data...');
       const existingWorksheet = await base44.entities.Worksheet.filter({ 
         lesson_id: lessonId,
         worksheet_number: worksheetNum
       });
 
       if (existingWorksheet.length > 0) {
-        console.log("Loading existing worksheet", worksheetNum);
+        console.log('[Worksheet] Found existing worksheet');
         const loadedWorksheet = existingWorksheet[0];
         
         if (loadedWorksheet.completed) {
+          console.log('[Worksheet] Worksheet already completed, redirecting to Feedback');
           navigate(createPageUrl("Feedback") + `?lessonId=${lessonId}&worksheet=${worksheetNum}`);
           return;
         }
         
         if (!loadedWorksheet.questions || loadedWorksheet.questions.length === 0) {
-          console.log("Worksheet is a placeholder, generating questions now");
+          console.log('[Worksheet] Worksheet is placeholder, generating questions...');
           await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum, loadedWorksheet.id);
         } else {
+          console.log('[Worksheet] Loading existing worksheet with', loadedWorksheet.questions.length, 'questions');
           setWorksheet(loadedWorksheet);
         }
       } else {
-        console.log("Generating new worksheet", worksheetNum);
+        console.log('[Worksheet] No existing worksheet, generating new one...');
         await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum);
       }
+      
+      console.log('[Worksheet] Load complete');
     } catch (error) {
-      console.error("Error loading worksheet:", error);
+      console.error('[Worksheet] Error in loadOrGenerateWorksheet:', error);
       setError({
         title: "Failed to Load Worksheet",
         message: error.message || "An unexpected error occurred while loading the worksheet.",
         canRetry: true,
         details: error.toString()
       });
+    } finally {
+      setIsGenerating(false);
     }
-    setIsGenerating(false);
   };
 
   const generateWorksheet = async (lessonId, lessonData, quizData, worksheetNum, existingWorksheetId = null) => {
@@ -381,7 +395,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
       setWorksheet(updatedWorksheet);
     } catch (error) {
       console.error("Error generating worksheet:", error);
-      throw error; // Re-throw to be caught by loadOrGenerateWorksheet
+      throw error;
     }
   };
 
@@ -761,8 +775,7 @@ Generate 3-5 tailored sessions based on current weak areas.
           pointsEarned = q.ai_grading.score_out_of_10;
           feedback = q.ai_grading.rationale_short;
         } else {
-          pointsEarned = q.is_correct ? 10 : 0;
-          feedback = q.is_correct 
+          pointsEarned = q.is_correct 
             ? `Excellent! Your answer demonstrates strong understanding of ${q.assessed_competencies?.[0] || 'this concept'}.`
             : `This question assessed ${q.assessed_competencies?.[0] || 'key concepts'}. Review the explanation provided to strengthen your understanding.`;
         }
@@ -1002,9 +1015,7 @@ Generate 3-5 tailored sessions based on current weak areas.
   const handleRetry = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const lessonId = urlParams.get('lessonId');
-    setRetryCount(prev => prev + 1);
-    // Explicitly call loadOrGenerateWorksheet to re-attempt
-    loadOrGenerateWorksheet(lessonId); 
+    loadOrGenerateWorksheet(lessonId);
   };
 
   // Error Display
