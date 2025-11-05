@@ -205,7 +205,7 @@ Provide your response as a single, valid JSON object with the structure specifie
         const latestWorksheet = prevWorksheets.sort((a, b) => b.worksheet_number - a.worksheet_number)[0];
         
         const previousWorksheetPerformance = latestWorksheet.questions.map(q => ({
-          question_number: q.question_number,
+          question_number: q.question_type === "Multiple Choice" ? q.question_number : undefined,
           question_type: q.question_type,
           difficulty_index: q.difficulty_index,
           question_text: q.question_text,
@@ -516,13 +516,14 @@ Provide your response as a single, valid JSON object with this exact structure.`
     setError(null);
     
     try {
+      console.log('[Worksheet] Starting submitWorksheet');
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
         id: user.learning_profile_id 
       });
       const learningProfile = profile[0] || {};
 
-      // Grade each question appropriately
+      console.log('[Worksheet] Grading questions...');
       const questionsWithGrading = await Promise.all(worksheet.questions.map(async (q) => {
         const questionType = q.question_type.toLowerCase();
         
@@ -571,7 +572,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
         };
       }));
 
-      // Prepare worksheet performance data for the AI - UPDATED FORMAT
+      console.log('[Worksheet] Preparing worksheet performance data...');
       const worksheetPerformanceData = questionsWithGrading.map((q) => {
         // Calculate score_out_of_10 for the new prompt format
         let scoreOutOf10;
@@ -722,6 +723,7 @@ Generate 3-5 tailored sessions based on current weak areas.
 
 ### Output (JSON-Only)`;
 
+      console.log('[Worksheet] Calling feedbackGrade function...');
       const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
         prompt: feedbackPrompt,
         response_json_schema: {
@@ -766,16 +768,21 @@ Generate 3-5 tailored sessions based on current weak areas.
         }
       });
 
-      // Calculate points for feedback based on AI grading where available
+      console.log('[Worksheet] Feedback data received:', feedbackData);
+
+      console.log('[Worksheet] Creating question feedback...');
       const questionFeedback = questionsWithGrading.map((q, idx) => {
         let pointsEarned = 0;
         let feedback = "";
         
         if (q.ai_grading) {
+          // For AI graded questions
           pointsEarned = q.ai_grading.score_out_of_10;
           feedback = q.ai_grading.rationale_short;
         } else {
-          pointsEarned = q.is_correct 
+          // For MCQ/T/F questions
+          pointsEarned = q.is_correct ? 10 : 0;
+          feedback = q.is_correct 
             ? `Excellent! Your answer demonstrates strong understanding of ${q.assessed_competencies?.[0] || 'this concept'}.`
             : `This question assessed ${q.assessed_competencies?.[0] || 'key concepts'}. Review the explanation provided to strengthen your understanding.`;
         }
@@ -788,6 +795,7 @@ Generate 3-5 tailored sessions based on current weak areas.
         };
       });
 
+      console.log('[Worksheet] Calculating letter grade...');
       const scoreNum = feedbackData.predicted_exam_score_percentage;
       let letterGrade = "F";
       if (scoreNum >= 90) letterGrade = "A+";
@@ -813,6 +821,7 @@ Generate 3-5 tailored sessions based on current weak areas.
         competency_mastery_breakdown: feedbackData.competency_mastery_breakdown || {}
       };
 
+      console.log('[Worksheet] Updating worksheet entity...');
       await base44.entities.Worksheet.update(worksheet.id, {
         questions: questionsWithGrading,
         feedback: questionFeedback,
@@ -823,6 +832,7 @@ Generate 3-5 tailored sessions based on current weak areas.
         completed: true
       });
 
+      console.log('[Worksheet] Creating placeholder worksheets if needed...');
       if (worksheet.worksheet_number === 1 && feedbackData.suggested_next_sessions) {
         await Promise.all(
           feedbackData.suggested_next_sessions.map((session, idx) =>
@@ -839,10 +849,12 @@ Generate 3-5 tailored sessions based on current weak areas.
         );
       }
 
+      console.log('[Worksheet] Updating lesson status...');
       await base44.entities.Lesson.update(lesson.id, {
         status: "worksheet_completed"
       });
 
+      console.log('[Worksheet] Calculating gamification rewards...');
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
       let pointsEarned = 0;
       
@@ -981,6 +993,7 @@ Generate 3-5 tailored sessions based on current weak areas.
       const currentAvg = user.average_score || 0;
       const newAvg = ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
 
+      console.log('[Worksheet] Updating user stats...');
       await base44.auth.updateMe({
         total_quizzes_taken: totalQuizzes,
         average_score: Math.round(newAvg),
@@ -997,11 +1010,12 @@ Generate 3-5 tailored sessions based on current weak areas.
         setNewBadges(earnedNow);
       }
 
+      console.log('[Worksheet] Navigating to Feedback page...');
       setTimeout(() => {
         navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
       }, earnedNow.length > 0 ? 2000 : 500);
     } catch (error) {
-      console.error("Error submitting worksheet:", error);
+      console.error('[Worksheet] Error submitting worksheet:', error);
       setError({
         title: "Failed to Submit Worksheet",
         message: error.message || "An unexpected error occurred while submitting your worksheet.",
