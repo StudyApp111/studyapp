@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, FileText, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
@@ -23,7 +23,6 @@ export default function Worksheet() {
   const [showConfetti, setShowConfetti] = React.useState(false);
   const [newBadges, setNewBadges] = React.useState([]);
   const [isGrading, setIsGrading] = useState(false);
-  const [error, setError] = useState(null);
   const gradingTimeoutRef = useRef(null);
   const lastGradedAnswerRef = useRef({});
 
@@ -31,10 +30,7 @@ export default function Worksheet() {
     const urlParams = new URLSearchParams(window.location.search);
     const lessonId = urlParams.get('lessonId');
     
-    console.log('[Worksheet] Starting with lessonId:', lessonId);
-    
     if (!lessonId) {
-      console.log('[Worksheet] No lessonId, navigating to Home');
       navigate(createPageUrl("Home"));
       return;
     }
@@ -43,41 +39,27 @@ export default function Worksheet() {
   }, [navigate]);
 
   const loadOrGenerateWorksheet = async (lessonId) => {
-    console.log('[Worksheet] loadOrGenerateWorksheet called for:', lessonId);
     setIsGenerating(true);
-    setError(null);
-    
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const worksheetNum = parseInt(urlParams.get('worksheet')) || 1;
       
-      console.log('[Worksheet] Loading lesson data...');
       const lessonData = await base44.entities.Lesson.filter({ id: lessonId });
       if (lessonData.length === 0) {
-        console.error('[Worksheet] Lesson not found');
-        setError({
-          title: "Lesson Not Found",
-          message: "The lesson you're looking for doesn't exist.",
-          canRetry: false
-        });
-        setIsGenerating(false);
+        navigate(createPageUrl("Home"));
         return;
       }
-      console.log('[Worksheet] Lesson loaded:', lessonData[0].course_name);
       setLesson(lessonData[0]);
 
       let quizData = null;
       if (worksheetNum === 1) {
-        console.log('[Worksheet] Loading diagnostic quiz for worksheet 1...');
         const diagnosticQuizData = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
         if (diagnosticQuizData.length === 0) {
-          console.log('[Worksheet] No quiz found, redirecting to DiagnosticQuiz');
           navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lessonId}`);
           return;
         }
         setQuiz(diagnosticQuizData[0]);
         quizData = diagnosticQuizData[0];
-        console.log('[Worksheet] Quiz loaded');
       } else {
         const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
         if (existingQuiz.length > 0) {
@@ -86,46 +68,36 @@ export default function Worksheet() {
         }
       }
 
-      console.log('[Worksheet] Loading worksheet data...');
       const existingWorksheet = await base44.entities.Worksheet.filter({ 
         lesson_id: lessonId,
         worksheet_number: worksheetNum
       });
 
       if (existingWorksheet.length > 0) {
-        console.log('[Worksheet] Found existing worksheet');
+        console.log("Loading existing worksheet", worksheetNum);
         const loadedWorksheet = existingWorksheet[0];
         
         if (loadedWorksheet.completed) {
-          console.log('[Worksheet] Worksheet already completed, redirecting to Feedback');
           navigate(createPageUrl("Feedback") + `?lessonId=${lessonId}&worksheet=${worksheetNum}`);
           return;
         }
         
         if (!loadedWorksheet.questions || loadedWorksheet.questions.length === 0) {
-          console.log('[Worksheet] Worksheet is placeholder, generating questions...');
+          console.log("Worksheet is a placeholder, generating questions now");
           await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum, loadedWorksheet.id);
         } else {
-          console.log('[Worksheet] Loading existing worksheet with', loadedWorksheet.questions.length, 'questions');
           setWorksheet(loadedWorksheet);
         }
       } else {
-        console.log('[Worksheet] No existing worksheet, generating new one...');
+        console.log("Generating new worksheet", worksheetNum);
         await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum);
       }
-      
-      console.log('[Worksheet] Load complete');
     } catch (error) {
-      console.error('[Worksheet] Error in loadOrGenerateWorksheet:', error);
-      setError({
-        title: "Failed to Load Worksheet",
-        message: error.message || "An unexpected error occurred while loading the worksheet.",
-        canRetry: true,
-        details: error.toString()
-      });
-    } finally {
-      setIsGenerating(false);
+      console.error("Error loading worksheet:", error);
+      alert("Failed to load or generate worksheet. Please try again. Error: " + error.message);
+      navigate(createPageUrl("Home"));
     }
+    setIsGenerating(false);
   };
 
   const generateWorksheet = async (lessonId, lessonData, quizData, worksheetNum, existingWorksheetId = null) => {
@@ -205,7 +177,7 @@ Provide your response as a single, valid JSON object with the structure specifie
         const latestWorksheet = prevWorksheets.sort((a, b) => b.worksheet_number - a.worksheet_number)[0];
         
         const previousWorksheetPerformance = latestWorksheet.questions.map(q => ({
-          question_number: q.question_type === "Multiple Choice" ? q.question_number : undefined,
+          question_number: q.question_number,
           question_type: q.question_type,
           difficulty_index: q.difficulty_index,
           question_text: q.question_text,
@@ -395,7 +367,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
       setWorksheet(updatedWorksheet);
     } catch (error) {
       console.error("Error generating worksheet:", error);
-      throw error;
+      alert("Failed to generate worksheet. Please try again. Error: " + error.message);
+      navigate(createPageUrl("Home"));
     }
   };
 
@@ -513,17 +486,14 @@ Provide your response as a single, valid JSON object with this exact structure.`
 
   const submitWorksheet = async () => {
     setIsSubmitting(true);
-    setError(null);
-    
     try {
-      console.log('[Worksheet] Starting submitWorksheet');
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
         id: user.learning_profile_id 
       });
       const learningProfile = profile[0] || {};
 
-      console.log('[Worksheet] Grading questions...');
+      // Grade each question appropriately
       const questionsWithGrading = await Promise.all(worksheet.questions.map(async (q) => {
         const questionType = q.question_type.toLowerCase();
         
@@ -558,7 +528,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
             };
           }
           
-          // Fallback to exact match if AI grading fails
+          // Fallback to exact match if AI grading fails or question type is not strictly graded by AI
           return {
             ...q,
             is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
@@ -572,175 +542,145 @@ Provide your response as a single, valid JSON object with this exact structure.`
         };
       }));
 
-      console.log('[Worksheet] Preparing worksheet performance data...');
-      const worksheetPerformanceData = questionsWithGrading.map((q) => {
-        // Calculate score_out_of_10 for the new prompt format
-        let scoreOutOf10;
-        if (q.ai_grading && q.ai_grading.score_out_of_10 !== undefined) {
-          scoreOutOf10 = q.ai_grading.score_out_of_10;
-        } else {
-          // For MCQ/T/F, convert binary to 0 or 10
-          scoreOutOf10 = q.is_correct ? 10 : 0;
-        }
+      // Prepare worksheet performance data for the AI
+      const worksheetPerformanceData = questionsWithGrading.map((q, idx) => ({
+        question_number: q.question_number,
+        question_type: q.question_type,
+        difficulty_index: q.difficulty_index,
+        question_text: q.question_text,
+        options: q.options || [],
+        student_answer: q.user_answer || "No answer provided",
+        correct_answer: q.correct_answer,
+        explanation: q.explanation,
+        assessed_competencies: q.assessed_competencies,
+        targeted_misconception: q.targeted_misconception,
+        is_correct: q.is_correct,
+        ai_grading: q.ai_grading || null
+      }));
 
-        return {
-          question_number: q.question_number,
-          question_type: q.question_type,
-          worksheet_difficulty_index: q.difficulty_index, // Renamed to match new prompt
-          question_text: q.question_text,
-          assessed_competencies: q.assessed_competencies || [],
-          student_answer: q.user_answer || "No answer provided",
-          score_out_of_10: scoreOutOf10, // New format - score at top level
-          targeted_misconception: q.targeted_misconception || "N/A"
-        };
-      });
+      const feedbackPrompt = `Context: You are an experienced teacher grading Worksheet ${worksheet.worksheet_number} of 6 for ${lesson.course_name} at ${learningProfile.grade || "N/A"}. You operate within the educational standards of ${learningProfile.school || "N/A"} and ${learningProfile.city || "N/A"}. You have a deep understanding of the curriculum and how it's assessed. The student has just completed a 10-question worksheet that was meticulously designed to mirror actual exam conditions in terms of style, question types, wording, and difficulty, based on the curriculum map. Your primary task is to analyze their worksheet performance to provide an accurate predicted exam grade, insightful feedback, and actionable recommendations for future study.
 
-      const feedbackPrompt = `You are an experienced teacher and assessment specialist for ${lesson.course_name} at ${learningProfile.grade || "N/A"},
-operating within the academic standards of ${learningProfile.school || "N/A"} in ${learningProfile.city || "N/A"}.
-You have a deep understanding of the curriculum (defined in Lesson.curriculum_map) and how it is assessed.
+IMPORTANT: Some questions have been AI-graded for short/long answers. These questions include an "ai_grading" object with detailed scoring. Use this AI grading data in your analysis.
 
-The student has just completed a 10-question worksheet that mirrors real exam conditions.
-Your mission is to analyze their worksheet performance to provide:
-1. An accurate predicted exam grade.
-2. Insightful feedback grounded in the curriculum map.
-3. Actionable, data-driven next-step recommendations aligned with key competencies.
-
----
-
-### Input Data
-
-Course / Unit Name: ${lesson.course_name}
-Student Written Description: ${lesson.description || "N/A"}
-Grade Level: ${learningProfile.grade || "N/A"}
+Input Data:
+Student's Grade Level: ${learningProfile.grade || "N/A"}
+Course/Unit Name: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
-City / Region: ${learningProfile.city || "N/A"}
+City/Region: ${learningProfile.city || "N/A"}
+Worksheet Number: ${worksheet.worksheet_number} of 6
 
-Diagnostic Quiz Results:
-${quiz ? JSON.stringify(quiz.questions.map((q, idx) => ({
+Detailed Curriculum Profile (JSON object):
+${JSON.stringify(lesson.curriculum_map, null, 2)}
+
+Diagnostic Quiz Performance:
+- Diagnostic Score: ${quiz?.score || 'N/A'}%
+- Diagnostic Results:
+${JSON.stringify(quiz?.questions.map((q, idx) => ({
   question_text: q.question_text,
   user_answer: quiz.user_answers?.[idx],
   is_correct: quiz.user_answers?.[idx] === q.correct_answer
-}))) : "N/A"}
+})) || [], null, 2)}
 
-Detailed Curriculum Profile:
-${JSON.stringify(lesson.curriculum_map, null, 2)}
-
-Worksheet ${worksheet.worksheet_number} Performance Data:
+Worksheet ${worksheet.worksheet_number} Performance:
+- Analysis Summary:
+${JSON.stringify(worksheet.analysis_summary, null, 2)}
+- Questions with Student Answers:
 ${JSON.stringify(worksheetPerformanceData, null, 2)}
 
----
+Mission: Deliver a comprehensive performance analysis, including an accurate predicted exam grade (with clear calculation reasoning), constructive feedback, and targeted future session plans.
 
-## Part 1: Performance Analysis & Grade Prediction Calculation
+Part 1: Performance Analysis & Grade Prediction Calculation
 
-(If WorksheetPerformanceData shows all scores = 0 / 10, skip calculations and directly fill "Predicted Grade & Rationale" in Part 2 with the 0 / 10 guidance.  
-If all = 10 / 10, handle with the exceptional-performance narrative.)
+(If WorksheetPerformanceData shows 0 correct answers out of 10, do NOT perform steps 1-6. Instead, directly populate the "Predicted Grade & Rationale" section in Part 2 with the specific 0/10 guidance. Similarly, handle 10/10 performance with adjusted narrative as outlined in Part 2.)
 
-### 1️⃣ Initialize Per-Question Score  
-For each question in WorksheetPerformanceData: convert score_out_of_10 to base score = (score_out_of_10 ÷ 10).
+1. Initialize Per-Question Score:
+For each question: 
+- If ai_grading exists, use (ai_grading.score_out_of_10 / 10) as the base score (normalized to 0-1).
+- Else if is_correct is true, assign a base score of 0.9 (strong indication of knowledge). 
+- Else (if false and no ai_grading), assign 0.2 (acknowledging some exposure but incorrect application).
 
-### 2️⃣ Adjust Score by Question Difficulty  
-Modify each base score using worksheet_difficulty_index:
-- High Challenge Exam-Level → × 1.05 (max 1.00)  
-- Challenging Exam-Level → × 1.02 (max 0.98)  
-- Moderate Exam-Level → × 1.00 (max 0.95)
+2. Adjust Score Based on Worksheet Question Difficulty:
+Modify the base score using the difficulty_index for each question:
+- Correct on "High Challenge Exam-Level": Multiply score by 1.05 (max score 0.98).
+- Correct on "Challenging Exam-Level": Multiply score by 1.02 (max score 0.96).
+- Correct on "Moderate Exam-Level": No change or multiply score by 1.01 (max score 0.92).
+- Incorrect on "Moderate Exam-Level": Multiply score by 0.7 (min score 0.05).
+- Incorrect on "Challenging Exam-Level": Multiply score by 0.8 (min score 0.08).
+- Incorrect on "High Challenge Exam-Level": Multiply score by 0.9 (min score 0.1).
 
-If base score is very low (< 0.25), scale slightly higher (× 0.7–0.9) to acknowledge minimal exposure.  
-Clamp all adjusted scores within 0.05–1.00.
+3. Calculate Weighted Competency Mastery:
+For each core_competency in the curriculum map:
+- Identify all worksheet questions linked to this competency via assessed_competencies.
+- Calculate the average adjusted score for these questions. This is the "MasteryScore" for that competency.
+- Calculate a preliminary aggregate score: Sum of (MasteryScore_for_Competency_X * Weight_of_Competency_X). Normalize to be out of 100.
 
-### 3️⃣ Calculate Weighted Competency Mastery  
-For each competency in the curriculum map core_competencies:
-- Identify all questions linked via assessed_competencies.  
-- Compute average adjusted score → MasteryScore.  
-- Weight by that competency's weight from competency_weightings.
+4. Adjust for Performance on Exam Question Styles:
+Analyze student's average scores for each question_type present in the worksheet.
+Compare this performance against the frequency of those types in the curriculum map's question_formats.
+If significant underperformance (<40% average score) on a question_type with high exam frequency (>30%), apply a small negative modifier to the aggregate score (e.g., -3 to -6 points). Conversely, strong performance on high-frequency types might warrant a smaller positive modifier (+0 to +2 points).
 
-If a competency was not tested, set to "not assessed," neutral (0.5), or infer from related competencies.  
-Sum (MasteryScore × Weight) for all competencies → preliminary aggregate (0–1 scale).
+5. Finalize Predicted Exam Score:
+The result is the PredictedExamScorePercentage. Round to the nearest whole number.
 
-### 4️⃣ Adjust for Performance by Question Format  
-Compare average performance by question_type with expected frequencies in curriculum map question_formats.  
-If a high-frequency type (> 30%) shows low mastery (< 0.4), apply −3 to −6 points.  
-If strong on high-frequency types, add +0 to +2 points.
+Part 2: Feedback Generation
 
-### 5️⃣ Finalize Predicted Exam Score  
-Multiply weighted aggregate by 100 to get percentage.  
-Apply any format-based adjustments from Step 4.  
-Round to nearest whole number → PredictedExamScorePercentage.
+(Adopt a supportive, constructive, and experienced teacher persona. Use grade-appropriate language.)
 
----
+A. Predicted Grade & Rationale:
 
-## Part 2: Feedback Generation
+(Handle Edge Cases First)
 
-Use professional, supportive language appropriate for ${learningProfile.grade || "the student's grade level"}.  
-All comments should connect directly to competencies in the curriculum map.
+If 0/10 Correct on Worksheet:
+- predicted_exam_score_percentage: "Not Calculable"
+- prediction_calculation_rationale: "With 0 correct answers on this predictive worksheet, a numerical exam prediction is not meaningful. This indicates a critical need to revisit foundational concepts across the curriculum before focusing on exam-style performance."
 
-### A. Predicted Grade & Rationale  
-- predicted_exam_score_percentage: [from Part 1 Step 5]  
-- prediction_rationale: "This score reflects competency-weighted mastery adjusted for difficulty and alignment with curriculum question formats."
+If 10/10 Correct on Worksheet:
+- predicted_exam_score_percentage: [Output score from Part 1; likely 95-100%]
+- prediction_calculation_rationale: "Exceptional performance (10/10 correct) on this challenging, exam-style worksheet demonstrates outstanding mastery across all assessed competencies and question types, leading to this high predicted score."
 
-Edge cases: if all ≤ 1 / 10 → "Not Calculable. Foundational review required." If all ≥ 9 / 10 → "Exceptional performance demonstrating exam-level mastery."
+(Standard Case: 1-9/10 Correct)
+- predicted_exam_score_percentage: [Output score from Part 1]
+- prediction_calculation_rationale: "This prediction is based on your detailed performance on the 10-question exam-style worksheet. It considers the difficulty of each question you answered, your demonstrated mastery of core competencies (weighted by their exam importance), and your effectiveness with different exam question formats. For questions with AI grading, nuanced partial credit was awarded. Strengths and areas for targeted improvement are outlined below."
 
-### B. Overall Performance Summary (≤ 2 sentences)  
-Provide an empathetic summary of patterns and readiness.
+B. Concise Overall Performance Summary (1-2 empathetic sentences):
+[Tailor to performance. E.g., "This worksheet provided a good challenge! It shows you're building a solid understanding of [Competency X], while areas like [Competency Y] and handling [Question Type Z] are good next steps for focus."]
 
-### C. Identified Strengths (2–3 points)  
-Reference competencies with strong mastery (≥ 0.8).
+C. Identified Strengths (2-3 specific bullet points):
+[Reference specific competencies where performance was strong. E.g., "Strong problem-solving in 'Algebraic Manipulations', correctly answering challenging multi-step questions."]
 
-### D. Key Areas for Improvement (2–3 points)  
-List weaker competencies (< 0.6) or recurring misconceptions.
+D. Key Areas for Improvement (2-3 specific, actionable bullet points):
+[Reference specific competencies or misconceptions linked to incorrect answers. E.g., "Focus on 'Interpreting Figurative Language': the worksheet questions for this competency proved tricky."]
 
----
-
-### E. Suggested Future Sessions (5 sessions)
-
+E. Suggested Future Sessions (3-5 tailored sessions):
+Must be directly relevant to the course, targeting 90%+ mastery.
 ${worksheet.worksheet_number === 1 ? `
-Generate 5 adaptive learning sessions. Each session is generated from competency-level data and directly addresses weak areas.
+- Session 1: Focus on the most critical weak area/competency
+- Session 2: Address the next gap or build on a strength
+- Session 3: Exam question strategy with targeted question types
+- Sessions 4-5 (optional): Comprehensive review or mixed practice` : `
+These recommendations build on previous performance and aim to move you towards 90%+ mastery.`}
 
-#### Session 1 – Foundations First: [Most Critical Weak Area / Competency]  
-Purpose: Repair the competency with lowest mastery or frequent misconceptions.  
-session_focus_description: Re-teach core concepts through simplified examples and guided practice.
+Output Format:
+Provide your response as a single, valid JSON object with this exact structure.`;
 
-#### Session 2 – Bridging the Gap: [Secondary Weakness / Linked Competency]  
-Purpose: Strengthen the next-most-affected competency.  
-session_focus_description: Provide guided practice on near-miss questions and error-analysis tasks.
-
-#### Session 3 – Exam Question Strategy: [Challenging Format / Question Type]  
-Purpose: Develop exam-style fluency on formats that caused difficulty.  
-session_focus_description: Replicate real exam conditions with timed practice on high-frequency types.
-
-#### Session 4 – Applied Competency Integration: [Cross-Linking Concepts]  
-Purpose: Transfer learning between related competencies.  
-session_focus_description: Design tasks that blend two or more competencies.
-
-#### Session 5 – Mastery Simulation & Feedback Loop  
-Purpose: Measure growth and reinforce learning.  
-session_focus_description: Deliver a mini exam with revisited misconceptions to test retention.
-` : `
-These recommendations build on previous performance and aim to move towards 90%+ mastery.
-Generate 3-5 tailored sessions based on current weak areas.
-`}
-
----
-
-### Output (JSON-Only)`;
-
-      console.log('[Worksheet] Calling feedbackGrade function...');
       const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
         prompt: feedbackPrompt,
         response_json_schema: {
           type: "object",
           properties: {
-            predicted_exam_score_percentage: { type: "integer" },
-            prediction_rationale: { type: "string" },
-            performance_summary: { type: "string" },
-            strengths: {
+            feedback_session_title: { type: "string" },
+            predicted_exam_score_percentage: { type: "string" },
+            prediction_calculation_rationale: { type: "string" },
+            overall_performance_summary_text: { type: "string" },
+            identified_strengths_list: {
               type: "array",
               items: { type: "string" }
             },
-            areas_for_improvement: {
+            key_areas_for_improvement_list: {
               type: "array",
               items: { type: "string" }
             },
-            suggested_next_sessions: {
+            suggested_future_sessions_plan: {
               type: "array",
               items: {
                 type: "object",
@@ -751,36 +691,31 @@ Generate 3-5 tailored sessions based on current weak areas.
                 },
                 required: ["session_number", "session_name", "session_focus_description"]
               }
-            },
-            competency_mastery_breakdown: {
-              type: "object",
-              additionalProperties: { type: "number" }
             }
           },
           required: [
+            "feedback_session_title",
             "predicted_exam_score_percentage",
-            "prediction_rationale",
-            "performance_summary",
-            "strengths",
-            "areas_for_improvement",
-            "suggested_next_sessions"
+            "prediction_calculation_rationale",
+            "overall_performance_summary_text",
+            "identified_strengths_list",
+            "key_areas_for_improvement_list",
+            "suggested_future_sessions_plan"
           ]
         }
       });
 
-      console.log('[Worksheet] Feedback data received:', feedbackData);
-
-      console.log('[Worksheet] Creating question feedback...');
+      // Calculate points for feedback based on AI grading where available
       const questionFeedback = questionsWithGrading.map((q, idx) => {
         let pointsEarned = 0;
         let feedback = "";
         
         if (q.ai_grading) {
-          // For AI graded questions
+          // Use AI grading score (out of 10)
           pointsEarned = q.ai_grading.score_out_of_10;
           feedback = q.ai_grading.rationale_short;
         } else {
-          // For MCQ/T/F questions
+          // Use binary scoring for MCQ/T/F
           pointsEarned = q.is_correct ? 10 : 0;
           feedback = q.is_correct 
             ? `Excellent! Your answer demonstrates strong understanding of ${q.assessed_competencies?.[0] || 'this concept'}.`
@@ -795,47 +730,34 @@ Generate 3-5 tailored sessions based on current weak areas.
         };
       });
 
-      console.log('[Worksheet] Calculating letter grade...');
-      const scoreNum = feedbackData.predicted_exam_score_percentage;
+      const scoreNum = parseInt(feedbackData.predicted_exam_score_percentage);
       let letterGrade = "F";
-      if (scoreNum >= 90) letterGrade = "A+";
-      else if (scoreNum >= 85) letterGrade = "A";
-      else if (scoreNum >= 80) letterGrade = "A-";
-      else if (scoreNum >= 77) letterGrade = "B+";
-      else if (scoreNum >= 73) letterGrade = "B";
-      else if (scoreNum >= 70) letterGrade = "B-";
-      else if (scoreNum >= 67) letterGrade = "C+";
-      else if (scoreNum >= 63) letterGrade = "C";
-      else if (scoreNum >= 60) letterGrade = "C-";
-      else if (scoreNum >= 50) letterGrade = "D";
+      if (!isNaN(scoreNum)) {
+        if (scoreNum >= 90) letterGrade = "A+";
+        else if (scoreNum >= 85) letterGrade = "A";
+        else if (scoreNum >= 80) letterGrade = "A-";
+        else if (scoreNum >= 77) letterGrade = "B+";
+        else if (scoreNum >= 73) letterGrade = "B";
+        else if (scoreNum >= 70) letterGrade = "B-";
+        else if (scoreNum >= 67) letterGrade = "C+";
+        else if (scoreNum >= 63) letterGrade = "C";
+        else if (scoreNum >= 60) letterGrade = "C-";
+        else if (scoreNum >= 50) letterGrade = "D";
+      }
 
-      // Map new response format to existing ai_feedback structure
-      const mappedAiFeedback = {
-        feedback_session_title: `Worksheet ${worksheet.worksheet_number} Feedback`,
-        predicted_exam_score_percentage: scoreNum.toString(), // Convert back to string for consistency with old type
-        prediction_calculation_rationale: feedbackData.prediction_rationale,
-        overall_performance_summary_text: feedbackData.performance_summary,
-        identified_strengths_list: feedbackData.strengths,
-        key_areas_for_improvement_list: feedbackData.areas_for_improvement,
-        suggested_future_sessions_plan: feedbackData.suggested_next_sessions,
-        competency_mastery_breakdown: feedbackData.competency_mastery_breakdown || {}
-      };
-
-      console.log('[Worksheet] Updating worksheet entity...');
       await base44.entities.Worksheet.update(worksheet.id, {
         questions: questionsWithGrading,
         feedback: questionFeedback,
-        total_score: scoreNum,
+        total_score: isNaN(scoreNum) ? 0 : scoreNum,
         predicted_grade: letterGrade,
-        ai_feedback: mappedAiFeedback,
+        ai_feedback: feedbackData,
         status: "completed",
         completed: true
       });
 
-      console.log('[Worksheet] Creating placeholder worksheets if needed...');
-      if (worksheet.worksheet_number === 1 && feedbackData.suggested_next_sessions) {
+      if (worksheet.worksheet_number === 1 && feedbackData.suggested_future_sessions_plan) {
         await Promise.all(
-          feedbackData.suggested_next_sessions.map((session, idx) =>
+          feedbackData.suggested_future_sessions_plan.map((session, idx) =>
             base44.entities.Worksheet.create({
               lesson_id: lesson.id,
               worksheet_number: idx + 2,
@@ -849,12 +771,10 @@ Generate 3-5 tailored sessions based on current weak areas.
         );
       }
 
-      console.log('[Worksheet] Updating lesson status...');
       await base44.entities.Lesson.update(lesson.id, {
         status: "worksheet_completed"
       });
 
-      console.log('[Worksheet] Calculating gamification rewards...');
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
       let pointsEarned = 0;
       
@@ -991,9 +911,8 @@ Generate 3-5 tailored sessions based on current weak areas.
 
       const totalQuizzes = (user.total_quizzes_taken || 0) + 1;
       const currentAvg = user.average_score || 0;
-      const newAvg = ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
+      const newAvg = isNaN(scoreNum) ? currentAvg : ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
 
-      console.log('[Worksheet] Updating user stats...');
       await base44.auth.updateMe({
         total_quizzes_taken: totalQuizzes,
         average_score: Math.round(newAvg),
@@ -1010,76 +929,15 @@ Generate 3-5 tailored sessions based on current weak areas.
         setNewBadges(earnedNow);
       }
 
-      console.log('[Worksheet] Navigating to Feedback page...');
       setTimeout(() => {
         navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
       }, earnedNow.length > 0 ? 2000 : 500);
     } catch (error) {
-      console.error('[Worksheet] Error submitting worksheet:', error);
-      setError({
-        title: "Failed to Submit Worksheet",
-        message: error.message || "An unexpected error occurred while submitting your worksheet.",
-        canRetry: false,
-        details: error.toString()
-      });
+      console.error("Error submitting worksheet:", error);
+      alert("Failed to submit worksheet. Please try again. Error: " + error.message);
       setIsSubmitting(false);
     }
   };
-
-  const handleRetry = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const lessonId = urlParams.get('lessonId');
-    loadOrGenerateWorksheet(lessonId);
-  };
-
-  // Error Display
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md shadow-2xl">
-          <CardContent className="p-8">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <AlertCircle className="w-8 h-8 text-red-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">{error.title}</h2>
-              <p className="text-slate-600 mb-6">{error.message}</p>
-              
-              {error.details && (
-                <details className="w-full mb-6 text-left">
-                  <summary className="cursor-pointer text-sm text-slate-500 hover:text-slate-700">
-                    Technical Details
-                  </summary>
-                  <pre className="mt-2 p-3 bg-slate-100 rounded text-xs overflow-auto max-h-40">
-                    {error.details}
-                  </pre>
-                </details>
-              )}
-              
-              <div className="flex gap-3 w-full">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate(createPageUrl("Home"))}
-                  className="flex-1"
-                >
-                  Go Home
-                </Button>
-                {error.canRetry && (
-                  <Button
-                    onClick={handleRetry}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Retry
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   if (isGenerating) {
     return (
