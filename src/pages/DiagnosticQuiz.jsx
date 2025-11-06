@@ -88,7 +88,7 @@ export default function DiagnosticQuiz() {
 
 Create a clear, concise, and engaging "Smart Summary" of key concepts for the student, leveraging the provided detailed curriculum.
 
-Design a 5-question "Diagnostic Quiz" to effectively gauge the student's current understanding across core curriculum areas. This quiz will inform the creation of a subsequent personalized worksheet.
+Design a 5-question "Diagnostic Quiz" with ONLY Multiple Choice Questions (MCQs) to effectively gauge the student's current understanding across core curriculum areas. This quiz will inform the creation of a subsequent personalized worksheet.
 
 This entire experience should be warm, ${learningProfile.grade || 'student'}-friendly, and presented as if you are guiding the student step-by-step towards success.
 
@@ -110,46 +110,63 @@ Structure & Content:
 - If a student description is provided and is relevant, ensure this summary gives particular attention or slightly more detailed, clear explanations to those concepts.
 - Organize the summary logically: begin with foundational concepts and smoothly progress to more complex or granular details, ensuring a natural flow of information.
 
+Length Requirement:
+- CRITICAL: The summary MUST be between 250-350 words total. Be concise and focused.
+- Structure into 2-4 key sections with clear headings
+- Prioritize the most essential concepts only
+
 Language & Tone:
 - Use clear, intuitive, and engaging language precisely tailored to the specified grade level for easy comprehension. Employ techniques like short sentences, relatable analogies (where appropriate), and simple definitions for key terminology.
 - Maintain a consistently supportive, encouraging, and patient tone, as an effective teacher would when guiding a student.
 - Where pedagogically valuable, briefly explain the importance or relevance of key concepts.
 
-Length & Focus:
-- Aim for a summary that is comprehensive enough to be a valuable revision tool but concise enough not to overwhelm. Typically 300-600 words, or structured into 3-5 distinct key sections with clear headings.
-- Use markdown formatting for structure (headings with ##, bold text with **, italic with *, lists with -)
+Math Notation:
+- For superscripts (exponents, powers): use the format x^2 or E^2 (will be rendered properly)
+- For subscripts (chemical formulas): use the format H_2O or C_6H_12O_6 (will be rendered properly)
+- Use italics for variables: *x*, *y*, *velocity*
+- Example: "The equation *E* = *m*c^2 shows that energy equals mass times the speed of light squared"
+
+Formatting:
+- Use markdown: ## for headings, **bold** for key terms, *italic* for emphasis and variables, - for lists
 
 Task 2: Design the 5-Question Diagnostic Quiz
 
-Grounded in mastery learning principles and utilizing the curriculum map. Ensure the 5 questions collectively provide broad diagnostic coverage across several distinct core competencies.
+CRITICAL: ALL questions MUST be Multiple Choice Questions (MCQs) with exactly 4 answer options.
 
-Question Design & Coverage (5 Questions Total):
-- Employ multi-step questions where appropriate to assess multiple facets of a competency.
-- Strive for a balance: include items that touch upon foundational skills/knowledge as well as those requiring more granular understanding or simple application.
-- Scaffold difficulty across the 5 questions (e.g., starting with a more accessible concept).
+Grounded in mastery learning principles and utilizing the curriculum map. Ensure the 5 MCQs collectively provide broad diagnostic coverage across several distinct core competencies.
 
-Question Characteristics (FOR EACH of the 5 questions):
+Question Design & Coverage (5 MCQ Questions Total):
+- Each question must assess understanding of different core competencies
+- Strive for a balance: include items that touch upon foundational skills/knowledge as well as those requiring more granular understanding or simple application
+- Scaffold difficulty across the 5 questions (e.g., starting with a more accessible concept)
 
-a. Question Type: Select appropriate types (e.g., MCQ, Short Answer, True/False, Fill-in-the-Blank, simple Problem-Solving).
-   - For MCQs, provide 3-4 plausible distractors and clearly indicate the correct answer choice.
-   - CRITICAL: All answer options MUST use proper capitalization and maintain original case (e.g., "Fought" not "fought", "Brave" not "brave")
-   - For other types, provide the ideal correct answer with proper capitalization.
+Question Characteristics (FOR EACH of the 5 MCQ questions):
 
-b. Question Text Formatting:
-   - Use markdown for formatting: **bold** for emphasis, *italic* for special terms, and regular text otherwise
-   - Example: "In the sentence, 'The brave knight **fought** the dragon fiercely,' which word is a verb?"
+a. Question Type: MUST be "Multiple Choice" or "MCQ"
 
-c. Difficulty Index: Assign one label from:
-   - "Foundational": Basic recall, definitions, essential facts, or core prerequisite skills.
-   - "Conceptual": Understanding of concepts, relationships between ideas, interpretations, or simple applications.
-   - "Applied/Multi-step": Application to new scenarios, or involves multiple steps/concepts.
+b. Question Options: 
+   - MUST provide exactly 4 plausible answer options
+   - All options MUST use proper capitalization and maintain original case
+   - One option must be the correct answer
+   - Other 3 options should be plausible distractors that test common misconceptions
+   - Example: ["Mitochondria", "Nucleus", "Ribosome", "Chloroplast"]
 
-d. Targeted Misconception (Optional): If this question specifically tests a known common misconception, briefly state it. Otherwise use null.
+c. Question Text Formatting:
+   - Use markdown for formatting: **bold** for emphasis, *italic* for variables/special terms
+   - For math notation: use x^2 for superscripts, H_2O for subscripts, *x* for variables
+   - Example: "If *x*^2 + 5*x* + 6 = 0, what are the values of *x*?"
+
+d. Difficulty Index: Assign one label from:
+   - "Foundational": Basic recall, definitions, essential facts, or core prerequisite skills
+   - "Conceptual": Understanding of concepts, relationships between ideas, interpretations, or simple applications
+   - "Applied/Multi-step": Application to new scenarios, or involves multiple steps/concepts
+
+e. Targeted Misconception (Optional): If this question specifically tests a known common misconception, briefly state it. Otherwise use null.
 
 Clarity & Appropriateness: Ensure all questions are clearly worded, unambiguous, and entirely appropriate for the specified grade level.
 
 Output Format:
-Provide your response as a single, valid JSON object with the following structure. Ensure the content_markdown field uses proper markdown formatting including ## for headings, ** for bold, * for italic, and - for lists.`;
+Provide your response as a single, valid JSON object with the following structure. Ensure the content_markdown field uses proper markdown formatting including ## for headings, ** for bold, * for italic and variables, - for lists, and proper math notation (x^2, H_2O).`;
 
       const { data: quizData } = await base44.functions.invoke('smartSummaryQuiz', {
         prompt: aiPrompt,
@@ -174,17 +191,19 @@ Provide your response as a single, valid JSON object with the following structur
                     type: "object",
                     properties: {
                       question_number: { type: "integer" },
-                      question_type: { type: "string" },
+                      question_type: { type: "string", enum: ["Multiple Choice", "MCQ"] },
                       difficulty_index: { type: "string" },
                       targeted_misconception: { type: "string" },
                       question_text: { type: "string" },
                       options: {
                         type: "array",
-                        items: { type: "string" }
+                        items: { type: "string" },
+                        minItems: 4,
+                        maxItems: 4
                       },
                       correct_answer: { type: "string" }
                     },
-                    required: ["question_number", "question_type", "difficulty_index", "question_text", "correct_answer"]
+                    required: ["question_number", "question_type", "difficulty_index", "question_text", "options", "correct_answer"]
                   }
                 }
               },

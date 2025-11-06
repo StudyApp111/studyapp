@@ -405,13 +405,19 @@ Ensure specificity, alignment with official regional curriculum standards, predi
               >
                 {isProcessing ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Analyzing Curriculum & Creating Lesson...
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin flex-shrink-0" />
+                    <span className="truncate">
+                      <span className="hidden sm:inline">Analyzing Curriculum & Creating Lesson...</span>
+                      <span className="sm:hidden">Creating Lesson...</span>
+                    </span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    Create Lesson & Start Diagnostic
+                    <Sparkles className="w-5 h-5 mr-2 flex-shrink-0" />
+                    <span className="truncate">
+                      <span className="hidden sm:inline">Create Lesson & Start Diagnostic</span>
+                      <span className="sm:hidden">Create Lesson</span>
+                    </span>
                   </>
                 )}
               </Button>

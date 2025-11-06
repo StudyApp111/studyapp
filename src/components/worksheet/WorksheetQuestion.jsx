@@ -20,6 +20,21 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
     setTimeout(() => setShowSuccess(false), 800);
   };
 
+  // Helper function to render text with math notation
+  const renderMathText = (text) => {
+    if (!text) return null;
+    
+    // Replace superscripts: x^2 becomes x²
+    let processed = text.replace(/\^(\d+)/g, '<sup>$1</sup>');
+    processed = processed.replace(/\^([a-zA-Z])/g, '<sup>$1</sup>');
+    
+    // Replace subscripts: H_2O becomes H₂O
+    processed = processed.replace(/_(\d+)/g, '<sub>$1</sub>');
+    processed = processed.replace(/_([a-zA-Z])/g, '<sub>$1</sub>');
+    
+    return processed;
+  };
+
   const renderQuestionInput = () => {
     const questionType = question.question_type.toLowerCase();
     
@@ -67,13 +82,12 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
                     <CheckCircle className="w-5 h-5 text-indigo-600" />
                   </motion.div>
                 )}
-                <RadioGroupItem value={option} id={`option-${idx}`} className="mt-0.5" />
+                <RadioGroupItem value={option} id={`option-${idx}`} className="mt-0.5 flex-shrink-0" />
                 <Label
                   htmlFor={`option-${idx}`}
                   className="flex-1 cursor-pointer text-slate-700 font-medium leading-relaxed"
-                >
-                  {option}
-                </Label>
+                  dangerouslySetInnerHTML={{ __html: renderMathText(option) }}
+                />
               </motion.div>
             ))}
           </div>
@@ -211,14 +225,14 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
               <motion.div 
-                className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center"
+                className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center flex-shrink-0"
                 whileHover={{ scale: 1.1, rotate: 5 }}
               >
                 <span className="text-white font-bold">{question.question_number}</span>
               </motion.div>
               <div>
                 <CardTitle className="text-xl">Question {question.question_number}</CardTitle>
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2 flex-wrap">
                   <Badge className={`${getDifficultyColor()} border`}>
                     {question.difficulty_index}
                   </Badge>
@@ -237,7 +251,10 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
                 p: ({ children }) => <span>{children}</span>, // Render p as span to prevent extra margin if it's the only child. Tailwind's prose handles top-level paragraph spacing.
                 strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
                 em: ({ children }) => <em className="italic">{children}</em>,
-                code: ({ children }) => <code className="px-1.5 py-0.5 bg-slate-100 rounded text-sm">{children}</code>
+                code: ({ children }) => {
+                  const text = String(children);
+                  return <span dangerouslySetInnerHTML={{ __html: renderMathText(text) }} className="px-1.5 py-0.5 bg-slate-100 rounded text-sm" />;
+                }
               }}
             >
               {question.question_text}
