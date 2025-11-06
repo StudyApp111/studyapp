@@ -175,26 +175,29 @@ export default function Feedback() {
             <span className="text-sm font-medium text-slate-700">Worksheet {worksheet.worksheet_number} Complete</span>
           </div>
           
-          <h1 className="text-5xl font-bold text-slate-900 mb-4">
+          <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 md:mb-6">
             Your Predicted Grade
           </h1>
           
+          {/* Mobile: 75% scale, Desktop: 100% scale */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className={`inline-block px-16 py-8 rounded-3xl bg-gradient-to-r ${getGradeColor(worksheet.predicted_grade)} shadow-2xl mb-4`}
+            className="inline-block scale-75 md:scale-100 origin-top"
           >
-            <div className="text-8xl font-bold text-white mb-2">
-              {worksheet.predicted_grade} {getGradeEmoji(worksheet.predicted_grade)}
-            </div>
-            <div className="text-2xl text-white font-semibold">
-              {getPredictedScore()}
+            <div className={`px-12 md:px-16 py-6 md:py-8 rounded-3xl bg-gradient-to-r ${getGradeColor(worksheet.predicted_grade)} shadow-2xl mb-4`}>
+              <div className="text-6xl md:text-8xl font-bold text-white mb-2">
+                {worksheet.predicted_grade} {getGradeEmoji(worksheet.predicted_grade)}
+              </div>
+              <div className="text-xl md:text-2xl text-white font-semibold">
+                {getPredictedScore()}
+              </div>
             </div>
           </motion.div>
 
           {worksheet.ai_feedback?.overall_performance_summary_text && (
-            <p className="text-lg text-slate-700 max-w-3xl mx-auto mt-6">
+            <p className="text-base md:text-lg text-slate-700 max-w-3xl mx-auto mt-6">
               {worksheet.ai_feedback.overall_performance_summary_text}
             </p>
           )}
@@ -212,14 +215,14 @@ export default function Feedback() {
             </div>
           )}
 
-          <div className="flex items-center justify-center gap-6 text-slate-600 text-lg mt-6">
+          <div className="flex items-center justify-center gap-4 md:gap-6 text-slate-600 text-sm md:text-lg mt-6 flex-wrap">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-purple-600" />
+              <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
               <span className="font-semibold">{Math.round(worksheet.total_score)}%</span>
             </div>
-            <div className="w-1 h-6 bg-slate-300 rounded-full" />
+            <div className="w-1 h-4 md:h-6 bg-slate-300 rounded-full" />
             <span>Worksheet {worksheet.worksheet_number} of {totalWorksheets}</span>
-            <div className="w-1 h-6 bg-slate-300 rounded-full" />
+            <div className="w-1 h-4 md:h-6 bg-slate-300 rounded-full" />
             <span>{worksheet.feedback.filter(f => f.is_correct).length} Correct</span>
           </div>
         </motion.div>
@@ -318,25 +321,27 @@ export default function Feedback() {
           </motion.div>
         )}
 
-        {/* Roadmap Modal */}
+        {/* Roadmap Modal - Improved Styling */}
         <Dialog open={showRoadmapModal} onOpenChange={setShowRoadmapModal}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl flex items-center gap-2">
-                <MapPin className="w-6 h-6 text-purple-600" />
-                Your Personalized Learning Roadmap
-              </DialogTitle>
-              <DialogDescription>
-                Complete these {futureWorksheets.length} worksheet{futureWorksheets.length > 1 ? 's' : ''} to reach 90%+ mastery and ace your exam
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0">
+            <div className="sticky top-0 bg-white z-10 px-6 py-4 border-b border-slate-200">
+              <DialogHeader>
+                <DialogTitle className="text-xl md:text-2xl flex items-center gap-2">
+                  <MapPin className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
+                  Your Personalized Learning Roadmap
+                </DialogTitle>
+                <DialogDescription className="text-sm md:text-base">
+                  Complete these {futureWorksheets.length} worksheet{futureWorksheets.length > 1 ? 's' : ''} to reach 90%+ mastery and ace your exam
+                </DialogDescription>
+              </DialogHeader>
+            </div>
             
-            <div className="space-y-4 mt-6">
+            <div className="px-4 md:px-6 py-6 space-y-4">
               {futureWorksheets.map((session, idx) => {
                 const worksheetNum = session.session_number;
                 const existingWorksheet = allWorksheets.find(w => w.worksheet_number === worksheetNum);
                 const isCompleted = existingWorksheet?.completed;
-                const isCurrent = (nextWorksheet && worksheetNum === nextWorksheet.worksheet_number && !isCompleted); // Only "up next" if it's the sequential next and not already completed
+                const isCurrent = (nextWorksheet && worksheetNum === nextWorksheet.worksheet_number && !isCompleted);
                 
                 return (
                   <motion.div
@@ -348,24 +353,24 @@ export default function Feedback() {
                   >
                     {/* Connector Line */}
                     {idx < futureWorksheets.length - 1 && (
-                      <div className="absolute left-6 top-16 w-0.5 h-12 bg-gradient-to-b from-purple-300 to-purple-100" />
+                      <div className="absolute left-6 top-20 w-0.5 h-16 bg-gradient-to-b from-purple-300 to-purple-100 hidden md:block" />
                     )}
                     
                     <Card className={`border-2 transition-all ${
                       isCompleted 
-                        ? 'border-emerald-300 bg-emerald-50' 
+                        ? 'border-emerald-400 bg-emerald-50 shadow-md' 
                         : isCurrent 
-                        ? 'border-purple-400 bg-purple-50 shadow-lg' 
-                        : 'border-slate-200 bg-white'
+                        ? 'border-purple-500 bg-purple-50 shadow-xl ring-2 ring-purple-200' 
+                        : 'border-slate-300 bg-white shadow-sm'
                     }`}>
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white ${
+                      <CardContent className="p-4 md:p-6">
+                        <div className="flex items-start gap-3 md:gap-4">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white shadow-lg ${
                             isCompleted 
                               ? 'bg-emerald-500' 
                               : isCurrent 
-                              ? 'bg-purple-600 ring-4 ring-purple-200' 
-                              : 'bg-slate-300'
+                              ? 'bg-purple-600 ring-4 ring-purple-200 scale-110' 
+                              : 'bg-slate-400'
                           }`}>
                             {isCompleted ? (
                               <CheckCircle className="w-6 h-6" />
@@ -374,19 +379,19 @@ export default function Feedback() {
                             )}
                           </div>
                           
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between mb-2">
                               <div>
-                                <h4 className="text-lg font-bold text-slate-900 mb-1">
+                                <h4 className="text-base md:text-lg font-bold text-slate-900 mb-1 leading-tight">
                                   {session.session_name}
                                 </h4>
-                                <Badge className={
+                                <Badge className={`${
                                   isCompleted 
-                                    ? 'bg-emerald-100 text-emerald-700' 
+                                    ? 'bg-emerald-100 text-emerald-700 border-emerald-300' 
                                     : isCurrent 
-                                    ? 'bg-purple-100 text-purple-700' 
-                                    : 'bg-slate-100 text-slate-600'
-                                }>
+                                    ? 'bg-purple-100 text-purple-700 border-purple-300' 
+                                    : 'bg-slate-100 text-slate-600 border-slate-300'
+                                } border`}>
                                   {isCompleted ? 'Completed' : isCurrent ? 'Up Next' : `Worksheet ${worksheetNum}`}
                                 </Badge>
                               </div>
@@ -402,7 +407,7 @@ export default function Feedback() {
                                   setShowRoadmapModal(false);
                                   handleNextWorksheet();
                                 }}
-                                className="bg-purple-600 hover:bg-purple-700 w-full"
+                                className="bg-purple-600 hover:bg-purple-700 w-full shadow-md"
                               >
                                 <BookOpen className="w-4 h-4 mr-2" />
                                 Start Worksheet {worksheetNum}
@@ -410,7 +415,7 @@ export default function Feedback() {
                             )}
                             
                             {isCompleted && existingWorksheet && (
-                              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-emerald-200">
+                              <div className="flex items-center justify-between p-3 bg-white rounded-lg border-2 border-emerald-300 shadow-sm">
                                 <div className="flex items-center gap-2">
                                   <CheckCircle className="w-4 h-4 text-emerald-600" />
                                   <span className="text-sm font-medium text-slate-700">Score: {Math.round(existingWorksheet.total_score)}%</span>
@@ -432,10 +437,10 @@ export default function Feedback() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: futureWorksheets.length * 0.1 }}
               >
-                <Card className="border-2 border-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50">
-                  <CardContent className="p-6 text-center">
-                    <Award className="w-12 h-12 mx-auto text-yellow-600 mb-3" />
-                    <h4 className="text-xl font-bold text-slate-900 mb-2">
+                <Card className="border-2 border-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50 shadow-lg">
+                  <CardContent className="p-4 md:p-6 text-center">
+                    <Award className="w-10 h-10 md:w-12 md:h-12 mx-auto text-yellow-600 mb-3" />
+                    <h4 className="text-lg md:text-xl font-bold text-slate-900 mb-2">
                       90%+ Mastery Goal
                     </h4>
                     <p className="text-slate-600 text-sm">

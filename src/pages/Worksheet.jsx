@@ -1015,7 +1015,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
   const canProceed = currentQ.user_answer?.trim() !== "";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-3 md:p-6 lg:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 pb-24 md:pb-6">
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
       {/* New Badges Toast */}
@@ -1043,28 +1043,29 @@ Provide your response as a single, valid JSON object with this exact structure.`
         </motion.div>
       )}
 
-      <div className="max-w-4xl mx-auto">
-        <Card className="mb-4 md:mb-6 shadow-xl">
-          <CardContent className="p-4 md:p-6">
-            <h2 className="text-lg md:text-2xl font-bold text-slate-900 mb-2 md:mb-3">
+      {/* Sticky Header - Compact & Always Visible */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-purple-200/60 shadow-sm">
+        <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-base md:text-xl font-bold text-slate-900 truncate">
               {lesson.course_name} - Worksheet {worksheet?.worksheet_number || 1}
             </h2>
-            <p className="text-sm md:text-base text-slate-600 mb-3 md:mb-4">Answer all questions to the best of your ability</p>
-            <div className="flex items-center gap-2 md:gap-3">
-              <Progress value={progress} className="flex-1 h-2 md:h-3" />
-              <span className="text-xs md:text-sm font-medium text-slate-600 whitespace-nowrap">
-                {currentQuestion + 1} / {worksheet.questions.length}
-              </span>
+            <span className="text-xs md:text-sm font-medium text-slate-600 whitespace-nowrap ml-2">
+              {currentQuestion + 1}/{worksheet.questions.length}
+            </span>
+          </div>
+          <Progress value={progress} className="h-1.5 md:h-2" />
+          {gradingInProgress[currentQuestion] && (
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-purple-600">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>AI grading...</span>
             </div>
-            {gradingInProgress[currentQuestion] && (
-              <div className="mt-2 md:mt-3 flex items-center gap-2 text-xs md:text-sm text-purple-600">
-                <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
-                <span>AI is grading your answer...</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          )}
+        </div>
+      </div>
 
+      {/* Question Content */}
+      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6">
         <AnimatePresence mode="wait">
           <WorksheetQuestion
             key={currentQuestion}
@@ -1073,48 +1074,53 @@ Provide your response as a single, valid JSON object with this exact structure.`
             onAnswer={handleAnswer}
           />
         </AnimatePresence>
+      </div>
 
-        <div className="flex justify-between mt-4 md:mt-6">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentQuestion === 0}
-            size="sm"
-            className="md:text-base"
-          >
-            Previous
-          </Button>
-          {isLastQuestion ? (
+      {/* Sticky Footer Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
+        <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
+          <div className="flex justify-between gap-3">
             <Button
-              onClick={submitWorksheet}
-              disabled={!canProceed || isSubmitting}
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentQuestion === 0}
               size="sm"
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 md:text-base"
+              className="md:text-base"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  <span className="hidden sm:inline">Submitting & Grading...</span>
-                  <span className="sm:hidden">Submit</span>
-                </>
-              ) : (
-                <>
-                  <span className="hidden sm:inline">Submit Worksheet</span>
-                  <span className="sm:hidden">Submit</span>
-                </>
-              )}
+              Previous
             </Button>
-          ) : (
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed}
-              size="sm"
-              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
-            >
-              <span className="hidden sm:inline">Next Question</span>
-              <span className="sm:hidden">Next</span>
-            </Button>
-          )}
+            {isLastQuestion ? (
+              <Button
+                onClick={submitWorksheet}
+                disabled={!canProceed || isSubmitting}
+                size="sm"
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 md:text-base"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <span className="hidden sm:inline">Submitting...</span>
+                    <span className="sm:hidden">Submit</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">Submit Worksheet</span>
+                    <span className="sm:hidden">Submit</span>
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNext}
+                disabled={!canProceed}
+                size="sm"
+                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
+              >
+                <span className="hidden sm:inline">Next Question</span>
+                <span className="sm:hidden">Next</span>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

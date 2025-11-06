@@ -305,30 +305,32 @@ Provide your response as a single, valid JSON object with the following structur
   const isLastQuestion = currentQuestion === quiz.questions.length - 1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-3 md:p-6 lg:p-10">
-      <div className="max-w-4xl mx-auto">
-        <Card className="mb-4 md:mb-6 shadow-xl sticky top-2 md:top-6 z-10 bg-white/95 backdrop-blur-sm">
-          <CardContent className="p-4 md:p-6">
-            <h2 className="text-lg md:text-2xl font-bold text-slate-900 mb-2 md:mb-3">{lesson.course_name}</h2>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 pb-24 md:pb-6">
+      {/* Sticky Header - Compact & Always Visible */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-purple-200/60 shadow-sm">
+        <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-base md:text-xl font-bold text-slate-900 truncate">{lesson.course_name}</h2>
+            <span className="text-xs md:text-sm font-medium text-slate-600 whitespace-nowrap ml-2">
+              {currentQuestion + 1}/{quiz.questions.length}
+            </span>
+          </div>
 
-            {quiz.smart_summary && (
-              <div className="mb-3 md:mb-4 p-3 md:p-4 bg-purple-50/50 rounded-lg border border-purple-200">
-                <h3 className="font-semibold text-sm md:text-base text-purple-900 mb-2">{quiz.smart_summary.title}</h3>
-                <div className="prose prose-sm max-w-none text-slate-700 text-xs md:text-sm">
-                  <ReactMarkdown>{quiz.smart_summary.content_markdown}</ReactMarkdown>
-                </div>
+          {quiz.smart_summary && (
+            <div className="mb-2 p-2 md:p-3 bg-purple-50/50 rounded-lg border border-purple-200">
+              <h3 className="font-semibold text-xs md:text-sm text-purple-900 mb-1">{quiz.smart_summary.title}</h3>
+              <div className="prose prose-sm max-w-none text-slate-700 text-xs line-clamp-2">
+                <ReactMarkdown>{quiz.smart_summary.content_markdown}</ReactMarkdown>
               </div>
-            )}
-
-            <div className="flex items-center gap-2 md:gap-3">
-              <Progress value={progress} className="flex-1 h-2 md:h-3" />
-              <span className="text-xs md:text-sm font-medium text-slate-600 whitespace-nowrap">
-                {currentQuestion + 1} / {quiz.questions.length}
-              </span>
             </div>
-          </CardContent>
-        </Card>
+          )}
 
+          <Progress value={progress} className="h-1.5 md:h-2" />
+        </div>
+      </div>
+
+      {/* Question Content */}
+      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6">
         <AnimatePresence mode="wait">
           <QuizQuestion
             key={currentQuestion}
@@ -338,48 +340,53 @@ Provide your response as a single, valid JSON object with the following structur
             onSelectAnswer={handleAnswer}
           />
         </AnimatePresence>
+      </div>
 
-        <div className="flex justify-between mt-4 md:mt-6">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentQuestion === 0}
-            size="sm"
-            className="md:text-base"
-          >
-            Previous
-          </Button>
-          {isLastQuestion ? (
+      {/* Sticky Footer Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
+        <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
+          <div className="flex justify-between gap-3">
             <Button
-              onClick={submitQuiz}
-              disabled={!canProceed || isSubmitting}
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentQuestion === 0}
               size="sm"
-              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
+              className="md:text-base"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  <span className="hidden sm:inline">Submitting...</span>
-                  <span className="sm:hidden">Submit</span>
-                </>
-              ) : (
-                <>
-                  <span className="hidden sm:inline">Complete & Continue</span>
-                  <span className="sm:hidden">Complete</span>
-                </>
-              )}
+              Previous
             </Button>
-          ) : (
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed}
-              size="sm"
-              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
-            >
-              <span className="hidden sm:inline">Next Question</span>
-              <span className="sm:hidden">Next</span>
-            </Button>
-          )}
+            {isLastQuestion ? (
+              <Button
+                onClick={submitQuiz}
+                disabled={!canProceed || isSubmitting}
+                size="sm"
+                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <span className="hidden sm:inline">Submitting...</span>
+                    <span className="sm:hidden">Submit</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">Complete & Continue</span>
+                    <span className="sm:hidden">Complete</span>
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNext}
+                disabled={!canProceed}
+                size="sm"
+                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
+              >
+                <span className="hidden sm:inline">Next Question</span>
+                <span className="sm:hidden">Next</span>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
