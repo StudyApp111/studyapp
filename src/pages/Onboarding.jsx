@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -12,34 +11,35 @@ import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
 
 const questions = [
   {
-    id: "display_name",
-    question: "What would you like to be called on the leaderboard?",
-    type: "text",
-    placeholder: "e.g., Alex the Great, MathWizard, etc."
-  },
-  {
     id: "school",
-    question: "What school do you attend?",
+    question: "What School Do You Go To?",
     type: "text",
-    placeholder: "e.g., Lincoln High School"
+    placeholder: "e.g., Lincoln High School, University of Toronto"
   },
   {
     id: "grade",
-    question: "What grade are you in?",
+    question: "What Grade Are You In?",
     type: "single",
-    options: ["Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12", "College/University", "Other"]
+    options: [
+      "Grade 6",
+      "Grade 7", 
+      "Grade 8",
+      "Grade 9",
+      "Grade 10",
+      "Grade 11",
+      "Grade 12",
+      "1st Year University",
+      "2nd Year University",
+      "3rd Year University",
+      "4th Year University",
+      "Post Graduate"
+    ]
   },
   {
     id: "city",
-    question: "What city do you live in?",
+    question: "What City Do You Live In?",
     type: "text",
-    placeholder: "e.g., New York City"
-  },
-  {
-    id: "country",
-    question: "What country do you live in?",
-    type: "text",
-    placeholder: "e.g., United States, Canada, United Kingdom"
+    placeholder: "e.g., New York City, Toronto, London"
   }
 ];
 
@@ -75,15 +75,13 @@ export default function Onboarding() {
       const profileData = {
         school: answers.school,
         grade: answers.grade,
-        city: answers.city,
-        country: answers.country
+        city: answers.city
       };
 
       const profile = await base44.entities.LearningProfile.create(profileData);
       await base44.auth.updateMe({
         onboarding_completed: true,
-        learning_profile_id: profile.id,
-        display_name: answers.display_name
+        learning_profile_id: profile.id
       });
 
       navigate(createPageUrl("Home"));

@@ -122,7 +122,7 @@ export default function Leaderboard() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-base md:text-xl font-bold text-slate-900 truncate">
-                    {currentUser.display_name || currentUser.full_name || 'You'}
+                    {currentUser.full_name || 'You'}
                   </h3>
                   <p className="text-xs md:text-sm text-slate-600">Your Stats</p>
                 </div>
@@ -193,14 +193,14 @@ export default function Leaderboard() {
                         
                         <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-slate-600 to-slate-800 rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-white font-semibold text-xs md:text-sm">
-                            {(user.display_name || user.full_name)?.[0]?.toUpperCase() || '?'}
+                            {user.full_name?.[0]?.toUpperCase() || '?'}
                           </span>
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-bold text-sm md:text-base text-slate-900 truncate">
-                              {user.display_name || user.full_name || `User ${rank}`}
+                              {user.full_name || `User ${rank}`}
                             </h4>
                             {isCurrentUser && (
                               <Badge className="bg-purple-600 text-white text-xs flex-shrink-0">You</Badge>
