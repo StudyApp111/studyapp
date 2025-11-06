@@ -205,47 +205,47 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
                 rotate: [0, 10, -10, 0]
               }}
               transition={{ duration: 0.6 }}
-              className="bg-white rounded-full p-6 shadow-2xl"
+              className="bg-white rounded-full p-4 md:p-6 shadow-2xl"
             >
-              <Sparkles className="w-12 h-12 text-yellow-500" />
+              <Sparkles className="w-8 h-8 md:w-12 md:h-12 text-yellow-500" />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <Card className="shadow-2xl">
-        <CardHeader>
-          <div className="flex items-center gap-3 mb-3">
+        <CardHeader className="p-4 md:p-6">
+          <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
             <motion.div 
-              className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center flex-shrink-0"
+              className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center flex-shrink-0"
               whileHover={{ scale: 1.1, rotate: 5 }}
             >
-              <span className="text-white font-bold">{questionNumber}</span>
+              <span className="text-white font-bold text-sm md:text-base">{questionNumber}</span>
             </motion.div>
-            <CardTitle className="text-xl">Question {questionNumber}</CardTitle>
+            <CardTitle className="text-lg md:text-xl">Question {questionNumber}</CardTitle>
           </div>
-          <div className="flex gap-2 mb-4 flex-wrap">
-            <Badge className={`${getDifficultyColor()} border`}>
+          <div className="flex gap-2 mb-3 md:mb-4 flex-wrap">
+            <Badge className={`${getDifficultyColor()} border text-xs`}>
               {question.difficulty_index}
             </Badge>
-            <Badge className={`${getQuestionTypeColor()} border`}>
+            <Badge className={`${getQuestionTypeColor()} border text-xs`}>
               {question.question_type}
             </Badge>
           </div>
           
           {/* Render question text with proper math notation */}
           <div 
-            className="text-lg text-slate-700 leading-relaxed font-medium"
+            className="text-base md:text-lg text-slate-700 leading-relaxed font-medium break-words"
             dangerouslySetInnerHTML={{ __html: renderMathText(question.question_text) }}
           />
 
           {question.targeted_misconception && question.targeted_misconception !== "null" && (
-            <p className="text-sm text-slate-500 mt-2 italic">
+            <p className="text-xs md:text-sm text-slate-500 mt-2 italic">
               💡 This question addresses a common misconception
             </p>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6">
           {renderQuestionInput()}
         </CardContent>
       </Card>

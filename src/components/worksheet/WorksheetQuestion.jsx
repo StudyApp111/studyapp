@@ -213,31 +213,31 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
                 rotate: [0, 10, -10, 0]
               }}
               transition={{ duration: 0.6 }}
-              className="bg-white rounded-full p-6 shadow-2xl"
+              className="bg-white rounded-full p-4 md:p-6 shadow-2xl"
             >
-              <Sparkles className="w-12 h-12 text-yellow-500" />
+              <Sparkles className="w-8 h-8 md:w-12 md:h-12 text-yellow-500" />
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <Card className="shadow-2xl">
-        <CardHeader>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
+        <CardHeader className="p-4 md:p-6">
+          <div className="flex items-start justify-between mb-3 md:mb-4">
+            <div className="flex items-center gap-2 md:gap-3">
               <motion.div 
-                className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center flex-shrink-0"
+                className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center flex-shrink-0"
                 whileHover={{ scale: 1.1, rotate: 5 }}
               >
-                <span className="text-white font-bold">{question.question_number}</span>
+                <span className="text-white font-bold text-sm md:text-base">{question.question_number}</span>
               </motion.div>
               <div>
-                <CardTitle className="text-xl">Question {question.question_number}</CardTitle>
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  <Badge className={`${getDifficultyColor()} border`}>
+                <CardTitle className="text-lg md:text-xl">Question {question.question_number}</CardTitle>
+                <div className="flex gap-2 mt-1 md:mt-2 flex-wrap">
+                  <Badge className={`${getDifficultyColor()} border text-xs`}>
                     {question.difficulty_index}
                   </Badge>
-                  <Badge className={`${getQuestionTypeColor()} border`}>
+                  <Badge className={`${getQuestionTypeColor()} border text-xs`}>
                     {question.question_type}
                   </Badge>
                 </div>
@@ -247,11 +247,11 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
           
           {/* Render question text with proper math notation */}
           <div 
-            className="text-lg text-slate-700 leading-relaxed font-medium"
+            className="text-base md:text-lg text-slate-700 leading-relaxed font-medium break-words"
             dangerouslySetInnerHTML={{ __html: renderMathText(question.question_text) }}
           />
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6">
           {renderQuestionInput()}
         </CardContent>
       </Card>

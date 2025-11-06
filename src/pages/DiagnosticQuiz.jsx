@@ -281,18 +281,18 @@ Provide your response as a single, valid JSON object with the following structur
 
   if (isGenerating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md text-center p-8 shadow-2xl">
-          <Brain className="w-16 h-16 mx-auto text-purple-600 mb-4 animate-pulse" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4 md:p-6">
+        <Card className="w-full max-w-md text-center p-6 md:p-8 shadow-2xl">
+          <Brain className="w-12 h-12 md:w-16 md:h-16 mx-auto text-purple-600 mb-4 animate-pulse" />
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">
             {quiz ? "Loading Your Diagnostic Quiz" : "Generating Your Diagnostic Quiz"}
           </h2>
-          <p className="text-slate-600 mb-6">
+          <p className="text-sm md:text-base text-slate-600 mb-6">
             {quiz
               ? "Retrieving your saved quiz..."
               : "Our AI is analyzing the curriculum and creating personalized questions..."}
           </p>
-          <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
+          <Loader2 className="w-6 h-6 md:w-8 md:h-8 mx-auto animate-spin text-purple-600" />
         </Card>
       </div>
     );
@@ -300,31 +300,29 @@ Provide your response as a single, valid JSON object with the following structur
 
   if (!quiz) return null;
 
-  // showResults block was removed from here.
-
   const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
   const canProceed = userAnswers[currentQuestion] !== null && userAnswers[currentQuestion] !== "";
   const isLastQuestion = currentQuestion === quiz.questions.length - 1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-3 md:p-6 lg:p-10">
       <div className="max-w-4xl mx-auto">
-        <Card className="mb-6 shadow-xl sticky top-6 z-10 bg-white/95 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">{lesson.course_name}</h2>
+        <Card className="mb-4 md:mb-6 shadow-xl sticky top-2 md:top-6 z-10 bg-white/95 backdrop-blur-sm">
+          <CardContent className="p-4 md:p-6">
+            <h2 className="text-lg md:text-2xl font-bold text-slate-900 mb-2 md:mb-3">{lesson.course_name}</h2>
 
             {quiz.smart_summary && (
-              <div className="mb-4 p-4 bg-purple-50/50 rounded-lg border border-purple-200">
-                <h3 className="font-semibold text-purple-900 mb-2">{quiz.smart_summary.title}</h3>
-                <div className="prose prose-sm max-w-none text-slate-700">
+              <div className="mb-3 md:mb-4 p-3 md:p-4 bg-purple-50/50 rounded-lg border border-purple-200">
+                <h3 className="font-semibold text-sm md:text-base text-purple-900 mb-2">{quiz.smart_summary.title}</h3>
+                <div className="prose prose-sm max-w-none text-slate-700 text-xs md:text-sm">
                   <ReactMarkdown>{quiz.smart_summary.content_markdown}</ReactMarkdown>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center gap-3">
-              <Progress value={progress} className="flex-1 h-3" />
-              <span className="text-sm font-medium text-slate-600 whitespace-nowrap">
+            <div className="flex items-center gap-2 md:gap-3">
+              <Progress value={progress} className="flex-1 h-2 md:h-3" />
+              <span className="text-xs md:text-sm font-medium text-slate-600 whitespace-nowrap">
                 {currentQuestion + 1} / {quiz.questions.length}
               </span>
             </div>
@@ -341,11 +339,13 @@ Provide your response as a single, valid JSON object with the following structur
           />
         </AnimatePresence>
 
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between mt-4 md:mt-6">
           <Button
             variant="outline"
             onClick={handlePrevious}
             disabled={currentQuestion === 0}
+            size="sm"
+            className="md:text-base"
           >
             Previous
           </Button>
@@ -353,24 +353,31 @@ Provide your response as a single, valid JSON object with the following structur
             <Button
               onClick={submitQuiz}
               disabled={!canProceed || isSubmitting}
-              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+              size="sm"
+              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Submitting...
+                  <span className="hidden sm:inline">Submitting...</span>
+                  <span className="sm:hidden">Submit</span>
                 </>
               ) : (
-                "Complete & Continue"
+                <>
+                  <span className="hidden sm:inline">Complete & Continue</span>
+                  <span className="sm:hidden">Complete</span>
+                </>
               )}
             </Button>
           ) : (
             <Button
               onClick={handleNext}
               disabled={!canProceed}
-              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+              size="sm"
+              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
             >
-              Next Question
+              <span className="hidden sm:inline">Next Question</span>
+              <span className="sm:hidden">Next</span>
             </Button>
           )}
         </div>

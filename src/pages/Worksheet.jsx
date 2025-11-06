@@ -990,18 +990,18 @@ Provide your response as a single, valid JSON object with this exact structure.`
 
   if (isGenerating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-6">
-        <Card className="w-full max-w-md text-center p-8 shadow-2xl">
-          <FileText className="w-16 h-16 mx-auto text-purple-600 mb-4 animate-pulse" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4 md:p-6">
+        <Card className="w-full max-w-md text-center p-6 md:p-8 shadow-2xl">
+          <FileText className="w-12 h-12 md:w-16 md:h-16 mx-auto text-purple-600 mb-4 animate-pulse" />
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">
             {worksheet ? "Loading Your Worksheet" : "Generating Your Worksheet"}
           </h2>
-          <p className="text-slate-600 mb-6">
+          <p className="text-sm md:text-base text-slate-600 mb-6">
             {worksheet 
               ? `Retrieving your saved Worksheet ${worksheet.worksheet_number || ''}...`
               : "Creating a personalized exam based on your diagnostic results..."}
           </p>
-          <Loader2 className="w-8 h-8 mx-auto animate-spin text-purple-600" />
+          <Loader2 className="w-6 h-6 md:w-8 md:h-8 mx-auto animate-spin text-purple-600" />
         </Card>
       </div>
     );
@@ -1015,7 +1015,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
   const canProceed = currentQ.user_answer?.trim() !== "";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-3 md:p-6 lg:p-10">
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
       {/* New Badges Toast */}
@@ -1023,19 +1023,19 @@ Provide your response as a single, valid JSON object with this exact structure.`
         <motion.div
           initial={{ opacity: 0, y: -100 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-2xl p-6 max-w-md"
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-2xl p-4 md:p-6 max-w-md mx-4"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <Sparkles className="w-8 h-8 text-yellow-500" />
-            <h3 className="text-xl font-bold text-slate-900">New Badge{newBadges.length > 1 ? 's' : ''} Earned!</h3>
+          <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+            <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-yellow-500" />
+            <h3 className="text-lg md:text-xl font-bold text-slate-900">New Badge{newBadges.length > 1 ? 's' : ''} Earned!</h3>
           </div>
           <div className="space-y-2">
             {newBadges.map((badge, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                <span className="text-2xl">{badge.badge_icon}</span>
+              <div key={idx} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-purple-50 rounded-lg">
+                <span className="text-xl md:text-2xl">{badge.badge_icon}</span>
                 <div>
-                  <p className="font-semibold text-slate-900">{badge.badge_name}</p>
-                  <p className="text-sm text-slate-600">{badge.badge_description}</p>
+                  <p className="font-semibold text-sm md:text-base text-slate-900">{badge.badge_name}</p>
+                  <p className="text-xs md:text-sm text-slate-600">{badge.badge_description}</p>
                 </div>
               </div>
             ))}
@@ -1044,21 +1044,21 @@ Provide your response as a single, valid JSON object with this exact structure.`
       )}
 
       <div className="max-w-4xl mx-auto">
-        <Card className="mb-6 shadow-xl">
-          <CardContent className="p-6">
-            <h2 className="text-2xl font-bold text-slate-900 mb-3">
+        <Card className="mb-4 md:mb-6 shadow-xl">
+          <CardContent className="p-4 md:p-6">
+            <h2 className="text-lg md:text-2xl font-bold text-slate-900 mb-2 md:mb-3">
               {lesson.course_name} - Worksheet {worksheet?.worksheet_number || 1}
             </h2>
-            <p className="text-slate-600 mb-4">Answer all questions to the best of your ability</p>
-            <div className="flex items-center gap-3">
-              <Progress value={progress} className="flex-1 h-3" />
-              <span className="text-sm font-medium text-slate-600 whitespace-nowrap">
+            <p className="text-sm md:text-base text-slate-600 mb-3 md:mb-4">Answer all questions to the best of your ability</p>
+            <div className="flex items-center gap-2 md:gap-3">
+              <Progress value={progress} className="flex-1 h-2 md:h-3" />
+              <span className="text-xs md:text-sm font-medium text-slate-600 whitespace-nowrap">
                 {currentQuestion + 1} / {worksheet.questions.length}
               </span>
             </div>
             {gradingInProgress[currentQuestion] && (
-              <div className="mt-3 flex items-center gap-2 text-sm text-purple-600">
-                <Loader2 className="w-4 h-4 animate-spin" />
+              <div className="mt-2 md:mt-3 flex items-center gap-2 text-xs md:text-sm text-purple-600">
+                <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin" />
                 <span>AI is grading your answer...</span>
               </div>
             )}
@@ -1074,11 +1074,13 @@ Provide your response as a single, valid JSON object with this exact structure.`
           />
         </AnimatePresence>
 
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between mt-4 md:mt-6">
           <Button
             variant="outline"
             onClick={handlePrevious}
             disabled={currentQuestion === 0}
+            size="sm"
+            className="md:text-base"
           >
             Previous
           </Button>
@@ -1086,24 +1088,31 @@ Provide your response as a single, valid JSON object with this exact structure.`
             <Button
               onClick={submitWorksheet}
               disabled={!canProceed || isSubmitting}
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+              size="sm"
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 md:text-base"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Submitting & Grading...
+                  <span className="hidden sm:inline">Submitting & Grading...</span>
+                  <span className="sm:hidden">Submit</span>
                 </>
               ) : (
-                "Submit Worksheet"
+                <>
+                  <span className="hidden sm:inline">Submit Worksheet</span>
+                  <span className="sm:hidden">Submit</span>
+                </>
               )}
             </Button>
           ) : (
             <Button
               onClick={handleNext}
               disabled={!canProceed}
-              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+              size="sm"
+              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
             >
-              Next Question
+              <span className="hidden sm:inline">Next Question</span>
+              <span className="sm:hidden">Next</span>
             </Button>
           )}
         </div>
