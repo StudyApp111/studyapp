@@ -120,14 +120,14 @@ Language & Tone:
 - Maintain a consistently supportive, encouraging, and patient tone, as an effective teacher would when guiding a student.
 - Where pedagogically valuable, briefly explain the importance or relevance of key concepts.
 
-Math Notation:
+Math Notation for Summary:
 - For superscripts (exponents, powers): use the format x^2 or E^2 (will be rendered properly)
 - For subscripts (chemical formulas): use the format H_2O or C_6H_12O_6 (will be rendered properly)
-- Use italics for variables: *x*, *y*, *velocity*
-- Example: "The equation *E* = *m*c^2 shows that energy equals mass times the speed of light squared"
+- Use markdown italics for emphasis: *important concept*
 
-Formatting:
-- Use markdown: ## for headings, **bold** for key terms, *italic* for emphasis and variables, - for lists
+Formatting for Summary:
+- Use markdown: ## for headings, **bold** for key terms, *italic* for emphasis
+- This markdown will be rendered in the summary display
 
 Task 2: Design the 5-Question Diagnostic Quiz
 
@@ -152,9 +152,10 @@ b. Question Options:
    - Example: ["Mitochondria", "Nucleus", "Ribosome", "Chloroplast"]
 
 c. Question Text Formatting:
-   - Use markdown for formatting: **bold** for emphasis, *italic* for variables/special terms
-   - For math notation: use x^2 for superscripts, H_2O for subscripts, *x* for variables
-   - Example: "If *x*^2 + 5*x* + 6 = 0, what are the values of *x*?"
+   - CRITICAL: Write question_text as PLAIN TEXT without any markdown formatting (no **, no *, no special formatting)
+   - For math notation: use x^2 for superscripts, H_2O for subscripts (these will be auto-rendered)
+   - Example: "Simplify the expression: (5x^-3y^2)(2x^5y^-1)"
+   - DO NOT use **bold** or *italic* in question_text - just write plain text
 
 d. Difficulty Index: Assign one label from:
    - "Foundational": Basic recall, definitions, essential facts, or core prerequisite skills
@@ -166,7 +167,7 @@ e. Targeted Misconception (Optional): If this question specifically tests a know
 Clarity & Appropriateness: Ensure all questions are clearly worded, unambiguous, and entirely appropriate for the specified grade level.
 
 Output Format:
-Provide your response as a single, valid JSON object with the following structure. Ensure the content_markdown field uses proper markdown formatting including ## for headings, ** for bold, * for italic and variables, - for lists, and proper math notation (x^2, H_2O).`;
+Provide your response as a single, valid JSON object with the following structure. Ensure the content_markdown field uses proper markdown formatting including ## for headings, ** for bold, * for italic, - for lists, and proper math notation (x^2, H_2O).`;
 
       const { data: quizData } = await base44.functions.invoke('smartSummaryQuiz', {
         prompt: aiPrompt,

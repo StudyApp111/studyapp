@@ -152,8 +152,10 @@ Task 2: Generate the 10-Question Predictive Worksheet
 Create 10 unique questions following the curriculum map's style and difficulty distribution.
 
 CRITICAL FORMATTING REQUIREMENTS:
-1. Question Text: Use markdown formatting - **bold** for emphasis, *italic* for special terms
-   Example: "Read the sentence: 'The ancient scroll was **fragile**, so the historian handled it with extreme care.' What does the word 'fragile' most likely mean in this sentence?"
+1. Question Text: Write as PLAIN TEXT without markdown formatting (no **, no *, no special symbols)
+   - For math: use x^2 for superscripts, H_2O for subscripts (auto-rendered)
+   - Example: "Simplify the expression: (2x^3)^2 * x^-2"
+   - DO NOT use **bold** or *italic* in question_text
 2. Answer Options: MUST use proper capitalization (e.g., "Fought" not "fought", "Brave" not "brave")
 3. Correct Answer: Must match one of the options EXACTLY, with same capitalization
 
@@ -164,7 +166,7 @@ IMPORTANT JSON FORMATTING:
 - Keep all text fields concise
 - Use simple language in explanations
 - Avoid complex punctuation
-- Keep question_text clear
+- Keep question_text clear and in plain text format
 - Maintain proper capitalization in all answer options
 
 Output Format:
@@ -259,9 +261,11 @@ Exact Alignment with Exam Style:
 - All Multiple Choice Questions MUST have exactly 4 options as a simple array of strings
 
 CRITICAL FORMATTING REQUIREMENTS:
-1. Question Text: Use markdown formatting - **bold** for emphasis, *italic* for special terms
-   Example: "Which of the following sentences uses **proper capitalization** for a title?"
-2. Answer Options: MUST use proper capitalization (e.g., "California" not "california", "The Great Gatsby" not "the great gatsby")
+1. Question Text: Write as PLAIN TEXT without markdown formatting (no **, no *, no special symbols)
+   - For math: use x^2 for superscripts, H_2O for subscripts (auto-rendered)
+   - Example: "Factor the trinomial completely: x^2 + 9x + 18"
+   - DO NOT use **bold** or *italic* in question_text
+2. Answer Options: MUST use proper capitalization (e.g., "California" not "california")
 3. Correct Answer: Must match one of the options EXACTLY, with same capitalization
 
 Assigned Difficulty Index (Per Question):
@@ -285,7 +289,7 @@ CRITICAL JSON FORMATTING RULES:
 3. NEVER leave the "options" array empty for Multiple Choice questions
 4. If you cannot create valid multiple choice options, use a different question_type instead
 5. Use simple, clear language in all fields
-6. Keep question_text concise and unambiguous
+6. Keep question_text concise, unambiguous, and in plain text format (no markdown)
 7. Correct answer MUST match one of the options exactly
 
 Output Format:
