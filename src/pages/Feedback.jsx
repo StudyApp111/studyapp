@@ -323,7 +323,7 @@ export default function Feedback() {
 
         {/* Roadmap Modal - Improved Styling */}
         <Dialog open={showRoadmapModal} onOpenChange={setShowRoadmapModal}>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0">
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0 border-2 border-purple-300 shadow-2xl">
             <div className="sticky top-0 bg-white z-10 px-6 py-4 border-b border-slate-200">
               <DialogHeader>
                 <DialogTitle className="text-xl md:text-2xl flex items-center gap-2">
