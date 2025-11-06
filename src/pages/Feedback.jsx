@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Award, TrendingUp, CheckCircle, XCircle, Sparkles, Home, TrendingDown, Target, BookOpen } from "lucide-react";
+import { Loader2, Award, TrendingUp, CheckCircle, XCircle, Sparkles, Home, TrendingDown, Target, BookOpen, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -25,6 +25,7 @@ export default function Feedback() {
   const [isLoading, setIsLoading] = useState(true);
   const [strengths, setStrengths] = useState([]);
   const [weaknesses, setWeaknesses] = useState([]);
+  const [showRoadmapModal, setShowRoadmapModal] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -155,10 +156,10 @@ export default function Feedback() {
     return scoreValue.toString().includes('%') ? scoreValue : `${scoreValue}%`;
   };
 
+  // nextWorksheet variable from original code is still useful for dialog logic
   const nextWorksheet = allWorksheets.find(w => w.worksheet_number === worksheet.worksheet_number + 1);
-  const hasNextWorksheet = nextWorksheet && nextWorksheet.status === "not_started";
-  const currentWorksheetIndex = allWorksheets.findIndex(w => w.worksheet_number === worksheet.worksheet_number);
   const totalWorksheets = allWorksheets.length;
+  const futureWorksheets = worksheet.ai_feedback?.suggested_future_sessions_plan || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
@@ -280,42 +281,172 @@ export default function Feedback() {
           </motion.div>
         </div>
 
-        {/* Next Worksheet CTA */}
-        {hasNextWorksheet && (
+        {/* Roadmap to 90% CTA - Replaces the old "Continue Your Learning Journey" */}
+        {futureWorksheets.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
             className="mb-8"
           >
-            <Card className="shadow-xl border-0 bg-gradient-to-r from-purple-500 to-purple-700 text-white">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-between">
+            <Card className="shadow-xl border-0 bg-gradient-to-br from-purple-600 to-indigo-700 text-white overflow-hidden relative">
+              <CardContent className="p-6 md:p-8">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                      <Sparkles className="w-6 h-6" />
-                      Continue Your Learning Journey
-                    </h3>
-                    <p className="text-purple-100 text-lg mb-4">
-                      {nextWorksheet.focus_description || `Worksheet ${nextWorksheet.worksheet_number} is ready to help you reach 90%+ mastery`}
+                    <div className="flex items-center gap-2 mb-3">
+                      <MapPin className="w-6 h-6" />
+                      <h3 className="text-2xl md:text-3xl font-bold">Your Roadmap to 90%+</h3>
+                    </div>
+                    <p className="text-purple-100 text-base md:text-lg mb-2">
+                      We've created {futureWorksheets.length} personalized worksheet{futureWorksheets.length > 1 ? 's' : ''} to help you master this subject
                     </p>
-                    <p className="text-sm text-purple-200">
-                      Progress: {worksheet.worksheet_number} of {totalWorksheets} worksheets completed for this lesson
+                    <p className="text-purple-200 text-sm">
+                      Progress: {worksheet.worksheet_number} of {totalWorksheets} worksheets completed
                     </p>
                   </div>
                   <Button
-                    onClick={handleNextWorksheet}
+                    onClick={() => setShowRoadmapModal(true)}
                     size="lg"
-                    className="bg-white text-purple-700 hover:bg-purple-50 shadow-xl"
+                    className="bg-white text-purple-700 hover:bg-purple-50 shadow-xl font-semibold w-full md:w-auto"
                   >
-                    <BookOpen className="w-5 h-5 mr-2" />
-                    Start Worksheet {nextWorksheet.worksheet_number}
+                    <MapPin className="w-5 h-5 mr-2" />
+                    View Your Learning Path
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
         )}
+
+        {/* Roadmap Modal */}
+        <Dialog open={showRoadmapModal} onOpenChange={setShowRoadmapModal}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <MapPin className="w-6 h-6 text-purple-600" />
+                Your Personalized Learning Roadmap
+              </DialogTitle>
+              <DialogDescription>
+                Complete these {futureWorksheets.length} worksheet{futureWorksheets.length > 1 ? 's' : ''} to reach 90%+ mastery and ace your exam
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 mt-6">
+              {futureWorksheets.map((session, idx) => {
+                const worksheetNum = session.session_number;
+                const existingWorksheet = allWorksheets.find(w => w.worksheet_number === worksheetNum);
+                const isCompleted = existingWorksheet?.completed;
+                const isCurrent = (nextWorksheet && worksheetNum === nextWorksheet.worksheet_number && !isCompleted); // Only "up next" if it's the sequential next and not already completed
+                
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="relative"
+                  >
+                    {/* Connector Line */}
+                    {idx < futureWorksheets.length - 1 && (
+                      <div className="absolute left-6 top-16 w-0.5 h-12 bg-gradient-to-b from-purple-300 to-purple-100" />
+                    )}
+                    
+                    <Card className={`border-2 transition-all ${
+                      isCompleted 
+                        ? 'border-emerald-300 bg-emerald-50' 
+                        : isCurrent 
+                        ? 'border-purple-400 bg-purple-50 shadow-lg' 
+                        : 'border-slate-200 bg-white'
+                    }`}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white ${
+                            isCompleted 
+                              ? 'bg-emerald-500' 
+                              : isCurrent 
+                              ? 'bg-purple-600 ring-4 ring-purple-200' 
+                              : 'bg-slate-300'
+                          }`}>
+                            {isCompleted ? (
+                              <CheckCircle className="w-6 h-6" />
+                            ) : (
+                              <span>{worksheetNum}</span>
+                            )}
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-2">
+                              <div>
+                                <h4 className="text-lg font-bold text-slate-900 mb-1">
+                                  {session.session_name}
+                                </h4>
+                                <Badge className={
+                                  isCompleted 
+                                    ? 'bg-emerald-100 text-emerald-700' 
+                                    : isCurrent 
+                                    ? 'bg-purple-100 text-purple-700' 
+                                    : 'bg-slate-100 text-slate-600'
+                                }>
+                                  {isCompleted ? 'Completed' : isCurrent ? 'Up Next' : `Worksheet ${worksheetNum}`}
+                                </Badge>
+                              </div>
+                            </div>
+                            
+                            <p className="text-slate-600 text-sm leading-relaxed mb-4">
+                              {session.session_focus_description}
+                            </p>
+                            
+                            {isCurrent && existingWorksheet && (
+                              <Button
+                                onClick={() => {
+                                  setShowRoadmapModal(false);
+                                  handleNextWorksheet();
+                                }}
+                                className="bg-purple-600 hover:bg-purple-700 w-full"
+                              >
+                                <BookOpen className="w-4 h-4 mr-2" />
+                                Start Worksheet {worksheetNum}
+                              </Button>
+                            )}
+                            
+                            {isCompleted && existingWorksheet && (
+                              <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-emerald-200">
+                                <div className="flex items-center gap-2">
+                                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                  <span className="text-sm font-medium text-slate-700">Score: {Math.round(existingWorksheet.total_score)}%</span>
+                                </div>
+                                <span className="text-sm font-bold text-emerald-600">{existingWorksheet.predicted_grade}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+              
+              {/* Goal Achievement Card */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: futureWorksheets.length * 0.1 }}
+              >
+                <Card className="border-2 border-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50">
+                  <CardContent className="p-6 text-center">
+                    <Award className="w-12 h-12 mx-auto text-yellow-600 mb-3" />
+                    <h4 className="text-xl font-bold text-slate-900 mb-2">
+                      90%+ Mastery Goal
+                    </h4>
+                    <p className="text-slate-600 text-sm">
+                      Complete all worksheets with focused practice to achieve exam excellence
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Detailed Question Feedback */}
         <motion.div

@@ -23,12 +23,13 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
   const renderMathText = (text) => {
     if (!text) return null;
     
-    // Replace superscripts: x^2 becomes x²
-    let processed = text.replace(/\^(\d+)/g, '<sup>$1</sup>');
+    // Replace superscripts: x^2 becomes x², (2x^3)^2 becomes (2x³)²
+    let processed = text.replace(/\^(-?\d+)/g, '<sup>$1</sup>');
     processed = processed.replace(/\^([a-zA-Z])/g, '<sup>$1</sup>');
+    processed = processed.replace(/\^\(([^)]+)\)/g, '<sup>($1)</sup>');
     
     // Replace subscripts: H_2O becomes H₂O
-    processed = processed.replace(/_(\d+)/g, '<sub>$1</sub>');
+    processed = processed.replace(/_(-?\d+)/g, '<sub>$1</sub>');
     processed = processed.replace(/_([a-zA-Z])/g, '<sub>$1</sub>');
     
     return processed;
@@ -232,22 +233,11 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
             </Badge>
           </div>
           
-          {/* Use ReactMarkdown for rich text support */}
-          <div className="text-lg text-slate-700 prose prose-slate max-w-none">
-            <ReactMarkdown
-              components={{
-                p: ({ children }) => <span>{children}</span>,
-                strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
-                em: ({ children }) => <em className="italic">{children}</em>,
-                code: ({ children }) => {
-                  const text = String(children);
-                  return <span dangerouslySetInnerHTML={{ __html: renderMathText(text) }} className="px-1.5 py-0.5 bg-slate-100 rounded text-sm" />;
-                }
-              }}
-            >
-              {question.question_text}
-            </ReactMarkdown>
-          </div>
+          {/* Render question text with proper math notation */}
+          <div 
+            className="text-lg text-slate-700 leading-relaxed font-medium"
+            dangerouslySetInnerHTML={{ __html: renderMathText(question.question_text) }}
+          />
 
           {question.targeted_misconception && question.targeted_misconception !== "null" && (
             <p className="text-sm text-slate-500 mt-2 italic">

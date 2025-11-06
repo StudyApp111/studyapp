@@ -24,13 +24,14 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
   const renderMathText = (text) => {
     if (!text) return null;
     
-    // Replace superscripts: x^2 becomes x²
-    let processed = text.replace(/\^(\d+)/g, '<sup>$1</sup>');
-    processed = processed.replace(/\^([a-zA-Z])/g, '<sup>$1</sup>');
+    // Replace superscripts: x^2 becomes x², (2x^3)^2 becomes (2x³)², x^-1 becomes x⁻¹
+    let processed = text.replace(/\^(-?\d+)/g, '<sup>$1</sup>'); // Handles ^2, ^-1, ^10
+    processed = processed.replace(/\^([a-zA-Z])/g, '<sup>$1</sup>'); // Handles ^x, ^y
+    processed = processed.replace(/\^\(([^)]+)\)/g, '<sup>($1)</sup>'); // Handles ^(2x+1)
     
-    // Replace subscripts: H_2O becomes H₂O
-    processed = processed.replace(/_(\d+)/g, '<sub>$1</sub>');
-    processed = processed.replace(/_([a-zA-Z])/g, '<sub>$1</sub>');
+    // Replace subscripts: H_2O becomes H₂O, H_-1 becomes H₋₁
+    processed = processed.replace(/_(-?\d+)/g, '<sub>$1</sub>'); // Handles _2, _-1, _10
+    processed = processed.replace(/_([a-zA-Z])/g, '<sub>$1</sub>'); // Handles _x, _y
     
     return processed;
   };
@@ -244,22 +245,11 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
             </div>
           </div>
           
-          {/* Use ReactMarkdown for rich text support */}
-          <div className="text-lg text-slate-700 prose prose-slate max-w-none leading-relaxed">
-            <ReactMarkdown
-              components={{
-                p: ({ children }) => <span>{children}</span>, // Render p as span to prevent extra margin if it's the only child. Tailwind's prose handles top-level paragraph spacing.
-                strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
-                em: ({ children }) => <em className="italic">{children}</em>,
-                code: ({ children }) => {
-                  const text = String(children);
-                  return <span dangerouslySetInnerHTML={{ __html: renderMathText(text) }} className="px-1.5 py-0.5 bg-slate-100 rounded text-sm" />;
-                }
-              }}
-            >
-              {question.question_text}
-            </ReactMarkdown>
-          </div>
+          {/* Render question text with proper math notation */}
+          <div 
+            className="text-lg text-slate-700 leading-relaxed font-medium"
+            dangerouslySetInnerHTML={{ __html: renderMathText(question.question_text) }}
+          />
         </CardHeader>
         <CardContent>
           {renderQuestionInput()}
