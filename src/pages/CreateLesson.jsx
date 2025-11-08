@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -142,12 +143,13 @@ Task: Generate a detailed curriculum profile that includes:
 2. Competency Weightings (importance in assessments)
    For each core competency:
    - Competency name (matching above)
-   - Weight percentage: Relative importance in typical exams (must sum to 100%)
+   - Weight percentage: MUST be a string like "15%" or "20%" (including the % symbol)
+   - All weights must sum to 100%
 
 3. Question Formats (types of questions students will encounter)
    For each format:
    - Type: (e.g., "Multiple Choice", "Short Answer", "Problem-Solving", "Essay")
-   - Frequency: How often this appears (e.g., "30% of exam", "Rare", "Common")
+   - Frequency: How often this appears as a STRING (e.g., "30%", "15%", "Rare", "Common")
    - Examples: 2-3 specific example questions in this format
 
 4. High-Yield Focal Points (3-5 items)
@@ -157,6 +159,11 @@ Task: Generate a detailed curriculum profile that includes:
 5. Common Misconceptions (3-5 items)
    - Identify typical errors or misunderstandings students have with this material
    - Format: Brief description of the misconception
+
+CRITICAL FORMATTING:
+- weight_percentage MUST be a STRING with % symbol (e.g., "20%", "15%")
+- frequency MUST be a STRING (e.g., "30%", "Common", "Rare")
+- Do NOT use numeric values, always use strings
 
 Requirements:
 - Base your analysis on standard educational practices for ${learningProfile.grade || "this grade level"}
@@ -189,7 +196,10 @@ Output Format: JSON object matching the specified schema`;
                 type: "object",
                 properties: {
                   competency_name: { type: "string" },
-                  weight_percentage: { type: "string" }
+                  weight_percentage: { 
+                    type: "string",
+                    description: "Must be a string with % symbol, e.g., '20%' or '15%'"
+                  }
                 },
                 required: ["competency_name", "weight_percentage"]
               }
@@ -200,7 +210,10 @@ Output Format: JSON object matching the specified schema`;
                 type: "object",
                 properties: {
                   type: { type: "string" },
-                  frequency: { type: "string" },
+                  frequency: { 
+                    type: "string",
+                    description: "Must be a string, e.g., '30%', 'Common', or 'Rare'"
+                  },
                   examples: {
                     type: "array",
                     items: { type: "string" }
