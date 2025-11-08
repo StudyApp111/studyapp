@@ -1043,7 +1043,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
                 <span className="text-xl md:text-2xl">{badge.badge_icon}</span>
                 <div>
                   <p className="font-semibold text-sm md:text-base text-slate-900">{badge.badge_name}</p>
-                  <p className="text-xs md:text-sm text-slate-600}>{badge.badge_description}</p>
+                  <p className="text-xs md:text-sm text-slate-600">{badge.badge_description}</p>
                 </div>
               </div>
             ))}
