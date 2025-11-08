@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -9,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { FileText, Link as LinkIcon, Upload, Loader2, ArrowLeft, Sparkles } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, Plus, FileText, Link as LinkIcon, Upload } from "lucide-react";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
@@ -19,15 +18,13 @@ export default function CreateLesson() {
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
   const [file, setFile] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
-  const [suggestedLesson, setSuggestedLesson] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    // Check if we're creating from a suggested lesson
     const urlParams = new URLSearchParams(window.location.search);
-    const suggestedId = urlParams.get('suggested');
-
+    const suggestedId = urlParams.get('suggestedId');
+    
     if (suggestedId) {
       loadSuggestedLesson(suggestedId);
     }
@@ -35,13 +32,11 @@ export default function CreateLesson() {
 
   const loadSuggestedLesson = async (suggestedId) => {
     try {
-      const lessons = await base44.entities.SuggestedLesson.filter({ id: suggestedId });
-      if (lessons.length > 0) {
-        const suggested = lessons[0];
-        setSuggestedLesson(suggested);
-        setCourseName(suggested.lesson_title);
-        setDescription(suggested.description + "\n\nKey Topics: " + (suggested.key_topics?.join(", ") || ""));
-        setInputType("description"); // Automatically set to description input type when pre-filling
+      const suggested = await base44.entities.SuggestedLesson.filter({ id: suggestedId });
+      if (suggested.length > 0) {
+        setCourseName(suggested[0].lesson_title);
+        setDescription(suggested[0].description || "");
+        setInputType("description");
       }
     } catch (error) {
       console.error("Error loading suggested lesson:", error);
@@ -52,135 +47,128 @@ export default function CreateLesson() {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setError("");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
-    if (!courseName.trim()) {
-      setError("Please enter a course name");
-      return;
-    }
-
-    if (inputType === "description" && !description.trim()) {
-      setError("Please enter a lesson description");
-      return;
-    }
-
-    if (inputType === "url" && !url.trim()) {
-      setError("Please enter a URL");
-      return;
-    }
-
-    if (inputType === "file" && !file) {
-      setError("Please upload a file");
-      return;
-    }
-
     setIsProcessing(true);
 
     try {
+      if (!courseName.trim()) {
+        throw new Error("Please enter a course name");
+      }
+
+      let extractedContent = "";
+      let fileUrl = "";
+
+      // Handle URL input
+      if (inputType === "url") {
+        if (!url.trim()) {
+          throw new Error("Please enter a URL");
+        }
+
+        try {
+          const { data: urlContent } = await base44.integrations.Core.InvokeLLM({
+            prompt: `Extract and summarize all educational content from the following URL in detail. Provide a comprehensive transcript or summary of the content that captures all key concepts, topics, and learning materials. URL: ${url}`,
+            add_context_from_internet: true
+          });
+          
+          extractedContent = urlContent;
+        } catch (urlError) {
+          console.error("Error extracting URL content:", urlError);
+          throw new Error("Failed to extract content from URL. Please check the URL and try again.");
+        }
+      }
+
+      // Handle file upload
+      if (inputType === "file") {
+        if (!file) {
+          throw new Error("Please select a file");
+        }
+
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          fileUrl = file_url;
+
+          // Extract content from file using LLM
+          const { data: fileContent } = await base44.integrations.Core.InvokeLLM({
+            prompt: "Extract and provide a detailed, comprehensive transcript or summary of all educational content from this file. Capture all key concepts, topics, formulas, definitions, and learning materials in detail.",
+            file_urls: [file_url]
+          });
+
+          extractedContent = fileContent;
+        } catch (fileError) {
+          console.error("Error processing file:", fileError);
+          throw new Error("Failed to process file. Please try a different file.");
+        }
+      }
+
+      // Handle description input
+      if (inputType === "description") {
+        if (!description.trim()) {
+          throw new Error("Please enter a description");
+        }
+        extractedContent = description;
+      }
+
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({
-        created_by: user.email
+        id: user.learning_profile_id
       });
 
       const learningProfile = profile[0] || {};
 
-      let lessonData = {
-        course_name: courseName,
-        input_type: inputType,
-        status: "created"
-      };
+      const curriculumPrompt = `Educational Curriculum Analysis Request
 
-      let processedLessonContent = "N/A";
-      let studentDescription = "N/A";
+You are an expert curriculum analyst tasked with creating a comprehensive profile of educational content to support precise, high-fidelity assessment design. Your analysis will be used to generate diagnostic quizzes and worksheets that accurately mirror exam conditions and learning objectives.
 
-      if (inputType === "description") {
-        lessonData.description = description;
-        studentDescription = description;
-      } else if (inputType === "url") {
-        lessonData.url = url;
-        processedLessonContent = `Content from URL: ${url} (To be parsed in future implementation)`;
-      } else if (inputType === "file") {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        lessonData.file_url = file_url;
-        processedLessonContent = `Uploaded file: ${file.name} (To be OCR'd in future implementation)`;
-      }
+Input Context:
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course/Unit Name: ${courseName}
+School Context: ${learningProfile.school || "N/A"}
+Location Context: ${learningProfile.city || "N/A"}
+Content Source: ${extractedContent}
 
-      const aiPrompt = `Objective: You are an expert curriculum and pedagogical analyst. Your mission is to meticulously analyze the provided inputs (including any student-written description and/or uploaded materials) and scour the web to construct the most accurate and comprehensive curriculum profile. This profile is foundational for generating personalized learning materials. If student-provided inputs (StudentWrittenDescriptionText or StudentUploadedMaterialsText) are available, they are primary resources for understanding the specific focus, wording, emphasis, and perceived needs related to their course. All other sources should then be used to validate, supplement, and contextualize this primary information.
+Task: Generate a detailed curriculum profile that includes:
 
-Input Educational Context:
-Grade Level: ${learningProfile.grade || "N/A"} (e.g., Grade 9, 1st Year University. N/A if not applicable)
-Course/Unit: ${courseName} (e.g., Mathematics, Introduction to Psychology, AP Calculus BC - Unit 3)
-School: ${learningProfile.school || "N/A"} (e.g., FFCA High School, University of Calgary, specific professional body)
-City/Region: ${learningProfile.city || "N/A"} (e.g., Calgary, Alberta; California; Ontario)
-StudentWrittenDescriptionText (Optional): ${studentDescription} (Text directly written by the student describing their course, what they need help with, specific topics, or questions. If empty, "N/A", or not provided, proceed without it.)
-StudentUploadedMaterialsText (Optional): ${processedLessonContent} (Text content from student's notes, PowerPoints, OCR'd documents. If empty, "N/A", or not provided, proceed without it.)
+1. Core Competencies (5-8 primary learning objectives)
+   For each competency:
+   - Name: Clear, concise label
+   - Description: 2-3 sentence explanation of what mastery looks like
 
-You are expected to actively use online search (Google Search) to find the most current and relevant official documents for the following steps, especially when student-provided materials are insufficient or unavailable.
+2. Competency Weightings (importance in assessments)
+   For each core competency:
+   - Competency name (matching above)
+   - Weight percentage: Relative importance in typical exams (must sum to 100%)
 
-Information Sourcing & Synthesis Strategy (Prioritized):
+3. Question Formats (types of questions students will encounter)
+   For each format:
+   - Type: (e.g., "Multiple Choice", "Short Answer", "Problem-Solving", "Essay")
+   - Frequency: How often this appears (e.g., "30% of exam", "Rare", "Common")
+   - Examples: 2-3 specific example questions in this format
 
-Primary Analysis - Student-Provided Inputs (If Available):
-If StudentWrittenDescriptionText and/or StudentUploadedMaterialsText are available and contain relevant content:
-- Thoroughly analyze these inputs first.
-- From StudentWrittenDescriptionText, extract the student's stated needs, topics of focus, areas of confusion, specific questions, and the language they use.
-- From StudentUploadedMaterialsText, identify core topics, concepts, learning objectives, specific terminology, wording, difficulty, question styles/examples, and areas of emphasis (e.g., recurring themes, depth of coverage).
-- Insights from these student-provided inputs should form the foundational layer and heavily influence all sections of the "Required Curriculum Profile Output," especially regarding the nuances of the student's specific class experience and perceived needs.
+4. High-Yield Focal Points (3-5 items)
+   - List the most critical topics/concepts that frequently appear on assessments
+   - These should represent the "must-know" material for exam success
 
-Secondary Analysis - Direct Institutional Information (Validation & Supplementation):
-Next, search for official curriculum documents, course outlines, syllabi, or learning objectives directly from the specified School for the Course/Unit (and Grade Level).
-Use this information to:
-- Validate and corroborate findings from the student-provided inputs (Step 1).
-- Supplement areas where student inputs might be incomplete or less detailed.
-- Provide the official framework and broader context for the course.
-- If no student inputs (description or materials) were provided, this step becomes the primary information gathering phase.
+5. Common Misconceptions (3-5 items)
+   - Identify typical errors or misunderstandings students have with this material
+   - Format: Brief description of the misconception
 
-Tertiary Analysis - Regional Standards (K-12 Fallback / Broader Context):
-If sufficient detail is not available from Steps 1 and 2 (especially for K-12): Use City/Region to consult official regional (e.g., Ministry/Department of Education, District) curriculum standards for the Grade Level and Course/Unit.
-Use this to ensure alignment with broader educational requirements and to fill any remaining gaps, always synthesizing with information from prior steps.
+Requirements:
+- Base your analysis on standard educational practices for ${learningProfile.grade || "this grade level"}
+- Align with typical ${courseName} curriculum standards
+- Ensure competency weightings sum to 100%
+- Make question format examples realistic and grade-appropriate
+- Focus on exam-relevant material
 
-Post-Secondary & Professional Course Contextualization:
-For post-secondary/professional courses, the official School syllabus/outline (from Step 2) is paramount. Student-provided inputs (description or materials like lecture notes) (Step 1) provide critical class-specific detail.
-City/Region can help disambiguate the institution or identify related professional accreditation standards or common resources, used to further contextualize the information from Steps 1 and 2.
+Output Format: JSON object matching the specified schema`;
 
-Required Curriculum Profile Output:
-The content should strongly reflect insights from StudentUploadedMaterialsText if provided, using other official sources for validation, completion, and official terminology. Based on the most authoritative source(s) identified through the strategy above, provide the following:
-
-A. Core Competencies / Learning Outcomes:
-Identify and list 6-10 major, clearly defined core competencies or overarching learning outcomes for the Course/Unit.
-For each, provide a concise 1-2 sentence description clarifying its scope.
-Note: If the official source provides a significantly different number of core/major outcomes (e.g., only 4, or perhaps 12 essential ones), reflect that. If the source lists many granular outcomes, synthesize them into broader competency statements, perhaps noting that each encompasses several sub-skills.
-
-B. Competency Weightings / Emphasis:
-Provide estimated percentage weightings for each core competency as an array of objects with competency_name and weight_percentage fields. Ensure the total sums to 100%. Prioritize evidence of emphasis from student-provided inputs (StudentWrittenDescriptionText, StudentUploadedMaterialsText), then official document structures, or typical Course/Unit patterns.
-If percentages cannot be reliably determined, indicate relative importance (High, Medium, Low focus). As a final resort, state "Weightings not specified or inferable."
-
-C. Typical Assessment Question Formats & Patterns:
-List the common question formats used in assessments (e.g., Multiple Choice Questions (MCQ), Short Answer Questions (SAQ), Extended Response/Essay, Problem-Solving Sets, Document-Based Questions (DBQ), Lab Reports, Practical Demonstrations, Oral Exams) for the Course/Unit.
-For the 3-4 most significant formats, estimate their frequency distribution (e.g., MCQ: 40-50%, SAQ: 20-30%, Problem-Solving: 30-40%).
-Provide one illustrative example for each of these key question formats, reflecting typical wording, style, and difficulty level.
-
-D. High-Yield Focal Points (Key Topics/Skills):
-Identify and briefly describe 3-5 critical concepts, topics, or skills that are:
-- Frequently tested or heavily weighted.
-- Fundamental for success in subsequent units or courses.
-- Known to be particularly challenging for students.
-
-E. Common Student Misconceptions & Difficulties:
-Describe at least 3-4 specific and common student misconceptions, typical errors, or areas of difficulty directly related to the core competencies or high-yield focal points of the Course/Unit.
-(Source these from curriculum support documents, teacher guides, educational research on the subject, or commonly acknowledged pedagogical knowledge for teaching this specific course/subject at the given level.)
-
-Present the analysis precisely in the structured JSON format with the exact structure specified.
-Ensure specificity, alignment with official regional curriculum standards, predictive relevance to actual exam outcomes, and avoid generic responses.`;
-
-      console.log("Calling curriculumMapping function...");
-
-      const response = await base44.functions.invoke('curriculumMapping', {
-        prompt: aiPrompt,
+      const { data: curriculumMap } = await base44.functions.invoke('curriculumMapping', {
+        prompt: curriculumPrompt,
         response_json_schema: {
           type: "object",
           properties: {
@@ -230,61 +218,50 @@ Ensure specificity, alignment with official regional curriculum standards, predi
               items: { type: "string" }
             }
           },
-          required: ["core_competencies", "competency_weightings", "question_formats", "high_yield_focal_points", "common_misconceptions"]
+          required: [
+            "core_competencies",
+            "competency_weightings",
+            "question_formats",
+            "high_yield_focal_points",
+            "common_misconceptions"
+          ]
         }
       });
 
-      console.log("Function response:", response);
+      const lessonData = {
+        course_name: courseName,
+        input_type: inputType,
+        curriculum_map: curriculumMap,
+        status: "created"
+      };
 
-      if (!response || !response.data) {
-        throw new Error("Invalid response from curriculumMapping function");
+      if (inputType === "description") {
+        lessonData.description = description;
+      } else if (inputType === "url") {
+        lessonData.url = url;
+        lessonData.extracted_content = extractedContent;
+      } else if (inputType === "file") {
+        lessonData.file_url = fileUrl;
+        lessonData.extracted_content = extractedContent;
       }
-
-      lessonData.curriculum_map = response.data;
 
       const lesson = await base44.entities.Lesson.create(lessonData);
 
-      // If this was from a suggested lesson, mark it as used (optional)
-      if (suggestedLesson) {
-        // Could add a "used" or "created_lesson_id" field to SuggestedLesson if needed
-      }
-
       navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lesson.id}`);
-    } catch (error) {
-      console.error("Error creating lesson:", error);
-      setError(`Failed to create lesson: ${error.message || "Please try again."}`);
+    } catch (err) {
+      console.error("Error creating lesson:", err);
+      setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-3xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(createPageUrl("Home"))}
-          className="mb-6 hover:bg-purple-100"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Button>
-
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg mb-4">
-            <Sparkles className="w-5 h-5 text-purple-600" />
-            <span className="text-sm font-medium text-slate-700">
-              {suggestedLesson ? 'Recommended Lesson' : 'AI-Powered Curriculum'}
-            </span>
-          </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Create New Lesson</h1>
-          <p className="text-slate-600 text-lg">Tell us about what you want to learn</p>
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Create New Lesson</h1>
+          <p className="text-slate-600">Set up a personalized learning experience</p>
         </div>
-
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
 
         <Card className="shadow-2xl border-0">
           <CardHeader>
@@ -292,49 +269,56 @@ Ensure specificity, alignment with official regional curriculum standards, predi
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="courseName">Course Name *</Label>
                 <Input
                   id="courseName"
                   value={courseName}
                   onChange={(e) => setCourseName(e.target.value)}
-                  placeholder="e.g., Introduction to Python Programming"
+                  placeholder="e.g., AP Calculus, World History, Biology 101"
+                  disabled={isProcessing}
                   className="text-base"
                 />
               </div>
 
-              <div className="space-y-4">
-                <Label>How would you like to provide lesson content? *</Label>
-                <RadioGroup value={inputType} onValueChange={setInputType}>
-                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all cursor-pointer">
+              <div className="space-y-3">
+                <Label>How would you like to provide the course content? *</Label>
+                <RadioGroup value={inputType} onValueChange={setInputType} disabled={isProcessing}>
+                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
                     <RadioGroupItem value="description" id="description" />
-                    <Label htmlFor="description" className="flex items-center gap-3 cursor-pointer flex-1">
+                    <Label htmlFor="description" className="flex items-center gap-2 flex-1 cursor-pointer">
                       <FileText className="w-5 h-5 text-purple-600" />
                       <div>
-                        <p className="font-medium">Write Description</p>
-                        <p className="text-sm text-slate-500">Describe what you want to learn</p>
+                        <p className="font-medium">Write a Description</p>
+                        <p className="text-xs text-slate-500">Describe the course content in your own words</p>
                       </div>
                     </Label>
                   </div>
 
-                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all cursor-pointer">
+                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
                     <RadioGroupItem value="url" id="url" />
-                    <Label htmlFor="url" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <LinkIcon className="w-5 h-5 text-purple-700" />
+                    <Label htmlFor="url" className="flex items-center gap-2 flex-1 cursor-pointer">
+                      <LinkIcon className="w-5 h-5 text-purple-600" />
                       <div>
-                        <p className="font-medium">Provide URL</p>
-                        <p className="text-sm text-slate-500">Link to a course or article</p>
+                        <p className="font-medium">Provide a URL</p>
+                        <p className="text-xs text-slate-500">Link to course materials, syllabus, or educational content</p>
                       </div>
                     </Label>
                   </div>
 
-                  <div className="flex items-center space-x-3 p-4 rounded-xl border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all cursor-pointer">
+                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
                     <RadioGroupItem value="file" id="file" />
-                    <Label htmlFor="file" className="flex items-center gap-3 cursor-pointer flex-1">
-                      <Upload className="w-5 h-5 text-yellow-600" />
+                    <Label htmlFor="file" className="flex items-center gap-2 flex-1 cursor-pointer">
+                      <Upload className="w-5 h-5 text-purple-600" />
                       <div>
-                        <p className="font-medium">Upload File</p>
-                        <p className="text-sm text-slate-500">PDF, image, or document</p>
+                        <p className="font-medium">Upload a File</p>
+                        <p className="text-xs text-slate-500">Upload a syllabus, PDF, or document with course info</p>
                       </div>
                     </Label>
                   </div>
@@ -343,81 +327,78 @@ Ensure specificity, alignment with official regional curriculum standards, predi
 
               {inputType === "description" && (
                 <div className="space-y-2">
-                  <Label htmlFor="description">Lesson Description *</Label>
+                  <Label htmlFor="description">Course Description *</Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe the topic you want to learn, what you hope to achieve, and any specific areas of focus..."
+                    placeholder="Describe what this course covers, key topics, learning objectives..."
+                    disabled={isProcessing}
                     className="min-h-[150px] text-base"
                   />
+                  <p className="text-xs text-slate-500">
+                    Provide as much detail as possible for better personalization
+                  </p>
                 </div>
               )}
 
               {inputType === "url" && (
                 <div className="space-y-2">
-                  <Label htmlFor="url">Resource URL *</Label>
+                  <Label htmlFor="url">Content URL *</Label>
                   <Input
                     id="url"
                     type="url"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://example.com/course"
+                    placeholder="https://example.com/course-syllabus"
+                    disabled={isProcessing}
                     className="text-base"
                   />
+                  <p className="text-xs text-slate-500">
+                    Provide a link to your course materials, syllabus, or any educational content
+                  </p>
                 </div>
               )}
 
               {inputType === "file" && (
                 <div className="space-y-2">
-                  <Label htmlFor="file">Upload File *</Label>
-                  <div className="border-2 border-dashed border-purple-300 rounded-xl p-8 text-center hover:border-purple-400 transition-colors bg-purple-50/30">
-                    <Upload className="w-12 h-12 mx-auto text-purple-500 mb-3" />
+                  <Label htmlFor="file">Upload Course Material *</Label>
+                  <div className="flex items-center gap-3">
                     <Input
                       id="file"
                       type="file"
                       onChange={handleFileChange}
-                      className="hidden"
+                      disabled={isProcessing}
+                      className="text-base"
                       accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
                     />
-                    <Label htmlFor="file" className="cursor-pointer">
-                      {file ? (
-                        <p className="text-sm font-medium text-slate-700">{file.name}</p>
-                      ) : (
-                        <>
-                          <p className="text-sm font-medium text-slate-700 mb-1">
-                            Click to upload or drag and drop
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            PDF, DOC, TXT, or images (Max 10MB)
-                          </p>
-                        </>
-                      )}
-                    </Label>
                   </div>
+                  {file && (
+                    <p className="text-sm text-green-600">
+                      Selected: {file.name}
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-500">
+                    Supported formats: PDF, Word, Text, Images (PNG, JPG)
+                  </p>
                 </div>
               )}
 
               <Button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 py-6 text-lg shadow-xl"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white"
+                size="lg"
               >
                 {isProcessing ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin flex-shrink-0" />
-                    <span className="truncate">
-                      <span className="hidden sm:inline">Analyzing Curriculum & Creating Lesson...</span>
-                      <span className="sm:hidden">Creating Lesson...</span>
-                    </span>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5 mr-2 flex-shrink-0" />
-                    <span className="truncate">
-                      <span className="hidden sm:inline">Create Lesson & Start Diagnostic</span>
-                      <span className="sm:hidden">Create Lesson</span>
-                    </span>
+                    <Plus className="w-5 h-5 mr-2" />
+                    Create Lesson & Start Diagnostic
                   </>
                 )}
               </Button>

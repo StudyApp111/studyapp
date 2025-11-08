@@ -1,15 +1,14 @@
 import React, { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 
-export default function ConfettiEffect({ show, onComplete, containerRef }) {
+export default function ConfettiEffect({ show, onComplete }) {
   useEffect(() => {
     if (show && onComplete) {
-      const timer = setTimeout(onComplete, 3500); // Increased duration
+      const timer = setTimeout(onComplete, 3500);
       return () => clearTimeout(timer);
     }
   }, [show, onComplete]);
 
-  // Randomly select animation type
   const animationType = useMemo(() => {
     const types = ['confetti', 'stars', 'sparkles', 'hearts'];
     return types[Math.floor(Math.random() * types.length)];
@@ -37,7 +36,7 @@ export default function ConfettiEffect({ show, onComplete, containerRef }) {
           shapes: ['💜', '💛', '🧡', '💚'],
           colors: ['#8B5CF6', '#FBBF24', '#F59E0B', '#10B981']
         };
-      default: // confetti
+      default:
         return {
           count: 50,
           shapes: ['▪', '▫', '●', '■'],
@@ -49,26 +48,19 @@ export default function ConfettiEffect({ show, onComplete, containerRef }) {
   const config = getParticleConfig();
   
   const particles = Array.from({ length: config.count }, (_, i) => {
-    const isEmoji = config.shapes[0].length > 1; // Emojis are longer than geometric shapes
+    const isEmoji = config.shapes[0].length > 1;
     
     return {
       id: i,
       shape: config.shapes[Math.floor(Math.random() * config.shapes.length)],
       color: config.colors[Math.floor(Math.random() * config.colors.length)],
-      // Random starting position across width
       startX: Math.random() * 100,
-      // Random end position with more spread
       endX: (Math.random() * 100),
-      // Random rotation
       startRotation: Math.random() * 360,
       endRotation: Math.random() * 720 + 360,
-      // Random delay for staggered effect
       delay: Math.random() * 0.3,
-      // Random duration between 2-3.5 seconds
       duration: 2 + Math.random() * 1.5,
-      // Random size
       size: isEmoji ? (16 + Math.random() * 8) : (8 + Math.random() * 6),
-      // Random horizontal drift
       drift: (Math.random() - 0.5) * 50,
       isEmoji
     };
@@ -76,29 +68,21 @@ export default function ConfettiEffect({ show, onComplete, containerRef }) {
 
   return (
     <div 
-      className="absolute inset-0 pointer-events-none overflow-hidden"
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 30
-      }}
+      className="fixed inset-0 pointer-events-none overflow-hidden z-50"
     >
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
           initial={{
-            x: `${particle.startX}%`,
+            x: `${particle.startX}vw`,
             y: -30,
             rotate: particle.startRotation,
             scale: 1,
             opacity: 1
           }}
           animate={{
-            x: [`${particle.startX}%`, `${particle.startX + particle.drift}%`, `${particle.endX}%`],
-            y: ['0%', '50%', '120%'],
+            x: [`${particle.startX}vw`, `${particle.startX + particle.drift * 0.5}vw`, `${particle.endX}vw`],
+            y: ['-10vh', '50vh', '120vh'],
             rotate: particle.endRotation,
             scale: [1, 1.2, 0.8, 0.6],
             opacity: [1, 1, 0.8, 0]
@@ -110,7 +94,7 @@ export default function ConfettiEffect({ show, onComplete, containerRef }) {
             times: [0, 0.3, 0.7, 1]
           }}
           style={{
-            position: 'absolute',
+            position: 'fixed',
             fontSize: particle.isEmoji ? `${particle.size}px` : undefined,
             width: particle.isEmoji ? 'auto' : `${particle.size}px`,
             height: particle.isEmoji ? 'auto' : `${particle.size}px`,
@@ -123,12 +107,11 @@ export default function ConfettiEffect({ show, onComplete, containerRef }) {
         </motion.div>
       ))}
       
-      {/* Success pulse overlay */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: [0, 0.15, 0], scale: [0.8, 1.2, 1.5] }}
         transition={{ duration: 1, ease: "easeOut" }}
-        className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-yellow-500/20 rounded-xl"
+        className="fixed inset-0 bg-gradient-to-br from-purple-500/20 to-yellow-500/20 pointer-events-none"
       />
     </div>
   );

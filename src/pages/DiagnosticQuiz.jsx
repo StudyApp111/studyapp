@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -45,34 +44,27 @@ export default function DiagnosticQuiz() {
       }
       setLesson(lessonData[0]);
 
-      // Check if a quiz already exists for this lesson
       const existingQuiz = await base44.entities.DiagnosticQuiz.filter({
         lesson_id: lessonId
       });
 
       if (existingQuiz.length > 0) {
-        // Load existing quiz
         console.log("Loading existing diagnostic quiz");
         const loadedQuiz = existingQuiz[0];
         setQuiz(loadedQuiz);
 
-        // Check if quiz was already completed
         if (loadedQuiz.completed) {
-          // If completed, directly navigate to worksheet
           navigate(createPageUrl("Worksheet") + `?lessonId=${lessonId}`);
-          return; // Important: exit early after navigating
+          return;
         } else {
-          // Quiz exists but not completed - resume where they left off
           setUserAnswers(loadedQuiz.user_answers || new Array(loadedQuiz.questions.length).fill(null));
         }
       } else {
-        // Generate new quiz
         console.log("Generating new diagnostic quiz");
         await generateDiagnosticQuiz(lessonId, lessonData[0]);
       }
     } catch (error) {
       console.error("Error loading quiz:", error);
-      // Optionally navigate to home or show an error on failure to load/generate
       navigate(createPageUrl("Home"));
     }
     setIsGenerating(false);
@@ -86,6 +78,18 @@ export default function DiagnosticQuiz() {
       });
 
       const learningProfile = profile[0] || {};
+
+      // Determine the lesson content source
+      let contentDescription = "";
+      if (lessonData.input_type === "description" && lessonData.description) {
+        contentDescription = lessonData.description;
+      } else if (lessonData.input_type === "url" && lessonData.extracted_content) {
+        contentDescription = lessonData.extracted_content;
+      } else if (lessonData.input_type === "file" && lessonData.extracted_content) {
+        contentDescription = lessonData.extracted_content;
+      } else {
+        contentDescription = lessonData.description || "N/A";
+      }
 
       const aiPrompt = `Objective: You are an expert supportive tutor. Your goal is to:
 
@@ -102,15 +106,15 @@ Course/Unit Name: ${lessonData.course_name}
 School: ${learningProfile.school || "N/A"}
 City/Region: ${learningProfile.city || "N/A"}
 Detailed Curriculum Profile: ${JSON.stringify(lessonData.curriculum_map)}
-Student Description: ${lessonData.description || "N/A"}
+Lesson Content: ${contentDescription}
 
 Task 1: Create the Smart Summary
 
-Based on the curriculum map and considering any student description:
+Based on the curriculum map and considering the lesson content:
 
 Structure & Content:
 - Synthesize information primarily from core competencies and high-yield focal points.
-- If a student description is provided and is relevant, ensure this summary gives particular attention or slightly more detailed, clear explanations to those concepts.
+- If lesson content is provided and is relevant, ensure this summary gives particular attention or slightly more detailed, clear explanations to those concepts.
 - Organize the summary logically: begin with foundational concepts and smoothly progress to more complex or granular details, ensuring a natural flow of information.
 
 Length Requirement:
@@ -240,7 +244,6 @@ Provide your response as a single, valid JSON object with the following structur
   };
 
   const handleNext = () => {
-    // Show confetti animation when moving to next question
     setShowConfetti(true);
     
     if (currentQuestion < quiz.questions.length - 1) {
@@ -257,7 +260,6 @@ Provide your response as a single, valid JSON object with the following structur
   const submitQuiz = async () => {
     setIsSubmitting(true);
     try {
-      // Improved validation - trim whitespace and case-insensitive comparison
       const correctAnswers = userAnswers.filter((answer, idx) => {
         const userAnswer = String(answer || "").trim().toLowerCase();
         const correctAnswer = String(quiz.questions[idx].correct_answer || "").trim().toLowerCase();
@@ -276,11 +278,10 @@ Provide your response as a single, valid JSON object with the following structur
         status: "diagnostic_completed"
       });
 
-      // Show celebration confetti before navigating
       setShowConfetti(true);
       setTimeout(() => {
         navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
-      }, 3500); // Changed from 2000 to 3500
+      }, 3500);
     } catch (error) {
       console.error("Error submitting quiz:", error);
       alert("Failed to submit quiz. Please try again.");
@@ -315,9 +316,8 @@ Provide your response as a single, valid JSON object with the following structur
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 pb-24 md:pb-6">
-      {/* ConfettiEffect moved from here */}
+      <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
-      {/* Sticky Header - Compact & Always Visible */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-purple-200/60 shadow-sm">
         <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
           <div className="flex items-center justify-between mb-2">
@@ -370,24 +370,18 @@ Provide your response as a single, valid JSON object with the following structur
         </div>
       </div>
 
-      {/* Question Content */}
-      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6 relative">
+      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6">
         <AnimatePresence mode="wait">
-          <div className="relative"> {/* Added relative positioning here */}
-            <QuizQuestion
-              key={currentQuestion}
-              question={quiz.questions[currentQuestion]}
-              questionNumber={currentQuestion + 1}
-              selectedAnswer={userAnswers[currentQuestion]}
-              onSelectAnswer={handleAnswer}
-            />
-            {/* ConfettiEffect moved inside this div */}
-            <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
-          </div>
+          <QuizQuestion
+            key={currentQuestion}
+            question={quiz.questions[currentQuestion]}
+            questionNumber={currentQuestion + 1}
+            selectedAnswer={userAnswers[currentQuestion]}
+            onSelectAnswer={handleAnswer}
+          />
         </AnimatePresence>
       </div>
 
-      {/* Sticky Footer Navigation - Mobile: full width, Desktop: accounts for sidebar */}
       <div className="fixed bottom-0 left-0 right-0 md:left-[256px] z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
         <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
           <div className="flex justify-between gap-3">
