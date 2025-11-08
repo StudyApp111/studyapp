@@ -330,12 +330,11 @@ Provide your response as a single, valid JSON object with the following structur
 
           {quiz.smart_summary && (
             <div className="mb-2 p-2 md:p-3 bg-purple-50/50 rounded-lg border border-purple-200">
-              <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center justify-between mb-1 cursor-pointer" onClick={() => setSummaryExpanded(!summaryExpanded)}>
                 <h3 className="font-semibold text-xs md:text-sm text-purple-900">{quiz.smart_summary.title}</h3>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSummaryExpanded(!summaryExpanded)}
                   className="h-6 px-2"
                 >
                   {summaryExpanded ? (
@@ -345,9 +344,26 @@ Provide your response as a single, valid JSON object with the following structur
                   )}
                 </Button>
               </div>
-              <div className={`prose prose-sm max-w-none text-slate-700 text-xs ${summaryExpanded ? '' : 'line-clamp-2'}`}>
-                <ReactMarkdown>{quiz.smart_summary.content_markdown}</ReactMarkdown>
-              </div>
+              <AnimatePresence>
+                {summaryExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="prose prose-sm max-w-none text-slate-700 text-xs pt-2">
+                      <ReactMarkdown>{quiz.smart_summary.content_markdown}</ReactMarkdown>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {!summaryExpanded && (
+                <div className="prose prose-sm max-w-none text-slate-700 text-xs line-clamp-2">
+                  <ReactMarkdown>{quiz.smart_summary.content_markdown}</ReactMarkdown>
+                </div>
+              )}
             </div>
           )}
 
@@ -368,8 +384,8 @@ Provide your response as a single, valid JSON object with the following structur
         </AnimatePresence>
       </div>
 
-      {/* Sticky Footer Navigation - Constrained to main content area */}
-      <div className="fixed bottom-0 left-0 md:left-64 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
+      {/* Sticky Footer Navigation - Mobile: full width, Desktop: accounts for sidebar */}
+      <div className="fixed bottom-0 left-0 right-0 md:left-[256px] z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
         <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
           <div className="flex justify-between gap-3">
             <Button

@@ -1084,8 +1084,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
         </AnimatePresence>
       </div>
 
-      {/* Sticky Footer Navigation - Constrained to main content area */}
-      <div className="fixed bottom-0 left-0 md:left-64 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
+      {/* Sticky Footer Navigation - Mobile: full width, Desktop: accounts for sidebar */}
+      <div className="fixed bottom-0 left-0 right-0 md:left-[256px] z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
         <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
           <div className="flex justify-between gap-3">
             <Button
