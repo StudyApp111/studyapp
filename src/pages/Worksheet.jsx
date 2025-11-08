@@ -1024,8 +1024,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 pb-24 md:pb-6">
-      <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
-      
       {/* New Badges Toast */}
       {newBadges.length > 0 && (
         <motion.div
@@ -1073,14 +1071,17 @@ Provide your response as a single, valid JSON object with this exact structure.`
       </div>
 
       {/* Question Content */}
-      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6">
+      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6 relative">
         <AnimatePresence mode="wait">
-          <WorksheetQuestion
-            key={currentQuestion}
-            question={currentQ}
-            answer={currentQ.user_answer}
-            onAnswer={handleAnswer}
-          />
+          <div className="relative">
+            <WorksheetQuestion
+              key={currentQuestion}
+              question={currentQ}
+              answer={currentQ.user_answer}
+              onAnswer={handleAnswer}
+            />
+            <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
+          </div>
         </AnimatePresence>
       </div>
 

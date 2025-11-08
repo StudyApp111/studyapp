@@ -242,7 +242,6 @@ Provide your response as a single, valid JSON object with the following structur
   const handleNext = () => {
     // Show confetti animation when moving to next question
     setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 2000);
     
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
@@ -281,7 +280,7 @@ Provide your response as a single, valid JSON object with the following structur
       setShowConfetti(true);
       setTimeout(() => {
         navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
-      }, 2000);
+      }, 3500); // Changed from 2000 to 3500
     } catch (error) {
       console.error("Error submitting quiz:", error);
       alert("Failed to submit quiz. Please try again.");
@@ -316,7 +315,7 @@ Provide your response as a single, valid JSON object with the following structur
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 pb-24 md:pb-6">
-      <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
+      {/* ConfettiEffect moved from here */}
       
       {/* Sticky Header - Compact & Always Visible */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-purple-200/60 shadow-sm">
@@ -372,15 +371,19 @@ Provide your response as a single, valid JSON object with the following structur
       </div>
 
       {/* Question Content */}
-      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6">
+      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6 relative">
         <AnimatePresence mode="wait">
-          <QuizQuestion
-            key={currentQuestion}
-            question={quiz.questions[currentQuestion]}
-            questionNumber={currentQuestion + 1}
-            selectedAnswer={userAnswers[currentQuestion]}
-            onSelectAnswer={handleAnswer}
-          />
+          <div className="relative"> {/* Added relative positioning here */}
+            <QuizQuestion
+              key={currentQuestion}
+              question={quiz.questions[currentQuestion]}
+              questionNumber={currentQuestion + 1}
+              selectedAnswer={userAnswers[currentQuestion]}
+              onSelectAnswer={handleAnswer}
+            />
+            {/* ConfettiEffect moved inside this div */}
+            <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
+          </div>
         </AnimatePresence>
       </div>
 

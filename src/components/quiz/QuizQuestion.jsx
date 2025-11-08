@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { CheckCircle } from "lucide-react";
 
-export default function QuizQuestion({ question, questionNumber, selectedAnswer, onSelectAnswer }) {
+export default function QuizQuestion({ question, questionNumber, selectedAnswer, onSelectAnswer, showConfetti }) {
   const handleAnswerChange = (answer) => {
     onSelectAnswer(answer);
   };
