@@ -6,10 +6,11 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Brain } from "lucide-react"; // Removed CheckCircle, XCircle as they are no longer used
+import { Loader2, Brain, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import QuizQuestion from "../components/quiz/QuizQuestion";
+import ConfettiEffect from "../components/gamification/ConfettiEffect";
 
 export default function DiagnosticQuiz() {
   const navigate = useNavigate();
@@ -18,7 +19,9 @@ export default function DiagnosticQuiz() {
   const [isGenerating, setIsGenerating] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Added isSubmitting state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -237,10 +240,13 @@ Provide your response as a single, valid JSON object with the following structur
   };
 
   const handleNext = () => {
+    // Show confetti animation when moving to next question
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 2000);
+    
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
     }
-    // The submitQuiz logic is now handled directly by the button when it's the last question
   };
 
   const handlePrevious = () => {
@@ -250,7 +256,7 @@ Provide your response as a single, valid JSON object with the following structur
   };
 
   const submitQuiz = async () => {
-    setIsSubmitting(true); // Set submitting state to true
+    setIsSubmitting(true);
     try {
       // Improved validation - trim whitespace and case-insensitive comparison
       const correctAnswers = userAnswers.filter((answer, idx) => {
@@ -271,12 +277,15 @@ Provide your response as a single, valid JSON object with the following structur
         status: "diagnostic_completed"
       });
 
-      // Directly proceed to worksheet - don't show results
-      navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
+      // Show celebration confetti before navigating
+      setShowConfetti(true);
+      setTimeout(() => {
+        navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
+      }, 2000);
     } catch (error) {
       console.error("Error submitting quiz:", error);
       alert("Failed to submit quiz. Please try again.");
-      setIsSubmitting(false); // Reset submitting state on error
+      setIsSubmitting(false);
     }
   };
 
@@ -307,6 +316,8 @@ Provide your response as a single, valid JSON object with the following structur
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 pb-24 md:pb-6">
+      <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
       {/* Sticky Header - Compact & Always Visible */}
       <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm border-b border-purple-200/60 shadow-sm">
         <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
@@ -319,8 +330,22 @@ Provide your response as a single, valid JSON object with the following structur
 
           {quiz.smart_summary && (
             <div className="mb-2 p-2 md:p-3 bg-purple-50/50 rounded-lg border border-purple-200">
-              <h3 className="font-semibold text-xs md:text-sm text-purple-900 mb-1">{quiz.smart_summary.title}</h3>
-              <div className="prose prose-sm max-w-none text-slate-700 text-xs line-clamp-2">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-semibold text-xs md:text-sm text-purple-900">{quiz.smart_summary.title}</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSummaryExpanded(!summaryExpanded)}
+                  className="h-6 px-2"
+                >
+                  {summaryExpanded ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+              <div className={`prose prose-sm max-w-none text-slate-700 text-xs ${summaryExpanded ? '' : 'line-clamp-2'}`}>
                 <ReactMarkdown>{quiz.smart_summary.content_markdown}</ReactMarkdown>
               </div>
             </div>
@@ -343,8 +368,8 @@ Provide your response as a single, valid JSON object with the following structur
         </AnimatePresence>
       </div>
 
-      {/* Sticky Footer Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
+      {/* Sticky Footer Navigation - Constrained to main content area */}
+      <div className="fixed bottom-0 left-0 md:left-64 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
         <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
           <div className="flex justify-between gap-3">
             <Button

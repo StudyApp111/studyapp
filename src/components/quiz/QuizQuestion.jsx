@@ -1,22 +1,16 @@
-
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Sparkles } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { motion } from "framer-motion";
+import { CheckCircle } from "lucide-react";
 
 export default function QuizQuestion({ question, questionNumber, selectedAnswer, onSelectAnswer }) {
-  const [showSuccess, setShowSuccess] = useState(false);
-
   const handleAnswerChange = (answer) => {
     onSelectAnswer(answer);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 800);
   };
 
   // Helper function to render text with math notation
@@ -190,29 +184,6 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
       transition={{ duration: 0.3 }}
       className="relative"
     >
-      {/* Success Animation Overlay */}
-      <AnimatePresence>
-        {showSuccess && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
-            className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
-          >
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                rotate: [0, 10, -10, 0]
-              }}
-              transition={{ duration: 0.6 }}
-              className="bg-white rounded-full p-4 md:p-6 shadow-2xl"
-            >
-              <Sparkles className="w-8 h-8 md:w-12 md:h-12 text-yellow-500" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <Card className="shadow-2xl">
         <CardHeader className="p-4 md:p-6">
           <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">

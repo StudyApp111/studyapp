@@ -1,23 +1,16 @@
-
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, Sparkles } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import { motion } from "framer-motion";
+import { CheckCircle } from "lucide-react";
 
 export default function WorksheetQuestion({ question, answer, onAnswer }) {
-  const [showSuccess, setShowSuccess] = useState(false);
-
   const handleAnswerChange = (newAnswer) => {
     onAnswer(newAnswer);
-    // Show success animation briefly
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 800);
   };
 
   // Helper function to render text with math notation
@@ -25,13 +18,13 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
     if (!text) return null;
     
     // Replace superscripts: x^2 becomes x², (2x^3)^2 becomes (2x³)², x^-1 becomes x⁻¹
-    let processed = text.replace(/\^(-?\d+)/g, '<sup>$1</sup>'); // Handles ^2, ^-1, ^10
-    processed = processed.replace(/\^([a-zA-Z])/g, '<sup>$1</sup>'); // Handles ^x, ^y
-    processed = processed.replace(/\^\(([^)]+)\)/g, '<sup>($1)</sup>'); // Handles ^(2x+1)
+    let processed = text.replace(/\^(-?\d+)/g, '<sup>$1</sup>');
+    processed = processed.replace(/\^([a-zA-Z])/g, '<sup>$1</sup>');
+    processed = processed.replace(/\^\(([^)]+)\)/g, '<sup>($1)</sup>');
     
     // Replace subscripts: H_2O becomes H₂O, H_-1 becomes H₋₁
-    processed = processed.replace(/_(-?\d+)/g, '<sub>$1</sub>'); // Handles _2, _-1, _10
-    processed = processed.replace(/_([a-zA-Z])/g, '<sub>$1</sub>'); // Handles _x, _y
+    processed = processed.replace(/_(-?\d+)/g, '<sub>$1</sub>');
+    processed = processed.replace(/_([a-zA-Z])/g, '<sub>$1</sub>');
     
     return processed;
   };
@@ -198,29 +191,6 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
       transition={{ duration: 0.3 }}
       className="relative"
     >
-      {/* Success Animation Overlay */}
-      <AnimatePresence>
-        {showSuccess && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
-            className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
-          >
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                rotate: [0, 10, -10, 0]
-              }}
-              transition={{ duration: 0.6 }}
-              className="bg-white rounded-full p-4 md:p-6 shadow-2xl"
-            >
-              <Sparkles className="w-8 h-8 md:w-12 md:h-12 text-yellow-500" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <Card className="shadow-2xl">
         <CardHeader className="p-4 md:p-6">
           <div className="flex items-start justify-between mb-3 md:mb-4">

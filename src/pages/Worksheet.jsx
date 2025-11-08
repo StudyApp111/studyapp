@@ -497,6 +497,10 @@ Provide your response as a single, valid JSON object with this exact structure.`
   };
 
   const handleNext = () => {
+    // Show confetti animation when moving to next question
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 2000);
+    
     if (currentQuestion < worksheet.questions.length - 1) {
       // If there's a pending grading call for the *current* question, execute it immediately
       if (gradingTimeoutRef.current) {
@@ -1039,7 +1043,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
                 <span className="text-xl md:text-2xl">{badge.badge_icon}</span>
                 <div>
                   <p className="font-semibold text-sm md:text-base text-slate-900">{badge.badge_name}</p>
-                  <p className="text-xs md:text-sm text-slate-600">{badge.badge_description}</p>
+                  <p className="text-xs md:text-sm text-slate-600}>{badge.badge_description}</p>
                 </div>
               </div>
             ))}
@@ -1080,8 +1084,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
         </AnimatePresence>
       </div>
 
-      {/* Sticky Footer Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
+      {/* Sticky Footer Navigation - Constrained to main content area */}
+      <div className="fixed bottom-0 left-0 md:left-64 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
         <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
           <div className="flex justify-between gap-3">
             <Button
