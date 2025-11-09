@@ -20,30 +20,33 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
         }
 
-        // Enhanced prompt to request JSON format
-        const enhancedPrompt = prompt + "\n\nIMPORTANT: You must respond with ONLY valid JSON matching the exact schema provided. Do not include any explanatory text before or after the JSON. Start your response with { and end with }.";
-
-        // Prepare the request body for Gemini API with Google Search grounding
-        // Note: Cannot use responseMimeType with tools, so we request JSON in the prompt
+        // Prepare the request body for Gemini 2.5 Flash with Google Search Grounding
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: enhancedPrompt
+                    text: prompt
                 }]
             }],
             generationConfig: {
-                temperature: 0.2,
+                temperature: 0.3,
                 topP: 0.95,
-                maxOutputTokens: 8192
+                maxOutputTokens: 8192,
+                responseMimeType: "application/json",
+                responseSchema: response_json_schema
             },
             tools: [{
-                googleSearch: {}
+                googleSearchRetrieval: {
+                    dynamicRetrievalConfig: {
+                        mode: "MODE_DYNAMIC",
+                        dynamicThreshold: 0.3
+                    }
+                }
             }]
         };
 
         // Call Gemini 2.5 Flash API
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {
@@ -75,17 +78,9 @@ Deno.serve(async (req) => {
             }, { status: 500 });
         }
 
-        // Parse JSON response
+        // Parse JSON response (should already be valid JSON from responseMimeType)
         try {
-            // Clean the response - remove markdown code blocks if present
-            let cleanedText = generatedText.trim();
-            if (cleanedText.startsWith('```json')) {
-                cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-            } else if (cleanedText.startsWith('```')) {
-                cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-            }
-            
-            const parsedResponse = JSON.parse(cleanedText);
+            const parsedResponse = JSON.parse(generatedText);
             return Response.json(parsedResponse);
         } catch (parseError) {
             console.error('Failed to parse JSON:', parseError);
