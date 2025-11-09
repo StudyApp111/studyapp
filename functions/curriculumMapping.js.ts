@@ -20,14 +20,28 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
         }
 
-        console.log('Calling Gemini 2.5-flash for curriculum mapping...');
+        console.log('Calling Gemini 2.5-flash with Google Search grounding for curriculum mapping...');
 
-        // Prepare the request body for Gemini API
+        // Enhance prompt to explicitly request JSON format
+        const enhancedPrompt = `${prompt}
+
+CRITICAL OUTPUT REQUIREMENT:
+You MUST respond with a valid JSON object that strictly follows this schema:
+${JSON.stringify(response_json_schema, null, 2)}
+
+Do not include any markdown formatting, code blocks, or explanatory text.
+Return ONLY the raw JSON object.`;
+
+        // Prepare the request body for Gemini API WITH Google Search grounding
+        // When using tools, we CANNOT use responseMimeType/responseSchema
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: prompt
+                    text: enhancedPrompt
                 }]
+            }],
+            tools: [{
+                google_search: {}
             }],
             generationConfig: {
                 temperature: 0.2,
@@ -36,13 +50,7 @@ Deno.serve(async (req) => {
             }
         };
 
-        // Add response schema if provided
-        if (response_json_schema) {
-            requestBody.generationConfig.responseMimeType = "application/json";
-            requestBody.generationConfig.responseSchema = response_json_schema;
-        }
-
-        // Call Gemini 2.5 Flash API
+        // Call Gemini 2.5 Flash API with Google Search
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
@@ -80,22 +88,62 @@ Deno.serve(async (req) => {
 
         console.log('Generated curriculum map - text length:', generatedText.length);
 
-        // Parse JSON response if schema was provided
-        if (response_json_schema) {
-            try {
-                const parsedResponse = JSON.parse(generatedText);
-                console.log('Successfully parsed curriculum map with Gemini 2.5-flash');
-                return Response.json(parsedResponse);
-            } catch (parseError) {
-                console.error('Failed to parse JSON:', parseError);
-                return Response.json({ 
-                    error: 'Failed to parse JSON response', 
-                    raw_text: generatedText.substring(0, 500)
-                }, { status: 500 });
-            }
+        // Parse JSON response with multiple cleanup attempts
+        let parsedResponse;
+        let cleanedText = generatedText.trim();
+        
+        // Attempt 1: Remove markdown code blocks
+        if (cleanedText.startsWith('```json')) {
+            cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        } else if (cleanedText.startsWith('```')) {
+            cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
         }
-
-        return Response.json({ text: generatedText });
+        
+        cleanedText = cleanedText.trim();
+        
+        // Attempt 2: Try direct parsing
+        try {
+            parsedResponse = JSON.parse(cleanedText);
+            console.log('Successfully parsed curriculum map with Gemini 2.5-flash + Google Search');
+            return Response.json(parsedResponse);
+        } catch (parseError) {
+            console.error('First parse attempt failed:', parseError.message);
+            
+            // Attempt 3: Find JSON object in text
+            const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                try {
+                    parsedResponse = JSON.parse(jsonMatch[0]);
+                    console.log('Successfully parsed curriculum map (extracted from text)');
+                    return Response.json(parsedResponse);
+                } catch (extractError) {
+                    console.error('Extract parse failed:', extractError.message);
+                }
+            }
+            
+            // Attempt 4: Try to extract JSON between first { and last }
+            const firstBrace = cleanedText.indexOf('{');
+            const lastBrace = cleanedText.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                try {
+                    const extracted = cleanedText.substring(firstBrace, lastBrace + 1);
+                    parsedResponse = JSON.parse(extracted);
+                    console.log('Successfully parsed curriculum map (full extraction)');
+                    return Response.json(parsedResponse);
+                } catch (extractError2) {
+                    console.error('Full extraction parse failed:', extractError2.message);
+                }
+            }
+            
+            // Final attempt failed
+            console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
+            return Response.json({ 
+                error: 'Failed to parse AI response as JSON', 
+                details: parseError.message,
+                raw_text_preview: cleanedText.substring(0, 1000),
+                parse_attempts: 'Tried 4 different parsing strategies'
+            }, { status: 500 });
+        }
 
     } catch (error) {
         console.error('Error in curriculumMapping function:', error);
