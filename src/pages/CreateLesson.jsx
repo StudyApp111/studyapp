@@ -143,7 +143,7 @@ Thoroughly analyze ${extractedContent} to identify core topics, concepts, learni
 Search for official curriculum documents, course outlines, or syllabi directly from ${learningProfile.school} for ${courseName}. Use this information to validate, supplement, and provide the official framework for the course, corroborating findings from the student-provided content.
 
 3. Tertiary Analysis - Broader Context & Standards:
-For K-12 courses, if necessary, consult official regional curriculum standards for ${gradeLevel} and ${courseName} using ${learningProfile.city} to ensure alignment with broader educational requirements.
+For K-12 courses, if necessary, consult official regional curriculum standards for ${learningProfile.grade} and ${courseName} using ${learningProfile.city} to ensure alignment with broader educational requirements.
 For post-secondary/professional courses, ${learningProfile.city} can help identify related professional accreditation standards or common resources to further contextualize the information.
 
 
