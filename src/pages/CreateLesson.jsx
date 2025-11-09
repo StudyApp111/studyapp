@@ -136,16 +136,13 @@ Content Source: ${extractedContent}
 Task: Generate a detailed curriculum profile that includes:
 
 Information Sourcing & Synthesis Strategy (Prioritized):
-1. Primary Analysis - Student-Provided Content:
-Thoroughly analyze ${extractedContent} to identify core topics, concepts, learning objectives, specific terminology, areas of emphasis (e.g., recurring themes, depth of coverage), and any stated needs or questions. The insights from this content should form the foundational layer and heavily influence all sections of the "Required Curriculum Profile Output."
 
-2. Secondary Analysis - Direct Institutional Information (Validation & Supplementation):
-Search for official curriculum documents, course outlines, or syllabi directly from ${learningProfile.school} for ${courseName}. Use this information to validate, supplement, and provide the official framework for the course, corroborating findings from the student-provided content.
-
-3. Tertiary Analysis - Broader Context & Standards:
-For K-12 courses, if necessary, consult official regional curriculum standards for ${learningProfile.grade} and ${courseName} using ${learningProfile.city} to ensure alignment with broader educational requirements.
-For post-secondary/professional courses, ${learningProfile.city} can help identify related professional accreditation standards or common resources to further contextualize the information.
-
+1. Primary Analysis – Student-Provided Content:
+Thoroughly analyze ${extractedContent} to identify core topics, concepts, learning objectives, specific terminology, areas of emphasis (e.g., recurring themes, depth of coverage), any stated needs or questions — and also identify relevant major authors, theorists, books or seminal works referenced or implied.
+2. Secondary Analysis – Direct Institutional Information (Validation & Supplementation):
+Search for official curriculum documents, course outlines or syllabi directly from ${learningProfile.school} for ${courseName}. Use this information to validate, supplement and provide the official framework for the course, corroborating findings from the student-provided content. Also locate recommended textbooks, key readings, or resource lists associated with the syllabus.
+3. Tertiary Analysis – Broader Context & Standards:
+For K-12 courses, if necessary, consult official regional curriculum standards for ${learningProfile.grade} and ${courseName} using ${learningProfile.city} to ensure alignment with broader educational requirements. For post-secondary/professional courses, use ${learningProfile.city} to identify related professional accreditation standards or common resources; locate canonical works, major figures, landmark studies or seminal concepts to further contextualize the information.
 
 Required Curriculum Profile Output:
 
@@ -155,25 +152,27 @@ Identify and list 6-10 major, clearly defined core competencies or overarching l
 B. Competency Weightings / Emphasis:
 Infer or calculate estimated percentage weightings for each core competency, ensuring a sum of 100%. Prioritize evidence of emphasis from ${extractedContent}, then official documents. If percentages cannot be reliably determined, indicate relative importance (High, Medium, Low).
 C. Typical Assessment Question Formats & Patterns:
-List common assessment formats (e.g., Multiple Choice, Short Answer, Essay). For the 3-4 most significant formats, estimate their frequency distribution and provide one illustrative example for each, reflecting typical style and difficulty.
+List common assessment formats (e.g., Multiple Choice, Short Answer, Essay). For the 3-4 most significant formats, estimate their frequency distribution and provide one illustrative example for each, reflecting typical style and difficulty. Also include one example resource or reading or figure that might appear in such an assessment (e.g., a theorist, textbook chapter, mathematical concept, scientific principle).
 D. High-Yield Focal Points (Key Topics/Skills):
-Identify and briefly describe 3-5 critical concepts, topics, or skills that are frequently tested, fundamental for future success, or known to be challenging.
+Identify and briefly describe 3-5 critical concepts, topics or skills that are frequently tested, fundamental for future success, or known to be challenging. Where relevant, mention major authors, key books, or historical/political figures or scientific/mathematical concepts linked to those focal points.
 E. Common Student Misconceptions & Difficulties:
 Describe at least 3-4 specific and common student misconceptions or difficulties related to the core competencies or high-yield focal points.
 
-
 CRITICAL FORMATTING:
-- weight_percentage MUST be a STRING with % symbol (e.g., "20%", "15%")
-- frequency MUST be a STRING (e.g., "30%", "Common", "Rare")
+
+- weight_percentage MUST be a STRING with % symbol (e.g., “20%”, “15%”)
+- frequency MUST be a STRING (e.g., “30%”, “Common”, “Rare”)
 - Do NOT use numeric values, always use strings
 
 Requirements:
+
 - Base your analysis on standard educational practices for ${learningProfile.grade || "this grade level"}
 - Align with typical ${courseName} curriculum standards
 - Ensure competency weightings sum to 100%
 - Make question format examples realistic and grade-appropriate
 - Focus on exam-relevant material
 
+Expand your search scope so that your response may include specific books, authors/theorists, concepts or figures relevant to the course domain.
 Output Format: JSON object matching the specified schema`;
 
       const { data: curriculumMap } = await base44.functions.invoke('curriculumMapping', {
