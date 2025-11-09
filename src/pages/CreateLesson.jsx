@@ -124,7 +124,7 @@ export default function CreateLesson() {
 
       const curriculumPrompt = `Educational Curriculum Analysis Request
 
-You are an expert curriculum analyst tasked with creating a comprehensive profile of educational content to support precise, high-fidelity assessment design. Your analysis will be used to generate diagnostic quizzes and worksheets that accurately mirror exam conditions and learning objectives.
+Objective: You are an expert curriculum and pedagogical analyst. Your mission is to meticulously analyze the provided inputs to construct the most accurate and comprehensive curriculum profile possible. This profile is foundational for generating personalized learning materials.
 
 Input Context:
 Student Grade Level: ${learningProfile.grade || "N/A"}
@@ -135,30 +135,32 @@ Content Source: ${extractedContent}
 
 Task: Generate a detailed curriculum profile that includes:
 
-1. Core Competencies (5-8 primary learning objectives)
-   For each competency:
-   - Name: Clear, concise label
-   - Description: 2-3 sentence explanation of what mastery looks like
+Information Sourcing & Synthesis Strategy (Prioritized):
+1. Primary Analysis - Student-Provided Content:
+Thoroughly analyze ${extractedContent} to identify core topics, concepts, learning objectives, specific terminology, areas of emphasis (e.g., recurring themes, depth of coverage), and any stated needs or questions. The insights from this content should form the foundational layer and heavily influence all sections of the "Required Curriculum Profile Output."
 
-2. Competency Weightings (importance in assessments)
-   For each core competency:
-   - Competency name (matching above)
-   - Weight percentage: MUST be a string like "15%" or "20%" (including the % symbol)
-   - All weights must sum to 100%
+2. Secondary Analysis - Direct Institutional Information (Validation & Supplementation):
+Search for official curriculum documents, course outlines, or syllabi directly from ${learningProfile.school} for ${courseName}. Use this information to validate, supplement, and provide the official framework for the course, corroborating findings from the student-provided content.
 
-3. Question Formats (types of questions students will encounter)
-   For each format:
-   - Type: (e.g., "Multiple Choice", "Short Answer", "Problem-Solving", "Essay")
-   - Frequency: How often this appears as a STRING (e.g., "30%", "15%", "Rare", "Common")
-   - Examples: 2-3 specific example questions in this format
+3. Tertiary Analysis - Broader Context & Standards:
+For K-12 courses, if necessary, consult official regional curriculum standards for ${gradeLevel} and ${courseName} using ${learningProfile.city} to ensure alignment with broader educational requirements.
+For post-secondary/professional courses, ${learningProfile.city} can help identify related professional accreditation standards or common resources to further contextualize the information.
 
-4. High-Yield Focal Points (3-5 items)
-   - List the most critical topics/concepts that frequently appear on assessments
-   - These should represent the "must-know" material for exam success
 
-5. Common Misconceptions (3-5 items)
-   - Identify typical errors or misunderstandings students have with this material
-   - Format: Brief description of the misconception
+Required Curriculum Profile Output:
+
+Based on the most authoritative source(s) identified, provide the following in the structured JSON format below. The content should strongly reflect insights from ${extractedContent}, using other official sources for validation and completion.
+A. Core Competencies / Learning Outcomes:
+Identify and list 6-10 major, clearly defined core competencies or overarching learning outcomes. For each, provide a concise 1-2 sentence description. If the official source provides a significantly different number of outcomes, reflect that. Synthesize granular outcomes into broader competency statements where appropriate.
+B. Competency Weightings / Emphasis:
+Infer or calculate estimated percentage weightings for each core competency, ensuring a sum of 100%. Prioritize evidence of emphasis from ${extractedContent}, then official documents. If percentages cannot be reliably determined, indicate relative importance (High, Medium, Low).
+C. Typical Assessment Question Formats & Patterns:
+List common assessment formats (e.g., Multiple Choice, Short Answer, Essay). For the 3-4 most significant formats, estimate their frequency distribution and provide one illustrative example for each, reflecting typical style and difficulty.
+D. High-Yield Focal Points (Key Topics/Skills):
+Identify and briefly describe 3-5 critical concepts, topics, or skills that are frequently tested, fundamental for future success, or known to be challenging.
+E. Common Student Misconceptions & Difficulties:
+Describe at least 3-4 specific and common student misconceptions or difficulties related to the core competencies or high-yield focal points.
+
 
 CRITICAL FORMATTING:
 - weight_percentage MUST be a STRING with % symbol (e.g., "20%", "15%")
