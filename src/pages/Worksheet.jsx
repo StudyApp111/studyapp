@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -31,14 +30,15 @@ export default function Worksheet() {
   const gradingTimeoutRef = useRef(null);
   const [gradingInProgress, setGradingInProgress] = useState({});
   
-  // Timer state
-  const [elapsedSeconds, setElapsedSeconds] = useState(0); // Total time spent on worksheet
-  const timerRef = useRef(null); // Interval ID for the total timer
-  const totalSessionStartTimeRef = useRef(null); // When the current session started (for total elapsed)
-
+  // Timer state - using refs to prevent re-render issues
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const timerInitializedRef = useRef(false); // NEW: Track if timer was initialized
+  
   // Question time tracking - track time per question
-  const questionTimesRef = useRef({}); // { 0: 45, 1: 30, 2: 60 } - total seconds per question index across all visits
-  const currentQuestionStartTimeRef = useRef(null); // When the current question was entered *this time*
+  const questionTimesRef = useRef({}); // { 0: 45, 1: 30, 2: 60 } - total seconds per question index
+  const currentQuestionStartTimeRef = useRef(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -52,76 +52,54 @@ export default function Worksheet() {
     loadOrGenerateWorksheet(lessonId);
   }, [navigate]);
 
-  // Main timer effect - runs continuously, initializes question timers
+  // Main timer effect - runs ONLY ONCE when worksheet loads
   useEffect(() => {
-    if (worksheet && !worksheet.completed) {
-      // Clear any existing timer first
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-
-      // Initialize elapsedSeconds from stored data if resuming
-      const initialElapsed = worksheet.time_taken_seconds || 0;
-      setElapsedSeconds(initialElapsed);
+    if (worksheet && !worksheet.completed && !timerInitializedRef.current) {
+      // Initialize timer ONCE
+      timerInitializedRef.current = true;
+      startTimeRef.current = Date.now();
+      currentQuestionStartTimeRef.current = Date.now();
       
-      // Set the start point for the *total* elapsed timer, accounting for previous sessions
-      totalSessionStartTimeRef.current = Date.now() - (initialElapsed * 1000);
-
-      // Initialize questionTimesRef from stored data or to zeros
-      const initialQuestionTimes = {};
+      // Initialize question times from existing data if any
       if (worksheet.question_time_laps && worksheet.question_time_laps.length > 0) {
+        const timesObj = {};
         worksheet.question_time_laps.forEach(lap => {
-          initialQuestionTimes[lap.question_index] = lap.total_seconds;
+          timesObj[lap.question_index] = lap.total_seconds;
         });
-      }
-      for (let i = 0; i < (worksheet.questions?.length || 0); i++) {
-        if (initialQuestionTimes[i] === undefined) { // Only set if not already loaded from saved data
-          initialQuestionTimes[i] = 0;
+        questionTimesRef.current = timesObj;
+      } else {
+        // Initialize all questions to 0
+        questionTimesRef.current = {};
+        for (let i = 0; i < (worksheet.questions?.length || 10); i++) {
+          questionTimesRef.current[i] = 0;
         }
       }
-      questionTimesRef.current = initialQuestionTimes;
-
-      // Set the start time for the *current* question (question 0 initially)
-      currentQuestionStartTimeRef.current = Date.now();
-
-      // Start the global timer interval
+      
+      // Start the interval timer
       timerRef.current = setInterval(() => {
-        setElapsedSeconds(Math.floor((Date.now() - totalSessionStartTimeRef.current) / 1000));
+        if (startTimeRef.current) {
+          const now = Date.now();
+          const totalElapsed = Math.floor((now - startTimeRef.current) / 1000);
+          setElapsedSeconds(totalElapsed);
+        }
       }, 1000);
 
-      // Cleanup function
       return () => {
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
-        // IMPORTANT: When the component unmounts or worksheet changes (e.g., completes),
-        // ensure the time spent on the *last active question* is recorded.
-        // This prevents losing time if navigating away without pressing next/previous/submit.
-        if (worksheet && !worksheet.completed && currentQuestionStartTimeRef.current !== null) {
-          const now = Date.now();
-          const timeSpentOnThisVisit = Math.floor((now - currentQuestionStartTimeRef.current) / 1000);
-          questionTimesRef.current[currentQuestion] = (questionTimesRef.current[currentQuestion] || 0) + timeSpentOnThisVisit;
-        }
       };
-    } else { // If worksheet is completed or null, ensure timer is stopped
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
     }
-  }, [worksheet]); // Only depends on worksheet. `currentQuestion` changes are handled by `recordQuestionTime`
+  }, [worksheet]); // Only depends on worksheet existing, not its contents
 
-  // Records time spent on the given question index, and resets timer for the next question.
+  // Record time when question changes
   const recordQuestionTime = (questionIndex) => {
     if (currentQuestionStartTimeRef.current) {
       const now = Date.now();
-      const timeSpentOnThisVisit = Math.floor((now - currentQuestionStartTimeRef.current) / 1000);
+      const timeSpentOnQuestion = Math.floor((now - currentQuestionStartTimeRef.current) / 1000);
       
-      // Add time spent on this visit to the total for this question
-      questionTimesRef.current[questionIndex] = (questionTimesRef.current[questionIndex] || 0) + timeSpentOnThisVisit;
-      
-      // Reset for the next question (or current if navigating back to it)
-      currentQuestionStartTimeRef.current = now;
+      // Add time to this question's total
+      questionTimesRef.current[questionIndex] = (questionTimesRef.current[questionIndex] || 0) + timeSpentOnQuestion;
     }
   };
 
@@ -196,7 +174,6 @@ export default function Worksheet() {
 
       const learningProfile = profile[0] || {};
 
-      // Determine the lesson content source
       let contentDescription = "";
       if (lessonData.input_type === "description" && lessonData.description) {
         contentDescription = lessonData.description;
@@ -209,7 +186,6 @@ export default function Worksheet() {
       }
 
       let aiPrompt = "";
-      let contextData = "";
 
       if (worksheetNum === 1) {
         const diagnosticResults = quizData.questions.map((q, index) => ({
@@ -220,8 +196,7 @@ export default function Worksheet() {
           StudentAnswer: quizData.user_answers?.[index] || "No answer provided",
           IsCorrect: quizData.user_answers?.[index] === q.correct_answer
         }));
-        contextData = `Diagnostic Quiz Results:\n${JSON.stringify(diagnosticResults, null, 2)}`;
-
+        
         aiPrompt = `Context
 You are a master assessment designer creating Worksheet ${worksheetNum} of 6 for ${lessonData.course_name}.
 
@@ -237,7 +212,8 @@ ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 Lesson Content:
 ${contentDescription}
 
-${contextData}
+Diagnostic Quiz Results:
+${JSON.stringify(diagnosticResults, null, 2)}
 
 Task 1: Analyze Student Performance & Curriculum Profile
 Based on diagnostic quiz results, identify:
@@ -251,20 +227,11 @@ Create 10 unique questions following the curriculum map's style and difficulty d
 CRITICAL FORMATTING REQUIREMENTS:
 1. Question Text: Write as PLAIN TEXT without markdown formatting (no **, no *, no special symbols)
    - For math: use x^2 for superscripts, H_2O for subscripts (auto-rendered)
-   - Example: "Simplify the expression: (2x^3)^2 * x^-2"
-   - DO NOT use **bold** or *italic* in question_text
-2. Answer Options: MUST use proper capitalization (e.g., "Fought" not "fought", "Brave" not "brave")
-3. Correct Answer: Must match one of the options EXACTLY, with same capitalization
+2. Answer Options: MUST use proper capitalization
+3. Correct Answer: Must match one of the options EXACTLY
 
 Task 3: Provide Complete Answer Key Details
 For each question include: correct_answer, explanation (2-3 sentences), assessed_competencies, targeted_misconception.
-
-IMPORTANT JSON FORMATTING:
-- Keep all text fields concise
-- Use simple language in explanations
-- Avoid complex punctuation
-- Keep question_text clear and in plain text format
-- Maintain proper capitalization in all answer options
 
 Output Format:
 Provide your response as a single, valid JSON object with the structure specified.`;
@@ -287,7 +254,6 @@ Provide your response as a single, valid JSON object with the structure specifie
           question_text: q.question_text,
           options: q.options || [],
           correct_answer: q.correct_answer,
-          explanation: q.explanation,
           assessed_competencies: q.assessed_competencies,
           targeted_misconception: q.targeted_misconception,
           student_answer: q.user_answer || "No answer provided",
@@ -298,7 +264,7 @@ Provide your response as a single, valid JSON object with the structure specifie
           worksheet_number: latestWorksheet.worksheet_number,
           predicted_grade: latestWorksheet.predicted_grade,
           total_score: latestWorksheet.total_score,
-          strengths: latestWorkheet.ai_feedback?.identified_strengths_list || [],
+          strengths: latestWorksheet.ai_feedback?.identified_strengths_list || [],
           weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
         };
 
@@ -311,85 +277,28 @@ Provide your response as a single, valid JSON object with the structure specifie
         }
 
         aiPrompt = `Context
-You are a master assessment designer and expert tutor (simulated 180 IQ). Your primary function is to create the next 10-question adaptive worksheet for the student in ${lessonData.course_name}. This worksheet must continue to be highly predictive of exam performance by iteratively building upon the student's performance on the previous worksheet and aligning with the curriculum map. The questions must precisely mirror the style, type, wording, and difficulty detailed in the curriculum map.
+You are a master assessment designer creating the next 10-question adaptive worksheet for ${lessonData.course_name}.
 
 Input Educational Context
 Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${lessonData.course_name}
-School (for context): ${learningProfile.school || "N/A"}
-City/Region (for context): ${learningProfile.city || "N/A"}
-Current Iteration/Worksheet Number and Description: ${currentWorksheetDescription}
+Current Iteration: ${currentWorksheetDescription}
 
-Detailed Curriculum Profile (JSON object):
+Detailed Curriculum Profile:
 ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
 Lesson Content:
 ${contentDescription}
 
-Previous Worksheet Performance Data (Worksheet ${latestWorksheet.worksheet_number}):
+Previous Worksheet Performance:
 ${JSON.stringify(previousWorksheetPerformance, null, 2)}
 
-Cumulative Performance Summary:
+Cumulative Performance:
 ${JSON.stringify(cumulativePerformance, null, 2)}
 
-Task 1: Analyze Previous Performance to Guide Current Worksheet Design
-Based on the curriculum map, lesson content, previous worksheet performance, and cumulative performance summary:
+Task: Generate 10 adaptive questions following curriculum alignment. Provide complete answer key with explanations.
 
-1. Identify Current Weak Competencies: Pinpoint core competencies where the student answered questions incorrectly in the previous worksheet, especially those with a higher difficulty_index or those reflecting cumulative trends of persistent weakness.
-
-2. Identify Competencies Showing Improvement: Note competencies where previous worksheet indicates recent success, especially if they were previously weak.
-
-3. Identify Mastered/Consistently Strong Competencies: Note competencies where the student performed well on higher-difficulty questions.
-
-4. Track Persistent Misconceptions: Note if previous worksheet shows continued errors on questions targeting common misconceptions.
-
-Task 2: Generate the Next Iterative 10-Question Predictive Worksheet
-Create 10 unique questions. Adhere strictly to the following criteria:
-
-Adaptive & Targeted Question Distribution:
-- Primary Focus (approx. 5-6 questions): Target Current Weak Competencies and Persistent Misconceptions. Select appropriate difficulty_index for these questions (e.g., if a student struggles with "Moderate Exam-Level," provide more "Moderate Exam-Level" or even a "Foundational" review question before retrying "Moderate Exam-Level").
-- Reinforce & Solidify (approx. 2-3 questions): For Competencies Showing Improvement, provide questions at a similar or slightly increased difficulty_index to solidify understanding and build confidence.
-- Review & Extend (approx. 1-2 questions): For Mastered/Consistently Strong Competencies, include a question to ensure retention (spaced repetition) OR to extend understanding (e.g., a "High Challenge Exam-Level" question, a novel application, or integration with another competency).
-
-Exact Alignment with Exam Style:
-- Question distribution must mirror the curriculum map's question_formats frequency
-- Type, wording, style, difficulty must emulate the curriculum map's question_formats examples
-- All Multiple Choice Questions MUST have exactly 4 options as a simple array of strings
-
-CRITICAL FORMATTING REQUIREMENTS:
-1. Question Text: Write as PLAIN TEXT without markdown formatting (no **, no *, no special symbols)
-   - For math: use x^2 for superscripts, H_2O for subscripts (auto-rendered)
-   - Example: "Factor the trinomial completely: x^2 + 9x + 18"
-   - DO NOT use **bold** or *italic* in question_text
-2. Answer Options: MUST use proper capitalization (e.g., "California" not "california")
-3. Correct Answer: Must match one of the options EXACTLY, with same capitalization
-
-Assigned Difficulty Index (Per Question):
-For each question, assign a difficulty_index from: "Foundational", "Conceptual", "Moderate Exam-Level", "Challenging Exam-Level", or "High Challenge Exam-Level"
-This assignment must be adaptive based on your analysis in Task 1.
-
-Grade-Appropriate Language:
-Use language appropriate for ${learningProfile.grade || "the student's grade level"}.
-
-Task 3: Provide Complete Answer Key Details
-For each question include:
-- correct_answer: The correct answer (with proper capitalization matching the option)
-- explanation: Detailed explanation (2-3 sentences)
-- assessed_competencies: Array of competency names being assessed
-- targeted_misconception: The specific misconception this question addresses (or "N/A" if not applicable)
-
-CRITICAL JSON FORMATTING RULES:
-1. All text fields must have properly escaped quotes and special characters
-2. For Multiple Choice questions: ALWAYS provide exactly 4 options as a simple array of strings with proper capitalization
-   Example: "options": ["California", "New York", "Texas", "Florida"]
-3. NEVER leave the "options" array empty for Multiple Choice questions
-4. If you cannot create valid multiple choice options, use a different question_type instead
-5. Use simple, clear language in all fields
-6. Keep question_text concise, unambiguous, and in plain text format (no markdown)
-7. Correct answer MUST match one of the options exactly
-
-Output Format:
-Provide your response as a single, valid JSON object with this exact structure.`;
+Output Format: Valid JSON object matching the schema.`;
       }
 
       const { data: worksheetData } = await base44.functions.invoke('generateWorksheet', {
@@ -401,18 +310,9 @@ Provide your response as a single, valid JSON object with this exact structure.`
             analysis_summary_for_worksheet_design: {
               type: "object",
               properties: {
-                targeted_weak_competencies: {
-                  type: "array",
-                  items: { type: "string" }
-                },
-                key_gaps_or_misconceptions_addressed: {
-                  type: "array",
-                  items: { type: "string" }
-                },
-                focused_differentiating_competencies: {
-                  type: "array",
-                  items: { type: "string" }
-                }
+                targeted_weak_competencies: { type: "array", items: { type: "string" } },
+                key_gaps_or_misconceptions_addressed: { type: "array", items: { type: "string" } },
+                focused_differentiating_competencies: { type: "array", items: { type: "string" } }
               },
               required: ["targeted_weak_competencies", "key_gaps_or_misconceptions_addressed", "focused_differentiating_competencies"]
             },
@@ -425,16 +325,10 @@ Provide your response as a single, valid JSON object with this exact structure.`
                   question_type: { type: "string" },
                   difficulty_index: { type: "string" },
                   question_text: { type: "string" },
-                  options: {
-                    type: "array",
-                    items: { type: "string" }
-                  },
+                  options: { type: "array", items: { type: "string" } },
                   correct_answer: { type: "string" },
                   explanation: { type: "string" },
-                  assessed_competencies: {
-                    type: "array",
-                    items: { type: "string" }
-                  },
+                  assessed_competencies: { type: "array", items: { type: "string" } },
                   targeted_misconception: { type: "string" }
                 },
                 required: ["question_number", "question_type", "difficulty_index", "question_text", "correct_answer", "explanation", "assessed_competencies", "targeted_misconception"]
@@ -471,8 +365,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
           analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
           status: "in_progress",
           completed: false,
-          time_taken_seconds: 0, // Initialize time_taken_seconds for new worksheets
-          question_time_laps: [] // Initialize question_time_laps for new worksheets
+          time_taken_seconds: 0,
+          question_time_laps: []
         });
       }
 
@@ -561,10 +455,11 @@ Provide your response as a single, valid JSON object with this exact structure.`
     const updatedQuestions = [...worksheet.questions];
     updatedQuestions[currentQuestion].user_answer = answer;
     
-    setWorksheet({
-      ...worksheet,
+    // Update worksheet state WITHOUT triggering timer reset
+    setWorksheet(prev => ({
+      ...prev,
       questions: updatedQuestions
-    });
+    }));
 
     if (gradingTimeoutRef.current) {
       clearTimeout(gradingTimeoutRef.current);
@@ -597,6 +492,9 @@ Provide your response as a single, valid JSON object with this exact structure.`
           gradeSubjectiveQuestion(currentQ, currentQuestion);
         }
       }
+      
+      // Reset timer for next question
+      currentQuestionStartTimeRef.current = Date.now();
       setCurrentQuestion(prev => prev + 1);
     }
   };
@@ -606,6 +504,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
       // Record time for current question before going back
       recordQuestionTime(currentQuestion);
       
+      // Reset timer for previous question
+      currentQuestionStartTimeRef.current = Date.now();
       setCurrentQuestion(prev => prev - 1);
     }
   };
@@ -613,7 +513,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
   const submitWorksheet = async () => {
     setIsSubmitting(true);
     
-    // Record final question time for the question the user is currently on
+    // Record final question time
     recordQuestionTime(currentQuestion);
     
     // Stop the timer
@@ -666,7 +566,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
         };
       });
 
-      // Determine the lesson content source for feedback prompt
       let contentDescription = "";
       if (lesson.input_type === "description" && lesson.description) {
         contentDescription = lesson.description;
@@ -699,114 +598,22 @@ Provide your response as a single, valid JSON object with this exact structure.`
         } : null
       }));
 
-      const feedbackPrompt = `Context: You are an experienced teacher grading Worksheet ${worksheet.worksheet_number} of 6 for ${lesson.course_name} at ${learningProfile.grade || "N/A"}. You operate within the educational standards of ${learningProfile.school || "N/A"} and ${learningProfile.city || "N/A"}. You have a deep understanding of the curriculum and how it's assessed. The student has just completed a 10-question worksheet that was meticulously designed to mirror actual exam conditions in terms of style, question types, wording, and difficulty, based on the curriculum map. Your primary task is to analyze their worksheet performance to provide an accurate predicted exam grade, insightful feedback, and actionable recommendations for future study.
-
-IMPORTANT: Some questions have been AI-graded with detailed scoring. When a question has "ai_grading" data, USE THAT SCORE as the base score out of 10 for that question. This reflects nuanced understanding and partial credit. For questions without "ai_grading" data (e.g., Multiple Choice), use the 'is_correct' boolean to assign a score.
+      const feedbackPrompt = `Context: You are an experienced teacher grading Worksheet ${worksheet.worksheet_number} of 6 for ${lesson.course_name}.
 
 Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${lesson.course_name}
-School: ${learningProfile.school || "N/A"}
-City/Region: ${learningProfile.city || "N/A"}
 Worksheet Number: ${worksheet.worksheet_number} of 6
 
-Detailed Curriculum Profile (JSON object):
+Curriculum Profile:
 ${JSON.stringify(lesson.curriculum_map, null, 2)}
 
-Lesson Content:
-${contentDescription}
-
-Diagnostic Quiz Performance:
-- Diagnostic Score: ${quiz?.score || 'N/A'}%
-- Diagnostic Results:
-${JSON.stringify(quiz?.questions.map((q, idx) => ({
-  question_text: q.question_text,
-  user_answer: quiz.user_answers?.[idx],
-  is_correct: quiz.user_answers?.[idx] === q.correct_answer
-})) || [], null, 2)}
-
-Worksheet ${worksheet.worksheet_number} Performance:
-- Analysis Summary:
-${JSON.stringify(worksheet.analysis_summary, null, 2)}
-- Questions with Student Answers:
+Worksheet Performance:
 ${JSON.stringify(worksheetPerformanceData, null, 2)}
 
-Mission: Deliver a comprehensive performance analysis, including an accurate predicted exam grade (with clear calculation reasoning), constructive feedback, and targeted future session plans.
+Mission: Provide comprehensive feedback including predicted grade, strengths, and improvement areas.
 
-Part 1: Performance Analysis & Grade Prediction Calculation
-
-(If WorksheetPerformanceData shows 0 correct answers out of 10, do NOT perform steps 1-6. Instead, directly populate the "Predicted Grade & Rationale" section in Part 2 with the specific 0/10 guidance. Similarly, handle 10/10 performance with adjusted narrative as outlined in Part 2.)
-
-1. Initialize Per-Question Score (on a 0-10 scale):
-For each question: 
-- If it has ai_grading data (i.e., 'ai_grading' is not null), use ai_grading.score_out_of_10 directly as the base score (this is already on a 0-10 scale).
-- If 'ai_grading' is null (for MCQ/True-False questions):
-  - If is_correct is true, assign a base score of 9.0 (strong indication of knowledge).
-  - If is_correct is false, assign 0.2 (acknowledging some exposure but incorrect application).
-
-2. Adjust Score Based on Worksheet Question Difficulty (apply only to non-AI-graded questions, as AI-graded scores inherently account for difficulty):
-For questions where 'ai_grading' is null:
-- If base score is 9.0:
-  - Correct on "High Challenge Exam-Level": Multiply score by 1.05 (max score 9.8).
-  - Correct on "Challenging Exam-Level": Multiply score by 1.02 (max score 9.6).
-  - Correct on "Moderate Exam-Level": No change or multiply score by 1.01 (max score 9.2).
-- If base score is 0.2 (incorrect):
-  - No further adjustment needed based on difficulty, keep at 0.2.
-
-3. Calculate Weighted Competency Mastery:
-For each core_competency in the curriculum map:
-- Identify all worksheet questions linked to this competency via assessed_competencies.
-- Calculate the average adjusted score (from step 2 or direct AI score from step 1) for these questions. This is the "MasteryScore" for that competency.
-- Calculate a preliminary aggregate score: Sum of (MasteryScore_for_Competency_X * Weight_of_Competency_X). Normalize to be out of 100.
-
-4. Adjust for Performance on Exam Question Styles:
-Analyze student's average scores for each question_type present in the worksheet.
-Compare this performance against the frequency of those types in the curriculum map's question_formats.
-If significant underperformance (<40% average score) on a question_type with high exam frequency (>30%), apply a small negative modifier to the aggregate score (e.g., -3 to -6 points). Conversely, strong performance on high-frequency types might warrant a smaller positive modifier (+0 to +2 points).
-
-5. Finalize Predicted Exam Score:
-The result is the PredictedExamScorePercentage. Round to the nearest whole number.
-
-Part 2: Feedback Generation
-
-(Adopt a supportive, constructive, and experienced teacher persona. Use grade-appropriate language.)
-
-A. Predicted Grade & Rationale:
-
-(Handle Edge Cases First)
-
-If 0/10 Correct on Worksheet:
-- predicted_exam_score_percentage: "Not Calculable"
-- prediction_calculation_rationale: "With 0 correct answers on this predictive worksheet, a numerical exam prediction is not meaningful. This indicates a critical need to revisit foundational concepts across the curriculum before focusing on exam-style performance."
-
-If 10/10 Correct on Worksheet:
-- predicted_exam_score_percentage: [Output score from Part 1; likely 95-100%]
-- prediction_calculation_rationale: "Exceptional performance (10/10 correct) on this challenging, exam-style worksheet demonstrates outstanding mastery across all assessed competencies and question types, leading to this high predicted score."
-
-(Standard Case: 1-9/10 Correct)
-- predicted_exam_score_percentage: [Output score from Part 1]
-- prediction_calculation_rationale: "This prediction is based on your detailed performance on the 10-question exam-style worksheet. It considers the difficulty of each question you answered, your demonstrated mastery of core competencies (weighted by their exam importance), and your effectiveness with different exam question formats. For subjective questions, AI grading provided nuanced scores reflecting partial credit where appropriate. Strengths and areas for targeted improvement are outlined below."
-
-B. Concise Overall Performance Summary (1-2 empathetic sentences):
-[Tailor to performance. E.g., "This worksheet provided a good challenge! It shows you're building a solid understanding of [Competency X], while areas like [Competency Y] and handling [Question Type Z] are good next steps for focus."]
-
-C. Identified Strengths (2-3 specific bullet points):
-[Reference specific competencies where performance was strong. E.g., "Strong problem-solving in 'Algebraic Manipulations', correctly answering challenging multi-step questions."]
-
-D. Key Areas for Improvement (2-3 specific, actionable bullet points):
-[Reference specific competencies or misconceptions linked to incorrect answers. E.g., "Focus on 'Interpreting Figurative Language': the worksheet questions for this competency proved tricky."]
-
-E. Suggested Future Sessions (3-5 tailored sessions):
-Must be directly relevant to the course, targeting 90%+ mastery.
-${worksheet.worksheet_number === 1 ? `
-- Session 1: Focus on the most critical weak area/competency
-- Session 2: Address the next gap or build on a strength
-- Session 3: Exam question strategy with targeted question types
-- Sessions 4-5 (optional): Comprehensive review or mixed practice` : `
-These recommendations build on previous performance and aim to move you towards 90%+ mastery.`}
-
-Output Format:
-Provide your response as a single, valid JSON object with this exact structure.`;
+Output Format: Valid JSON matching the required schema.`;
 
       const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
         prompt: feedbackPrompt,
@@ -817,14 +624,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
             predicted_exam_score_percentage: { type: "string" },
             prediction_calculation_rationale: { type: "string" },
             overall_performance_summary_text: { type: "string" },
-            identified_strengths_list: {
-              type: "array",
-              items: { type: "string" }
-            },
-            key_areas_for_improvement_list: {
-              type: "array",
-              items: { type: "string" }
-            },
+            identified_strengths_list: { type: "array", items: { type: "string" } },
+            key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
             suggested_future_sessions_plan: {
               type: "array",
               items: {
@@ -838,15 +639,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
               }
             }
           },
-          required: [
-            "feedback_session_title",
-            "predicted_exam_score_percentage",
-            "prediction_calculation_rationale",
-            "overall_performance_summary_text",
-            "identified_strengths_list",
-            "key_areas_for_improvement_list",
-            "suggested_future_sessions_plan"
-          ]
+          required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan"]
         }
       });
 
@@ -897,8 +690,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
         total_score: isNaN(scoreNum) ? 0 : scoreNum,
         predicted_grade: letterGrade,
         ai_feedback: feedbackData,
-        time_taken_seconds: elapsedSeconds, // Store the final elapsed time
-        question_time_laps: questionTimeLaps, // Store time spent on each question
+        time_taken_seconds: elapsedSeconds,
+        question_time_laps: questionTimeLaps,
         status: "completed",
         completed: true
       });
@@ -926,9 +719,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
       });
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
-      let pointsEarned = 0;
-      
-      pointsEarned += 50;
+      let pointsEarned = 50;
       
       questionsWithGrading.forEach(q => {
         if (isSubjectiveQuestion(q.question_type) && q.ai_score_out_of_10 !== undefined) {
@@ -974,88 +765,81 @@ Provide your response as a single, valid JSON object with this exact structure.`
       const earnedNow = [];
 
       if (!badgeIds.includes('first_lesson') && worksheet.worksheet_number === 1) {
-        const badge = {
+        earnedBadges.push({
           badge_id: 'first_lesson',
           badge_name: 'First Steps',
           badge_description: 'Completed your first worksheet!',
           badge_icon: '📚',
           earned_date: new Date().toISOString()
-        };
-        earnedBadges.push(badge);
-        earnedNow.push(badge);
+        });
+        earnedNow.push(earnedBadges[earnedBadges.length - 1]);
       }
 
       if (!badgeIds.includes('perfect_score') && correctCount === questionsWithGrading.length) {
-        const badge = {
+        earnedBadges.push({
           badge_id: 'perfect_score',
           badge_name: 'Perfect Score',
           badge_description: 'Got 100% on a worksheet!',
           badge_icon: '🏆',
           earned_date: new Date().toISOString()
-        };
-        earnedBadges.push(badge);
-        earnedNow.push(badge);
+        });
+        earnedNow.push(earnedBadges[earnedBadges.length - 1]);
       }
 
       if (!badgeIds.includes('grade_a') && letterGrade === 'A+') {
-        const badge = {
+        earnedBadges.push({
           badge_id: 'grade_a',
           badge_name: 'Excellence',
           badge_description: 'Achieved an A+ grade!',
           badge_icon: '🌟',
           earned_date: new Date().toISOString()
-        };
-        earnedBadges.push(badge);
-        earnedNow.push(badge);
+        });
+        earnedNow.push(earnedBadges[earnedBadges.length - 1]);
       }
 
       if (!badgeIds.includes('seven_day_streak') && newStreak >= 7) {
-        const badge = {
+        earnedBadges.push({
           badge_id: 'seven_day_streak',
           badge_name: 'Week Warrior',
           badge_description: '7-day study streak!',
           badge_icon: '🔥',
           earned_date: new Date().toISOString()
-        };
-        earnedBadges.push(badge);
-        earnedNow.push(badge);
+        });
+        earnedNow.push(earnedBadges[earnedBadges.length - 1]);
       }
 
       if (!badgeIds.includes('thirty_day_streak') && newStreak >= 30) {
-        const badge = {
+        earnedBadges.push({
           badge_id: 'thirty_day_streak',
           badge_name: 'Month Master',
           badge_description: '30-day study streak!',
           badge_icon: '🔥',
           earned_date: new Date().toISOString()
-        };
-        earnedBadges.push(badge);
-        earnedNow.push(badge);
+        });
+        earnedNow.push(earnedBadges[earnedBadges.length - 1]);
       }
 
       const allCompletedWorksheets = await base44.entities.Worksheet.filter({ completed: true, lesson_id: lesson.id });
       if (!badgeIds.includes('five_worksheets') && allCompletedWorksheets.length >= 5) {
-        const badge = {
+        earnedBadges.push({
           badge_id: 'five_worksheets',
           badge_name: 'Dedicated Learner',
           badge_description: 'Completed 5 worksheets in a lesson!',
           badge_icon: '🎯',
           earned_date: new Date().toISOString()
-        };
-        earnedBadges.push(badge);
-        earnedNow.push(badge);
+        });
+        earnedNow.push(earnedBadges[earnedBadges.length - 1]);
       }
 
       if (!badgeIds.includes('ten_worksheets') && allCompletedWorksheets.length >= 10) {
-        const badge = {
+        earnedBadges.push({
           badge_id: 'ten_worksheets',
           badge_name: 'Knowledge Seeker',
           badge_description: 'Completed 10 worksheets in a lesson!',
           badge_icon: '⭐',
           earned_date: new Date().toISOString()
-        };
-        earnedBadges.push(badge);
-        earnedNow.push(badge);
+        });
+        earnedNow.push(earnedBadges[earnedBadges.length - 1]);
       }
 
       const newTotalPoints = (user.total_points || 0) + pointsEarned;
@@ -1065,7 +849,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
       const currentAvg = user.average_score || 0;
       const newAvg = isNaN(scoreNum) ? currentAvg : ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
 
-      // Update user stats with questions completed and time spent
       await base44.auth.updateMe({
         total_quizzes_taken: totalQuizzes,
         average_score: Math.round(newAvg),
