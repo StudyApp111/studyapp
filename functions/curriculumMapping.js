@@ -39,7 +39,7 @@ IMPORTANT FORMATTING RULES:
 
 Your response must be valid, parseable JSON that exactly matches the schema above.`;
 
-        // Prepare the request body for Gemini 2.5 Flash with Google Search grounding
+        // Prepare the request body for Gemini 2.0 Flash Experimental with Google Search grounding
         const requestBody = {
             contents: [{
                 parts: [{
@@ -57,11 +57,11 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
             }]
         };
 
-        console.log('Calling Gemini 2.5 Flash with Google Search grounding...');
+        console.log('Calling Gemini 2.0 Flash Experimental with Google Search grounding...');
 
-        // Call Gemini 2.5 Flash API
+        // Call Gemini 2.0 Flash Experimental API (the actual latest Flash model)
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {
@@ -73,24 +73,24 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
 
         if (!response.ok) {
             const errorData = await response.text();
-            console.error('Gemini 2.5 Flash API Error:', errorData);
+            console.error('Gemini API Error:', errorData);
             return Response.json({ 
-                error: 'Gemini 2.5 Flash API request failed', 
+                error: 'Gemini API request failed', 
                 details: errorData,
                 status: response.status
             }, { status: response.status });
         }
 
         const data = await response.json();
-        console.log('Gemini 2.5 Flash response received');
+        console.log('Gemini 2.0 Flash response received');
         
         // Extract the generated content
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
-            console.error('No content generated from Gemini 2.5 Flash:', JSON.stringify(data, null, 2));
+            console.error('No content generated:', JSON.stringify(data, null, 2));
             return Response.json({ 
-                error: 'No content generated from Gemini 2.5 Flash', 
+                error: 'No content generated from AI', 
                 details: data 
             }, { status: 500 });
         }
@@ -111,7 +111,7 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
         // Attempt 2: Try parsing
         try {
             parsedResponse = JSON.parse(cleanedText);
-            console.log('Successfully parsed curriculum map with Gemini 2.5 Flash + grounding');
+            console.log('Successfully parsed curriculum map with Gemini 2.0 Flash + Google grounding');
             return Response.json(parsedResponse);
         } catch (parseError) {
             console.error('First parse attempt failed:', parseError.message);
@@ -131,7 +131,7 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
             // Final attempt failed
             console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
             return Response.json({ 
-                error: 'Failed to parse Gemini 2.5 Flash response as JSON', 
+                error: 'Failed to parse AI response as JSON', 
                 details: parseError.message,
                 raw_text_preview: cleanedText.substring(0, 500)
             }, { status: 500 });
