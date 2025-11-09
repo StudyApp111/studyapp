@@ -230,6 +230,7 @@ Provide your response as a single, valid JSON object with the structure specifie
           question_text: q.question_text,
           options: q.options || [],
           correct_answer: q.correct_answer,
+          explanation: q.explanation,
           assessed_competencies: q.assessed_competencies,
           targeted_misconception: q.targeted_misconception,
           student_answer: q.user_answer || "No answer provided",
@@ -990,14 +991,11 @@ Provide your response as a single, valid JSON object with this exact structure.`
       const newAvg = isNaN(scoreNum) ? currentAvg : ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
 
       // Update user stats with questions completed and time spent
-      const newQuestionsCompleted = (user.questions_completed || 0) + questionsWithGrading.length;
-      const newTimeSpent = (user.time_spent_minutes || 0) + Math.round(elapsedSeconds / 60);
-
       await base44.auth.updateMe({
         total_quizzes_taken: totalQuizzes,
         average_score: Math.round(newAvg),
-        questions_completed: newQuestionsCompleted,
-        time_spent_minutes: newTimeSpent,
+        questions_completed: (user.questions_completed || 0) + questionsWithGrading.length,
+        time_spent_seconds: (user.time_spent_seconds || 0) + elapsedSeconds,
         total_points: newTotalPoints,
         level: newLevel,
         badges: earnedBadges,
