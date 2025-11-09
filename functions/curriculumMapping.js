@@ -20,15 +20,11 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
         }
 
-        // Enhanced prompt to request JSON format with schema details
-        let enhancedPrompt = prompt + "\n\nIMPORTANT: You must respond with ONLY valid JSON matching the exact schema provided below. Do not include any explanatory text before or after the JSON. Start your response with { and end with }.";
-        
-        if (response_json_schema) {
-            enhancedPrompt += "\n\nRequired JSON Schema:\n" + JSON.stringify(response_json_schema, null, 2);
-        }
+        // Enhanced prompt to request JSON format
+        const enhancedPrompt = prompt + "\n\nIMPORTANT: You must respond with ONLY valid JSON matching the exact schema provided. Do not include any explanatory text before or after the JSON. Start your response with { and end with }.";
 
-        // Prepare the request body for Gemini API
-        // Using standard generation without Google Search to ensure JSON schema compliance
+        // Prepare the request body for Gemini API with Google Search grounding
+        // Note: Cannot use responseMimeType with tools, so we request JSON in the prompt
         const requestBody = {
             contents: [{
                 parts: [{
@@ -38,19 +34,16 @@ Deno.serve(async (req) => {
             generationConfig: {
                 temperature: 0.2,
                 topP: 0.95,
-                maxOutputTokens: 8192,
-                responseMimeType: "application/json"
-            }
+                maxOutputTokens: 8192
+            },
+            tools: [{
+                googleSearch: {}
+            }]
         };
-
-        // Add JSON schema if provided
-        if (response_json_schema) {
-            requestBody.generationConfig.responseSchema = response_json_schema;
-        }
 
         // Call Gemini 2.5 Flash API
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {

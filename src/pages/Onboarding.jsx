@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -76,8 +75,7 @@ export default function Onboarding() {
       const profileData = {
         school: answers.school,
         grade: answers.grade,
-        city: answers.city,
-        country: "Unknown" // Default value, can be enhanced later with location API
+        city: answers.city
       };
 
       const profile = await base44.entities.LearningProfile.create(profileData);
