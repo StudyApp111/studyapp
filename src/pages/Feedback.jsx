@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Award, TrendingUp, CheckCircle, XCircle, Sparkles, Home, TrendingDown, Target, BookOpen, MapPin } from "lucide-react";
+import { Loader2, Award, TrendingUp, CheckCircle, XCircle, Sparkles, Home, TrendingDown, Target, BookOpen, MapPin, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -156,6 +156,19 @@ export default function Feedback() {
     return scoreValue.toString().includes('%') ? scoreValue : `${scoreValue}%`;
   };
 
+  // Format time spent
+  const formatTimeSpent = (seconds) => {
+    if (seconds === undefined || seconds === null || seconds < 0) return '0m 0s';
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m ${secs}s`;
+    }
+    return `${minutes}m ${secs}s`;
+  };
+
   // nextWorksheet variable from original code is still useful for dialog logic
   const nextWorksheet = allWorksheets.find(w => w.worksheet_number === worksheet.worksheet_number + 1);
   const totalWorksheets = allWorksheets.length;
@@ -224,6 +237,15 @@ export default function Feedback() {
             <span>Worksheet {worksheet.worksheet_number} of {totalWorksheets}</span>
             <div className="w-1 h-4 md:h-6 bg-slate-300 rounded-full" />
             <span>{worksheet.feedback.filter(f => f.is_correct).length} Correct</span>
+            {worksheet.time_spent_seconds > 0 && (
+              <>
+                <div className="w-1 h-4 md:h-6 bg-slate-300 rounded-full" />
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
+                  <span className="font-semibold">{formatTimeSpent(worksheet.time_spent_seconds)}</span>
+                </div>
+              </>
+            )}
           </div>
         </motion.div>
 
