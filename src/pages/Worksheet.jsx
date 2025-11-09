@@ -32,9 +32,13 @@ export default function Worksheet() {
   const [gradingInProgress, setGradingInProgress] = useState({});
   
   // Timer state
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const timerRef = useRef(null);
-  const startTimeRef = useRef(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0); // Total time spent on worksheet
+  const timerRef = useRef(null); // Interval ID for the total timer
+  const totalSessionStartTimeRef = useRef(null); // When the current session started (for total elapsed)
+
+  // Question time tracking - track time per question
+  const questionTimesRef = useRef({}); // { 0: 45, 1: 30, 2: 60 } - total seconds per question index across all visits
+  const currentQuestionStartTimeRef = useRef(null); // When the current question was entered *this time*
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -48,25 +52,78 @@ export default function Worksheet() {
     loadOrGenerateWorksheet(lessonId);
   }, [navigate]);
 
-  // Timer effect - starts when worksheet loads
+  // Main timer effect - runs continuously, initializes question timers
   useEffect(() => {
     if (worksheet && !worksheet.completed) {
-      // If there's a stored time, start from there
+      // Clear any existing timer first
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+
+      // Initialize elapsedSeconds from stored data if resuming
       const initialElapsed = worksheet.time_taken_seconds || 0;
       setElapsedSeconds(initialElapsed);
-      startTimeRef.current = Date.now() - (initialElapsed * 1000);
       
+      // Set the start point for the *total* elapsed timer, accounting for previous sessions
+      totalSessionStartTimeRef.current = Date.now() - (initialElapsed * 1000);
+
+      // Initialize questionTimesRef from stored data or to zeros
+      const initialQuestionTimes = {};
+      if (worksheet.question_time_laps && worksheet.question_time_laps.length > 0) {
+        worksheet.question_time_laps.forEach(lap => {
+          initialQuestionTimes[lap.question_index] = lap.total_seconds;
+        });
+      }
+      for (let i = 0; i < (worksheet.questions?.length || 0); i++) {
+        if (initialQuestionTimes[i] === undefined) { // Only set if not already loaded from saved data
+          initialQuestionTimes[i] = 0;
+        }
+      }
+      questionTimesRef.current = initialQuestionTimes;
+
+      // Set the start time for the *current* question (question 0 initially)
+      currentQuestionStartTimeRef.current = Date.now();
+
+      // Start the global timer interval
       timerRef.current = setInterval(() => {
-        setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+        setElapsedSeconds(Math.floor((Date.now() - totalSessionStartTimeRef.current) / 1000));
       }, 1000);
 
+      // Cleanup function
       return () => {
         if (timerRef.current) {
           clearInterval(timerRef.current);
         }
+        // IMPORTANT: When the component unmounts or worksheet changes (e.g., completes),
+        // ensure the time spent on the *last active question* is recorded.
+        // This prevents losing time if navigating away without pressing next/previous/submit.
+        if (worksheet && !worksheet.completed && currentQuestionStartTimeRef.current !== null) {
+          const now = Date.now();
+          const timeSpentOnThisVisit = Math.floor((now - currentQuestionStartTimeRef.current) / 1000);
+          questionTimesRef.current[currentQuestion] = (questionTimesRef.current[currentQuestion] || 0) + timeSpentOnThisVisit;
+        }
       };
+    } else { // If worksheet is completed or null, ensure timer is stopped
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
-  }, [worksheet]);
+  }, [worksheet]); // Only depends on worksheet. `currentQuestion` changes are handled by `recordQuestionTime`
+
+  // Records time spent on the given question index, and resets timer for the next question.
+  const recordQuestionTime = (questionIndex) => {
+    if (currentQuestionStartTimeRef.current) {
+      const now = Date.now();
+      const timeSpentOnThisVisit = Math.floor((now - currentQuestionStartTimeRef.current) / 1000);
+      
+      // Add time spent on this visit to the total for this question
+      questionTimesRef.current[questionIndex] = (questionTimesRef.current[questionIndex] || 0) + timeSpentOnThisVisit;
+      
+      // Reset for the next question (or current if navigating back to it)
+      currentQuestionStartTimeRef.current = now;
+    }
+  };
 
   const loadOrGenerateWorksheet = async (lessonId) => {
     setIsGenerating(true);
@@ -241,7 +298,7 @@ Provide your response as a single, valid JSON object with the structure specifie
           worksheet_number: latestWorksheet.worksheet_number,
           predicted_grade: latestWorksheet.predicted_grade,
           total_score: latestWorksheet.total_score,
-          strengths: latestWorksheet.ai_feedback?.identified_strengths_list || [],
+          strengths: latestWorkheet.ai_feedback?.identified_strengths_list || [],
           weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
         };
 
@@ -414,7 +471,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
           analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
           status: "in_progress",
           completed: false,
-          time_taken_seconds: 0 // Initialize time_taken_seconds for new worksheets
+          time_taken_seconds: 0, // Initialize time_taken_seconds for new worksheets
+          question_time_laps: [] // Initialize question_time_laps for new worksheets
         });
       }
 
@@ -528,6 +586,9 @@ Provide your response as a single, valid JSON object with this exact structure.`
   const handleNext = () => {
     setShowConfetti(true);
     
+    // Record time for current question before moving
+    recordQuestionTime(currentQuestion);
+    
     if (currentQuestion < worksheet.questions.length - 1) {
       if (gradingTimeoutRef.current) {
         clearTimeout(gradingTimeoutRef.current);
@@ -542,6 +603,9 @@ Provide your response as a single, valid JSON object with this exact structure.`
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
+      // Record time for current question before going back
+      recordQuestionTime(currentQuestion);
+      
       setCurrentQuestion(prev => prev - 1);
     }
   };
@@ -549,10 +613,19 @@ Provide your response as a single, valid JSON object with this exact structure.`
   const submitWorksheet = async () => {
     setIsSubmitting(true);
     
+    // Record final question time for the question the user is currently on
+    recordQuestionTime(currentQuestion);
+    
     // Stop the timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    
+    // Convert question times to laps format
+    const questionTimeLaps = Object.keys(questionTimesRef.current).map(key => ({
+      question_index: parseInt(key),
+      total_seconds: questionTimesRef.current[key]
+    }));
     
     try {
       const user = await base44.auth.me();
@@ -593,6 +666,18 @@ Provide your response as a single, valid JSON object with this exact structure.`
         };
       });
 
+      // Determine the lesson content source for feedback prompt
+      let contentDescription = "";
+      if (lesson.input_type === "description" && lesson.description) {
+        contentDescription = lesson.description;
+      } else if (lesson.input_type === "url" && lesson.extracted_content) {
+        contentDescription = lesson.extracted_content;
+      } else if (lesson.input_type === "file" && lesson.extracted_content) {
+        contentDescription = lesson.extracted_content;
+      } else {
+        contentDescription = lesson.description || "N/A";
+      }
+
       const worksheetPerformanceData = questionsWithGrading.map((q, idx) => ({
         question_number: q.question_number,
         question_type: q.question_type,
@@ -613,18 +698,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
           keypoints_missed: q.ai_keypoints_missed
         } : null
       }));
-
-      // Determine the lesson content source for feedback prompt
-      let contentDescription = "";
-      if (lesson.input_type === "description" && lesson.description) {
-        contentDescription = lesson.description;
-      } else if (lesson.input_type === "url" && lesson.extracted_content) {
-        contentDescription = lesson.extracted_content;
-      } else if (lesson.input_type === "file" && lesson.extracted_content) {
-        contentDescription = lesson.extracted_content;
-      } else {
-        contentDescription = lesson.description || "N/A";
-      }
 
       const feedbackPrompt = `Context: You are an experienced teacher grading Worksheet ${worksheet.worksheet_number} of 6 for ${lesson.course_name} at ${learningProfile.grade || "N/A"}. You operate within the educational standards of ${learningProfile.school || "N/A"} and ${learningProfile.city || "N/A"}. You have a deep understanding of the curriculum and how it's assessed. The student has just completed a 10-question worksheet that was meticulously designed to mirror actual exam conditions in terms of style, question types, wording, and difficulty, based on the curriculum map. Your primary task is to analyze their worksheet performance to provide an accurate predicted exam grade, insightful feedback, and actionable recommendations for future study.
 
@@ -817,7 +890,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
         else if (scoreNum >= 50) letterGrade = "D";
       }
 
-      // Save worksheet with timer data
+      // Save worksheet with timer data and question laps
       await base44.entities.Worksheet.update(worksheet.id, {
         questions: questionsWithGrading,
         feedback: questionFeedback,
@@ -825,6 +898,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
         predicted_grade: letterGrade,
         ai_feedback: feedbackData,
         time_taken_seconds: elapsedSeconds, // Store the final elapsed time
+        question_time_laps: questionTimeLaps, // Store time spent on each question
         status: "completed",
         completed: true
       });
@@ -840,7 +914,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
               completed: false,
               questions: [],
               feedback: [],
-              time_taken_seconds: 0 // Initialize time_taken_seconds for new worksheets
+              time_taken_seconds: 0,
+              question_time_laps: []
             })
           )
         );

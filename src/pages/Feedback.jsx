@@ -14,13 +14,14 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 const formatTime = (seconds) => {
+  if (!seconds) return '0s';
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  if (mins === 0) return `${secs}s`;
+  return `${mins}m ${secs}s`;
 };
 
 export default function Feedback() {
@@ -123,6 +124,13 @@ export default function Feedback() {
     } else {
       navigate(createPageUrl("Home"));
     }
+  };
+
+  // Add helper to get time for a specific question
+  const getQuestionTime = (questionIndex) => {
+    if (!worksheet.question_time_laps) return 0;
+    const lap = worksheet.question_time_laps.find(l => l.question_index === questionIndex);
+    return lap ? lap.total_seconds : 0;
   };
 
   if (isLoading || !worksheet) {
@@ -452,7 +460,7 @@ export default function Feedback() {
           </DialogContent>
         </Dialog>
 
-        {/* Detailed Question Feedback */}
+        {/* Detailed Question Feedback - WITH TIME PER QUESTION */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -467,6 +475,8 @@ export default function Feedback() {
               <div className="space-y-4">
                 {worksheet.feedback.map((feedback, idx) => {
                   const question = worksheet.questions[feedback.question_index];
+                  const questionTime = getQuestionTime(feedback.question_index);
+                  
                   return (
                     <motion.div
                       key={idx}
@@ -508,6 +518,12 @@ export default function Feedback() {
                                 <Badge variant="outline">
                                   {feedback.points_earned}/10 pts
                                 </Badge>
+                                {questionTime > 0 && (
+                                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    {formatTime(questionTime)}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                           </div>
