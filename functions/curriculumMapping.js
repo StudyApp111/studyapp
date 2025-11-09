@@ -15,9 +15,9 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
-        const apiKey = Deno.env.get("API_KEY");
-        if (!apiKey) {
-            return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
+        const grokApiKey = Deno.env.get("GROK_API_KEY");
+        if (!grokApiKey) {
+            return Response.json({ error: 'GROK_API_KEY not configured' }, { status: 500 });
         }
 
         // Enhanced prompt with explicit JSON schema instructions
@@ -39,33 +39,30 @@ IMPORTANT FORMATTING RULES:
 
 Your response must be valid, parseable JSON that exactly matches the schema above.`;
 
-        // Prepare the request body for Gemini 2.0 Flash Experimental with Google Search grounding
+        // Prepare the request body for Grok-3
         const requestBody = {
-            contents: [{
-                parts: [{
-                    text: enhancedPrompt
-                }]
+            messages: [{
+                role: "user",
+                content: enhancedPrompt
             }],
-            generationConfig: {
-                temperature: 0.3,
-                topP: 0.95,
-                topK: 40,
-                maxOutputTokens: 8192
-            },
-            tools: [{
-                googleSearch: {}
-            }]
+            model: "grok-3",
+            temperature: 0.3,
+            max_tokens: 8192,
+            response_format: {
+                type: "json_object"
+            }
         };
 
-        console.log('Calling Gemini 2.0 Flash Experimental with Google Search grounding...');
+        console.log('Calling Grok-3 API...');
 
-        // Call Gemini 2.0 Flash Experimental API (the actual latest Flash model)
+        // Call Grok-3 API
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+            'https://api.x.ai/v1/chat/completions',
             {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${grokApiKey}`
                 },
                 body: JSON.stringify(requestBody)
             }
@@ -73,19 +70,19 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
 
         if (!response.ok) {
             const errorData = await response.text();
-            console.error('Gemini API Error:', errorData);
+            console.error('Grok API Error:', errorData);
             return Response.json({ 
-                error: 'Gemini API request failed', 
+                error: 'Grok API request failed', 
                 details: errorData,
                 status: response.status
             }, { status: response.status });
         }
 
         const data = await response.json();
-        console.log('Gemini 2.0 Flash response received');
+        console.log('Grok-3 response received');
         
         // Extract the generated content
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const generatedText = data.choices?.[0]?.message?.content;
         
         if (!generatedText) {
             console.error('No content generated:', JSON.stringify(data, null, 2));
@@ -111,7 +108,7 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
         // Attempt 2: Try parsing
         try {
             parsedResponse = JSON.parse(cleanedText);
-            console.log('Successfully parsed curriculum map with Gemini 2.0 Flash + Google grounding');
+            console.log('Successfully parsed curriculum map with Grok-3');
             return Response.json(parsedResponse);
         } catch (parseError) {
             console.error('First parse attempt failed:', parseError.message);
