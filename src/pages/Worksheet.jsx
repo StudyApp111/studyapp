@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -209,7 +210,7 @@ City/Region (for context): ${learningProfile.city || "N/A"}
 Detailed Curriculum Profile:
 ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
-Lesson Content:
+Content Source:
 ${contentDescription}
 
 Diagnostic Quiz Results:
@@ -287,7 +288,7 @@ Current Iteration: ${currentWorksheetDescription}
 Detailed Curriculum Profile:
 ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
-Lesson Content:
+Content Source:
 ${contentDescription}
 
 Previous Worksheet Performance:

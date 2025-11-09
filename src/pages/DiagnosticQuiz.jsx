@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -106,7 +107,7 @@ Course/Unit Name: ${lessonData.course_name}
 School: ${learningProfile.school || "N/A"}
 City/Region: ${learningProfile.city || "N/A"}
 Detailed Curriculum Profile: ${JSON.stringify(lessonData.curriculum_map)}
-Lesson Content: ${contentDescription}
+Content Source: ${contentDescription}
 
 Task 1: Create the Smart Summary
 
