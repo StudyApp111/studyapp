@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Loader2, FileText } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
+import WorksheetTimer from "../components/worksheet/WorksheetTimer"; // Added import
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 import { Sparkles } from "lucide-react";
 
@@ -23,6 +25,7 @@ export default function Worksheet() {
   const [newBadges, setNewBadges] = React.useState([]);
   const gradingTimeoutRef = useRef(null);
   const [gradingInProgress, setGradingInProgress] = useState({});
+  const [timeSpent, setTimeSpent] = useState(0); // Added state
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -390,6 +393,10 @@ Provide your response as a single, valid JSON object with this exact structure.`
       alert("Failed to generate worksheet. Please try again. Error: " + error.message);
       navigate(createPageUrl("Home"));
     }
+  };
+
+  const handleTimeUpdate = (newTime) => {
+    setTimeSpent(newTime);
   };
 
   const isSubjectiveQuestion = (questionType) => {
@@ -783,6 +790,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
         total_score: isNaN(scoreNum) ? 0 : scoreNum,
         predicted_grade: letterGrade,
         ai_feedback: feedbackData,
+        time_spent_seconds: timeSpent, // Added time_spent_seconds
         status: "completed",
         completed: true
       });
@@ -947,6 +955,7 @@ Provide your response as a single, valid JSON object with this exact structure.`
       const currentAvg = user.average_score || 0;
       const newAvg = isNaN(scoreNum) ? currentAvg : ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
 
+      // Update user stats with questions completed and time spent
       await base44.auth.updateMe({
         total_quizzes_taken: totalQuizzes,
         average_score: Math.round(newAvg),
@@ -955,7 +964,9 @@ Provide your response as a single, valid JSON object with this exact structure.`
         badges: earnedBadges,
         current_streak: newStreak,
         longest_streak: longestStreak,
-        last_activity_date: today
+        last_activity_date: today,
+        questions_completed: (user.questions_completed || 0) + questionsWithGrading.length, // Added questions_completed
+        time_spent_seconds: (user.time_spent_seconds || 0) + timeSpent // Added time_spent_seconds
       });
 
       if (earnedNow.length > 0 || correctCount >= (questionsWithGrading.length * 0.8)) {
@@ -1033,9 +1044,12 @@ Provide your response as a single, valid JSON object with this exact structure.`
             <h2 className="text-base md:text-xl font-bold text-slate-900 truncate">
               {lesson.course_name} - Worksheet {worksheet?.worksheet_number || 1}
             </h2>
-            <span className="text-xs md:text-sm font-medium text-slate-600 whitespace-nowrap ml-2">
-              {currentQuestion + 1}/{worksheet.questions.length}
-            </span>
+            <div className="flex items-center gap-2">
+              <WorksheetTimer onTimeUpdate={handleTimeUpdate} /> {/* Added WorksheetTimer */}
+              <span className="text-xs md:text-sm font-medium text-slate-600 whitespace-nowrap">
+                {currentQuestion + 1}/{worksheet.questions.length}
+              </span>
+            </div>
           </div>
           <Progress value={progress} className="h-1.5 md:h-2" />
           {gradingInProgress[currentQuestion] && (
