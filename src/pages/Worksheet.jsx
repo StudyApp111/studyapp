@@ -6,12 +6,17 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, FileText } from "lucide-react";
+import { Loader2, FileText, Clock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
-import WorksheetTimer from "../components/worksheet/WorksheetTimer"; // Added import
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 import { Sparkles } from "lucide-react";
+
+const formatTime = (seconds) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
 
 export default function Worksheet() {
   const navigate = useNavigate();
@@ -25,7 +30,11 @@ export default function Worksheet() {
   const [newBadges, setNewBadges] = React.useState([]);
   const gradingTimeoutRef = useRef(null);
   const [gradingInProgress, setGradingInProgress] = useState({});
-  const [timeSpent, setTimeSpent] = useState(0); // Added state
+  
+  // Timer state
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef(null);
+  const startTimeRef = useRef(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -38,6 +47,26 @@ export default function Worksheet() {
 
     loadOrGenerateWorksheet(lessonId);
   }, [navigate]);
+
+  // Timer effect - starts when worksheet loads
+  useEffect(() => {
+    if (worksheet && !worksheet.completed) {
+      // If there's a stored time, start from there
+      const initialElapsed = worksheet.time_taken_seconds || 0;
+      setElapsedSeconds(initialElapsed);
+      startTimeRef.current = Date.now() - (initialElapsed * 1000);
+      
+      timerRef.current = setInterval(() => {
+        setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      }, 1000);
+
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+      };
+    }
+  }, [worksheet]);
 
   const loadOrGenerateWorksheet = async (lessonId) => {
     setIsGenerating(true);
@@ -383,7 +412,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
           questions: questionsWithPlaceholder,
           analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
           status: "in_progress",
-          completed: false
+          completed: false,
+          time_taken_seconds: 0 // Initialize time_taken_seconds for new worksheets
         });
       }
 
@@ -393,10 +423,6 @@ Provide your response as a single, valid JSON object with this exact structure.`
       alert("Failed to generate worksheet. Please try again. Error: " + error.message);
       navigate(createPageUrl("Home"));
     }
-  };
-
-  const handleTimeUpdate = (newTime) => {
-    setTimeSpent(newTime);
   };
 
   const isSubjectiveQuestion = (questionType) => {
@@ -521,6 +547,12 @@ Provide your response as a single, valid JSON object with this exact structure.`
 
   const submitWorksheet = async () => {
     setIsSubmitting(true);
+    
+    // Stop the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
     try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
@@ -784,13 +816,14 @@ Provide your response as a single, valid JSON object with this exact structure.`
         else if (scoreNum >= 50) letterGrade = "D";
       }
 
+      // Save worksheet with timer data
       await base44.entities.Worksheet.update(worksheet.id, {
         questions: questionsWithGrading,
         feedback: questionFeedback,
         total_score: isNaN(scoreNum) ? 0 : scoreNum,
         predicted_grade: letterGrade,
         ai_feedback: feedbackData,
-        time_spent_seconds: timeSpent, // Added time_spent_seconds
+        time_taken_seconds: elapsedSeconds, // Store the final elapsed time
         status: "completed",
         completed: true
       });
@@ -805,7 +838,8 @@ Provide your response as a single, valid JSON object with this exact structure.`
               status: "not_started",
               completed: false,
               questions: [],
-              feedback: []
+              feedback: [],
+              time_taken_seconds: 0 // Initialize time_taken_seconds for new worksheets
             })
           )
         );
@@ -956,17 +990,20 @@ Provide your response as a single, valid JSON object with this exact structure.`
       const newAvg = isNaN(scoreNum) ? currentAvg : ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
 
       // Update user stats with questions completed and time spent
+      const newQuestionsCompleted = (user.questions_completed || 0) + questionsWithGrading.length;
+      const newTimeSpent = (user.time_spent_minutes || 0) + Math.round(elapsedSeconds / 60);
+
       await base44.auth.updateMe({
         total_quizzes_taken: totalQuizzes,
         average_score: Math.round(newAvg),
+        questions_completed: newQuestionsCompleted,
+        time_spent_minutes: newTimeSpent,
         total_points: newTotalPoints,
         level: newLevel,
         badges: earnedBadges,
         current_streak: newStreak,
         longest_streak: longestStreak,
-        last_activity_date: today,
-        questions_completed: (user.questions_completed || 0) + questionsWithGrading.length, // Added questions_completed
-        time_spent_seconds: (user.time_spent_seconds || 0) + timeSpent // Added time_spent_seconds
+        last_activity_date: today
       });
 
       if (earnedNow.length > 0 || correctCount >= (questionsWithGrading.length * 0.8)) {
@@ -1044,8 +1081,11 @@ Provide your response as a single, valid JSON object with this exact structure.`
             <h2 className="text-base md:text-xl font-bold text-slate-900 truncate">
               {lesson.course_name} - Worksheet {worksheet?.worksheet_number || 1}
             </h2>
-            <div className="flex items-center gap-2">
-              <WorksheetTimer onTimeUpdate={handleTimeUpdate} /> {/* Added WorksheetTimer */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
+                <Clock className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-semibold text-purple-700">{formatTime(elapsedSeconds)}</span>
+              </div>
               <span className="text-xs md:text-sm font-medium text-slate-600 whitespace-nowrap">
                 {currentQuestion + 1}/{worksheet.questions.length}
               </span>

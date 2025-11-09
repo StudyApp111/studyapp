@@ -17,11 +17,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+const formatTime = (seconds) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
 export default function Feedback() {
   const navigate = useNavigate();
   const [lesson, setLesson] = useState(null);
   const [worksheet, setWorksheet] = useState(null);
-  const [allWorksheets, setAllWorksheets] = useState([]); // New state for all worksheets
+  const [allWorksheets, setAllWorksheets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [strengths, setStrengths] = useState([]);
   const [weaknesses, setWeaknesses] = useState([]);
@@ -30,17 +36,17 @@ export default function Feedback() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const lessonId = urlParams.get('lessonId');
-    const worksheetNum = parseInt(urlParams.get('worksheet')) || 1; // New: Get worksheet number
+    const worksheetNum = parseInt(urlParams.get('worksheet')) || 1;
     
     if (!lessonId) {
       navigate(createPageUrl("Home"));
       return;
     }
 
-    loadFeedback(lessonId, worksheetNum); // Pass worksheetNum to loadFeedback
+    loadFeedback(lessonId, worksheetNum);
   }, [navigate]);
 
-  const loadFeedback = async (lessonId, worksheetNum) => { // Accept worksheetNum
+  const loadFeedback = async (lessonId, worksheetNum) => {
     setIsLoading(true);
     try {
       const lessonData = await base44.entities.Lesson.filter({ id: lessonId });
@@ -52,29 +58,25 @@ export default function Feedback() {
 
       const worksheetData = await base44.entities.Worksheet.filter({ 
         lesson_id: lessonId,
-        worksheet_number: worksheetNum, // Filter by worksheet number
+        worksheet_number: worksheetNum,
         completed: true
       });
       
       if (worksheetData.length === 0) {
-        // If the specific worksheet isn't completed, redirect to the worksheet page
         navigate(createPageUrl("Worksheet") + `?lessonId=${lessonId}&worksheet=${worksheetNum}`);
         return;
       }
       setWorksheet(worksheetData[0]);
 
-      // Load all worksheets for this lesson
       const allWorksheetsData = await base44.entities.Worksheet.filter({ 
         lesson_id: lessonId 
       });
       setAllWorksheets(allWorksheetsData.sort((a, b) => a.worksheet_number - b.worksheet_number));
 
-      // Analyze strengths and weaknesses from AI feedback
       analyzePerformance(worksheetData[0]);
 
-      // Update total lessons completed only if it's the first worksheet of the lesson
       const user = await base44.auth.me();
-      if (worksheetNum === 1) { // Only increment if it's the first worksheet of a lesson
+      if (worksheetNum === 1) {
         await base44.auth.updateMe({
           total_lessons_completed: (user.total_lessons_completed || 0) + 1
         });
@@ -86,12 +88,10 @@ export default function Feedback() {
   };
 
   const analyzePerformance = (worksheetData) => {
-    // Use AI feedback if available
     if (worksheetData.ai_feedback) {
       setStrengths(worksheetData.ai_feedback.identified_strengths_list || []);
       setWeaknesses(worksheetData.ai_feedback.key_areas_for_improvement_list || []);
     } else {
-      // Fallback to basic analysis
       const correctAnswers = worksheetData.feedback.filter(f => f.is_correct);
       const incorrectAnswers = worksheetData.feedback.filter(f => !f.is_correct);
 
@@ -121,8 +121,7 @@ export default function Feedback() {
         navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${nextWorksheet.worksheet_number}`);
       }
     } else {
-      // If no next worksheet, navigate to home or a lesson complete page
-      navigate(createPageUrl("Home")); // Or a more specific "Lesson Completed" page
+      navigate(createPageUrl("Home"));
     }
   };
 
@@ -149,27 +148,11 @@ export default function Feedback() {
     return '🎯';
   };
 
-  // Parse predicted score - handle both "85%" and "85" formats
   const getPredictedScore = () => {
     const scoreValue = worksheet.ai_feedback?.predicted_exam_score_percentage || worksheet.total_score.toString();
-    // If it already has %, return as is, otherwise add %
     return scoreValue.toString().includes('%') ? scoreValue : `${scoreValue}%`;
   };
 
-  // Format time spent
-  const formatTimeSpent = (seconds) => {
-    if (seconds === undefined || seconds === null || seconds < 0) return '0m 0s';
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    const hours = Math.floor(minutes / 60);
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes % 60}m ${secs}s`;
-    }
-    return `${minutes}m ${secs}s`;
-  };
-
-  // nextWorksheet variable from original code is still useful for dialog logic
   const nextWorksheet = allWorksheets.find(w => w.worksheet_number === worksheet.worksheet_number + 1);
   const totalWorksheets = allWorksheets.length;
   const futureWorksheets = worksheet.ai_feedback?.suggested_future_sessions_plan || [];
@@ -192,7 +175,6 @@ export default function Feedback() {
             Your Predicted Grade
           </h1>
           
-          {/* Mobile: 75% scale, Desktop: 100% scale */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -234,18 +216,14 @@ export default function Feedback() {
               <span className="font-semibold">{Math.round(worksheet.total_score)}%</span>
             </div>
             <div className="w-1 h-4 md:h-6 bg-slate-300 rounded-full" />
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 md:w-5 md:h-5 text-purple-700" />
+              <span className="font-semibold">{formatTime(worksheet.time_taken_seconds || 0)}</span>
+            </div>
+            <div className="w-1 h-4 md:h-6 bg-slate-300 rounded-full" />
             <span>Worksheet {worksheet.worksheet_number} of {totalWorksheets}</span>
             <div className="w-1 h-4 md:h-6 bg-slate-300 rounded-full" />
             <span>{worksheet.feedback.filter(f => f.is_correct).length} Correct</span>
-            {worksheet.time_spent_seconds > 0 && (
-              <>
-                <div className="w-1 h-4 md:h-6 bg-slate-300 rounded-full" />
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
-                  <span className="font-semibold">{formatTimeSpent(worksheet.time_spent_seconds)}</span>
-                </div>
-              </>
-            )}
           </div>
         </motion.div>
 
@@ -453,7 +431,6 @@ export default function Feedback() {
                 );
               })}
               
-              {/* Goal Achievement Card */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
