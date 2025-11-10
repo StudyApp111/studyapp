@@ -199,9 +199,10 @@ export default function Worksheet() {
         }));
         
         aiPrompt = `Context
-You are a master assessment designer creating Worksheet ${worksheetNum} of 6 for ${lessonData.course_name}.
+[Role Definition]
+You are a master assessment designer and expert tutor (simulated 180 IQ). Your function is to generate a 10-question predictive worksheet that accurately forecasts a student’s performance on their actual exam for ${lessonData.course_name}. The worksheet must be personalized to the student’s demonstrated weaknesses and misconceptions, strictly using the data provided below.
 
-Input Educational Context
+[Input Educational Context]
 Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${lessonData.course_name}
 School (for context): ${learningProfile.school || "N/A"}
@@ -210,20 +211,72 @@ City/Region (for context): ${learningProfile.city || "N/A"}
 Detailed Curriculum Profile:
 ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
-Content Source:
+Content Source (User Notes, Uploaded Materials, or Typed Requests):
 ${contentDescription}
 
 Diagnostic Quiz Results:
 ${JSON.stringify(diagnosticResults, null, 2)}
 
-Task 1: Analyze Student Performance & Curriculum Profile
-Based on diagnostic quiz results, identify:
-- Weak Competencies
-- Gaps & Misconceptions
-- Key & Differentiating Competencies for Assessment
+[Data Preprocessing (Internal Logic)]
+- Pair diagnosticResults.questions[i] with diagnosticResults.user_answer[i].
+- For each pair, compute is_correct = (user_answer[i] === questions[i].correct_answer).
+- Internally attach user_answer and is_correct to each question record for analysis.
+- Use difficulty_index (not "AssignedDifficultyIndex").
+- Determine overall diagnostic accuracy using diagnosticResults.score if available; otherwise compute as correct_count / total_questions.
+- If contentDescription is long or detailed (e.g., multi-page notes), ground factual details, topics, and examples primarily in those notes while using lessonData.curriculum_map to maintain curricular alignment and authentic question formats.
+- If contentDescription is brief or generic (e.g., "I need help with final"), rely more heavily on lessonData.curriculum_map to infer appropriate content scope and standards.
 
-Task 2: Generate the 10-Question Predictive Worksheet
-Create 10 unique questions following the curriculum map's style and difficulty distribution.
+[Task 1 – Internal Analysis (Reasoning Only, Do Not Output)]
+Internally perform structured reasoning using the data above before generating questions.
+
+Correlate diagnostic performance to competencies:
+- Map incorrect responses to lessonData.curriculum_map.core_competencies.
+- Prioritize competencies with higher weights from lessonData.curriculum_map.competency_weightings.
+
+Map misconceptions:
+- Align incorrect responses to lessonData.curriculum_map.common_misconceptions and each item's targeted_misconception.
+- Identify recurring patterns for remediation through new question design.
+
+Calibrate difficulty:
+- If accuracy ≤ 50 % → bias toward "Moderate Exam-Level".
+- If accuracy ≥ 80 % → bias toward "High Challenge Exam-Level".
+- Otherwise → balanced progression (Moderate → Challenging → High Challenge).
+
+Establish question allocation:
+- 6–7 questions → weak competencies / misconceptions.
+- 2–3 questions → key or high-weight competencies.
+- Ensure broad coverage of essential curricular areas.
+
+Align to authentic exam style:
+- Mirror format distributions and stylistic conventions from lessonData.curriculum_map.question_formats.
+- Preserve the phrasing and cognitive style typical of ${learningProfile.school || "the school"}.
+
+(All reasoning must occur internally and never be output.)
+
+[Task 2 – Worksheet Generation (Output-Only)]
+Generate exactly 10 unique, exam-authentic questions derived from the internal analysis.
+Each question must reflect identified weaknesses, misconceptions, and weighting priorities.
+
+Subject-Specific Design Guidelines:
+{
+  "Mathematics": "Multi-step problems, proofs, applied word problems, function and graph interpretation, connecting formulas to real data.",
+  "Natural Sciences": "Experimental design, data-table interpretation, quantitative calculations, model explanation, and application of theory to scenarios.",
+  "Social Sciences": "Source or case analysis, cause-effect reasoning, comparative evaluation, interpretation of charts, and structured short answers.",
+  "Humanities": "Text or excerpt analysis, critical interpretation, argument construction, thematic comparison, and evaluation of perspectives.",
+  "Languages": "Reading comprehension, vocabulary-in-context, grammar correction, translation or composition, and interpretive short responses.",
+  "Business Economics Accounting Finance": "Case-based decision scenarios, journal entries, ratio or data analysis, policy evaluation, cost-benefit interpretation, and quantitative justification.",
+  "Computer Science Technology Engineering": "Algorithm tracing, pseudo-code completion, debugging logic, applied calculations, and conceptual questions on data structures or systems.",
+  "Fine Arts and Creative Subjects": "Visual or aural analysis, style recognition, composition planning, interpretive reasoning, and contextual or historical linkage.",
+  "Interdisciplinary and Professional Courses": "Case-study interpretation, ethical or policy analysis, applied reasoning, scenario-based judgments, and reflective synthesis."
+}
+
+General Construction Rules:
+- Use clear, grade-appropriate language for ${learningProfile.grade}.
+- Include four plausible options (A–D) if question_type = "Multiple Choice"; otherwise set options = [].
+- Assign each question a difficulty_index of "Moderate Exam-Level", "Challenging Exam-Level", or "High Challenge Exam-Level".
+- Each question must test a distinct concept or skill for predictive breadth.
+- Maintain authentic exam wording and format grounded in ${lessonData.course_name} and ${learningProfile.school || "the school"} context.
+- When extensive notes are provided, ensure question content, terminology, and examples align factually with those materials; when notes are minimal, extrapolate content scope from the curriculum map and question_formats.
 
 CRITICAL FORMATTING REQUIREMENTS:
 1. Question Text: Write as PLAIN TEXT without markdown formatting (no **, no *, no special symbols)
