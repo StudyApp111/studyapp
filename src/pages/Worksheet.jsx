@@ -31,15 +31,17 @@ export default function Worksheet() {
   const gradingTimeoutRef = useRef(null);
   const [gradingInProgress, setGradingInProgress] = useState({});
   
-  // Timer state - using refs to prevent re-render issues
+  // Timer state
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
-  const timerInitializedRef = useRef(false); // NEW: Track if timer was initialized
   
-  // Question time tracking - track time per question
-  const questionTimesRef = useRef({}); // { 0: 45, 1: 30, 2: 60 } - total seconds per question index
+  // Question time tracking
+  const questionTimesRef = useRef({});
   const currentQuestionStartTimeRef = useRef(null);
+  
+  // Worksheet ID ref to track which worksheet the timer is running for
+  const worksheetIdRef = useRef(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -53,11 +55,25 @@ export default function Worksheet() {
     loadOrGenerateWorksheet(lessonId);
   }, [navigate]);
 
-  // Main timer effect - runs ONLY ONCE when worksheet loads
+  // Main timer effect - Only runs when worksheet changes AND is not completed
   useEffect(() => {
-    if (worksheet && !worksheet.completed && !timerInitializedRef.current) {
-      // Initialize timer ONCE
-      timerInitializedRef.current = true;
+    // Start timer only if:
+    // 1. Worksheet exists
+    // 2. Worksheet is not completed
+    // 3. This is a new worksheet (different ID) OR timer hasn't started yet
+    if (worksheet && !worksheet.completed && worksheet.id !== worksheetIdRef.current) {
+      console.log('Starting timer for worksheet:', worksheet.id);
+      
+      // Store the worksheet ID
+      worksheetIdRef.current = worksheet.id;
+      
+      // Clear any existing timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      // Initialize start time
       startTimeRef.current = Date.now();
       currentQuestionStartTimeRef.current = Date.now();
       
@@ -85,13 +101,16 @@ export default function Worksheet() {
         }
       }, 1000);
 
+      // Cleanup function - only clears timer when component unmounts or worksheet changes
       return () => {
+        console.log('Cleaning up timer');
         if (timerRef.current) {
           clearInterval(timerRef.current);
+          timerRef.current = null;
         }
       };
     }
-  }, [worksheet]); // Only depends on worksheet existing, not its contents
+  }, [worksheet?.id, worksheet?.completed]); // Only depend on worksheet ID and completion status
 
   // Record time when question changes
   const recordQuestionTime = (questionIndex) => {
@@ -101,6 +120,8 @@ export default function Worksheet() {
       
       // Add time to this question's total
       questionTimesRef.current[questionIndex] = (questionTimesRef.current[questionIndex] || 0) + timeSpentOnQuestion;
+      
+      console.log(`Question ${questionIndex} time: ${timeSpentOnQuestion}s (total: ${questionTimesRef.current[questionIndex]}s)`);
     }
   };
 
@@ -159,7 +180,7 @@ export default function Worksheet() {
         await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum);
       }
     } catch (error) {
-      console.error("Error loading worksheet:", error);
+      console.error("Error loading or generating worksheet:", error);
       alert("Failed to load or generate worksheet. Please try again. Error: " + error.message);
       navigate(createPageUrl("Home"));
     }
@@ -308,6 +329,7 @@ Provide your response as a single, valid JSON object with the structure specifie
           question_text: q.question_text,
           options: q.options || [],
           correct_answer: q.correct_answer,
+          explanation: q.explanation,
           assessed_competencies: q.assessed_competencies,
           targeted_misconception: q.targeted_misconception,
           student_answer: q.user_answer || "No answer provided",
@@ -573,7 +595,11 @@ Output Format: Valid JSON object matching the schema.`;
     // Stop the timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
+    
+    console.log('Final elapsed time:', elapsedSeconds);
+    console.log('Question times:', questionTimesRef.current);
     
     // Convert question times to laps format
     const questionTimeLaps = Object.keys(questionTimesRef.current).map(key => ({
