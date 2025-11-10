@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, GraduationCap, History, LogOut, Settings, Plus, Trophy, Flame, Award, Clock, CheckCircle2 } from "lucide-react";
+import { Home, BookOpen, GraduationCap, History, LogOut, Settings, Plus, Trophy, Flame, Award, CheckCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -37,15 +37,13 @@ const navigationItems = [
   },
 ];
 
-// Helper function to format time
-const formatTime = (seconds) => {
-  if (!seconds || seconds < 60) return `${seconds || 0}s`;
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  if (hours > 0) {
-    return `${hours}h ${minutes % 60}m`;
+const formatTime = (minutes) => {
+  if (minutes < 60) {
+    return `${Math.round(minutes)}m`;
   }
-  return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
+  return `${hours}h ${mins}m`;
 };
 
 export default function Layout({ children, currentPageName }) {
@@ -137,7 +135,7 @@ export default function Layout({ children, currentPageName }) {
                     <div className="px-4 py-3 space-y-3">
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-purple-600" />
+                          <CheckCircle className="w-4 h-4 text-purple-600" />
                           <span className="text-slate-600">Questions</span>
                         </div>
                         <span className="font-bold text-purple-600">{user.questions_completed || 0}</span>
@@ -147,13 +145,10 @@ export default function Layout({ children, currentPageName }) {
                           <Clock className="w-4 h-4 text-purple-700" />
                           <span className="text-slate-600">Time Spent</span>
                         </div>
-                        <span className="font-bold text-purple-700">{formatTime(user.time_spent_seconds || 0)}</span>
+                        <span className="font-bold text-purple-700">{formatTime(user.time_spent_minutes || 0)}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <Award className="w-4 h-4 text-purple-800" />
-                          <span className="text-slate-600">Avg Score</span>
-                        </div>
+                        <span className="text-slate-600">Avg Score</span>
                         <span className="font-bold text-purple-800">{user.average_score || 0}%</span>
                       </div>
                     </div>
