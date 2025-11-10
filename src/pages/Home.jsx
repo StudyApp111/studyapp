@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -10,9 +9,8 @@ import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Trophy, Flame } from "lu
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-// StatCard import removed as it's no longer used
 import { motion } from "framer-motion";
-import BadgeDisplay from "@/components/gamification/BadgeDisplay"; // Updated path to components
+import BadgeDisplay from "@/components/gamification/BadgeDisplay";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -37,7 +35,7 @@ export default function Home() {
 
   const { data: lessons = [], isLoading } = useQuery({
     queryKey: ['lessons'],
-    queryFn: () => base44.entities.Lesson.list('-created_date'),
+    queryFn: () => base44.entities.Lesson.list('-created_date', 6),
     initialData: [],
   });
 
@@ -97,7 +95,7 @@ export default function Home() {
             <div 
               className={`h-full transition-all duration-500 ${
                 completedCount === totalWorksheets ? 'bg-emerald-500' : 
-                completedCount > 0 ? 'bg-amber-500' :
+                completedCount > 0 ? 'bg-yellow-500' :
                 'bg-purple-500'
               }`}
               style={{ width: `${progress}%` }}
@@ -108,12 +106,12 @@ export default function Home() {
             <div className="flex items-start justify-between mb-3">
               <BookOpen className={`w-8 h-8 ${
                 completedCount === totalWorksheets ? 'text-emerald-600' :
-                completedCount > 0 ? 'text-amber-600' :
+                completedCount > 0 ? 'text-yellow-600' :
                 'text-purple-600'
               }`} />
               <Badge className={`${
                 completedCount === totalWorksheets ? 'bg-emerald-100 text-emerald-700' :
-                completedCount > 0 ? 'bg-amber-100 text-amber-700' :
+                completedCount > 0 ? 'bg-yellow-100 text-yellow-700' :
                 'bg-purple-100 text-purple-700'
               } border`}>
                 {completedCount}/{totalWorksheets}
@@ -133,7 +131,7 @@ export default function Home() {
               </div>
 
               {latestCompletedWorksheet ? (
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-yellow-50 rounded-lg border border-purple-200">
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-yellow-50 rounded-lg border border-yellow-300 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-semibold text-slate-600 mb-1">Current Predicted Grade</p>
@@ -173,7 +171,7 @@ export default function Home() {
         {(user.total_points > 0 || (user.current_streak || 0) > 0 || (user.badges && user.badges.length > 0)) && (
           <div className="flex items-center gap-4 mt-4 flex-wrap">
             {user.total_points > 0 && (
-              <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-amber-50 px-4 py-2 rounded-full border border-yellow-200">
+              <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-amber-50 px-4 py-2 rounded-full border border-yellow-300 shadow-sm">
                 <Trophy className="w-5 h-5 text-yellow-600" />
                 <span className="text-sm font-semibold text-slate-700">Level {user.level || 1}</span>
                 <span className="text-xs text-slate-500">• {user.total_points || 0} pts</span>
@@ -290,20 +288,12 @@ export default function Home() {
         </motion.div>
       </div>
 
-      {/* Badges Section */}
-      {user.badges && user.badges.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-4">Your Badges</h2>
-          <BadgeDisplay badges={user.badges} size="compact" />
-        </div>
-      )}
-
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900">Active Lessons</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900">Recent Lessons</h2>
           <Button
             onClick={() => navigate(createPageUrl("CreateLesson"))}
-            className="hidden md:flex bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-500/30"
+            className="hidden md:flex bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold shadow-lg shadow-yellow-500/30"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create New Lesson
@@ -324,14 +314,14 @@ export default function Home() {
             ))}
           </div>
         ) : lessons.length === 0 ? (
-          <Card className="text-center py-12 md:py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-purple-300">
+          <Card className="text-center py-12 md:py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
             <CardContent>
-              <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto text-purple-500 mb-4" />
+              <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto text-yellow-600 mb-4" />
               <h3 className="text-lg md:text-xl font-semibold text-slate-700 mb-2">No lessons yet</h3>
               <p className="text-sm md:text-base text-slate-500 mb-6">Create your first lesson to begin your learning journey</p>
               <Button
                 onClick={() => navigate(createPageUrl("CreateLesson"))}
-                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+                className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Your First Lesson
@@ -346,6 +336,14 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Badges Section - Moved to Bottom */}
+      {user.badges && user.badges.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-4">Your Badges</h2>
+          <BadgeDisplay badges={user.badges} size="compact" />
+        </div>
+      )}
     </div>
   );
 }

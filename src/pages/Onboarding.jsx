@@ -102,12 +102,19 @@ export default function Onboarding() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
+          <div className="flex items-center justify-center mb-6">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
+              alt="StudyApp.AI Logo"
+              className="w-24 h-24 rounded-2xl shadow-2xl"
+            />
+          </div>
           <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-4">
-            <Sparkles className="w-5 h-5 text-purple-600" />
+            <Sparkles className="w-5 h-5 text-yellow-600" />
             <span className="text-sm font-medium text-slate-700">Get Started</span>
           </div>
           <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome to StudyApp.AI</h1>
-          <p className="text-slate-600">Tell us a bit about yourself</p>
+          <p className="text-slate-600">Tell us a bit about yourself to personalize your experience</p>
         </motion.div>
 
         <Card className="bg-white/90 backdrop-blur-sm shadow-2xl border-0">
@@ -117,7 +124,7 @@ export default function Onboarding() {
                 <span className="text-sm font-medium text-slate-600">
                   Question {currentStep + 1} of {questions.length}
                 </span>
-                <span className="text-sm font-medium text-purple-600">{Math.round(progress)}%</span>
+                <span className="text-sm font-medium text-yellow-600">{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
@@ -151,7 +158,7 @@ export default function Onboarding() {
               <Button
                 onClick={handleNext}
                 disabled={!isAnswered || isSubmitting}
-                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 gap-2"
+                className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold gap-2"
               >
                 {currentStep === questions.length - 1 ? (
                   isSubmitting ? "Creating Profile..." : "Complete"
