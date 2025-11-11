@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Plus, FileText, Link as LinkIcon, Upload } from "lucide-react";
+import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck } from "lucide-react";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
@@ -21,6 +20,7 @@ export default function CreateLesson() {
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState("");
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -56,6 +56,7 @@ export default function CreateLesson() {
     e.preventDefault();
     setError("");
     setIsProcessing(true);
+    setProcessingStep("");
 
     try {
       if (!courseName.trim()) {
@@ -72,6 +73,7 @@ export default function CreateLesson() {
         }
 
         try {
+          setProcessingStep("Extracting content from URL...");
           const { data: urlContent } = await base44.integrations.Core.InvokeLLM({
             prompt: `Extract and summarize all educational content from the following URL in detail. Provide a comprehensive transcript or summary of the content that captures all key concepts, topics, and learning materials. URL: ${url}`,
             add_context_from_internet: true
@@ -84,26 +86,34 @@ export default function CreateLesson() {
         }
       }
 
-      // Handle file upload
+      // Handle file upload - Using Mistral
       if (inputType === "file") {
         if (!file) {
           throw new Error("Please select a file");
         }
 
         try {
+          setProcessingStep("Uploading file...");
           const { file_url } = await base44.integrations.Core.UploadFile({ file });
           fileUrl = file_url;
 
-          // Extract content from file using LLM
-          const { data: fileContent } = await base44.integrations.Core.InvokeLLM({
-            prompt: "Extract and provide a detailed, comprehensive transcript or summary of all educational content from this file. Capture all key concepts, topics, formulas, definitions, and learning materials in detail.",
-            file_urls: [file_url]
+          setProcessingStep("Extracting content with Mistral AI...");
+          console.log("Processing document with Mistral, file URL:", file_url);
+          
+          // Use Mistral to extract content from the file
+          const { data: fileData } = await base44.functions.invoke('extractDocumentContent', {
+            file_url: file_url
           });
 
-          extractedContent = fileContent;
+          if (!fileData || !fileData.extracted_content) {
+            throw new Error("Failed to extract content from document");
+          }
+
+          extractedContent = fileData.extracted_content;
+          console.log("Content extracted successfully:", extractedContent.length, "characters");
         } catch (fileError) {
           console.error("Error processing file:", fileError);
-          throw new Error("Failed to process file. Please try a different file.");
+          throw new Error(fileError.message || "Failed to process file. Please try a different file.");
         }
       }
 
@@ -114,6 +124,8 @@ export default function CreateLesson() {
         }
         extractedContent = description;
       }
+
+      setProcessingStep("Analyzing curriculum...");
 
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({
@@ -160,8 +172,8 @@ Describe at least 3-4 specific and common student misconceptions or difficulties
 
 CRITICAL FORMATTING:
 
-- weight_percentage MUST be a STRING with % symbol (e.g., “20%”, “15%”)
-- frequency MUST be a STRING (e.g., “30%”, “Common”, “Rare”)
+- weight_percentage MUST be a STRING with % symbol (e.g., "20%", "15%")
+- frequency MUST be a STRING (e.g., "30%", "Common", "Rare")
 - Do NOT use numeric values, always use strings
 
 Requirements:
@@ -242,6 +254,8 @@ Output Format: JSON object matching the specified schema`;
         }
       });
 
+      setProcessingStep("Creating lesson...");
+
       const lessonData = {
         course_name: courseName,
         input_type: inputType,
@@ -266,6 +280,7 @@ Output Format: JSON object matching the specified schema`;
       console.error("Error creating lesson:", err);
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
+      setProcessingStep("");
     }
   };
 
@@ -286,6 +301,15 @@ Output Format: JSON object matching the specified schema`;
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {processingStep && (
+                <Alert className="bg-purple-50 border-purple-200">
+                  <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                  <AlertDescription className="text-purple-900 ml-2">
+                    {processingStep}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -332,7 +356,7 @@ Output Format: JSON object matching the specified schema`;
                       <Upload className="w-5 h-5 text-purple-600" />
                       <div>
                         <p className="font-medium">Upload a File</p>
-                        <p className="text-xs text-slate-500">Upload a syllabus, PDF, or document with course info</p>
+                        <p className="text-xs text-slate-500">AI-powered extraction with Mistral (PDF, Word, Images)</p>
                       </div>
                     </Label>
                   </div>
@@ -388,13 +412,19 @@ Output Format: JSON object matching the specified schema`;
                     />
                   </div>
                   {file && (
-                    <p className="text-sm text-green-600">
-                      Selected: {file.name}
-                    </p>
+                    <div className="flex items-center gap-2 text-sm text-emerald-600">
+                      <FileCheck className="w-4 h-4" />
+                      <span>Selected: {file.name}</span>
+                    </div>
                   )}
-                  <p className="text-xs text-slate-500">
-                    Supported formats: PDF, Word, Text, Images (PNG, JPG)
-                  </p>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                    <p className="text-xs text-purple-900 font-medium mb-1">
+                      ✨ Powered by Mistral AI
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      Advanced document understanding for PDFs, Word docs, and images. Extracts text, formulas, tables, and diagrams with high accuracy.
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -407,7 +437,7 @@ Output Format: JSON object matching the specified schema`;
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Processing...
+                    {processingStep || "Processing..."}
                   </>
                 ) : (
                   <>
