@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck } from "lucide-react";
+import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle } from "lucide-react";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
@@ -47,6 +47,14 @@ export default function CreateLesson() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
+      // Check file size (50MB limit)
+      if (selectedFile.size > 50 * 1024 * 1024) {
+        setError("File is too large. Please upload files smaller than 50MB.");
+        setFile(null);
+        e.target.value = '';
+        return;
+      }
+      
       setFile(selectedFile);
       setError("");
     }
@@ -94,26 +102,54 @@ export default function CreateLesson() {
 
         try {
           setProcessingStep("Uploading file...");
+          console.log("Starting file upload, size:", file.size, "bytes");
+          
           const { file_url } = await base44.integrations.Core.UploadFile({ file });
           fileUrl = file_url;
+          console.log("File uploaded successfully:", file_url);
 
-          setProcessingStep("Extracting content with Mistral AI...");
-          console.log("Processing document with Mistral, file URL:", file_url);
+          setProcessingStep("Extracting content with Mistral AI (this may take a minute)...");
+          console.log("Calling extractDocumentContent function...");
           
           // Use Mistral to extract content from the file
-          const { data: fileData } = await base44.functions.invoke('extractDocumentContent', {
+          const response = await base44.functions.invoke('extractDocumentContent', {
             file_url: file_url
           });
 
-          if (!fileData || !fileData.extracted_content) {
-            throw new Error("Failed to extract content from document");
+          console.log("Function response:", response);
+
+          if (!response || !response.data) {
+            throw new Error("Invalid response from document extraction service");
           }
 
-          extractedContent = fileData.extracted_content;
+          if (response.data.error) {
+            throw new Error(response.data.error + (response.data.details ? ': ' + response.data.details : ''));
+          }
+
+          if (!response.data.extracted_content) {
+            throw new Error("No content was extracted from the document. Please try a different file.");
+          }
+
+          extractedContent = response.data.extracted_content;
           console.log("Content extracted successfully:", extractedContent.length, "characters");
+          
         } catch (fileError) {
           console.error("Error processing file:", fileError);
-          throw new Error(fileError.message || "Failed to process file. Please try a different file.");
+          
+          // Provide more helpful error messages
+          let errorMessage = fileError.message || "Failed to process file";
+          
+          if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
+            errorMessage = "Authentication error with Mistral AI. Please contact support.";
+          } else if (errorMessage.includes("413") || errorMessage.includes("too large")) {
+            errorMessage = "File is too large. Please use a file smaller than 50MB.";
+          } else if (errorMessage.includes("422")) {
+            errorMessage = "File format not supported or file is corrupted. Please try a different file.";
+          } else if (errorMessage.includes("500")) {
+            errorMessage = "Server error while processing document. Please try again or use a different file format.";
+          }
+          
+          throw new Error(errorMessage);
         }
       }
 
@@ -300,6 +336,7 @@ Output Format: JSON object matching the specified schema`;
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -356,7 +393,7 @@ Output Format: JSON object matching the specified schema`;
                       <Upload className="w-5 h-5 text-purple-600" />
                       <div>
                         <p className="font-medium">Upload a File</p>
-                        <p className="text-xs text-slate-500">AI-powered extraction with Mistral (PDF, Word, Images)</p>
+                        <p className="text-xs text-slate-500">AI-powered extraction with Mistral (PDF, Word, Images - Max 50MB)</p>
                       </div>
                     </Label>
                   </div>
@@ -414,7 +451,7 @@ Output Format: JSON object matching the specified schema`;
                   {file && (
                     <div className="flex items-center gap-2 text-sm text-emerald-600">
                       <FileCheck className="w-4 h-4" />
-                      <span>Selected: {file.name}</span>
+                      <span>Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                     </div>
                   )}
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
