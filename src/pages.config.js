@@ -11,6 +11,8 @@ import ProfileInformation from './pages/ProfileInformation';
 import ChangePassword from './pages/ChangePassword';
 import PricingPlans from './pages/PricingPlans';
 import Leaderboard from './pages/Leaderboard';
+import SmartGrader from './pages/SmartGrader';
+import GradeResults from './pages/GradeResults';
 import Layout from './Layout.jsx';
 
 
@@ -28,6 +30,8 @@ export const PAGES = {
     "ChangePassword": ChangePassword,
     "PricingPlans": PricingPlans,
     "Leaderboard": Leaderboard,
+    "SmartGrader": SmartGrader,
+    "GradeResults": GradeResults,
 }
 
 export const pagesConfig = {
