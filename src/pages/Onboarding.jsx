@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Sparkles, AlertCircle } from "lucide-react";
+import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, LogOut } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
 
@@ -72,6 +72,16 @@ export default function Onboarding() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await base44.auth.logout();
+    } catch (error) {
+      console.error("Error logging out:", error);
+      // Force logout by redirecting to login
+      window.location.href = '/';
+    }
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError("");
@@ -119,6 +129,19 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
       <div className="w-full max-w-3xl">
+        {/* Logout Button - Top Right */}
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="gap-2 bg-white/90 backdrop-blur-sm shadow-lg hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+          >
+            <LogOut className="w-4 h-4" />
+            Back to Login
+          </Button>
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
