@@ -6,7 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
+import { ChevronRight, ChevronLeft, Sparkles, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
 
 const questions = [
@@ -48,11 +49,13 @@ export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const progress = ((currentStep + 1) / questions.length) * 100;
 
   const handleAnswer = (questionId, answer) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
+    setError(""); // Clear error when user types
   };
 
   const handleNext = () => {
@@ -71,24 +74,43 @@ export default function Onboarding() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setError("");
+    
     try {
+      console.log("Starting onboarding submission with answers:", answers);
+      
+      // Validate all answers are present
+      if (!answers.school || !answers.grade || !answers.city) {
+        throw new Error("Please answer all questions before completing onboarding");
+      }
+
       const profileData = {
-        school: answers.school,
-        grade: answers.grade,
-        city: answers.city
+        school: answers.school.trim(),
+        grade: answers.grade.trim(),
+        city: answers.city.trim()
       };
 
+      console.log("Creating learning profile with data:", profileData);
       const profile = await base44.entities.LearningProfile.create(profileData);
+      console.log("Profile created successfully:", profile);
+
+      console.log("Updating user with onboarding_completed flag");
       await base44.auth.updateMe({
         onboarding_completed: true,
         learning_profile_id: profile.id
       });
+      console.log("User updated successfully");
 
-      navigate(createPageUrl("Home"));
+      // Force a small delay to ensure backend update propagates
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log("Navigating to Home page");
+      navigate(createPageUrl("Home"), { replace: true });
     } catch (error) {
       console.error("Error saving profile:", error);
+      setError(error.message || "Failed to complete onboarding. Please try again.");
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
 
   const currentQuestion = questions[currentStep];
@@ -119,6 +141,13 @@ export default function Onboarding() {
 
         <Card className="bg-white/90 backdrop-blur-sm shadow-2xl border-0">
           <CardContent className="p-8">
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-slate-600">
@@ -149,7 +178,7 @@ export default function Onboarding() {
               <Button
                 variant="outline"
                 onClick={handleBack}
-                disabled={currentStep === 0}
+                disabled={currentStep === 0 || isSubmitting}
                 className="gap-2"
               >
                 <ChevronLeft className="w-4 h-4" />
