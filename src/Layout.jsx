@@ -26,6 +26,11 @@ const navigationItems = [
     icon: Home,
   },
   {
+    title: "Smart Grader",
+    url: createPageUrl("SmartGrader"),
+    icon: GraduationCap,
+  },
+  {
     title: "Leaderboard",
     url: createPageUrl("Leaderboard"),
     icon: Trophy,
@@ -37,12 +42,15 @@ const navigationItems = [
   },
 ];
 
-const formatTime = (minutes) => {
+const formatTime = (seconds) => {
+  if (!seconds || seconds === 0) return '0m';
+  
+  const minutes = Math.floor(seconds / 60);
   if (minutes < 60) {
-    return `${Math.round(minutes)}m`;
+    return `${minutes}m`;
   }
   const hours = Math.floor(minutes / 60);
-  const mins = Math.round(minutes % 60);
+  const mins = minutes % 60;
   return `${hours}h ${mins}m`;
 };
 
@@ -166,7 +174,7 @@ export default function Layout({ children, currentPageName }) {
                             <Clock className="w-4 h-4 text-purple-700" />
                             <span className="text-slate-600">Time Spent</span>
                           </div>
-                          <span className="font-bold text-purple-700">{formatTime(user.time_spent_minutes || 0)}</span>
+                          <span className="font-bold text-purple-700">{formatTime(user.time_spent_seconds || 0)}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate-600">Avg Score</span>
@@ -291,14 +299,14 @@ export default function Layout({ children, currentPageName }) {
                 </Link>
 
                 <Link
-                  to={createPageUrl("Leaderboard")}
+                  to={createPageUrl("SmartGrader")}
                   className={`flex items-center justify-center p-3 rounded-lg transition-all ${
-                    location.pathname === createPageUrl("Leaderboard")
+                    location.pathname === createPageUrl("SmartGrader")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <Trophy className="w-6 h-6" />
+                  <GraduationCap className="w-6 h-6" />
                 </Link>
 
                 {/* Elevated CTA Button - Centered with clear space below */}
@@ -310,14 +318,14 @@ export default function Layout({ children, currentPageName }) {
                 </button>
 
                 <Link
-                  to={createPageUrl("LessonHistory")}
+                  to={createPageUrl("Leaderboard")}
                   className={`flex items-center justify-center p-3 rounded-lg transition-all ${
-                    location.pathname === createPageUrl("LessonHistory")
+                    location.pathname === createPageUrl("Leaderboard")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <History className="w-6 h-6" />
+                  <Trophy className="w-6 h-6" />
                 </Link>
 
                 <button
