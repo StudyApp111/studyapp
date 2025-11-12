@@ -65,8 +65,6 @@ export default function SmartGrader() {
 
       const extractedContent = extractResponse.data.extracted_content;
 
-      setProcessingStep("Analyzing curriculum standards...");
-
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({
         id: user.learning_profile_id
@@ -74,7 +72,25 @@ export default function SmartGrader() {
 
       const learningProfile = profile[0] || {};
 
-      const curriculumPrompt = `Educational Curriculum Analysis Request
+      // Check for existing curriculum map
+      setProcessingStep("Checking for existing curriculum map...");
+      const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
+        course_name: courseName.trim(),
+        school: learningProfile.school || "",
+        grade: learningProfile.grade || ""
+      });
+
+      let curriculumMap;
+
+      if (existingCurriculumMaps.length > 0) {
+        console.log("Found existing curriculum map, reusing it");
+        curriculumMap = existingCurriculumMaps[0].curriculum_data;
+        setProcessingStep("Using existing curriculum standards...");
+      } else {
+        console.log("No existing curriculum map found, generating new one");
+        setProcessingStep("Analyzing curriculum standards (first time for this course)...");
+
+        const curriculumPrompt = `Educational Curriculum Analysis Request
 
 Objective: Analyze the provided course information to create a comprehensive curriculum profile for grading purposes.
 
@@ -82,150 +98,192 @@ Input Context:
 Student Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${courseName}
 School Context: ${learningProfile.school || "N/A"}
-Assignment Content: ${extractedContent}
+Assignment Content: ${extractedContent.substring(0, 5000)}
 
 Task: Generate a detailed curriculum profile including:
-- Core competencies and learning outcomes
+- Core competencies and learning outcomes (6-10)
 - Competency weightings (must sum to 100%)
-- Typical assessment question formats
-- High-yield focal points
-- Common student misconceptions
+- Typical assessment question formats (3-4 most common)
+- High-yield focal points (3-5 critical concepts)
+- Common student misconceptions (3-4 specific ones)
 
 CRITICAL FORMATTING:
 - weight_percentage MUST be a STRING with % symbol (e.g., "20%", "15%")
 - frequency MUST be a STRING (e.g., "30%", "Common", "Rare")
 
+Base your analysis on standard educational practices for ${learningProfile.grade || "this grade level"}.
+Align with typical ${courseName} curriculum standards.
+Ensure competency weightings sum to 100%.
+
 Output Format: JSON object matching the specified schema`;
 
-      const { data: curriculumMap } = await base44.functions.invoke('curriculumMapping', {
-        prompt: curriculumPrompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            core_competencies: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  description: { type: "string" }
-                },
-                required: ["name", "description"]
+        const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
+          prompt: curriculumPrompt,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              core_competencies: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    description: { type: "string" }
+                  },
+                  required: ["name", "description"]
+                }
+              },
+              competency_weightings: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    competency_name: { type: "string" },
+                    weight_percentage: { type: "string" }
+                  },
+                  required: ["competency_name", "weight_percentage"]
+                }
+              },
+              question_formats: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    type: { type: "string" },
+                    frequency: { type: "string" },
+                    examples: {
+                      type: "array",
+                      items: { type: "string" }
+                    }
+                  },
+                  required: ["type", "frequency", "examples"]
+                }
+              },
+              high_yield_focal_points: {
+                type: "array",
+                items: { type: "string" }
+              },
+              common_misconceptions: {
+                type: "array",
+                items: { type: "string" }
               }
             },
-            competency_weightings: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  competency_name: { type: "string" },
-                  weight_percentage: { type: "string" }
-                },
-                required: ["competency_name", "weight_percentage"]
-              }
-            },
-            question_formats: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  type: { type: "string" },
-                  frequency: { type: "string" },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" }
-                  }
-                },
-                required: ["type", "frequency", "examples"]
-              }
-            },
-            high_yield_focal_points: {
-              type: "array",
-              items: { type: "string" }
-            },
-            common_misconceptions: {
-              type: "array",
-              items: { type: "string" }
-            }
-          },
-          required: ["core_competencies", "competency_weightings", "question_formats", "high_yield_focal_points", "common_misconceptions"]
-        }
-      });
+            required: ["core_competencies", "competency_weightings", "question_formats", "high_yield_focal_points", "common_misconceptions"]
+          }
+        });
 
-      setProcessingStep("Grading your assignment...");
+        curriculumMap = generatedMap;
 
-      const gradingPrompt = `You are an expert teacher grading a student's assignment.
+        // Save for future use
+        await base44.entities.CurriculumMap.create({
+          course_name: courseName.trim(),
+          school: learningProfile.school || "",
+          grade: learningProfile.grade || "",
+          city: learningProfile.city || "",
+          curriculum_data: curriculumMap
+        });
+      }
 
-Student Information:
-Grade Level: ${learningProfile.grade || "N/A"}
-Course: ${courseName}
-Assignment: ${assignmentTitle}
+      setProcessingStep("Grading your assignment with expert AI feedback...");
 
-Curriculum Standards:
+      const gradingPrompt = `[Role Definition]
+You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
+
+[Input Educational Context]
+Student's Grade Level: ${learningProfile.grade || "N/A"}
+Course/Unit Name: ${courseName}
+School (context): ${learningProfile.school || "N/A"}
+City/Region (context): ${learningProfile.city || "N/A"}
+
+Detailed Curriculum Profile (for alignment: competencies, weightings, question formats, misconceptions):
 ${JSON.stringify(curriculumMap, null, 2)}
 
-Student's Assignment Content:
+Assignment Metadata:
+Assignment Name/Type: ${assignmentTitle}
+Assignment Text (OCR'd or user-uploaded; may include mixed formatting):
 ${extractedContent}
 
-Task: Provide comprehensive grading and feedback including:
-1. Predicted letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D, F)
-2. Numerical score (0-100)
-3. Overall performance summary (2-3 paragraphs)
-4. 3-5 identified strengths with specific examples
-5. 3-5 areas for improvement with specific recommendations
-6. Detailed feedback by section/question
-7. Rubric breakdown aligned with curriculum competencies
+[Task – Grading & Feedback Generation]
+Produce a teacher-quality grade and feedback package:
+1) Assignment Overview - One concise paragraph summarizing what the assignment attempted, its main task(s), and how well it aligned to ${courseName} expectations.
 
-Be thorough, constructive, and specific in your feedback.`;
+2) Rubric & Scores - List 3–6 criteria with short descriptions. Assign each criterion a percentage weight (sum = 100%). Provide a score (0–100%) for each criterion with a 1–2 sentence justification tied to the student's actual work.
+
+3) Strengths & High-Value Feedback - 3–5 bullet points highlighting what was done well, anchored to passages, steps, or evidence from the submission.
+
+4) Priority Improvements (Actionable Next Steps) - 4–6 bullet points with specific, teachable fixes.
+
+5) Inline or Section-Targeted Comments (Optional if feasible) - Up to 5 pinpoint comments referencing a line/paragraph/step, each with a brief correction or suggestion.
+
+6) Academic Integrity & Source Checks (If Applicable) - Briefly note any issues to review. Keep tone neutral; provide evidence-based pointers.
+
+7) Predicted Grade - Provide a percentage grade (0–100%), a short descriptor, and a 1–2 sentence rationale that ties together the rubric. If the school/course has explicit grade bands, align to them; otherwise use common bands (A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60).
+
+8) Competency Mapping & Next Focus - List 2–4 curriculum core_competencies most associated with weaknesses observed, in priority order. Suggest 1–2 targeted next mini-lessons or practice activities.
+
+Be thorough, constructive, and specific in your feedback. Output only valid JSON per the schema.`;
 
       const { data: gradingResult } = await base44.functions.invoke('gradeAssignment', {
         prompt: gradingPrompt,
         response_json_schema: {
           type: "object",
           properties: {
-            predicted_grade: { type: "string" },
-            total_score: { type: "number" },
-            overall_performance_summary: { type: "string" },
-            identified_strengths: {
-              type: "array",
-              items: { type: "string" }
-            },
-            areas_for_improvement: {
-              type: "array",
-              items: { type: "string" }
-            },
-            detailed_feedback_by_section: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  section_name: { type: "string" },
-                  points_earned: { type: "number" },
-                  points_possible: { type: "number" },
-                  feedback: { type: "string" },
-                  competencies_assessed: {
-                    type: "array",
-                    items: { type: "string" }
-                  }
-                },
-                required: ["section_name", "points_earned", "points_possible", "feedback"]
-              }
-            },
-            rubric_breakdown: {
+            assignment_overview: { type: "string" },
+            rubric: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
                   criterion: { type: "string" },
-                  score: { type: "number" },
-                  max_score: { type: "number" },
-                  comments: { type: "string" }
+                  description: { type: "string" },
+                  weight_percentage: { type: "string" },
+                  score_percentage: { type: "string" },
+                  justification: { type: "string" }
                 },
-                required: ["criterion", "score", "max_score", "comments"]
+                required: ["criterion", "description", "weight_percentage", "score_percentage", "justification"]
               }
+            },
+            strengths: {
+              type: "array",
+              items: { type: "string" }
+            },
+            priority_improvements: {
+              type: "array",
+              items: { type: "string" }
+            },
+            inline_comments: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  anchor: { type: "string" },
+                  comment: { type: "string" }
+                }
+              }
+            },
+            academic_integrity_flags: {
+              type: "array",
+              items: { type: "string" }
+            },
+            predicted_grade: {
+              type: "object",
+              properties: {
+                percentage: { type: "string" },
+                band: { type: "string" },
+                rationale: { type: "string" }
+              },
+              required: ["percentage", "band", "rationale"]
+            },
+            competency_mapping: {
+              type: "array",
+              items: { type: "string" }
+            },
+            recommended_next_focus: {
+              type: "array",
+              items: { type: "string" }
             }
           },
-          required: ["predicted_grade", "total_score", "overall_performance_summary", "identified_strengths", "areas_for_improvement"]
+          required: ["assignment_overview", "rubric", "strengths", "priority_improvements", "predicted_grade"]
         }
       });
 
@@ -363,10 +421,11 @@ Be thorough, constructive, and specific in your feedback.`;
                 <p className="text-sm font-semibold text-blue-900 mb-2">📋 What you'll get:</p>
                 <ul className="text-xs text-slate-700 space-y-1 ml-4 list-disc">
                   <li>Predicted letter grade and percentage score</li>
-                  <li>Detailed strengths and areas for improvement</li>
-                  <li>Section-by-section feedback</li>
-                  <li>Rubric breakdown aligned with curriculum standards</li>
-                  <li>Specific recommendations to improve your grade</li>
+                  <li>Detailed rubric breakdown with justifications</li>
+                  <li>Strengths and priority improvements</li>
+                  <li>Inline comments on specific sections</li>
+                  <li>Academic integrity checks</li>
+                  <li>Competency mapping and recommended next focus areas</li>
                 </ul>
               </div>
             </form>
