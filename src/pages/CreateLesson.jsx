@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -161,8 +162,6 @@ export default function CreateLesson() {
         extractedContent = description;
       }
 
-      setProcessingStep("Analyzing curriculum...");
-
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({
         id: user.learning_profile_id
@@ -223,72 +222,104 @@ Requirements:
 Expand your search scope so that your response may include specific books, authors/theorists, concepts or figures relevant to the course domain.
 Output Format: JSON object matching the specified schema`;
 
-      const { data: curriculumMap } = await base44.functions.invoke('curriculumMapping', {
-        prompt: curriculumPrompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            core_competencies: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  description: { type: "string" }
-                },
-                required: ["name", "description"]
-              }
-            },
-            competency_weightings: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  competency_name: { type: "string" },
-                  weight_percentage: { 
-                    type: "string",
-                    description: "Must be a string with % symbol, e.g., '20%' or '15%'"
-                  }
-                },
-                required: ["competency_name", "weight_percentage"]
-              }
-            },
-            question_formats: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  type: { type: "string" },
-                  frequency: { 
-                    type: "string",
-                    description: "Must be a string, e.g., '30%', 'Common', or 'Rare'"
-                  },
-                  examples: {
-                    type: "array",
-                    items: { type: "string" }
-                  }
-                },
-                required: ["type", "frequency", "examples"]
-              }
-            },
-            high_yield_focal_points: {
-              type: "array",
-              items: { type: "string" }
-            },
-            common_misconceptions: {
-              type: "array",
-              items: { type: "string" }
+      const curriculumResponseJsonSchema = {
+        type: "object",
+        properties: {
+          core_competencies: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                description: { type: "string" }
+              },
+              required: ["name", "description"]
             }
           },
-          required: [
-            "core_competencies",
-            "competency_weightings",
-            "question_formats",
-            "high_yield_focal_points",
-            "common_misconceptions"
-          ]
-        }
+          competency_weightings: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                competency_name: { type: "string" },
+                weight_percentage: { 
+                  type: "string",
+                  description: "Must be a string with % symbol, e.g., '20%' or '15%'"
+                }
+              },
+              required: ["competency_name", "weight_percentage"]
+            }
+          },
+          question_formats: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                type: { type: "string" },
+                frequency: { 
+                  type: "string",
+                  description: "Must be a string, e.g., '30%', 'Common', or 'Rare'"
+                },
+                examples: {
+                  type: "array",
+                  items: { type: "string" }
+                }
+              },
+              required: ["type", "frequency", "examples"]
+            }
+          },
+          high_yield_focal_points: {
+            type: "array",
+            items: { type: "string" }
+          },
+          common_misconceptions: {
+            type: "array",
+            items: { type: "string" }
+          }
+        },
+        required: [
+          "core_competencies",
+          "competency_weightings",
+          "question_formats",
+          "high_yield_focal_points",
+          "common_misconceptions"
+        ]
+      };
+
+      // Check for existing curriculum map
+      setProcessingStep("Checking for existing curriculum map...");
+      const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
+        course_name: courseName.trim(),
+        school: learningProfile.school || "",
+        grade: learningProfile.grade || ""
       });
+
+      let curriculumMap;
+
+      if (existingCurriculumMaps.length > 0) {
+        console.log("Found existing curriculum map, reusing it");
+        curriculumMap = existingCurriculumMaps[0].curriculum_data;
+        setProcessingStep("Using existing curriculum standards...");
+      } else {
+        console.log("No existing curriculum map found, generating new one");
+        setProcessingStep("Analyzing curriculum (first time for this course)...");
+
+        const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
+          prompt: curriculumPrompt,
+          response_json_schema: curriculumResponseJsonSchema
+        });
+
+        curriculumMap = generatedMap;
+
+        // Save for future use
+        await base44.entities.CurriculumMap.create({
+          course_name: courseName.trim(),
+          school: learningProfile.school || "",
+          grade: learningProfile.grade || "",
+          city: learningProfile.city || "",
+          curriculum_data: curriculumMap
+        });
+      }
 
       setProcessingStep("Creating lesson...");
 
