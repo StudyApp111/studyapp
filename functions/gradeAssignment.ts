@@ -49,9 +49,9 @@ Deno.serve(async (req) => {
             requestBody.generationConfig.responseSchema = response_json_schema;
         }
 
-        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=' + apiKey;
+        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=' + apiKey;
 
-        console.log('Calling Gemini API...');
+        console.log('Calling Gemini 2.5 Flash API...');
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json();
-        console.log('Response received');
+        console.log('Response received, candidates count:', data.candidates?.length);
 
         if (!data.candidates || data.candidates.length === 0) {
             console.error('No candidates in response');
@@ -84,14 +84,20 @@ Deno.serve(async (req) => {
         }
 
         const generatedText = data.candidates[0].content.parts[0].text;
+        console.log('Generated text length:', generatedText?.length);
+        console.log('First 500 chars of response:', generatedText?.substring(0, 500));
 
         if (response_json_schema) {
             try {
                 const parsed = JSON.parse(generatedText);
                 console.log('Successfully parsed JSON response');
+                console.log('Response keys:', Object.keys(parsed));
+                console.log('Has predicted_grade:', !!parsed.predicted_grade);
+                console.log('Predicted grade structure:', parsed.predicted_grade);
                 return Response.json({ data: parsed });
             } catch (parseError) {
                 console.error('Failed to parse JSON:', parseError);
+                console.error('Raw text:', generatedText);
                 return Response.json({
                     error: 'Failed to parse response as JSON',
                     raw_text: generatedText
