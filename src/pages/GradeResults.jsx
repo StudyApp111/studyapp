@@ -51,7 +51,14 @@ export default function GradeResults() {
 
   const result = assignment.grading_result;
 
+  // Safe access to predicted_grade with fallbacks
+  const predictedGrade = result?.predicted_grade || {};
+  const gradeBand = predictedGrade.band || 'N/A';
+  const gradePercentage = predictedGrade.percentage || '0%';
+  const gradeRationale = predictedGrade.rationale || 'Grade analysis in progress.';
+
   const getGradeColor = (band) => {
+    if (!band || band === 'N/A') return 'from-slate-500 to-slate-600';
     if (band.startsWith('A')) return 'from-emerald-500 to-teal-600';
     if (band.startsWith('B')) return 'from-blue-500 to-indigo-600';
     if (band.startsWith('C')) return 'from-amber-500 to-orange-600';
@@ -59,6 +66,7 @@ export default function GradeResults() {
   };
 
   const getGradeEmoji = (band) => {
+    if (!band || band === 'N/A') return '📊';
     if (band.startsWith('A')) return '🎉';
     if (band.startsWith('B')) return '👍';
     if (band.startsWith('C')) return '📚';
@@ -90,25 +98,25 @@ export default function GradeResults() {
             transition={{ delay: 0.2 }}
             className="inline-block scale-75 md:scale-100 origin-top"
           >
-            <div className={`px-12 md:px-16 py-6 md:py-8 rounded-3xl bg-gradient-to-r ${getGradeColor(result.predicted_grade.band)} shadow-2xl mb-4`}>
+            <div className={`px-12 md:px-16 py-6 md:py-8 rounded-3xl bg-gradient-to-r ${getGradeColor(gradeBand)} shadow-2xl mb-4`}>
               <div className="text-6xl md:text-8xl font-bold text-white mb-2">
-                {result.predicted_grade.band} {getGradeEmoji(result.predicted_grade.band)}
+                {gradeBand} {getGradeEmoji(gradeBand)}
               </div>
               <div className="text-xl md:text-2xl text-white font-semibold">
-                {result.predicted_grade.percentage}
+                {gradePercentage}
               </div>
             </div>
           </motion.div>
 
-          {result.predicted_grade.rationale && (
+          {gradeRationale && (
             <p className="text-base md:text-lg text-slate-700 max-w-3xl mx-auto mt-6 leading-relaxed">
-              {result.predicted_grade.rationale}
+              {gradeRationale}
             </p>
           )}
         </motion.div>
 
         {/* Assignment Overview */}
-        {result.assignment_overview && (
+        {result?.assignment_overview && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -130,59 +138,65 @@ export default function GradeResults() {
         )}
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-emerald-50 to-teal-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-emerald-700">
-                  <TrendingUp className="w-5 h-5" />
-                  Strengths
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {result.strengths.map((strength, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-slate-700">{strength}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </motion.div>
+          {/* Strengths */}
+          {result?.strengths && result.strengths.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-emerald-50 to-teal-50/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-emerald-700">
+                    <TrendingUp className="w-5 h-5" />
+                    Strengths
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {result.strengths.map((strength, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-slate-700">{strength}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-amber-50 to-orange-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-700">
-                  <TrendingDown className="w-5 h-5" />
-                  Priority Improvements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {result.priority_improvements.map((area, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <Target className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-slate-700">{area}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </motion.div>
+          {/* Priority Improvements */}
+          {result?.priority_improvements && result.priority_improvements.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-amber-50 to-orange-50/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-amber-700">
+                    <TrendingDown className="w-5 h-5" />
+                    Priority Improvements
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    {result.priority_improvements.map((area, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <Target className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <span className="text-slate-700">{area}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
         </div>
 
         {/* Rubric Breakdown */}
-        {result.rubric && result.rubric.length > 0 && (
+        {result?.rubric && result.rubric.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -214,7 +228,9 @@ export default function GradeResults() {
                               Weight: {criterion.weight_percentage}
                             </Badge>
                           </div>
-                          <p className="text-sm text-slate-600 mb-2">{criterion.description}</p>
+                          {criterion.description && (
+                            <p className="text-sm text-slate-600 mb-2">{criterion.description}</p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center justify-between mb-3">
@@ -222,10 +238,12 @@ export default function GradeResults() {
                           Score: {criterion.score_percentage}
                         </Badge>
                       </div>
-                      <div className="bg-white rounded-lg p-4 border border-purple-200">
-                        <p className="text-sm font-medium text-slate-600 mb-1">Justification:</p>
-                        <p className="text-sm text-slate-700 leading-relaxed">{criterion.justification}</p>
-                      </div>
+                      {criterion.justification && (
+                        <div className="bg-white rounded-lg p-4 border border-purple-200">
+                          <p className="text-sm font-medium text-slate-600 mb-1">Justification:</p>
+                          <p className="text-sm text-slate-700 leading-relaxed">{criterion.justification}</p>
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </div>
@@ -235,7 +253,7 @@ export default function GradeResults() {
         )}
 
         {/* Inline Comments */}
-        {result.inline_comments && result.inline_comments.length > 0 && (
+        {result?.inline_comments && result.inline_comments.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -251,7 +269,9 @@ export default function GradeResults() {
                 <div className="space-y-3">
                   {result.inline_comments.map((comment, idx) => (
                     <div key={idx} className="p-4 rounded-lg border-2 border-blue-200 bg-blue-50/50">
-                      <p className="text-xs font-semibold text-blue-700 mb-1">📍 {comment.anchor}</p>
+                      {comment.anchor && (
+                        <p className="text-xs font-semibold text-blue-700 mb-1">📍 {comment.anchor}</p>
+                      )}
                       <p className="text-sm text-slate-700">{comment.comment}</p>
                     </div>
                   ))}
@@ -262,7 +282,7 @@ export default function GradeResults() {
         )}
 
         {/* Academic Integrity Flags */}
-        {result.academic_integrity_flags && result.academic_integrity_flags.length > 0 && (
+        {result?.academic_integrity_flags && result.academic_integrity_flags.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -291,7 +311,8 @@ export default function GradeResults() {
         )}
 
         {/* Competency Mapping & Next Focus */}
-        {(result.competency_mapping || result.recommended_next_focus) && (
+        {((result?.competency_mapping && result.competency_mapping.length > 0) || 
+          (result?.recommended_next_focus && result.recommended_next_focus.length > 0)) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -306,7 +327,7 @@ export default function GradeResults() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {result.competency_mapping && result.competency_mapping.length > 0 && (
+                {result?.competency_mapping && result.competency_mapping.length > 0 && (
                   <div className="mb-6">
                     <h4 className="font-semibold text-slate-900 mb-3">Focus Competencies:</h4>
                     <div className="flex flex-wrap gap-2">
@@ -318,7 +339,7 @@ export default function GradeResults() {
                     </div>
                   </div>
                 )}
-                {result.recommended_next_focus && result.recommended_next_focus.length > 0 && (
+                {result?.recommended_next_focus && result.recommended_next_focus.length > 0 && (
                   <div>
                     <h4 className="font-semibold text-slate-900 mb-3">Recommended Next Steps:</h4>
                     <ul className="space-y-2">
