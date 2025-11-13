@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -5,8 +6,9 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Award, TrendingUp, CheckCircle, Target, Home, TrendingDown, AlertTriangle, BookOpen, FileText } from "lucide-react";
+import { Loader2, Award, TrendingUp, CheckCircle, Target, Home, TrendingDown, AlertTriangle, BookOpen, FileText, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function GradeResults() {
   const navigate = useNavigate();
@@ -33,6 +35,8 @@ export default function GradeResults() {
         navigate(createPageUrl("SmartGrader"));
         return;
       }
+      console.log('Loaded assignment:', assignmentData[0]);
+      console.log('Grading result:', assignmentData[0].grading_result);
       setAssignment(assignmentData[0]);
     } catch (error) {
       console.error("Error loading results:", error);
@@ -50,6 +54,42 @@ export default function GradeResults() {
   }
 
   const result = assignment.grading_result;
+
+  // DEBUG: Show if result is empty
+  if (!result || Object.keys(result).length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
+        <div className="max-w-3xl mx-auto">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Grading data missing.</strong> The assignment was uploaded but no grading feedback was generated. 
+              <br/><br/>
+              <details className="mt-2">
+                <summary className="cursor-pointer font-medium">Debug Info (Click to expand)</summary>
+                <pre className="mt-2 text-xs bg-black/5 p-2 rounded overflow-auto">
+                  {JSON.stringify({
+                    assignment_id: assignment.id,
+                    has_result: !!result,
+                    result_keys: result ? Object.keys(result) : [],
+                    result_content: result
+                  }, null, 2)}
+                </pre>
+              </details>
+            </AlertDescription>
+          </Alert>
+          <div className="mt-6 flex justify-center gap-4">
+            <Button onClick={() => navigate(createPageUrl("SmartGrader"))} size="lg">
+              Try Again
+            </Button>
+            <Button onClick={() => navigate(createPageUrl("Home"))} size="lg" variant="outline">
+              Back to Home
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Safe access to predicted_grade with fallbacks
   const predictedGrade = result?.predicted_grade || {};

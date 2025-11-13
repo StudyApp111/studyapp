@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
         }
 
-        console.log('Starting assignment grading...');
+        console.log('=== GRADING REQUEST START ===');
         console.log('Prompt length:', prompt.length);
         console.log('Has JSON schema:', !!response_json_schema);
 
@@ -49,9 +49,10 @@ Deno.serve(async (req) => {
             requestBody.generationConfig.responseSchema = response_json_schema;
         }
 
-        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=' + apiKey;
+        // Gemini 2.5 Flash
+        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=' + apiKey;
 
-        console.log('Calling Gemini 2.5 Flash API...');
+        console.log('Calling Gemini API...');
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -60,11 +61,13 @@ Deno.serve(async (req) => {
             body: JSON.stringify(requestBody)
         });
 
-        console.log('Gemini API response status:', response.status);
+        console.log('API response status:', response.status);
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Gemini API error:', errorText);
+            console.error('=== API ERROR ===');
+            console.error('Status:', response.status);
+            console.error('Response:', errorText);
             return Response.json({
                 error: 'API request failed',
                 details: errorText,
@@ -73,7 +76,8 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json();
-        console.log('Response received, candidates count:', data.candidates?.length);
+        console.log('Response received');
+        console.log('Candidates:', data.candidates?.length);
 
         if (!data.candidates || data.candidates.length === 0) {
             console.error('No candidates in response');
@@ -84,22 +88,23 @@ Deno.serve(async (req) => {
         }
 
         const generatedText = data.candidates[0].content.parts[0].text;
-        console.log('Generated text length:', generatedText?.length);
-        console.log('First 500 chars of response:', generatedText?.substring(0, 500));
+        console.log('Text length:', generatedText?.length);
 
         if (response_json_schema) {
             try {
                 const parsed = JSON.parse(generatedText);
-                console.log('Successfully parsed JSON response');
-                console.log('Response keys:', Object.keys(parsed));
+                console.log('=== PARSED SUCCESSFULLY ===');
+                console.log('Keys:', Object.keys(parsed));
                 console.log('Has predicted_grade:', !!parsed.predicted_grade);
-                console.log('Predicted grade structure:', parsed.predicted_grade);
+                console.log('Grade band:', parsed.predicted_grade?.band);
+                console.log('Grade %:', parsed.predicted_grade?.percentage);
                 return Response.json({ data: parsed });
             } catch (parseError) {
-                console.error('Failed to parse JSON:', parseError);
-                console.error('Raw text:', generatedText);
+                console.error('=== PARSE ERROR ===');
+                console.error('Error:', parseError.message);
+                console.error('Raw:', generatedText?.substring(0, 500));
                 return Response.json({
-                    error: 'Failed to parse response as JSON',
+                    error: 'Failed to parse response',
                     raw_text: generatedText
                 }, { status: 500 });
             }
@@ -108,7 +113,9 @@ Deno.serve(async (req) => {
         return Response.json({ data: generatedText });
 
     } catch (error) {
-        console.error('Error in gradeAssignment:', error);
+        console.error('=== FATAL ERROR ===');
+        console.error('Message:', error.message);
+        console.error('Stack:', error.stack);
         return Response.json({
             error: error.message,
             stack: error.stack
