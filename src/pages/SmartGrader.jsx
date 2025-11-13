@@ -252,7 +252,8 @@ Produce a teacher-quality grade and feedback package:
    - Briefly note any issues to review (e.g., missing citations for quoted material, dubious references, numerical claims without source). Keep tone neutral; provide evidence-based pointers.
 
 7) Predicted Grade
-   - Provide a percentage grade (0–100%), a short descriptor (e.g., "B range; above average but uneven analysis"), and a 1–2 sentence rationale that ties together the rubric.
+   - Provide a letter grade (e.g., "A+", "B", "C-") and a percentage score (0–100%).
+   - Include a 1–2 sentence rationale that ties together the rubric.
    - If the school/course has explicit grade bands in curriculum_map or notes, align to them; otherwise use common bands (A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60).
 
 8) Competency Mapping & Next Focus
@@ -260,7 +261,7 @@ Produce a teacher-quality grade and feedback package:
    - Suggest 1–2 targeted next mini-lessons or practice activities aligned to curriculum_map.question_formats and high-yield focal points.
 
 [Strict Output Format Always Must ADHERE]
-Return a single JSON object with the fields below (strings unless otherwise noted). Do not include any other text.
+Return a single JSON object with the fields below. Do not include any other text.
 
 {
   "assignment_overview": "<1 short paragraph>",
@@ -282,18 +283,18 @@ Return a single JSON object with the fields below (strings unless otherwise note
     }
   ],
   "academic_integrity_flags": ["<issue 1>", "<issue 2>"],
-  "predicted_grade": {
-    "percentage": "##%",
-    "band": "<A/B/C/D/F or local band>",
-    "rationale": "<1–2 sentences tying to rubric>"
-  },
+  "predicted_grade": "<letter grade e.g., A+, B, C->",
+  "predicted_grade_percentage": "##%",
+  "predicted_grade_rationale": "<1–2 sentences tying to rubric>",
   "competency_mapping": ["<competency 1>", "<competency 2>"],
   "recommended_next_focus": ["<mini-lesson/practice 1>", "<mini-lesson/practice 2>"]
 }
 
 [Global Output Rules]
 - Output only valid JSON per the schema above (no markdown, no commentary).
-- All percentages are strings with a "%" symbol.
+- predicted_grade must be a simple string like "A+", "B", "C-", "D", or "F"
+- predicted_grade_percentage must be a string with a "%" symbol like "85%"
+- All other percentages are strings with a "%" symbol.
 - Rubric weights must sum to "100%".
 - Keep all internal reasoning hidden; provide only the structured results.`;
 
@@ -345,13 +346,16 @@ Return a single JSON object with the fields below (strings unless otherwise note
               items: { type: "string" }
             },
             predicted_grade: {
-              type: "object",
-              properties: {
-                percentage: { type: "string" },
-                band: { type: "string" },
-                rationale: { type: "string" }
-              },
-              required: ["percentage", "band", "rationale"]
+              type: "string",
+              description: "Letter grade only, e.g., A+, B, C-"
+            },
+            predicted_grade_percentage: {
+              type: "string",
+              description: "Percentage with % symbol, e.g., 85%"
+            },
+            predicted_grade_rationale: {
+              type: "string",
+              description: "1-2 sentences explaining the grade"
             },
             competency_mapping: {
               type: "array",
@@ -362,7 +366,7 @@ Return a single JSON object with the fields below (strings unless otherwise note
               items: { type: "string" }
             }
           },
-          required: ["assignment_overview", "rubric", "strengths", "priority_improvements", "predicted_grade", "competency_mapping", "recommended_next_focus"]
+          required: ["assignment_overview", "rubric", "strengths", "priority_improvements", "predicted_grade", "predicted_grade_percentage", "predicted_grade_rationale", "competency_mapping", "recommended_next_focus"]
         }
       });
 
