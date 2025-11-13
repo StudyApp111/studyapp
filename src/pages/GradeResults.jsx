@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -91,11 +90,10 @@ export default function GradeResults() {
     );
   }
 
-  // Safe access to predicted_grade with fallbacks
-  const predictedGrade = result?.predicted_grade || {};
-  const gradeBand = predictedGrade.band || 'N/A';
-  const gradePercentage = predictedGrade.percentage || '0%';
-  const gradeRationale = predictedGrade.rationale || 'Grade analysis in progress.';
+  // NEW FLAT STRUCTURE - Access predicted_grade directly as strings
+  const gradeBand = result.predicted_grade || 'N/A';
+  const gradePercentage = result.predicted_grade_percentage || '0%';
+  const gradeRationale = result.predicted_grade_rationale || 'Grade analysis in progress.';
 
   const getGradeColor = (band) => {
     if (!band || band === 'N/A') return 'from-slate-500 to-slate-600';
