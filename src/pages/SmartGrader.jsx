@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -81,7 +80,6 @@ export default function SmartGrader() {
 
       const learningProfile = profile[0] || {};
 
-      // Check for existing curriculum map
       setProcessingStep("Analyzing curriculum standards...");
       const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
         course_name: courseName.trim(),
@@ -181,7 +179,6 @@ Output Format: JSON object matching the specified schema`;
 
         curriculumMap = generatedMap;
 
-        // Save for future use
         await base44.entities.CurriculumMap.create({
           course_name: courseName.trim(),
           school: learningProfile.school || "",
@@ -193,7 +190,7 @@ Output Format: JSON object matching the specified schema`;
 
       console.log("Curriculum map ready");
 
-      setProcessingStep("Grading your assignment with expert AI feedback...");
+      setProcessingStep("Grading your assignment...");
 
       const gradingPrompt = `[Role Definition]
 You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
@@ -300,33 +297,25 @@ Return a single JSON object with the fields below (strings unless otherwise note
 - Rubric weights must sum to "100%".
 - Keep all internal reasoning hidden; provide only the structured results.`;
 
-      console.log("Calling grading function with Gemini 2.0 Flash...");
+      console.log("Submitting to grading function...");
 
       const gradingResponse = await base44.functions.invoke('gradeAssignment', {
         prompt: gradingPrompt,
         response_json_schema: {
           type: "object",
           properties: {
-            assignment_overview: {
-              type: "string",
-              description: "One paragraph summary"
+            assignment_overview: { 
+              type: "string"
             },
             rubric: {
               type: "array",
-              description: "List of 3-6 grading criteria",
               items: {
                 type: "object",
                 properties: {
                   criterion: { type: "string" },
                   description: { type: "string" },
-                  weight_percentage: {
-                    type: "string",
-                    description: "Weight as string with % symbol, e.g. '25%'"
-                  },
-                  score_percentage: {
-                    type: "string",
-                    description: "Score as string with % symbol, e.g. '80%'"
-                  },
+                  weight_percentage: { type: "string" },
+                  score_percentage: { type: "string" },
                   justification: { type: "string" }
                 },
                 required: ["criterion", "description", "weight_percentage", "score_percentage", "justification"]
@@ -334,24 +323,18 @@ Return a single JSON object with the fields below (strings unless otherwise note
             },
             strengths: {
               type: "array",
-              description: "3-5 specific strengths",
               items: { type: "string" }
             },
             priority_improvements: {
               type: "array",
-              description: "4-6 actionable improvements",
               items: { type: "string" }
             },
             inline_comments: {
               type: "array",
-              description: "Up to 5 specific comments",
               items: {
                 type: "object",
                 properties: {
-                  anchor: {
-                    type: "string",
-                    description: "Reference to section/page/line"
-                  },
+                  anchor: { type: "string" },
                   comment: { type: "string" }
                 },
                 required: ["anchor", "comment"]
@@ -359,36 +342,23 @@ Return a single JSON object with the fields below (strings unless otherwise note
             },
             academic_integrity_flags: {
               type: "array",
-              description: "List of integrity concerns if any",
               items: { type: "string" }
             },
             predicted_grade: {
               type: "object",
-              description: "Final grade prediction",
               properties: {
-                percentage: {
-                  type: "string",
-                  description: "Percentage with % symbol, e.g. '85%'"
-                },
-                band: {
-                  type: "string",
-                  description: "Letter grade: A+, A, A-, B+, B, B-, C+, C, C-, D, F"
-                },
-                rationale: {
-                  type: "string",
-                  description: "1-2 sentences explaining the grade"
-                }
+                percentage: { type: "string" },
+                band: { type: "string" },
+                rationale: { type: "string" }
               },
               required: ["percentage", "band", "rationale"]
             },
             competency_mapping: {
               type: "array",
-              description: "2-4 competencies needing focus",
               items: { type: "string" }
             },
             recommended_next_focus: {
               type: "array",
-              description: "1-2 next learning activities",
               items: { type: "string" }
             }
           },
@@ -396,7 +366,7 @@ Return a single JSON object with the fields below (strings unless otherwise note
         }
       });
 
-      console.log("Grading response received:", gradingResponse);
+      console.log("Grading response received");
 
       if (!gradingResponse || !gradingResponse.data) {
         throw new Error("Invalid response from grading service");
@@ -408,7 +378,7 @@ Return a single JSON object with the fields below (strings unless otherwise note
       }
 
       const gradingResult = gradingResponse.data;
-      console.log("Grading result structure:", Object.keys(gradingResult));
+      console.log("Grading complete, keys:", Object.keys(gradingResult));
 
       setProcessingStep("Saving results...");
 
@@ -421,8 +391,6 @@ Return a single JSON object with the fields below (strings unless otherwise note
         grading_result: gradingResult,
         completed: true
       });
-
-      console.log("Successfully saved graded assignment");
 
       navigate(createPageUrl("GradeResults") + `?assignmentId=${gradedAssignment.id}`);
     } catch (err) {
