@@ -192,111 +192,57 @@ Output Format: JSON object matching the specified schema`;
 
       setProcessingStep("Grading your assignment...");
 
-      const gradingPrompt = `[Role Definition]
-You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
+      const gradingPrompt = `You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
 
-[Input Educational Context]
+Input Educational Context:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${courseName}
-School (context): ${learningProfile.school || "N/A"}
-City/Region (context): ${learningProfile.city || "N/A"}
+School: ${learningProfile.school || "N/A"}
+City/Region: ${learningProfile.city || "N/A"}
 
-Detailed Curriculum Profile (for alignment: competencies, weightings, question formats, misconceptions):
+Detailed Curriculum Profile:
 ${JSON.stringify(curriculumMap, null, 2)}
 
 Assignment Metadata:
 Assignment Name/Type: ${assignmentTitle}
-Assignment Text (OCR'd or user-uploaded; may include mixed formatting):
+Assignment Text (OCR'd or user-uploaded):
 ${extractedContent}
 
-[Grounding & Reasoning Policy (Internal Only, Do Not Output)]
-- Ground factual content, topical coverage, and examples primarily in the uploaded assignment text (OCR) and any user-provided notes. Use curriculum_map to maintain curricular alignment, competency mapping, and appropriate assessment style/rigor.
-- Determine assignment type from the metadata and text: e.g., Essay (argument/analysis), Short Answers, Problem Set (math/econ/accounting), Lab/Report (science), Case/Policy Analysis (business/econ/law), Code/Algorithmic (CS), Presentation/Slides (if text provided), Mixed.
-- Select or infer a rubric aligned to the course and assignment type. Weight criteria in line with curriculum_map.competency_weightings when relevant; otherwise use a standard, transparent breakdown for the assignment type.
-- For quantitative/technical work (math/science/econ/accounting/CS): verify method, steps, correctness, units, assumptions, edge cases, and interpretation. For essays/humanities/social sciences: evaluate thesis clarity, text/primary-source use, argumentation, conceptual accuracy, structure, style, citation integrity, and originality of insight.
-- If the assignment includes sources or citations, check relevance, accuracy of claims, and basic academic integrity signals (fabricated citations, mismatched quotes, impossible page numbers). Do not accuse plagiarism; flag "integrity concerns" with neutral phrasing and evidence to review.
-- Calibrate predicted grade to the school/course norms when available; otherwise use a clear percentage scale with descriptors.
-- Keep all chain-of-thought internal. Do not output hidden notes or the rubric selection logic—only final results per the output format.
+CRITICAL INSTRUCTIONS:
+1. Ground factual content and examples in the uploaded assignment text and curriculum map
+2. Determine assignment type (Essay, Short Answers, Problem Set, Lab Report, etc.)
+3. Select appropriate rubric with 3-6 criteria based on assignment type
+4. For quantitative work: verify method, steps, correctness, units, assumptions
+5. For essays: evaluate thesis, evidence, argumentation, structure, style, citations
+6. Check for academic integrity issues (missing citations, dubious references)
+7. Calibrate predicted grade to course norms
 
-[Rubric Construction (Internal Only, Do Not Output)]
-Build an appropriate rubric with 3–6 criteria based on assignment type:
-- Essay/Analysis: Thesis/Claim & Relevance; Evidence/Use of Sources; Depth of Analysis & Counter-argument; Organization & Coherence; Style, Grammar, Citations.
-- Problem Set/Quantitative (Math/Econ/Accounting/Finance/Stats): Method/Setup; Correctness of Workings; Accuracy of Results; Assumptions/Units/Interpretation; Clarity/Organization.
-- Science Lab/Report: Research Question/Hypothesis; Methods/Design; Data/Calculations; Analysis/Discussion; Conclusion/Limits; Formatting/Citations.
-- CS/Engineering: Problem Understanding; Algorithm/Approach; Correctness/Complexity; Code Quality/Clarity; Testing/Edge Cases; Documentation.
-- Social Sciences/Policy/Case: Framework Selection; Evidence/Reasoning; Comparative/Counterfactual Analysis; Policy/Implications; Clarity/Structure; Citations.
-- Languages: Comprehension/Content; Vocabulary/Grammar/Syntax; Task Fulfillment; Organization/Coherence; Register/Style.
+Task - Grade the assignment and provide:
 
-Map rubric criteria to curriculum_map.core_competencies where relevant; reflect emphasis using curriculum_map.competency_weightings when applicable.
+1. Assignment Overview: One concise paragraph summarizing what the assignment attempted, its main task(s), and how well it aligned to ${courseName} expectations.
 
-[Task – Grading & Feedback Generation]
-Produce a teacher-quality grade and feedback package:
-1) Assignment Overview
-   - One concise paragraph summarizing what the assignment attempted, its main task(s), and how well it aligned to ${courseName} expectations.
+2. Rubric & Scores: 
+   - List 3-6 criteria with short descriptions
+   - Assign each criterion a percentage weight (sum = 100%)
+   - Provide a score (0-100%) for each criterion with 1-2 sentence justification
 
-2) Rubric & Scores
-   - List 3–6 criteria with short descriptions.
-   - Assign each criterion a percentage weight (sum = 100%).
-   - Provide a score (0–100%) for each criterion with a 1–2 sentence justification tied to the student's actual work.
+3. Strengths: 3-5 bullet points highlighting what was done well
 
-3) Strengths & High-Value Feedback
-   - 3–5 bullet points highlighting what was done well, anchored to passages, steps, or evidence from the submission.
+4. Priority Improvements: 4-6 bullet points with specific, actionable fixes
 
-4) Priority Improvements (Actionable Next Steps)
-   - 4–6 bullet points with specific, teachable fixes (e.g., "Re-derive step 3 with the normal approximation; show continuity correction," "Integrate direct quotation from primary text and analyze author's term X," "Balance sheet journal entry reversals—see item 2—should net to …").
+5. Inline Comments: Up to 5 pinpoint comments referencing specific sections
 
-5) Inline or Section-Targeted Comments (Optional if feasible)
-   - Up to 5 pinpoint comments referencing a line/paragraph/step (approximate anchors are fine for OCR), each with a brief correction or suggestion.
+6. Academic Integrity: Note any issues to review (missing citations, etc.) or use empty array if none
 
-6) Academic Integrity & Source Checks (If Applicable)
-   - Briefly note any issues to review (e.g., missing citations for quoted material, dubious references, numerical claims without source). Keep tone neutral; provide evidence-based pointers.
+7. Predicted Grade: 
+   - Letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D, F)
+   - Percentage score (0-100%)
+   - 1-2 sentence rationale
 
-7) Predicted Grade
-   - Provide a letter grade (e.g., "A+", "B", "C-") and a percentage score (0–100%).
-   - Include a 1–2 sentence rationale that ties together the rubric.
-   - If the school/course has explicit grade bands in curriculum_map or notes, align to them; otherwise use common bands (A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60).
+8. Competency Mapping: 2-4 curriculum competencies most associated with weaknesses
+9. Recommended Next Focus: 1-2 targeted practice activities
 
-8) Competency Mapping & Next Focus
-   - List 2–4 curriculum_map.core_competencies most associated with weaknesses observed, in priority order.
-   - Suggest 1–2 targeted next mini-lessons or practice activities aligned to curriculum_map.question_formats and high-yield focal points.
-
-[Strict Output Format Always Must ADHERE]
-Return a single JSON object with the fields below. Do not include any other text.
-
-{
-  "assignment_overview": "<1 short paragraph>",
-  "rubric": [
-    {
-      "criterion": "<name>",
-      "description": "<what you evaluated>",
-      "weight_percentage": "##%",
-      "score_percentage": "##%",
-      "justification": "<1–2 sentences anchored in the work>"
-    }
-  ],
-  "strengths": ["<bullet 1>", "<bullet 2>", "<bullet 3>"],
-  "priority_improvements": ["<bullet 1>", "<bullet 2>", "<bullet 3>", "<bullet 4>"],
-  "inline_comments": [
-    {
-      "anchor": "<page/line/section reference if possible>",
-      "comment": "<brief correction or suggestion>"
-    }
-  ],
-  "academic_integrity_flags": ["<issue 1>", "<issue 2>"],
-  "predicted_grade": "<letter grade e.g., A+, B, C->",
-  "predicted_grade_percentage": "##%",
-  "predicted_grade_rationale": "<1–2 sentences tying to rubric>",
-  "competency_mapping": ["<competency 1>", "<competency 2>"],
-  "recommended_next_focus": ["<mini-lesson/practice 1>", "<mini-lesson/practice 2>"]
-}
-
-[Global Output Rules]
-- Output only valid JSON per the schema above (no markdown, no commentary).
-- predicted_grade must be a simple string like "A+", "B", "C-", "D", or "F"
-- predicted_grade_percentage must be a string with a "%" symbol like "85%"
-- All other percentages are strings with a "%" symbol.
-- Rubric weights must sum to "100%".
-- Keep all internal reasoning hidden; provide only the structured results.`;
+IMPORTANT: Do NOT return placeholder text like "<1 short paragraph>" or "##%". Fill in ALL fields with actual grading analysis based on the student's work.`;
 
       console.log("Submitting to grading function...");
 
@@ -306,64 +252,91 @@ Return a single JSON object with the fields below. Do not include any other text
           type: "object",
           properties: {
             assignment_overview: { 
-              type: "string"
+              type: "string",
+              description: "One paragraph summarizing the assignment and performance"
             },
             rubric: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
-                  criterion: { type: "string" },
-                  description: { type: "string" },
-                  weight_percentage: { type: "string" },
-                  score_percentage: { type: "string" },
-                  justification: { type: "string" }
+                  criterion: { 
+                    type: "string",
+                    description: "Name of the criterion being evaluated"
+                  },
+                  description: { 
+                    type: "string",
+                    description: "What was evaluated in this criterion"
+                  },
+                  weight_percentage: { 
+                    type: "string",
+                    description: "Weight as percentage string like 25%"
+                  },
+                  score_percentage: { 
+                    type: "string",
+                    description: "Score as percentage string like 85%"
+                  },
+                  justification: { 
+                    type: "string",
+                    description: "1-2 sentences explaining the score"
+                  }
                 },
                 required: ["criterion", "description", "weight_percentage", "score_percentage", "justification"]
               }
             },
             strengths: {
               type: "array",
-              items: { type: "string" }
+              items: { type: "string" },
+              description: "List of 3-5 specific strengths observed"
             },
             priority_improvements: {
               type: "array",
-              items: { type: "string" }
+              items: { type: "string" },
+              description: "List of 4-6 actionable improvements"
             },
             inline_comments: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
-                  anchor: { type: "string" },
-                  comment: { type: "string" }
+                  anchor: { 
+                    type: "string",
+                    description: "Reference to section/page/line"
+                  },
+                  comment: { 
+                    type: "string",
+                    description: "Brief correction or suggestion"
+                  }
                 },
                 required: ["anchor", "comment"]
               }
             },
             academic_integrity_flags: {
               type: "array",
-              items: { type: "string" }
+              items: { type: "string" },
+              description: "List of integrity issues or empty array if none"
             },
             predicted_grade: {
               type: "string",
-              description: "Letter grade only, e.g., A+, B, C-"
+              description: "Letter grade only: A+, A, A-, B+, B, B-, C+, C, C-, D, or F"
             },
             predicted_grade_percentage: {
               type: "string",
-              description: "Percentage with % symbol, e.g., 85%"
+              description: "Numeric percentage with % symbol like 85%"
             },
             predicted_grade_rationale: {
               type: "string",
-              description: "1-2 sentences explaining the grade"
+              description: "1-2 sentences explaining the final grade"
             },
             competency_mapping: {
               type: "array",
-              items: { type: "string" }
+              items: { type: "string" },
+              description: "List of 2-4 competencies to focus on"
             },
             recommended_next_focus: {
               type: "array",
-              items: { type: "string" }
+              items: { type: "string" },
+              description: "List of 1-2 practice activities or mini-lessons"
             }
           },
           required: ["assignment_overview", "rubric", "strengths", "priority_improvements", "predicted_grade", "predicted_grade_percentage", "predicted_grade_rationale", "competency_mapping", "recommended_next_focus"]
