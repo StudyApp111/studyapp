@@ -678,7 +678,7 @@ Output Format: Valid JSON object matching the schema.`;
         } : null
       }));
 
-      const feedbackPrompt = `Context: You are an experienced teacher grading Worksheet ${worksheet.worksheet_number} of 6 for ${lesson.course_name}.
+      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map and the student’s 10-question worksheet performance to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, and a 5-session plan. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
 
 Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -691,110 +691,71 @@ ${JSON.stringify(lesson.curriculum_map, null, 2)}
 Worksheet Performance:
 ${JSON.stringify(worksheetPerformanceData, null, 2)}
 
-[Role]
-You are an experienced teacher and assessment specialist for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum profile and the student’s 10-question worksheet performance to produce an accurate predicted exam grade plus concise, targeted feedback and next steps. Keep all internal reasoning hidden; output only the required fields (downstream schema handles formatting).
 
-[Inputs]
-Student’s Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${lesson.course_name}
-Worksheet Number: ${worksheet.worksheet_number} of 6
+[Assumptions & Fields]
+Each worksheet item may include:
+question_number, question_type, difficulty_index, question_text,
+options, student_answer, correct_answer, explanation,
+assessed_competencies[] (names), targeted_misconception (string),
+is_correct (boolean),
+ai_grading { score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[] }.
+Ignore missing fields; do not invent values.
 
-Curriculum Profile:
-${JSON.stringify(lesson.curriculum_map, null, 2)}
+[Part 1 — Performance Analysis & Prediction]
+Edge Handling
+- If total correct = 0/10: skip calculations and output “Not Calculable” for predicted_exam_score_percentage with a foundation-rebuild rationale.
+- If total correct = 10/10: still compute; expect a top score (~95–100).
 
-Worksheet Performance:
-${JSON.stringify(worksheetPerformanceData, null, 2)}
-
-[Assumptions & Fallbacks]
-- Each worksheet item contains: question_number, question_type, difficulty_index, assessed_competencies (array of names), is_correct (boolean).
-- If assessed_competencies is missing/empty for an item, treat it as assessing the most closely related competency inferred from the question text or leave it unassigned (do not fabricate). Prefer unassigned if uncertain.
-- Competency weights are in lesson.curriculum_map.competency_weightings with "weight_percentage" as a string (e.g., "30%"). Parse to numeric.
-- question_formats.frequency may be a percent string (e.g., "30%") or a label (“High”/“Medium”/“Low”). Map labels to 40% / 20% / 10% respectively.
-
-[Part 1 — Performance Analysis & Grade Prediction]
-Edge Handling:
-- If total correct = 0/10: skip calculations; go to Part 2 (0/10 message).
-- If total correct = 10/10: still compute, but expect a high prediction.
-
-1) Per-Item Mastery Score (base then difficulty-adjusted)
-- Base: 0.90 if is_correct = true; else 0.20.
-- Difficulty multiplier by difficulty_index:
-  Correct:
-    - "High Challenge Exam-Level": ×1.05 (cap 0.98)
-    - "Challenging Exam-Level": ×1.02 (cap 0.96)
-    - "Moderate Exam-Level": ×1.01 (cap 0.92)
-  Incorrect:
-    - "High Challenge Exam-Level": ×0.90 (floor 0.10)
-    - "Challenging Exam-Level": ×0.80 (floor 0.08)
-    - "Moderate Exam-Level": ×0.70 (floor 0.05)
-- Clamp each item score to [0.05, 0.98].
-
-(Optional) Behavioral Micro-Adjustments (only if robust data present, e.g., time_taken, attempts, revisions):
-- Apply at most ±0.04 per item in total (e.g., very fast correct on High Challenge +0.03; very slow correct on Moderate −0.02; multiple revisions to wrong −0.03).
-- If behavior data is missing/sparse, skip entirely.
+1) Per-Item Mastery (blend binary, partial credit, difficulty)
+- Base = 0.90 if is_correct else 0.20.
+- If ai_grading exists:
+  partial = clamp(ai_grading.score_out_of_10 / 10, 0, 1);
+  base = 0.75*partial + 0.25*base.
+- Difficulty multiplier:
+  Correct: High Challenge ×1.05 (cap 0.98), Challenging ×1.02 (cap 0.96), Moderate ×1.01 (cap 0.92)
+  Incorrect: High Challenge ×0.90 (floor 0.10), Challenging ×0.80 (floor 0.08), Moderate ×0.70 (floor 0.05)
+- Misconception penalty (if targeted_misconception && !is_correct): −0.05/−0.07/−0.09 for Moderate/Challenging/High Challenge.
+- Explanation alignment (if ai_grading && verdict!="Correct" && explanation): −0.03.
+- Keypoints bonus (if ai_grading && keypoints_hit length ≥2): +0.02.
+- Clamp final item score ∈ [0.05, 0.98].
 
 2) Competency Mastery
 - For each competency in lesson.curriculum_map.core_competencies:
-  - Gather all items whose assessed_competencies include that competency name.
-  - MasteryScore(competency) = average of those items’ adjusted scores.
-  - If no items targeted a competency:
-    - Set MasteryScore to 0.50 (neutral) and note “not assessed in this worksheet” in the rationale.
+  MasteryScore = mean of scores from items whose assessed_competencies include that competency name.
+  If none: set 0.50 (neutral) and note “not assessed in this worksheet” for rationale.
 
-3) Weighted Aggregate (Curriculum-Aligned)
-- Parse lesson.curriculum_map.competency_weightings into numeric weights that sum to 1.
-- PreliminaryAggregate = Σ(MasteryScore(competency) × weight(competency)) × 100.
-  (MasteryScores are 0–1; result becomes 0–100.)
+3) Weighted Aggregate (curriculum-aligned)
+- Parse lesson.curriculum_map.competency_weightings ("30%") → 0.30; normalize to sum = 1.
+- PreliminaryAggregate = Σ(MasteryScore * weight) * 100.
 
-4) Question-Type Style Adjustment (Exam Fidelity)
-- For each question_type present in the worksheet:
-  - AvgTypeScore = average adjusted item scores for that type (0–1).
-  - ExamTypeFrequency = percent from lesson.curriculum_map.question_formats (parse % string; or map High=40, Medium=20, Low=10).
-- If AvgTypeScore < 0.40 on any type with ExamTypeFrequency ≥ 30% → apply −3 to −6 points total (severity scales with frequency gap and number of such types).
-- If AvgTypeScore ≥ 0.80 on any type with ExamTypeFrequency ≥ 30% → apply +0 to +2 points total.
+4) Question-Type Adjustment (exam fidelity)
+- For each question_type:
+  AvgTypeScore = mean score for that type.
+  ExamTypeFrequency = from curriculum_map.question_formats (parse %; map High=40, Medium=20, Low=10 if non-percent).
+- If AvgTypeScore < 0.40 and ExamTypeFrequency ≥ 30% → apply −3 to −6 total.
+- If AvgTypeScore ≥ 0.80 and ExamTypeFrequency ≥ 30% → apply +0 to +2 total.
 - Cap total style modifier to [−8, +4].
 
-5) Predicted Exam Score
-- PredictedExamScorePercentage = round( PreliminaryAggregate + StyleModifier ).
-- Clamp to [0, 100].
+5) Coverage Reliability Adjustment
+- For any competency with weight ≥ 25% and <2 assessed items → −2 each (max −4).
+- If ≥ 80% of weighted competencies were assessed → +1 to +2.
+- Combine with style modifier; cap overall modifier to [−8, +4].
 
-[Part 2 — Output Mapping (Strict to JSON Schema)]
-Populate ONLY the following fields and types:
-
-- feedback_session_title (string)
-  • Title for this feedback (e.g., "Worksheet ${worksheet.worksheet_number} Performance & Grade Prediction").
-
-- predicted_exam_score_percentage (string)
-  • Use the computed score from Part 1 as a whole-number percentage with "%".
-  • Edge case 0/10: "Not Calculable".
-
-- prediction_calculation_rationale (string)
-  • 1–3 sentences referencing difficulty-adjusted item performance, weighted competencies, and high-frequency question types.
-
-- overall_performance_summary_text (string)
-  • 1–2 empathetic sentences summarizing strengths and next focus.
-
-- identified_strengths_list (array of strings)
-  • 2–3 bullets; each a single string naming strong competencies and/or well-handled high-frequency question types.
-
-- key_areas_for_improvement_list (array of strings)
-  • 2–3 bullets; each a single string naming weak competencies and/or problematic high-frequency question types.
-
-- suggested_future_sessions_plan (array of 5 objects)
-  • Each object MUST include:
-    – session_number (integer) 
-    – session_name (string)
-    – session_focus_description (string)
-  • Recommended sequence:
-    1. "Foundations First: [Highest-weight weak competency]"
-    2. "Address Next Gap: [Competency/Skill]"
-    3. "Exam Question Strategy: [Problematic high-frequency question_type]"
-    4. "Mixed Review: [Cross-competency integration]"
-    5. "Mock Section & Feedback"
+6) Final Prediction
+- PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then convert to string with “%”.
+- Exceptions: if 0/10 → "Not Calculable".
 
 [Global Output Rules]
-- Output ONLY a valid JSON object matching the provided schema.
-- All percentages MUST be strings with a "%" sign, except the 0/10 case which must be "Not Calculable".
-- Do not add extra fields. Do not include explanations outside the JSON.
+- Output ONLY a single JSON object that matches the provided response_json_schema.
+- Field guidance for content (names exactly as schema):
+  • feedback_session_title: "Worksheet ${worksheet.worksheet_number} Performance & Grade Prediction"
+  • predicted_exam_score_percentage: string with "%", or "Not Calculable" for 0/10
+  • prediction_calculation_rationale: 1–3 sentences referencing difficulty-adjusted items, weighted competencies, and high-frequency question types (and any coverage limits)
+  • overall_performance_summary_text: 1–2 empathetic sentences (strength trend + next focus)
+  • identified_strengths_list: 2–3 strings naming strong competencies and/or well-handled high-frequency types
+  • key_areas_for_improvement_list: 2–3 strings naming weak competencies/misconceptions and/or problematic high-frequency types
+  • suggested_future_sessions_plan: 5 objects with session_number (1..5), session_name, session_focus_description, aligned to the weaknesses and exam formats identified
+- No extra fields. No explanations outside the JSON. All percentages are strings with “%”.
 
 
 Output Format: Valid JSON matching the required schema.`;
