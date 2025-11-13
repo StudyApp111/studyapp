@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 
 Deno.serve(async (req) => {
     try {
@@ -25,17 +25,12 @@ Deno.serve(async (req) => {
         console.log('Prompt length:', prompt.length);
         console.log('Has JSON schema:', !!response_json_schema);
 
-        let requestBody = {
-            contents: [
-                {
-                    role: "user",
-                    parts: [
-                        {
-                            text: prompt
-                        }
-                    ]
-                }
-            ],
+        const requestBody = {
+            contents: [{
+                parts: [{
+                    text: prompt
+                }]
+            }],
             generationConfig: {
                 temperature: 0.3,
                 topP: 0.95,
@@ -50,9 +45,9 @@ Deno.serve(async (req) => {
         }
 
         // Gemini 2.5 Flash
-        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=' + apiKey;
+        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey;
 
-        console.log('Calling Gemini API...');
+        console.log('Calling Gemini 2.5 Flash API...');
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -98,7 +93,7 @@ Deno.serve(async (req) => {
                 console.log('Has predicted_grade:', !!parsed.predicted_grade);
                 console.log('Grade band:', parsed.predicted_grade?.band);
                 console.log('Grade %:', parsed.predicted_grade?.percentage);
-                return Response.json({ data: parsed });
+                return Response.json(parsed);
             } catch (parseError) {
                 console.error('=== PARSE ERROR ===');
                 console.error('Error:', parseError.message);
