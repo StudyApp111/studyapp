@@ -209,7 +209,7 @@ Assignment Content:
 ${extractedContent}
 
 [Grounding & Reasoning Policy (Internal Only, Do Not Output)]
-- Ground factual content, topical coverage, and examples primarily in the uploaded assignment text (OCR) and any user-provided notes. Use lessonData.curriculum_map to maintain curricular alignment, competency mapping, and appropriate assessment style/rigor.
+- Ground factual content, topical coverage, and examples primarily in the uploaded assignment text (OCR) and any user-provided notes. Use ${JSON.stringify(curriculumMap, null, 2)} to maintain curricular alignment, competency mapping, and appropriate assessment style/rigor.
 - Determine assignment type from the metadata and text: e.g., Essay (argument/analysis), Short Answers, Problem Set (math/econ/accounting), Lab/Report (science), Case/Policy Analysis (business/econ/law), Code/Algorithmic (CS), Presentation/Slides (if text provided), Mixed.
 - Select or infer a rubric aligned to the course and assignment type. Weight criteria in line with curriculum_map.competency_weightings when relevant; otherwise use a standard, transparent breakdown for the assignment type.
 - For quantitative/technical work (math/science/econ/accounting/CS): verify method, steps, correctness, units, assumptions, edge cases, and interpretation. For essays/humanities/social sciences: evaluate thesis clarity, text/primary-source use, argumentation, conceptual accuracy, structure, style, citation integrity, and originality of insight.
@@ -231,7 +231,7 @@ Map rubric criteria to curriculum_map.core_competencies where relevant; reflect 
 [Task – Grading & Feedback Generation]
 Produce a teacher-quality grade and feedback package:
 1) Assignment Overview
-   - One concise paragraph summarizing what the assignment attempted, its main task(s), and how well it aligned to ${lessonData.course_name} expectations.
+   - One concise paragraph summarizing what the assignment attempted, its main task(s), and how well it aligned to ${JSON.stringify(curriculumMap, null, 2)} expectations.
 
 2) Rubric & Scores
    - List 3–6 criteria with short descriptions.
