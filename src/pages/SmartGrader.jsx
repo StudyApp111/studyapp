@@ -53,17 +53,25 @@ export default function SmartGrader() {
 
       setProcessingStep("Uploading your assignment...");
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      console.log("File uploaded:", file_url);
 
       setProcessingStep("Extracting content from your assignment...");
       const extractResponse = await base44.functions.invoke('extractDocumentContent', {
         file_url: file_url
       });
 
+      console.log("Extract response:", extractResponse);
+
       if (extractResponse.data.error) {
         throw new Error(extractResponse.data.error);
       }
 
       const extractedContent = extractResponse.data.extracted_content;
+      console.log("Extracted content length:", extractedContent?.length);
+
+      if (!extractedContent || extractedContent.length === 0) {
+        throw new Error("Failed to extract content from document. The file might be empty or corrupted.");
+      }
 
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({
@@ -98,7 +106,7 @@ Input Context:
 Student Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${courseName}
 School Context: ${learningProfile.school || "N/A"}
-Assignment Content: ${extractedContent.substring(0, 5000)}
+Assignment Content (first 3000 chars): ${extractedContent.substring(0, 3000)}
 
 Task: Generate a detailed curriculum profile including:
 - Core competencies and learning outcomes (6-10)
@@ -184,46 +192,57 @@ Output Format: JSON object matching the specified schema`;
         });
       }
 
+      console.log("Curriculum map ready:", curriculumMap);
+
       setProcessingStep("Grading your assignment with expert AI feedback...");
 
-      const gradingPrompt = `[Role Definition]
-You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
+      const gradingPrompt = `You are a veteran teacher grading an assignment for ${courseName} at ${learningProfile.school || "the school"}.
 
-[Input Educational Context]
-Student's Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${courseName}
-School (context): ${learningProfile.school || "N/A"}
-City/Region (context): ${learningProfile.city || "N/A"}
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course: ${courseName}
+School: ${learningProfile.school || "N/A"}
+Region: ${learningProfile.city || "N/A"}
 
-Detailed Curriculum Profile (for alignment: competencies, weightings, question formats, misconceptions):
+Curriculum Standards:
 ${JSON.stringify(curriculumMap, null, 2)}
 
-Assignment Metadata:
-Assignment Name/Type: ${assignmentTitle}
-Assignment Text (OCR'd or user-uploaded; may include mixed formatting):
+Assignment Title: ${assignmentTitle}
+Student's Work:
 ${extractedContent}
 
-[Task – Grading & Feedback Generation]
-Produce a teacher-quality grade and feedback package:
-1) Assignment Overview - One concise paragraph summarizing what the assignment attempted, its main task(s), and how well it aligned to ${courseName} expectations.
+Your Task: Grade this assignment as an expert teacher would. Provide:
 
-2) Rubric & Scores - List 3–6 criteria with short descriptions. Assign each criterion a percentage weight (sum = 100%). Provide a score (0–100%) for each criterion with a 1–2 sentence justification tied to the student's actual work.
+1. Assignment Overview - One paragraph summary of what the student attempted and how it aligns with course expectations.
 
-3) Strengths & High-Value Feedback - 3–5 bullet points highlighting what was done well, anchored to passages, steps, or evidence from the submission.
+2. Rubric & Scores - Create 3-6 criteria, each with:
+   - Criterion name and description
+   - Weight percentage (must sum to 100%)
+   - Score percentage (0-100%)
+   - 1-2 sentence justification
 
-4) Priority Improvements (Actionable Next Steps) - 4–6 bullet points with specific, teachable fixes.
+3. Strengths - List 3-5 specific things done well with evidence from the work.
 
-5) Inline or Section-Targeted Comments (Optional if feasible) - Up to 5 pinpoint comments referencing a line/paragraph/step, each with a brief correction or suggestion.
+4. Priority Improvements - List 4-6 specific, actionable next steps for improvement.
 
-6) Academic Integrity & Source Checks (If Applicable) - Briefly note any issues to review. Keep tone neutral; provide evidence-based pointers.
+5. Inline Comments (optional) - Up to 5 specific comments referencing sections of the work.
 
-7) Predicted Grade - Provide a percentage grade (0–100%), a short descriptor, and a 1–2 sentence rationale that ties together the rubric. If the school/course has explicit grade bands, align to them; otherwise use common bands (A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60).
+6. Academic Integrity - Note any citation or integrity concerns (if applicable).
 
-8) Competency Mapping & Next Focus - List 2–4 curriculum core_competencies most associated with weaknesses observed, in priority order. Suggest 1–2 targeted next mini-lessons or practice activities.
+7. Predicted Grade:
+   - Percentage (0-100%)
+   - Letter grade band (A/B/C/D/F)
+   - Brief rationale tying to the rubric
 
-Be thorough, constructive, and specific in your feedback. Output only valid JSON per the schema.`;
+8. Competency Mapping - List 2-4 competencies from the curriculum that need focus.
 
-      const { data: gradingResult } = await base44.functions.invoke('gradeAssignment', {
+9. Recommended Next Focus - Suggest 1-2 mini-lessons or practice activities.
+
+Output only valid JSON matching the schema. Be thorough, constructive, and specific.`;
+
+      console.log("Calling grading function...");
+      console.log("Prompt length:", gradingPrompt.length);
+
+      const gradingResponse = await base44.functions.invoke('gradeAssignment', {
         prompt: gradingPrompt,
         response_json_schema: {
           type: "object",
@@ -240,7 +259,7 @@ Be thorough, constructive, and specific in your feedback. Output only valid JSON
                   score_percentage: { type: "string" },
                   justification: { type: "string" }
                 },
-                required: ["criterion", "description", "weight_percentage", "score_percentage", "justification"]
+                required: ["criterion", "weight_percentage", "score_percentage"]
               }
             },
             strengths: {
@@ -287,6 +306,20 @@ Be thorough, constructive, and specific in your feedback. Output only valid JSON
         }
       });
 
+      console.log("Grading response:", gradingResponse);
+
+      if (!gradingResponse || !gradingResponse.data) {
+        throw new Error("Invalid response from grading service");
+      }
+
+      if (gradingResponse.data.error) {
+        console.error("Grading error:", gradingResponse.data);
+        throw new Error(gradingResponse.data.error || "Failed to grade assignment");
+      }
+
+      const gradingResult = gradingResponse.data;
+      console.log("Grading result:", gradingResult);
+
       setProcessingStep("Saving results...");
 
       const gradedAssignment = await base44.entities.GradedAssignment.create({
@@ -298,6 +331,8 @@ Be thorough, constructive, and specific in your feedback. Output only valid JSON
         grading_result: gradingResult,
         completed: true
       });
+
+      console.log("Saved graded assignment:", gradedAssignment);
 
       navigate(createPageUrl("GradeResults") + `?assignmentId=${gradedAssignment.id}`);
     } catch (err) {
