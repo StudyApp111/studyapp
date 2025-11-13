@@ -192,121 +192,181 @@ Output Format: JSON object matching the specified schema`;
         });
       }
 
-      console.log("Curriculum map ready:", curriculumMap);
+      console.log("Curriculum map ready");
 
       setProcessingStep("Grading your assignment with expert AI feedback...");
 
-      const gradingPrompt = `You are a veteran teacher grading an assignment for ${courseName} at ${learningProfile.school || "the school"}.
+      const gradingPrompt = `[Role Definition]
+You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
 
-Student Grade Level: ${learningProfile.grade || "N/A"}
-Course: ${courseName}
-School: ${learningProfile.school || "N/A"}
-Region: ${learningProfile.city || "N/A"}
+[Input Educational Context]
+Student's Grade Level: ${learningProfile.grade || "N/A"}
+Course/Unit Name: ${courseName}
+School (context): ${learningProfile.school || "N/A"}
+City/Region (context): ${learningProfile.city || "N/A"}
 
-Curriculum Standards:
+Detailed Curriculum Profile (for alignment: competencies, weightings, question formats, misconceptions):
 ${JSON.stringify(curriculumMap, null, 2)}
 
-Assignment Title: ${assignmentTitle}
-Student's Work:
+Assignment Metadata:
+Assignment Name/Type: ${assignmentTitle}
+Assignment Text (OCR'd or user-uploaded; may include mixed formatting):
 ${extractedContent}
 
-Your Task: Grade this assignment as an expert teacher would. Provide:
+[Task – Grading & Feedback Generation]
+Produce a teacher-quality grade and feedback package:
 
-1. Assignment Overview - One paragraph summary of what the student attempted and how it aligns with course expectations.
+1) Assignment Overview - One concise paragraph summarizing what the assignment attempted, its main task(s), and how well it aligned to ${courseName} expectations.
 
-2. Rubric & Scores - Create 3-6 criteria, each with:
-   - Criterion name and description
-   - Weight percentage (must sum to 100%)
-   - Score percentage (0-100%)
-   - 1-2 sentence justification
+2) Rubric & Scores - List 3–6 criteria with short descriptions. Assign each criterion a percentage weight (sum = 100%). Provide a score (0–100%) for each criterion with a 1–2 sentence justification tied to the student's actual work.
 
-3. Strengths - List 3-5 specific things done well with evidence from the work.
+3) Strengths & High-Value Feedback - 3–5 bullet points highlighting what was done well, anchored to passages, steps, or evidence from the submission.
 
-4. Priority Improvements - List 4-6 specific, actionable next steps for improvement.
+4) Priority Improvements (Actionable Next Steps) - 4–6 bullet points with specific, teachable fixes.
 
-5. Inline Comments (optional) - Up to 5 specific comments referencing sections of the work.
+5) Inline or Section-Targeted Comments (Optional if feasible) - Up to 5 pinpoint comments referencing a line/paragraph/step, each with a brief correction or suggestion.
 
-6. Academic Integrity - Note any citation or integrity concerns (if applicable).
+6) Academic Integrity & Source Checks (If Applicable) - Briefly note any issues to review. Keep tone neutral; provide evidence-based pointers.
 
-7. Predicted Grade:
-   - Percentage (0-100%)
-   - Letter grade band (A/B/C/D/F)
-   - Brief rationale tying to the rubric
+7) Predicted Grade - Provide a percentage grade (0–100%), a short descriptor, and a 1–2 sentence rationale that ties together the rubric. If the school/course has explicit grade bands, align to them; otherwise use common bands (A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60).
 
-8. Competency Mapping - List 2-4 competencies from the curriculum that need focus.
+8) Competency Mapping & Next Focus - List 2–4 curriculum core_competencies most associated with weaknesses observed, in priority order. Suggest 1–2 targeted next mini-lessons or practice activities.
 
-9. Recommended Next Focus - Suggest 1-2 mini-lessons or practice activities.
+[Output Format]
+Return a single JSON object with the fields below (strings unless otherwise noted). Do not include any other text.
 
-Output only valid JSON matching the schema. Be thorough, constructive, and specific.`;
+{
+  "assignment_overview": "<1 short paragraph>",
+  "rubric": [
+    {
+      "criterion": "<name>",
+      "description": "<what you evaluated>",
+      "weight_percentage": "##%",
+      "score_percentage": "##%",
+      "justification": "<1–2 sentences anchored in the work>"
+    }
+  ],
+  "strengths": ["<bullet 1>", "<bullet 2>", "<bullet 3>"],
+  "priority_improvements": ["<bullet 1>", "<bullet 2>", "<bullet 3>", "<bullet 4>"],
+  "inline_comments": [
+    {
+      "anchor": "<page/line/section reference if possible>",
+      "comment": "<brief correction or suggestion>"
+    }
+  ],
+  "academic_integrity_flags": ["<issue 1>", "<issue 2>"],
+  "predicted_grade": {
+    "percentage": "##%",
+    "band": "<A/B/C/D/F or local band>",
+    "rationale": "<1–2 sentences tying to rubric>"
+  },
+  "competency_mapping": ["<competency 1>", "<competency 2>"],
+  "recommended_next_focus": ["<mini-lesson/practice 1>", "<mini-lesson/practice 2>"]
+}
 
-      console.log("Calling grading function...");
-      console.log("Prompt length:", gradingPrompt.length);
+[Global Output Rules]
+- Output only valid JSON per the schema above (no markdown, no commentary).
+- All percentages are strings with a "%" symbol.
+- Rubric weights must sum to "100%".
+- Keep all internal reasoning hidden; provide only the structured results.`;
+
+      console.log("Calling grading function with Gemini 2.0 Flash...");
 
       const gradingResponse = await base44.functions.invoke('gradeAssignment', {
         prompt: gradingPrompt,
         response_json_schema: {
           type: "object",
           properties: {
-            assignment_overview: { type: "string" },
+            assignment_overview: { 
+              type: "string",
+              description: "One paragraph summary"
+            },
             rubric: {
               type: "array",
+              description: "List of 3-6 grading criteria",
               items: {
                 type: "object",
                 properties: {
                   criterion: { type: "string" },
                   description: { type: "string" },
-                  weight_percentage: { type: "string" },
-                  score_percentage: { type: "string" },
+                  weight_percentage: { 
+                    type: "string",
+                    description: "Weight as string with % symbol, e.g. '25%'"
+                  },
+                  score_percentage: { 
+                    type: "string",
+                    description: "Score as string with % symbol, e.g. '80%'"
+                  },
                   justification: { type: "string" }
                 },
-                required: ["criterion", "weight_percentage", "score_percentage"]
+                required: ["criterion", "description", "weight_percentage", "score_percentage", "justification"]
               }
             },
             strengths: {
               type: "array",
+              description: "3-5 specific strengths",
               items: { type: "string" }
             },
             priority_improvements: {
               type: "array",
+              description: "4-6 actionable improvements",
               items: { type: "string" }
             },
             inline_comments: {
               type: "array",
+              description: "Up to 5 specific comments",
               items: {
                 type: "object",
                 properties: {
-                  anchor: { type: "string" },
+                  anchor: { 
+                    type: "string",
+                    description: "Reference to section/page/line"
+                  },
                   comment: { type: "string" }
-                }
+                },
+                required: ["anchor", "comment"]
               }
             },
             academic_integrity_flags: {
               type: "array",
+              description: "List of integrity concerns if any",
               items: { type: "string" }
             },
             predicted_grade: {
               type: "object",
+              description: "Final grade prediction",
               properties: {
-                percentage: { type: "string" },
-                band: { type: "string" },
-                rationale: { type: "string" }
+                percentage: { 
+                  type: "string",
+                  description: "Percentage with % symbol, e.g. '85%'"
+                },
+                band: { 
+                  type: "string",
+                  description: "Letter grade: A+, A, A-, B+, B, B-, C+, C, C-, D, F"
+                },
+                rationale: { 
+                  type: "string",
+                  description: "1-2 sentences explaining the grade"
+                }
               },
               required: ["percentage", "band", "rationale"]
             },
             competency_mapping: {
               type: "array",
+              description: "2-4 competencies needing focus",
               items: { type: "string" }
             },
             recommended_next_focus: {
               type: "array",
+              description: "1-2 next learning activities",
               items: { type: "string" }
             }
           },
-          required: ["assignment_overview", "rubric", "strengths", "priority_improvements", "predicted_grade"]
+          required: ["assignment_overview", "rubric", "strengths", "priority_improvements", "predicted_grade", "competency_mapping", "recommended_next_focus"]
         }
       });
 
-      console.log("Grading response:", gradingResponse);
+      console.log("Grading response received:", gradingResponse);
 
       if (!gradingResponse || !gradingResponse.data) {
         throw new Error("Invalid response from grading service");
@@ -318,7 +378,7 @@ Output only valid JSON matching the schema. Be thorough, constructive, and speci
       }
 
       const gradingResult = gradingResponse.data;
-      console.log("Grading result:", gradingResult);
+      console.log("Grading result structure:", Object.keys(gradingResult));
 
       setProcessingStep("Saving results...");
 
@@ -332,7 +392,7 @@ Output only valid JSON matching the schema. Be thorough, constructive, and speci
         completed: true
       });
 
-      console.log("Saved graded assignment:", gradedAssignment);
+      console.log("Successfully saved graded assignment");
 
       navigate(createPageUrl("GradeResults") + `?assignmentId=${gradedAssignment.id}`);
     } catch (err) {
