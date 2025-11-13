@@ -192,57 +192,49 @@ Output Format: JSON object matching the specified schema`;
 
       setProcessingStep("Grading your assignment...");
 
-      const gradingPrompt = `You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
+      const gradingPrompt = `You are an expert educator and grading specialist for ${courseName} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map and the student's submitted assignment to produce an accurate grade, rubric breakdown, feedback, and competency analysis. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
 
-Input Educational Context:
+Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${courseName}
 School: ${learningProfile.school || "N/A"}
 City/Region: ${learningProfile.city || "N/A"}
 
-Detailed Curriculum Profile:
+Curriculum Profile:
 ${JSON.stringify(curriculumMap, null, 2)}
 
 Assignment Metadata:
 Assignment Name/Type: ${assignmentTitle}
-Assignment Text (OCR'd or user-uploaded):
+Assignment Content:
 ${extractedContent}
 
-CRITICAL INSTRUCTIONS:
-1. Ground factual content and examples in the uploaded assignment text and curriculum map
-2. Determine assignment type (Essay, Short Answers, Problem Set, Lab Report, etc.)
-3. Select appropriate rubric with 3-6 criteria based on assignment type
-4. For quantitative work: verify method, steps, correctness, units, assumptions
-5. For essays: evaluate thesis, evidence, argumentation, structure, style, citations
-6. Check for academic integrity issues (missing citations, dubious references)
-7. Calibrate predicted grade to course norms
+[Task Instructions]
+1. Analyze the assignment content against the curriculum profile
+2. Determine assignment type (Essay, Problem Set, Lab Report, etc.)
+3. Create appropriate rubric with 3-6 criteria
+4. For quantitative work: verify methods, steps, correctness, units
+5. For written work: evaluate thesis, evidence, argumentation, structure, citations
+6. Check for academic integrity issues (missing citations, etc.)
+7. Produce predicted grade aligned to course standards
 
-Task - Grade the assignment and provide:
-
-1. Assignment Overview: One concise paragraph summarizing what the assignment attempted, its main task(s), and how well it aligned to ${courseName} expectations.
-
-2. Rubric & Scores: 
-   - List 3-6 criteria with short descriptions
-   - Assign each criterion a percentage weight (sum = 100%)
-   - Provide a score (0-100%) for each criterion with 1-2 sentence justification
-
-3. Strengths: 3-5 bullet points highlighting what was done well
-
-4. Priority Improvements: 4-6 bullet points with specific, actionable fixes
-
-5. Inline Comments: Up to 5 pinpoint comments referencing specific sections
-
-6. Academic Integrity: Note any issues to review (missing citations, etc.) or use empty array if none
-
-7. Predicted Grade: 
-   - Letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D, F)
-   - Percentage score (0-100%)
-   - 1-2 sentence rationale
-
-8. Competency Mapping: 2-4 curriculum competencies most associated with weaknesses
-9. Recommended Next Focus: 1-2 targeted practice activities
-
-IMPORTANT: Do NOT return placeholder text like "<1 short paragraph>" or "##%". Fill in ALL fields with actual grading analysis based on the student's work.`;
+[Global Output Rules]
+- Output ONLY a single JSON object that matches the provided response_json_schema
+- Field guidance (names exactly as schema):
+  • assignment_overview: one paragraph summarizing what the assignment attempted and alignment to course expectations
+  • rubric: array of 3-6 objects, each with criterion (string), description (string), weight_percentage (string with %), score_percentage (string with %), justification (string)
+  • strengths: array of 2-5 strings highlighting what was done well
+  • priority_improvements: array of 3-6 strings with specific actionable fixes
+  • inline_comments: array of objects with anchor (string) and comment (string), or empty array if none
+  • academic_integrity_flags: array of strings noting issues to review, or empty array if none
+  • predicted_grade: single letter grade string (A+, A, A-, B+, B, B-, C+, C, C-, D, F)
+  • predicted_grade_percentage: numeric percentage as string with % symbol (e.g., "85%")
+  • predicted_grade_rationale: 1-2 sentences explaining the final grade
+  • competency_mapping: array of 2-4 strings naming competencies needing focus
+  • recommended_next_focus: array of 1-2 strings describing practice activities or mini-lessons
+- Rubric weights must sum to 100%
+- All percentages are strings with "%" symbol
+- No extra fields, no explanations outside JSON
+- Fill all fields with actual analysis, never use placeholder text`;
 
       console.log("Submitting to grading function...");
 
@@ -253,90 +245,63 @@ IMPORTANT: Do NOT return placeholder text like "<1 short paragraph>" or "##%". F
           properties: {
             assignment_overview: { 
               type: "string",
-              description: "One paragraph summarizing the assignment and performance"
+              description: "One paragraph summary"
             },
             rubric: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
-                  criterion: { 
-                    type: "string",
-                    description: "Name of the criterion being evaluated"
-                  },
-                  description: { 
-                    type: "string",
-                    description: "What was evaluated in this criterion"
-                  },
-                  weight_percentage: { 
-                    type: "string",
-                    description: "Weight as percentage string like 25%"
-                  },
-                  score_percentage: { 
-                    type: "string",
-                    description: "Score as percentage string like 85%"
-                  },
-                  justification: { 
-                    type: "string",
-                    description: "1-2 sentences explaining the score"
-                  }
+                  criterion: { type: "string" },
+                  description: { type: "string" },
+                  weight_percentage: { type: "string" },
+                  score_percentage: { type: "string" },
+                  justification: { type: "string" }
                 },
                 required: ["criterion", "description", "weight_percentage", "score_percentage", "justification"]
               }
             },
             strengths: {
               type: "array",
-              items: { type: "string" },
-              description: "List of 3-5 specific strengths observed"
+              items: { type: "string" }
             },
             priority_improvements: {
               type: "array",
-              items: { type: "string" },
-              description: "List of 4-6 actionable improvements"
+              items: { type: "string" }
             },
             inline_comments: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
-                  anchor: { 
-                    type: "string",
-                    description: "Reference to section/page/line"
-                  },
-                  comment: { 
-                    type: "string",
-                    description: "Brief correction or suggestion"
-                  }
+                  anchor: { type: "string" },
+                  comment: { type: "string" }
                 },
                 required: ["anchor", "comment"]
               }
             },
             academic_integrity_flags: {
               type: "array",
-              items: { type: "string" },
-              description: "List of integrity issues or empty array if none"
+              items: { type: "string" }
             },
             predicted_grade: {
               type: "string",
-              description: "Letter grade only: A+, A, A-, B+, B, B-, C+, C, C-, D, or F"
+              description: "Letter grade: A+, A, A-, B+, B, B-, C+, C, C-, D, F"
             },
             predicted_grade_percentage: {
               type: "string",
-              description: "Numeric percentage with % symbol like 85%"
+              description: "Percentage with % like 85%"
             },
             predicted_grade_rationale: {
-              type: "string",
-              description: "1-2 sentences explaining the final grade"
+              type: "string"
             },
             competency_mapping: {
               type: "array",
-              items: { type: "string" },
-              description: "List of 2-4 competencies to focus on"
+              items: { type: "string" }
             },
             recommended_next_focus: {
               type: "array",
-              items: { type: "string" },
-              description: "List of 1-2 practice activities or mini-lessons"
+              items: { type: "string" }
             }
           },
           required: ["assignment_overview", "rubric", "strengths", "priority_improvements", "predicted_grade", "predicted_grade_percentage", "predicted_grade_rationale", "competency_mapping", "recommended_next_focus"]
