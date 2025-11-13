@@ -192,7 +192,7 @@ Output Format: JSON object matching the specified schema`;
 
       setProcessingStep("Grading your assignment...");
 
-      const gradingPrompt = `You are a veteran teacher and expert grader for ${lessonData.course_name} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
+      const gradingPrompt = `You are a veteran teacher and expert grader for${learningProfile.grade || "N/A"} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
 
 Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
