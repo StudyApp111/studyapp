@@ -259,7 +259,7 @@ Produce a teacher-quality grade and feedback package:
    - List 2–4 curriculum_map.core_competencies most associated with weaknesses observed, in priority order.
    - Suggest 1–2 targeted next mini-lessons or practice activities aligned to curriculum_map.question_formats and high-yield focal points.
 
-[Output Format]
+[Strict Output Format Always Must Adhere]
 Return a single JSON object with the fields below (strings unless otherwise noted). Do not include any other text.
 
 {
