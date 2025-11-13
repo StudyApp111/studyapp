@@ -218,7 +218,7 @@ ${extractedContent}
 7. Produce predicted grade aligned to course standards
 
 [Global Output Rules]
-- Output ONLY a single JSON object that matches the provided response_json_schema
+- Output ONLY a single JSON object that matches the provided response_json_schema EXACTLY
 - Field guidance (names exactly as schema):
   • assignment_overview: one paragraph summarizing what the assignment attempted and alignment to course expectations
   • rubric: array of 3-6 objects, each with criterion (string), description (string), weight_percentage (string with %), score_percentage (string with %), justification (string)
