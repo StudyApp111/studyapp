@@ -68,9 +68,14 @@ export default function SmartGrader() {
 
       const extractedContent = extractResponse.data.extracted_content;
       console.log("Extracted content length:", extractedContent?.length);
+      console.log("First 500 chars of content:", extractedContent?.substring(0, 500));
 
       if (!extractedContent || extractedContent.length === 0) {
         throw new Error("Failed to extract content from document. The file might be empty or corrupted.");
+      }
+
+      if (extractedContent.length < 50) {
+        throw new Error("Extracted content is too short. Please ensure your file contains readable text.");
       }
 
       const user = await base44.auth.me();
@@ -190,55 +195,26 @@ Output Format: JSON object matching the specified schema`;
 
       console.log("Curriculum map ready");
 
-      setProcessingStep("Grading your assignment...");
+      setProcessingStep("Grading your assignment (this takes 30-60 seconds)...");
 
-      const gradingPrompt = `
-[Role]
-You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Grade the submitted assignment exactly as a skilled instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, give precise feedback, and output a predicted grade. Keep all reasoning internal. Output ONLY a single JSON object that matches the provided schema (exact keys, snake_case, correct types). If a list has no items, return an empty array [] (never null). Do not include extra keys.
+      const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student. Read the ENTIRE assignment content below carefully and produce a COMPLETE grading report. Do NOT skip any fields. Do NOT return null or empty arrays.
 
-[Inputs]
-Student's Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${courseName}
-School: ${learningProfile.school || "N/A"}
-City/Region: ${learningProfile.city || "N/A"}
-
-Curriculum Profile:
-${JSON.stringify(curriculumMap, null, 2)}
-
-Assignment Metadata:
-Assignment Name/Type: ${assignmentTitle}
-
-Assignment Content (OCR/user-uploaded):
+ASSIGNMENT CONTENT TO GRADE:
 ${extractedContent}
 
-[Grounding (Internal Only)]
-- Ground content and examples primarily in the uploaded assignment text; use the curriculum profile to align competencies, emphasis, and assessment style.
-- Infer assignment type from the text (Essay/Analysis; Short Answers; Problem Set—math/econ/accounting; Lab/Report; Case/Policy; Code/Algorithmic; Presentation; Mixed).
-- Build a rubric with 3–6 criteria appropriate to that type, mapped where relevant to curriculum_map.core_competencies and reflecting curriculum_map.competency_weightings emphasis if applicable.
-- Quant/technical work: check method/steps/correctness/units/assumptions/edge cases/interpretation.  
-  Essays/humanities/social sciences: thesis, evidence/sources, depth of analysis/counter-argument, structure, style, citations.  
-  CS/engineering: problem understanding, algorithm/approach, correctness/complexity, code clarity, testing, documentation.  
-  Social sciences/policy: framework selection, evidence/reasoning, comparative/counterfactual, implications, clarity, citations.  
-  Languages: comprehension, vocabulary/grammar/syntax, task fulfilment, organization, register/style.
-- Integrity: neutrally flag citation gaps or dubious references if present. Do not accuse; just note concerns to review.
-- Grade bands: use school norms if present; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
+REQUIRED OUTPUT - Fill EVERY field with actual analysis based on the content above:
 
-[Task]
-Produce the following, strictly matching the schema keys and types below:
-- predicted_grade (string): letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D, F).
-- total_score (number): numeric percentage score (0-100).
-- overall_performance_summary (string): one concise paragraph summarizing the task, what the student attempted, and alignment to course expectations.
-- identified_strengths (array of strings): 3–5 specific strengths anchored to passages/steps/choices in the submission.
-- areas_for_improvement (array of strings): 4–6 specific, teachable next steps (what to change and how).
-- detailed_feedback_by_section (array of objects): 3-6 sections with section_name (string), points_earned (number), points_possible (number), feedback (string), competencies_assessed (array of strings).
-- rubric_breakdown (array of objects): 3–6 rubric criteria with criterion (string), score (number), max_score (number), comments (string).
+1. predicted_grade: A letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D, F)
+2. total_score: A number from 0-100 representing percentage
+3. overall_performance_summary: Write at least 3 sentences analyzing what the student submitted
+4. identified_strengths: List 3-5 specific things done well (must reference actual content)
+5. areas_for_improvement: List 4-6 specific weaknesses (must reference actual content)
+6. detailed_feedback_by_section: Create 3-6 sections analyzing different parts. Each needs section_name, points_earned (number), points_possible (number), feedback (text), competencies_assessed (array)
+7. rubric_breakdown: Create 3-6 rubric items. Each needs criterion (name), score (number earned), max_score (number possible), comments (text explaining the score)
 
-CRITICAL: Every field must be filled with real data. Never return null or empty arrays unless truly no data. All text fields must have meaningful content.
+You MUST fill all 7 fields. Do not return null. Do not return empty arrays unless the assignment is literally blank.
 
-[Output Rules]
-- Output ONLY one valid JSON object with EXACTLY these keys and types. No extra keys. No nulls (use [] for empty arrays only if legitimately empty). Total scores across rubric should align.
-
-`;
+Output valid JSON matching this exact schema.`;
 
       console.log("Submitting to grading function...");
 
@@ -257,20 +233,23 @@ CRITICAL: Every field must be filled with real data. Never return null or empty 
             },
             overall_performance_summary: {
               type: "string",
-              description: "One paragraph summary of performance"
+              description: "At least 3 sentences analyzing the work"
             },
             identified_strengths: {
               type: "array",
               items: { type: "string" },
-              description: "3-5 specific strengths"
+              minItems: 3,
+              description: "3-5 specific strengths from the content"
             },
             areas_for_improvement: {
               type: "array",
               items: { type: "string" },
-              description: "4-6 specific improvements"
+              minItems: 4,
+              description: "4-6 specific improvements needed"
             },
             detailed_feedback_by_section: {
               type: "array",
+              minItems: 3,
               items: {
                 type: "object",
                 properties: {
@@ -288,6 +267,7 @@ CRITICAL: Every field must be filled with real data. Never return null or empty 
             },
             rubric_breakdown: {
               type: "array",
+              minItems: 3,
               items: {
                 type: "object",
                 properties: {
@@ -304,7 +284,7 @@ CRITICAL: Every field must be filled with real data. Never return null or empty 
         }
       });
 
-      console.log("Grading response received");
+      console.log("Grading response received:", gradingResponse);
 
       if (!gradingResponse || !gradingResponse.data) {
         throw new Error("Invalid response from grading service");
@@ -316,7 +296,15 @@ CRITICAL: Every field must be filled with real data. Never return null or empty 
       }
 
       const gradingResult = gradingResponse.data;
-      console.log("Grading complete, keys:", Object.keys(gradingResult));
+      console.log("Grading complete:", JSON.stringify(gradingResult, null, 2));
+
+      // Validate that we got actual data
+      if (!gradingResult.overall_performance_summary || 
+          !gradingResult.identified_strengths || 
+          gradingResult.identified_strengths.length === 0) {
+        console.error("Incomplete grading result:", gradingResult);
+        throw new Error("AI did not provide complete feedback. Please try again.");
+      }
 
       setProcessingStep("Saving results...");
 
