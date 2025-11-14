@@ -90,10 +90,10 @@ export default function GradeResults() {
     );
   }
 
-  // NEW FLAT STRUCTURE - Access predicted_grade directly as strings
+  // Map to correct field names from AI response
   const gradeBand = result.predicted_grade || 'N/A';
-  const gradePercentage = result.predicted_grade_percentage || '0%';
-  const gradeRationale = result.predicted_grade_rationale || 'Grade analysis in progress.';
+  const gradePercentage = result.total_score ? `${result.total_score}%` : '0%';
+  const gradeRationale = result.overall_performance_summary || 'Grade analysis in progress.';
 
   const getGradeColor = (band) => {
     if (!band || band === 'N/A') return 'from-slate-500 to-slate-600';
@@ -146,38 +146,16 @@ export default function GradeResults() {
             </div>
           </motion.div>
 
-          {gradeRationale && (
+          {gradeRationale && gradeRationale !== 'Grade analysis in progress.' && (
             <p className="text-base md:text-lg text-slate-700 max-w-3xl mx-auto mt-6 leading-relaxed">
               {gradeRationale}
             </p>
           )}
         </motion.div>
 
-        {/* Assignment Overview */}
-        {result?.assignment_overview && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-8"
-          >
-            <Card className="shadow-xl border-0 bg-gradient-to-br from-purple-50 to-indigo-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-purple-900">
-                  <FileText className="w-5 h-5" />
-                  Assignment Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-700 leading-relaxed">{result.assignment_overview}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* Strengths */}
-          {result?.strengths && result.strengths.length > 0 && (
+          {/* Strengths - using identified_strengths */}
+          {result?.identified_strengths && result.identified_strengths.length > 0 && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -192,7 +170,7 @@ export default function GradeResults() {
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
-                    {result.strengths.map((strength, idx) => (
+                    {result.identified_strengths.map((strength, idx) => (
                       <li key={idx} className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
                         <span className="text-slate-700">{strength}</span>
@@ -204,8 +182,8 @@ export default function GradeResults() {
             </motion.div>
           )}
 
-          {/* Priority Improvements */}
-          {result?.priority_improvements && result.priority_improvements.length > 0 && (
+          {/* Improvements - using areas_for_improvement */}
+          {result?.areas_for_improvement && result.areas_for_improvement.length > 0 && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -215,12 +193,12 @@ export default function GradeResults() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-amber-700">
                     <TrendingDown className="w-5 h-5" />
-                    Priority Improvements
+                    Areas for Improvement
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
-                    {result.priority_improvements.map((area, idx) => (
+                    {result.areas_for_improvement.map((area, idx) => (
                       <li key={idx} className="flex items-start gap-3">
                         <Target className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
                         <span className="text-slate-700">{area}</span>
@@ -233,8 +211,8 @@ export default function GradeResults() {
           )}
         </div>
 
-        {/* Rubric Breakdown */}
-        {result?.rubric && result.rubric.length > 0 && (
+        {/* Rubric Breakdown - using rubric_breakdown */}
+        {result?.rubric_breakdown && result.rubric_breakdown.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -248,7 +226,7 @@ export default function GradeResults() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {result.rubric.map((criterion, idx) => (
+                  {result.rubric_breakdown.map((item, idx) => (
                     <motion.div
                       key={idx}
                       initial={{ opacity: 0, y: 10 }}
@@ -257,29 +235,16 @@ export default function GradeResults() {
                       className="p-6 rounded-xl border-2 border-purple-200 bg-purple-50/50"
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="font-semibold text-slate-900 text-lg">
-                              {criterion.criterion}
-                            </h4>
-                            <Badge variant="outline" className="bg-white ml-2">
-                              Weight: {criterion.weight_percentage}
-                            </Badge>
-                          </div>
-                          {criterion.description && (
-                            <p className="text-sm text-slate-600 mb-2">{criterion.description}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-slate-900 text-lg">
+                          {item.criterion}
+                        </h4>
                         <Badge className="bg-purple-600 text-white text-lg px-4 py-1">
-                          Score: {criterion.score_percentage}
+                          {item.score}/{item.max_score}
                         </Badge>
                       </div>
-                      {criterion.justification && (
+                      {item.comments && (
                         <div className="bg-white rounded-lg p-4 border border-purple-200">
-                          <p className="text-sm font-medium text-slate-600 mb-1">Justification:</p>
-                          <p className="text-sm text-slate-700 leading-relaxed">{criterion.justification}</p>
+                          <p className="text-sm text-slate-700 leading-relaxed">{item.comments}</p>
                         </div>
                       )}
                     </motion.div>
@@ -290,8 +255,8 @@ export default function GradeResults() {
           </motion.div>
         )}
 
-        {/* Inline Comments */}
-        {result?.inline_comments && result.inline_comments.length > 0 && (
+        {/* Section Feedback - using detailed_feedback_by_section */}
+        {result?.detailed_feedback_by_section && result.detailed_feedback_by_section.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -300,96 +265,32 @@ export default function GradeResults() {
           >
             <Card className="shadow-2xl border-0">
               <CardHeader>
-                <CardTitle className="text-2xl">Inline Comments</CardTitle>
-                <p className="text-slate-600">Specific feedback on sections of your work</p>
+                <CardTitle className="text-2xl">Section-by-Section Feedback</CardTitle>
+                <p className="text-slate-600">Detailed analysis of each part of your work</p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {result.inline_comments.map((comment, idx) => (
+                <div className="space-y-4">
+                  {result.detailed_feedback_by_section.map((section, idx) => (
                     <div key={idx} className="p-4 rounded-lg border-2 border-blue-200 bg-blue-50/50">
-                      {comment.anchor && (
-                        <p className="text-xs font-semibold text-blue-700 mb-1">📍 {comment.anchor}</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-slate-900">{section.section_name}</h4>
+                        <Badge variant="outline">
+                          {section.points_earned}/{section.points_possible} pts
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-slate-700 mb-2">{section.feedback}</p>
+                      {section.competencies_assessed && section.competencies_assessed.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {section.competencies_assessed.map((comp, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">
+                              {comp}
+                            </Badge>
+                          ))}
+                        </div>
                       )}
-                      <p className="text-sm text-slate-700">{comment.comment}</p>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Academic Integrity Flags */}
-        {result?.academic_integrity_flags && result.academic_integrity_flags.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-            className="mb-8"
-          >
-            <Card className="shadow-xl border-0 border-amber-300 bg-amber-50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-800">
-                  <AlertTriangle className="w-5 h-5" />
-                  Academic Integrity Notes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {result.academic_integrity_flags.map((flag, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <span className="text-amber-700">•</span>
-                      <span className="text-slate-700">{flag}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Competency Mapping & Next Focus */}
-        {((result?.competency_mapping && result.competency_mapping.length > 0) || 
-          (result?.recommended_next_focus && result.recommended_next_focus.length > 0)) && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="mb-8"
-          >
-            <Card className="shadow-xl border-0 bg-gradient-to-br from-indigo-50 to-purple-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-indigo-900">
-                  <BookOpen className="w-5 h-5" />
-                  Learning Path Forward
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {result?.competency_mapping && result.competency_mapping.length > 0 && (
-                  <div className="mb-6">
-                    <h4 className="font-semibold text-slate-900 mb-3">Focus Competencies:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {result.competency_mapping.map((comp, idx) => (
-                        <Badge key={idx} className="bg-indigo-100 text-indigo-800 border-indigo-200 px-3 py-1">
-                          {comp}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {result?.recommended_next_focus && result.recommended_next_focus.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-slate-900 mb-3">Recommended Next Steps:</h4>
-                    <ul className="space-y-2">
-                      {result.recommended_next_focus.map((focus, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-indigo-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-slate-700">{focus}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </motion.div>
