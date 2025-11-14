@@ -6,31 +6,43 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Upload, FileCheck, AlertCircle, GraduationCap, History, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Upload, FileCheck, AlertCircle, GraduationCap, History, FileText, X } from "lucide-react";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
   const [courseName, setCourseName] = useState("");
   const [assignmentTitle, setAssignmentTitle] = useState("");
-  const [file, setFile] = useState(null);
-  const [customCurriculum, setCustomCurriculum] = useState("");
-  const [showCurriculumSection, setShowCurriculumSection] = useState(false);
+  const [assignmentFile, setAssignmentFile] = useState(null);
+  const [curriculumFile, setCurriculumFile] = useState(null);
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
 
-  const handleFileChange = (e) => {
+  const handleAssignmentFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       if (selectedFile.size > 50 * 1024 * 1024) {
         setError("File is too large. Please upload files smaller than 50MB.");
-        setFile(null);
+        setAssignmentFile(null);
         e.target.value = '';
         return;
       }
-      setFile(selectedFile);
+      setAssignmentFile(selectedFile);
+      setError("");
+    }
+  };
+
+  const handleCurriculumFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        setError("Curriculum file is too large. Please upload files smaller than 10MB.");
+        setCurriculumFile(null);
+        e.target.value = '';
+        return;
+      }
+      setCurriculumFile(selectedFile);
       setError("");
     }
   };
@@ -50,28 +62,23 @@ export default function SmartGrader() {
         throw new Error("Please enter an assignment title");
       }
 
-      if (!file) {
+      if (!assignmentFile) {
         throw new Error("Please upload your assignment file");
       }
 
       setProcessingStep("Uploading your assignment...");
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      console.log("File uploaded:", file_url);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: assignmentFile });
 
       setProcessingStep("Extracting content from your assignment...");
       const extractResponse = await base44.functions.invoke('extractDocumentContent', {
         file_url: file_url
       });
 
-      console.log("Extract response:", extractResponse);
-
       if (extractResponse.data.error) {
         throw new Error(extractResponse.data.error);
       }
 
       const extractedContent = extractResponse.data.extracted_content;
-      console.log("Extracted content length:", extractedContent?.length);
-      console.log("First 500 chars of content:", extractedContent?.substring(0, 500));
 
       if (!extractedContent || extractedContent.length === 0) {
         throw new Error("Failed to extract content from document. The file might be empty or corrupted.");
@@ -90,14 +97,25 @@ export default function SmartGrader() {
 
       let curriculumMap;
 
-      // Use custom curriculum if provided, otherwise generate/fetch it
-      if (customCurriculum.trim()) {
-        console.log("Using custom curriculum provided by user");
-        setProcessingStep("Using your custom curriculum...");
+      // Handle custom curriculum file if provided
+      if (curriculumFile) {
+        console.log("Processing custom curriculum file");
+        setProcessingStep("Processing your curriculum file...");
         
-        // Store as a simple text-based curriculum map
+        const { file_url: curriculumUrl } = await base44.integrations.Core.UploadFile({ file: curriculumFile });
+        
+        const curriculumExtractResponse = await base44.functions.invoke('extractDocumentContent', {
+          file_url: curriculumUrl
+        });
+
+        if (curriculumExtractResponse.data.error) {
+          throw new Error("Failed to extract curriculum file: " + curriculumExtractResponse.data.error);
+        }
+
+        const customCurriculumText = curriculumExtractResponse.data.extracted_content;
+        
         curriculumMap = {
-          custom_curriculum: customCurriculum.trim(),
+          custom_curriculum: customCurriculumText,
           is_custom: true
         };
       } else {
@@ -109,11 +127,8 @@ export default function SmartGrader() {
         });
 
         if (existingCurriculumMaps.length > 0) {
-          console.log("Found existing curriculum map, reusing it");
           curriculumMap = existingCurriculumMaps[0].curriculum_data;
         } else {
-          console.log("No existing curriculum map found, generating new one");
-
           const curriculumPrompt = `Educational Curriculum Analysis Request
 
 Objective: Analyze the provided course information to create a comprehensive curriculum profile for grading purposes.
@@ -208,8 +223,6 @@ Output Format: JSON object matching the specified schema`;
         }
       }
 
-      console.log("Curriculum map ready");
-
       setProcessingStep("Grading your assignment (this takes 30-60 seconds)...");
 
       const curriculumContext = curriculumMap.is_custom 
@@ -248,8 +261,6 @@ REQUIRED OUTPUT - Fill EVERY field with actual analysis based on the content abo
 You MUST fill all 7 fields. Do not return null. Do not return empty arrays unless the assignment is literally blank.
 
 Output valid JSON matching this exact schema.`;
-
-      console.log("Submitting to grading function...");
 
       const gradingResponse = await base44.functions.invoke('gradeAssignment', {
         prompt: gradingPrompt,
@@ -317,25 +328,19 @@ Output valid JSON matching this exact schema.`;
         }
       });
 
-      console.log("Grading response received:", gradingResponse);
-
       if (!gradingResponse || !gradingResponse.data) {
         throw new Error("Invalid response from grading service");
       }
 
       if (gradingResponse.data.error) {
-        console.error("Grading error:", gradingResponse.data);
         throw new Error(gradingResponse.data.error || "Failed to grade assignment");
       }
 
       const gradingResult = gradingResponse.data;
-      console.log("Grading complete:", JSON.stringify(gradingResult, null, 2));
 
-      // Validate that we got actual data
       if (!gradingResult.overall_performance_summary || 
           !gradingResult.identified_strengths || 
           gradingResult.identified_strengths.length === 0) {
-        console.error("Incomplete grading result:", gradingResult);
         throw new Error("AI did not provide complete feedback. Please try again.");
       }
 
@@ -371,7 +376,7 @@ Output valid JSON matching this exact schema.`;
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Smart Grader</h1>
-                <p className="text-slate-600">Get instant AI-powered feedback on your assignments</p>
+                <p className="text-slate-600">Get instant AI-powered feedback</p>
               </div>
             </div>
             <Button
@@ -380,26 +385,17 @@ Output valid JSON matching this exact schema.`;
               className="hidden md:flex gap-2"
             >
               <History className="w-4 h-4" />
-              View History
+              History
             </Button>
           </div>
-          <Button
-            onClick={() => navigate(createPageUrl("AssignmentHistory"))}
-            variant="outline"
-            className="md:hidden w-full mb-4 gap-2"
-          >
-            <History className="w-4 h-4" />
-            View Assignment History
-          </Button>
         </div>
 
         <Card className="shadow-2xl border-0">
-          <CardHeader>
-            <CardTitle>Upload Your Assignment</CardTitle>
-            <p className="text-sm text-slate-600">Our AI will analyze your work and provide detailed feedback</p>
+          <CardHeader className="pb-4">
+            <CardTitle>Upload Assignment</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -416,99 +412,86 @@ Output valid JSON matching this exact schema.`;
                 </Alert>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="courseName">Course Name *</Label>
-                <Input
-                  id="courseName"
-                  value={courseName}
-                  onChange={(e) => setCourseName(e.target.value)}
-                  placeholder="e.g., AP Calculus, World History, Biology 101"
-                  disabled={isProcessing}
-                  className="text-base"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="assignmentTitle">Assignment Title *</Label>
-                <Input
-                  id="assignmentTitle"
-                  value={assignmentTitle}
-                  onChange={(e) => setAssignmentTitle(e.target.value)}
-                  placeholder="e.g., Midterm Exam, Essay #3, Lab Report"
-                  disabled={isProcessing}
-                  className="text-base"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="file">Upload Assignment File *</Label>
-                <div className="flex items-center gap-3">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="courseName">Course Name *</Label>
                   <Input
-                    id="file"
-                    type="file"
-                    onChange={handleFileChange}
+                    id="courseName"
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                    placeholder="e.g., AP Calculus"
                     disabled={isProcessing}
-                    className="text-base"
-                    accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
                   />
                 </div>
-                {file && (
-                  <div className="flex items-center gap-2 text-sm text-emerald-600">
-                    <FileCheck className="w-4 h-4" />
-                    <span>Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                  </div>
-                )}
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                  <p className="text-xs text-purple-900 font-medium mb-1">
-                    ✨ AI-Powered Document Analysis
-                  </p>
-                  <p className="text-xs text-slate-600">
-                    Upload your completed assignment, test, or essay. Our AI will extract the content, analyze it against curriculum standards, and provide comprehensive feedback.
-                  </p>
+
+                <div className="space-y-2">
+                  <Label htmlFor="assignmentTitle">Assignment Title *</Label>
+                  <Input
+                    id="assignmentTitle"
+                    value={assignmentTitle}
+                    onChange={(e) => setAssignmentTitle(e.target.value)}
+                    placeholder="e.g., Midterm Exam"
+                    disabled={isProcessing}
+                  />
                 </div>
               </div>
 
-              {/* Optional Curriculum/Rubric Section */}
-              <div className="border border-purple-200 rounded-lg bg-purple-50/50">
-                <button
-                  type="button"
-                  onClick={() => setShowCurriculumSection(!showCurriculumSection)}
-                  className="w-full flex items-center justify-between p-4 text-left hover:bg-purple-100/50 transition-colors rounded-lg"
+              <div className="space-y-2">
+                <Label htmlFor="assignmentFile">Assignment File *</Label>
+                <Input
+                  id="assignmentFile"
+                  type="file"
+                  onChange={handleAssignmentFileChange}
                   disabled={isProcessing}
-                >
-                  <div>
-                    <p className="font-medium text-slate-900">Custom Curriculum/Rubric (Optional)</p>
-                    <p className="text-xs text-slate-600 mt-1">Provide your own grading criteria to override automatic curriculum mapping</p>
-                  </div>
-                  {showCurriculumSection ? (
-                    <ChevronUp className="w-5 h-5 text-slate-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-slate-600" />
-                  )}
-                </button>
-                
-                {showCurriculumSection && (
-                  <div className="p-4 pt-0 space-y-2">
-                    <Label htmlFor="customCurriculum">Paste Your Curriculum, Rubric, or Grading Criteria</Label>
-                    <Textarea
-                      id="customCurriculum"
-                      value={customCurriculum}
-                      onChange={(e) => setCustomCurriculum(e.target.value)}
-                      placeholder="E.g., Rubric criteria, learning objectives, grading standards, competencies to assess, etc."
-                      disabled={isProcessing}
-                      className="min-h-[150px] text-sm bg-white"
-                    />
-                    <p className="text-xs text-slate-500">
-                      If provided, the AI will use your criteria instead of generating a curriculum map. This ensures grading aligns with your specific standards.
-                    </p>
+                  accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                />
+                {assignmentFile && (
+                  <div className="flex items-center gap-2 text-sm text-emerald-600">
+                    <FileCheck className="w-4 h-4" />
+                    <span>{assignmentFile.name}</span>
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="curriculumFile" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Custom Rubric/Curriculum (Optional)
+                </Label>
+                <Input
+                  id="curriculumFile"
+                  type="file"
+                  onChange={handleCurriculumFileChange}
+                  disabled={isProcessing}
+                  accept=".pdf,.doc,.docx,.txt"
+                />
+                {curriculumFile && (
+                  <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg p-2">
+                    <div className="flex items-center gap-2 text-sm text-purple-700">
+                      <FileCheck className="w-4 h-4" />
+                      <span>{curriculumFile.name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurriculumFile(null);
+                        document.getElementById('curriculumFile').value = '';
+                      }}
+                      className="text-purple-600 hover:text-purple-800"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <p className="text-xs text-slate-500">
+                  Upload your grading rubric or curriculum to override automatic standards
+                </p>
               </div>
 
               <Button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
                 size="lg"
               >
                 {isProcessing ? (
@@ -519,21 +502,10 @@ Output valid JSON matching this exact schema.`;
                 ) : (
                   <>
                     <Upload className="w-5 h-5 mr-2" />
-                    Grade My Assignment
+                    Grade Assignment
                   </>
                 )}
               </Button>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm font-semibold text-blue-900 mb-2">📋 What you'll get:</p>
-                <ul className="text-xs text-slate-700 space-y-1 ml-4 list-disc">
-                  <li>Predicted letter grade and percentage score</li>
-                  <li>Detailed rubric breakdown with justifications</li>
-                  <li>Strengths and priority improvements</li>
-                  <li>Section-by-section feedback</li>
-                  <li>Competency assessment</li>
-                </ul>
-              </div>
             </form>
           </CardContent>
         </Card>
