@@ -231,22 +231,51 @@ Output Format: JSON object matching the specified schema`;
 
       const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}. Read the ENTIRE assignment content below carefully and produce a COMPLETE grading report. Do NOT skip any fields. Do NOT return null or empty arrays.
 
-${curriculumContext}
+Curriculum: ${curriculumContext}
 
 ASSIGNMENT CONTENT TO GRADE:
 ${extractedContent}
 
 [Grounding (Internal Only)]
-- Ground content and examples primarily in the uploaded assignment text; use the curriculum profile to align competencies, emphasis, and assessment style.
-- Infer assignment type from the text (Essay/Analysis; Short Answers; Problem Set—math/econ/accounting; Lab/Report; Case/Policy; Code/Algorithmic; Presentation; Mixed).
-- Build a rubric with 3–6 criteria appropriate to that type, mapped where relevant to curriculum_map.core_competencies and reflecting curriculum_map.competency_weightings emphasis if applicable.
-- Quant/technical work: check method/steps/correctness/units/assumptions/edge cases/interpretation.  
-  Essays/humanities/social sciences: thesis, evidence/sources, depth of analysis/counter-argument, structure, style, citations.  
-  CS/engineering: problem understanding, algorithm/approach, correctness/complexity, code clarity, testing, documentation.  
-  Social sciences/policy: framework selection, evidence/reasoning, comparative/counterfactual, implications, clarity, citations.  
-  Languages: comprehension, vocabulary/grammar/syntax, task fulfilment, organization, register/style.
-- Integrity: neutrally flag citation gaps or dubious references if present. Do not accuse; just note concerns to review.
-- Grade bands: use school norms if present; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
+- Primary grounding: the student’s uploaded assignment text above. Secondary grounding: the mapped/uploaded curriculum context in ${curriculumContext} (e.g., core_competencies, competency_weightings, question_formats, exemplar rubrics, high_yield_focal_points, common_misconceptions). Use curriculum to shape the rubric, weight emphasis, and ensure parity with in-class grading norms.
+- Determine assignment type from the submission and/or metadata: Essay/Analysis; Short Answers; Problem Set (math/econ/accounting/finance/stats); Lab/Report (science); Case/Policy (business/econ/law); Code/Algorithmic (CS/engineering); Presentation/Slides; Mixed/Portfolio.
+- If ${curriculumContext} includes a **rubric** or **criteria**, use it as the first choice. If not, build a rubric with 3–6 criteria appropriate to the type and **map each criterion** to relevant curriculum core_competencies; reflect **competency_weightings** by adjusting criterion weights.
+- For quantitative/technical work: check method, stepwise reasoning, correctness, units, assumptions, edge cases, interpretation of results, and clarity of layout.
+- For essays/humanities/social sciences: evaluate prompt adherence, thesis/claim, textual/primary-source use, depth of analysis and counter-argument, structure/organization, clarity/style, and citation integrity.
+- For CS/engineering: problem understanding, algorithm/approach, correctness/complexity, code clarity and structure, testing/edge cases, documentation.
+- For social sciences/policy/case: theoretical framework fit, evidence/reasoning quality, comparative or counterfactual analysis, policy/implications, clarity and citations.
+- For languages: comprehension, vocabulary/grammar/syntax, task fulfillment, organization/coherence, register/style.
+- Academic integrity: neutrally flag citation gaps or dubious references with specific evidence to review; do not accuse—just note concerns.
+- Grade bands: if explicit in ${curriculumContext}, follow them; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
+
+[Curriculum/Rubric Utilization Rules (Internal Only)]
+- **Competency alignment:** For each rubric criterion, list the most relevant curriculum core_competencies (from ${curriculumContext}) that the student’s work demonstrates or lacks.
+- **Weighting parity:** If competency_weightings exist, proportionally reflect them in rubric **weight_percentage** so the total rubric weight sums to 100%. If a high-weight competency is not evidenced in the work, evaluate the closest aligned criterion and explain the gap in comments.
+- **Question format parity:** When relevant (e.g., short answers, document analysis), mirror ${curriculumContext}.question_formats in expectations for depth and style.
+- **High-yield focal points:** Prefer assessing high_yield_focal_points when the submission touches them; give extra commentary there for authenticity with how the course is graded IRL.
+- **Common misconceptions:** If the submission exhibits any listed misconceptions, reference them explicitly in comments and in “areas_for_improvement”.
+
+[Scoring Algorithm (Internal Only)]
+- Build 3–6 rubric items with clear **weight_percentage** that total exactly **100%**.
+- For each criterion, assign **score_percentage** (0–100%) with justification anchored to the student’s actual content (quote/line/step/section).
+- Compute **total_score** as the sum over all criteria: (score_percentage × weight_percentage/100). Round to nearest whole number.
+- Map **total_score** to **predicted_grade** using the active grade bands.
+- Keep numeric consistency: criterion **max_score** may be expressed as 100 for clarity, with **score** as the criterion’s score_percentage; the detail in “rubric_breakdown” must match the weights/percentages used to compute **total_score**.
+
+[Evidence Anchoring (Internal Only)]
+- Always point comments to concrete evidence: paragraph/line/section, a quoted phrase, a step number, a figure/table, or a code block. If OCR is messy, approximate anchors (e.g., “para ~3, second stanza”, “Step ~4”).
+
+[Type-Specific Nuances (Internal Only)]
+- Problem sets: partial credit for correct setup with minor arithmetic slips; deduct more for conceptual errors. Require final units and sanity checks.
+- Labs/reports: methods fidelity, data integrity, error analysis/limitations, linkage of results to theory.
+- Essays: claim specificity, source integration and analysis (not just summary), counter-argument handling, paragraph cohesion, MLA/APA/Chicago consistency if required.
+- Code: correctness and complexity, edge cases, readability (naming/modularity), test evidence.
+- Policy/case: framework fidelity, empirical grounding, trade-off analysis, feasibility/implications.
+
+[Style & Parity (Internal Only)]
+- Tone: professional and constructive, like an experienced teacher marking real work.
+- Avoid generic feedback; prefer precise, teachable corrections tied to the student’s text.
+- Never return null; if a list is thin, include at least the minimum items based on actual content; only use [] if the assignment is literally blank.
 
 REQUIRED OUTPUT - Fill EVERY field with actual analysis based on the content above:
 
