@@ -197,7 +197,7 @@ Output Format: JSON object matching the specified schema`;
 You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Grade the submitted assignment exactly as a skilled instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, give precise feedback, and output a predicted grade. Keep all reasoning internal. Output ONLY a single JSON object that matches the provided schema (exact keys, snake_case, correct types). If a list has no items, return an empty array [] (never null). Do not include extra keys.
 
 [Inputs]
-Student’s Grade Level: ${learningProfile.grade || "N/A"}
+Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${courseName}
 School: ${learningProfile.school || "N/A"}
 City/Region: ${learningProfile.city || "N/A"}
@@ -225,20 +225,18 @@ ${extractedContent}
 
 [Task]
 Produce the following, strictly matching the schema keys and types below:
-- assignment_overview (string): one concise paragraph summarizing the task, what the student attempted, and alignment to course expectations.
-- rubric (array of 3–6 objects): each with criterion (string), description (string), weight_percentage (string like "20%"; weights must sum to "100%"), score_percentage (string like "85%"), and justification (string; 1–2 sentences grounded in the student’s work).
-- strengths (array of strings): 3–5 specific strengths anchored to passages/steps/choices in the submission.
-- priority_improvements (array of strings): 4–6 specific, teachable next steps (what to change and how).
-- inline_comments (array of objects): up to 5 pinpoint comments with anchor (string, e.g., “para 3, line 2” or “Step 4”) and comment (string). If anchors are unclear in OCR, approximate.
-- academic_integrity_flags (array of strings): evidence-based concerns to review; [] if none.
 - predicted_grade (string): letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D, F).
-- predicted_grade_percentage (string): percentage with “%” (e.g., "87%").
-- predicted_grade_rationale (string): 1–2 sentences tying rubric results to the grade.
-- competency_mapping (array of strings): 2–4 curriculum competencies most associated with weaknesses, in priority order.
-- recommended_next_focus (array of strings): 2–4 targeted mini-lessons/practice activities aligned to curriculum_map.question_formats and high-yield focal points.
+- total_score (number): numeric percentage score (0-100).
+- overall_performance_summary (string): one concise paragraph summarizing the task, what the student attempted, and alignment to course expectations.
+- identified_strengths (array of strings): 3–5 specific strengths anchored to passages/steps/choices in the submission.
+- areas_for_improvement (array of strings): 4–6 specific, teachable next steps (what to change and how).
+- detailed_feedback_by_section (array of objects): 3-6 sections with section_name (string), points_earned (number), points_possible (number), feedback (string), competencies_assessed (array of strings).
+- rubric_breakdown (array of objects): 3–6 rubric criteria with criterion (string), score (number), max_score (number), comments (string).
+
+CRITICAL: Every field must be filled with real data. Never return null or empty arrays unless truly no data. All text fields must have meaningful content.
 
 [Output Rules]
-- Output ONLY one valid JSON object with EXACTLY these keys and types. No extra keys. No nulls (use [] for empty arrays). All percentages are strings with a “%” symbol. Weights must sum to "100%".
+- Output ONLY one valid JSON object with EXACTLY these keys and types. No extra keys. No nulls (use [] for empty arrays only if legitimately empty). Total scores across rubric should align.
 
 `;
 
@@ -249,68 +247,60 @@ Produce the following, strictly matching the schema keys and types below:
         response_json_schema: {
           type: "object",
           properties: {
-            assignment_overview: { 
+            predicted_grade: {
               type: "string",
-              description: "One paragraph summary"
+              description: "Letter grade: A+, A, A-, B+, B, B-, C+, C, C-, D, F"
             },
-            rubric: {
+            total_score: {
+              type: "number",
+              description: "Numeric percentage score 0-100"
+            },
+            overall_performance_summary: {
+              type: "string",
+              description: "One paragraph summary of performance"
+            },
+            identified_strengths: {
+              type: "array",
+              items: { type: "string" },
+              description: "3-5 specific strengths"
+            },
+            areas_for_improvement: {
+              type: "array",
+              items: { type: "string" },
+              description: "4-6 specific improvements"
+            },
+            detailed_feedback_by_section: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  section_name: { type: "string" },
+                  points_earned: { type: "number" },
+                  points_possible: { type: "number" },
+                  feedback: { type: "string" },
+                  competencies_assessed: {
+                    type: "array",
+                    items: { type: "string" }
+                  }
+                },
+                required: ["section_name", "points_earned", "points_possible", "feedback", "competencies_assessed"]
+              }
+            },
+            rubric_breakdown: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
                   criterion: { type: "string" },
-                  description: { type: "string" },
-                  weight_percentage: { type: "string" },
-                  score_percentage: { type: "string" },
-                  justification: { type: "string" }
+                  score: { type: "number" },
+                  max_score: { type: "number" },
+                  comments: { type: "string" }
                 },
-                required: ["criterion", "description", "weight_percentage", "score_percentage", "justification"]
+                required: ["criterion", "score", "max_score", "comments"]
               }
-            },
-            strengths: {
-              type: "array",
-              items: { type: "string" }
-            },
-            priority_improvements: {
-              type: "array",
-              items: { type: "string" }
-            },
-            inline_comments: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  anchor: { type: "string" },
-                  comment: { type: "string" }
-                },
-                required: ["anchor", "comment"]
-              }
-            },
-            academic_integrity_flags: {
-              type: "array",
-              items: { type: "string" }
-            },
-            predicted_grade: {
-              type: "string",
-              description: "Letter grade: A+, A, A-, B+, B, B-, C+, C, C-, D, F"
-            },
-            predicted_grade_percentage: {
-              type: "string",
-              description: "Percentage with % like 85%"
-            },
-            predicted_grade_rationale: {
-              type: "string"
-            },
-            competency_mapping: {
-              type: "array",
-              items: { type: "string" }
-            },
-            recommended_next_focus: {
-              type: "array",
-              items: { type: "string" }
             }
           },
-          required: ["assignment_overview", "rubric", "strengths", "priority_improvements", "predicted_grade", "predicted_grade_percentage", "predicted_grade_rationale", "competency_mapping", "recommended_next_focus"]
+          required: ["predicted_grade", "total_score", "overall_performance_summary", "identified_strengths", "areas_for_improvement", "detailed_feedback_by_section", "rubric_breakdown"]
         }
       });
 
@@ -464,9 +454,8 @@ Produce the following, strictly matching the schema keys and types below:
                   <li>Predicted letter grade and percentage score</li>
                   <li>Detailed rubric breakdown with justifications</li>
                   <li>Strengths and priority improvements</li>
-                  <li>Inline comments on specific sections</li>
-                  <li>Academic integrity checks</li>
-                  <li>Competency mapping and recommended next focus areas</li>
+                  <li>Section-by-section feedback</li>
+                  <li>Competency assessment</li>
                 </ul>
               </div>
             </form>
