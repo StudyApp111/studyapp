@@ -6,14 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Upload, FileCheck, AlertCircle, GraduationCap, History } from "lucide-react";
+import { Loader2, Upload, FileCheck, AlertCircle, GraduationCap, History, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
   const [courseName, setCourseName] = useState("");
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [file, setFile] = useState(null);
+  const [customCurriculum, setCustomCurriculum] = useState("");
+  const [showCurriculumSection, setShowCurriculumSection] = useState(false);
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
@@ -85,22 +88,33 @@ export default function SmartGrader() {
 
       const learningProfile = profile[0] || {};
 
-      setProcessingStep("Analyzing curriculum standards...");
-      const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
-        course_name: courseName.trim(),
-        school: learningProfile.school || "",
-        grade: learningProfile.grade || ""
-      });
-
       let curriculumMap;
 
-      if (existingCurriculumMaps.length > 0) {
-        console.log("Found existing curriculum map, reusing it");
-        curriculumMap = existingCurriculumMaps[0].curriculum_data;
+      // Use custom curriculum if provided, otherwise generate/fetch it
+      if (customCurriculum.trim()) {
+        console.log("Using custom curriculum provided by user");
+        setProcessingStep("Using your custom curriculum...");
+        
+        // Store as a simple text-based curriculum map
+        curriculumMap = {
+          custom_curriculum: customCurriculum.trim(),
+          is_custom: true
+        };
       } else {
-        console.log("No existing curriculum map found, generating new one");
+        setProcessingStep("Analyzing curriculum standards...");
+        const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
+          course_name: courseName.trim(),
+          school: learningProfile.school || "",
+          grade: learningProfile.grade || ""
+        });
 
-        const curriculumPrompt = `Educational Curriculum Analysis Request
+        if (existingCurriculumMaps.length > 0) {
+          console.log("Found existing curriculum map, reusing it");
+          curriculumMap = existingCurriculumMaps[0].curriculum_data;
+        } else {
+          console.log("No existing curriculum map found, generating new one");
+
+          const curriculumPrompt = `Educational Curriculum Analysis Request
 
 Objective: Analyze the provided course information to create a comprehensive curriculum profile for grading purposes.
 
@@ -127,77 +141,84 @@ Ensure competency weightings sum to 100%.
 
 Output Format: JSON object matching the specified schema`;
 
-        const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
-          prompt: curriculumPrompt,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              core_competencies: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    description: { type: "string" }
-                  },
-                  required: ["name", "description"]
+          const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
+            prompt: curriculumPrompt,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                core_competencies: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      description: { type: "string" }
+                    },
+                    required: ["name", "description"]
+                  }
+                },
+                competency_weightings: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      competency_name: { type: "string" },
+                      weight_percentage: { type: "string" }
+                    },
+                    required: ["competency_name", "weight_percentage"]
+                  }
+                },
+                question_formats: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      type: { type: "string" },
+                      frequency: { type: "string" },
+                      examples: {
+                        type: "array",
+                        items: { type: "string" }
+                      }
+                    },
+                    required: ["type", "frequency", "examples"]
+                  }
+                },
+                high_yield_focal_points: {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                common_misconceptions: {
+                  type: "array",
+                  items: { type: "string" }
                 }
               },
-              competency_weightings: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    competency_name: { type: "string" },
-                    weight_percentage: { type: "string" }
-                  },
-                  required: ["competency_name", "weight_percentage"]
-                }
-              },
-              question_formats: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    type: { type: "string" },
-                    frequency: { type: "string" },
-                    examples: {
-                      type: "array",
-                      items: { type: "string" }
-                    }
-                  },
-                  required: ["type", "frequency", "examples"]
-                }
-              },
-              high_yield_focal_points: {
-                type: "array",
-                items: { type: "string" }
-              },
-              common_misconceptions: {
-                type: "array",
-                items: { type: "string" }
-              }
-            },
-            required: ["core_competencies", "competency_weightings", "question_formats", "high_yield_focal_points", "common_misconceptions"]
-          }
-        });
+              required: ["core_competencies", "competency_weightings", "question_formats", "high_yield_focal_points", "common_misconceptions"]
+            }
+          });
 
-        curriculumMap = generatedMap;
+          curriculumMap = generatedMap;
 
-        await base44.entities.CurriculumMap.create({
-          course_name: courseName.trim(),
-          school: learningProfile.school || "",
-          grade: learningProfile.grade || "",
-          city: learningProfile.city || "",
-          curriculum_data: curriculumMap
-        });
+          await base44.entities.CurriculumMap.create({
+            course_name: courseName.trim(),
+            school: learningProfile.school || "",
+            grade: learningProfile.grade || "",
+            city: learningProfile.city || "",
+            curriculum_data: curriculumMap
+          });
+        }
       }
 
       console.log("Curriculum map ready");
 
       setProcessingStep("Grading your assignment (this takes 30-60 seconds)...");
 
+      const curriculumContext = curriculumMap.is_custom 
+        ? `Custom Curriculum/Rubric Provided by Instructor:\n${curriculumMap.custom_curriculum}`
+        : `Curriculum Profile:\n${JSON.stringify(curriculumMap, null, 2)}`;
+
       const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}. Read the ENTIRE assignment content below carefully and produce a COMPLETE grading report. Do NOT skip any fields. Do NOT return null or empty arrays.
+
+${curriculumContext}
 
 ASSIGNMENT CONTENT TO GRADE:
 ${extractedContent}
@@ -445,6 +466,43 @@ Output valid JSON matching this exact schema.`;
                     Upload your completed assignment, test, or essay. Our AI will extract the content, analyze it against curriculum standards, and provide comprehensive feedback.
                   </p>
                 </div>
+              </div>
+
+              {/* Optional Curriculum/Rubric Section */}
+              <div className="border border-purple-200 rounded-lg bg-purple-50/50">
+                <button
+                  type="button"
+                  onClick={() => setShowCurriculumSection(!showCurriculumSection)}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-purple-100/50 transition-colors rounded-lg"
+                  disabled={isProcessing}
+                >
+                  <div>
+                    <p className="font-medium text-slate-900">Custom Curriculum/Rubric (Optional)</p>
+                    <p className="text-xs text-slate-600 mt-1">Provide your own grading criteria to override automatic curriculum mapping</p>
+                  </div>
+                  {showCurriculumSection ? (
+                    <ChevronUp className="w-5 h-5 text-slate-600" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-slate-600" />
+                  )}
+                </button>
+                
+                {showCurriculumSection && (
+                  <div className="p-4 pt-0 space-y-2">
+                    <Label htmlFor="customCurriculum">Paste Your Curriculum, Rubric, or Grading Criteria</Label>
+                    <Textarea
+                      id="customCurriculum"
+                      value={customCurriculum}
+                      onChange={(e) => setCustomCurriculum(e.target.value)}
+                      placeholder="E.g., Rubric criteria, learning objectives, grading standards, competencies to assess, etc."
+                      disabled={isProcessing}
+                      className="min-h-[150px] text-sm bg-white"
+                    />
+                    <p className="text-xs text-slate-500">
+                      If provided, the AI will use your criteria instead of generating a curriculum map. This ensures grading aligns with your specific standards.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <Button
