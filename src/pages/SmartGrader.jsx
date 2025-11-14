@@ -197,10 +197,22 @@ Output Format: JSON object matching the specified schema`;
 
       setProcessingStep("Grading your assignment (this takes 30-60 seconds)...");
 
-      const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student. Read the ENTIRE assignment content below carefully and produce a COMPLETE grading report. Do NOT skip any fields. Do NOT return null or empty arrays.
+      const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}. Read the ENTIRE assignment content below carefully and produce a COMPLETE grading report. Do NOT skip any fields. Do NOT return null or empty arrays.
 
 ASSIGNMENT CONTENT TO GRADE:
 ${extractedContent}
+
+[Grounding (Internal Only)]
+- Ground content and examples primarily in the uploaded assignment text; use the curriculum profile to align competencies, emphasis, and assessment style.
+- Infer assignment type from the text (Essay/Analysis; Short Answers; Problem Set—math/econ/accounting; Lab/Report; Case/Policy; Code/Algorithmic; Presentation; Mixed).
+- Build a rubric with 3–6 criteria appropriate to that type, mapped where relevant to curriculum_map.core_competencies and reflecting curriculum_map.competency_weightings emphasis if applicable.
+- Quant/technical work: check method/steps/correctness/units/assumptions/edge cases/interpretation.  
+  Essays/humanities/social sciences: thesis, evidence/sources, depth of analysis/counter-argument, structure, style, citations.  
+  CS/engineering: problem understanding, algorithm/approach, correctness/complexity, code clarity, testing, documentation.  
+  Social sciences/policy: framework selection, evidence/reasoning, comparative/counterfactual, implications, clarity, citations.  
+  Languages: comprehension, vocabulary/grammar/syntax, task fulfilment, organization, register/style.
+- Integrity: neutrally flag citation gaps or dubious references if present. Do not accuse; just note concerns to review.
+- Grade bands: use school norms if present; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
 
 REQUIRED OUTPUT - Fill EVERY field with actual analysis based on the content above:
 
