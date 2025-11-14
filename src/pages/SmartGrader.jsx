@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Upload, FileCheck, AlertCircle, GraduationCap, History, FileText, X } from "lucide-react";
+import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, CheckCircle2, Code2, Calculator, Microscope, FileEdit } from "lucide-react";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
@@ -237,7 +237,7 @@ ASSIGNMENT CONTENT TO GRADE:
 ${extractedContent}
 
 [Grounding (Internal Only)]
-- Primary grounding: the student’s uploaded assignment text above. Secondary grounding: the mapped/uploaded curriculum context in ${curriculumContext} (e.g., core_competencies, competency_weightings, question_formats, exemplar rubrics, high_yield_focal_points, common_misconceptions). Use curriculum to shape the rubric, weight emphasis, and ensure parity with in-class grading norms.
+- Primary grounding: the student's uploaded assignment text above. Secondary grounding: the mapped/uploaded curriculum context in ${curriculumContext} (e.g., core_competencies, competency_weightings, question_formats, exemplar rubrics, high_yield_focal_points, common_misconceptions). Use curriculum to shape the rubric, weight emphasis, and ensure parity with in-class grading norms.
 - Determine assignment type from the submission and/or metadata: Essay/Analysis; Short Answers; Problem Set (math/econ/accounting/finance/stats); Lab/Report (science); Case/Policy (business/econ/law); Code/Algorithmic (CS/engineering); Presentation/Slides; Mixed/Portfolio.
 - If ${curriculumContext} includes a **rubric** or **criteria**, use it as the first choice. If not, build a rubric with 3–6 criteria appropriate to the type and **map each criterion** to relevant curriculum core_competencies; reflect **competency_weightings** by adjusting criterion weights.
 - For quantitative/technical work: check method, stepwise reasoning, correctness, units, assumptions, edge cases, interpretation of results, and clarity of layout.
@@ -249,21 +249,21 @@ ${extractedContent}
 - Grade bands: if explicit in ${curriculumContext}, follow them; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
 
 [Curriculum/Rubric Utilization Rules (Internal Only)]
-- **Competency alignment:** For each rubric criterion, list the most relevant curriculum core_competencies (from ${curriculumContext}) that the student’s work demonstrates or lacks.
+- **Competency alignment:** For each rubric criterion, list the most relevant curriculum core_competencies (from ${curriculumContext}) that the student's work demonstrates or lacks.
 - **Weighting parity:** If competency_weightings exist, proportionally reflect them in rubric **weight_percentage** so the total rubric weight sums to 100%. If a high-weight competency is not evidenced in the work, evaluate the closest aligned criterion and explain the gap in comments.
 - **Question format parity:** When relevant (e.g., short answers, document analysis), mirror ${curriculumContext}.question_formats in expectations for depth and style.
 - **High-yield focal points:** Prefer assessing high_yield_focal_points when the submission touches them; give extra commentary there for authenticity with how the course is graded IRL.
-- **Common misconceptions:** If the submission exhibits any listed misconceptions, reference them explicitly in comments and in “areas_for_improvement”.
+- **Common misconceptions:** If the submission exhibits any listed misconceptions, reference them explicitly in comments and in "areas_for_improvement".
 
 [Scoring Algorithm (Internal Only)]
 - Build 3–6 rubric items with clear **weight_percentage** that total exactly **100%**.
-- For each criterion, assign **score_percentage** (0–100%) with justification anchored to the student’s actual content (quote/line/step/section).
+- For each criterion, assign **score_percentage** (0–100%) with justification anchored to the student's actual content (quote/line/step/section).
 - Compute **total_score** as the sum over all criteria: (score_percentage × weight_percentage/100). Round to nearest whole number.
 - Map **total_score** to **predicted_grade** using the active grade bands.
-- Keep numeric consistency: criterion **max_score** may be expressed as 100 for clarity, with **score** as the criterion’s score_percentage; the detail in “rubric_breakdown” must match the weights/percentages used to compute **total_score**.
+- Keep numeric consistency: criterion **max_score** may be expressed as 100 for clarity, with **score** as the criterion's score_percentage; the detail in "rubric_breakdown" must match the weights/percentages used to compute **total_score**.
 
 [Evidence Anchoring (Internal Only)]
-- Always point comments to concrete evidence: paragraph/line/section, a quoted phrase, a step number, a figure/table, or a code block. If OCR is messy, approximate anchors (e.g., “para ~3, second stanza”, “Step ~4”).
+- Always point comments to concrete evidence: paragraph/line/section, a quoted phrase, a step number, a figure/table, or a code block. If OCR is messy, approximate anchors (e.g., "para ~3, second stanza", "Step ~4").
 
 [Type-Specific Nuances (Internal Only)]
 - Problem sets: partial credit for correct setup with minor arithmetic slips; deduct more for conceptual errors. Require final units and sanity checks.
@@ -274,7 +274,7 @@ ${extractedContent}
 
 [Style & Parity (Internal Only)]
 - Tone: professional and constructive, like an experienced teacher marking real work.
-- Avoid generic feedback; prefer precise, teachable corrections tied to the student’s text.
+- Avoid generic feedback; prefer precise, teachable corrections tied to the student's text.
 - Never return null; if a list is thin, include at least the minimum items based on actual content; only use [] if the assignment is literally blank.
 
 REQUIRED OUTPUT - Fill EVERY field with actual analysis based on the content above:
@@ -397,25 +397,50 @@ Output valid JSON matching this exact schema.`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl shadow-lg">
-                <GraduationCap className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Smart Grader</h1>
-                <p className="text-slate-600">Get instant AI-powered feedback</p>
-              </div>
-            </div>
+        {/* Centered Header */}
+        <div className="mb-8 text-center">
+          <div className="flex justify-end mb-4">
             <Button
               onClick={() => navigate(createPageUrl("AssignmentHistory"))}
               variant="outline"
-              className="hidden md:flex gap-2"
+              className="gap-2"
             >
               <History className="w-4 h-4" />
               History
             </Button>
+          </div>
+          
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="p-3 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl shadow-lg">
+              <CheckCircle2 className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Smart Grader</h1>
+              <p className="text-slate-600">Get instant AI-powered feedback</p>
+            </div>
+          </div>
+
+          {/* What Can Be Graded */}
+          <div className="mt-6 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-100">
+            <p className="text-sm font-semibold text-slate-700 mb-3">AI can grade:</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <FileEdit className="w-4 h-4 text-purple-600" />
+                <span>Essays</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <Calculator className="w-4 h-4 text-purple-600" />
+                <span>Math Work</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <Code2 className="w-4 h-4 text-purple-600" />
+                <span>Coding</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-600">
+                <Microscope className="w-4 h-4 text-purple-600" />
+                <span>Lab Reports</span>
+              </div>
+            </div>
           </div>
         </div>
 
