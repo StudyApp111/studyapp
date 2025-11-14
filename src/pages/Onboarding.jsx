@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, LogOut } from "lucide-react";
+import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, LogOut, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
 
@@ -49,13 +49,43 @@ export default function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    loadExistingProfile();
+  }, []);
+
+  const loadExistingProfile = async () => {
+    try {
+      const user = await base44.auth.me();
+      
+      if (user.learning_profile_id) {
+        const profiles = await base44.entities.LearningProfile.filter({ 
+          id: user.learning_profile_id 
+        });
+        
+        if (profiles.length > 0) {
+          const profile = profiles[0];
+          setAnswers({
+            school: profile.school || "",
+            grade: profile.grade || "",
+            city: profile.city || ""
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const progress = ((currentStep + 1) / questions.length) * 100;
 
   const handleAnswer = (questionId, answer) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
-    setError(""); // Clear error when user types
+    setError("");
   };
 
   const handleNext = () => {
@@ -77,7 +107,6 @@ export default function Onboarding() {
       await base44.auth.logout();
     } catch (error) {
       console.error("Error logging out:", error);
-      // Force logout by redirecting to login
       window.location.href = '/';
     }
   };
@@ -87,9 +116,6 @@ export default function Onboarding() {
     setError("");
     
     try {
-      console.log("Starting onboarding submission with answers:", answers);
-      
-      // Validate all answers are present
       if (!answers.school || !answers.grade || !answers.city) {
         throw new Error("Please answer all questions before completing onboarding");
       }
@@ -100,21 +126,35 @@ export default function Onboarding() {
         city: answers.city.trim()
       };
 
-      console.log("Creating learning profile with data:", profileData);
-      const profile = await base44.entities.LearningProfile.create(profileData);
-      console.log("Profile created successfully:", profile);
+      const user = await base44.auth.me();
+      
+      let profile;
+      if (user.learning_profile_id) {
+        const existingProfiles = await base44.entities.LearningProfile.filter({ 
+          id: user.learning_profile_id 
+        });
+        
+        if (existingProfiles.length > 0) {
+          profile = await base44.entities.LearningProfile.update(user.learning_profile_id, profileData);
+        } else {
+          profile = await base44.entities.LearningProfile.create(profileData);
+          await base44.auth.updateMe({
+            learning_profile_id: profile.id
+          });
+        }
+      } else {
+        profile = await base44.entities.LearningProfile.create(profileData);
+        await base44.auth.updateMe({
+          learning_profile_id: profile.id
+        });
+      }
 
-      console.log("Updating user with onboarding_completed flag");
       await base44.auth.updateMe({
-        onboarding_completed: true,
-        learning_profile_id: profile.id
+        onboarding_completed: true
       });
-      console.log("User updated successfully");
 
-      // Force a small delay to ensure backend update propagates
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      console.log("Navigating to Home page");
       navigate(createPageUrl("Home"), { replace: true });
     } catch (error) {
       console.error("Error saving profile:", error);
@@ -123,13 +163,20 @@ export default function Onboarding() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+      </div>
+    );
+  }
+
   const currentQuestion = questions[currentStep];
   const isAnswered = answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== "";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
       <div className="w-full max-w-3xl">
-        {/* Logout Button - Top Right */}
         <div className="flex justify-end mb-4">
           <Button
             variant="outline"
@@ -213,7 +260,7 @@ export default function Onboarding() {
                 className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold gap-2"
               >
                 {currentStep === questions.length - 1 ? (
-                  isSubmitting ? "Creating Profile..." : "Complete"
+                  isSubmitting ? "Saving..." : "Complete"
                 ) : (
                   <>
                     Next
