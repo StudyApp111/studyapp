@@ -192,10 +192,12 @@ Output Format: JSON object matching the specified schema`;
 
       setProcessingStep("Grading your assignment...");
 
-      const gradingPrompt = `You are a veteran teacher and expert grader for${learningProfile.grade || "N/A"} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Your task is to mark the submitted assignment exactly as a skilled course instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, provide precise and constructive feedback, and output a predicted grade based on performance.
+      const gradingPrompt = `
+[Role]
+You are a veteran teacher and expert grader for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Grade the submitted assignment exactly as a skilled instructor would: align to the curriculum map, apply an appropriate rubric for the assignment type, give precise feedback, and output a predicted grade. Keep all reasoning internal. Output ONLY a single JSON object that matches the provided schema (exact keys, snake_case, correct types). If a list has no items, return an empty array [] (never null). Do not include extra keys.
 
-Input Data:
-Student's Grade Level: ${learningProfile.grade || "N/A"}
+[Inputs]
+Student’s Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${courseName}
 School: ${learningProfile.school || "N/A"}
 City/Region: ${learningProfile.city || "N/A"}
@@ -205,61 +207,39 @@ ${JSON.stringify(curriculumMap, null, 2)}
 
 Assignment Metadata:
 Assignment Name/Type: ${assignmentTitle}
-Assignment Content:
+
+Assignment Content (OCR/user-uploaded):
 ${extractedContent}
 
-[Grounding & Reasoning Policy (Internal Only, Do Not Output)]
-- Ground factual content, topical coverage, and examples primarily in the uploaded assignment text (OCR) and any user-provided notes. Use ${JSON.stringify(curriculumMap, null, 2)} to maintain curricular alignment, competency mapping, and appropriate assessment style/rigor.
-- Determine assignment type from the metadata and text: e.g., Essay (argument/analysis), Short Answers, Problem Set (math/econ/accounting), Lab/Report (science), Case/Policy Analysis (business/econ/law), Code/Algorithmic (CS), Presentation/Slides (if text provided), Mixed.
-- Select or infer a rubric aligned to the course and assignment type. Weight criteria in line with curriculum_map.competency_weightings when relevant; otherwise use a standard, transparent breakdown for the assignment type.
-- For quantitative/technical work (math/science/econ/accounting/CS): verify method, steps, correctness, units, assumptions, edge cases, and interpretation. For essays/humanities/social sciences: evaluate thesis clarity, text/primary-source use, argumentation, conceptual accuracy, structure, style, citation integrity, and originality of insight.
-- If the assignment includes sources or citations, check relevance, accuracy of claims, and basic academic integrity signals (fabricated citations, mismatched quotes, impossible page numbers). Do not accuse plagiarism; flag “integrity concerns” with neutral phrasing and evidence to review.
-- Calibrate predicted grade to the school/course norms when available; otherwise use a clear percentage scale with descriptors.
-- Keep all chain-of-thought internal. Do not output hidden notes or the rubric selection logic—only final results per the output format.
+[Grounding (Internal Only)]
+- Ground content and examples primarily in the uploaded assignment text; use the curriculum profile to align competencies, emphasis, and assessment style.
+- Infer assignment type from the text (Essay/Analysis; Short Answers; Problem Set—math/econ/accounting; Lab/Report; Case/Policy; Code/Algorithmic; Presentation; Mixed).
+- Build a rubric with 3–6 criteria appropriate to that type, mapped where relevant to curriculum_map.core_competencies and reflecting curriculum_map.competency_weightings emphasis if applicable.
+- Quant/technical work: check method/steps/correctness/units/assumptions/edge cases/interpretation.  
+  Essays/humanities/social sciences: thesis, evidence/sources, depth of analysis/counter-argument, structure, style, citations.  
+  CS/engineering: problem understanding, algorithm/approach, correctness/complexity, code clarity, testing, documentation.  
+  Social sciences/policy: framework selection, evidence/reasoning, comparative/counterfactual, implications, clarity, citations.  
+  Languages: comprehension, vocabulary/grammar/syntax, task fulfilment, organization, register/style.
+- Integrity: neutrally flag citation gaps or dubious references if present. Do not accuse; just note concerns to review.
+- Grade bands: use school norms if present; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
 
-[Rubric Construction (Internal Only, Do Not Output)]
-Build an appropriate rubric with 3–6 criteria based on assignment type:
-- Essay/Analysis: Thesis/Claim & Relevance; Evidence/Use of Sources; Depth of Analysis & Counter-argument; Organization & Coherence; Style, Grammar, Citations.
-- Problem Set/Quantitative (Math/Econ/Accounting/Finance/Stats): Method/Setup; Correctness of Workings; Accuracy of Results; Assumptions/Units/Interpretation; Clarity/Organization.
-- Science Lab/Report: Research Question/Hypothesis; Methods/Design; Data/Calculations; Analysis/Discussion; Conclusion/Limits; Formatting/Citations.
-- CS/Engineering: Problem Understanding; Algorithm/Approach; Correctness/Complexity; Code Quality/Clarity; Testing/Edge Cases; Documentation.
-- Social Sciences/Policy/Case: Framework Selection; Evidence/Reasoning; Comparative/Counterfactual Analysis; Policy/Implications; Clarity/Structure; Citations.
-- Languages: Comprehension/Content; Vocabulary/Grammar/Syntax; Task Fulfillment; Organization/Coherence; Register/Style.
+[Task]
+Produce the following, strictly matching the schema keys and types below:
+- assignment_overview (string): one concise paragraph summarizing the task, what the student attempted, and alignment to course expectations.
+- rubric (array of 3–6 objects): each with criterion (string), description (string), weight_percentage (string like "20%"; weights must sum to "100%"), score_percentage (string like "85%"), and justification (string; 1–2 sentences grounded in the student’s work).
+- strengths (array of strings): 3–5 specific strengths anchored to passages/steps/choices in the submission.
+- priority_improvements (array of strings): 4–6 specific, teachable next steps (what to change and how).
+- inline_comments (array of objects): up to 5 pinpoint comments with anchor (string, e.g., “para 3, line 2” or “Step 4”) and comment (string). If anchors are unclear in OCR, approximate.
+- academic_integrity_flags (array of strings): evidence-based concerns to review; [] if none.
+- predicted_grade (string): letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D, F).
+- predicted_grade_percentage (string): percentage with “%” (e.g., "87%").
+- predicted_grade_rationale (string): 1–2 sentences tying rubric results to the grade.
+- competency_mapping (array of strings): 2–4 curriculum competencies most associated with weaknesses, in priority order.
+- recommended_next_focus (array of strings): 2–4 targeted mini-lessons/practice activities aligned to curriculum_map.question_formats and high-yield focal points.
 
-Map rubric criteria to curriculum_map.core_competencies where relevant; reflect emphasis using curriculum_map.competency_weightings when applicable.
+[Output Rules]
+- Output ONLY one valid JSON object with EXACTLY these keys and types. No extra keys. No nulls (use [] for empty arrays). All percentages are strings with a “%” symbol. Weights must sum to "100%".
 
-[Task – Grading & Feedback Generation]
-Produce a teacher-quality grade and feedback package:
-1) Assignment Overview
-   - One concise paragraph summarizing what the assignment attempted, its main task(s), and how well it aligned to ${JSON.stringify(curriculumMap, null, 2)} expectations.
-
-2) Rubric & Scores
-   - List 3–6 criteria with short descriptions.
-   - Assign each criterion a percentage weight (sum = 100%).
-   - Provide a score (0–100%) for each criterion with a 1–2 sentence justification tied to the student’s actual work.
-
-3) Strengths & High-Value Feedback
-   - 3–5 bullet points highlighting what was done well, anchored to passages, steps, or evidence from the submission.
-
-4) Priority Improvements (Actionable Next Steps)
-   - 4–6 bullet points with specific, teachable fixes (e.g., “Re-derive step 3 with the normal approximation; show continuity correction,” “Integrate direct quotation from primary text and analyze author’s term X,” “Balance sheet journal entry reversals—see item 2—should net to …”).
-
-5) Inline or Section-Targeted Comments (Optional if feasible)
-   - Up to 5 pinpoint comments referencing a line/paragraph/step (approximate anchors are fine for OCR), each with a brief correction or suggestion.
-
-6) Academic Integrity & Source Checks (If Applicable)
-   - Briefly note any issues to review (e.g., missing citations for quoted material, dubious references, numerical claims without source). Keep tone neutral; provide evidence-based pointers.
-
-7) Predicted Grade
-   - Provide a percentage grade (0–100%), a short descriptor (e.g., “B range; above average but uneven analysis”), and a 1–2 sentence rationale that ties together the rubric.
-   - If the school/course has explicit grade bands in curriculum_map or notes, align to them; otherwise use common bands (A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60).
-
-8) Competency Mapping & Next Focus
-   - List 2–4 curriculum_map.core_competencies most associated with weaknesses observed, in priority order.
-   - Suggest 1–2 targeted next mini-lessons or practice activities aligned to curriculum_map.question_formats and high-yield focal points.
-
-[Output Format]
-Return a single JSON object with the fields below (strings unless otherwise noted). Do not include any other text.
 `;
 
       console.log("Submitting to grading function...");
