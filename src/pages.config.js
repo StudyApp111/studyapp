@@ -13,6 +13,7 @@ import PricingPlans from './pages/PricingPlans';
 import Leaderboard from './pages/Leaderboard';
 import SmartGrader from './pages/SmartGrader';
 import GradeResults from './pages/GradeResults';
+import AssignmentHistory from './pages/AssignmentHistory';
 import Layout from './Layout.jsx';
 
 
@@ -32,6 +33,7 @@ export const PAGES = {
     "Leaderboard": Leaderboard,
     "SmartGrader": SmartGrader,
     "GradeResults": GradeResults,
+    "AssignmentHistory": AssignmentHistory,
 }
 
 export const pagesConfig = {

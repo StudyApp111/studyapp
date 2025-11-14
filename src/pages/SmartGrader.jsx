@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Upload, FileCheck, AlertCircle, GraduationCap } from "lucide-react";
+import { Loader2, Upload, FileCheck, AlertCircle, GraduationCap, History } from "lucide-react";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
@@ -331,15 +331,33 @@ Output valid JSON matching this exact schema.`;
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl shadow-lg">
-              <GraduationCap className="w-8 h-8 text-white" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl shadow-lg">
+                <GraduationCap className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Smart Grader</h1>
+                <p className="text-slate-600">Get instant AI-powered feedback on your assignments</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Smart Grader</h1>
-              <p className="text-slate-600">Get instant AI-powered feedback on your assignments</p>
-            </div>
+            <Button
+              onClick={() => navigate(createPageUrl("AssignmentHistory"))}
+              variant="outline"
+              className="hidden md:flex gap-2"
+            >
+              <History className="w-4 h-4" />
+              View History
+            </Button>
           </div>
+          <Button
+            onClick={() => navigate(createPageUrl("AssignmentHistory"))}
+            variant="outline"
+            className="md:hidden w-full mb-4 gap-2"
+          >
+            <History className="w-4 h-4" />
+            View Assignment History
+          </Button>
         </div>
 
         <Card className="shadow-2xl border-0">
