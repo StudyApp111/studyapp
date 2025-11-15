@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import MathText from "../components/math/MathText";
 
 const formatTime = (seconds) => {
   if (!seconds) return '0s';
@@ -529,25 +530,31 @@ export default function Feedback() {
                           </div>
                           
                           <div className="bg-white rounded-lg p-4 border border-slate-200 mb-3">
-                            <p className="text-slate-800 font-medium mb-3">{question.question_text}</p>
+                            <MathText className="text-slate-800 font-medium mb-3">
+                              {question.question_text}
+                            </MathText>
                             {question.options && question.options.length > 0 && (
                               <div className="mt-3 space-y-1 bg-slate-50 p-3 rounded">
                                 <p className="text-xs font-semibold text-slate-600 mb-2">Options:</p>
                                 {question.options.map((opt, i) => (
-                                  <div key={i} className="text-sm text-slate-600">
+                                  <MathText key={i} className="text-sm text-slate-600" inline>
                                     {String.fromCharCode(65 + i)}. {opt}
-                                  </div>
+                                  </MathText>
                                 ))}
                               </div>
                             )}
                             <div className="mt-3 grid grid-cols-2 gap-3">
                               <div className="bg-blue-50 p-3 rounded">
                                 <p className="text-xs font-semibold text-blue-700 mb-1">Your Answer:</p>
-                                <p className="text-sm text-slate-700">{question.user_answer || "No answer"}</p>
+                                <MathText className="text-sm text-slate-700">
+                                  {question.user_answer || "No answer"}
+                                </MathText>
                               </div>
                               <div className="bg-emerald-50 p-3 rounded">
                                 <p className="text-xs font-semibold text-emerald-700 mb-1">Correct Answer:</p>
-                                <p className="text-sm text-slate-700">{question.correct_answer}</p>
+                                <MathText className="text-sm text-slate-700">
+                                  {question.correct_answer}
+                                </MathText>
                               </div>
                             </div>
                           </div>
@@ -558,12 +565,16 @@ export default function Feedback() {
                             <p className="text-sm font-semibold mb-2 text-slate-800">
                               {feedback.is_correct ? '✓ Excellent work!' : 'Learning Opportunity:'}
                             </p>
-                            <p className="text-sm text-slate-700 leading-relaxed">{feedback.feedback}</p>
+                            <MathText className="text-sm text-slate-700 leading-relaxed">
+                              {feedback.feedback}
+                            </MathText>
                           </div>
 
                           <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
                             <p className="text-xs font-semibold text-purple-700 mb-2">📚 Explanation & Key Concepts:</p>
-                            <p className="text-sm text-slate-700 mb-3">{question.explanation}</p>
+                            <MathText className="text-sm text-slate-700 mb-3">
+                              {question.explanation}
+                            </MathText>
                             <div className="flex flex-wrap gap-2">
                               {question.assessed_competencies?.map((comp, i) => (
                                 <Badge key={i} className="bg-purple-100 text-purple-800 border-purple-200">
