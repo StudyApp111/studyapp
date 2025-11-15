@@ -109,35 +109,7 @@ City/Region: ${learningProfile.city || "N/A"}
 Detailed Curriculum Profile: ${JSON.stringify(lessonData.curriculum_map)}
 Content Source: ${contentDescription}
 
-Task 1: Create the Smart Summary
-
-Based on the curriculum map and considering the lesson content:
-
-Structure & Content:
-- Synthesize information primarily from core competencies and high-yield focal points.
-- If lesson content is provided and is relevant, ensure this summary gives particular attention or slightly more detailed, clear explanations to those concepts.
-- Organize the summary logically: begin with foundational concepts and smoothly progress to more complex or granular details, ensuring a natural flow of information.
-
-Length Requirement:
-- CRITICAL: The summary MUST be between 250-350 words total. Be concise and focused.
-- Structure into 2-4 key sections with clear headings
-- Prioritize the most essential concepts only
-
-Language & Tone:
-- Use clear, intuitive, and engaging language precisely tailored to the specified grade level for easy comprehension. Employ techniques like short sentences, relatable analogies (where appropriate), and simple definitions for key terminology.
-- Maintain a consistently supportive, encouraging, and patient tone, as an effective teacher would when guiding a student.
-- Where pedagogically valuable, briefly explain the importance or relevance of key concepts.
-
-Math Notation for Summary:
-- For superscripts (exponents, powers): use the format x^2 or E^2 (will be rendered properly)
-- For subscripts (chemical formulas): use the format H_2O or C_6H_12O_6 (will be rendered properly)
-- Use markdown italics for emphasis: *important concept*
-
-Formatting for Summary:
-- Use markdown: ## for headings, **bold** for key terms, *italic* for emphasis
-- This markdown will be rendered in the summary display
-
-Task 2: Design the 5-Question Diagnostic Quiz
+Task 1: Design the 5-Question Diagnostic Quiz
 
 CRITICAL: ALL questions MUST be Multiple Choice Questions (MCQs) with exactly 4 answer options.
 
@@ -177,7 +149,7 @@ Clarity & Appropriateness: Ensure all questions are clearly worded, unambiguous,
 Output Format:
 Provide your response as a single, valid JSON object with the following structure. Ensure the content_markdown field uses proper markdown formatting including ## for headings, ** for bold, * for italic, - for lists, and proper math notation (x^2, H_2O).`;
 
-      const { data: quizData } = await base44.functions.invoke('smartSummaryQuiz', {
+      const quizData = await base44.integrations.Core.InvokeLLM({
         prompt: aiPrompt,
         response_json_schema: {
           type: "object",
