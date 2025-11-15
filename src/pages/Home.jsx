@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Trophy, Flame } from "lucide-react";
+import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Trophy, Flame, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, DollarSign, Briefcase } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -82,12 +82,57 @@ export default function Home() {
     return `${minutes}m`;
   };
 
+  const getSubjectIcon = (courseName) => {
+    const name = courseName.toLowerCase();
+    
+    // Math & Calculus
+    if (name.includes('math') || name.includes('calculus') || name.includes('algebra') || name.includes('geometry') || name.includes('trigonometry') || name.includes('statistics')) {
+      return Calculator;
+    }
+    // Science subjects
+    if (name.includes('physics') || name.includes('chemistry') || name.includes('biology') || name.includes('science')) {
+      return Beaker;
+    }
+    // Geography
+    if (name.includes('geography') || name.includes('geo')) {
+      return Globe;
+    }
+    // Humanities (History, Philosophy, etc)
+    if (name.includes('history') || name.includes('humanities') || name.includes('philosophy') || name.includes('literature') || name.includes('english')) {
+      return BookText;
+    }
+    // Languages
+    if (name.includes('language') || name.includes('french') || name.includes('spanish') || name.includes('german') || name.includes('chinese')) {
+      return Languages;
+    }
+    // Computer Science
+    if (name.includes('computer') || name.includes('coding') || name.includes('programming') || name.includes('cs')) {
+      return Code;
+    }
+    // Art
+    if (name.includes('art') || name.includes('design')) {
+      return Palette;
+    }
+    // Music
+    if (name.includes('music')) {
+      return Music;
+    }
+    // Business/Economics
+    if (name.includes('business') || name.includes('economics') || name.includes('econ') || name.includes('finance') || name.includes('accounting')) {
+      return Briefcase;
+    }
+    
+    // Default
+    return BookOpen;
+  };
+
   const SimpleLessonCard = ({ lesson }) => {
     const worksheets = (lessonWorksheets[lesson.id] || []).sort((a, b) => a.worksheet_number - b.worksheet_number);
     const completedCount = worksheets.filter(w => w.completed).length;
     const totalWorksheets = 6;
     const latestCompletedWorksheet = worksheets.filter(w => w.completed).pop();
     const progress = (completedCount / totalWorksheets) * 100;
+    const SubjectIcon = getSubjectIcon(lesson.course_name);
 
     const handleClick = () => {
       navigate(createPageUrl("LessonDetail") + `?lessonId=${lesson.id}`);
@@ -115,13 +160,16 @@ export default function Home() {
           </div>
 
           <CardHeader className="pb-4 pt-6">
-            <div className="flex items-start justify-between mb-3">
-              <BookOpen className={`w-8 h-8 ${
-                completedCount === totalWorksheets ? 'text-emerald-600' :
-                completedCount > 0 ? 'text-yellow-600' :
-                'text-purple-600'
-              }`} />
-              <Badge className={`${
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <SubjectIcon className={`w-7 h-7 flex-shrink-0 ${
+                  completedCount === totalWorksheets ? 'text-emerald-600' :
+                  completedCount > 0 ? 'text-yellow-600' :
+                  'text-purple-600'
+                }`} />
+                <CardTitle className="text-lg text-slate-900 truncate">{lesson.course_name}</CardTitle>
+              </div>
+              <Badge className={`flex-shrink-0 ${
                 completedCount === totalWorksheets ? 'bg-emerald-100 text-emerald-700' :
                 completedCount > 0 ? 'bg-yellow-100 text-yellow-700' :
                 'bg-purple-100 text-purple-700'
@@ -129,7 +177,6 @@ export default function Home() {
                 {completedCount}/{totalWorksheets}
               </Badge>
             </div>
-            <CardTitle className="text-xl text-slate-900">{lesson.course_name}</CardTitle>
           </CardHeader>
           
           <CardContent>
@@ -144,13 +191,13 @@ export default function Home() {
 
               {latestCompletedWorksheet ? (
                 <div className="p-4 bg-gradient-to-r from-purple-50 to-yellow-50 rounded-lg border border-yellow-300 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
                       <p className="text-xs font-semibold text-slate-600 mb-1">Current Predicted Grade</p>
                       <p className="text-3xl font-bold text-slate-900">{latestCompletedWorksheet.predicted_grade}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-slate-600">Score</p>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs text-slate-600 mb-1">Score</p>
                       <p className="text-xl font-bold text-purple-600">{Math.round(latestCompletedWorksheet.total_score)}%</p>
                     </div>
                   </div>
@@ -223,102 +270,105 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Mobile-Optimized Stats - 2x2 Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-700 opacity-10" />
-            <CardContent className="p-4 md:p-6 relative">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">
-                    <Award className="w-4 h-4 md:w-6 md:h-6 text-white" />
+      {/* Mobile-Optimized Stats - 2x2 Grid - Centered */}
+      <div className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-700 opacity-10" />
+              <CardContent className="p-4 md:p-6 relative">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">
+                      <Award className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Completed</p>
+                    <p className="text-2xl md:text-3xl font-bold text-slate-900">{completedWorksheets}</p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Completed</p>
-                  <p className="text-2xl md:text-3xl font-bold text-slate-900">{completedWorksheets}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-yellow-600 opacity-10" />
-            <CardContent className="p-4 md:p-6 relative">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg">
-                    <Clock className="w-4 h-4 md:w-6 md:h-6 text-white" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-yellow-600 opacity-10" />
+              <CardContent className="p-4 md:p-6 relative">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg">
+                      <Clock className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">In Progress</p>
+                    <p className="text-2xl md:text-3xl font-bold text-slate-900">{inProgressWorksheets}</p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">In Progress</p>
-                  <p className="text-2xl md:text-3xl font-bold text-slate-900">{inProgressWorksheets}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-800 opacity-10" />
-            <CardContent className="p-4 md:p-6 relative">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-purple-600 to-purple-800 shadow-lg">
-                    <Zap className="w-4 h-4 md:w-6 md:h-6 text-white" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-800 opacity-10" />
+              <CardContent className="p-4 md:p-6 relative">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-purple-600 to-purple-800 shadow-lg">
+                      <Zap className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Total Tests</p>
+                    <p className="text-2xl md:text-3xl font-bold text-slate-900">{totalQuizzes}</p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Total Tests</p>
-                  <p className="text-2xl md:text-3xl font-bold text-slate-900">{totalQuizzes}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 to-amber-600 opacity-10" />
-            <CardContent className="p-4 md:p-6 relative">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 shadow-lg">
-                    <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-white" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 to-amber-600 opacity-10" />
+              <CardContent className="p-4 md:p-6 relative">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 shadow-lg">
+                      <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Avg Score</p>
+                    <p className="text-2xl md:text-3xl font-bold text-slate-900">{avgScore}%</p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Avg Score</p>
-                  <p className="text-2xl md:text-3xl font-bold text-slate-900">{avgScore}%</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
 
-      <div className="mb-8">
+      {/* Recent Lessons - Centered */}
+      <div className="mb-8 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl md:text-2xl font-bold text-slate-900">Recent Lessons</h2>
           <Button
@@ -367,9 +417,9 @@ export default function Home() {
         )}
       </div>
 
-      {/* Badges Section - Moved to Bottom */}
+      {/* Badges Section - Centered */}
       {user.badges && user.badges.length > 0 && (
-        <div className="mb-8">
+        <div className="mb-8 max-w-6xl mx-auto">
           <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-4">Your Badges</h2>
           <BadgeDisplay badges={user.badges} size="compact" />
         </div>
