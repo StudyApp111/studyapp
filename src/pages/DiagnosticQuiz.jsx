@@ -383,15 +383,15 @@ Provide your response as a single, valid JSON object with the following structur
         </AnimatePresence>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 md:left-[256px] z-20 bg-white/95 backdrop-blur-sm border-t border-purple-200/60 shadow-lg">
-        <div className="max-w-4xl mx-auto px-3 py-3 md:px-6 md:py-4">
-          <div className="flex justify-between gap-3">
+      <div className="fixed bottom-0 left-0 right-0 md:left-[256px] z-30 bg-white border-t border-purple-200/60 shadow-2xl safe-area-inset-bottom">
+        <div className="max-w-4xl mx-auto px-4 py-4 md:px-6 md:py-5">
+          <div className="flex justify-between gap-4">
             <Button
               variant="outline"
               onClick={handlePrevious}
               disabled={currentQuestion === 0}
-              size="sm"
-              className="md:text-base"
+              size="lg"
+              className="flex-1 min-h-[48px] md:min-h-[44px] text-base font-semibold touch-manipulation active:scale-95 transition-transform"
             >
               Previous
             </Button>
@@ -399,12 +399,12 @@ Provide your response as a single, valid JSON object with the following structur
               <Button
                 onClick={submitQuiz}
                 disabled={!canProceed || isSubmitting}
-                size="sm"
-                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
+                size="lg"
+                className="flex-1 min-h-[48px] md:min-h-[44px] bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-base font-semibold touch-manipulation active:scale-95 transition-transform"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     <span className="hidden sm:inline">Submitting...</span>
                     <span className="sm:hidden">Submit</span>
                   </>
@@ -419,8 +419,8 @@ Provide your response as a single, valid JSON object with the following structur
               <Button
                 onClick={handleNext}
                 disabled={!canProceed}
-                size="sm"
-                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 md:text-base"
+                size="lg"
+                className="flex-1 min-h-[48px] md:min-h-[44px] bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-base font-semibold touch-manipulation active:scale-95 transition-transform"
               >
                 <span className="hidden sm:inline">Next Question</span>
                 <span className="sm:hidden">Next</span>
