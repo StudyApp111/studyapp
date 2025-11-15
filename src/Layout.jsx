@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -19,6 +18,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
+import FeedbackButton from "@/components/feedback/FeedbackButton";
 
 const navigationItems = [
   {
@@ -84,7 +84,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 relative">
         <style>{`
           :root {
             --primary: 270 50% 50%;
@@ -346,6 +346,9 @@ export default function Layout({ children, currentPageName }) {
             </nav>
           )}
         </main>
+
+        {/* Global Feedback Button - Always visible on authenticated pages */}
+        {showNavigation && !isOnboardingPage && <FeedbackButton />}
       </div>
     </SidebarProvider>
   );
