@@ -27,10 +27,16 @@ export default function FeedbackButton() {
     setIsSending(true);
 
     try {
-      await base44.entities.Feedback.create({
-        name: name || "Anonymous",
-        email: email,
-        message: message
+      await base44.integrations.Core.SendEmail({
+        to: "support@study-app.ai",
+        subject: `Feedback from ${name || email}`,
+        body: `
+From: ${name || "Anonymous"}
+Email: ${email}
+
+Message:
+${message}
+        `.trim()
       });
 
       setSent(true);
