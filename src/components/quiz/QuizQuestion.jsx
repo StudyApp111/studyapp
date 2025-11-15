@@ -41,25 +41,27 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
 
           <RadioGroup value={selectedAnswer} onValueChange={onSelectAnswer} className="space-y-3">
             {question.options.map((option, index) => {
-              // Clean the option text - remove any leading formatting like "A., " or "A,. ," etc
-              const cleanOption = option.replace(/^[A-Z][,.\s]+,?\s*/i, '').trim();
+              // Clean the option text - remove any leading letter prefixes and punctuation
+              const cleanOption = option
+                .replace(/^[A-Z][,.\s)]+/i, '')  // Remove "A., ", "A,. ", "A) ", etc.
+                .replace(/^[,.\s]+/, '')           // Remove any remaining leading punctuation
+                .trim();
               
               return (
-                <div
+                <label
                   key={index}
-                  className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all ${
+                  htmlFor={`option-${index}`}
+                  className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer ${
                     selectedAnswer === option
                       ? "border-purple-500 bg-purple-50"
                       : "border-slate-200 hover:border-purple-300 bg-white"
                   }`}
                 >
-                  <RadioGroupItem value={option} id={`option-${index}`} className="mt-1" />
-                  <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                    <MathText inline className="text-slate-700">
-                      {String.fromCharCode(65 + index)}. {cleanOption}
-                    </MathText>
-                  </Label>
-                </div>
+                  <RadioGroupItem value={option} id={`option-${index}`} className="flex-shrink-0" />
+                  <MathText className="text-base text-slate-700 flex-1">
+                    {String.fromCharCode(65 + index)}. {cleanOption}
+                  </MathText>
+                </label>
               );
             })}
           </RadioGroup>
