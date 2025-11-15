@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Award, TrendingUp, CheckCircle, Target, Home, TrendingDown, AlertTriangle, BookOpen, FileText, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import MathText from "../components/math/MathText";
 
 export default function GradeResults() {
   const navigate = useNavigate();
@@ -244,7 +246,9 @@ export default function GradeResults() {
                       </div>
                       {item.comments && (
                         <div className="bg-white rounded-lg p-4 border border-purple-200">
-                          <p className="text-sm text-slate-700 leading-relaxed">{item.comments}</p>
+                          <MathText className="text-sm text-slate-700 leading-relaxed">
+                            {item.comments}
+                          </MathText>
                         </div>
                       )}
                     </motion.div>
@@ -278,7 +282,9 @@ export default function GradeResults() {
                           {section.points_earned}/{section.points_possible} pts
                         </Badge>
                       </div>
-                      <p className="text-sm text-slate-700 mb-2">{section.feedback}</p>
+                      <MathText className="text-sm text-slate-700 mb-2">
+                        {section.feedback}
+                      </MathText>
                       {section.competencies_assessed && section.competencies_assessed.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {section.competencies_assessed.map((comp, i) => (
