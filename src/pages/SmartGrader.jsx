@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, CheckCircle2, Code2, Calculator, Microscope, FileEdit } from "lucide-react";
+import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, Code2, Calculator, Microscope, FileEdit, CheckCircle2, Zap } from "lucide-react";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
@@ -397,8 +397,8 @@ Output valid JSON matching this exact schema.`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-3xl mx-auto">
-        {/* Centered Header */}
-        <div className="mb-8 text-center">
+        {/* Hero Header */}
+        <div className="mb-8">
           <div className="flex justify-end mb-4">
             <Button
               onClick={() => navigate(createPageUrl("AssignmentHistory"))}
@@ -410,35 +410,40 @@ Output valid JSON matching this exact schema.`;
             </Button>
           </div>
           
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="p-3 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl shadow-lg">
-              <CheckCircle2 className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Smart Grader</h1>
-              <p className="text-slate-600">Get instant AI-powered feedback</p>
-            </div>
-          </div>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 p-6 md:p-8 shadow-xl">
+            {/* Decorative elements */}
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-20 -mt-20" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-700/20 rounded-full blur-xl -ml-16 -mb-16" />
+            
+            <div className="relative text-center">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <CheckCircle2 className="w-7 h-7 text-white" />
+                </div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white">Smart Grader</h1>
+              </div>
+              <p className="text-white/95 text-sm md:text-base mb-4">
+                Get instant AI-powered feedback on any assignment
+              </p>
 
-          {/* What Can Be Graded */}
-          <div className="mt-6 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-100">
-            <p className="text-sm font-semibold text-slate-700 mb-3">AI can grade:</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <FileEdit className="w-4 h-4 text-purple-600" />
-                <span>Essays</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Calculator className="w-4 h-4 text-purple-600" />
-                <span>Math Work</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Code2 className="w-4 h-4 text-purple-600" />
-                <span>Coding</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Microscope className="w-4 h-4 text-purple-600" />
-                <span>Lab Reports</span>
+              {/* What Can Be Graded */}
+              <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-2 rounded-full">
+                  <FileEdit className="w-4 h-4 text-white" />
+                  <span className="text-sm text-white font-medium">Essays</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-2 rounded-full">
+                  <Calculator className="w-4 h-4 text-white" />
+                  <span className="text-sm text-white font-medium">Math</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-2 rounded-full">
+                  <Code2 className="w-4 h-4 text-white" />
+                  <span className="text-sm text-white font-medium">Code</span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-2 rounded-full">
+                  <Microscope className="w-4 h-4 text-white" />
+                  <span className="text-sm text-white font-medium">Labs</span>
+                </div>
               </div>
             </div>
           </div>
@@ -545,7 +550,7 @@ Output valid JSON matching this exact schema.`;
               <Button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold"
                 size="lg"
               >
                 {isProcessing ? (
@@ -555,7 +560,7 @@ Output valid JSON matching this exact schema.`;
                   </>
                 ) : (
                   <>
-                    <Upload className="w-5 h-5 mr-2" />
+                    <Zap className="w-5 h-5 mr-2" />
                     Grade Assignment
                   </>
                 )}
