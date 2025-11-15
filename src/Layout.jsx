@@ -19,6 +19,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
+import FeedbackButton from "@/components/feedback/FeedbackButton";
 
 const navigationItems = [
   {
@@ -347,6 +348,8 @@ export default function Layout({ children, currentPageName }) {
           )}
         </main>
       </div>
+      {/* Global Feedback Button - Visible on all pages */}
+      {showNavigation && !isOnboardingPage && <FeedbackButton />}
     </SidebarProvider>
   );
 }
