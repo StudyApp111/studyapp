@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
     try {
@@ -125,10 +125,10 @@ CONSTRAINTS
                 }
             },
             safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_LOW_AND_ABOVE" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_LOW_AND_ABOVE" }
             ]
         };
 
@@ -165,25 +165,17 @@ CONSTRAINTS
 
         try {
             const parsedResponse = JSON.parse(generatedText);
-            
-            // Validate the response structure
-            if (typeof parsedResponse.score_out_of_10 !== 'number' || 
-                !parsedResponse.verdict || 
-                !parsedResponse.rationale_short) {
-                throw new Error('Invalid response structure from AI');
-            }
-
             return Response.json(parsedResponse);
         } catch (parseError) {
             console.error('Failed to parse JSON:', parseError);
             return Response.json({ 
-                error: 'Failed to parse AI response', 
+                error: 'Failed to parse JSON response', 
                 raw_text: generatedText 
             }, { status: 500 });
         }
 
     } catch (error) {
-        console.error('Error in gradeShortAnswer:', error);
+        console.error('Error in smartSummaryQuiz:', error);
         return Response.json({ 
             error: error.message 
         }, { status: 500 });
