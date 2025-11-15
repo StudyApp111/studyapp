@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle } from "lucide-react";
 
 export default function CreateLesson() {
@@ -420,15 +420,18 @@ Output Format: JSON object matching the specified schema`;
                     </Label>
                   </div>
 
-                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
-                    <RadioGroupItem value="url" id="url" />
-                    <Label htmlFor="url" className="flex items-center gap-2 flex-1 cursor-pointer">
-                      <LinkIcon className="w-5 h-5 text-purple-600" />
-                      <div>
-                        <p className="font-medium">Provide a URL</p>
-                        <p className="text-xs text-slate-500">Link to course materials, syllabus, or educational content</p>
-                      </div>
-                    </Label>
+                  <div className="relative">
+                    <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 bg-slate-50 opacity-60">
+                      <RadioGroupItem value="url" id="url" disabled />
+                      <Label htmlFor="url" className="flex items-center gap-2 flex-1 cursor-not-allowed">
+                        <LinkIcon className="w-5 h-5 text-slate-400" />
+                        <div>
+                          <p className="font-medium text-slate-500">Provide a URL</p>
+                          <p className="text-xs text-slate-400">Link to course materials, syllabus, or educational content</p>
+                        </div>
+                      </Label>
+                      <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-300">Coming Soon</Badge>
+                    </div>
                   </div>
 
                   <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
@@ -457,24 +460,6 @@ Output Format: JSON object matching the specified schema`;
                   />
                   <p className="text-xs text-slate-500">
                     Provide as much detail as possible for better personalization
-                  </p>
-                </div>
-              )}
-
-              {inputType === "url" && (
-                <div className="space-y-2">
-                  <Label htmlFor="url">Content URL *</Label>
-                  <Input
-                    id="url"
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://example.com/course-syllabus"
-                    disabled={isProcessing}
-                    className="text-base"
-                  />
-                  <p className="text-xs text-slate-500">
-                    Provide a link to your course materials, syllabus, or any educational content
                   </p>
                 </div>
               )}
