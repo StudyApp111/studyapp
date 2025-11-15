@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Send, X } from "lucide-react";
 import {
@@ -22,6 +22,22 @@ export default function FeedbackButton() {
   const [isSending, setIsSending] = useState(false);
   const [sent, setSent] = useState(false);
 
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setEmail(user.email || "");
+        setName(user.full_name || "");
+      } catch (error) {
+        console.error("Error loading user:", error);
+      }
+    };
+    
+    if (isOpen) {
+      loadUser();
+    }
+  }, [isOpen]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSending(true);
@@ -43,8 +59,6 @@ ${message}
       setTimeout(() => {
         setIsOpen(false);
         setSent(false);
-        setName("");
-        setEmail("");
         setMessage("");
       }, 2000);
     } catch (error) {

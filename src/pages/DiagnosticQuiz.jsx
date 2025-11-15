@@ -177,7 +177,7 @@ Clarity & Appropriateness: Ensure all questions are clearly worded, unambiguous,
 Output Format:
 Provide your response as a single, valid JSON object with the following structure. Ensure the content_markdown field uses proper markdown formatting including ## for headings, ** for bold, * for italic, - for lists, and proper math notation (x^2, H_2O).`;
 
-      const quizData = await base44.integrations.Core.InvokeLLM({
+      const { data: quizData } = await base44.functions.invoke('smartSummaryQuiz', {
         prompt: aiPrompt,
         response_json_schema: {
           type: "object",

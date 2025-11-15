@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -178,7 +178,10 @@ export default function Layout({ children, currentPageName }) {
                           <span className="font-bold text-purple-700">{formatTime(user.time_spent_seconds || 0)}</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-600">Avg Score</span>
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-purple-800" />
+                            <span className="text-slate-600">Avg Score</span>
+                          </div>
                           <span className="font-bold text-purple-800">{user.average_score || 0}%</span>
                         </div>
                       </div>
