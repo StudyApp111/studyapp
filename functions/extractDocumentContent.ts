@@ -23,8 +23,6 @@ Deno.serve(async (req) => {
 
         console.log('=== Starting Document Extraction ===');
         console.log('File URL:', file_url);
-        console.log('API Key present:', !!apiKey);
-        console.log('API Key length:', apiKey?.length);
 
         // Download the file
         console.log('Step 1: Downloading file...');
@@ -42,7 +40,7 @@ Deno.serve(async (req) => {
         console.log('✓ File downloaded successfully');
         console.log('File size:', fileSize, 'bytes (', (fileSize / 1024 / 1024).toFixed(2), 'MB)');
 
-        // Check file size
+        // Check file size limit (50MB)
         if (fileSize > 50 * 1024 * 1024) {
             console.error('File too large:', fileSize);
             return Response.json({ 
@@ -50,58 +48,73 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
-        // Determine content type
+        // Determine file type from URL and content-type
         const contentType = fileResponse.headers.get('content-type') || '';
+        const fileName = file_url.split('/').pop().toLowerCase();
+        const fileExt = fileName.split('.').pop();
+        
         console.log('Content type:', contentType);
+        console.log('File extension:', fileExt);
 
-        const isPDF = contentType.includes('pdf') || file_url.toLowerCase().endsWith('.pdf');
-        console.log('Is PDF:', isPDF);
+        // Determine appropriate media type for Mistral API
+        let mediaType = 'application/pdf';
+        let useVisionModel = false;
 
-        let extractedContent = '';
-
-        // Strategy 1: For PDFs, try text extraction first (simpler, faster)
-        if (isPDF) {
-            console.log('Strategy: PDF detected - trying direct text extraction');
-            
-            try {
-                // Use Base44's built-in LLM with file support for PDFs
-                console.log('Using Base44 LLM for PDF extraction...');
-                const pdfResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
-                    prompt: `Extract all educational content from this PDF document. Provide a comprehensive summary including:
-- All key concepts, topics, and learning objectives
-- Important definitions, formulas, and terminology  
-- Course structure and organization
-- Assessment information and grading criteria
-- Examples and case studies
-- Any recommended resources or readings
-
-Be thorough and detailed - this will be used to create personalized study materials.`,
-                    file_urls: [file_url]
-                });
-
-                extractedContent = pdfResult;
-                console.log('✓ PDF content extracted successfully using Base44 LLM');
-                console.log('Extracted content length:', extractedContent.length, 'characters');
-
-                return Response.json({ 
-                    extracted_content: extractedContent,
-                    characters: extractedContent.length,
-                    file_size: fileSize,
-                    method: 'base44_llm'
-                });
-
-            } catch (pdfError) {
-                console.error('PDF extraction with Base44 failed:', pdfError);
-                console.log('Falling back to Mistral vision model...');
+        // Image files - use vision model
+        if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(fileExt) || 
+            contentType.includes('image/')) {
+            useVisionModel = true;
+            if (contentType.includes('png') || fileExt === 'png') {
+                mediaType = 'image/png';
+            } else if (contentType.includes('jpeg') || contentType.includes('jpg') || fileExt === 'jpg' || fileExt === 'jpeg') {
+                mediaType = 'image/jpeg';
+            } else if (contentType.includes('webp') || fileExt === 'webp') {
+                mediaType = 'image/webp';
+            } else if (contentType.includes('gif') || fileExt === 'gif') {
+                mediaType = 'image/gif';
             }
+            console.log('Detected image file, using vision model with media type:', mediaType);
+        }
+        // PDF files
+        else if (fileExt === 'pdf' || contentType.includes('pdf')) {
+            mediaType = 'application/pdf';
+            useVisionModel = true;
+            console.log('Detected PDF file');
+        }
+        // Word documents
+        else if (fileExt === 'docx' || contentType.includes('wordprocessingml')) {
+            mediaType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            useVisionModel = true;
+            console.log('Detected DOCX file');
+        }
+        else if (fileExt === 'doc' || contentType.includes('msword')) {
+            mediaType = 'application/msword';
+            useVisionModel = true;
+            console.log('Detected DOC file');
+        }
+        // PowerPoint files
+        else if (fileExt === 'pptx' || contentType.includes('presentationml')) {
+            mediaType = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+            useVisionModel = true;
+            console.log('Detected PPTX file');
+        }
+        else if (fileExt === 'ppt' || contentType.includes('ms-powerpoint')) {
+            mediaType = 'application/vnd.ms-powerpoint';
+            useVisionModel = true;
+            console.log('Detected PPT file');
+        }
+        else {
+            console.log('Unsupported file type, defaulting to PDF processing');
+            mediaType = 'application/pdf';
+            useVisionModel = true;
         }
 
-        // Strategy 2: Use Mistral Vision API for images or as fallback
+        // Convert to base64
         console.log('Step 2: Converting to base64...');
         const arrayBuffer = await fileBlob.arrayBuffer();
         const bytes = new Uint8Array(arrayBuffer);
         
-        // More efficient base64 encoding for large files
+        // Efficient base64 encoding for large files
         const chunkSize = 8192;
         let binary = '';
         for (let i = 0; i < bytes.length; i += chunkSize) {
@@ -112,29 +125,52 @@ Be thorough and detailed - this will be used to create personalized study materi
         console.log('✓ Base64 encoding complete');
         console.log('Base64 length:', base64Data.length);
 
-        // Map to supported media types
-        let mediaType = 'application/pdf';
-        if (contentType.includes('png')) {
-            mediaType = 'image/png';
-        } else if (contentType.includes('jpeg') || contentType.includes('jpg')) {
-            mediaType = 'image/jpeg';
-        } else if (contentType.includes('webp')) {
-            mediaType = 'image/webp';
-        } else if (contentType.includes('gif')) {
-            mediaType = 'image/gif';
-        }
-        console.log('Using media type:', mediaType);
+        // Comprehensive extraction prompt
+        const prompt = `Extract ALL educational content from this document with maximum detail and comprehensiveness. Your extraction should include:
 
-        // Mistral vision prompt
-        const prompt = `Extract all educational content from this document. Provide a comprehensive summary including:
-- All key concepts, topics, and learning objectives
-- Important definitions, formulas, and terminology
-- Course structure and organization
-- Assessment information and grading criteria
-- Examples and case studies
-- Any recommended resources or readings
+📚 COURSE INFORMATION:
+- Course name, code, and description
+- Instructor information and contact details
+- Course objectives and learning outcomes
+- Prerequisites and requirements
 
-Be thorough and detailed - this will be used to create personalized study materials.`;
+📖 CONTENT STRUCTURE:
+- All chapters, sections, and subsections with their titles
+- Topic outlines and hierarchical organization
+- Week-by-week or unit-by-unit breakdown
+- Reading assignments and page numbers
+
+🔑 KEY CONCEPTS & MATERIAL:
+- All definitions, terminology, and vocabulary
+- Formulas, equations, and mathematical expressions
+- Theories, principles, and frameworks
+- Important facts, dates, and figures
+- Examples, case studies, and applications
+- Diagrams, charts, and visual content descriptions
+
+📝 ASSESSMENT INFORMATION:
+- Grading criteria and rubrics
+- Assignment descriptions and requirements
+- Test/exam formats and sample questions
+- Project guidelines and expectations
+- Participation and attendance policies
+
+📚 RESOURCES & REFERENCES:
+- Textbook information (title, author, edition, ISBN)
+- Required and recommended readings
+- Supplementary materials and resources
+- External links and online resources
+
+⚠️ IMPORTANT NOTES:
+- Capture ALL text including headers, footers, and side notes
+- Include page numbers and section references where visible
+- Preserve the logical flow and organization of content
+- Note any handwritten annotations or highlights
+- For images: describe all diagrams, charts, graphs in detail
+- For presentations: capture all slide content including speaker notes
+- For assignments: include all questions, prompts, and instructions
+
+Be extremely thorough - this content will be used to create personalized study materials and assessments. Do not skip or summarize - extract everything verbatim where possible.`;
 
         console.log('Step 3: Calling Mistral Vision API...');
         
@@ -155,12 +191,13 @@ Be thorough and detailed - this will be used to create personalized study materi
                     ]
                 }
             ],
-            temperature: 0.2,
+            temperature: 0.1,
             max_tokens: 16000
         };
 
         console.log('Request body size:', JSON.stringify(requestBody).length, 'bytes');
         console.log('Using model: pixtral-large-latest');
+        console.log('Media type:', mediaType);
 
         const chatResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
             method: 'POST',
@@ -172,7 +209,6 @@ Be thorough and detailed - this will be used to create personalized study materi
         });
 
         console.log('Mistral API response status:', chatResponse.status);
-        console.log('Response headers:', Object.fromEntries(chatResponse.headers.entries()));
 
         if (!chatResponse.ok) {
             const errorText = await chatResponse.text();
@@ -193,44 +229,47 @@ Be thorough and detailed - this will be used to create personalized study materi
             if (chatResponse.status === 401) {
                 errorDetails = 'Authentication failed. Please check your Mistral API key.';
             } else if (chatResponse.status === 400) {
-                errorDetails = 'Invalid request format. The file might be corrupted or unsupported.';
+                errorDetails = 'Invalid request format. The file might be corrupted, too large, or the format is not supported by Mistral.';
             } else if (chatResponse.status === 413) {
-                errorDetails = 'File or request too large for Mistral API.';
+                errorDetails = 'File or request too large for Mistral API. Try a smaller file.';
+            } else if (chatResponse.status === 415) {
+                errorDetails = 'Unsupported media type. Please use PDF, DOCX, PPTX, or image files (PNG, JPG, WEBP, GIF).';
             }
 
             return Response.json({ 
                 error: 'Mistral API request failed', 
                 details: errorDetails,
                 status_code: chatResponse.status,
-                mistral_error: errorText
+                file_type: mediaType,
+                file_size_mb: (fileSize / 1024 / 1024).toFixed(2)
             }, { status: 500 });
         }
 
         const chatData = await chatResponse.json();
         console.log('✓ Mistral API response received');
-        console.log('Response structure:', Object.keys(chatData));
 
-        extractedContent = chatData.choices?.[0]?.message?.content;
+        const extractedContent = chatData.choices?.[0]?.message?.content;
 
-        if (!extractedContent) {
+        if (!extractedContent || extractedContent.trim().length === 0) {
             console.error('=== NO CONTENT IN RESPONSE ===');
             console.error('Full response:', JSON.stringify(chatData, null, 2));
             return Response.json({ 
                 error: 'No content extracted from document',
-                details: 'The API returned an empty response',
+                details: 'The API returned an empty response. The document might be blank or unreadable.',
                 response_preview: JSON.stringify(chatData).substring(0, 500)
             }, { status: 500 });
         }
 
         console.log('=== SUCCESS ===');
         console.log('Extracted content length:', extractedContent.length, 'characters');
-        console.log('First 200 chars:', extractedContent.substring(0, 200));
+        console.log('Preview:', extractedContent.substring(0, 300) + '...');
 
         return Response.json({ 
             extracted_content: extractedContent,
             characters: extractedContent.length,
             file_size: fileSize,
-            method: 'mistral_vision'
+            file_type: mediaType,
+            method: 'mistral_pixtral_large'
         });
 
     } catch (error) {
@@ -242,8 +281,7 @@ Be thorough and detailed - this will be used to create personalized study materi
         return Response.json({ 
             error: 'Internal server error',
             message: error.message,
-            type: error.constructor.name,
-            stack: error.stack
+            type: error.constructor.name
         }, { status: 500 });
     }
 });
