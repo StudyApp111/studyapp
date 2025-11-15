@@ -271,8 +271,8 @@ export default function Home() {
       </div>
 
       {/* Mobile-Optimized Stats - 2x2 Grid - Centered */}
-      <div className="max-w-5xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-10">
+      <div className="max-w-5xl mx-auto mb-6 md:mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

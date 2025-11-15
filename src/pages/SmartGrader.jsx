@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -397,8 +398,8 @@ Output valid JSON matching this exact schema.`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-3xl mx-auto">
-        {/* Centered Header */}
-        <div className="mb-8 text-center">
+        {/* Hero Header Section */}
+        <div className="mb-8">
           <div className="flex justify-end mb-4">
             <Button
               onClick={() => navigate(createPageUrl("AssignmentHistory"))}
@@ -409,19 +410,24 @@ Output valid JSON matching this exact schema.`;
               History
             </Button>
           </div>
-          
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="p-3 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl shadow-lg">
-              <CheckCircle2 className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Smart Grader</h1>
-              <p className="text-slate-600">Get instant AI-powered feedback</p>
+
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-6 md:p-8 shadow-xl mb-6">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-2xl -mr-24 -mt-24" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-xl -ml-16 -mb-16" />
+            
+            <div className="relative flex items-center gap-4">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg">
+                <CheckCircle2 className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Smart Grader</h1>
+                <p className="text-white/90 text-sm md:text-base">Get instant AI-powered feedback on your work</p>
+              </div>
             </div>
           </div>
 
           {/* What Can Be Graded */}
-          <div className="mt-6 bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-100">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-100">
             <p className="text-sm font-semibold text-slate-700 mb-3">AI can grade:</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="flex items-center gap-2 text-sm text-slate-600">

@@ -219,7 +219,7 @@ Requirements:
 - Make question format examples realistic and grade-appropriate
 - Focus on exam-relevant material
 
-Expand your search scope so that your response may include specific books, authors/theorists, concepts or figures relevant to the course domain.
+Expand your search scope so that your response may include specific books, authors/therorists, concepts or figures relevant to the course domain.
 Output Format: JSON object matching the specified schema`;
 
       const curriculumResponseJsonSchema = {
@@ -354,9 +354,22 @@ Output Format: JSON object matching the specified schema`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-3xl mx-auto">
+        {/* Hero Header Section */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Create New Lesson</h1>
-          <p className="text-slate-600">Set up a personalized learning experience</p>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-6 md:p-8 shadow-xl">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-2xl -mr-24 -mt-24" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-xl -ml-16 -mb-16" />
+            
+            <div className="relative flex items-center gap-4">
+              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg">
+                <Plus className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Create New Lesson</h1>
+                <p className="text-white/90 text-sm md:text-base">Set up your personalized learning experience</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <Card className="shadow-2xl border-0">
