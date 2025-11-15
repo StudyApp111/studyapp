@@ -70,6 +70,18 @@ export default function Home() {
     );
   }
 
+  const formatTime = (seconds) => {
+    if (!seconds || seconds === 0) return '0m';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    
+    if (hours > 0) {
+      return `${hours}h`;
+    }
+    return `${minutes}m`;
+  };
+
   const SimpleLessonCard = ({ lesson }) => {
     const worksheets = (lessonWorksheets[lesson.id] || []).sort((a, b) => a.worksheet_number - b.worksheet_number);
     const completedCount = worksheets.filter(w => w.completed).length;
@@ -161,36 +173,54 @@ export default function Home() {
 
   return (
     <div className="p-4 md:p-10 max-w-7xl mx-auto">
-      <div className="mb-6 md:mb-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-          Welcome back, {user.full_name?.split(' ')[0] || 'Learner'}! 👋
-        </h1>
-        <p className="text-slate-600 text-base md:text-lg">Ready to continue your learning journey?</p>
-        
-        {/* Gamification Summary */}
-        {(user.total_points > 0 || (user.current_streak || 0) > 0 || (user.badges && user.badges.length > 0)) && (
-          <div className="flex items-center gap-4 mt-4 flex-wrap">
-            {user.total_points > 0 && (
-              <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-amber-50 px-4 py-2 rounded-full border border-yellow-300 shadow-sm">
-                <Trophy className="w-5 h-5 text-yellow-600" />
-                <span className="text-sm font-semibold text-slate-700">Level {user.level || 1}</span>
-                <span className="text-xs text-slate-500">• {user.total_points || 0} pts</span>
-              </div>
-            )}
-            {(user.current_streak || 0) > 0 && (
-              <div className="flex items-center gap-2 bg-gradient-to-r from-orange-50 to-red-50 px-4 py-2 rounded-full border border-orange-200">
-                <Flame className="w-5 h-5 text-orange-500" />
-                <span className="text-sm font-semibold text-slate-700">{user.current_streak} day streak</span>
-              </div>
-            )}
-            {user.badges && user.badges.length > 0 && (
-              <div className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-indigo-50 px-4 py-2 rounded-full border border-purple-200">
-                <Award className="w-5 h-5 text-purple-600" />
-                <span className="text-sm font-semibold text-slate-700">{user.badges.length} {user.badges.length === 1 ? 'badge' : 'badges'}</span>
-              </div>
-            )}
+      {/* Centered Hero Section with Gradient */}
+      <div className="mb-8 md:mb-12">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-8 md:p-12 shadow-2xl">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-2xl -ml-24 -mb-24" />
+          
+          <div className="relative text-center">
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
+              Welcome back, {user.full_name?.split(' ')[0] || 'Learner'}! 👋
+            </h1>
+            <p className="text-white/90 text-base md:text-xl mb-6 max-w-2xl mx-auto">
+              Ready to continue your learning journey?
+            </p>
+            
+            {/* Stats Badges */}
+            <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
+              {user.total_points > 0 && (
+                <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg">
+                  <Trophy className="w-5 h-5 text-yellow-600" />
+                  <span className="text-sm font-semibold text-slate-700">Level {user.level || 1}</span>
+                  <span className="text-xs text-slate-500">• {user.total_points || 0} pts</span>
+                </div>
+              )}
+              
+              {(user.current_streak || 0) > 0 && (
+                <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg">
+                  <Flame className="w-5 h-5 text-orange-500" />
+                  <span className="text-sm font-semibold text-slate-700">{user.current_streak} day streak</span>
+                </div>
+              )}
+              
+              {user.badges && user.badges.length > 0 && (
+                <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg">
+                  <Award className="w-5 h-5 text-purple-600" />
+                  <span className="text-sm font-semibold text-slate-700">{user.badges.length} {user.badges.length === 1 ? 'badge' : 'badges'}</span>
+                </div>
+              )}
+              
+              {(user.time_spent_seconds || 0) > 0 && (
+                <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-semibold text-slate-700">{formatTime(user.time_spent_seconds)}</span>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Mobile-Optimized Stats - 2x2 Grid */}
