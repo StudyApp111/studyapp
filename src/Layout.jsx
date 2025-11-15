@@ -1,7 +1,8 @@
+
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, GraduationCap, History, LogOut, Settings, Plus, Trophy, Flame, Award, CheckCircle, Clock } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -28,7 +29,7 @@ const navigationItems = [
   {
     title: "Smart Grader",
     url: createPageUrl("SmartGrader"),
-    icon: GraduationCap,
+    icon: FileCheck,
   },
   {
     title: "Leaderboard",
@@ -285,7 +286,7 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Mobile Bottom Navigation - Hidden during onboarding */}
           {showNavigation && !isOnboardingPage && (
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-6 py-3 safe-area-inset-bottom z-50">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-4 py-3 safe-area-inset-bottom z-50">
               <div className="flex items-center justify-between max-w-lg mx-auto relative">
                 <Link
                   to={createPageUrl("Home")}
@@ -306,16 +307,11 @@ export default function Layout({ children, currentPageName }) {
                       : 'text-slate-600'
                   }`}
                 >
-                  <GraduationCap className="w-6 h-6" />
+                  <FileCheck className="w-6 h-6" />
                 </Link>
 
-                {/* Elevated CTA Button - Centered with clear space below */}
-                <button
-                  onClick={() => navigate(createPageUrl("CreateLesson"))}
-                  className="absolute left-1/2 -translate-x-1/2 -top-8 w-14 h-14 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 rounded-full shadow-xl shadow-yellow-500/40 flex items-center justify-center transition-transform hover:scale-110"
-                >
-                  <Plus className="w-6 h-6 text-slate-900" />
-                </button>
+                {/* Elevated CTA Button - Centered with spacing */}
+                <div className="w-14" />
 
                 <Link
                   to={createPageUrl("Leaderboard")}
@@ -337,6 +333,14 @@ export default function Layout({ children, currentPageName }) {
                   }`}
                 >
                   <Settings className="w-6 h-6" />
+                </button>
+
+                {/* Centered Floating CTA Button */}
+                <button
+                  onClick={() => navigate(createPageUrl("CreateLesson"))}
+                  className="absolute left-1/2 -translate-x-1/2 -top-8 w-14 h-14 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 rounded-full shadow-xl shadow-yellow-500/40 flex items-center justify-center transition-transform hover:scale-110"
+                >
+                  <Plus className="w-6 h-6 text-slate-900" />
                 </button>
               </div>
             </nav>
