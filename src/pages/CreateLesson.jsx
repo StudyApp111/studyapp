@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, BookOpen, Sparkles } from "lucide-react";
+import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle } from "lucide-react";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
@@ -353,25 +354,9 @@ Output Format: JSON object matching the specified schema`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-3xl mx-auto">
-        {/* Hero Header */}
         <div className="mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 p-6 md:p-8 shadow-xl">
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-20 -mt-20" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-orange-600/20 rounded-full blur-xl -ml-16 -mb-16" />
-            
-            <div className="relative text-center">
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
-                  <BookOpen className="w-7 h-7 text-white" />
-                </div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Create New Lesson</h1>
-              </div>
-              <p className="text-white/95 text-sm md:text-base">
-                Build a personalized study path with AI-powered materials
-              </p>
-            </div>
-          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Create New Lesson</h1>
+          <p className="text-slate-600">Set up a personalized learning experience</p>
         </div>
 
         <Card className="shadow-2xl border-0">
@@ -514,7 +499,7 @@ Output Format: JSON object matching the specified schema`;
               <Button
                 type="submit"
                 disabled={isProcessing}
-                className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white"
                 size="lg"
               >
                 {isProcessing ? (
@@ -524,7 +509,7 @@ Output Format: JSON object matching the specified schema`;
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5 mr-2" />
+                    <Plus className="w-5 h-5 mr-2" />
                     Create Lesson & Start Diagnostic
                   </>
                 )}
