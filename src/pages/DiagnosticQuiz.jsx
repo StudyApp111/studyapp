@@ -152,13 +152,15 @@ Question Characteristics (FOR EACH of the 5 MCQ questions):
 
 a. Question Type: MUST be "Multiple Choice" or "MCQ"
 
-b. Question Options: 
+b. Question Options - CRITICAL FORMATTING:
    - MUST provide exactly 4 plausible answer options
-   - All options MUST use proper capitalization and maintain original case
-   - DO NOT include letter prefixes in the options (no "A.", "B.", etc.) - just the answer text
+   - Each option should be JUST the answer text - NO letters, NO numbers, NO punctuation prefixes
+   - DO NOT include: "A.", "B.", "C.", "D.", "A,", "A)", or ANY letter prefixes
+   - CORRECT examples: ["Simile", "Metaphor", "Personification", "Hyperbole"]
+   - WRONG examples: ["A. Simile", "A., Simile", "A,. ,Simile", "B,. ,Metaphor"]
+   - All options MUST use proper capitalization
    - One option must be the correct answer
    - Other 3 options should be plausible distractors that test common misconceptions
-   - Example: ["Mitochondria", "Nucleus", "Ribosome", "Chloroplast"]
 
 c. Question Text Formatting:
    - CRITICAL: Write question_text as PLAIN TEXT without any markdown formatting (no **, no *, no special formatting)
