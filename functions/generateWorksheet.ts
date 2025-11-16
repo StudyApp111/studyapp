@@ -17,10 +17,9 @@ Deno.serve(async (req) => {
 
         const apiKey = Deno.env.get("API_KEY");
         if (!apiKey) {
-            return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
+            return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        // Enhance prompt with strict formatting rules
         const enhancedPrompt = prompt + `\n\nCRITICAL FORMATTING RULES:
 1. All text fields (question_text, explanation, etc.) MUST have properly escaped quotes and special characters
 2. For ANY Multiple Choice question:
@@ -69,22 +68,17 @@ Deno.serve(async (req) => {
         );
 
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error('Gemini API Error:', errorData);
             return Response.json({ 
-                error: 'Gemini API request failed', 
-                details: errorData 
-            }, { status: response.status });
+                error: 'Failed to generate content' 
+            }, { status: 500 });
         }
 
         const data = await response.json();
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
-            console.error('No content generated from Gemini:', data);
             return Response.json({ 
-                error: 'No content generated', 
-                details: data 
+                error: 'No content generated' 
             }, { status: 500 });
         }
 
@@ -99,21 +93,16 @@ Deno.serve(async (req) => {
                 
                 const parsedResponse = JSON.parse(cleanedText);
                 
-                // CRITICAL: Validate and fix Multiple Choice questions
                 if (parsedResponse.worksheet_questions) {
                     parsedResponse.worksheet_questions = parsedResponse.worksheet_questions.map(q => {
                         const isMultipleChoice = q.question_type?.toLowerCase().includes('multiple choice') || 
                                                q.question_type?.toLowerCase().includes('mcq');
                         
                         if (isMultipleChoice) {
-                            // Ensure options exist and have at least 2 items
                             if (!q.options || q.options.length < 2) {
-                                console.warn(`Question ${q.question_number} is MCQ but has invalid options. Converting to Short Answer.`);
                                 q.question_type = "Short Answer";
-                                q.options = null; // Remove invalid options
+                                q.options = null;
                             } else if (q.options.length < 4) {
-                                // If less than 4 options, pad with generic options
-                                console.warn(`Question ${q.question_number} has only ${q.options.length} options. Padding to 4.`);
                                 while (q.options.length < 4) {
                                     q.options.push(`Option ${String.fromCharCode(65 + q.options.length)}`);
                                 }
@@ -125,9 +114,6 @@ Deno.serve(async (req) => {
                 
                 return Response.json(parsedResponse);
             } catch (parseError) {
-                console.error('Failed to parse JSON:', parseError);
-                console.error('Raw text (first 1000 chars):', generatedText.substring(0, 1000));
-                
                 try {
                     let fixedText = generatedText
                         .replace(/\\n/g, ' ')
@@ -142,7 +128,6 @@ Deno.serve(async (req) => {
                     
                     const retryParsed = JSON.parse(fixedText);
                     
-                    // Validate MCQs here too
                     if (retryParsed.worksheet_questions) {
                         retryParsed.worksheet_questions = retryParsed.worksheet_questions.map(q => {
                             const isMultipleChoice = q.question_type?.toLowerCase().includes('multiple choice') || 
@@ -156,15 +141,10 @@ Deno.serve(async (req) => {
                         });
                     }
                     
-                    console.log('Successfully parsed after cleanup');
                     return Response.json(retryParsed);
                 } catch (retryError) {
-                    console.error('Retry parse also failed:', retryError);
                     return Response.json({ 
-                        error: 'Failed to parse JSON response after cleanup', 
-                        raw_text_preview: generatedText.substring(0, 500),
-                        parse_error: parseError.message,
-                        retry_error: retryError.message
+                        error: 'Failed to process response' 
                     }, { status: 500 });
                 }
             }
@@ -173,9 +153,8 @@ Deno.serve(async (req) => {
         return Response.json({ text: generatedText });
 
     } catch (error) {
-        console.error('Error in generateWorksheet:', error);
         return Response.json({ 
-            error: error.message 
+            error: 'Internal server error' 
         }, { status: 500 });
     }
 });

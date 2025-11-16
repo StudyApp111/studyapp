@@ -22,20 +22,17 @@ Deno.serve(async (req) => {
             course_name
         } = await req.json();
 
-        // Validate required fields
         if (!question_text || !student_answer || !explanation) {
             return Response.json({ 
-                error: 'Missing required fields',
-                required: ['question_text', 'student_answer', 'explanation']
+                error: 'Missing required fields'
             }, { status: 400 });
         }
 
         const apiKey = Deno.env.get("API_KEY");
         if (!apiKey) {
-            return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
+            return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        // Construct the grading prompt
         const gradingPrompt = `You are a teacher for ${course_name} at grade ${student_grade_level} grading a student's work.
 
 Grade a single SHORT or LONG answer fairly and succinctly using the provided context.
@@ -79,7 +76,6 @@ CONSTRAINTS
 • Keep language age-appropriate for the student_grade_level.
 • Do not include extra commentary, markdown, or text outside the JSON.`;
 
-        // Call Gemini 2.5 Flash API with JSON schema
         const requestBody = {
             contents: [{
                 parts: [{
@@ -95,30 +91,25 @@ CONSTRAINTS
                     type: "object",
                     properties: {
                         score_out_of_10: { 
-                            type: "number",
-                            description: "Score from 0 to 10, allowing one decimal place"
+                            type: "number"
                         },
                         verdict: { 
                             type: "string",
                             enum: ["Correct", "Partially Correct", "Incorrect"]
                         },
                         rationale_short: { 
-                            type: "string",
-                            description: "One concise sentence explaining the score"
+                            type: "string"
                         },
                         keypoints_hit: {
                             type: "array",
-                            items: { type: "string" },
-                            description: "What the student did well"
+                            items: { type: "string" }
                         },
                         keypoints_missed: {
                             type: "array",
-                            items: { type: "string" },
-                            description: "What was missing or flawed"
+                            items: { type: "string" }
                         },
                         misconception_detected: {
-                            type: "boolean",
-                            description: "Whether the targeted misconception was present"
+                            type: "boolean"
                         }
                     },
                     required: ["score_out_of_10", "verdict", "rationale_short", "keypoints_hit", "keypoints_missed", "misconception_detected"]
@@ -144,22 +135,17 @@ CONSTRAINTS
         );
 
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error('Gemini API Error:', errorData);
             return Response.json({ 
-                error: 'Gemini API request failed', 
-                details: errorData 
-            }, { status: response.status });
+                error: 'Failed to grade answer' 
+            }, { status: 500 });
         }
 
         const data = await response.json();
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
-            console.error('No content generated from Gemini:', data);
             return Response.json({ 
-                error: 'No content generated', 
-                details: data 
+                error: 'No grading result generated' 
             }, { status: 500 });
         }
 
@@ -167,17 +153,14 @@ CONSTRAINTS
             const parsedResponse = JSON.parse(generatedText);
             return Response.json(parsedResponse);
         } catch (parseError) {
-            console.error('Failed to parse JSON:', parseError);
             return Response.json({ 
-                error: 'Failed to parse JSON response', 
-                raw_text: generatedText 
+                error: 'Failed to process grading result' 
             }, { status: 500 });
         }
 
     } catch (error) {
-        console.error('Error in smartSummaryQuiz:', error);
         return Response.json({ 
-            error: error.message 
+            error: 'Internal server error' 
         }, { status: 500 });
     }
 });

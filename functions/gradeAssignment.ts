@@ -17,13 +17,8 @@ Deno.serve(async (req) => {
 
         const apiKey = Deno.env.get("API_KEY");
         if (!apiKey) {
-            console.error('API_KEY not found in environment');
-            return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
+            return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
-
-        console.log('=== GRADING REQUEST START ===');
-        console.log('Prompt length:', prompt.length);
-        console.log('Has JSON schema:', !!response_json_schema);
 
         const requestBody = {
             contents: [{
@@ -50,10 +45,8 @@ Deno.serve(async (req) => {
             requestBody.generationConfig.responseSchema = response_json_schema;
         }
 
-        // Gemini 2.5 Flash
         const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey;
 
-        console.log('Calling Gemini 2.5 Flash API...');
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -62,51 +55,29 @@ Deno.serve(async (req) => {
             body: JSON.stringify(requestBody)
         });
 
-        console.log('API response status:', response.status);
-
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('=== API ERROR ===');
-            console.error('Status:', response.status);
-            console.error('Response:', errorText);
             return Response.json({
-                error: 'API request failed',
-                details: errorText,
-                status: response.status
-            }, { status: response.status });
+                error: 'Failed to grade assignment'
+            }, { status: 500 });
         }
 
         const data = await response.json();
-        console.log('Response received');
-        console.log('Candidates:', data.candidates?.length);
 
         if (!data.candidates || data.candidates.length === 0) {
-            console.error('No candidates in response');
             return Response.json({
-                error: 'No response generated',
-                details: 'API returned empty candidates'
+                error: 'No grading result generated'
             }, { status: 500 });
         }
 
         const generatedText = data.candidates[0].content.parts[0].text;
-        console.log('Text length:', generatedText?.length);
 
         if (response_json_schema) {
             try {
                 const parsed = JSON.parse(generatedText);
-                console.log('=== PARSED SUCCESSFULLY ===');
-                console.log('Keys:', Object.keys(parsed));
-                console.log('Has predicted_grade:', !!parsed.predicted_grade);
-                console.log('Grade band:', parsed.predicted_grade?.band);
-                console.log('Grade %:', parsed.predicted_grade?.percentage);
                 return Response.json(parsed);
             } catch (parseError) {
-                console.error('=== PARSE ERROR ===');
-                console.error('Error:', parseError.message);
-                console.error('Raw:', generatedText?.substring(0, 500));
                 return Response.json({
-                    error: 'Failed to parse response',
-                    raw_text: generatedText
+                    error: 'Failed to process grading result'
                 }, { status: 500 });
             }
         }
@@ -114,12 +85,8 @@ Deno.serve(async (req) => {
         return Response.json({ data: generatedText });
 
     } catch (error) {
-        console.error('=== FATAL ERROR ===');
-        console.error('Message:', error.message);
-        console.error('Stack:', error.stack);
         return Response.json({
-            error: error.message,
-            stack: error.stack
+            error: 'Internal server error'
         }, { status: 500 });
     }
 });

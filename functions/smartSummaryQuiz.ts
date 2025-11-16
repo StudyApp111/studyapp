@@ -17,11 +17,9 @@ Deno.serve(async (req) => {
 
         const apiKey = Deno.env.get("API_KEY");
         if (!apiKey) {
-            return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
+            return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        // Prepare the request body for Gemini API (NO Google Search grounding)
-        // Can use JSON mode since we're not using tools
         const requestBody = {
             contents: [{
                 parts: [{
@@ -41,13 +39,11 @@ Deno.serve(async (req) => {
             ]
         };
 
-        // Add response schema if provided (works without tools)
         if (response_json_schema) {
             requestBody.generationConfig.responseMimeType = "application/json";
             requestBody.generationConfig.responseSchema = response_json_schema;
         }
 
-        // Call Gemini 2.5 Flash API
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
@@ -60,37 +56,27 @@ Deno.serve(async (req) => {
         );
 
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error('Gemini API Error:', errorData);
             return Response.json({ 
-                error: 'Gemini API request failed', 
-                details: errorData 
-            }, { status: response.status });
-        }
-
-        const data = await response.json();
-        
-        // Extract the generated content
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (!generatedText) {
-            console.error('No content generated from Gemini:', data);
-            return Response.json({ 
-                error: 'No content generated', 
-                details: data 
+                error: 'Failed to generate content' 
             }, { status: 500 });
         }
 
-        // Parse JSON response if schema was provided
+        const data = await response.json();
+        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!generatedText) {
+            return Response.json({ 
+                error: 'No content generated' 
+            }, { status: 500 });
+        }
+
         if (response_json_schema) {
             try {
                 const parsedResponse = JSON.parse(generatedText);
                 return Response.json(parsedResponse);
             } catch (parseError) {
-                console.error('Failed to parse JSON:', parseError);
                 return Response.json({ 
-                    error: 'Failed to parse JSON response', 
-                    raw_text: generatedText 
+                    error: 'Failed to process response' 
                 }, { status: 500 });
             }
         }
@@ -98,9 +84,8 @@ Deno.serve(async (req) => {
         return Response.json({ text: generatedText });
 
     } catch (error) {
-        console.error('Error in smartSummaryQuiz:', error);
         return Response.json({ 
-            error: error.message 
+            error: 'Internal server error' 
         }, { status: 500 });
     }
 });
