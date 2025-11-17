@@ -419,23 +419,30 @@ Output Format: Valid JSON object matching the schema.`;
         throw new Error("Invalid worksheet data received from AI");
       }
 
-      // Aggressive cleaning function
-      const cleanOption = (opt) => {
-        let result = opt.trim();
-        result = result.replace(/^[A-Za-z][\s,.\-)(]*/, '');
-        result = result.replace(/^[,.\s\-)(]+/, '');
-        return result.trim();
-      };
-
-      // Clean MCQ options
+      // Clean all MCQ options to remove any letter prefixes, punctuation
       const questionsWithPlaceholder = worksheetData.worksheet_questions.map(q => {
+        let cleanedOptions = q.options;
+        let cleanedCorrectAnswer = q.correct_answer;
+        
+        // Only clean if it's a multiple choice question
         const isMultipleChoice = q.question_type?.toLowerCase().includes('multiple choice') || 
                                  q.question_type?.toLowerCase().includes('mcq');
         
+        if (isMultipleChoice && q.options && q.options.length > 0) {
+          cleanedOptions = q.options.map(opt => 
+            opt.replace(/^[A-Za-z][\s,.\-)]+/g, '').replace(/^[,.\s)]+/g, '').trim()
+          );
+          
+          cleanedCorrectAnswer = q.correct_answer
+            .replace(/^[A-Za-z][\s,.\-)]+/g, '')
+            .replace(/^[,.\s)]+/g, '')
+            .trim();
+        }
+        
         return {
           ...q,
-          options: isMultipleChoice && q.options ? q.options.map(cleanOption) : q.options,
-          correct_answer: isMultipleChoice ? cleanOption(q.correct_answer) : q.correct_answer,
+          options: cleanedOptions,
+          correct_answer: cleanedCorrectAnswer,
           user_answer: ""
         };
       });
