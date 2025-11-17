@@ -14,7 +14,7 @@ import Leaderboard from './pages/Leaderboard';
 import SmartGrader from './pages/SmartGrader';
 import GradeResults from './pages/GradeResults';
 import AssignmentHistory from './pages/AssignmentHistory';
-import Layout from './Layout.jsx';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -39,5 +39,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "Onboarding",
     Pages: PAGES,
-    Layout: Layout,
+    Layout: __Layout,
 };

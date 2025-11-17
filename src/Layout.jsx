@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -30,6 +31,7 @@ const navigationItems = [
     title: "Smart Grader",
     url: createPageUrl("SmartGrader"),
     icon: FileCheck,
+    isNew: true, // Add flag for new feature
   },
   {
     title: "Leaderboard",
@@ -144,9 +146,16 @@ export default function Layout({ children, currentPageName }) {
                             location.pathname === item.url ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 shadow-lg shadow-yellow-500/30 font-semibold' : ''
                           }`}
                         >
-                          <Link to={item.url} className="flex items-center gap-3 px-4 py-3">
+                          <Link to={item.url} className="flex items-center gap-3 px-4 py-3 relative">
                             <item.icon className="w-5 h-5" />
                             <span className="font-medium">{item.title}</span>
+                            {item.isNew && (
+                              <span className="absolute -top-1 -right-1 w-0 h-0 border-t-[28px] border-t-emerald-500 border-l-[28px] border-l-transparent">
+                                <span className="absolute -top-7 left-0.5 text-[9px] font-bold text-white transform rotate-45">
+                                  NEW
+                                </span>
+                              </span>
+                            )}
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -304,13 +313,16 @@ export default function Layout({ children, currentPageName }) {
 
                 <Link
                   to={createPageUrl("SmartGrader")}
-                  className={`flex items-center justify-center p-3 rounded-lg transition-all ${
+                  className={`flex items-center justify-center p-3 rounded-lg transition-all relative ${
                     location.pathname === createPageUrl("SmartGrader")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
                   <FileCheck className="w-6 h-6" />
+                  <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                    NEW
+                  </span>
                 </Link>
 
                 {/* Elevated CTA Button - Centered with spacing */}
