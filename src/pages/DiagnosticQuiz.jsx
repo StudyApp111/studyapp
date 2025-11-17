@@ -226,24 +226,22 @@ Provide your response as a single, valid JSON object with the following structur
         }
       });
 
-      // Clean all options to remove any letter prefixes, punctuation
-      const cleanedQuestions = quizData.diagnostic_quiz.questions.map(q => {
-        const cleanedOptions = q.options.map(opt => 
-          opt.replace(/^[A-Za-z][\s,.\-)]+/g, '').replace(/^[,.\s)]+/g, '').trim()
-        );
-        
-        // Also clean the correct_answer to match
-        const cleanedCorrectAnswer = q.correct_answer
-          .replace(/^[A-Za-z][\s,.\-)]+/g, '')
-          .replace(/^[,.\s)]+/g, '')
-          .trim();
-        
-        return {
-          ...q,
-          options: cleanedOptions,
-          correct_answer: cleanedCorrectAnswer
-        };
-      });
+      // Aggressive cleaning function to remove ALL prefix patterns
+      const cleanOption = (opt) => {
+        let result = opt.trim();
+        // Remove leading letter (A-Z) followed by ANY punctuation/spaces
+        result = result.replace(/^[A-Za-z][\s,.\-)(]*/, '');
+        // Remove any remaining leading punctuation/spaces  
+        result = result.replace(/^[,.\s\-)(]+/, '');
+        return result.trim();
+      };
+
+      // Clean all options and correct answers
+      const cleanedQuestions = quizData.diagnostic_quiz.questions.map(q => ({
+        ...q,
+        options: q.options.map(cleanOption),
+        correct_answer: cleanOption(q.correct_answer)
+      }));
 
       const createdQuiz = await base44.entities.DiagnosticQuiz.create({
         lesson_id: lessonId,
