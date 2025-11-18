@@ -19,23 +19,28 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
     if (questionType.includes("multiple choice") || questionType.includes("mcq")) {
       return (
         <RadioGroup value={answer} onValueChange={handleAnswerChange} className="space-y-3">
-          {question.options.map((option, index) => (
-            <div
-              key={index}
-              className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all ${
-                answer === option
-                  ? "border-purple-500 bg-purple-50"
-                  : "border-slate-200 hover:border-purple-300 bg-white"
-              }`}
-            >
-              <RadioGroupItem value={option} id={`option-${index}`} className="mt-1" />
-              <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                <MathText inline className="text-slate-700">
-                  {String.fromCharCode(65 + index)}. {option}
-                </MathText>
-              </Label>
-            </div>
-          ))}
+          {question.options.map((option, index) => {
+            const optionLetter = String.fromCharCode(65 + index);
+            return (
+              <div
+                key={index}
+                className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                  answer === option
+                    ? "border-purple-500 bg-purple-50"
+                    : "border-slate-200 hover:border-purple-300 bg-white"
+                }`}
+                onClick={() => handleAnswerChange(option)}
+              >
+                <RadioGroupItem value={option} id={`option-${index}`} className="mt-1" />
+                <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-slate-700">{optionLetter}.</span>
+                    <MathText inline className="text-slate-700">{option}</MathText>
+                  </div>
+                </Label>
+              </div>
+            );
+          })}
         </RadioGroup>
       );
     }
