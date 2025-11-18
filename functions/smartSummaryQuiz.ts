@@ -20,15 +20,10 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        const enhancedPrompt = prompt + `\n\nCRITICAL FORMATTING INSTRUCTIONS:
-- For multiple choice options: provide ONLY the answer text without any letter labels (A, B, C, D), numbers, or punctuation prefixes
-- Example: options should be ["Carbon and Oxygen", "Sodium and Chlorine"] NOT ["A. Carbon and Oxygen", "B) Sodium and Chlorine"]
-- The correct_answer must exactly match one of the options`;
-
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: enhancedPrompt
+                    text: prompt
                 }]
             }],
             generationConfig: {

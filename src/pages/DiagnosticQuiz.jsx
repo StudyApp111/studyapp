@@ -226,34 +226,15 @@ Provide your response as a single, valid JSON object with the following structur
         }
       });
 
-      // Clean all options to remove any letter prefixes, punctuation
-      const cleanedQuestions = quizData.diagnostic_quiz.questions.map(q => {
-        const cleanedOptions = q.options.map(opt => 
-          opt.replace(/^[A-Za-z][\s,.\-)]+/g, '').replace(/^[,.\s)]+/g, '').trim()
-        );
-        
-        // Also clean the correct_answer to match
-        const cleanedCorrectAnswer = q.correct_answer
-          .replace(/^[A-Za-z][\s,.\-)]+/g, '')
-          .replace(/^[,.\s)]+/g, '')
-          .trim();
-        
-        return {
-          ...q,
-          options: cleanedOptions,
-          correct_answer: cleanedCorrectAnswer
-        };
-      });
-
       const createdQuiz = await base44.entities.DiagnosticQuiz.create({
         lesson_id: lessonId,
         smart_summary: quizData.smart_summary,
-        questions: cleanedQuestions,
+        questions: quizData.diagnostic_quiz.questions,
         completed: false
       });
 
       setQuiz(createdQuiz);
-      setUserAnswers(new Array(cleanedQuestions.length).fill(null));
+      setUserAnswers(new Array(quizData.diagnostic_quiz.questions.length).fill(null));
     } catch (error) {
       console.error("Error generating quiz:", error);
       navigate(createPageUrl("Home"));
@@ -284,7 +265,6 @@ Provide your response as a single, valid JSON object with the following structur
     setIsSubmitting(true);
     try {
       const correctAnswers = userAnswers.filter((answer, idx) => {
-        // Ensure both answer and correct_answer are treated as strings before trimming and lowercasing
         const userAnswer = String(answer || "").trim().toLowerCase();
         const correctAnswer = String(quiz.questions[idx].correct_answer || "").trim().toLowerCase();
         return userAnswer === correctAnswer;
