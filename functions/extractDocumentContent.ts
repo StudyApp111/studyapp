@@ -204,8 +204,9 @@ Be extremely thorough - this content will be used to create personalized study m
         });
 
     } catch (error) {
+        console.error('Extract document error:', error.message, error.stack);
         return Response.json({ 
-            error: 'Internal server error'
+            error: error.message || 'Internal server error'
         }, { status: 500 });
     }
 });
