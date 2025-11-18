@@ -39,14 +39,7 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
           </div>
 
           <RadioGroup value={selectedAnswer} onValueChange={onSelectAnswer} className="space-y-3">
-            {question.options.map((option, index) => {
-              // Aggressive cleaning - remove ALL leading letters, commas, periods, spaces, and parentheses
-              const cleanOption = option
-                .replace(/^[A-Za-z][\s,.\-)]+/g, '')  // Remove letter + any combo of space, comma, period, hyphen, parenthesis
-                .replace(/^[,.\s)]+/g, '')             // Remove any remaining leading punctuation
-                .trim();
-              
-              return (
+            {question.options.map((option, index) => (
                 <label
                   key={index}
                   htmlFor={`option-${index}`}
@@ -58,11 +51,10 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
                 >
                   <RadioGroupItem value={option} id={`option-${index}`} className="flex-shrink-0 mt-0.5" />
                   <MathText className="text-base text-slate-700 leading-relaxed flex-1">
-                    {String.fromCharCode(65 + index)}. {cleanOption}
+                    {String.fromCharCode(65 + index)}. {option}
                   </MathText>
                 </label>
-              );
-            })}
+              ))}
           </RadioGroup>
         </CardContent>
       </Card>

@@ -24,9 +24,10 @@ Deno.serve(async (req) => {
 1. All text fields (question_text, explanation, etc.) MUST have properly escaped quotes and special characters
 2. For ANY Multiple Choice question:
    - ALWAYS provide exactly 4 options in the "options" array
-   - Each option must be a clear, distinct answer choice
+   - Each option must be a clear, distinct answer choice without ANY letter prefixes (A, B, C, D) or punctuation
+   - Example: "options": ["Carbon and Oxygen", "Sodium and Chlorine", "Hydrogen and Helium", "Nitrogen and Fluorine"]
+   - NOT: ["A. Carbon and Oxygen", "B) Sodium and Chlorine"]
    - One option must match the "correct_answer" exactly
-   - Example: "options": ["Option A", "Option B", "Option C", "Option D"]
 3. NEVER leave the "options" array empty or null for Multiple Choice questions
 4. If you cannot create valid multiple choice options, use a different question_type instead
 5. Use single quotes within text or escape double quotes as \\"
