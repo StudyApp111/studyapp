@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -100,7 +99,7 @@ export default function SmartGrader() {
 
       // Handle custom curriculum file if provided
       if (curriculumFile) {
-        console.log("Processing custom curriculum file");
+
         setProcessingStep("Processing your curriculum file...");
         
         const { file_url: curriculumUrl } = await base44.integrations.Core.UploadFile({ file: curriculumFile });
@@ -388,7 +387,6 @@ Output valid JSON matching this exact schema.`;
 
       navigate(createPageUrl("GradeResults") + `?assignmentId=${gradedAssignment.id}`);
     } catch (err) {
-      console.error("Error grading assignment:", err);
       setError(err.message || "Failed to grade assignment. Please try again.");
       setIsProcessing(false);
       setProcessingStep("");

@@ -17,7 +17,8 @@ Deno.serve(async (req) => {
 
         const apiKey = Deno.env.get("MistralDocumentAIKey");
         if (!apiKey) {
-            return Response.json({ error: 'Service configuration error' }, { status: 500 });
+            console.error('MistralDocumentAIKey not found in environment');
+            return Response.json({ error: 'API key not configured' }, { status: 500 });
         }
 
         const fileResponse = await fetch(file_url);
@@ -81,16 +82,24 @@ Deno.serve(async (req) => {
             useVisionModel = true;
         }
 
-        const arrayBuffer = await fileBlob.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        
-        const chunkSize = 8192;
-        let binary = '';
-        for (let i = 0; i < bytes.length; i += chunkSize) {
-            const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
-            binary += String.fromCharCode.apply(null, Array.from(chunk));
+        let base64Data;
+        try {
+            const arrayBuffer = await fileBlob.arrayBuffer();
+            const bytes = new Uint8Array(arrayBuffer);
+            
+            const chunkSize = 8192;
+            let binary = '';
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+                binary += String.fromCharCode.apply(null, Array.from(chunk));
+            }
+            base64Data = btoa(binary);
+        } catch (encError) {
+            console.error('Base64 encoding error:', encError.message);
+            return Response.json({ 
+                error: 'Failed to process file content'
+            }, { status: 500 });
         }
-        const base64Data = btoa(binary);
 
         const prompt = `Extract ALL educational content from this document with maximum detail and comprehensiveness. Your extraction should include:
 
@@ -159,26 +168,39 @@ Be extremely thorough - this content will be used to create personalized study m
             max_tokens: 16000
         };
 
-        const chatResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(requestBody)
-        });
+        let chatResponse;
+        try {
+            chatResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(requestBody)
+            });
+        } catch (fetchError) {
+            console.error('Mistral API fetch error:', fetchError.message);
+            return Response.json({ 
+                error: 'Failed to connect to AI service'
+            }, { status: 500 });
+        }
 
         if (!chatResponse.ok) {
+            const errorText = await chatResponse.text();
+            console.error('Mistral API error:', chatResponse.status, errorText);
+            
             let errorDetails = 'Document extraction failed';
             
             if (chatResponse.status === 401) {
-                errorDetails = 'Authentication failed';
+                errorDetails = 'Authentication failed - API key invalid';
             } else if (chatResponse.status === 400) {
-                errorDetails = 'Invalid file format';
+                errorDetails = 'Invalid file format or request';
             } else if (chatResponse.status === 413) {
-                errorDetails = 'File too large';
+                errorDetails = 'File too large for processing';
             } else if (chatResponse.status === 415) {
                 errorDetails = 'Unsupported file type';
+            } else if (chatResponse.status === 429) {
+                errorDetails = 'Rate limit exceeded - please try again in a moment';
             }
 
             return Response.json({ 
