@@ -389,7 +389,7 @@ Provide your response as a single, valid JSON object with the following structur
         </AnimatePresence>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 md:left-[256px] z-30 bg-white border-t border-purple-200/60 shadow-2xl safe-area-inset-bottom">
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-purple-200/60 shadow-2xl safe-area-inset-bottom">
         <div className="max-w-4xl mx-auto px-4 py-4 md:px-6 md:py-5">
           <div className="flex justify-between gap-4">
             <Button
@@ -397,7 +397,7 @@ Provide your response as a single, valid JSON object with the following structur
               onClick={handlePrevious}
               disabled={currentQuestion === 0}
               size="lg"
-              className="flex-1 min-h-[48px] md:min-h-[44px] text-base font-semibold touch-manipulation active:scale-95 transition-transform"
+              className="flex-1 min-h-[52px] md:min-h-[44px] text-base font-semibold touch-manipulation active:scale-95 transition-transform"
             >
               Previous
             </Button>
@@ -406,7 +406,7 @@ Provide your response as a single, valid JSON object with the following structur
                 onClick={submitQuiz}
                 disabled={!canProceed || isSubmitting}
                 size="lg"
-                className="flex-1 min-h-[48px] md:min-h-[44px] bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-base font-semibold touch-manipulation active:scale-95 transition-transform"
+                className="flex-1 min-h-[52px] md:min-h-[44px] bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-base font-semibold touch-manipulation active:scale-95 transition-transform"
               >
                 {isSubmitting ? (
                   <>
@@ -426,7 +426,7 @@ Provide your response as a single, valid JSON object with the following structur
                 onClick={handleNext}
                 disabled={!canProceed}
                 size="lg"
-                className="flex-1 min-h-[48px] md:min-h-[44px] bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-base font-semibold touch-manipulation active:scale-95 transition-transform"
+                className="flex-1 min-h-[52px] md:min-h-[44px] bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-base font-semibold touch-manipulation active:scale-95 transition-transform"
               >
                 <span className="hidden sm:inline">Next Question</span>
                 <span className="sm:hidden">Next</span>

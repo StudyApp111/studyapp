@@ -45,14 +45,15 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
                 <label
                   key={index}
                   htmlFor={`option-${index}`}
-                  className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                  className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer touch-manipulation active:scale-[0.99] ${
                     selectedAnswer === option
                       ? "border-purple-500 bg-purple-50"
                       : "border-slate-200 hover:border-purple-300 bg-white hover:bg-slate-50"
                   }`}
+                  onClick={() => onSelectAnswer(option)}
                 >
-                  <RadioGroupItem value={option} id={`option-${index}`} className="flex-shrink-0 mt-0.5" />
-                  <div className="flex items-center gap-2 flex-1">
+                  <RadioGroupItem value={option} id={`option-${index}`} className="flex-shrink-0 mt-0.5 pointer-events-none" />
+                  <div className="flex items-center gap-2 flex-1 pointer-events-none">
                     <span className="font-semibold text-slate-700">{optionLetter}.</span>
                     <MathText className="text-base text-slate-700 leading-relaxed">{option}</MathText>
                   </div>
