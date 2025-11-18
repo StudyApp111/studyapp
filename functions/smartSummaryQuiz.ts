@@ -78,29 +78,6 @@ Deno.serve(async (req) => {
         if (response_json_schema) {
             try {
                 const parsedResponse = JSON.parse(generatedText);
-                
-                // Clean diagnostic quiz options if present
-                if (parsedResponse.diagnostic_quiz?.questions) {
-                    parsedResponse.diagnostic_quiz.questions = parsedResponse.diagnostic_quiz.questions.map(q => {
-                        if (q.options && Array.isArray(q.options)) {
-                            q.options = q.options.map(opt => 
-                                String(opt)
-                                    .replace(/^[A-Za-z][\s,.\-)]+/g, '')
-                                    .replace(/^[,.\s)]+/g, '')
-                                    .trim()
-                            );
-                            
-                            if (q.correct_answer) {
-                                q.correct_answer = String(q.correct_answer)
-                                    .replace(/^[A-Za-z][\s,.\-)]+/g, '')
-                                    .replace(/^[,.\s)]+/g, '')
-                                    .trim();
-                            }
-                        }
-                        return q;
-                    });
-                }
-                
                 return Response.json(parsedResponse);
             } catch (parseError) {
                 return Response.json({ 
