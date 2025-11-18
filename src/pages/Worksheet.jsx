@@ -61,7 +61,6 @@ export default function Worksheet() {
     // 2. Worksheet is not completed
     // 3. This is a new worksheet (different ID) OR timer hasn't started yet
     if (worksheet && !worksheet.completed && worksheet.id !== worksheetIdRef.current) {
-      console.log('Starting timer for worksheet:', worksheet.id);
       
       // Store the worksheet ID
       worksheetIdRef.current = worksheet.id;
@@ -102,7 +101,6 @@ export default function Worksheet() {
 
       // Cleanup function - only clears timer when component unmounts or worksheet changes
       return () => {
-        console.log('Cleaning up timer');
         if (timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = null;
@@ -119,8 +117,6 @@ export default function Worksheet() {
       
       // Add time to this question's total
       questionTimesRef.current[questionIndex] = (questionTimesRef.current[questionIndex] || 0) + timeSpentOnQuestion;
-      
-      console.log(`Question ${questionIndex} time: ${timeSpentOnQuestion}s (total: ${questionTimesRef.current[questionIndex]}s)`);
     }
   };
 
@@ -160,7 +156,7 @@ export default function Worksheet() {
       });
 
       if (existingWorksheet.length > 0) {
-        console.log("Loading existing worksheet", worksheetNum);
+
         const loadedWorksheet = existingWorksheet[0];
         
         if (loadedWorksheet.completed) {
@@ -169,13 +165,13 @@ export default function Worksheet() {
         }
         
         if (!loadedWorksheet.questions || loadedWorksheet.questions.length === 0) {
-          console.log("Worksheet is a placeholder, generating questions now");
+
           await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum, loadedWorksheet.id);
         } else {
           setWorksheet(loadedWorksheet);
         }
       } else {
-        console.log("Generating new worksheet", worksheetNum);
+
         await generateWorksheet(lessonId, lessonData[0], quizData, worksheetNum);
       }
     } catch (error) {
@@ -414,9 +410,7 @@ Output Format: Valid JSON object matching the schema.`;
         }
       });
 
-      console.log("=== RAW API RESPONSE ===");
-      console.log(JSON.stringify(worksheetData, null, 2));
-      console.log("=== END RAW API RESPONSE ===");
+
 
       if (!worksheetData || !worksheetData.worksheet_questions || worksheetData.worksheet_questions.length === 0) {
         throw new Error("Invalid worksheet data received from AI");
@@ -600,9 +594,6 @@ Output Format: Valid JSON object matching the schema.`;
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    
-    console.log('Final elapsed time:', elapsedSeconds);
-    console.log('Question times:', questionTimesRef.current);
     
     // Convert question times to laps format
     const questionTimeLaps = Object.keys(questionTimesRef.current).map(key => ({
@@ -1105,7 +1096,7 @@ Output Format: Valid JSON matching the required schema.`;
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6">
+      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6 pb-24 md:pb-6">
         <AnimatePresence mode="wait">
           <WorksheetQuestion
             key={currentQuestion}
@@ -1114,11 +1105,9 @@ Output Format: Valid JSON matching the required schema.`;
             onAnswer={handleAnswer}
           />
         </AnimatePresence>
-      </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-purple-200/60 shadow-2xl">
-        <div className="max-w-4xl mx-auto px-4 py-4 pb-8 md:px-6 md:py-5">
-          <div className="flex justify-between gap-4">
+        <div className="mt-6">
+          <div className="flex gap-4">
             <Button
               variant="outline"
               onClick={handlePrevious}

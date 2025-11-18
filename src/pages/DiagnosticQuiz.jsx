@@ -49,7 +49,7 @@ export default function DiagnosticQuiz() {
       });
 
       if (existingQuiz.length > 0) {
-        console.log("Loading existing diagnostic quiz");
+
         const loadedQuiz = existingQuiz[0];
         setQuiz(loadedQuiz);
 
@@ -60,7 +60,7 @@ export default function DiagnosticQuiz() {
           setUserAnswers(loadedQuiz.user_answers || new Array(loadedQuiz.questions.length).fill(null));
         }
       } else {
-        console.log("Generating new diagnostic quiz");
+
         await generateDiagnosticQuiz(lessonId, lessonData[0]);
       }
     } catch (error) {
@@ -225,9 +225,7 @@ Provide your response as a single, valid JSON object with the following structur
         }
       });
 
-      console.log("=== RAW DIAGNOSTIC QUIZ API RESPONSE ===");
-      console.log(JSON.stringify(quizData, null, 2));
-      console.log("=== END RAW DIAGNOSTIC QUIZ API RESPONSE ===");
+
 
       const createdQuiz = await base44.entities.DiagnosticQuiz.create({
         lesson_id: lessonId,
@@ -377,7 +375,7 @@ Provide your response as a single, valid JSON object with the following structur
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6">
+      <div className="max-w-4xl mx-auto px-3 md:px-6 py-4 md:py-6 pb-24 md:pb-6">
         <AnimatePresence mode="wait">
           <QuizQuestion
             key={currentQuestion}
@@ -387,11 +385,9 @@ Provide your response as a single, valid JSON object with the following structur
             onSelectAnswer={handleAnswer}
           />
         </AnimatePresence>
-      </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-purple-200/60 shadow-2xl">
-        <div className="max-w-4xl mx-auto px-4 py-4 pb-8 md:px-6 md:py-5">
-          <div className="flex justify-between gap-4">
+        <div className="mt-6">
+          <div className="flex gap-4">
             <Button
               variant="outline"
               onClick={handlePrevious}
