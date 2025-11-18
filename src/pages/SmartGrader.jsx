@@ -70,15 +70,25 @@ export default function SmartGrader() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file: assignmentFile });
 
       setProcessingStep("Extracting content from your assignment...");
-      const extractResponse = await base44.functions.invoke('extractDocumentContent', {
-        file_url: file_url
+      const extractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
+        file_url: file_url,
+        json_schema: {
+          type: "object",
+          properties: {
+            full_text_content: {
+              type: "string",
+              description: "Complete extracted text from the document"
+            }
+          },
+          required: ["full_text_content"]
+        }
       });
 
-      if (extractResponse.data.error) {
-        throw new Error(extractResponse.data.error);
+      if (extractResult.status === "error") {
+        throw new Error(extractResult.details || "Failed to extract content from document");
       }
 
-      const extractedContent = extractResponse.data.extracted_content;
+      const extractedContent = extractResult.output?.full_text_content || "";
 
       if (!extractedContent || extractedContent.length === 0) {
         throw new Error("Failed to extract content from document. The file might be empty or corrupted.");
@@ -104,15 +114,25 @@ export default function SmartGrader() {
         
         const { file_url: curriculumUrl } = await base44.integrations.Core.UploadFile({ file: curriculumFile });
         
-        const curriculumExtractResponse = await base44.functions.invoke('extractDocumentContent', {
-          file_url: curriculumUrl
+        const curriculumExtractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
+          file_url: curriculumUrl,
+          json_schema: {
+            type: "object",
+            properties: {
+              full_text_content: {
+                type: "string",
+                description: "Complete extracted text from the document"
+              }
+            },
+            required: ["full_text_content"]
+          }
         });
 
-        if (curriculumExtractResponse.data.error) {
-          throw new Error("Failed to extract curriculum file: " + curriculumExtractResponse.data.error);
+        if (curriculumExtractResult.status === "error") {
+          throw new Error("Failed to extract curriculum file: " + (curriculumExtractResult.details || "Unknown error"));
         }
 
-        const customCurriculumText = curriculumExtractResponse.data.extracted_content;
+        const customCurriculumText = curriculumExtractResult.output?.full_text_content || "";
         
         curriculumMap = {
           custom_curriculum: customCurriculumText,
