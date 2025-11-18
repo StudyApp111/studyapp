@@ -39,38 +39,22 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
           </div>
 
           <RadioGroup value={selectedAnswer} onValueChange={onSelectAnswer} className="space-y-3">
-            {question.options.map((option, index) => {
-              // Ultimate cleaning - strip EVERYTHING from the start until we hit actual content
-              let cleanOption = String(option || "");
-              
-              // Remove all leading: letters, numbers, punctuation, whitespace
-              cleanOption = cleanOption.replace(/^[A-Za-z0-9\s,.\-_:;!?()[\]{}'"]+/, '');
-              
-              // If that removed everything, use original but trim
-              if (!cleanOption || cleanOption.length === 0) {
-                cleanOption = String(option || "").trim();
-              }
-              
-              // One final cleanup: remove any leading punctuation/whitespace that remains
-              cleanOption = cleanOption.replace(/^[\s,.\-_:;!?()[\]{}'"]+/, '').trim();
-              
-              return (
-                <label
-                  key={index}
-                  htmlFor={`option-${index}`}
-                  className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                    selectedAnswer === option
-                      ? "border-purple-500 bg-purple-50"
-                      : "border-slate-200 hover:border-purple-300 bg-white hover:bg-slate-50"
-                  }`}
-                >
-                  <RadioGroupItem value={option} id={`option-${index}`} className="flex-shrink-0 mt-0.5" />
-                  <MathText className="text-base text-slate-700 leading-relaxed flex-1">
-                    {String.fromCharCode(65 + index)}. {cleanOption}
-                  </MathText>
-                </label>
-              );
-            })}
+            {question.options.map((option, index) => (
+              <label
+                key={index}
+                htmlFor={`option-${index}`}
+                className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                  selectedAnswer === option
+                    ? "border-purple-500 bg-purple-50"
+                    : "border-slate-200 hover:border-purple-300 bg-white hover:bg-slate-50"
+                }`}
+              >
+                <RadioGroupItem value={option} id={`option-${index}`} className="flex-shrink-0 mt-0.5" />
+                <MathText className="text-base text-slate-700 leading-relaxed flex-1">
+                  {String.fromCharCode(65 + index)}. {option}
+                </MathText>
+              </label>
+            ))}
           </RadioGroup>
         </CardContent>
       </Card>

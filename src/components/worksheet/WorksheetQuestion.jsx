@@ -19,39 +19,23 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
     if (questionType.includes("multiple choice") || questionType.includes("mcq")) {
       return (
         <RadioGroup value={answer} onValueChange={handleAnswerChange} className="space-y-3">
-          {question.options.map((option, index) => {
-            // Ultimate cleaning - strip EVERYTHING from the start until we hit actual content
-            let cleanOption = String(option || "");
-            
-            // Remove all leading: letters, numbers, punctuation, whitespace
-            cleanOption = cleanOption.replace(/^[A-Za-z0-9\s,.\-_:;!?()[\]{}'"]+/, '');
-            
-            // If that removed everything, use original but trim
-            if (!cleanOption || cleanOption.length === 0) {
-              cleanOption = String(option || "").trim();
-            }
-            
-            // One final cleanup: remove any leading punctuation/whitespace that remains
-            cleanOption = cleanOption.replace(/^[\s,.\-_:;!?()[\]{}'"]+/, '').trim();
-            
-            return (
-              <div
-                key={index}
-                className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all ${
-                  answer === option
-                    ? "border-purple-500 bg-purple-50"
-                    : "border-slate-200 hover:border-purple-300 bg-white"
-                }`}
-              >
-                <RadioGroupItem value={option} id={`option-${index}`} className="mt-1" />
-                <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
-                  <MathText inline className="text-slate-700">
-                    {String.fromCharCode(65 + index)}. {cleanOption}
-                  </MathText>
-                </Label>
-              </div>
-            );
-          })}
+          {question.options.map((option, index) => (
+            <div
+              key={index}
+              className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all ${
+                answer === option
+                  ? "border-purple-500 bg-purple-50"
+                  : "border-slate-200 hover:border-purple-300 bg-white"
+              }`}
+            >
+              <RadioGroupItem value={option} id={`option-${index}`} className="mt-1" />
+              <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer">
+                <MathText inline className="text-slate-700">
+                  {String.fromCharCode(65 + index)}. {option}
+                </MathText>
+              </Label>
+            </div>
+          ))}
         </RadioGroup>
       );
     }
