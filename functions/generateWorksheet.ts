@@ -99,7 +99,22 @@ Deno.serve(async (req) => {
                         const isMultipleChoice = q.question_type?.toLowerCase().includes('multiple choice') || 
                                                q.question_type?.toLowerCase().includes('mcq');
                         
-                        if (isMultipleChoice) {
+                        // Clean options for MCQ
+                        if (isMultipleChoice && q.options && Array.isArray(q.options)) {
+                            q.options = q.options.map(opt => 
+                                String(opt)
+                                    .replace(/^[A-Za-z][\s,.\-)]+/g, '')
+                                    .replace(/^[,.\s)]+/g, '')
+                                    .trim()
+                            );
+                            
+                            if (q.correct_answer) {
+                                q.correct_answer = String(q.correct_answer)
+                                    .replace(/^[A-Za-z][\s,.\-)]+/g, '')
+                                    .replace(/^[,.\s)]+/g, '')
+                                    .trim();
+                            }
+                            
                             if (!q.options || q.options.length < 2) {
                                 q.question_type = "Short Answer";
                                 q.options = null;
