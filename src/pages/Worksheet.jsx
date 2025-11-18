@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -418,35 +419,26 @@ Output Format: Valid JSON object matching the schema.`;
         throw new Error("Invalid worksheet data received from AI");
       }
 
-      // AGGRESSIVE cleaning - remove ALL prefixes and leading garbage
+      // Clean all MCQ options to remove any letter prefixes, punctuation
       const questionsWithPlaceholder = worksheetData.worksheet_questions.map(q => {
         let cleanedOptions = q.options;
         let cleanedCorrectAnswer = q.correct_answer;
-
+        
+        // Only clean if it's a multiple choice question
         const isMultipleChoice = q.question_type?.toLowerCase().includes('multiple choice') || 
                                  q.question_type?.toLowerCase().includes('mcq');
-
+        
         if (isMultipleChoice && q.options && q.options.length > 0) {
-          cleanedOptions = q.options.map(opt => {
-            let cleaned = String(opt);
-            // Remove any pattern repeatedly until clean
-            while (/^[A-Za-z0-9]?[\s,.\-:;)}\]]*/.test(cleaned) && cleaned.length > 0) {
-              const before = cleaned;
-              cleaned = cleaned.replace(/^[A-Za-z0-9]?[\s,.\-:;)}\]]*/g, '').trim();
-              if (before === cleaned) break;
-            }
-            return cleaned;
-          });
-
-          let cleanedAnswer = String(q.correct_answer);
-          while (/^[A-Za-z0-9]?[\s,.\-:;)}\]]*/.test(cleanedAnswer) && cleanedAnswer.length > 0) {
-            const before = cleanedAnswer;
-            cleanedAnswer = cleanedAnswer.replace(/^[A-Za-z0-9]?[\s,.\-:;)}\]]*/g, '').trim();
-            if (before === cleanedAnswer) break;
-          }
-          cleanedCorrectAnswer = cleanedAnswer;
+          cleanedOptions = q.options.map(opt => 
+            opt.replace(/^[A-Za-z][\s,.\-)]+/g, '').replace(/^[,.\s)]+/g, '').trim()
+          );
+          
+          cleanedCorrectAnswer = q.correct_answer
+            .replace(/^[A-Za-z][\s,.\-)]+/g, '')
+            .replace(/^[,.\s)]+/g, '')
+            .trim();
         }
-
+        
         return {
           ...q,
           options: cleanedOptions,
