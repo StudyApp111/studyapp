@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -226,17 +225,26 @@ Provide your response as a single, valid JSON object with the following structur
         }
       });
 
-      // Clean all options to remove any letter prefixes, punctuation
+      // AGGRESSIVE cleaning - remove ALL prefixes and leading garbage
       const cleanedQuestions = quizData.diagnostic_quiz.questions.map(q => {
-        const cleanedOptions = q.options.map(opt => 
-          opt.replace(/^[A-Za-z][\s,.\-)]+/g, '').replace(/^[,.\s)]+/g, '').trim()
-        );
+        const cleanedOptions = q.options.map(opt => {
+          let cleaned = String(opt);
+          // Remove any pattern like "A., ," or "B) " or "C. " etc repeatedly until clean
+          while (/^[A-Za-z0-9]?[\s,.\-:;)}\]]*/.test(cleaned) && cleaned.length > 0) {
+            const before = cleaned;
+            cleaned = cleaned.replace(/^[A-Za-z0-9]?[\s,.\-:;)}\]]*/g, '').trim();
+            if (before === cleaned) break; // Prevent infinite loop
+          }
+          return cleaned;
+        });
         
-        // Also clean the correct_answer to match
-        const cleanedCorrectAnswer = q.correct_answer
-          .replace(/^[A-Za-z][\s,.\-)]+/g, '')
-          .replace(/^[,.\s)]+/g, '')
-          .trim();
+        // Clean correct_answer the same way
+        let cleanedCorrectAnswer = String(q.correct_answer);
+        while (/^[A-Za-z0-9]?[\s,.\-:;)}\]]*/.test(cleanedCorrectAnswer) && cleanedCorrectAnswer.length > 0) {
+          const before = cleanedCorrectAnswer;
+          cleanedCorrectAnswer = cleanedCorrectAnswer.replace(/^[A-Za-z0-9]?[\s,.\-:;)}\]]*/g, '').trim();
+          if (before === cleanedCorrectAnswer) break;
+        }
         
         return {
           ...q,
