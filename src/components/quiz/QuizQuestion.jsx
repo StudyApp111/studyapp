@@ -40,11 +40,19 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
 
           <RadioGroup value={selectedAnswer} onValueChange={onSelectAnswer} className="space-y-3">
             {question.options.map((option, index) => {
-              // Aggressive cleaning - remove ALL leading letters, commas, periods, spaces, and parentheses
-              const cleanOption = option
-                .replace(/^[A-Za-z][\s,.\-)]+/g, '')  // Remove letter + any combo of space, comma, period, hyphen, parenthesis
-                .replace(/^[,.\s)]+/g, '')             // Remove any remaining leading punctuation
-                .trim();
+              // Ultimate cleaning - strip EVERYTHING from the start until we hit actual content
+              let cleanOption = String(option || "");
+              
+              // Remove all leading: letters, numbers, punctuation, whitespace
+              cleanOption = cleanOption.replace(/^[A-Za-z0-9\s,.\-_:;!?()[\]{}'"]+/, '');
+              
+              // If that removed everything, use original but trim
+              if (!cleanOption || cleanOption.length === 0) {
+                cleanOption = String(option || "").trim();
+              }
+              
+              // One final cleanup: remove any leading punctuation/whitespace that remains
+              cleanOption = cleanOption.replace(/^[\s,.\-_:;!?()[\]{}'"]+/, '').trim();
               
               return (
                 <label

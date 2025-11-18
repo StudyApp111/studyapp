@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -225,6 +224,10 @@ Provide your response as a single, valid JSON object with the following structur
           required: ["smart_summary", "diagnostic_quiz"]
         }
       });
+
+      console.log("=== RAW DIAGNOSTIC QUIZ API RESPONSE ===");
+      console.log(JSON.stringify(quizData, null, 2));
+      console.log("=== END RAW DIAGNOSTIC QUIZ API RESPONSE ===");
 
       const createdQuiz = await base44.entities.DiagnosticQuiz.create({
         lesson_id: lessonId,

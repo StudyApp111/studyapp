@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
@@ -414,6 +413,10 @@ Output Format: Valid JSON object matching the schema.`;
           required: ["worksheet_title", "analysis_summary_for_worksheet_design", "worksheet_questions"]
         }
       });
+
+      console.log("=== RAW API RESPONSE ===");
+      console.log(JSON.stringify(worksheetData, null, 2));
+      console.log("=== END RAW API RESPONSE ===");
 
       if (!worksheetData || !worksheetData.worksheet_questions || worksheetData.worksheet_questions.length === 0) {
         throw new Error("Invalid worksheet data received from AI");
