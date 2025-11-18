@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -83,6 +82,10 @@ export default function Layout({ children, currentPageName }) {
   // Don't render layout navigation if onboarding not completed
   const isOnboardingPage = location.pathname === createPageUrl("Onboarding");
   const showNavigation = user?.onboarding_completed || isOnboardingPage;
+  
+  // Hide mobile bottom nav on pages with their own custom navigation
+  const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
+  const showMobileBottomNav = !pagesWithCustomNav.includes(currentPageName);
 
   return (
     <SidebarProvider>
@@ -296,8 +299,8 @@ export default function Layout({ children, currentPageName }) {
             {children}
           </div>
 
-          {/* Mobile Bottom Navigation - Hidden during onboarding */}
-          {showNavigation && !isOnboardingPage && (
+          {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
+          {showNavigation && !isOnboardingPage && showMobileBottomNav && (
             <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-4 py-3 safe-area-inset-bottom z-50">
               <div className="flex items-center justify-between max-w-lg mx-auto relative">
                 <Link
