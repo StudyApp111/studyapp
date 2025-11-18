@@ -1116,8 +1116,8 @@ Output Format: Valid JSON matching the required schema.`;
         </AnimatePresence>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-purple-200/60 shadow-2xl safe-area-inset-bottom">
-        <div className="max-w-4xl mx-auto px-4 py-4 md:px-6 md:py-5">
+      <div className="fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-purple-200/60 shadow-2xl">
+        <div className="max-w-4xl mx-auto px-4 py-4 pb-8 md:px-6 md:py-5">
           <div className="flex justify-between gap-4">
             <Button
               variant="outline"
