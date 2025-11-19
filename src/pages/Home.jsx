@@ -24,6 +24,13 @@ export default function Home() {
         
         if (!currentUser.onboarding_completed) {
           navigate(createPageUrl("Onboarding"));
+        } else if (currentUser.learning_profile_id) {
+          const profile = await base44.entities.LearningProfile.filter({
+            id: currentUser.learning_profile_id
+          });
+          if (profile.length > 0) {
+            setLearningProfile(profile[0]);
+          }
         }
       } catch (error) {
         console.error("Error checking user:", error);
@@ -32,6 +39,8 @@ export default function Home() {
     
     checkOnboarding();
   }, [navigate]);
+
+  const [learningProfile, setLearningProfile] = useState(null);
 
   const { data: lessons = [], isLoading } = useQuery({
     queryKey: ['lessons'],
@@ -232,7 +241,13 @@ export default function Home() {
               Welcome back, {user.full_name?.split(' ')[0] || 'Learner'}! 👋
             </h1>
             <p className="text-white/90 text-base md:text-xl mb-6 max-w-2xl mx-auto">
-              Ready to continue your learning journey?
+              {learningProfile?.grade && learningProfile?.school && learningProfile?.city ? (
+                <>
+                  {learningProfile.grade} student at {learningProfile.school} • {learningProfile.city}
+                </>
+              ) : (
+                "Ready to continue your learning journey?"
+              )}
             </p>
             
             {/* Stats Badges */}
