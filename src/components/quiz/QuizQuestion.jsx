@@ -4,8 +4,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import MathText from "../math/MathText";
+import { Brain, Target } from "lucide-react";
 
-export default function QuizQuestion({ question, questionNumber, selectedAnswer, onSelectAnswer }) {
+export default function QuizQuestion({ question, questionNumber, selectedAnswer, onSelectAnswer, metadata, onMetadataChange }) {
   const getDifficultyColor = (difficulty) => {
     if (!difficulty) return "bg-slate-100 text-slate-700";
     if (difficulty.includes("Foundational")) return "bg-blue-100 text-blue-700";
@@ -61,6 +62,68 @@ export default function QuizQuestion({ question, questionNumber, selectedAnswer,
               );
             })}
           </RadioGroup>
+
+          {selectedAnswer && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 pt-6 border-t border-slate-200 space-y-5"
+            >
+              {/* Reasoning Method */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Brain className="w-4 h-4 text-purple-600" />
+                  <label className="text-sm font-semibold text-slate-700">
+                    How did you choose this answer?
+                  </label>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {["I Knew It", "I Worked It Out", "I Guessed", "It Felt Right"].map((method) => (
+                    <button
+                      key={method}
+                      onClick={() => onMetadataChange({ ...metadata, reasoning_method: method })}
+                      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                        metadata?.reasoning_method === method
+                          ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      {method}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Confidence Level */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="w-4 h-4 text-purple-600" />
+                  <label className="text-sm font-semibold text-slate-700">
+                    How confident are you?
+                  </label>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Low", "Medium", "High"].map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => onMetadataChange({ ...metadata, confidence_level: level })}
+                      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                        metadata?.confidence_level === level
+                          ? level === "Low"
+                            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                            : level === "Medium"
+                            ? "bg-yellow-500 text-white shadow-lg shadow-yellow-500/30"
+                            : "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
         </CardContent>
       </Card>
     </motion.div>
