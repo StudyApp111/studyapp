@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
             prompt: prompt,
             response_json_schema: response_json_schema,
             add_context_from_internet: true,
-            model: "gemini-2.0-flash-exp",
+            model: "gemini-2.5-flash",
             temperature: 0.2
         });
 
