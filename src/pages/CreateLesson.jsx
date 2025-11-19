@@ -286,42 +286,26 @@ Output Format: JSON object matching the specified schema`;
         ]
       };
 
-      // Check for existing curriculum map (only from create_lesson)
-      setProcessingStep("Checking for existing curriculum map...");
-      const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
+      // Always generate a fresh curriculum map
+      setProcessingStep("Analyzing curriculum...");
+      console.log("Generating new curriculum map");
+
+      const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
+        prompt: curriculumPrompt,
+        response_json_schema: curriculumResponseJsonSchema
+      });
+
+      const curriculumMap = generatedMap;
+
+      // Save the new curriculum map
+      await base44.entities.CurriculumMap.create({
         course_name: courseName.trim(),
         school: learningProfile.school || "",
         grade: learningProfile.grade || "",
-        source: "create_lesson"
+        city: learningProfile.city || "",
+        source: "create_lesson",
+        curriculum_data: curriculumMap
       });
-
-      let curriculumMap;
-
-      if (existingCurriculumMaps.length > 0) {
-        console.log("Found existing curriculum map, reusing it");
-        curriculumMap = existingCurriculumMaps[0].curriculum_data;
-        setProcessingStep("Using existing curriculum standards...");
-      } else {
-        console.log("No existing curriculum map found, generating new one");
-        setProcessingStep("Analyzing curriculum (first time for this course)...");
-
-        const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
-          prompt: curriculumPrompt,
-          response_json_schema: curriculumResponseJsonSchema
-        });
-
-        curriculumMap = generatedMap;
-
-        // Save for future use
-        await base44.entities.CurriculumMap.create({
-          course_name: courseName.trim(),
-          school: learningProfile.school || "",
-          grade: learningProfile.grade || "",
-          city: learningProfile.city || "",
-          source: "create_lesson",
-          curriculum_data: curriculumMap
-        });
-      }
 
       setProcessingStep("Creating lesson...");
 
