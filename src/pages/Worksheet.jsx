@@ -230,79 +230,89 @@ ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 Content Source (User Notes, Uploaded Materials, or Typed Requests):
 ${contentDescription}
 
-Diagnostic Quiz Results:
-${JSON.stringify(diagnosticResults, null, 2)}
+"Diagnostic Quiz Results": "${JSON.stringify(diagnosticResults, null, 2)}",
 
-[Data Preprocessing (Internal Logic)]
-- Pair diagnosticResults.questions[i] with diagnosticResults.user_answer[i].
-- For each pair, compute is_correct = (user_answer[i] === questions[i].correct_answer).
-- Internally attach user_answer and is_correct to each question record for analysis.
-- Use difficulty_index (not "AssignedDifficultyIndex").
-- Determine overall diagnostic accuracy using diagnosticResults.score if available; otherwise compute as correct_count / total_questions.
-- If contentDescription is long or detailed (e.g., multi-page notes), ground factual details, topics, and examples primarily in those notes while using lessonData.curriculum_map to maintain curricular alignment and authentic question formats.
-- If contentDescription is brief or generic (e.g., "I need help with final"), rely more heavily on lessonData.curriculum_map to infer appropriate content scope and standards.
+  "Data Preprocessing (Internal Logic)": [
+    "Pair diagnosticResults.questions[i] with diagnosticResults.user_answer[i] and diagnosticResults.question_metadata[i].",
+    "For each pair, compute is_correct = (user_answer[i] === questions[i].correct_answer).",
+    "Internally attach user_answer, is_correct, difficulty_index, targeted_misconception, assessed_competencies (if present), reasoning_method, and confidence_level to each question record for analysis.",
+    "Normalize reasoning_method into canonical categories: Guess, Elimination, Recall/Memory, Pattern-spotting, Example/Analogy, Formula/Plug-in, Algorithmic/Procedural, Heuristic/Rule-of-thumb.",
+    "Map confidence_level into {High, Medium, Low}.",
+    "Derive metacognitive patterns per competency:",
+    "  - Overconfidence: is_correct = false AND confidence = High",
+    "  - Underconfidence: is_correct = true AND confidence = Low",
+    "  - Guess-correct risk: is_correct = true AND (reasoning_method = Guess OR confidence = Low)",
+    "  - Reasoning-method mismatch: repeated use of an unsuitable method (e.g., Pattern where Conceptual reasoning required).",
+    "Determine overall diagnostic accuracy using diagnosticResults.score if available; otherwise compute as correct_count / total_questions.",
+    "If contentDescription is long or detailed (multi-page notes), ground factual content, topics, and examples primarily in those notes while maintaining curricular alignment via lessonData.curriculum_map.",
+    "If contentDescription is brief or generic (e.g., 'I need help with final'), rely more heavily on lessonData.curriculum_map to infer scope, structure, and style."
+  ],
 
-[Task 1 – Internal Analysis (Reasoning Only, Do Not Output)]
-Internally perform structured reasoning using the data above before generating questions.
+  "Task 1 – Internal Analysis (Reasoning Only, Do Not Output)": [
+    "Internally perform structured reasoning using the data above before generating questions.",
 
-Correlate diagnostic performance to competencies:
-- Map incorrect responses to lessonData.curriculum_map.core_competencies.
-- Prioritize competencies with higher weights from lessonData.curriculum_map.competency_weightings.
+    "Correlate diagnostic performance to competencies:",
+    "  - Map incorrect responses to lessonData.curriculum_map.core_competencies.",
+    "  - Prioritize competencies with higher weights from lessonData.curriculum_map.competency_weightings.",
 
-Map misconceptions:
-- Align incorrect responses to lessonData.curriculum_map.common_misconceptions and each item's targeted_misconception.
-- Identify recurring patterns for remediation through new question design.
+    "Map misconceptions and reasoning patterns:",
+    "  - Align incorrect responses to lessonData.curriculum_map.common_misconceptions and each item's targeted_misconception.",
+    "  - Identify recurring reasoning_method patterns for remediation through new question design.",
+    "  - Detect overconfidence, underconfidence, and guess-correct patterns to adjust difficulty and question structure.",
+    "  - For each competency, record the dominant reasoning_method and confidence trends observed in the diagnostic.",
 
-Calibrate difficulty:
-- If accuracy ≤ 50 % → bias toward "Moderate Exam-Level".
-- If accuracy ≥ 80 % → bias toward "High Challenge Exam-Level".
-- Otherwise → balanced progression (Moderate → Challenging → High Challenge).
+    "Calibrate difficulty (using accuracy and confidence):",
+    "  - If accuracy ≤ 50% → bias toward 'Moderate Exam-Level'.",
+    "  - If accuracy ≥ 80% → bias toward 'High Challenge Exam-Level'.",
+    "  - Otherwise → balanced progression (Moderate → Challenging → High Challenge).",
+    "  - If overconfidence is frequent, include conceptually tricky questions that require justification or deeper explanation.",
+    "  - If underconfidence dominates, include scaffolded or confidence-building items early in the set.",
 
-Establish question allocation:
-- 6–7 questions → weak competencies / misconceptions.
-- 2–3 questions → key or high-weight competencies.
-- Ensure broad coverage of essential curricular areas.
+    "Establish question allocation:",
+    "  - 6–7 questions → weak competencies, misconceptions, or reasoning vulnerabilities (overconfidence, guess-correct).",
+    "  - 2–3 questions → key or high-weight competencies from the curriculum map.",
+    "  - Include 1–2 calibration twin items that test the same competency using different reasoning demands (e.g., procedural vs conceptual).",
+    "  - Ensure broad coverage across essential curricular areas and reasoning types.",
 
-Align to authentic exam style:
-- Mirror format distributions and stylistic conventions from lessonData.curriculum_map.question_formats.
-- Preserve the phrasing and cognitive style typical of ${learningProfile.school || "the school"}.
+    "Align to authentic exam style:",
+    "  - Mirror format distributions and stylistic conventions from lessonData.curriculum_map.question_formats.",
+    "  - Preserve the phrasing and cognitive style typical of ${learningProfile.school || 'the school'}.",
+    "  - Maintain realism and consistency with how students are assessed in ${lessonData.course_name}."
+  ],
 
-(All reasoning must occur internally and never be output.)
+  "Task 2 – Worksheet Generation (Output-Only)": [
+    "Generate exactly 10 unique, exam-authentic questions derived from the internal analysis.",
+    "Each question must reflect identified weaknesses, misconceptions, reasoning patterns, and curriculum weighting priorities.",
 
-[Task 2 – Worksheet Generation (Output-Only)]
-Generate exactly 10 unique, exam-authentic questions derived from the internal analysis.
-Each question must reflect identified weaknesses, misconceptions, and weighting priorities.
+    "Subject-Specific Design Guidelines": {
+      "Mathematics": "Multi-step problems, proofs, applied word problems, function and graph interpretation, connecting formulas to real data. Include variants that require justification when previous errors showed guessing or pattern reliance.",
+      "Natural Sciences": "Experimental design, data-table interpretation, quantitative calculations, model explanation, and application of theory to scenarios. Add interpretation checks where confidence was high but incorrect.",
+      "Social Sciences": "Source or case analysis, cause-effect reasoning, comparative evaluation, interpretation of charts, and structured short answers. Include prompts requiring explicit evidence to counter intuitive but wrong pattern-based reasoning.",
+      "Humanities": "Text or excerpt analysis, critical interpretation, argument construction, thematic comparison, and evaluation of perspectives. Distractors should reflect observed misreadings or overconfident assumptions from the diagnostic.",
+      "Languages": "Reading comprehension, vocabulary-in-context, grammar correction, translation or composition, and interpretive short responses. Emphasize distinctions between near-synonyms where confidence was high but accuracy was low.",
+      "Business Economics Accounting Finance": "Case-based decision scenarios, journal entries, ratio or data analysis, policy evaluation, cost-benefit interpretation, and quantitative justification. Include method-selection items to test conceptual grounding over rote recall.",
+      "Computer Science Technology Engineering": "Algorithm tracing, pseudo-code completion, debugging logic, applied calculations, and conceptual questions on data structures or systems. Add a variant where shortcut or pattern-based reasoning fails without full logic.",
+      "Fine Arts and Creative Subjects": "Visual or aural analysis, style recognition, composition planning, interpretive reasoning, and contextual or historical linkage. Include questions prompting explanation of stylistic inference rather than recognition only.",
+      "Interdisciplinary and Professional Courses": "Case-study interpretation, ethical or policy analysis, applied reasoning, scenario-based judgments, and reflective synthesis. Introduce framework-choice questions where heuristic errors were seen."
+    },
 
-Subject-Specific Design Guidelines:
-{
-  "Mathematics": "Multi-step problems, proofs, applied word problems, function and graph interpretation, connecting formulas to real data.",
-  "Natural Sciences": "Experimental design, data-table interpretation, quantitative calculations, model explanation, and application of theory to scenarios.",
-  "Social Sciences": "Source or case analysis, cause-effect reasoning, comparative evaluation, interpretation of charts, and structured short answers.",
-  "Humanities": "Text or excerpt analysis, critical interpretation, argument construction, thematic comparison, and evaluation of perspectives.",
-  "Languages": "Reading comprehension, vocabulary-in-context, grammar correction, translation or composition, and interpretive short responses.",
-  "Business Economics Accounting Finance": "Case-based decision scenarios, journal entries, ratio or data analysis, policy evaluation, cost-benefit interpretation, and quantitative justification.",
-  "Computer Science Technology Engineering": "Algorithm tracing, pseudo-code completion, debugging logic, applied calculations, and conceptual questions on data structures or systems.",
-  "Fine Arts and Creative Subjects": "Visual or aural analysis, style recognition, composition planning, interpretive reasoning, and contextual or historical linkage.",
-  "Interdisciplinary and Professional Courses": "Case-study interpretation, ethical or policy analysis, applied reasoning, scenario-based judgments, and reflective synthesis."
-}
+    "General Construction Rules": [
+      "Use clear, grade-appropriate language for ${learningProfile.grade}.",
+      "Include four plausible options (A–D) if question_type = 'Multiple Choice'; otherwise set options = [].",
+      "Assign each question a difficulty_index of 'Moderate Exam-Level', 'Challenging Exam-Level', or 'High Challenge Exam-Level'.",
+      "Each question must test a distinct concept or reasoning demand for predictive breadth.",
+      "Maintain authentic exam wording and structure grounded in ${lessonData.course_name} and ${learningProfile.school || 'the school'} context.",
+      "If extensive notes are provided, align question content, terminology, and examples to those materials.",
+      "If notes are minimal, extrapolate from the curriculum map and question_formats to ensure validity and balance."
+    ]
+  ],
 
-General Construction Rules:
-- Use clear, grade-appropriate language for ${learningProfile.grade}.
-- Include four plausible options (A–D) if question_type = "Multiple Choice"; otherwise set options = [].
-- Assign each question a difficulty_index of "Moderate Exam-Level", "Challenging Exam-Level", or "High Challenge Exam-Level".
-- Each question must test a distinct concept or skill for predictive breadth.
-- Maintain authentic exam wording and format grounded in ${lessonData.course_name} and ${learningProfile.school || "the school"} context.
-- When extensive notes are provided, ensure question content, terminology, and examples align factually with those materials; when notes are minimal, extrapolate content scope from the curriculum map and question_formats.
-
-CRITICAL FORMATTING REQUIREMENTS:
-1. Question Text: Write as PLAIN TEXT without markdown formatting (no **, no *, no special symbols)
-   - For math: use x^2 for superscripts, H_2O for subscripts (auto-rendered)
-2. Answer Options: MUST use proper capitalization
-3. Correct Answer: Must match one of the options EXACTLY
-
-Task 3: Provide Complete Answer Key Details
-For each question include: correct_answer, explanation (2-3 sentences), assessed_competencies, targeted_misconception.
-
+  "Task 3 – Provide Complete Answer Key Details": [
+    "For each question include: correct_answer, explanation (2–3 sentences), assessed_competencies, targeted_misconception.",
+    "In the explanation, explicitly reference the most likely reasoning_method error if the student missed this type previously (e.g., 'If you chose C by pattern recognition, note that the variable changes in line 3').",
+    "Each explanation must teach a corrective insight for the identified misconception or reasoning flaw, not merely restate the correct answer.",
+    "Ensure every explanation provides a mini feedback loop that helps the system learn how the student learns and mislearns."
+  ],
 Output Format:
 Provide your response as a single, valid JSON object with the structure specified.`;
       } else {
