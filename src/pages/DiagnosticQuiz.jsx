@@ -5,9 +5,8 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Brain, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Brain } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import ReactMarkdown from "react-markdown";
 import QuizQuestion from "../components/quiz/QuizQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 
@@ -20,7 +19,6 @@ export default function DiagnosticQuiz() {
   const [userAnswers, setUserAnswers] = useState([]);
   const [questionMetadata, setQuestionMetadata] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
@@ -93,10 +91,7 @@ export default function DiagnosticQuiz() {
         contentDescription = lessonData.description || "N/A";
       }
 
-      const aiPrompt = `Objective: You are an expert supportive tutor. Your goal is to:
-
-
-Design a 5-question "Diagnostic Quiz" with ONLY Multiple Choice Questions (MCQs) to effectively gauge the student's current understanding across core curriculum areas. This quiz will inform the creation of a subsequent personalized worksheet.
+      const aiPrompt = `Objective: You are an expert supportive tutor. Your goal is to design a 5-question "Diagnostic Quiz" with ONLY Multiple Choice Questions (MCQs) to effectively gauge the student's current understanding across core curriculum areas. This quiz will inform the creation of a subsequent personalized worksheet.
 
 This entire experience should be warm, ${learningProfile.grade || 'student'}-friendly, and presented as if you are guiding the student step-by-step towards success.
 
@@ -109,7 +104,7 @@ City/Region: ${learningProfile.city || "N/A"}
 Detailed Curriculum Profile: ${JSON.stringify(lessonData.curriculum_map)}
 Content Source: ${contentDescription}
 
-Task 2: Design the 5-Question Diagnostic Quiz
+Task: Design the 5-Question Diagnostic Quiz
 
 CRITICAL: ALL questions MUST be Multiple Choice Questions (MCQs) with exactly 4 answer options.
 
@@ -150,51 +145,36 @@ e. Targeted Misconception (Optional): If this question specifically tests a know
 Clarity & Appropriateness: Ensure all questions are clearly worded, unambiguous, and entirely appropriate for the specified grade level.
 
 Output Format:
-Provide your response as a single, valid JSON object with the following structure. Ensure the content_markdown field uses proper markdown formatting including ## for headings, ** for bold, * for italic, - for lists, and proper math notation (x^2, H_2O).`;
+Provide your response as a single, valid JSON object with the following structure.`;
 
       const { data: quizData } = await base44.functions.invoke('smartSummaryQuiz', {
         prompt: aiPrompt,
         response_json_schema: {
           type: "object",
           properties: {
-            smart_summary: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                content_markdown: { type: "string" }
-              },
-              required: ["title", "content_markdown"]
-            },
-            diagnostic_quiz: {
-              type: "object",
-              properties: {
-                title: { type: "string" },
-                questions: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      question_number: { type: "integer" },
-                      question_type: { type: "string", enum: ["Multiple Choice", "MCQ"] },
-                      difficulty_index: { type: "string" },
-                      targeted_misconception: { type: "string" },
-                      question_text: { type: "string" },
-                      options: {
-                        type: "array",
-                        items: { type: "string" },
-                        minItems: 4,
-                        maxItems: 4
-                      },
-                      correct_answer: { type: "string" }
-                    },
-                    required: ["question_number", "question_type", "difficulty_index", "question_text", "options", "correct_answer"]
-                  }
-                }
-              },
-              required: ["questions"]
+            questions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  question_number: { type: "integer" },
+                  question_type: { type: "string", enum: ["Multiple Choice", "MCQ"] },
+                  difficulty_index: { type: "string" },
+                  targeted_misconception: { type: "string" },
+                  question_text: { type: "string" },
+                  options: {
+                    type: "array",
+                    items: { type: "string" },
+                    minItems: 4,
+                    maxItems: 4
+                  },
+                  correct_answer: { type: "string" }
+                },
+                required: ["question_number", "question_type", "difficulty_index", "question_text", "options", "correct_answer"]
+              }
             }
           },
-          required: ["smart_summary", "diagnostic_quiz"]
+          required: ["questions"]
         }
       });
 
@@ -202,14 +182,13 @@ Provide your response as a single, valid JSON object with the following structur
 
       const createdQuiz = await base44.entities.DiagnosticQuiz.create({
         lesson_id: lessonId,
-        smart_summary: quizData.smart_summary,
-        questions: quizData.diagnostic_quiz.questions,
+        questions: quizData.questions,
         completed: false
       });
 
       setQuiz(createdQuiz);
-      setUserAnswers(new Array(quizData.diagnostic_quiz.questions.length).fill(null));
-      setQuestionMetadata(new Array(quizData.diagnostic_quiz.questions.length).fill({}));
+      setUserAnswers(new Array(quizData.questions.length).fill(null));
+      setQuestionMetadata(new Array(quizData.questions.length).fill({}));
     } catch (error) {
       console.error("Error generating quiz:", error);
       navigate(createPageUrl("Home"));
@@ -319,45 +298,6 @@ Provide your response as a single, valid JSON object with the following structur
               {currentQuestion + 1}/{quiz.questions.length}
             </span>
           </div>
-
-          {quiz.smart_summary && (
-            <div className="mb-2 p-2 md:p-3 bg-purple-50/50 rounded-lg border border-purple-200">
-              <div className="flex items-center justify-between mb-1 cursor-pointer" onClick={() => setSummaryExpanded(!summaryExpanded)}>
-                <h3 className="font-semibold text-xs md:text-sm text-purple-900">{quiz.smart_summary.title}</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2"
-                >
-                  {summaryExpanded ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </Button>
-              </div>
-              <AnimatePresence>
-                {summaryExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="prose prose-sm max-w-none text-slate-700 text-xs pt-2">
-                      <ReactMarkdown>{quiz.smart_summary.content_markdown}</ReactMarkdown>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              {!summaryExpanded && (
-                <div className="prose prose-sm max-w-none text-slate-700 text-xs line-clamp-2">
-                  <ReactMarkdown>{quiz.smart_summary.content_markdown}</ReactMarkdown>
-                </div>
-              )}
-            </div>
-          )}
 
           <Progress value={progress} className="h-1.5 md:h-2" />
         </div>
