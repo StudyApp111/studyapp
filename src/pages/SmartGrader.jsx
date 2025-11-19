@@ -143,7 +143,8 @@ export default function SmartGrader() {
         const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
           course_name: courseName.trim(),
           school: learningProfile.school || "",
-          grade: learningProfile.grade || ""
+          grade: learningProfile.grade || "",
+          source: "smart_grader"
         });
 
         if (existingCurriculumMaps.length > 0) {
@@ -242,6 +243,7 @@ Requirements:
             school: learningProfile.school || "",
             grade: learningProfile.grade || "",
             city: learningProfile.city || "",
+            source: "smart_grader",
             curriculum_data: rubric
           });
         }

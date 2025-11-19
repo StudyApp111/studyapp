@@ -286,12 +286,13 @@ Output Format: JSON object matching the specified schema`;
         ]
       };
 
-      // Check for existing curriculum map
+      // Check for existing curriculum map (only from create_lesson)
       setProcessingStep("Checking for existing curriculum map...");
       const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
         course_name: courseName.trim(),
         school: learningProfile.school || "",
-        grade: learningProfile.grade || ""
+        grade: learningProfile.grade || "",
+        source: "create_lesson"
       });
 
       let curriculumMap;
@@ -317,6 +318,7 @@ Output Format: JSON object matching the specified schema`;
           school: learningProfile.school || "",
           grade: learningProfile.grade || "",
           city: learningProfile.city || "",
+          source: "create_lesson",
           curriculum_data: curriculumMap
         });
       }
