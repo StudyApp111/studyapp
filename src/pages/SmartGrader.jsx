@@ -105,12 +105,12 @@ export default function SmartGrader() {
 
       const learningProfile = profile[0] || {};
 
-      let curriculumMap;
+      let rubric;
 
-      // Handle custom curriculum file if provided
+      // Handle custom rubric file if provided
       if (curriculumFile) {
 
-        setProcessingStep("Processing your curriculum file...");
+        setProcessingStep("Processing your rubric file...");
         
         const { file_url: curriculumUrl } = await base44.integrations.Core.UploadFile({ file: curriculumFile });
         
@@ -132,10 +132,10 @@ export default function SmartGrader() {
           throw new Error("Failed to extract curriculum file: " + (curriculumExtractResult.details || "Unknown error"));
         }
 
-        const customCurriculumText = curriculumExtractResult.output?.full_text_content || "";
+        const customRubricText = curriculumExtractResult.output?.full_text_content || "";
         
-        curriculumMap = {
-          custom_curriculum: customCurriculumText,
+        rubric = {
+          custom_rubric: customRubricText,
           is_custom: true
         };
       } else {
@@ -147,7 +147,7 @@ export default function SmartGrader() {
         });
 
         if (existingCurriculumMaps.length > 0) {
-          curriculumMap = existingCurriculumMaps[0].curriculum_data;
+          rubric = existingCurriculumMaps[0].curriculum_data;
         } else {
           const rubricPrompt = `Objective:
 You are an expert curriculum designer and academic assessor. Generate an accurate, assignment-specific grading rubric aligned to real teacher evaluation practices for ${courseName} at the ${learningProfile.grade || "N/A"} level.
@@ -235,49 +235,48 @@ Requirements:
             }
           });
 
-          curriculumMap = generatedRubric;
+          rubric = generatedRubric;
 
           await base44.entities.CurriculumMap.create({
             course_name: courseName.trim(),
             school: learningProfile.school || "",
             grade: learningProfile.grade || "",
             city: learningProfile.city || "",
-            curriculum_data: curriculumMap
+            curriculum_data: rubric
           });
         }
       }
 
       setProcessingStep("Grading your assignment (this takes 30-60 seconds)...");
 
-      const curriculumContext = curriculumMap.is_custom 
-        ? `Custom Curriculum/Rubric Provided by Instructor:\n${curriculumMap.custom_curriculum}`
-        : `Curriculum Profile:\n${JSON.stringify(curriculumMap, null, 2)}`;
+      const rubricContext = rubric.is_custom 
+        ? `Custom Rubric Provided by Instructor:\n${rubric.custom_rubric}`
+        : `Assignment-Specific Rubric:\n${JSON.stringify(rubric, null, 2)}`;
 
       const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}. Read the ENTIRE assignment content below carefully and produce a COMPLETE grading report. Do NOT skip any fields. Do NOT return null or empty arrays.
 
-Curriculum: ${curriculumContext}
+Grading Rubric: ${rubricContext}
 
 ASSIGNMENT CONTENT TO GRADE:
 ${extractedContent}
 
 [Grounding (Internal Only)]
-- Primary grounding: the student's uploaded assignment text above. Secondary grounding: the mapped/uploaded curriculum context in ${curriculumContext} (e.g., core_competencies, competency_weightings, question_formats, exemplar rubrics, high_yield_focal_points, common_misconceptions). Use curriculum to shape the rubric, weight emphasis, and ensure parity with in-class grading norms.
+- Primary grounding: the student's uploaded assignment text above. Secondary grounding: the assignment-specific rubric provided in ${rubricContext} (e.g., rubric_criteria with criterion, description, weight_percentage, and performance_levels). Use the rubric to evaluate the student's work according to the defined criteria and performance standards.
 - Determine assignment type from the submission and/or metadata: Essay/Analysis; Short Answers; Problem Set (math/econ/accounting/finance/stats); Lab/Report (science); Case/Policy (business/econ/law); Code/Algorithmic (CS/engineering); Presentation/Slides; Mixed/Portfolio.
-- If ${curriculumContext} includes a **rubric** or **criteria**, use it as the first choice. If not, build a rubric with 3–6 criteria appropriate to the type and **map each criterion** to relevant curriculum core_competencies; reflect **competency_weightings** by adjusting criterion weights.
+- Use the rubric provided in ${rubricContext} as your primary evaluation framework. Apply each criterion with its defined weight_percentage and evaluate performance according to the four performance_levels (Excellent, Good, Developing, Needs Improvement).
 - For quantitative/technical work: check method, stepwise reasoning, correctness, units, assumptions, edge cases, interpretation of results, and clarity of layout.
 - For essays/humanities/social sciences: evaluate prompt adherence, thesis/claim, textual/primary-source use, depth of analysis and counter-argument, structure/organization, clarity/style, and citation integrity.
 - For CS/engineering: problem understanding, algorithm/approach, correctness/complexity, code clarity and structure, testing/edge cases, documentation.
 - For social sciences/policy/case: theoretical framework fit, evidence/reasoning quality, comparative or counterfactual analysis, policy/implications, clarity and citations.
 - For languages: comprehension, vocabulary/grammar/syntax, task fulfillment, organization/coherence, register/style.
 - Academic integrity: neutrally flag citation gaps or dubious references with specific evidence to review; do not accuse—just note concerns.
-- Grade bands: if explicit in ${curriculumContext}, follow them; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
+- Grade bands: A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
 
-[Curriculum/Rubric Utilization Rules (Internal Only)]
-- **Competency alignment:** For each rubric criterion, list the most relevant curriculum core_competencies (from ${curriculumContext}) that the student's work demonstrates or lacks.
-- **Weighting parity:** If competency_weightings exist, proportionally reflect them in rubric **weight_percentage** so the total rubric weight sums to 100%. If a high-weight competency is not evidenced in the work, evaluate the closest aligned criterion and explain the gap in comments.
-- **Question format parity:** When relevant (e.g., short answers, document analysis), mirror ${curriculumContext}.question_formats in expectations for depth and style.
-- **High-yield focal points:** Prefer assessing high_yield_focal_points when the submission touches them; give extra commentary there for authenticity with how the course is graded IRL.
-- **Common misconceptions:** If the submission exhibits any listed misconceptions, reference them explicitly in comments and in "areas_for_improvement".
+[Rubric Application Rules (Internal Only)]
+- **Criterion-by-criterion evaluation:** For each criterion in the rubric, evaluate the student's work against the four performance levels provided (Excellent, Good, Developing, Needs Improvement).
+- **Weight application:** Apply the exact weight_percentage specified in the rubric for each criterion. The total must sum to 100%.
+- **Performance level matching:** Determine which performance level best describes the student's work for each criterion, then assign an appropriate percentage score (e.g., Excellent = 90-100%, Good = 75-89%, Developing = 60-74%, Needs Improvement = 0-59%).
+- **Evidence-based scoring:** Always reference specific evidence from the student's work that justifies the assigned performance level.
 
 [Scoring Algorithm (Internal Only)]
 - Build 3–6 rubric items with clear **weight_percentage** that total exactly **100%**.
@@ -404,7 +403,7 @@ Output valid JSON matching this exact schema.`;
         assignment_title: assignmentTitle,
         file_url: file_url,
         extracted_content: extractedContent,
-        curriculum_map: curriculumMap,
+        curriculum_map: rubric,
         grading_result: gradingResult,
         completed: true
       });
