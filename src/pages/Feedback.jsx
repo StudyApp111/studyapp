@@ -77,9 +77,44 @@ export default function Feedback() {
       analyzePerformance(worksheetData[0]);
 
       const user = await base44.auth.me();
+      
+      // Update streak tracking
+      const today = new Date().toISOString().split('T')[0];
+      const lastActivityDate = user.last_activity_date;
+      let newStreak = user.current_streak || 0;
+      
+      if (lastActivityDate) {
+        const lastDate = new Date(lastActivityDate);
+        const todayDate = new Date(today);
+        const diffTime = todayDate - lastDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+          // Same day - keep streak
+        } else if (diffDays === 1) {
+          // Consecutive day - increase streak
+          newStreak += 1;
+        } else {
+          // Streak broken - reset to 1
+          newStreak = 1;
+        }
+      } else {
+        // First activity
+        newStreak = 1;
+      }
+      
       if (worksheetNum === 1) {
         await base44.auth.updateMe({
-          total_lessons_completed: (user.total_lessons_completed || 0) + 1
+          total_lessons_completed: (user.total_lessons_completed || 0) + 1,
+          current_streak: newStreak,
+          longest_streak: Math.max(newStreak, user.longest_streak || 0),
+          last_activity_date: today
+        });
+      } else {
+        await base44.auth.updateMe({
+          current_streak: newStreak,
+          longest_streak: Math.max(newStreak, user.longest_streak || 0),
+          last_activity_date: today
         });
       }
     } catch (error) {
