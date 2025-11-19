@@ -393,7 +393,7 @@ Output valid JSON matching the expected schema.`;
         assignment_title: assignmentTitle,
         file_url: file_url,
         extracted_content: extractedContent,
-        curriculum_map: rubric,
+        assignment_rubric: rubric,
         grading_result: gradingResult,
         completed: true
       });
