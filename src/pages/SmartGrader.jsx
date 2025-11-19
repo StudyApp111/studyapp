@@ -66,6 +66,10 @@ export default function SmartGrader() {
         throw new Error("Please upload your assignment file");
       }
 
+      if (!curriculumFile) {
+        throw new Error("Please upload your grading rubric");
+      }
+
       setProcessingStep("Uploading your assignment...");
       const { file_url } = await base44.integrations.Core.UploadFile({ file: assignmentFile });
 
@@ -527,7 +531,7 @@ Output valid JSON matching the expected schema.`;
               <div className="space-y-2">
                 <Label htmlFor="curriculumFile" className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
-                  Custom Rubric/Curriculum (Optional)
+                  Grading Rubric *
                 </Label>
                 <Input
                   id="curriculumFile"
@@ -555,7 +559,7 @@ Output valid JSON matching the expected schema.`;
                   </div>
                 )}
                 <p className="text-xs text-slate-500">
-                  Upload your grading rubric or curriculum to override automatic standards
+                  Upload the official grading rubric for this assignment
                 </p>
               </div>
 
