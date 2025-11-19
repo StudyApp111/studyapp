@@ -261,15 +261,15 @@ ASSIGNMENT CONTENT TO GRADE:
 ${extractedContent}
 
 [Grounding (Internal Only)]
-- Primary grounding: the student's uploaded assignment text above. Co-primary grounding: the assignment-specific rubric in ${rubricContext} (e.g., rubric_criteria with criterion, description, weight_percentage, performance_levels). You MUST evaluate exclusively against the rubric criteria and their defined performance standards.
+- Primary grounding: the student's uploaded assignment text above. Co-primary grounding: the assignment-specific rubric provided above in the "Grading Rubric" section. You MUST evaluate exclusively against the rubric criteria and their defined performance standards.
 - Determine assignment type from the submission and/or metadata only to interpret rubric expectations (do NOT alter criteria).
 - For quantitative/technical work: check method, stepwise reasoning, correctness, units, assumptions, edge cases, interpretation, and clarity of layout.
 - For essays/humanities/social sciences: evaluate prompt adherence, thesis/claim, textual/primary-source use, depth of analysis and counter-argument, structure/organization, clarity/style, and citation integrity—strictly through the rubric’s criteria.
 - Academic integrity: neutrally flag citation gaps or dubious references with specific evidence to review; do not accuse—just note concerns.
-- Grade bands: if present in ${rubricContext}, follow them; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
+- Grade bands: if grade bands are specified in the rubric, follow them; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
 
 [Rubric Application Rules (Internal Only)]
-- Iterate over ${rubricContext}.rubric_criteria exactly as provided. Do NOT add, remove, rename, or reweight criteria.
+- Iterate over all criteria in the rubric exactly as provided. Do NOT add, remove, rename, or reweight criteria.
 - For each criterion, match the student’s work to one performance level ("Excellent", "Good", "Developing", "Needs Improvement") using explicit evidence from the assignment.
 - Assign a criterion score_percentage (0–100%) consistent with the chosen level’s description.
 - Apply the exact weight_percentage from the rubric. If weight_percentage is a string with "%", strip the symbol and use its numeric value; if it is numeric, use as-is. The total must sum to 100%.
