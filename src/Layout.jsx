@@ -153,10 +153,8 @@ export default function Layout({ children, currentPageName }) {
                             <item.icon className="w-5 h-5" />
                             <span className="font-medium">{item.title}</span>
                             {item.isNew && (
-                              <span className="absolute -top-1 -right-1 w-0 h-0 border-t-[28px] border-t-emerald-500 border-l-[28px] border-l-transparent">
-                                <span className="absolute -top-7 left-0.5 text-[9px] font-bold text-white transform rotate-45">
-                                  NEW
-                                </span>
+                              <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                NEW
                               </span>
                             )}
                           </Link>
