@@ -139,7 +139,7 @@ export default function SmartGrader() {
           is_custom: true
         };
       } else {
-        setProcessingStep("Analyzing curriculum standards...");
+        setProcessingStep("Generating assignment rubric...");
         const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
           course_name: courseName.trim(),
           school: learningProfile.school || "",
@@ -149,89 +149,112 @@ export default function SmartGrader() {
         if (existingCurriculumMaps.length > 0) {
           curriculumMap = existingCurriculumMaps[0].curriculum_data;
         } else {
-          const curriculumPrompt = `Educational Curriculum Analysis Request
-
-Objective: Analyze the provided course information to create a comprehensive curriculum profile for grading purposes.
+          const rubricPrompt = `Objective:
+You are an expert curriculum designer and academic assessor. Generate an accurate, assignment-specific grading rubric aligned to real teacher evaluation practices for ${courseName} at the ${learningProfile.grade || "N/A"} level.
 
 Input Context:
 Student Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${courseName}
 School Context: ${learningProfile.school || "N/A"}
+Assignment Title/Type: ${assignmentTitle}
 Assignment Content (first 3000 chars): ${extractedContent.substring(0, 3000)}
 
-Task: Generate a detailed curriculum profile including:
-- Core competencies and learning outcomes (6-10)
-- Competency weightings (must sum to 100%)
-- Typical assessment question formats (3-4 most common)
-- High-yield focal points (3-5 critical concepts)
-- Common student misconceptions (3-4 specific ones)
+Task:
+Analyze the input to infer:
 
-CRITICAL FORMATTING:
-- weight_percentage MUST be a STRING with % symbol (e.g., "20%", "15%")
-- frequency MUST be a STRING (e.g., "30%", "Common", "Rare")
+The type of assignment (essay, response, lab, coding project, report, etc.).
 
-Base your analysis on standard educational practices for ${learningProfile.grade || "this grade level"}.
-Align with typical ${courseName} curriculum standards.
-Ensure competency weightings sum to 100%.
+The core skills and competencies the assignment is intended to assess.
 
-Output Format: JSON object matching the specified schema`;
+The criteria that a qualified teacher at ${learningProfile.school || "the school"} would realistically use to grade it.
 
-          const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
-            prompt: curriculumPrompt,
+Information Sourcing & Grounding Strategy (Internal – Do Not Output):
+
+Begin with the provided assignment content to infer intent, structure, and domain.
+
+Search and reference official or public curriculum guides, marking rubrics, and assignment exemplars related to ${courseName} for the given grade level.
+
+If unavailable, use regionally relevant standards (for K–12, consult the school board or provincial/state education standards in ${learningProfile.city || "the region"}; for university-level, use published course outlines or faculty rubrics for similar subjects).
+
+Synthesize this information to create a rubric that mirrors how real instructors would assess this task.
+
+Do not fabricate new grading criteria—ground them in verified or commonly used frameworks for this course type and level.
+
+Output Requirements:
+
+Generate 3–6 grading criteria covering distinct, meaningful skill domains (e.g., Thesis/Argumentation, Evidence/Reasoning, Technical Accuracy, Clarity/Structure, Creativity/Originality).
+
+For each criterion, include:
+
+criterion: concise title of the skill or domain being assessed.
+
+description: 1–2 sentences explaining what is evaluated.
+
+weight_percentage: relative importance, summing to 100%.
+
+performance_levels: four tiers labeled "Excellent," "Good," "Developing," and "Needs Improvement," each with 1–2 sentences describing performance at that level.
+
+Ensure the rubric reflects grade-appropriate expectations and the authentic evaluation style of ${learningProfile.school || "the school"} or its regional equivalent.
+
+Use precise, readable, teacher-facing language.
+
+The rubric must be realistic, balanced, and clearly tied to the input content and course context.
+
+Requirements:
+
+Base analysis on the assignment content to detect the nature and objectives of the task.
+
+Align all criteria with regional or institutional standards found online.
+
+Prioritize pedagogical accuracy and curriculum alignment over verbosity.
+
+Avoid filler criteria like "effort" or "participation."
+
+The weights must total 100%.
+
+Produce a fully grounded, ready-to-use rubric.`;
+
+          const { data: generatedRubric } = await base44.functions.invoke('curriculumMapping', {
+            prompt: rubricPrompt,
             response_json_schema: {
               type: "object",
               properties: {
-                core_competencies: {
+                rubric_criteria: {
                   type: "array",
                   items: {
                     type: "object",
                     properties: {
-                      name: { type: "string" },
-                      description: { type: "string" }
-                    },
-                    required: ["name", "description"]
-                  }
-                },
-                competency_weightings: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      competency_name: { type: "string" },
-                      weight_percentage: { type: "string" }
-                    },
-                    required: ["competency_name", "weight_percentage"]
-                  }
-                },
-                question_formats: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      type: { type: "string" },
-                      frequency: { type: "string" },
-                      examples: {
+                      criterion: { type: "string" },
+                      description: { type: "string" },
+                      weight_percentage: { type: "number" },
+                      performance_levels: {
                         type: "array",
-                        items: { type: "string" }
+                        items: {
+                          type: "object",
+                          properties: {
+                            level: { 
+                              type: "string",
+                              enum: ["Excellent", "Good", "Developing", "Needs Improvement"]
+                            },
+                            description: { type: "string" }
+                          },
+                          required: ["level", "description"]
+                        },
+                        minItems: 4,
+                        maxItems: 4
                       }
                     },
-                    required: ["type", "frequency", "examples"]
-                  }
-                },
-                high_yield_focal_points: {
-                  type: "array",
-                  items: { type: "string" }
-                },
-                common_misconceptions: {
-                  type: "array",
-                  items: { type: "string" }
+                    required: ["criterion", "description", "weight_percentage", "performance_levels"]
+                  },
+                  minItems: 3,
+                  maxItems: 6
                 }
               },
-              required: ["core_competencies", "competency_weightings", "question_formats", "high_yield_focal_points", "common_misconceptions"]
+              required: ["rubric_criteria"]
             }
           });
 
-          curriculumMap = generatedMap;
+          curriculumMap = generatedRubric;
 
           await base44.entities.CurriculumMap.create({
             course_name: courseName.trim(),
