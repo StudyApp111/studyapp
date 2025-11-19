@@ -5,7 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Award, TrendingUp, CheckCircle, XCircle, Sparkles, Home, TrendingDown, Target, BookOpen, MapPin, Clock } from "lucide-react";
+import { Loader2, Award, TrendingUp, CheckCircle, XCircle, Sparkles, Home, TrendingDown, Target, BookOpen, MapPin, Clock, Brain, Zap, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -326,6 +326,86 @@ export default function Feedback() {
             </Card>
           </motion.div>
         </div>
+
+        {/* Learning Insights Section */}
+        {worksheet.ai_feedback?.learning_patterns && worksheet.ai_feedback.learning_patterns.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-8"
+          >
+            <Card className="shadow-xl border-0 overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
+                  <Brain className="w-6 h-6" />
+                  Learning Insights
+                </CardTitle>
+                <p className="text-purple-100 text-sm">Understanding how you learn helps you improve faster</p>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200">
+                        <th className="text-left px-4 md:px-6 py-4 font-semibold text-slate-700 text-sm md:text-base">
+                          Pattern Type
+                        </th>
+                        <th className="text-left px-4 md:px-6 py-4 font-semibold text-slate-700 text-sm md:text-base">
+                          What It Means
+                        </th>
+                        <th className="text-left px-4 md:px-6 py-4 font-semibold text-slate-700 text-sm md:text-base">
+                          How to Improve
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {worksheet.ai_feedback.learning_patterns.map((pattern, idx) => {
+                        const getPatternIcon = (type) => {
+                          const typeLower = type.toLowerCase();
+                          if (typeLower.includes('guess') || typeLower.includes('pressure')) return '🎲';
+                          if (typeLower.includes('overconfiden')) return '🎯';
+                          if (typeLower.includes('underconfiden')) return '💭';
+                          if (typeLower.includes('reason') || typeLower.includes('method')) return '🧠';
+                          if (typeLower.includes('time') || typeLower.includes('rush')) return '⏱️';
+                          return '💡';
+                        };
+
+                        return (
+                          <tr 
+                            key={idx} 
+                            className={`border-b border-slate-100 hover:bg-purple-50/30 transition-colors ${
+                              idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
+                            }`}
+                          >
+                            <td className="px-4 md:px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <span className="text-2xl" role="img" aria-label="pattern icon">
+                                  {getPatternIcon(pattern.pattern_type)}
+                                </span>
+                                <span className="font-semibold text-slate-900 text-sm md:text-base">
+                                  {pattern.pattern_type}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 md:px-6 py-4 text-slate-700 text-sm md:text-base">
+                              {pattern.what_it_means}
+                            </td>
+                            <td className="px-4 md:px-6 py-4 text-slate-700 text-sm md:text-base">
+                              <div className="bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
+                                {pattern.how_to_improve}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Roadmap to 90% CTA - Replaces the old "Continue Your Learning Journey" */}
         {futureWorksheets.length > 0 && (
