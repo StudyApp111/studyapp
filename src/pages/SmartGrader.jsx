@@ -261,44 +261,32 @@ ASSIGNMENT CONTENT TO GRADE:
 ${extractedContent}
 
 [Grounding (Internal Only)]
-- Primary grounding: the student's uploaded assignment text above. Secondary grounding: the assignment-specific rubric provided in ${rubricContext} (e.g., rubric_criteria with criterion, description, weight_percentage, and performance_levels). Use the rubric to evaluate the student's work according to the defined criteria and performance standards.
-- Determine assignment type from the submission and/or metadata: Essay/Analysis; Short Answers; Problem Set (math/econ/accounting/finance/stats); Lab/Report (science); Case/Policy (business/econ/law); Code/Algorithmic (CS/engineering); Presentation/Slides; Mixed/Portfolio.
-- Use the rubric provided in ${rubricContext} as your primary evaluation framework. Apply each criterion with its defined weight_percentage and evaluate performance according to the four performance_levels (Excellent, Good, Developing, Needs Improvement).
-- For quantitative/technical work: check method, stepwise reasoning, correctness, units, assumptions, edge cases, interpretation of results, and clarity of layout.
-- For essays/humanities/social sciences: evaluate prompt adherence, thesis/claim, textual/primary-source use, depth of analysis and counter-argument, structure/organization, clarity/style, and citation integrity.
-- For CS/engineering: problem understanding, algorithm/approach, correctness/complexity, code clarity and structure, testing/edge cases, documentation.
-- For social sciences/policy/case: theoretical framework fit, evidence/reasoning quality, comparative or counterfactual analysis, policy/implications, clarity and citations.
-- For languages: comprehension, vocabulary/grammar/syntax, task fulfillment, organization/coherence, register/style.
+- Primary grounding: the student's uploaded assignment text above. Co-primary grounding: the assignment-specific rubric in ${rubricContext} (e.g., rubric_criteria with criterion, description, weight_percentage, performance_levels). You MUST evaluate exclusively against the rubric criteria and their defined performance standards.
+- Determine assignment type from the submission and/or metadata only to interpret rubric expectations (do NOT alter criteria).
+- For quantitative/technical work: check method, stepwise reasoning, correctness, units, assumptions, edge cases, interpretation, and clarity of layout.
+- For essays/humanities/social sciences: evaluate prompt adherence, thesis/claim, textual/primary-source use, depth of analysis and counter-argument, structure/organization, clarity/style, and citation integrity—strictly through the rubric’s criteria.
 - Academic integrity: neutrally flag citation gaps or dubious references with specific evidence to review; do not accuse—just note concerns.
-- Grade bands: A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
+- Grade bands: if present in ${rubricContext}, follow them; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
 
 [Rubric Application Rules (Internal Only)]
-- **Criterion-by-criterion evaluation:** For each criterion in the rubric, evaluate the student's work against the four performance levels provided (Excellent, Good, Developing, Needs Improvement).
-- **Weight application:** Apply the exact weight_percentage specified in the rubric for each criterion. The total must sum to 100%.
-- **Performance level matching:** Determine which performance level best describes the student's work for each criterion, then assign an appropriate percentage score (e.g., Excellent = 90-100%, Good = 75-89%, Developing = 60-74%, Needs Improvement = 0-59%).
-- **Evidence-based scoring:** Always reference specific evidence from the student's work that justifies the assigned performance level.
+- Iterate over ${rubricContext}.rubric_criteria exactly as provided. Do NOT add, remove, rename, or reweight criteria.
+- For each criterion, match the student’s work to one performance level ("Excellent", "Good", "Developing", "Needs Improvement") using explicit evidence from the assignment.
+- Assign a criterion score_percentage (0–100%) consistent with the chosen level’s description.
+- Apply the exact weight_percentage from the rubric. If weight_percentage is a string with "%", strip the symbol and use its numeric value; if it is numeric, use as-is. The total must sum to 100%.
+- If a criterion is insufficiently evidenced, score accordingly (typically low) and explain precisely why.
 
 [Scoring Algorithm (Internal Only)]
-- Build 3–6 rubric items with clear **weight_percentage** that total exactly **100%**.
-- For each criterion, assign **score_percentage** (0–100%) with justification anchored to the student's actual content (quote/line/step/section).
-- Compute **total_score** as the sum over all criteria: (score_percentage × weight_percentage/100). Round to nearest whole number.
-- Map **total_score** to **predicted_grade** using the active grade bands.
-- Keep numeric consistency: criterion **max_score** may be expressed as 100 for clarity, with **score** as the criterion's score_percentage; the detail in "rubric_breakdown" must match the weights/percentages used to compute **total_score**.
+- total_score = Σ_over_all_rubric_criteria( criterion_score_percentage × (weight_percentage / 100) ). Round to nearest whole number.
+- Map total_score to predicted_grade using the active grade bands (rubric-defined if available; otherwise default bands above).
+- Numeric consistency: in rubric_breakdown, use max_score = 100 and score = criterion_score_percentage for each criterion; ensure the weighted sum equals total_score.
 
 [Evidence Anchoring (Internal Only)]
-- Always point comments to concrete evidence: paragraph/line/section, a quoted phrase, a step number, a figure/table, or a code block. If OCR is messy, approximate anchors (e.g., "para ~3, second stanza", "Step ~4").
-
-[Type-Specific Nuances (Internal Only)]
-- Problem sets: partial credit for correct setup with minor arithmetic slips; deduct more for conceptual errors. Require final units and sanity checks.
-- Labs/reports: methods fidelity, data integrity, error analysis/limitations, linkage of results to theory.
-- Essays: claim specificity, source integration and analysis (not just summary), counter-argument handling, paragraph cohesion, MLA/APA/Chicago consistency if required.
-- Code: correctness and complexity, edge cases, readability (naming/modularity), test evidence.
-- Policy/case: framework fidelity, empirical grounding, trade-off analysis, feasibility/implications.
+- Justify every score with concrete anchors: paragraph/line/section, quoted phrase, step number, figure/table, or code block. If OCR is messy, use approximate anchors (e.g., "para ~3, second stanza", "Step ~4").
 
 [Style & Parity (Internal Only)]
 - Tone: professional and constructive, like an experienced teacher marking real work.
-- Avoid generic feedback; prefer precise, teachable corrections tied to the student's text.
-- Never return null; if a list is thin, include at least the minimum items based on actual content; only use [] if the assignment is literally blank.
+- Avoid generic feedback; give precise, teachable corrections tied to the student’s text.
+- Never return null; if content is thin, still complete all fields based on available evidence. Only use [] if the assignment is literally blank.
 
 REQUIRED OUTPUT - Fill EVERY field with actual analysis based on the content above:
 
@@ -308,11 +296,11 @@ REQUIRED OUTPUT - Fill EVERY field with actual analysis based on the content abo
 4. identified_strengths: List 3-5 specific things done well (must reference actual content)
 5. areas_for_improvement: List 4-6 specific weaknesses (must reference actual content)
 6. detailed_feedback_by_section: Create 3-6 sections analyzing different parts. Each needs section_name, points_earned (number), points_possible (number), feedback (text), competencies_assessed (array)
-7. rubric_breakdown: Create 3-6 rubric items. Each needs criterion (name), score (number earned), max_score (number possible), comments (text explaining the score)
+7. rubric_breakdown: Create exactly one item per rubric criterion. Each needs criterion (name), score (number earned), max_score (number possible, use 100), comments (text explaining the score)
 
 You MUST fill all 7 fields. Do not return null. Do not return empty arrays unless the assignment is literally blank.
 
-Output valid JSON matching this exact schema.`;
+Output valid JSON matching the expected schema.`;
 
       const gradingResponse = await base44.functions.invoke('gradeAssignment', {
         prompt: gradingPrompt,
