@@ -18,6 +18,7 @@ export default function DiagnosticQuiz() {
   const [isGenerating, setIsGenerating] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
+  const [questionMetadata, setQuestionMetadata] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [summaryExpanded, setSummaryExpanded] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -58,6 +59,7 @@ export default function DiagnosticQuiz() {
           return;
         } else {
           setUserAnswers(loadedQuiz.user_answers || new Array(loadedQuiz.questions.length).fill(null));
+          setQuestionMetadata(loadedQuiz.question_metadata || new Array(loadedQuiz.questions.length).fill({}));
         }
       } else {
 
@@ -236,6 +238,7 @@ Provide your response as a single, valid JSON object with the following structur
 
       setQuiz(createdQuiz);
       setUserAnswers(new Array(quizData.diagnostic_quiz.questions.length).fill(null));
+      setQuestionMetadata(new Array(quizData.diagnostic_quiz.questions.length).fill({}));
     } catch (error) {
       console.error("Error generating quiz:", error);
       navigate(createPageUrl("Home"));
@@ -246,6 +249,15 @@ Provide your response as a single, valid JSON object with the following structur
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestion] = answer;
     setUserAnswers(newAnswers);
+  };
+
+  const handleMetadataChange = (metadata) => {
+    const newMetadata = [...questionMetadata];
+    newMetadata[currentQuestion] = {
+      question_index: currentQuestion,
+      ...metadata
+    };
+    setQuestionMetadata(newMetadata);
   };
 
   const handleNext = () => {
@@ -275,6 +287,7 @@ Provide your response as a single, valid JSON object with the following structur
 
       await base44.entities.DiagnosticQuiz.update(quiz.id, {
         user_answers: userAnswers,
+        question_metadata: questionMetadata,
         score: finalScore,
         completed: true
       });
@@ -316,7 +329,11 @@ Provide your response as a single, valid JSON object with the following structur
   if (!quiz) return null;
 
   const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
-  const canProceed = userAnswers[currentQuestion] !== null && userAnswers[currentQuestion] !== "";
+  const currentMetadata = questionMetadata[currentQuestion] || {};
+  const canProceed = userAnswers[currentQuestion] !== null && 
+                     userAnswers[currentQuestion] !== "" &&
+                     currentMetadata.reasoning_method &&
+                     currentMetadata.confidence_level;
   const isLastQuestion = currentQuestion === quiz.questions.length - 1;
 
   return (
@@ -383,6 +400,8 @@ Provide your response as a single, valid JSON object with the following structur
             questionNumber={currentQuestion + 1}
             selectedAnswer={userAnswers[currentQuestion]}
             onSelectAnswer={handleAnswer}
+            metadata={currentMetadata}
+            onMetadataChange={handleMetadataChange}
           />
         </AnimatePresence>
 
