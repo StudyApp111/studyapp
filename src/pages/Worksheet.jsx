@@ -696,11 +696,16 @@ Worksheet Performance:
 ${JSON.stringify(worksheetPerformanceData, null, 2)}
 
 Diagnostic Quiz (5Q) With Meta:
-${JSON.stringify(diagnosticResults, null, 2)}
+${quiz ? JSON.stringify({
+  questions: quiz.questions,
+  user_answers: quiz.user_answers,
+  score: quiz.score,
+  question_metadata: quiz.question_metadata || []
+}, null, 2) : 'N/A'}
 // diagnosticResults includes:
 //   questions[], user_answers[], score (optional),
 //   question_metadata[] where
-//     question_metadata[i].reasoning_method ∈ {Guess, Elimination, Recall/Memory, Pattern, Example/Analogy, Formula, Algorithmic, Heuristic, ...}
+//     question_metadata[i].reasoning_method ∈ {I Knew It, I Worked It Out, I Guessed, It Felt Right}
 //     question_metadata[i].confidence_level ∈ {High, Medium, Low}
 
 [Assumptions & Fields]
@@ -815,9 +820,23 @@ Output Format: Valid JSON matching the required schema.`;
                 },
                 required: ["session_number", "session_name", "session_focus_description"]
               }
+            },
+            learning_patterns: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  pattern_type: { type: "string" },
+                  what_it_means: { type: "string" },
+                  how_to_improve: { type: "string" }
+                },
+                required: ["pattern_type", "what_it_means", "how_to_improve"]
+              },
+              minItems: 3,
+              maxItems: 5
             }
           },
-          required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan"]
+          required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan", "learning_patterns"]
         }
       });
 
