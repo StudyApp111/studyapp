@@ -682,7 +682,7 @@ Output Format: Valid JSON object matching the schema.`;
         } : null
       }));
 
-      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map and the student’s 10-question worksheet performance to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, and a 5-session plan. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
+      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student’s 10-question worksheet performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a 5-session plan, and learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
 
 Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -695,6 +695,13 @@ ${JSON.stringify(lesson.curriculum_map, null, 2)}
 Worksheet Performance:
 ${JSON.stringify(worksheetPerformanceData, null, 2)}
 
+Diagnostic Quiz (5Q) With Meta:
+${JSON.stringify(diagnosticResults, null, 2)}
+// diagnosticResults includes:
+//   questions[], user_answers[], score (optional),
+//   question_metadata[] where
+//     question_metadata[i].reasoning_method ∈ {Guess, Elimination, Recall/Memory, Pattern, Example/Analogy, Formula, Algorithmic, Heuristic, ...}
+//     question_metadata[i].confidence_level ∈ {High, Medium, Low}
 
 [Assumptions & Fields]
 Each worksheet item may include:
@@ -704,6 +711,18 @@ assessed_competencies[] (names), targeted_misconception (string),
 is_correct (boolean),
 ai_grading { score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[] }.
 Ignore missing fields; do not invent values.
+
+[Part 0 — Diagnostic Meta Synthesis (Internal Only)]
+- Pair each diagnostic question with its user_answer and question_metadata (reasoning_method, confidence_level) to compute:
+  • is_correct_d = (user_answer === correct_answer) when available.
+  • Overconfidence flag: is_correct_d=false AND confidence=High.
+  • Underconfidence flag: is_correct_d=true AND confidence=Low.
+  • Guess-correct risk: is_correct_d=true AND (reasoning_method=Guess OR confidence=Low).
+  • Method bias counts by competency/topic when mappable (Pattern, Formula, Algorithmic, Heuristic, Recall).
+- Derive an “Early Insight Profile”:
+  • dominant_methods: top 1–2 reasoning_method labels by frequency.
+  • confidence_alignment: accuracy when High vs Medium vs Low confidence (if computable).
+  • primary_risk: one of {Overconfidence, Underconfidence, Guess-correct, Method-mismatch} if observed ≥2 times or clearly indicated.
 
 [Part 1 — Performance Analysis & Prediction]
 Edge Handling
@@ -740,10 +759,17 @@ Edge Handling
 - If AvgTypeScore ≥ 0.80 and ExamTypeFrequency ≥ 30% → apply +0 to +2 total.
 - Cap total style modifier to [−8, +4].
 
+4b) Diagnostic Meta Adjustment (confidence/method calibration)
+- If diagnostic primary_risk = Overconfidence → −2 to −4 (use −4 if ≥2 High-confidence misses on competencies weighted ≥25%).
+- If diagnostic primary_risk = Underconfidence → +1 to +2 (only if worksheet shows ≥70% accuracy on Moderate items).
+- If guess-correct risk prominent (≥2 instances) AND worksheet shows low explanation alignment (see step 1) → −1 to −3.
+- If dominant_methods show heavy Formula/Algorithmic AND worksheet misses are conceptual (with explanations) → −1 to −2.
+- Cap combined diagnostic meta impact so that (style modifier + meta modifier) remains within [−8, +4] overall.
+
 5) Coverage Reliability Adjustment
 - For any competency with weight ≥ 25% and <2 assessed items → −2 each (max −4).
 - If ≥ 80% of weighted competencies were assessed → +1 to +2.
-- Combine with style modifier; cap overall modifier to [−8, +4].
+- Combine with previous modifiers; cap overall modifier to [−8, +4].
 
 6) Final Prediction
 - PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then convert to string with “%”.
@@ -754,13 +780,16 @@ Edge Handling
 - Field guidance for content (names exactly as schema):
   • feedback_session_title: "Worksheet ${worksheet.worksheet_number} Performance & Grade Prediction"
   • predicted_exam_score_percentage: string with "%", or "Not Calculable" for 0/10
-  • prediction_calculation_rationale: 1–3 sentences referencing difficulty-adjusted items, weighted competencies, and high-frequency question types (and any coverage limits)
+  • prediction_calculation_rationale: 1–3 sentences referencing difficulty-adjusted items, weighted competencies, high-frequency types, coverage limits, AND (briefly) the diagnostic meta influence (e.g., overconfidence or method bias).
   • overall_performance_summary_text: 1–2 empathetic sentences (strength trend + next focus)
   • identified_strengths_list: 2–3 strings naming strong competencies and/or well-handled high-frequency types
   • key_areas_for_improvement_list: 2–3 strings naming weak competencies/misconceptions and/or problematic high-frequency types
-  • suggested_future_sessions_plan: 5 objects with session_number (1..5), session_name, session_focus_description, aligned to the weaknesses and exam formats identified
+  • suggested_future_sessions_plan: 5 objects with session_number (1..5), session_name, session_focus_description, aligned to weaknesses, misconceptions, exam formats, and any diagnostic meta risks (e.g., add “explain-your-reasoning” drills for overconfidence).
+  • learning_patterns: 3–5 objects, each with:
+      - pattern_type: short label (e.g., "Overconfidence on conceptual items", "Formula-first solving", "Pattern-matching under time", "Low-confidence but correct")
+      - what_it_means: 1 sentence describing the behavior (draw on diagnostic reasoning_method + confidence_level AND worksheet evidence)
+      - how_to_improve: 1 sentence with a concrete tactic that the next sessions/worksheets will train (e.g., “require unit checks before substitution”, “justify rule choice in one line”)
 - No extra fields. No explanations outside the JSON. All percentages are strings with “%”.
-
 
 Output Format: Valid JSON matching the required schema.`;
 
