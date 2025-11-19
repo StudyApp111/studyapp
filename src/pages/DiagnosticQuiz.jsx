@@ -95,7 +95,6 @@ export default function DiagnosticQuiz() {
 
       const aiPrompt = `Objective: You are an expert supportive tutor. Your goal is to:
 
-Create a clear, concise, and engaging "Smart Summary" of key concepts for the student, leveraging the provided detailed curriculum.
 
 Design a 5-question "Diagnostic Quiz" with ONLY Multiple Choice Questions (MCQs) to effectively gauge the student's current understanding across core curriculum areas. This quiz will inform the creation of a subsequent personalized worksheet.
 
