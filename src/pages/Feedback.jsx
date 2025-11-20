@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Award, TrendingUp, CheckCircle, XCircle, Sparkles, Home, TrendingDown, Target, BookOpen, MapPin, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, X } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
