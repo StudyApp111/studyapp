@@ -5,7 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Award, TrendingUp, CheckCircle, XCircle, Sparkles, Home, TrendingDown, Target, BookOpen, MapPin, Clock, Brain, Zap, Eye } from "lucide-react";
+import { Loader2, Award, TrendingUp, CheckCircle, XCircle, Sparkles, Home, TrendingDown, Target, BookOpen, MapPin, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, X } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   Dialog,
@@ -33,6 +33,25 @@ export default function Feedback() {
   const [strengths, setStrengths] = useState([]);
   const [weaknesses, setWeaknesses] = useState([]);
   const [showRoadmapModal, setShowRoadmapModal] = useState(false);
+  
+  // Section collapse state (default all collapsed = false)
+  const [sectionsExpanded, setSectionsExpanded] = useState({
+    strengths: false,
+    weaknesses: false,
+    insights: false,
+    breakdown: false
+  });
+  
+  // Question collapse state
+  const [expandedQuestions, setExpandedQuestions] = useState({});
+
+  const toggleSection = (section) => {
+    setSectionsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const toggleQuestion = (index) => {
+    setExpandedQuestions(prev => ({ ...prev, [index]: !prev[index] }));
+  };
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -287,25 +306,46 @@ export default function Feedback() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-emerald-50 to-teal-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-emerald-700">
-                  <TrendingUp className="w-5 h-5" />
-                  Your Strengths
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {strengths.length > 0 ? strengths.map((strength, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-slate-700">{strength}</span>
-                    </li>
-                  )) : (
-                    <li className="text-slate-500 italic">Complete more questions to identify strengths</li>
+            <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-emerald-50 to-teal-50/50 overflow-hidden">
+              <CardHeader 
+                className="cursor-pointer hover:bg-emerald-100/50 transition-colors"
+                onClick={() => toggleSection('strengths')}
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-emerald-700 text-lg">
+                    <TrendingUp className="w-5 h-5" />
+                    Your Strengths
+                  </CardTitle>
+                  {sectionsExpanded.strengths ? (
+                    <ChevronUp className="w-5 h-5 text-emerald-700" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-emerald-700" />
                   )}
-                </ul>
-              </CardContent>
+                </div>
+              </CardHeader>
+              <AnimatePresence>
+                {sectionsExpanded.strengths && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {strengths.length > 0 ? strengths.map((strength, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                            <span className="text-slate-700 text-sm">{strength}</span>
+                          </li>
+                        )) : (
+                          <li className="text-slate-500 italic text-sm">Complete more questions to identify strengths</li>
+                        )}
+                      </ul>
+                    </CardContent>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Card>
           </motion.div>
 
@@ -314,25 +354,46 @@ export default function Feedback() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-amber-50 to-orange-50/50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-700">
-                  <TrendingDown className="w-5 h-5" />
-                  Areas for Improvement
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {weaknesses.length > 0 ? weaknesses.map((weakness, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <Target className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                      <span className="text-slate-700">{weakness}</span>
-                    </li>
-                  )) : (
-                    <li className="text-slate-500 italic">Great job! Keep up the excellent work</li>
+            <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-amber-50 to-orange-50/50 overflow-hidden">
+              <CardHeader 
+                className="cursor-pointer hover:bg-amber-100/50 transition-colors"
+                onClick={() => toggleSection('weaknesses')}
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-amber-700 text-lg">
+                    <TrendingDown className="w-5 h-5" />
+                    Areas for Improvement
+                  </CardTitle>
+                  {sectionsExpanded.weaknesses ? (
+                    <ChevronUp className="w-5 h-5 text-amber-700" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-amber-700" />
                   )}
-                </ul>
-              </CardContent>
+                </div>
+              </CardHeader>
+              <AnimatePresence>
+                {sectionsExpanded.weaknesses && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <CardContent>
+                      <ul className="space-y-3">
+                        {weaknesses.length > 0 ? weaknesses.map((weakness, idx) => (
+                          <li key={idx} className="flex items-start gap-3">
+                            <Target className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                            <span className="text-slate-700 text-sm">{weakness}</span>
+                          </li>
+                        )) : (
+                          <li className="text-slate-500 italic text-sm">Great job! Keep up the excellent work</li>
+                        )}
+                      </ul>
+                    </CardContent>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Card>
           </motion.div>
         </div>
@@ -346,14 +407,34 @@ export default function Feedback() {
             className="mb-8"
           >
             <Card className="shadow-xl border-0 overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-                <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
-                  <Brain className="w-6 h-6" />
-                  Learning Insights
-                </CardTitle>
-                <p className="text-purple-100 text-sm">Understanding how you learn helps you improve faster</p>
+              <CardHeader 
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white cursor-pointer hover:brightness-110 transition-all"
+                onClick={() => toggleSection('insights')}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-lg md:text-2xl">
+                      <Brain className="w-5 h-5 md:w-6 md:h-6" />
+                      Learning Insights
+                    </CardTitle>
+                    <p className="text-purple-100 text-xs md:text-sm mt-1">Understanding how you learn helps you improve faster</p>
+                  </div>
+                  {sectionsExpanded.insights ? (
+                    <ChevronUp className="w-6 h-6 text-white" />
+                  ) : (
+                    <ChevronDown className="w-6 h-6 text-white" />
+                  )}
+                </div>
               </CardHeader>
-              <CardContent className="p-0">
+              <AnimatePresence>
+                {sectionsExpanded.insights && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <CardContent className="p-0">
                 {/* Mobile View - Stacked Cards */}
                 <div className="block md:hidden">
                   {worksheet.ai_feedback.learning_patterns.map((pattern, idx) => (
@@ -435,7 +516,10 @@ export default function Feedback() {
                     </tbody>
                   </table>
                 </div>
-              </CardContent>
+                    </CardContent>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Card>
           </motion.div>
         )}
@@ -479,20 +563,26 @@ export default function Feedback() {
 
         {/* Roadmap Modal - Improved Styling */}
         <Dialog open={showRoadmapModal} onOpenChange={setShowRoadmapModal}>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-0 border-2 border-purple-300 shadow-2xl">
-            <div className="sticky top-0 bg-white z-10 px-6 py-4 border-b border-slate-200">
-              <DialogHeader>
-                <DialogTitle className="text-xl md:text-2xl flex items-center gap-2">
-                  <MapPin className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[85vh] overflow-y-auto p-0 border-2 border-purple-300 shadow-2xl rounded-xl">
+            <button 
+              onClick={() => setShowRoadmapModal(false)}
+              className="absolute right-3 top-3 z-50 p-2 bg-white/80 hover:bg-white rounded-full text-slate-500 hover:text-slate-800 transition-colors shadow-sm"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="sticky top-0 bg-white z-10 px-4 py-4 md:px-6 border-b border-slate-200">
+              <DialogHeader className="pr-8">
+                <DialogTitle className="text-lg md:text-2xl flex items-center gap-2 text-left">
+                  <MapPin className="w-5 h-5 md:w-6 md:h-6 text-purple-600 flex-shrink-0" />
                   Your Personalized Learning Roadmap
                 </DialogTitle>
-                <DialogDescription className="text-sm md:text-base">
-                  Complete these {futureWorksheets.length} worksheet{futureWorksheets.length > 1 ? 's' : ''} to reach 90%+ mastery and ace your exam
+                <DialogDescription className="text-xs md:text-base text-left mt-1">
+                  Complete these {futureWorksheets.length} worksheet{futureWorksheets.length > 1 ? 's' : ''} to reach 90%+ mastery
                 </DialogDescription>
               </DialogHeader>
             </div>
             
-            <div className="px-4 md:px-6 py-6 space-y-4">
+            <div className="px-3 md:px-6 py-6 space-y-4">
               {futureWorksheets.map((session, idx) => {
                 const worksheetNum = session.session_number;
                 const existingWorksheet = allWorksheets.find(w => w.worksheet_number === worksheetNum);
@@ -608,140 +698,199 @@ export default function Feedback() {
           </DialogContent>
         </Dialog>
 
-        {/* Detailed Question Feedback - WITH TIME PER QUESTION */}
+        {/* Detailed Question Feedback - Collapsible Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="shadow-2xl border-0 mb-8">
-            <CardHeader>
-              <CardTitle className="text-2xl">Question-by-Question Breakdown</CardTitle>
-              <p className="text-slate-600">Review your answers and learn from detailed feedback</p>
+          <Card className="shadow-2xl border-0 mb-8 overflow-hidden">
+            <CardHeader 
+              className="cursor-pointer hover:bg-slate-50 transition-colors"
+              onClick={() => toggleSection('breakdown')}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl md:text-2xl">Question-by-Question Breakdown</CardTitle>
+                  <p className="text-slate-600 text-sm mt-1">Review your answers and learn from detailed feedback</p>
+                </div>
+                {sectionsExpanded.breakdown ? (
+                  <ChevronUp className="w-6 h-6 text-slate-400" />
+                ) : (
+                  <ChevronDown className="w-6 h-6 text-slate-400" />
+                )}
+              </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {worksheet.feedback.map((feedback, idx) => {
-                  const question = worksheet.questions[feedback.question_index];
-                  const questionTime = getQuestionTime(feedback.question_index);
-                  
-                  return (
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.6 + (idx * 0.05) }}
-                      className={`p-6 rounded-xl border-2 ${
-                        feedback.is_correct 
-                          ? 'border-emerald-200 bg-emerald-50/50' 
-                          : 'border-amber-200 bg-amber-50/50'
-                      }`}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                          feedback.is_correct 
-                            ? 'bg-emerald-500 text-white' 
-                            : 'bg-amber-500 text-white'
-                        }`}>
-                          {feedback.is_correct ? (
-                            <CheckCircle className="w-6 h-6" />
-                          ) : (
-                            <XCircle className="w-6 h-6" />
-                          )}
-                        </div>
+            
+            <AnimatePresence>
+              {sectionsExpanded.breakdown && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <CardContent>
+                    <div className="space-y-3">
+                      {worksheet.feedback.map((feedback, idx) => {
+                        const question = worksheet.questions[feedback.question_index];
+                        const questionTime = getQuestionTime(feedback.question_index);
+                        const isExpanded = expandedQuestions[idx];
                         
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h4 className="font-semibold text-slate-900 text-lg mb-1">
-                                Question {question.question_number}
-                              </h4>
-                              <div className="flex gap-2 flex-wrap">
-                                <Badge variant="outline">
-                                  {question.question_type}
-                                </Badge>
-                                <Badge variant="outline">
-                                  {question.difficulty_index}
-                                </Badge>
-                                <Badge variant="outline">
-                                  {feedback.points_earned}/10 pts
-                                </Badge>
-                                {questionTime > 0 && (
-                                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                    <Clock className="w-3 h-3 mr-1" />
-                                    {formatTime(questionTime)}
-                                  </Badge>
+                        return (
+                          <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className={`rounded-xl border-2 overflow-hidden transition-all ${
+                              feedback.is_correct 
+                                ? 'border-emerald-100 bg-white' 
+                                : 'border-amber-100 bg-white'
+                            }`}
+                          >
+                            {/* Collapsed Header / Toggle */}
+                            <div 
+                              className={`p-3 md:p-4 cursor-pointer flex items-center gap-3 md:gap-4 hover:bg-slate-50 transition-colors ${
+                                isExpanded ? 'border-b border-slate-100' : ''
+                              }`}
+                              onClick={() => toggleQuestion(idx)}
+                            >
+                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${
+                                feedback.is_correct 
+                                  ? 'bg-emerald-500 text-white' 
+                                  : 'bg-amber-500 text-white'
+                              }`}>
+                                {feedback.is_correct ? (
+                                  <CheckCircle className="w-5 h-5" />
+                                ) : (
+                                  <XCircle className="w-5 h-5" />
                                 )}
                               </div>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-white rounded-lg p-4 border border-slate-200 mb-3">
-                            <MathText className="text-slate-800 font-medium mb-3">
-                              {question.question_text}
-                            </MathText>
-                            {question.options && question.options.length > 0 && (
-                              <div className="mt-3 space-y-1 bg-slate-50 p-3 rounded">
-                                <p className="text-xs font-semibold text-slate-600 mb-2">Options:</p>
-                                {question.options.map((opt, i) => (
-                                  <MathText key={i} className="text-sm text-slate-600" inline>
-                                    {String.fromCharCode(65 + i)}. {opt}
-                                  </MathText>
-                                ))}
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                  <h4 className="font-semibold text-slate-900 text-sm md:text-base">
+                                    Question {question.question_number}
+                                  </h4>
+                                  
+                                  <div className="flex gap-1.5 flex-wrap">
+                                    <Badge variant="secondary" className="text-[10px] md:text-xs font-normal bg-slate-100 text-slate-700 hover:bg-slate-200">
+                                      {question.question_type}
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-[10px] md:text-xs font-normal bg-slate-100 text-slate-700 hover:bg-slate-200">
+                                      {question.difficulty_index}
+                                    </Badge>
+                                    <Badge variant={feedback.is_correct ? "success" : "outline"} className={`text-[10px] md:text-xs font-medium ${feedback.is_correct ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                                      {feedback.points_earned}/10 pts
+                                    </Badge>
+                                    {questionTime > 0 && (
+                                      <Badge variant="secondary" className="text-[10px] md:text-xs font-normal bg-purple-50 text-purple-700 border border-purple-100">
+                                        <Clock className="w-3 h-3 mr-1" />
+                                        {formatTime(questionTime)}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                            <div className="mt-3 grid grid-cols-2 gap-3">
-                              <div className="bg-blue-50 p-3 rounded">
-                                <p className="text-xs font-semibold text-blue-700 mb-1">Your Answer:</p>
-                                <MathText className="text-sm text-slate-700">
-                                  {question.user_answer || "No answer"}
-                                </MathText>
-                              </div>
-                              <div className="bg-emerald-50 p-3 rounded">
-                                <p className="text-xs font-semibold text-emerald-700 mb-1">Correct Answer:</p>
-                                <MathText className="text-sm text-slate-700">
-                                  {question.correct_answer}
-                                </MathText>
-                              </div>
-                            </div>
-                          </div>
 
-                          <div className={`p-4 rounded-lg mb-3 ${
-                            feedback.is_correct ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
-                          }`}>
-                            <p className="text-sm font-semibold mb-2 text-slate-800">
-                              {feedback.is_correct ? '✓ Excellent work!' : 'Learning Opportunity:'}
-                            </p>
-                            <MathText className="text-sm text-slate-700 leading-relaxed">
-                              {feedback.feedback}
-                            </MathText>
-                          </div>
-
-                          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                            <p className="text-xs font-semibold text-purple-700 mb-2">📚 Explanation & Key Concepts:</p>
-                            <MathText className="text-sm text-slate-700 mb-3">
-                              {question.explanation}
-                            </MathText>
-                            <div className="flex flex-wrap gap-2">
-                              {question.assessed_competencies?.map((comp, i) => (
-                                <Badge key={i} className="bg-purple-100 text-purple-800 border-purple-200">
-                                  {comp}
-                                </Badge>
-                              ))}
+                              <div className="text-slate-400">
+                                {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                              </div>
                             </div>
-                            {question.targeted_misconception && question.targeted_misconception !== "N/A" && (
-                              <p className="text-xs text-amber-700 mt-3 italic">
-                                💡 Common misconception: {question.targeted_misconception}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </CardContent>
+
+                            {/* Expanded Content */}
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  <div className="p-4 md:p-6 bg-slate-50/30 space-y-4 border-t border-slate-100">
+                                    <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
+                                      <MathText className="text-slate-800 font-medium mb-3 text-sm md:text-base">
+                                        {question.question_text}
+                                      </MathText>
+                                      {question.options && question.options.length > 0 && (
+                                        <div className="mt-3 space-y-1 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Options</p>
+                                          {question.options.map((opt, i) => (
+                                            <MathText key={i} className="text-sm text-slate-600 block py-1" inline>
+                                              <span className="font-semibold text-slate-400 w-6 inline-block">{String.fromCharCode(65 + i)}.</span> {opt}
+                                            </MathText>
+                                          ))}
+                                        </div>
+                                      )}
+                                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
+                                          <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">Your Answer</p>
+                                          <MathText className="text-sm text-slate-700 font-medium">
+                                            {question.user_answer || "No answer"}
+                                          </MathText>
+                                        </div>
+                                        <div className="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                          <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-1">Correct Answer</p>
+                                          <MathText className="text-sm text-slate-700 font-medium">
+                                            {question.correct_answer}
+                                          </MathText>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className={`p-4 rounded-lg border ${
+                                      feedback.is_correct ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'
+                                    }`}>
+                                      <div className="flex items-start gap-3">
+                                        {feedback.is_correct ? <Sparkles className="w-5 h-5 text-emerald-600 mt-0.5" /> : <Zap className="w-5 h-5 text-amber-600 mt-0.5" />}
+                                        <div>
+                                          <p className={`text-sm font-bold mb-1 ${feedback.is_correct ? 'text-emerald-800' : 'text-amber-800'}`}>
+                                            {feedback.is_correct ? 'Excellent work!' : 'Learning Opportunity'}
+                                          </p>
+                                          <MathText className="text-sm text-slate-700 leading-relaxed">
+                                            {feedback.feedback}
+                                          </MathText>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <Brain className="w-4 h-4 text-purple-600" />
+                                        <p className="text-xs font-bold text-purple-700 uppercase tracking-wider">Explanation & Key Concepts</p>
+                                      </div>
+                                      <MathText className="text-sm text-slate-700 mb-3 leading-relaxed">
+                                        {question.explanation}
+                                      </MathText>
+                                      <div className="flex flex-wrap gap-2">
+                                        {question.assessed_competencies?.map((comp, i) => (
+                                          <Badge key={i} variant="outline" className="bg-white text-purple-700 border-purple-200 hover:bg-purple-50">
+                                            {comp}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                      {question.targeted_misconception && question.targeted_misconception !== "N/A" && (
+                                        <div className="mt-3 flex items-start gap-2 text-amber-700 bg-amber-50/50 p-2 rounded border border-amber-100">
+                                          <Eye className="w-3 h-3 mt-1" />
+                                          <p className="text-xs italic">
+                                            Common misconception: {question.targeted_misconception}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Card>
         </motion.div>
 
