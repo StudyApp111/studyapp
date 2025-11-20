@@ -232,57 +232,44 @@ ${contentDescription}
 
 "Diagnostic Quiz Results": "${JSON.stringify(diagnosticResults, null, 2)}",
 
-  "Data Preprocessing (Internal Logic)": [
-    "Pair diagnosticResults.questions[i] with diagnosticResults.user_answer[i] and diagnosticResults.question_metadata[i].",
-    "For each pair, compute is_correct = (user_answer[i] === questions[i].correct_answer).",
-    "Internally attach user_answer, is_correct, difficulty_index, targeted_misconception, assessed_competencies (if present), reasoning_method, and confidence_level to each question record for analysis.",
-    "Normalize reasoning_method into canonical categories: Guess, Elimination, Recall/Memory, Pattern-spotting, Example/Analogy, Formula/Plug-in, Algorithmic/Procedural, Heuristic/Rule-of-thumb.",
-    "Map confidence_level into {High, Medium, Low}.",
-    "Derive metacognitive patterns per competency:",
-    "  - Overconfidence: is_correct = false AND confidence = High",
-    "  - Underconfidence: is_correct = true AND confidence = Low",
-    "  - Guess-correct risk: is_correct = true AND (reasoning_method = Guess OR confidence = Low)",
-    "  - Reasoning-method mismatch: repeated use of an unsuitable method (e.g., Pattern where Conceptual reasoning required).",
-    "Determine overall diagnostic accuracy using diagnosticResults.score if available; otherwise compute as correct_count / total_questions.",
-    "If contentDescription is long or detailed (multi-page notes), ground factual content, topics, and examples primarily in those notes while maintaining curricular alignment via lessonData.curriculum_map.",
-    "If contentDescription is brief or generic (e.g., 'I need help with final'), rely more heavily on lessonData.curriculum_map to infer scope, structure, and style."
-  ],
+"Data Preprocessing (Internal Logic)": [
+  "Pair diagnosticResults.questions[i] with diagnosticResults.user_answer[i] and diagnosticResults.question_metadata[i].",
+  "For each pair, compute is_correct = (user_answer[i] === questions[i].correct_answer).",
+  "Attach to each question: user_answer, is_correct, difficulty_index, targeted_misconception, assessed_competencies (if present), reasoning_method, confidence_level.",
+  "Normalize reasoning_method into: Guess, Elimination, Recall/Memory, Pattern, Example/Analogy, Formula/Plug-in, Algorithmic/Procedural, Heuristic/Rule-of-thumb.",
+  "Map confidence_level into: High, Medium, Low.",
+  "Derive metacognitive patterns per competency:",
+  "  - Overconfidence: is_correct = false AND confidence = High.",
+  "  - Underconfidence: is_correct = true AND confidence = Low.",
+  "  - Guess-correct risk: is_correct = true AND (reasoning_method = Guess OR confidence = Low).",
+  "  - Method mismatch: repeated use of an unsuitable method (e.g., Pattern for a Conceptual item).",
+  "Compute overall diagnostic accuracy using diagnosticResults.score if available; otherwise correct_count / total_questions.",
+  "If contentDescription is long/detailed (multi-page notes), ground concrete facts and examples primarily in those notes, using lessonData.curriculum_map to keep alignment.",
+  "If contentDescription is brief/generic (e.g., 'I need help with final'), rely mainly on lessonData.curriculum_map and its question_formats to infer scope and style."
+],
 
-  "Task 1 – Internal Analysis (Reasoning Only, Do Not Output)": [
-    "Internally perform structured reasoning using the data above before generating questions.",
+"Task 1 – Internal Analysis (Reasoning Only, Do Not Output)": [
+  "Correlate diagnostic performance with lessonData.curriculum_map.core_competencies and competency_weightings.",
+  "Identify which competencies are weak, borderline, or strong based on item scores and frequencies.",
+  "Align incorrect responses with lessonData.curriculum_map.common_misconceptions and each item's targeted_misconception.",
+  "Summarize reasoning patterns by competency (dominant reasoning_method and confidence trends).",
+  "Use metacognitive patterns to shape question demands (e.g., add justification steps where guessing or overconfidence was common).",
+  "Calibrate overall difficulty:",
+  "  - If accuracy ≤ 50% → bias to 'Moderate Exam-Level'.",
+  "  - If accuracy ≥ 80% → bias to 'High Challenge Exam-Level'.",
+  "  - Otherwise → progression from Moderate → Challenging → High Challenge.",
+  "If overconfidence is frequent, include more conceptually tricky or trap-style items that require explaining or choosing why an answer is correct.",
+  "If underconfidence dominates, start with scaffolded/confidence-building questions before harder items.",
+  "Allocate questions:",
+  "  - 6–7 questions focused on weak competencies, misconceptions, and risky reasoning patterns (overconfidence, guess-correct).",
+  "  - 2–3 questions on key or high-weight competencies, including at least one that the student already handles well for reinforcement.",
+  "  - 1–2 'twin' items that test the same competency with different reasoning demands (e.g., procedural vs conceptual).",
+  "Align with authentic exam style by mirroring lessonData.curriculum_map.question_formats distributions and the phrasing/rigor typical of ${learningProfile.school || 'the school'} for ${lessonData.course_name}."
+],
 
-    "Correlate diagnostic performance to competencies:",
-    "  - Map incorrect responses to lessonData.curriculum_map.core_competencies.",
-    "  - Prioritize competencies with higher weights from lessonData.curriculum_map.competency_weightings.",
-
-    "Map misconceptions and reasoning patterns:",
-    "  - Align incorrect responses to lessonData.curriculum_map.common_misconceptions and each item's targeted_misconception.",
-    "  - Identify recurring reasoning_method patterns for remediation through new question design.",
-    "  - Detect overconfidence, underconfidence, and guess-correct patterns to adjust difficulty and question structure.",
-    "  - For each competency, record the dominant reasoning_method and confidence trends observed in the diagnostic.",
-
-    "Calibrate difficulty (using accuracy and confidence):",
-    "  - If accuracy ≤ 50% → bias toward 'Moderate Exam-Level'.",
-    "  - If accuracy ≥ 80% → bias toward 'High Challenge Exam-Level'.",
-    "  - Otherwise → balanced progression (Moderate → Challenging → High Challenge).",
-    "  - If overconfidence is frequent, include conceptually tricky questions that require justification or deeper explanation.",
-    "  - If underconfidence dominates, include scaffolded or confidence-building items early in the set.",
-
-    "Establish question allocation:",
-    "  - 6–7 questions → weak competencies, misconceptions, or reasoning vulnerabilities (overconfidence, guess-correct).",
-    "  - 2–3 questions → key or high-weight competencies from the curriculum map.",
-    "  - Include 1–2 calibration twin items that test the same competency using different reasoning demands (e.g., procedural vs conceptual).",
-    "  - Ensure broad coverage across essential curricular areas and reasoning types.",
-
-    "Align to authentic exam style:",
-    "  - Mirror format distributions and stylistic conventions from lessonData.curriculum_map.question_formats.",
-    "  - Preserve the phrasing and cognitive style typical of ${learningProfile.school || 'the school'}.",
-    "  - Maintain realism and consistency with how students are assessed in ${lessonData.course_name}."
-  ],
-
-  "Task 2 – Worksheet Generation (Output-Only)": [
-  "Generate exactly 10 unique, exam-authentic questions derived from the internal analysis.",
-  "Each question must reflect identified weaknesses, misconceptions, reasoning patterns, and curriculum weighting priorities.",
+"Task 2 – Worksheet Generation (Output-Only)": [
+  "Generate exactly 10 unique, exam-authentic questions based on the analysis above.",
+  "Each question must reflect specific weaknesses, misconceptions, reasoning patterns, and curriculum weighting priorities.",
 
   "Subject-Specific Design Guidelines": {
     "Mathematics": "Multi-step problems, proofs, applied word problems, function and graph interpretation, connecting formulas to real data. Include variants that require justification when previous errors showed guessing or pattern reliance.",
@@ -297,24 +284,26 @@ ${contentDescription}
   },
 
   "General Construction Rules": [
+    "Allowed question_type values: 'Multiple Choice', 'Short Answer', 'Structured Response'.",
+    "Before writing each question, decide question_type based on curriculum_map.question_formats and the reasoning demand.",
+    "Hard constraint 1: If the stem contains MCQ cues like 'Which of the following', 'Which statement', 'Select', 'is/are true about', 'Identify the correct', you MUST set question_type = 'Multiple Choice' and generate exactly four options A–D.",
+    "Hard constraint 2: If question_type = 'Multiple Choice', options MUST contain four distinct, plausible choices (A–D).",
+    "Hard constraint 3: If question_type ≠ 'Multiple Choice', the stem MUST NOT use MCQ cue phrases and options MUST be []. Write these as direct prompts for a word, number, explanation, or worked solution.",
     "Use clear, grade-appropriate language for ${learningProfile.grade}.",
-    "Include four plausible options (A–D) if question_type = 'Multiple Choice'; otherwise set options = [].",
-    "If the stem uses MCQ cues like 'Which of the following', 'Select', or 'is true about', force question_type = 'Multiple Choice' and generate four options A–D (never leave such stems as short-answer).",
-    "If question_type ≠ 'Multiple Choice', avoid MCQ cue phrases and write the stem as a direct prompt for a word, number, short explanation, or worked solution.",
-    "Assign each question a difficulty_index of 'Moderate Exam-Level', 'Challenging Exam-Level', or 'High Challenge Exam-Level'.",
+    "Assign each question a difficulty_index of 'Moderate Exam-Level', 'Challenging Exam-Level', or 'High Challenge Exam-Level' consistent with the Task 1 calibration.",
     "Each question must test a distinct concept or reasoning demand for predictive breadth.",
     "Maintain authentic exam wording and structure grounded in ${lessonData.course_name} and ${learningProfile.school || 'the school'} context.",
-    "If extensive notes are provided, align question content, terminology, and examples to those materials.",
-    "If notes are minimal, extrapolate from the curriculum map and question_formats to ensure validity and balance."
+    "If extensive notes are provided, align question content, terminology, and examples to those materials; if notes are minimal, extrapolate from lessonData.curriculum_map and its question_formats."
   ]
 ],
 
-  "Task 3 – Provide Complete Answer Key Details": [
-    "For each question include: correct_answer, explanation (2–3 sentences), assessed_competencies, targeted_misconception.",
-    "In the explanation, explicitly reference the most likely reasoning_method error if the student missed this type previously (e.g., 'If you chose C by pattern recognition, note that the variable changes in line 3').",
-    "Each explanation must teach a corrective insight for the identified misconception or reasoning flaw, not merely restate the correct answer.",
-    "Ensure every explanation provides a mini feedback loop that helps the system learn how the student learns and mislearns."
-  ],
+"Task 3 – Provide Complete Answer Key Details": [
+  "For each question include: correct_answer, explanation (2–3 sentences), assessed_competencies, targeted_misconception.",
+  "In the explanation, explicitly reference the most likely reasoning_method error if the student previously missed this type (e.g., 'If you chose C by pattern recognition, note that the variable changes in line 3.').",
+  "Each explanation must teach a corrective insight for the identified misconception or reasoning flaw, not merely restate the correct answer.",
+  "Ensure explanations create a mini feedback loop that helps the system model how the student learns and mislearns."
+],
+
 Output Format:
 Provide your response as a single, valid JSON object with the structure specified.`;
       } else {
