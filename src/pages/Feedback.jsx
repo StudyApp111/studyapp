@@ -34,12 +34,12 @@ export default function Feedback() {
   const [weaknesses, setWeaknesses] = useState([]);
   const [showRoadmapModal, setShowRoadmapModal] = useState(false);
   
-  // Section collapse state (default all collapsed = false)
+  // Section collapse state
   const [sectionsExpanded, setSectionsExpanded] = useState({
-    strengths: false,
-    weaknesses: false,
+    strengths: true,
+    weaknesses: true,
     insights: false,
-    breakdown: false
+    breakdown: true
   });
   
   // Question collapse state
@@ -705,32 +705,12 @@ export default function Feedback() {
           transition={{ delay: 0.5 }}
         >
           <Card className="shadow-2xl border-0 mb-8 overflow-hidden">
-            <CardHeader 
-              className="cursor-pointer hover:bg-slate-50 transition-colors"
-              onClick={() => toggleSection('breakdown')}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl md:text-2xl">Question-by-Question Breakdown</CardTitle>
-                  <p className="text-slate-600 text-sm mt-1">Review your answers and learn from detailed feedback</p>
-                </div>
-                {sectionsExpanded.breakdown ? (
-                  <ChevronUp className="w-6 h-6 text-slate-400" />
-                ) : (
-                  <ChevronDown className="w-6 h-6 text-slate-400" />
-                )}
-              </div>
+            <CardHeader>
+              <CardTitle className="text-xl md:text-2xl">Question-by-Question Breakdown</CardTitle>
+              <p className="text-slate-600 text-sm mt-1">Review your answers and learn from detailed feedback</p>
             </CardHeader>
             
-            <AnimatePresence>
-              {sectionsExpanded.breakdown && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CardContent>
+            <CardContent>
                     <div className="space-y-3">
                       {worksheet.feedback.map((feedback, idx) => {
                         const question = worksheet.questions[feedback.question_index];
@@ -888,9 +868,6 @@ export default function Feedback() {
                       })}
                     </div>
                   </CardContent>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </Card>
         </motion.div>
 
