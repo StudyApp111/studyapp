@@ -281,31 +281,33 @@ ${contentDescription}
   ],
 
   "Task 2 – Worksheet Generation (Output-Only)": [
-    "Generate exactly 10 unique, exam-authentic questions derived from the internal analysis.",
-    "Each question must reflect identified weaknesses, misconceptions, reasoning patterns, and curriculum weighting priorities.",
+  "Generate exactly 10 unique, exam-authentic questions derived from the internal analysis.",
+  "Each question must reflect identified weaknesses, misconceptions, reasoning patterns, and curriculum weighting priorities.",
 
-    "Subject-Specific Design Guidelines": {
-      "Mathematics": "Multi-step problems, proofs, applied word problems, function and graph interpretation, connecting formulas to real data. Include variants that require justification when previous errors showed guessing or pattern reliance.",
-      "Natural Sciences": "Experimental design, data-table interpretation, quantitative calculations, model explanation, and application of theory to scenarios. Add interpretation checks where confidence was high but incorrect.",
-      "Social Sciences": "Source or case analysis, cause-effect reasoning, comparative evaluation, interpretation of charts, and structured short answers. Include prompts requiring explicit evidence to counter intuitive but wrong pattern-based reasoning.",
-      "Humanities": "Text or excerpt analysis, critical interpretation, argument construction, thematic comparison, and evaluation of perspectives. Distractors should reflect observed misreadings or overconfident assumptions from the diagnostic.",
-      "Languages": "Reading comprehension, vocabulary-in-context, grammar correction, translation or composition, and interpretive short responses. Emphasize distinctions between near-synonyms where confidence was high but accuracy was low.",
-      "Business Economics Accounting Finance": "Case-based decision scenarios, journal entries, ratio or data analysis, policy evaluation, cost-benefit interpretation, and quantitative justification. Include method-selection items to test conceptual grounding over rote recall.",
-      "Computer Science Technology Engineering": "Algorithm tracing, pseudo-code completion, debugging logic, applied calculations, and conceptual questions on data structures or systems. Add a variant where shortcut or pattern-based reasoning fails without full logic.",
-      "Fine Arts and Creative Subjects": "Visual or aural analysis, style recognition, composition planning, interpretive reasoning, and contextual or historical linkage. Include questions prompting explanation of stylistic inference rather than recognition only.",
-      "Interdisciplinary and Professional Courses": "Case-study interpretation, ethical or policy analysis, applied reasoning, scenario-based judgments, and reflective synthesis. Introduce framework-choice questions where heuristic errors were seen."
-    },
+  "Subject-Specific Design Guidelines": {
+    "Mathematics": "Multi-step problems, proofs, applied word problems, function and graph interpretation, connecting formulas to real data. Include variants that require justification when previous errors showed guessing or pattern reliance.",
+    "Natural Sciences": "Experimental design, data-table interpretation, quantitative calculations, model explanation, and application of theory to scenarios. Add interpretation checks where confidence was high but incorrect.",
+    "Social Sciences": "Source or case analysis, cause-effect reasoning, comparative evaluation, interpretation of charts, and structured short answers. Include prompts requiring explicit evidence to counter intuitive but wrong pattern-based reasoning.",
+    "Humanities": "Text or excerpt analysis, critical interpretation, argument construction, thematic comparison, and evaluation of perspectives. Distractors should reflect observed misreadings or overconfident assumptions from the diagnostic.",
+    "Languages": "Reading comprehension, vocabulary-in-context, grammar correction, translation or composition, and interpretive short responses. Emphasize distinctions between near-synonyms where confidence was high but accuracy was low.",
+    "Business Economics Accounting Finance": "Case-based decision scenarios, journal entries, ratio or data analysis, policy evaluation, cost-benefit interpretation, and quantitative justification. Include method-selection items to test conceptual grounding over rote recall.",
+    "Computer Science Technology Engineering": "Algorithm tracing, pseudo-code completion, debugging logic, applied calculations, and conceptual questions on data structures or systems. Add a variant where shortcut or pattern-based reasoning fails without full logic.",
+    "Fine Arts and Creative Subjects": "Visual or aural analysis, style recognition, composition planning, interpretive reasoning, and contextual or historical linkage. Include questions prompting explanation of stylistic inference rather than recognition only.",
+    "Interdisciplinary and Professional Courses": "Case-study interpretation, ethical or policy analysis, applied reasoning, scenario-based judgments, and reflective synthesis. Introduce framework-choice questions where heuristic errors were seen."
+  },
 
-    "General Construction Rules": [
-      "Use clear, grade-appropriate language for ${learningProfile.grade}.",
-      "Include four plausible options (A–D) if question_type = 'Multiple Choice'; otherwise set options = [].",
-      "Assign each question a difficulty_index of 'Moderate Exam-Level', 'Challenging Exam-Level', or 'High Challenge Exam-Level'.",
-      "Each question must test a distinct concept or reasoning demand for predictive breadth.",
-      "Maintain authentic exam wording and structure grounded in ${lessonData.course_name} and ${learningProfile.school || 'the school'} context.",
-      "If extensive notes are provided, align question content, terminology, and examples to those materials.",
-      "If notes are minimal, extrapolate from the curriculum map and question_formats to ensure validity and balance."
-    ]
-  ],
+  "General Construction Rules": [
+    "Use clear, grade-appropriate language for ${learningProfile.grade}.",
+    "Include four plausible options (A–D) if question_type = 'Multiple Choice'; otherwise set options = [].",
+    "If the stem uses MCQ cues like 'Which of the following', 'Select', or 'is true about', force question_type = 'Multiple Choice' and generate four options A–D (never leave such stems as short-answer).",
+    "If question_type ≠ 'Multiple Choice', avoid MCQ cue phrases and write the stem as a direct prompt for a word, number, short explanation, or worked solution.",
+    "Assign each question a difficulty_index of 'Moderate Exam-Level', 'Challenging Exam-Level', or 'High Challenge Exam-Level'.",
+    "Each question must test a distinct concept or reasoning demand for predictive breadth.",
+    "Maintain authentic exam wording and structure grounded in ${lessonData.course_name} and ${learningProfile.school || 'the school'} context.",
+    "If extensive notes are provided, align question content, terminology, and examples to those materials.",
+    "If notes are minimal, extrapolate from the curriculum map and question_formats to ensure validity and balance."
+  ]
+],
 
   "Task 3 – Provide Complete Answer Key Details": [
     "For each question include: correct_answer, explanation (2–3 sentences), assessed_competencies, targeted_misconception.",
