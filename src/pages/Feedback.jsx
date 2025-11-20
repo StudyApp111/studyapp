@@ -200,8 +200,18 @@ export default function Feedback() {
   const totalWorksheets = allWorksheets.length;
   const futureWorksheets = worksheet.ai_feedback?.suggested_future_sessions_plan || [];
 
+  const getPatternIcon = (type) => {
+    const typeLower = type.toLowerCase();
+    if (typeLower.includes('guess') || typeLower.includes('pressure')) return '🎲';
+    if (typeLower.includes('overconfiden')) return '🎯';
+    if (typeLower.includes('underconfiden')) return '💭';
+    if (typeLower.includes('reason') || typeLower.includes('method')) return '🧠';
+    if (typeLower.includes('time') || typeLower.includes('rush')) return '⏱️';
+    return '💡';
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-3 md:p-10">
       <div className="max-w-6xl mx-auto">
         {/* Hero Section - Predicted Grade */}
         <motion.div
@@ -224,8 +234,8 @@ export default function Feedback() {
             transition={{ delay: 0.2 }}
             className="inline-block scale-75 md:scale-100 origin-top"
           >
-            <div className={`px-12 md:px-16 py-6 md:py-8 rounded-3xl bg-gradient-to-r ${getGradeColor(worksheet.predicted_grade)} shadow-2xl mb-4`}>
-              <div className="text-6xl md:text-8xl font-bold text-white mb-2">
+            <div className={`px-6 md:px-16 py-6 md:py-8 rounded-3xl bg-gradient-to-r ${getGradeColor(worksheet.predicted_grade)} shadow-2xl mb-4 mx-auto max-w-full md:max-w-none`}>
+              <div className="text-5xl md:text-8xl font-bold text-white mb-2">
                 {worksheet.predicted_grade} {getGradeEmoji(worksheet.predicted_grade)}
               </div>
               <div className="text-xl md:text-2xl text-white font-semibold">
@@ -235,7 +245,7 @@ export default function Feedback() {
           </motion.div>
 
           {worksheet.ai_feedback?.overall_performance_summary_text && (
-            <p className="text-base md:text-lg text-slate-700 max-w-3xl mx-auto mt-6">
+            <p className="text-sm md:text-lg text-slate-700 max-w-3xl mx-auto mt-6 px-2 leading-relaxed">
               {worksheet.ai_feedback.overall_performance_summary_text}
             </p>
           )}
@@ -344,7 +354,42 @@ export default function Feedback() {
                 <p className="text-purple-100 text-sm">Understanding how you learn helps you improve faster</p>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="overflow-x-auto">
+                {/* Mobile View - Stacked Cards */}
+                <div className="block md:hidden">
+                  {worksheet.ai_feedback.learning_patterns.map((pattern, idx) => (
+                    <div key={idx} className={`p-4 border-b border-slate-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-2xl" role="img" aria-label="pattern icon">
+                          {getPatternIcon(pattern.pattern_type)}
+                        </span>
+                        <span className="font-semibold text-slate-900 text-sm">
+                          {pattern.pattern_type}
+                        </span>
+                      </div>
+                      
+                      <div className="pl-1 space-y-3">
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Insight</p>
+                          <p className="text-sm text-slate-700 leading-relaxed">
+                            {pattern.what_it_means}
+                          </p>
+                        </div>
+                        
+                        <div className="bg-white px-3 py-2.5 rounded-lg border border-purple-200 shadow-sm">
+                          <p className="text-xs font-bold text-purple-600 uppercase tracking-wider mb-1 flex items-center gap-1">
+                            <Zap className="w-3 h-3" /> Strategy
+                          </p>
+                          <p className="text-sm text-slate-800">
+                            {pattern.how_to_improve}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop View - Table */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200">
@@ -360,45 +405,33 @@ export default function Feedback() {
                       </tr>
                     </thead>
                     <tbody>
-                      {worksheet.ai_feedback.learning_patterns.map((pattern, idx) => {
-                        const getPatternIcon = (type) => {
-                          const typeLower = type.toLowerCase();
-                          if (typeLower.includes('guess') || typeLower.includes('pressure')) return '🎲';
-                          if (typeLower.includes('overconfiden')) return '🎯';
-                          if (typeLower.includes('underconfiden')) return '💭';
-                          if (typeLower.includes('reason') || typeLower.includes('method')) return '🧠';
-                          if (typeLower.includes('time') || typeLower.includes('rush')) return '⏱️';
-                          return '💡';
-                        };
-
-                        return (
-                          <tr 
-                            key={idx} 
-                            className={`border-b border-slate-100 hover:bg-purple-50/30 transition-colors ${
-                              idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-                            }`}
-                          >
-                            <td className="px-4 md:px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <span className="text-2xl" role="img" aria-label="pattern icon">
-                                  {getPatternIcon(pattern.pattern_type)}
-                                </span>
-                                <span className="font-semibold text-slate-900 text-sm md:text-base">
-                                  {pattern.pattern_type}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-4 md:px-6 py-4 text-slate-700 text-sm md:text-base">
-                              {pattern.what_it_means}
-                            </td>
-                            <td className="px-4 md:px-6 py-4 text-slate-700 text-sm md:text-base">
-                              <div className="bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
-                                {pattern.how_to_improve}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {worksheet.ai_feedback.learning_patterns.map((pattern, idx) => (
+                        <tr 
+                          key={idx} 
+                          className={`border-b border-slate-100 hover:bg-purple-50/30 transition-colors ${
+                            idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
+                          }`}
+                        >
+                          <td className="px-4 md:px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl" role="img" aria-label="pattern icon">
+                                {getPatternIcon(pattern.pattern_type)}
+                              </span>
+                              <span className="font-semibold text-slate-900 text-sm md:text-base">
+                                {pattern.pattern_type}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 md:px-6 py-4 text-slate-700 text-sm md:text-base">
+                            {pattern.what_it_means}
+                          </td>
+                          <td className="px-4 md:px-6 py-4 text-slate-700 text-sm md:text-base">
+                            <div className="bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
+                              {pattern.how_to_improve}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
