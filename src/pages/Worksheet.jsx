@@ -17,6 +17,17 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+    }
+  }
+};
+
 export default function Worksheet() {
   const navigate = useNavigate();
   const [lesson, setLesson] = useState(null);
@@ -872,17 +883,19 @@ Output Format: Valid JSON matching the required schema.`;
       }
 
       // Save worksheet with timer data and question laps
-      await base44.entities.Worksheet.update(worksheet.id, {
-        questions: questionsWithGrading,
-        feedback: questionFeedback,
-        total_score: isNaN(scoreNum) ? 0 : scoreNum,
-        predicted_grade: letterGrade,
-        ai_feedback: feedbackData,
-        time_taken_seconds: elapsedSeconds,
-        question_time_laps: questionTimeLaps,
-        status: "completed",
-        completed: true
-      });
+      await retryOperation(() => 
+        base44.entities.Worksheet.update(worksheet.id, {
+          questions: questionsWithGrading,
+          feedback: questionFeedback,
+          total_score: isNaN(scoreNum) ? 0 : scoreNum,
+          predicted_grade: letterGrade,
+          ai_feedback: feedbackData,
+          time_taken_seconds: elapsedSeconds,
+          question_time_laps: questionTimeLaps,
+          status: "completed",
+          completed: true
+        })
+      );
 
       if (worksheet.worksheet_number === 1 && feedbackData.suggested_future_sessions_plan) {
         await Promise.all(
@@ -902,9 +915,11 @@ Output Format: Valid JSON matching the required schema.`;
         );
       }
 
-      await base44.entities.Lesson.update(lesson.id, {
-        status: "worksheet_completed"
-      });
+      await retryOperation(() => 
+        base44.entities.Lesson.update(lesson.id, {
+          status: "worksheet_completed"
+        })
+      );
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
       let pointsEarned = 50;
@@ -1037,18 +1052,20 @@ Output Format: Valid JSON matching the required schema.`;
       const currentAvg = user.average_score || 0;
       const newAvg = isNaN(scoreNum) ? currentAvg : ((currentAvg * (totalQuizzes - 1)) + scoreNum) / totalQuizzes;
 
-      await base44.auth.updateMe({
-        total_quizzes_taken: totalQuizzes,
-        average_score: Math.round(newAvg),
-        questions_completed: (user.questions_completed || 0) + questionsWithGrading.length,
-        time_spent_seconds: (user.time_spent_seconds || 0) + elapsedSeconds,
-        total_points: newTotalPoints,
-        level: newLevel,
-        badges: earnedBadges,
-        current_streak: newStreak,
-        longest_streak: longestStreak,
-        last_activity_date: today
-      });
+      await retryOperation(() => 
+        base44.auth.updateMe({
+          total_quizzes_taken: totalQuizzes,
+          average_score: Math.round(newAvg),
+          questions_completed: (user.questions_completed || 0) + questionsWithGrading.length,
+          time_spent_seconds: (user.time_spent_seconds || 0) + elapsedSeconds,
+          total_points: newTotalPoints,
+          level: newLevel,
+          badges: earnedBadges,
+          current_streak: newStreak,
+          longest_streak: longestStreak,
+          last_activity_date: today
+        })
+      );
 
       if (earnedNow.length > 0 || correctCount >= (questionsWithGrading.length * 0.8)) {
         setShowConfetti(true);
