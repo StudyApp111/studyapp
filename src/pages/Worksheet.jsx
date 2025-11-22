@@ -348,8 +348,7 @@ Provide your response as a single, valid JSON object with the structure specifie
           predicted_grade: latestWorksheet.predicted_grade,
           total_score: latestWorksheet.total_score,
           strengths: latestWorksheet.ai_feedback?.identified_strengths_list || [],
-          weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || [],
-          planning_signals: latestWorksheet.ai_feedback?.planning_signals || null
+          weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
         };
 
         let currentWorksheetDescription = `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
@@ -361,7 +360,7 @@ Provide your response as a single, valid JSON object with the structure specifie
         }
 
         aiPrompt = `Context
-You are a master assessment designer creating the next 10-question adaptive worksheet for ${lessonData.course_name}.
+You are a master assessment designer creating the next 10-question adaptive worksheet for ${lessonData.course_name}. This worksheet must evolve from ALL prior data: previous worksheet performance, cumulative performance trends, curriculum weightings, high-yield competencies, and the suggested_future_sessions_plan + learning_patterns generated during the last prediction cycle.
 
 Input Educational Context
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -380,18 +379,121 @@ ${JSON.stringify(previousWorksheetPerformance, null, 2)}
 Cumulative Performance:
 ${JSON.stringify(cumulativePerformance, null, 2)}
 
-${cumulativePerformance.planning_signals ? `
-Previous Worksheet Planning Signals (Priority Guidance):
-- Priority Competencies to Target: ${JSON.stringify(cumulativePerformance.planning_signals.priority_competencies)}
-- Misconception Targets: ${JSON.stringify(cumulativePerformance.planning_signals.misconception_targets)}
-- Diagnostic Meta Risks: ${JSON.stringify(cumulativePerformance.planning_signals.diagnostic_meta_risks)}
-- Exam Format Deficits: ${JSON.stringify(cumulativePerformance.planning_signals.exam_format_deficits)}
-- Trend Direction: ${cumulativePerformance.planning_signals.trend_direction}
+Suggested Future Sessions (from predictor):
+${JSON.stringify(suggestedFutureSessions || [], null, 2)}
 
-CRITICAL: Use these planning signals to shape question selection and difficulty calibration.
-` : ''}
+Learning Patterns (from predictor):
+${JSON.stringify(learningPatterns || [], null, 2)}
 
-Task: Generate 10 adaptive questions following curriculum alignment and addressing the planning signals above. Provide complete answer key with explanations.
+------------------------------------------------------------
+INTERNAL PROCESSING (Do Not Output)
+------------------------------------------------------------
+
+Using the inputs above, internally compute the following adaptation signals:
+
+1. priority_competencies
+   - Extract the lowest-performing competencies across previous worksheets.
+   - Weight deficiencies using curriculum_map.competency_weightings.
+   - Select the bottom 2–3 competencies as primary targets.
+
+2. misconception_targets
+   - Identify any misconceptions that appeared more than once (worksheet-based).
+   - Map these to specific curriculum concepts and integrate them into new items.
+
+3. exam_format_deficits
+   - For each question_type in curriculum_map.question_formats:
+       If (AvgScore(previousWorksheetPerformance for that type) < 40%)
+       AND (Exam weight for that type ≥ 20%)
+       → include at least 2 questions of this type.
+
+4. performance_trend_direction
+   - Compare difficulty-adjusted performance across worksheets:
+       Improving, Plateauing, or Declining.
+   - If improving → increase difficulty.
+   - If plateauing → mix procedural + conceptual twins.
+   - If declining → scaffold early questions before raising difficulty.
+
+5. learning_behavior_signals
+   - Derived from learningPatterns array:
+       Examples: “Formula-first solving”, “Low-confidence but correct”, “Pattern-matching under time”.
+   - Integrate these behaviors into question design:
+       • If overconfidence-like patterns → include justification steps.
+       • If low-confidence patterns → include early confidence-building items.
+       • If method-bias patterns → force alternate reasoning forms.
+
+------------------------------------------------------------
+TASK 1 – Internal Design (Do Not Output)
+------------------------------------------------------------
+
+Use the adaptation signals above to determine:
+
+• Difficulty progression  
+  - If student is strong (≥80% last worksheet): bias toward Challenging → High Challenge.
+  - If mixed (50–79%): Moderate → Challenging → High Challenge.
+  - If struggling (<50%): scaffold Moderate → Moderate → Challenging.
+
+• Allocation of 10 questions  
+  - 5–6 targeting priority_competencies and misconception_targets.
+  - 2–3 targeting exam_format_deficits.
+  - 1–2 “twin calibration items” (conceptual vs procedural or recognition vs application).
+  
+• Style and authenticity  
+  - Mirror curriculum_map.question_formats distributions.
+  - Ground all content in curriculum_map and ${contentDescription}.
+  - Use phrasing consistent with ${learningProfile.school || "the school"} exam norms.
+
+------------------------------------------------------------
+TASK 2 – Worksheet Generation (Output-Only)
+------------------------------------------------------------
+
+Generate exactly 10 adaptive, exam-authentic questions.
+
+Each question must include:
+• question_number  
+• question_type (“Multiple Choice”, “Short Answer”, “Structured Response”)  
+• question_text (plain text)  
+• options (A–D) if question_type = “Multiple Choice”; otherwise []  
+• difficulty_index (“Moderate Exam-Level”, “Challenging Exam-Level”, or “High Challenge Exam-Level”)  
+
+Strict MCQ Rules:
+- If the stem contains cues like “Which of the following”, “Select”, “Which statement”, “is/are true about”, “Identify the correct”, “Choose the option”—  
+  You MUST produce a Multiple Choice question with exactly four options A–D.
+- If question_type ≠ “Multiple Choice”, the stem MUST avoid MCQ cue phrases and options MUST be empty.
+
+Subject-Specific Design Guidelines:
+{
+  "Mathematics": "Multi-step problems, proofs, applied word problems, function/graph interpretation, formula-to-context mapping.",
+  "Natural Sciences": "Data tables, experimental design, calculations, model explanation, scenario-based application.",
+  "Social Sciences": "Source/case analysis, cause-effect reasoning, chart interpretation, structured short responses.",
+  "Humanities": "Excerpt analysis, argument evaluation, thematic comparison, inference-based distractors.",
+  "Languages": "Reading comprehension, vocab-in-context, grammar, translation, interpretive responses.",
+  "Business Economics Accounting Finance": "Case scenarios, journal entries, ratio analysis, cost-benefit interpretation.",
+  "Computer Science Technology Engineering": "Algorithm tracing, pseudocode completion, debugging, conceptual systems questions.",
+  "Fine Arts and Creative Subjects": "Visual/aural analysis, style recognition, historical/contextual linkage.",
+  "Interdisciplinary/Professional": "Ethical/policy dilemmas, applied reasoning, real-world judgment tasks."
+}
+
+General Construction Rules:
+- Write grade-appropriate stems.
+- Ensure questions explicitly target adaptation signals.
+- Each question must test a distinct concept or reasoning demand.
+- Align terminology and context with the supplied notes (if any).
+- If notes are sparse, rely on curriculum_map for concept selection.
+
+------------------------------------------------------------
+TASK 3 – Provide Complete Answer Key Details (Output-Only)
+------------------------------------------------------------
+
+For each question include:
+• correct_answer  
+• explanation (2–3 sentences; give conceptual correction, not just the answer)  
+• assessed_competencies[]  
+• targeted_misconception (string or null)
+
+Explanations MUST:
+- Address common reasoning errors observed in past worksheets.
+- Provide actionable micro-feedback (“Check unit consistency before substitution”, etc.).
+- Reinforce learning_patterns from the prediction stage where relevant.
 
 Output Format: Valid JSON object matching the schema.`;
       }
@@ -865,20 +967,9 @@ Output Format: Valid JSON matching the required schema.`;
               },
               minItems: 3,
               maxItems: 5
-            },
-            planning_signals: {
-              type: "object",
-              properties: {
-                priority_competencies: { type: "array", items: { type: "string" } },
-                misconception_targets: { type: "array", items: { type: "string" } },
-                diagnostic_meta_risks: { type: "array", items: { type: "string" } },
-                exam_format_deficits: { type: "array", items: { type: "string" } },
-                trend_direction: { type: "string" }
-              },
-              required: ["priority_competencies", "misconception_targets", "diagnostic_meta_risks", "exam_format_deficits", "trend_direction"]
             }
           },
-          required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan", "learning_patterns", "planning_signals"]
+          required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan", "learning_patterns"]
         }
       });
 
