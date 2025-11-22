@@ -318,9 +318,9 @@ export default function LessonDetail() {
                 <Brain className="w-16 h-16 mx-auto text-purple-600 mb-4" />
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Ready to Begin?</h3>
                 <p className="text-slate-600 mb-6">
-                  {quiz ? 'Start your first worksheet to get your predicted grade' : 'Take the diagnostic quiz to begin your personalized learning journey'}
+                  {quiz?.completed ? 'Start your first worksheet to get your predicted grade' : 'Take the diagnostic quiz to begin your personalized learning journey'}
                 </p>
-                {quiz ? (
+                {quiz?.completed ? (
                   <Button
                     onClick={() => handleWorksheetClick({ worksheet_number: 1, status: "not_started" })}
                     className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
