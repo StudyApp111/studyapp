@@ -934,9 +934,10 @@ Output ONLY a single JSON object matching the response_json_schema:
 
 Output Format: Valid JSON matching the required schema.`;
 
-      const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
-        prompt: feedbackPrompt,
-        response_json_schema: {
+      const { data: feedbackData } = await retryOperation(() => 
+        base44.functions.invoke('feedbackGrade', {
+          prompt: feedbackPrompt,
+          response_json_schema: {
           type: "object",
           properties: {
             feedback_session_title: { type: "string" },
@@ -974,7 +975,8 @@ Output Format: Valid JSON matching the required schema.`;
           },
           required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan", "learning_patterns"]
         }
-      });
+        })
+      );
 
       const questionFeedback = questionsWithGrading.map((q, idx) => {
         let feedback = "";
