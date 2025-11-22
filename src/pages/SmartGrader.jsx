@@ -442,9 +442,9 @@ Output valid JSON matching the expected schema.`;
           </div>
 
           {/* What Can Be Graded */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-100">
-            <p className="text-sm font-semibold text-slate-700 mb-3">AI can grade:</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-100 text-center">
+            <p className="text-sm font-semibold text-slate-700 mb-3">StudyApp can grade:</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 justify-items-center">
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <FileEdit className="w-4 h-4 text-purple-600" />
                 <span>Essays</span>
