@@ -351,6 +351,9 @@ Provide your response as a single, valid JSON object with the structure specifie
           weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
         };
 
+        const suggestedFutureSessions = latestWorksheet.ai_feedback?.suggested_future_sessions_plan || [];
+        const learningPatterns = latestWorksheet.ai_feedback?.learning_patterns || [];
+
         let currentWorksheetDescription = `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
         if (existingWorksheetId) {
           const placeholderData = await base44.entities.Worksheet.filter({ id: existingWorksheetId });
