@@ -684,7 +684,7 @@ Output Format: Valid JSON object matching the schema.`;
         } : null
       }));
 
-      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student’s 10-question worksheet performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a 5-session plan, and learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
+      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student’s 10-question worksheet performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
 
 Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -744,7 +744,7 @@ Edge Handling
 - Difficulty multiplier:
   Correct: High Challenge ×1.05 (cap 0.98), Challenging ×1.02 (cap 0.96), Moderate ×1.01 (cap 0.92)
   Incorrect: High Challenge ×0.90 (floor 0.10), Challenging ×0.80 (floor 0.08), Moderate ×0.70 (floor 0.05)
-- Misconception penalty (if targeted_misconception && !is_correct): −0.05/−0.07/−0.09 for Moderate/Challenging/High Challenge.
+- Misconception penalty (if targeted_misconception && !is_correct): −0.05/−0.07/−0.09
 - Explanation alignment (if ai_grading && verdict!="Correct" && explanation): −0.03.
 - Keypoints bonus (if ai_grading && keypoints_hit length ≥2): +0.02.
 - Clamp final item score ∈ [0.05, 0.98].
@@ -761,42 +761,59 @@ Edge Handling
 4) Question-Type Adjustment (exam fidelity)
 - For each question_type:
   AvgTypeScore = mean score for that type.
-  ExamTypeFrequency = from curriculum_map.question_formats (parse %; map High=40, Medium=20, Low=10 if non-percent).
-- If AvgTypeScore < 0.40 and ExamTypeFrequency ≥ 30% → apply −3 to −6 total.
-- If AvgTypeScore ≥ 0.80 and ExamTypeFrequency ≥ 30% → apply +0 to +2 total.
+  ExamTypeFrequency = from curriculum_map.question_formats.
+- If AvgTypeScore < 0.40 and ExamTypeFrequency ≥ 30% → −3 to −6 total.
+- If AvgTypeScore ≥ 0.80 and ExamTypeFrequency ≥ 30% → +0 to +2 total.
 - Cap total style modifier to [−8, +4].
 
 4b) Diagnostic Meta Adjustment (confidence/method calibration)
-- If diagnostic primary_risk = Overconfidence → −2 to −4 (use −4 if ≥2 High-confidence misses on competencies weighted ≥25%).
-- If diagnostic primary_risk = Underconfidence → +1 to +2 (only if worksheet shows ≥70% accuracy on Moderate items).
-- If guess-correct risk prominent (≥2 instances) AND worksheet shows low explanation alignment (see step 1) → −1 to −3.
-- If dominant_methods show heavy Formula/Algorithmic AND worksheet misses are conceptual (with explanations) → −1 to −2.
-- Cap combined diagnostic meta impact so that (style modifier + meta modifier) remains within [−8, +4] overall.
+- If diagnostic primary_risk = Overconfidence → −2 to −4.
+- If diagnostic primary_risk = Underconfidence → +1 to +2.
+- If guess-correct risk ≥2 AND worksheet explanation alignment low → −1 to −3.
+- If dominant_methods heavy Formula/Algorithmic AND misses conceptual → −1 to −2.
+- Cap combined meta impact so overall modifier stays in [−8, +4].
 
 5) Coverage Reliability Adjustment
-- For any competency with weight ≥ 25% and <2 assessed items → −2 each (max −4).
-- If ≥ 80% of weighted competencies were assessed → +1 to +2.
-- Combine with previous modifiers; cap overall modifier to [−8, +4].
+- For any competency weight ≥25% and <2 assessed items → −2 each (max −4).
+- If ≥80% of weighted competencies assessed → +1 to +2.
+- Combine with previous modifiers; cap overall to [−8, +4].
 
 6) Final Prediction
-- PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then convert to string with “%”.
-- Exceptions: if 0/10 → "Not Calculable".
+- PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then “%”.
+- Exception: if 0/10 → "Not Calculable".
+
+[Part 2 — **Structured Multi-Signal Planning Pipeline (Internal Only, New Section)**]
+Before generating suggested_future_sessions_plan and learning_patterns, internally compute five planning signals:
+1. priority_competencies = bottom 2–3 competencies by weighted mastery.
+2. misconception_targets = misconceptions recurring across worksheet or tied to weighted competencies.
+3. diagnostic_meta_risks = significant meta patterns (Overconfidence, Underconfidence, Guess-correct, Method-mismatch).
+4. exam_format_deficits = question types where AvgTypeScore < 40% AND exam weight ≥ 20%.
+5. trend_direction = {improving, plateauing, declining} based on difficulty × mastery trajectory.
+
+These signals MUST shape both:
+- suggested_future_sessions_plan  
+- learning_patterns  
+
+Do not output these internal signals directly; only use them to generate the required JSON fields.
 
 [Global Output Rules]
-- Output ONLY a single JSON object that matches the provided response_json_schema.
-- Field guidance for content (names exactly as schema):
-  • feedback_session_title: "Worksheet ${worksheet.worksheet_number} Performance & Grade Prediction"
-  • predicted_exam_score_percentage: string with "%", or "Not Calculable" for 0/10
-  • prediction_calculation_rationale: 1–3 sentences referencing difficulty-adjusted items, weighted competencies, high-frequency types, coverage limits, AND (briefly) the diagnostic meta influence (e.g., overconfidence or method bias).
-  • overall_performance_summary_text: 1–2 empathetic sentences (strength trend + next focus)
-  • identified_strengths_list: 2–3 strings naming strong competencies and/or well-handled high-frequency types
-  • key_areas_for_improvement_list: 2–3 strings naming weak competencies/misconceptions and/or problematic high-frequency types
-  • suggested_future_sessions_plan: 5 objects with session_number (1..5), session_name, session_focus_description, aligned to weaknesses, misconceptions, exam formats, and any diagnostic meta risks (e.g., add “explain-your-reasoning” drills for overconfidence).
-  • learning_patterns: 3–5 objects, each with:
-      - pattern_type: short label (e.g., "Overconfidence on conceptual items", "Formula-first solving", "Pattern-matching under time", "Low-confidence but correct")
-      - what_it_means: 1 sentence describing the behavior (draw on diagnostic reasoning_method + confidence_level AND worksheet evidence)
-      - how_to_improve: 1 sentence with a concrete tactic that the next sessions/worksheets will train (e.g., “require unit checks before substitution”, “justify rule choice in one line”)
-- No extra fields. No explanations outside the JSON. All percentages are strings with “%”.
+Output ONLY a single JSON object matching the response_json_schema:
+- feedback_session_title: "Worksheet ${worksheet.worksheet_number} Performance & Grade Prediction"
+- predicted_exam_score_percentage: "% string" or "Not Calculable"
+- prediction_calculation_rationale: 1–3 sentences referencing item difficulty, competency weighting, question-type frequency, coverage limits, AND the diagnostic meta influence.
+- overall_performance_summary_text: 1–2 empathetic sentences with a clear next-focus cue.
+- identified_strengths_list: 2–3 specific competency or exam-format strengths.
+- key_areas_for_improvement_list: 2–3 high-impact weaknesses tied to misconceptions or diagnostic meta risks.
+- suggested_future_sessions_plan:  
+  5 objects with session_number (1..5), session_name, session_focus_description.  
+  Each session MUST be directly grounded in at least ONE of the internal planning signals:  
+  (priority_competencies, misconception_targets, diagnostic_meta_risks, exam_format_deficits, trend_direction).
+- learning_patterns:  
+  3–5 objects with:
+    • pattern_type: behavior label based on reasoning_method + confidence data  
+    • what_it_means: 1 sentence explaining the pattern  
+    • how_to_improve: 1 sentence linking to tactics the next sessions/worksheets will reinforce.   
+- No extra fields. No explanations outside the JSON. All percentages must be strings with “%”.
 
 Output Format: Valid JSON matching the required schema.`;
 
