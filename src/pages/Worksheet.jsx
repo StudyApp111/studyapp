@@ -348,7 +348,8 @@ Provide your response as a single, valid JSON object with the structure specifie
           predicted_grade: latestWorksheet.predicted_grade,
           total_score: latestWorksheet.total_score,
           strengths: latestWorksheet.ai_feedback?.identified_strengths_list || [],
-          weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
+          weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || [],
+          planning_signals: latestWorksheet.ai_feedback?.planning_signals || null
         };
 
         let currentWorksheetDescription = `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
@@ -379,7 +380,18 @@ ${JSON.stringify(previousWorksheetPerformance, null, 2)}
 Cumulative Performance:
 ${JSON.stringify(cumulativePerformance, null, 2)}
 
-Task: Generate 10 adaptive questions following curriculum alignment. Provide complete answer key with explanations.
+${cumulativePerformance.planning_signals ? `
+Previous Worksheet Planning Signals (Priority Guidance):
+- Priority Competencies to Target: ${JSON.stringify(cumulativePerformance.planning_signals.priority_competencies)}
+- Misconception Targets: ${JSON.stringify(cumulativePerformance.planning_signals.misconception_targets)}
+- Diagnostic Meta Risks: ${JSON.stringify(cumulativePerformance.planning_signals.diagnostic_meta_risks)}
+- Exam Format Deficits: ${JSON.stringify(cumulativePerformance.planning_signals.exam_format_deficits)}
+- Trend Direction: ${cumulativePerformance.planning_signals.trend_direction}
+
+CRITICAL: Use these planning signals to shape question selection and difficulty calibration.
+` : ''}
+
+Task: Generate 10 adaptive questions following curriculum alignment and addressing the planning signals above. Provide complete answer key with explanations.
 
 Output Format: Valid JSON object matching the schema.`;
       }
@@ -853,9 +865,20 @@ Output Format: Valid JSON matching the required schema.`;
               },
               minItems: 3,
               maxItems: 5
+            },
+            planning_signals: {
+              type: "object",
+              properties: {
+                priority_competencies: { type: "array", items: { type: "string" } },
+                misconception_targets: { type: "array", items: { type: "string" } },
+                diagnostic_meta_risks: { type: "array", items: { type: "string" } },
+                exam_format_deficits: { type: "array", items: { type: "string" } },
+                trend_direction: { type: "string" }
+              },
+              required: ["priority_competencies", "misconception_targets", "diagnostic_meta_risks", "exam_format_deficits", "trend_direction"]
             }
           },
-          required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan", "learning_patterns"]
+          required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan", "learning_patterns", "planning_signals"]
         }
       });
 
