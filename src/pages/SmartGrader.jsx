@@ -259,12 +259,16 @@ Requirements:
         ? `Custom Rubric Provided by Instructor:\n${rubric.custom_rubric}`
         : `Assignment-Specific Rubric:\n${JSON.stringify(rubric, null, 2)}`;
 
-      const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}. Read the ENTIRE assignment content below carefully and produce a COMPLETE grading report. Do NOT skip any fields. Do NOT return null or empty arrays.
+      const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}.
+
+CRITICAL: You MUST read the ENTIRE assignment content below from beginning to end, including ALL sections, paragraphs, and especially the CONCLUSION. Do NOT stop reading partway through. The complete student work is provided below - analyze ALL of it.
 
 Grading Rubric: ${rubricContext}
 
-ASSIGNMENT CONTENT TO GRADE:
+ASSIGNMENT CONTENT TO GRADE (READ COMPLETELY FROM START TO FINISH):
 ${extractedContent}
+
+END OF ASSIGNMENT CONTENT - You must have read everything above including any conclusion or final sections.
 
 [Grounding (Internal Only)]
 - Primary grounding: the student's uploaded assignment text above. Co-primary grounding: the assignment-specific rubric provided above in the "Grading Rubric" section. You MUST evaluate exclusively against the rubric criteria and their defined performance standards.
