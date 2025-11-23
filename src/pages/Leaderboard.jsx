@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -29,8 +28,10 @@ export default function Leaderboard() {
     queryFn: async () => {
       const users = await base44.entities.User.list('-total_points', 100);
       
-      // Fetch learning profiles for countries
-      const profilePromises = users.map(user => 
+      // Filter out users with 0 or no points, then fetch profiles
+      const activeUsers = users.filter(user => (user.total_points || 0) > 0);
+      
+      const profilePromises = activeUsers.map(user => 
         user.learning_profile_id 
           ? base44.entities.LearningProfile.filter({ id: user.learning_profile_id })
           : Promise.resolve([])
@@ -38,7 +39,7 @@ export default function Leaderboard() {
       
       const profiles = await Promise.all(profilePromises);
       
-      return users.map((user, idx) => ({
+      return activeUsers.map((user, idx) => ({
         ...user,
         country: profiles[idx][0]?.country || "Unknown"
       }));
