@@ -114,7 +114,7 @@ export default function GradeResults() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -126,29 +126,29 @@ export default function GradeResults() {
             <span className="text-sm font-medium text-slate-700">Assignment Graded</span>
           </div>
           
-          <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-2">
+          <h1 className="text-xl md:text-4xl font-bold text-slate-900 mb-2 px-2">
             {assignment.assignment_title}
           </h1>
-          <p className="text-slate-600 mb-4">{assignment.course_name}</p>
+          <p className="text-sm md:text-base text-slate-600 mb-4 px-2">{assignment.course_name}</p>
           
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="inline-block scale-75 md:scale-100 origin-top"
+            className="w-full max-w-xs md:max-w-none mx-auto"
           >
-            <div className={`px-12 md:px-16 py-6 md:py-8 rounded-3xl bg-gradient-to-r ${getGradeColor(gradeBand)} shadow-2xl mb-4`}>
-              <div className="text-6xl md:text-8xl font-bold text-white mb-2">
+            <div className={`px-8 md:px-16 py-6 md:py-8 rounded-2xl md:rounded-3xl bg-gradient-to-r ${getGradeColor(gradeBand)} shadow-2xl mb-4`}>
+              <div className="text-5xl md:text-8xl font-bold text-white mb-2">
                 {gradeBand} {getGradeEmoji(gradeBand)}
               </div>
-              <div className="text-xl md:text-2xl text-white font-semibold">
+              <div className="text-lg md:text-2xl text-white font-semibold">
                 {gradePercentage}
               </div>
             </div>
           </motion.div>
 
           {gradeRationale && gradeRationale !== 'Grade analysis in progress.' && (
-            <p className="text-base md:text-lg text-slate-700 max-w-3xl mx-auto mt-6 leading-relaxed">
+            <p className="text-sm md:text-lg text-slate-700 max-w-3xl mx-auto mt-6 leading-relaxed px-2">
               {gradeRationale}
             </p>
           )}
