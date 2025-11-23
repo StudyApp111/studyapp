@@ -162,7 +162,7 @@ Student Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${courseName}
 School Context: ${learningProfile.school || "N/A"}
 Assignment Title/Type: ${assignmentTitle}
-Assignment Content (first 3000 chars): ${extractedContent.substring(0, 3000)}
+Assignment Content: ${extractedContent}
 
 Task:
 Analyze the input to infer:
