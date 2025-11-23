@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Trophy, Flame, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, DollarSign, Briefcase } from "lucide-react";
+import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Trophy, Flame, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, DollarSign, Briefcase, FileCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
