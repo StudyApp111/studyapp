@@ -42,11 +42,28 @@ export default function Home() {
 
   const [learningProfile, setLearningProfile] = useState(null);
 
-  const { data: lessons = [], isLoading } = useQuery({
+  const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons'],
-    queryFn: () => base44.entities.Lesson.list('-created_date', 6),
+    queryFn: () => base44.entities.Lesson.list('-created_date', 100),
     initialData: [],
   });
+
+  const { data: gradedAssignments = [], isLoading: assignmentsLoading } = useQuery({
+    queryKey: ['gradedAssignments'],
+    queryFn: () => base44.entities.GradedAssignment.list('-created_date', 100),
+    initialData: [],
+  });
+
+  const isLoading = lessonsLoading || assignmentsLoading;
+
+  // Combine and sort lessons and graded assignments by date
+  const recentItems = React.useMemo(() => {
+    const combined = [
+      ...lessons.map(l => ({ ...l, type: 'lesson', date: new Date(l.created_date) })),
+      ...gradedAssignments.map(a => ({ ...a, type: 'assignment', date: new Date(a.created_date) }))
+    ];
+    return combined.sort((a, b) => b.date - a.date).slice(0, 6);
+  }, [lessons, gradedAssignments]);
 
   const { data: allWorksheets = [] } = useQuery({
     queryKey: ['worksheets'],
@@ -133,6 +150,69 @@ export default function Home() {
     
     // Default
     return BookOpen;
+  };
+
+  const GradedAssignmentCard = ({ assignment }) => {
+    const handleClick = () => {
+      navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`);
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        onClick={handleClick}
+        className="cursor-pointer"
+      >
+        <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 shadow-lg relative overflow-hidden hover:scale-105 bg-gradient-to-br from-emerald-50 to-teal-50">
+          {/* Decorative gradient bar */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+
+          <CardHeader className="pb-4 pt-6">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <FileCheck className="w-7 h-7 flex-shrink-0 text-emerald-600" />
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-lg text-slate-900 truncate">{assignment.course_name}</CardTitle>
+                  <p className="text-xs text-slate-500 truncate mt-1">{assignment.assignment_title}</p>
+                </div>
+              </div>
+              <Badge className="flex-shrink-0 bg-emerald-100 text-emerald-700 border border-emerald-200">
+                Graded
+              </Badge>
+            </div>
+          </CardHeader>
+
+          <CardContent>
+            <div className="space-y-4">
+              {assignment.grading_result ? (
+                <div className="p-4 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-lg border border-emerald-300 shadow-sm">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-slate-600 mb-1">Predicted Grade</p>
+                      <p className="text-3xl font-bold text-slate-900">{assignment.grading_result.predicted_grade}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs text-slate-600 mb-1">Score</p>
+                      <p className="text-xl font-bold text-emerald-600">{Math.round(assignment.grading_result.total_score)}%</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
+                  <p className="text-sm text-slate-500">Processing...</p>
+                </div>
+              )}
+
+              <div className="pt-2 text-center">
+                <p className="text-xs text-slate-500">Click to view feedback →</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
   };
 
   const SimpleLessonCard = ({ lesson }) => {
@@ -288,7 +368,7 @@ export default function Home() {
       {/* Recent Lessons - Centered */}
       <div className="mb-8 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900">Recent Lessons</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900">Recent Activity</h2>
           <Button
             onClick={() => navigate(createPageUrl("CreateLesson"))}
             className="hidden md:flex bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold shadow-lg shadow-yellow-500/30"
@@ -311,25 +391,38 @@ export default function Home() {
               </Card>
             ))}
           </div>
-        ) : lessons.length === 0 ? (
+        ) : recentItems.length === 0 ? (
           <Card className="text-center py-12 md:py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
             <CardContent>
               <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto text-yellow-600 mb-4" />
-              <h3 className="text-lg md:text-xl font-semibold text-slate-700 mb-2">No lessons yet</h3>
-              <p className="text-sm md:text-base text-slate-500 mb-6">Create your first lesson to begin your learning journey</p>
-              <Button
-                onClick={() => navigate(createPageUrl("CreateLesson"))}
-                className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Lesson
-              </Button>
+              <h3 className="text-lg md:text-xl font-semibold text-slate-700 mb-2">Nothing here yet</h3>
+              <p className="text-sm md:text-base text-slate-500 mb-6">Create a lesson or grade an assignment to get started</p>
+              <div className="flex gap-3 justify-center flex-wrap">
+                <Button
+                  onClick={() => navigate(createPageUrl("CreateLesson"))}
+                  className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Lesson
+                </Button>
+                <Button
+                  onClick={() => navigate(createPageUrl("SmartGrader"))}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold"
+                >
+                  <FileCheck className="w-4 h-4 mr-2" />
+                  Grade Assignment
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {lessons.map(lesson => (
-              <SimpleLessonCard key={lesson.id} lesson={lesson} />
+            {recentItems.map(item => (
+              item.type === 'lesson' ? (
+                <SimpleLessonCard key={`lesson-${item.id}`} lesson={item} />
+              ) : (
+                <GradedAssignmentCard key={`assignment-${item.id}`} assignment={item} />
+              )
             ))}
           </div>
         )}
