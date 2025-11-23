@@ -119,17 +119,17 @@ export default function GradeResults() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8 md:mb-12"
         >
-          <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg mb-6">
+          <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg mb-4 md:mb-6">
             <Award className="w-5 h-5 text-purple-600" />
             <span className="text-sm font-medium text-slate-700">Assignment Graded</span>
           </div>
           
-          <h1 className="text-xl md:text-4xl font-bold text-slate-900 mb-2 px-2">
+          <h1 className="text-xl md:text-4xl font-bold text-slate-900 mb-2 px-4 break-words">
             {assignment.assignment_title}
           </h1>
-          <p className="text-sm md:text-base text-slate-600 mb-4 px-2">{assignment.course_name}</p>
+          <p className="text-sm md:text-base text-slate-600 mb-4 px-4 break-words">{assignment.course_name}</p>
           
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
@@ -148,13 +148,13 @@ export default function GradeResults() {
           </motion.div>
 
           {gradeRationale && gradeRationale !== 'Grade analysis in progress.' && (
-            <p className="text-sm md:text-lg text-slate-700 max-w-3xl mx-auto mt-6 leading-relaxed px-2">
+            <p className="text-sm md:text-lg text-slate-700 max-w-3xl mx-auto mt-4 md:mt-6 leading-relaxed px-4 break-words">
               {gradeRationale}
             </p>
           )}
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
           {/* Strengths - using identified_strengths */}
           {result?.identified_strengths && result.identified_strengths.length > 0 && (
             <motion.div
@@ -174,7 +174,7 @@ export default function GradeResults() {
                     {result.identified_strengths.map((strength, idx) => (
                       <li key={idx} className="flex items-start gap-3">
                         <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-slate-700">{strength}</span>
+                        <span className="text-sm md:text-base text-slate-700 break-words">{strength}</span>
                       </li>
                     ))}
                   </ul>
@@ -202,7 +202,7 @@ export default function GradeResults() {
                     {result.areas_for_improvement.map((area, idx) => (
                       <li key={idx} className="flex items-start gap-3">
                         <Target className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-slate-700">{area}</span>
+                        <span className="text-sm md:text-base text-slate-700 break-words">{area}</span>
                       </li>
                     ))}
                   </ul>
@@ -235,11 +235,11 @@ export default function GradeResults() {
                       transition={{ delay: 0.6 + (idx * 0.05) }}
                       className="p-6 rounded-xl border-2 border-purple-200 bg-purple-50/50"
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <h4 className="font-semibold text-slate-900 text-lg">
+                      <div className="flex items-start justify-between mb-3 gap-3">
+                        <h4 className="font-semibold text-slate-900 text-base md:text-lg break-words flex-1">
                           {item.criterion}
                         </h4>
-                        <Badge className="bg-purple-600 text-white text-lg px-4 py-1">
+                        <Badge className="bg-purple-600 text-white text-sm md:text-lg px-3 md:px-4 py-1 flex-shrink-0">
                           {item.score}/{item.max_score}
                         </Badge>
                       </div>
@@ -275,9 +275,9 @@ export default function GradeResults() {
                 <div className="space-y-4">
                   {result.detailed_feedback_by_section.map((section, idx) => (
                     <div key={idx} className="p-4 rounded-lg border-2 border-blue-200 bg-blue-50/50">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-slate-900">{section.section_name}</h4>
-                        <Badge variant="outline">
+                      <div className="flex items-start justify-between mb-2 gap-2">
+                        <h4 className="font-semibold text-sm md:text-base text-slate-900 break-words flex-1">{section.section_name}</h4>
+                        <Badge variant="outline" className="text-xs flex-shrink-0 whitespace-nowrap">
                           {section.points_earned}/{section.points_possible} pts
                         </Badge>
                       </div>
