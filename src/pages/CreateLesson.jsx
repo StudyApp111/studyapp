@@ -107,26 +107,35 @@ export default function CreateLesson() {
           const { file_url } = await base44.integrations.Core.UploadFile({ file });
           fileUrl = file_url;
 
-          setProcessingStep("Extracting content with Mistral AI (this may take a minute)...");
+          setProcessingStep("Extracting content from your document...");
           
-          // Use Mistral to extract content from the file
-          const response = await base44.functions.invoke('extractDocumentContent', {
-            file_url: file_url
+          const extractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
+            file_url: file_url,
+            json_schema: {
+              type: "object",
+              properties: {
+                full_text_content: {
+                  type: "string",
+                  description: "Complete extracted text from the document"
+                }
+              },
+              required: ["full_text_content"]
+            }
           });
 
-          if (!response || !response.data) {
-            throw new Error("Invalid response from document extraction service");
+          if (extractResult.status === "error") {
+            throw new Error(extractResult.details || "Failed to extract content from document");
           }
 
-          if (response.data.error) {
-            throw new Error(response.data.error + (response.data.details ? ': ' + response.data.details : ''));
+          extractedContent = extractResult.output?.full_text_content || "";
+
+          if (!extractedContent || extractedContent.length === 0) {
+            throw new Error("Failed to extract content from document. The file might be empty or corrupted.");
           }
 
-          if (!response.data.extracted_content) {
-            throw new Error("No content was extracted from the document. Please try a different file.");
+          if (extractedContent.length < 50) {
+            throw new Error("Extracted content is too short. Please ensure your file contains readable text.");
           }
-
-          extractedContent = response.data.extracted_content;
           
         } catch (fileError) {
           console.error("Error processing file:", fileError);
@@ -430,7 +439,7 @@ Output Format: JSON object matching the specified schema`;
                       <Upload className="w-5 h-5 text-purple-600" />
                       <div>
                         <p className="font-medium">Upload a File</p>
-                        <p className="text-xs text-slate-500">AI-powered extraction with Mistral (PDF, Word, Images - Max 50MB)</p>
+                        <p className="text-xs text-slate-500">PDF, Word, Images - Max 50MB</p>
                       </div>
                     </Label>
                   </div>
@@ -473,14 +482,9 @@ Output Format: JSON object matching the specified schema`;
                       <span>Selected: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                     </div>
                   )}
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                    <p className="text-xs text-purple-900 font-medium mb-1">
-                      ✨ Powered by Mistral AI
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      Advanced document understanding for PDFs, Word docs, and images. Extracts text, formulas, tables, and diagrams with high accuracy.
-                    </p>
-                  </div>
+                  <p className="text-xs text-slate-500">
+                    Upload course syllabi, notes, or study materials for AI-powered curriculum analysis.
+                  </p>
                 </div>
               )}
 
