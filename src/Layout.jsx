@@ -110,7 +110,7 @@ export default function Layout({ children, currentPageName }) {
         {showNavigation && !isOnboardingPage && (
           <Sidebar className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl">
             <SidebarHeader className="border-b border-purple-200/60 p-6">
-              <div className="flex items-center gap-3">
+              <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
                   alt="StudyApp.AI Logo"
@@ -120,7 +120,7 @@ export default function Layout({ children, currentPageName }) {
                   <h2 className="font-bold text-slate-900 text-lg">StudyApp.AI</h2>
                   <p className="text-xs text-slate-500">AI-Powered Learning</p>
                 </div>
-              </div>
+              </Link>
             </SidebarHeader>
             
             <SidebarContent className="p-3">
@@ -271,14 +271,14 @@ export default function Layout({ children, currentPageName }) {
           {showNavigation && !isOnboardingPage && (
             <header className="bg-white/90 backdrop-blur-xl border-b border-purple-200/60 px-6 py-4 md:hidden">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                   <img 
                     src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
                     alt="StudyApp.AI Logo"
                     className="w-8 h-8 rounded-lg"
                   />
                   <h1 className="text-xl font-bold text-slate-900">StudyApp.AI</h1>
-                </div>
+                </Link>
                 {user && (
                   <button
                     onClick={() => navigate(createPageUrl("Settings"))}
