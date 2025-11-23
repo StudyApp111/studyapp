@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle } from "lucide-react";
+import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, History } from "lucide-react";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
@@ -340,6 +340,18 @@ Output Format: JSON object matching the specified schema`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-3xl mx-auto">
+        {/* History Button */}
+        <div className="flex justify-end mb-4">
+          <Button
+            onClick={() => navigate(createPageUrl("LessonHistory"))}
+            variant="outline"
+            className="gap-2"
+          >
+            <History className="w-4 h-4" />
+            History
+          </Button>
+        </div>
+
         {/* Hero Header Section */}
         <div className="mb-8">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-6 md:p-8 shadow-xl">
