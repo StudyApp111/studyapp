@@ -35,8 +35,6 @@ export default function GradeResults() {
         navigate(createPageUrl("SmartGrader"));
         return;
       }
-      console.log('Loaded assignment:', assignmentData[0]);
-      console.log('Grading result:', assignmentData[0].grading_result);
       setAssignment(assignmentData[0]);
     } catch (error) {
       console.error("Error loading results:", error);

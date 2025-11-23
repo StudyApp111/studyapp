@@ -103,21 +103,16 @@ export default function CreateLesson() {
 
         try {
           setProcessingStep("Uploading file...");
-          console.log("Starting file upload, size:", file.size, "bytes");
           
           const { file_url } = await base44.integrations.Core.UploadFile({ file });
           fileUrl = file_url;
-          console.log("File uploaded successfully:", file_url);
 
           setProcessingStep("Extracting content with Mistral AI (this may take a minute)...");
-          console.log("Calling extractDocumentContent function...");
           
           // Use Mistral to extract content from the file
           const response = await base44.functions.invoke('extractDocumentContent', {
             file_url: file_url
           });
-
-          console.log("Function response:", response);
 
           if (!response || !response.data) {
             throw new Error("Invalid response from document extraction service");
@@ -132,7 +127,6 @@ export default function CreateLesson() {
           }
 
           extractedContent = response.data.extracted_content;
-          console.log("Content extracted successfully:", extractedContent.length, "characters");
           
         } catch (fileError) {
           console.error("Error processing file:", fileError);
@@ -288,7 +282,6 @@ Output Format: JSON object matching the specified schema`;
 
       // Always generate a fresh curriculum map
       setProcessingStep("Analyzing curriculum...");
-      console.log("Generating new curriculum map");
 
       const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
         prompt: curriculumPrompt,
@@ -330,7 +323,6 @@ Output Format: JSON object matching the specified schema`;
 
       navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lesson.id}`);
     } catch (err) {
-      console.error("Error creating lesson:", err);
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
       setProcessingStep("");

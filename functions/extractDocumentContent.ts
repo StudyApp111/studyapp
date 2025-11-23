@@ -17,7 +17,6 @@ Deno.serve(async (req) => {
 
         const apiKey = Deno.env.get("MistralDocumentAIKey");
         if (!apiKey) {
-            console.error('MistralDocumentAIKey not found in environment');
             return Response.json({ error: 'API key not configured' }, { status: 500 });
         }
 
@@ -95,7 +94,6 @@ Deno.serve(async (req) => {
             }
             base64Data = btoa(binary);
         } catch (encError) {
-            console.error('Base64 encoding error:', encError.message);
             return Response.json({ 
                 error: 'Failed to process file content'
             }, { status: 500 });
@@ -179,16 +177,12 @@ Be extremely thorough - this content will be used to create personalized study m
                 body: JSON.stringify(requestBody)
             });
         } catch (fetchError) {
-            console.error('Mistral API fetch error:', fetchError.message);
             return Response.json({ 
                 error: 'Failed to connect to AI service'
             }, { status: 500 });
         }
 
         if (!chatResponse.ok) {
-            const errorText = await chatResponse.text();
-            console.error('Mistral API error:', chatResponse.status, errorText);
-            
             let errorDetails = 'Document extraction failed';
             
             if (chatResponse.status === 401) {
@@ -226,9 +220,8 @@ Be extremely thorough - this content will be used to create personalized study m
         });
 
     } catch (error) {
-        console.error('Extract document error:', error.message, error.stack);
         return Response.json({ 
-            error: error.message || 'Internal server error'
+            error: 'Internal server error'
         }, { status: 500 });
     }
 });

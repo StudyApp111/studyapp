@@ -26,9 +26,8 @@ Deno.serve(async (req) => {
         return Response.json(result);
 
     } catch (error) {
-        console.error('Error in curriculumMapping:', error);
         return Response.json({ 
-            error: error.message 
+            error: 'Internal server error'
         }, { status: 500 });
     }
 });
