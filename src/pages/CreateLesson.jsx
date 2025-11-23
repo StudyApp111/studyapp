@@ -109,29 +109,23 @@ export default function CreateLesson() {
 
           setProcessingStep("Extracting content from your document...");
           
-          const extractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
-            file_url: file_url,
-            json_schema: {
-              type: "object",
-              properties: {
-                full_text_content: {
-                  type: "string",
-                  description: "Complete extracted text from the document"
-                }
-              },
-              required: ["full_text_content"]
-            }
+          const response = await base44.functions.invoke('extractDocumentContent', {
+            file_url: file_url
           });
 
-          if (extractResult.status === "error") {
-            throw new Error(extractResult.details || "Failed to extract content from document");
+          if (!response || !response.data) {
+            throw new Error("Invalid response from document extraction service");
           }
 
-          extractedContent = extractResult.output?.full_text_content || "";
-
-          if (!extractedContent || extractedContent.length === 0) {
-            throw new Error("Failed to extract content from document. The file might be empty or corrupted.");
+          if (response.data.error) {
+            throw new Error(response.data.error + (response.data.details ? ': ' + response.data.details : ''));
           }
+
+          if (!response.data.extracted_content) {
+            throw new Error("No content was extracted from the document. Please try a different file.");
+          }
+
+          extractedContent = response.data.extracted_content;
 
           if (extractedContent.length < 50) {
             throw new Error("Extracted content is too short. Please ensure your file contains readable text.");
