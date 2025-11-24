@@ -53,6 +53,10 @@ export default function GradeResults() {
 
   const result = assignment.grading_result;
 
+  // DEBUG: Log the missing_references_flag
+  console.log('DEBUG missing_references_flag:', result?.missing_references_flag);
+  console.log('DEBUG full result:', result);
+
   // DEBUG: Show if result is empty
   if (!result || Object.keys(result).length === 0) {
     return (
