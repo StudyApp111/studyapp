@@ -182,6 +182,10 @@ Output valid JSON matching the expected schema.`;
               type: "number",
               description: "Numeric percentage score 0-100"
             },
+            missing_references: {
+              type: "boolean",
+              description: "True if the assignment references external materials (diagrams, graphs, appendices) that weren't in the uploaded file"
+            },
             overall_performance_summary: {
               type: "string",
               description: "At least 3 sentences analyzing the work"
