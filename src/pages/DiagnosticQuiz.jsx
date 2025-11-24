@@ -79,13 +79,12 @@ export default function DiagnosticQuiz() {
 
       const learningProfile = profile[0] || {};
 
-      // Determine the lesson content source
+      // Determine the lesson content source - use full extracted content for files
       let contentDescription = "";
       if (lessonData.input_type === "description" && lessonData.description) {
         contentDescription = lessonData.description;
-      } else if (lessonData.input_type === "url" && lessonData.extracted_content) {
-        contentDescription = lessonData.extracted_content;
-      } else if (lessonData.input_type === "file" && lessonData.extracted_content) {
+      } else if (lessonData.extracted_content) {
+        // For files and URLs, use the full extracted content
         contentDescription = lessonData.extracted_content;
       } else {
         contentDescription = lessonData.description || "N/A";
@@ -95,6 +94,8 @@ export default function DiagnosticQuiz() {
 
 This entire experience should be warm, ${learningProfile.grade || 'student'}-friendly, and presented as if you are guiding the student step-by-step towards success.
 
+CRITICAL: Base your questions EXCLUSIVELY on the provided lesson content below. Do NOT generate questions about unrelated topics.
+
 Input Educational Context:
 
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -102,7 +103,9 @@ Course/Unit Name: ${lessonData.course_name}
 School: ${learningProfile.school || "N/A"}
 City/Region: ${learningProfile.city || "N/A"}
 Detailed Curriculum Profile: ${JSON.stringify(lessonData.curriculum_map)}
-Content Source: ${contentDescription}
+
+LESSON CONTENT (Questions MUST be based on this content):
+${contentDescription}
 
 Task: Design the 5-Question Diagnostic Quiz
 
