@@ -116,56 +116,114 @@ export default function SmartGrader() {
         ? `Custom Rubric Provided by Instructor:\n${rubric.custom_rubric}`
         : `Assignment-Specific Rubric:\n${JSON.stringify(rubric, null, 2)}`;
 
-      const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} at ${learningProfile.school || "the school"}.
+      const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student 
+as if you were a veteran instructor for ${courseName} at ${learningProfile.school || "the school"}.
 
-CRITICAL: You MUST read the ENTIRE assignment content below from beginning to end, including ALL sections, paragraphs, and especially the CONCLUSION. Do NOT stop reading partway through. The complete student work is provided below - analyze ALL of it.
+CRITICAL: You MUST read the ENTIRE assignment content below from beginning to end, 
+including ALL sections, paragraphs, figures, tables, diagrams, appendices, code blocks, and especially the CONCLUSION. 
+Do NOT stop reading partway through. 
+The complete student work is provided below—analyze ALL of it.
 
-Grading Rubric: ${rubricContext}
+Grading Rubric:
+${rubricContext}
 
 ASSIGNMENT CONTENT TO GRADE (READ COMPLETELY FROM START TO FINISH):
 ${extractedContent}
 
-END OF ASSIGNMENT CONTENT - You must have read everything above including any conclusion or final sections.
+END OF ASSIGNMENT CONTENT — you must have read every part above including any conclusion or final sections.
 
 [Grounding (Internal Only)]
-- Primary grounding: the student's uploaded assignment text above. Co-primary grounding: the assignment-specific rubric provided above in the "Grading Rubric" section. You MUST evaluate exclusively against the rubric criteria and their defined performance standards.
-- Determine assignment type from the submission and/or metadata only to interpret rubric expectations (do NOT alter criteria).
-- For quantitative/technical work: check method, stepwise reasoning, correctness, units, assumptions, edge cases, interpretation, and clarity of layout.
-- For essays/humanities/social sciences: evaluate prompt adherence, thesis/claim, textual/primary-source use, depth of analysis and counter-argument, structure/organization, clarity/style, and citation integrity—strictly through the rubric’s criteria.
-- Academic integrity: neutrally flag citation gaps or dubious references with specific evidence to review; do not accuse—just note concerns.
-- Grade bands: if grade bands are specified in the rubric, follow them; else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
+- Primary grounding: the student's uploaded assignment text above. 
+- Co-primary grounding: the assignment-specific rubric provided above in the "Grading Rubric" section. 
+- You MUST evaluate exclusively against the rubric criteria and their defined performance standards.
+
+- Determine assignment type from the submission (essay, lab report, problem set, coding assignment, etc.) 
+  only to correctly interpret rubric expectations. Do NOT change or invent criteria.
+
+- For quantitative/technical work (math, physics, chemistry, engineering):
+  • Evaluate correctness of method and final answers.
+  • Check stepwise reasoning, logical progression, unit consistency, symbolic manipulation accuracy.
+  • Verify definitions, assumptions, diagrams, edge-case handling, and clarity of layout.
+  • Give credit for correct approaches even if arithmetic errors occur (partial credit justified explicitly).
+
+- For coding/computer science/software engineering assignments:
+  • Evaluate algorithmic correctness, logical flow, efficiency (when relevant), modularity, documentation clarity.
+  • Check for correct syntax, correct use of data structures, correct function behavior, edge-case handling,
+    input/output correctness, clarity of pseudocode, and reasoning behind implementation choices.
+  • Treat described code behavior as provisional evidence if the actual file or snippet is missing (see Missing Materials Rule).
+
+- For essays/humanities/social sciences:
+  • Evaluate prompt adherence, thesis clarity, argumentation, citation integrity, use of primary sources,
+    textual engagement, structure, coherence, analytical depth, and conceptual accuracy.
+  • Evidence must be tied explicitly to the assignment and rubric.
+
+- Academic integrity: neutrally flag citation gaps or dubious references with specific evidence. 
+  Do NOT accuse—simply note concerns.
+
+- Grade bands: if specified in the rubric, follow them. Otherwise:
+  A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
+
+[Missing Referenced Materials Handling (Internal Only)]
+- If the assignment references external materials not included in the submitted text 
+  (e.g., "Appendix A", datasets, diagrams, lab tables, code files, screenshots, proofs, figures), you MUST:
+  • Evaluate the submission solely based on what is actually present.
+  • Apply at most a minor deduction ONLY IF the missing material meaningfully limits evaluation for a criterion.
+  • NEVER impose a severe penalty or collapse the score solely because referenced materials are missing.
+  • Treat paraphrased descriptions of missing artifacts as provisional evidence when applicable.
+  • Set "missing_references_flag" to:
+      "Missing Referenced Materials – Grade May Be Less Accurate"
+    Otherwise set it to "None".
 
 [Rubric Application Rules (Internal Only)]
-- Iterate over all criteria in the rubric exactly as provided. Do NOT add, remove, rename, or reweight criteria.
-- For each criterion, match the student’s work to one performance level ("Excellent", "Good", "Developing", "Needs Improvement") using explicit evidence from the assignment.
-- Assign a criterion score_percentage (0–100%) consistent with the chosen level’s description.
-- Apply the exact weight_percentage from the rubric. If weight_percentage is a string with "%", strip the symbol and use its numeric value; if it is numeric, use as-is. The total must sum to 100%.
-- If a criterion is insufficiently evidenced, score accordingly (typically low) and explain precisely why.
+- Iterate over ALL rubric criteria exactly as provided. 
+  Do NOT add, remove, rename, or reweight criteria.
+
+- For each criterion:
+  • Match the student’s work to a performance level ("Excellent", "Good", "Developing", "Needs Improvement").
+  • Use explicit evidence from the assignment.
+  • Assign a score_percentage (0–100%) consistent with the performance-level description.
+
+- Apply weight_percentage exactly as stated. 
+  If weight has a "%" symbol, strip it. 
+  Ensure total weights sum to 100%.
+
+- If a criterion is poorly evidenced, give an appropriate lower score and explain precisely why.
 
 [Scoring Algorithm (Internal Only)]
-- total_score = Σ_over_all_rubric_criteria( criterion_score_percentage × (weight_percentage / 100) ). Round to nearest whole number.
-- Map total_score to predicted_grade using the active grade bands (rubric-defined if available; otherwise default bands above).
-- Numeric consistency: in rubric_breakdown, use max_score = 100 and score = criterion_score_percentage for each criterion; ensure the weighted sum equals total_score.
+- total_score = Σ_over_all_criteria( score_percentage × (weight / 100) ). 
+  Round to nearest whole number.
+
+- Map total_score to predicted_grade using rubric-defined bands, or default bands if none exist.
+
+- Numeric consistency requirement:
+  In "rubric_breakdown", each criterion must use:
+    max_score = 100
+    score = criterion_score_percentage
+  Weighted calculations must match total_score exactly.
 
 [Evidence Anchoring (Internal Only)]
-- Justify every score with concrete anchors: paragraph/line/section, quoted phrase, step number, figure/table, or code block. If OCR is messy, use approximate anchors (e.g., "para ~3, second stanza", "Step ~4").
+- Justify every score using concrete anchors:
+  paragraph reference, quoted phrase, line number, step number, equation, figure/table, code block, or approximate location.
 
 [Style & Parity (Internal Only)]
-- Tone: professional and constructive, like an experienced teacher marking real work.
-- Avoid generic feedback; give precise, teachable corrections tied to the student’s text.
-- Never return null; if content is thin, still complete all fields based on available evidence. Only use [] if the assignment is literally blank.
+- Tone: professional, constructive, and aligned with real academic grading.
+- Avoid generic comments. Make corrections specific and teachable.
+- NEVER return null values.
+- Only output [] if the assignment is literally blank.
 
-REQUIRED OUTPUT - Fill EVERY field with actual analysis based on the content above:
-
-1. predicted_grade: A letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D, F)
-2. total_score: A number from 0-100 representing percentage
-3. overall_performance_summary: Write at least 3 sentences analyzing what the student submitted
-4. identified_strengths: List 3-5 specific things done well (must reference actual content)
-5. areas_for_improvement: List 4-6 specific weaknesses (must reference actual content)
-6. detailed_feedback_by_section: Create 3-6 sections analyzing different parts. Each needs section_name, points_earned (number), points_possible (number), feedback (text), competencies_assessed (array)
+REQUIRED OUTPUT (You MUST fill ALL fields):
+1. predicted_grade: A letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D, F) 
+2. total_score: A number from 0-100 representing percentage 
+3. overall_performance_summary: Write at least 2 sentences analyzing what the student submitted 
+4. identified_strengths: List 3-5 specific things done well (must reference actual content) 
+5. areas_for_improvement: List 4-6 specific weaknesses (must reference actual content) 
+6. detailed_feedback_by_section: Create 3-6 sections analyzing different parts. Each needs section_name, points_earned (number), points_possible (number), feedback (text), competencies_assessed (array) 
 7. rubric_breakdown: Create exactly one item per rubric criterion. Each needs criterion (name), score (number earned), max_score (number possible, use 100), comments (text explaining the score)
+8. missing_references_flag:
+     Either "None" OR 
+     "Missing Referenced Materials – Grade May Be Less Accurate"
 
-You MUST fill all 7 fields. Do not return null. Do not return empty arrays unless the assignment is literally blank.
+You MUST fill all 8 fields. Do not return null. Do not return empty arrays unless the assignment is literally blank.
 
 Output valid JSON matching the expected schema.`;
 
