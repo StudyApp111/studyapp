@@ -259,7 +259,7 @@ Requirements:
         ? `Custom Rubric Provided by Instructor:\n${rubric.custom_rubric}`
         : `Assignment-Specific Rubric:\n${JSON.stringify(rubric, null, 2)}`;
 
-      const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} at ${learningProfile.school || "the school"} (grade level: ${learningProfile.grade || "N/A"}.
+      const gradingPrompt = `Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} at ${learningProfile.school || "the school"}.
 
 CRITICAL: You MUST read the ENTIRE assignment content below from beginning to end, including ALL sections, paragraphs, and especially the CONCLUSION. Do NOT stop reading partway through. The complete student work is provided below - analyze ALL of it.
 
