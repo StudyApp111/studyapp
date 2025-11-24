@@ -143,6 +143,20 @@ export default function GradeResults() {
                 {gradePercentage}
               </div>
             </div>
+            
+            {result?.missing_references && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="inline-flex items-center gap-2 bg-amber-100 border-2 border-amber-400 px-4 py-2 rounded-xl shadow-md"
+              >
+                <AlertTriangle className="w-5 h-5 text-amber-700 flex-shrink-0" />
+                <span className="text-sm font-medium text-amber-900">
+                  Missing Referenced Materials – Grade May Be Less Accurate
+                </span>
+              </motion.div>
+            )}
           </motion.div>
 
           {gradeRationale && gradeRationale !== 'Grade analysis in progress.' && (
