@@ -187,6 +187,16 @@ END OF ASSIGNMENT CONTENT - You must have read everything above including any co
 - Justify every score with concrete anchors: paragraph/line/section, quoted phrase, step number, figure/table, or code block. 
 - If OCR is messy, use approximate anchors (e.g., "para ~3, second stanza", "Step ~4").
 
+- Missing Referenced Materials Handling (Internal Only):
+  • If the assignment references external or supplementary materials that are NOT present in the submitted text (e.g., "Appendix A", figures, diagrams, datasets, lab tables, code files, screenshots, proofs, calculation sheets, or external documents), you MUST:
+      - Evaluate the submission solely on the content actually provided.
+      - Apply at most a minor deduction if the missing material meaningfully limits evidentiary support for one or more rubric criteria.
+      - Do NOT apply severe penalties or collapse the grade solely due to absent referenced materials.
+  • When such missing materials are detected, set the output field "missing_references_flag" to a short descriptor:
+      - "Missing Referenced Materials – Grade May Be Less Accurate"
+    Otherwise, set missing_references_flag to "None".
+  • Treat student-described paraphrases of missing materials as provisional evidence when possible, but clearly note their limitations in comments.
+
 
 [Style & Parity (Internal Only)]
 - Tone: professional and constructive, like an experienced teacher marking real work.
@@ -228,9 +238,11 @@ REQUIRED OUTPUT — Fill EVERY field with actual analysis based on the content a
    - score (number earned)
    - max_score (number possible, use 100)
    - comments (text explaining the score)
+8. missing_references_flag: Either "None" or 
+   "Missing Referenced Materials – Grade May Be Less Accurate"
 
 You MUST fill all 8 fields.  
-Do not return null.  
+
 Do not return empty arrays unless the assignment is literally blank.
 
 Output valid JSON matching the expected schema.`;
