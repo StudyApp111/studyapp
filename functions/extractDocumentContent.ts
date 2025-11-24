@@ -76,37 +76,9 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
-        // Determine media type
-        const contentType = fileResponse.headers.get('content-type') || '';
-        const fileName = file_url.split('/').pop().toLowerCase();
-        const fileExt = fileName.split('.').pop();
-        console.log('📄 File type:', fileExt, 'Content-Type:', contentType);
-
-        let mediaType = 'application/pdf';
-        if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(fileExt)) {
-            if (fileExt === 'png') mediaType = 'image/png';
-            else if (fileExt === 'jpg' || fileExt === 'jpeg') mediaType = 'image/jpeg';
-            else if (fileExt === 'webp') mediaType = 'image/webp';
-            else if (fileExt === 'gif') mediaType = 'image/gif';
-        }
-        console.log('✅ Media type:', mediaType);
-
-        // Convert to base64
-        console.log('⏳ Converting to base64...');
-        const arrayBuffer = await fileBlob.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        
-        const chunkSize = 8192;
-        let binary = '';
-        for (let i = 0; i < bytes.length; i += chunkSize) {
-            const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
-            binary += String.fromCharCode.apply(null, Array.from(chunk));
-        }
-        const base64Data = btoa(binary);
-        console.log('✅ Base64 conversion complete, length:', base64Data.length);
-
         const prompt = `Extract ALL educational content from this document. Include every detail - text, questions, rubrics, criteria, and instructions. Be extremely thorough and preserve all information verbatim.`;
 
+        // Use file URL directly instead of base64 for PDFs
         const requestBody = {
             model: 'pixtral-large-latest',
             messages: [
@@ -120,7 +92,7 @@ Deno.serve(async (req) => {
                         {
                             type: 'image_url',
                             image_url: {
-                                url: `data:${mediaType};base64,${base64Data}`
+                                url: file_url
                             }
                         }
                     ]
