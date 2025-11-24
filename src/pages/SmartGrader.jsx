@@ -146,6 +146,16 @@ END OF ASSIGNMENT CONTENT - You must have read everything above including any co
   do not accuse — just note concerns.
 - Grade bands: if grade bands are specified in the rubric, follow them; 
   else A ≥ 90, B 80–89, C 70–79, D 60–69, F < 60.
+- Missing Referenced Materials Handling (Internal Only):
+  • If the assignment references external or supplementary materials that are NOT present in the submitted text (e.g., "Appendix A", figures, diagrams, datasets, lab tables, code files, screenshots, proofs, calculation sheets, or external documents), you MUST:
+      - Evaluate the submission solely on the content actually provided.
+      - Apply at most a minor deduction if the missing material meaningfully limits evidentiary support for one or more rubric criteria.
+      - Do NOT apply severe penalties or collapse the grade solely due to absent referenced materials.
+  • When such missing materials are detected, set the output field "missing_references_flag" to a short descriptor:
+      - "Missing Referenced Materials – Grade May Be Less Accurate"
+    Otherwise, set missing_references_flag to "None".
+  • Treat student-described paraphrases of missing materials as provisional evidence when possible, but clearly note their limitations in comments.
+
 
 [Rubric Application Rules (Internal Only)]
 - Iterate over all criteria in the rubric exactly as provided. 
@@ -213,7 +223,7 @@ REQUIRED OUTPUT — Fill EVERY field with actual analysis based on the content a
    - score (number earned)
    - max_score (number possible, use 100)
    - comments (text explaining the score)
-8. missing_references_flag: Either "None" or 
+8. missing_references_flag "None" or 
    "Missing Referenced Materials – Grade May Be Less Accurate"
 
 You MUST fill all 8 fields.  
