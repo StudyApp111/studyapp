@@ -17,8 +17,10 @@ Deno.serve(async (req) => {
 
         const apiKey = Deno.env.get("MistralDocumentAIKey");
         if (!apiKey) {
+            console.error('MistralDocumentAIKey not found in environment');
             return Response.json({ error: 'API key not configured' }, { status: 500 });
         }
+        console.log('API key found, length:', apiKey.length);
 
         const fileResponse = await fetch(file_url);
         if (!fileResponse.ok) {
@@ -165,6 +167,13 @@ Be extremely thorough - this content will be used to create personalized study m
             temperature: 0.1,
             max_tokens: 16000
         };
+        
+        console.log('Request details:', {
+            model: requestBody.model,
+            mediaType,
+            base64Length: base64Data.length,
+            promptLength: prompt.length
+        });
 
         let chatResponse;
         try {
@@ -183,6 +192,9 @@ Be extremely thorough - this content will be used to create personalized study m
         }
 
         if (!chatResponse.ok) {
+            const errorBody = await chatResponse.text();
+            console.error('Mistral API error:', chatResponse.status, errorBody);
+            
             let errorDetails = 'Document extraction failed';
             
             if (chatResponse.status === 401) {
@@ -198,7 +210,8 @@ Be extremely thorough - this content will be used to create personalized study m
             }
 
             return Response.json({ 
-                error: errorDetails
+                error: errorDetails,
+                details: errorBody
             }, { status: 500 });
         }
 
@@ -220,8 +233,11 @@ Be extremely thorough - this content will be used to create personalized study m
         });
 
     } catch (error) {
+        console.error('Function error:', error);
         return Response.json({ 
-            error: 'Internal server error'
+            error: 'Internal server error',
+            message: error.message,
+            stack: error.stack
         }, { status: 500 });
     }
 });
