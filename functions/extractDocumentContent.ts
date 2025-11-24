@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
             extracted_content: extractedContent,
             characters: extractedContent.length,
             file_size: fileSize,
-            file_type: mediaType,
+            file_type: isImage ? 'IMAGE' : 'DOCUMENT',
             method: 'mistral_pixtral_large'
         });
 
