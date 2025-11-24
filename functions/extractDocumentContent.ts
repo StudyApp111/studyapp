@@ -103,14 +103,10 @@ Deno.serve(async (req) => {
         // Use document_url for documents (PDF, PPTX, DOCX) and image_url for images
         const contentItem = isDocument ? {
             type: 'document_url',
-            document_url: {
-                url: file_url
-            }
+            document_url: file_url  // Direct string for documents
         } : {
             type: 'image_url',
-            image_url: {
-                url: file_url
-            }
+            image_url: file_url  // Direct string for images
         };
 
         const requestBody = {
