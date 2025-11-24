@@ -235,7 +235,7 @@ Output valid JSON matching the expected schema.`;
               }
             }
           },
-          required: ["predicted_grade", "total_score", "overall_performance_summary", "identified_strengths", "areas_for_improvement", "detailed_feedback_by_section", "rubric_breakdown"]
+          required: ["predicted_grade", "total_score", "missing_references", "overall_performance_summary", "identified_strengths", "areas_for_improvement", "detailed_feedback_by_section", "rubric_breakdown"]
         }
       });
 
