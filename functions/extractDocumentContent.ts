@@ -163,9 +163,7 @@ Be extremely thorough - this content will be used to create personalized study m
                         }
                     ]
                 }
-            ],
-            temperature: 0.1,
-            max_tokens: 16000
+            ]
         };
         
         console.log('Request details:', {
