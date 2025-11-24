@@ -109,29 +109,15 @@ export default function CreateLesson() {
 
           setProcessingStep("Extracting content from your document...");
           
-          const extractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
-            file_url: file_url,
-            json_schema: {
-              type: "object",
-              properties: {
-                full_text_content: {
-                  type: "string",
-                  description: "Complete extracted text from the document"
-                }
-              },
-              required: ["full_text_content"]
-            }
+          const extractResult = await base44.functions.invoke('extractDocumentContent', {
+            file_url: file_url
           });
 
-          if (extractResult.status === "error") {
-            throw new Error(extractResult.details || "Failed to extract content from document");
+          if (!extractResult?.data?.extracted_content) {
+            throw new Error("Failed to extract content from document");
           }
 
-          extractedContent = extractResult.output?.full_text_content || "";
-
-          if (!extractedContent || extractedContent.length === 0) {
-            throw new Error("Failed to extract content from document. The file might be empty or corrupted.");
-          }
+          extractedContent = extractResult.data.extracted_content;
 
           if (extractedContent.length < 50) {
             throw new Error("Extracted content is too short. Please ensure your file contains readable text.");
@@ -139,21 +125,7 @@ export default function CreateLesson() {
           
         } catch (fileError) {
           console.error("Error processing file:", fileError);
-          
-          // Provide more helpful error messages
-          let errorMessage = fileError.message || "Failed to process file";
-          
-          if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
-            errorMessage = "Authentication error with Mistral AI. Please contact support.";
-          } else if (errorMessage.includes("413") || errorMessage.includes("too large")) {
-            errorMessage = "File is too large. Please use a file smaller than 50MB.";
-          } else if (errorMessage.includes("422")) {
-            errorMessage = "File format not supported or file is corrupted. Please try a different file.";
-          } else if (errorMessage.includes("500")) {
-            errorMessage = "Server error while processing document. Please try again or use a different file format.";
-          }
-          
-          throw new Error(errorMessage);
+          throw new Error(fileError.message || "Failed to process file. Please try again.");
         }
       }
 
