@@ -28,10 +28,8 @@ export default function Leaderboard() {
     queryFn: async () => {
       const users = await base44.entities.User.list('-total_points', 100);
       
-      // Filter out users with 0 or no points, then fetch profiles
-      const activeUsers = users.filter(user => (user.total_points || 0) > 0);
-      
-      const profilePromises = activeUsers.map(user => 
+      // Show all users, including those with 0 points
+      const profilePromises = users.map(user => 
         user.learning_profile_id 
           ? base44.entities.LearningProfile.filter({ id: user.learning_profile_id })
           : Promise.resolve([])
@@ -39,7 +37,7 @@ export default function Leaderboard() {
       
       const profiles = await Promise.all(profilePromises);
       
-      return activeUsers.map((user, idx) => ({
+      return users.map((user, idx) => ({
         ...user,
         country: profiles[idx][0]?.country || "Unknown"
       }));
