@@ -132,6 +132,8 @@ Deno.serve(async (req) => {
         console.log('⏳ Calling Mistral API...');
         console.log('📤 Request body structure:', {
             model: requestBody.model,
+            file_type: isImage ? 'IMAGE' : 'DOCUMENT',
+            content_type: isImage ? 'image_url' : 'document_url',
             messages_count: requestBody.messages.length,
             content_items: requestBody.messages[0].content.length
         });
