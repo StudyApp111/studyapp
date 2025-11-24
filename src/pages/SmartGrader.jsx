@@ -70,41 +70,40 @@ export default function SmartGrader() {
         throw new Error("Please upload your grading rubric");
       }
 
-      setProcessingStep("Uploading your assignment...");
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: assignmentFile });
+      // Fetch learning profile
+      const profiles = await base44.entities.LearningProfile.filter({});
+      const learningProfile = profiles[0] || {};
 
-      setProcessingStep("Extracting content from your assignment...");
-      const extractResult = await base44.functions.invoke('extractDocumentContent', {
-        file_url: file_url
-      });
+      setProcessingStep("Uploading files...");
+      
+      // Upload both files in parallel
+      const [assignmentUpload, rubricUpload] = await Promise.all([
+        base44.integrations.Core.UploadFile({ file: assignmentFile }),
+        base44.integrations.Core.UploadFile({ file: curriculumFile })
+      ]);
 
-      if (!extractResult || !extractResult.data) {
-        throw new Error("Failed to extract content from document");
+      setProcessingStep("Extracting content from both files...");
+      
+      // Extract content from both files in parallel
+      const [assignmentExtract, rubricExtract] = await Promise.all([
+        base44.functions.invoke('extractDocumentContent', { file_url: assignmentUpload.file_url }),
+        base44.functions.invoke('extractDocumentContent', { file_url: rubricUpload.file_url })
+      ]);
+
+      if (!assignmentExtract?.data?.extracted_content) {
+        throw new Error("Failed to extract content from assignment");
       }
 
-      const extractedContent = extractResult.data.extracted_content || "";
-
-      if (!extractedContent || extractedContent.length === 0) {
-        throw new Error("Failed to extract content from document. The file might be empty or corrupted.");
+      if (!rubricExtract?.data?.extracted_content) {
+        throw new Error("Failed to extract content from rubric");
       }
+
+      const extractedContent = assignmentExtract.data.extracted_content;
+      const customRubricText = rubricExtract.data.extracted_content;
 
       if (extractedContent.length < 50) {
         throw new Error("Extracted content is too short. Please ensure your file contains readable text.");
       }
-
-      setProcessingStep("Processing your rubric file...");
-      
-      const { file_url: curriculumUrl } = await base44.integrations.Core.UploadFile({ file: curriculumFile });
-      
-      const curriculumExtractResult = await base44.functions.invoke('extractDocumentContent', {
-        file_url: curriculumUrl
-      });
-
-      if (!curriculumExtractResult || !curriculumExtractResult.data) {
-        throw new Error("Failed to extract rubric file");
-      }
-
-      const customRubricText = curriculumExtractResult.data.extracted_content || "";
       
       const rubric = {
         custom_rubric: customRubricText,
