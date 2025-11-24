@@ -210,15 +210,15 @@ Deno.serve(async (req) => {
         });
 
     } catch (error) {
-        console.error('❌ CRITICAL ERROR:', error);
+        console.error('❌ CRITICAL ERROR IN MAIN PROCESSING:', error);
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
         
         return Response.json({ 
-            error: 'Internal server error',
+            error: 'Document processing failed',
             message: error.message,
             type: error.name,
-            stack: error.stack
+            stage: 'main_processing'
         }, { status: 500 });
     }
 });
