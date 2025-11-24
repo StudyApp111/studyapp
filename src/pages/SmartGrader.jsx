@@ -236,8 +236,8 @@ Output valid JSON matching the expected schema.`;
               description: "Numeric percentage score 0-100"
             },
             missing_references_flag: {
-              type: "boolean",
-              description: "True if the assignment references external materials (diagrams, graphs, appendices) that weren't in the uploaded file"
+              type: "string",
+              description: "Either 'None' or 'Missing Referenced Materials – Grade May Be Less Accurate'"
             },
             overall_performance_summary: {
               type: "string",

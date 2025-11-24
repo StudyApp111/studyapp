@@ -144,7 +144,7 @@ export default function GradeResults() {
               </div>
             </div>
             
-            {result?.missing_references_flag && (
+            {result?.missing_references_flag && result.missing_references_flag !== "None" && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -153,7 +153,7 @@ export default function GradeResults() {
               >
                 <AlertTriangle className="w-5 h-5 text-amber-700 flex-shrink-0" />
                 <span className="text-sm font-medium text-amber-900">
-                  Missing Referenced Materials – Grade May Be Less Accurate
+                  {result.missing_references_flag}
                 </span>
               </motion.div>
             )}
