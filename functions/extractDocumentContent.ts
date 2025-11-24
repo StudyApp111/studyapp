@@ -76,9 +76,43 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
+        // Determine file type for correct API usage
+        const contentType = fileResponse.headers.get('content-type') || '';
+        const fileName = file_url.split('/').pop().toLowerCase();
+        const fileExt = fileName.split('.').pop();
+        console.log('📄 File type:', fileExt, 'Content-Type:', contentType);
+
+        const imageFormats = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff', 'heif', 'avif', 'mpo'];
+        const documentFormats = ['pdf', 'pptx', 'docx', 'doc', 'ppt'];
+        
+        const isImage = imageFormats.includes(fileExt);
+        const isDocument = documentFormats.includes(fileExt);
+
+        if (!isImage && !isDocument) {
+            console.error('❌ Unsupported file format:', fileExt);
+            return Response.json({ 
+                error: 'Unsupported file format',
+                details: `File type .${fileExt} is not supported. Supported formats: ${[...imageFormats, ...documentFormats].join(', ')}`
+            }, { status: 400 });
+        }
+
+        console.log('✅ File type detected:', isImage ? 'IMAGE' : 'DOCUMENT');
+
         const prompt = `Extract ALL educational content from this document. Include every detail - text, questions, rubrics, criteria, and instructions. Be extremely thorough and preserve all information verbatim.`;
 
-        // Use file URL directly instead of base64 for PDFs
+        // Use document_url for documents (PDF, PPTX, DOCX) and image_url for images
+        const contentItem = isDocument ? {
+            type: 'document_url',
+            document_url: {
+                url: file_url
+            }
+        } : {
+            type: 'image_url',
+            image_url: {
+                url: file_url
+            }
+        };
+
         const requestBody = {
             model: 'pixtral-large-latest',
             messages: [
@@ -89,12 +123,7 @@ Deno.serve(async (req) => {
                             type: 'text',
                             text: prompt
                         },
-                        {
-                            type: 'image_url',
-                            image_url: {
-                                url: file_url
-                            }
-                        }
+                        contentItem
                     ]
                 }
             ]
