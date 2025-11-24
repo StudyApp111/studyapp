@@ -229,7 +229,7 @@ REQUIRED OUTPUT — Fill EVERY field with actual analysis based on the content a
    - max_score (number possible, use 100)
    - comments (text explaining the score)
 
-You MUST fill all 7 fields.  
+You MUST fill all 8 fields.  
 Do not return null.  
 Do not return empty arrays unless the assignment is literally blank.
 
