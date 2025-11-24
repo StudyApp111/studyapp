@@ -256,7 +256,7 @@ Output valid JSON matching the expected schema.`;
       const gradedAssignment = await base44.entities.GradedAssignment.create({
         course_name: courseName,
         assignment_title: assignmentTitle,
-        file_url: file_url,
+        file_url: assignmentUpload.file_url,
         extracted_content: extractedContent,
         assignment_rubric: rubric,
         grading_result: gradingResult,
