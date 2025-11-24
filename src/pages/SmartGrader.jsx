@@ -74,25 +74,15 @@ export default function SmartGrader() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file: assignmentFile });
 
       setProcessingStep("Extracting content from your assignment...");
-      const extractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
-        file_url: file_url,
-        json_schema: {
-          type: "object",
-          properties: {
-            full_text_content: {
-              type: "string",
-              description: "Complete extracted text from the document"
-            }
-          },
-          required: ["full_text_content"]
-        }
+      const extractResult = await base44.functions.invoke('extractDocumentContent', {
+        file_url: file_url
       });
 
-      if (extractResult.status === "error") {
-        throw new Error(extractResult.details || "Failed to extract content from document");
+      if (!extractResult || !extractResult.data) {
+        throw new Error("Failed to extract content from document");
       }
 
-      const extractedContent = extractResult.output?.full_text_content || "";
+      const extractedContent = extractResult.data.extracted_content || "";
 
       if (!extractedContent || extractedContent.length === 0) {
         throw new Error("Failed to extract content from document. The file might be empty or corrupted.");
@@ -102,156 +92,24 @@ export default function SmartGrader() {
         throw new Error("Extracted content is too short. Please ensure your file contains readable text.");
       }
 
-      const user = await base44.auth.me();
-      const profile = await base44.entities.LearningProfile.filter({
-        id: user.learning_profile_id
+      setProcessingStep("Processing your rubric file...");
+      
+      const { file_url: curriculumUrl } = await base44.integrations.Core.UploadFile({ file: curriculumFile });
+      
+      const curriculumExtractResult = await base44.functions.invoke('extractDocumentContent', {
+        file_url: curriculumUrl
       });
 
-      const learningProfile = profile[0] || {};
-
-      let rubric;
-
-      // Handle custom rubric file if provided
-      if (curriculumFile) {
-
-        setProcessingStep("Processing your rubric file...");
-        
-        const { file_url: curriculumUrl } = await base44.integrations.Core.UploadFile({ file: curriculumFile });
-        
-        const curriculumExtractResult = await base44.integrations.Core.ExtractDataFromUploadedFile({
-          file_url: curriculumUrl,
-          json_schema: {
-            type: "object",
-            properties: {
-              full_text_content: {
-                type: "string",
-                description: "Complete extracted text from the document"
-              }
-            },
-            required: ["full_text_content"]
-          }
-        });
-
-        if (curriculumExtractResult.status === "error") {
-          throw new Error("Failed to extract curriculum file: " + (curriculumExtractResult.details || "Unknown error"));
-        }
-
-        const customRubricText = curriculumExtractResult.output?.full_text_content || "";
-        
-        rubric = {
-          custom_rubric: customRubricText,
-          is_custom: true
-        };
-      } else {
-        setProcessingStep("Generating assignment rubric...");
-        const existingCurriculumMaps = await base44.entities.CurriculumMap.filter({
-          course_name: courseName.trim(),
-          school: learningProfile.school || "",
-          grade: learningProfile.grade || "",
-          source: "smart_grader"
-        });
-
-        if (existingCurriculumMaps.length > 0) {
-          rubric = existingCurriculumMaps[0].curriculum_data;
-        } else {
-          const rubricPrompt = `Objective:
-You are an expert curriculum designer and academic assessor. Generate an accurate, assignment-specific grading rubric aligned to real teacher evaluation practices for ${courseName} at the ${learningProfile.grade || "N/A"} level.
-
-Input Context:
-Student Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${courseName}
-School Context: ${learningProfile.school || "N/A"}
-Assignment Title/Type: ${assignmentTitle}
-Assignment Content: ${extractedContent}
-
-Task:
-Analyze the input to infer:
-- The type of assignment (essay, response, lab, coding project, report, etc.).
-- The core skills and competencies the assignment is intended to assess.
-- The criteria that a qualified teacher at ${learningProfile.school || 'the school'} would realistically use to grade it.
-
-Information Sourcing & Grounding Strategy (Internal – Do Not Output):
-- Begin with the provided assignment content to infer intent, structure, and domain.
-- Search and reference official or public curriculum guides, marking rubrics, and assignment exemplars related to ${courseName} for the given grade level.
-- If unavailable, use regionally relevant standards (for K–12, consult the school board or provincial/state education standards in ${learningProfile.city || 'the region'}; 
-  for university-level, use published course outlines or faculty rubrics for similar subjects).
-- Synthesize this information to create a rubric that mirrors how real instructors would assess this task.
-- Do not fabricate new grading criteria—ground them in verified or commonly used frameworks for this course type and level.
-
-Output Requirements:
-- Generate 3–6 grading criteria covering distinct, meaningful skill domains 
-  (e.g., Thesis/Argumentation, Evidence/Reasoning, Technical Accuracy, Clarity/Structure, Creativity/Originality).
-- For each criterion, include:
-  • criterion: concise title of the skill or domain being assessed.
-  • description: 1–2 sentences explaining what is evaluated.
-  • weight_percentage: relative importance, summing to 100%.
-  • performance_levels: four tiers labeled 'Excellent,' 'Good,' 'Developing,' and 'Needs Improvement,' 
-    each with 1–2 sentences describing performance at that level.
-- Ensure the rubric reflects grade-appropriate expectations and the authentic evaluation style of 
-  ${learningProfile.school || 'the school'} or its regional equivalent.
-- Use precise, readable, teacher-facing language.
-- The rubric must be realistic, balanced, and clearly tied to the input content and course context.
-
-Requirements:
-- Base analysis on the assignment content to detect the nature and objectives of the task.
-- Align all criteria with regional or institutional standards found online.
-- Prioritize pedagogical accuracy and curriculum alignment over verbosity.
-- Avoid filler criteria like 'effort' or 'participation.'
-- The weights must total 100%.
-- Produce a fully grounded, ready-to-use rubric.`;
-
-          const { data: generatedRubric } = await base44.functions.invoke('curriculumMapping', {
-            prompt: rubricPrompt,
-            response_json_schema: {
-              type: "object",
-              properties: {
-                rubric_criteria: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      criterion: { type: "string" },
-                      description: { type: "string" },
-                      weight_percentage: { type: "number" },
-                      performance_levels: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            level: { 
-                              type: "string",
-                              enum: ["Excellent", "Good", "Developing", "Needs Improvement"]
-                            },
-                            description: { type: "string" }
-                          },
-                          required: ["level", "description"]
-                        },
-                        minItems: 4,
-                        maxItems: 4
-                      }
-                    },
-                    required: ["criterion", "description", "weight_percentage", "performance_levels"]
-                  },
-                  minItems: 3,
-                  maxItems: 6
-                }
-              },
-              required: ["rubric_criteria"]
-            }
-          });
-
-          rubric = generatedRubric;
-
-          await base44.entities.CurriculumMap.create({
-            course_name: courseName.trim(),
-            school: learningProfile.school || "",
-            grade: learningProfile.grade || "",
-            city: learningProfile.city || "",
-            source: "smart_grader",
-            curriculum_data: rubric
-          });
-        }
+      if (!curriculumExtractResult || !curriculumExtractResult.data) {
+        throw new Error("Failed to extract rubric file");
       }
+
+      const customRubricText = curriculumExtractResult.data.extracted_content || "";
+      
+      const rubric = {
+        custom_rubric: customRubricText,
+        is_custom: true
+      };
 
       setProcessingStep("Grading your assignment (this takes 30-60 seconds)...");
 
