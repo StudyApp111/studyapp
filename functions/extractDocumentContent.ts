@@ -3,17 +3,38 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 Deno.serve(async (req) => {
     console.log('=== extractDocumentContent Function Start ===');
     
+    let base44, user, file_url;
+    
     try {
-        const base44 = createClientFromRequest(req);
-        const user = await base44.auth.me();
+        base44 = createClientFromRequest(req);
+        console.log('✅ Base44 client created');
+    } catch (error) {
+        console.error('❌ Failed to create Base44 client:', error.message);
+        return Response.json({ error: 'Failed to initialize client', details: error.message }, { status: 500 });
+    }
 
+    try {
+        user = await base44.auth.me();
         if (!user) {
             console.error('❌ Authentication failed - no user');
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
         console.log('✅ User authenticated:', user.email);
+    } catch (error) {
+        console.error('❌ Auth check failed:', error.message);
+        return Response.json({ error: 'Authentication error', details: error.message }, { status: 401 });
+    }
 
-        const { file_url } = await req.json();
+    try {
+        const body = await req.json();
+        file_url = body.file_url;
+        console.log('✅ Request body parsed, file_url:', file_url);
+    } catch (error) {
+        console.error('❌ Failed to parse request body:', error.message);
+        return Response.json({ error: 'Invalid request body', details: error.message }, { status: 400 });
+    }
+
+    try {
 
         if (!file_url) {
             console.error('❌ Missing file_url in request');
