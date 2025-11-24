@@ -159,7 +159,9 @@ Be extremely thorough - this content will be used to create personalized study m
                         },
                         {
                             type: 'image_url',
-                            image_url: `data:${mediaType};base64,${base64Data}`
+                            image_url: {
+                                url: `data:${mediaType};base64,${base64Data}`
+                            }
                         }
                     ]
                 }
