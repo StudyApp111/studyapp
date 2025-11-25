@@ -64,26 +64,40 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json();
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        // Find text content from grounded response
+        let generatedText = null;
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        for (const part of parts) {
+            if (part.text) {
+                generatedText = part.text;
+                break;
+            }
+        }
         
         if (!generatedText) {
+            console.error('No content:', JSON.stringify(data));
             return Response.json({ 
                 error: 'No content generated' 
             }, { status: 500 });
         }
 
-        if (response_json_schema) {
-            try {
-                const parsedResponse = JSON.parse(generatedText);
-                return Response.json(parsedResponse);
-            } catch (parseError) {
-                return Response.json({ 
-                    error: 'Failed to process response' 
-                }, { status: 500 });
-            }
+        // Extract JSON from response (may have markdown code blocks)
+        let jsonStr = generatedText;
+        const jsonMatch = generatedText.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) {
+            jsonStr = jsonMatch[1].trim();
         }
 
-        return Response.json({ text: generatedText });
+        try {
+            const parsedResponse = JSON.parse(jsonStr);
+            return Response.json(parsedResponse);
+        } catch (parseError) {
+            console.error('Parse error:', parseError.message, 'Raw:', generatedText.substring(0, 500));
+            return Response.json({ 
+                error: 'Failed to process response' 
+            }, { status: 500 });
+        }
 
     } catch (error) {
         return Response.json({ 
