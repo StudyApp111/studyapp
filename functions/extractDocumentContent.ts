@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
         };
 
         const requestBody = {
-            model: 'pixtral-large-latest',
+            model: 'pixtral-12b-2409',
             messages: [
                 {
                     role: 'user',
