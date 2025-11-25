@@ -20,10 +20,12 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
+        // Google Search grounding cannot be combined with JSON response mode
+        // So we request grounded content and ask for JSON in the prompt
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: prompt
+                    text: prompt + "\n\nIMPORTANT: Return ONLY a valid JSON object with no markdown formatting, no code blocks, no extra text."
                 }]
             }],
             generationConfig: {
@@ -36,13 +38,11 @@ Deno.serve(async (req) => {
                 { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE" },
                 { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
                 { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_LOW_AND_ABOVE" }
-            ]
+            ],
+            tools: [{
+                googleSearch: {}
+            }]
         };
-
-        if (response_json_schema) {
-            requestBody.generationConfig.responseMimeType = "application/json";
-            requestBody.generationConfig.responseSchema = response_json_schema;
-        }
 
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -56,32 +56,51 @@ Deno.serve(async (req) => {
         );
 
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Gemini API error:', response.status, errorText);
             return Response.json({ 
-                error: 'Failed to generate content' 
+                error: 'Failed to generate content',
+                details: errorText
             }, { status: 500 });
         }
 
         const data = await response.json();
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        // Find text content from grounded response (may be in different parts)
+        let generatedText = null;
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        for (const part of parts) {
+            if (part.text) {
+                generatedText = part.text;
+                break;
+            }
+        }
         
         if (!generatedText) {
+            console.error('No content in response:', JSON.stringify(data));
             return Response.json({ 
                 error: 'No content generated' 
             }, { status: 500 });
         }
 
-        if (response_json_schema) {
-            try {
-                const parsedResponse = JSON.parse(generatedText);
-                return Response.json(parsedResponse);
-            } catch (parseError) {
-                return Response.json({ 
-                    error: 'Failed to process response' 
-                }, { status: 500 });
-            }
+        // Extract JSON - handle markdown code blocks if present
+        let jsonStr = generatedText.trim();
+        const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) {
+            jsonStr = jsonMatch[1].trim();
         }
 
-        return Response.json({ text: generatedText });
+        try {
+            const parsedResponse = JSON.parse(jsonStr);
+            return Response.json(parsedResponse);
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError.message);
+            console.error('Raw text:', generatedText.substring(0, 1000));
+            return Response.json({ 
+                error: 'Failed to parse response as JSON',
+                raw: generatedText.substring(0, 500)
+            }, { status: 500 });
+        }
 
     } catch (error) {
         return Response.json({ 
