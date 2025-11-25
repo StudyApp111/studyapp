@@ -36,10 +36,7 @@ Deno.serve(async (req) => {
                 { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE" },
                 { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
                 { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_LOW_AND_ABOVE" }
-            ],
-            tools: [{
-                googleSearch: {}
-            }]
+            ]
         };
 
         if (response_json_schema) {
