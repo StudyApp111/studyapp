@@ -18,9 +18,7 @@ Deno.serve(async (req) => {
         const result = await base44.integrations.Core.InvokeLLM({
             prompt: prompt,
             response_json_schema: response_json_schema,
-            add_context_from_internet: false,
-            model: "gemini-2.5-flash",
-            temperature: 0.2
+            add_context_from_internet: true
         });
 
         return Response.json(result);
