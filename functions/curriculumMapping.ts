@@ -15,21 +15,61 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
-        console.log('=== CURRICULUM MAPPING ===');
+        const apiKey = Deno.env.get("API_KEY");
+        if (!apiKey) {
+            return Response.json({ error: 'Gemini API key not configured' }, { status: 500 });
+        }
+
+        console.log('=== CURRICULUM MAPPING WITH GEMINI ===');
         console.log('Prompt length:', prompt.length);
-        console.log('Prompt preview (first 500 chars):', prompt.substring(0, 500));
 
-        // CRITICAL: Do NOT use add_context_from_internet as it pollutes the response
-        // with irrelevant web search results that override the actual curriculum content.
-        // The prompt already contains all the extracted content from the uploaded document.
-        const result = await base44.integrations.Core.InvokeLLM({
-            prompt: prompt,
-            response_json_schema: response_json_schema,
-            add_context_from_internet: false
-        });
+        // Use Gemini 2.5 Flash with Google Search grounding
+        const requestBody = {
+            contents: [{
+                parts: [{
+                    text: prompt
+                }]
+            }],
+            generationConfig: {
+                temperature: 0.2,
+                responseMimeType: "application/json",
+                responseSchema: response_json_schema
+            },
+            tools: [{
+                google_search: {}
+            }]
+        };
 
-        console.log('Result preview:', JSON.stringify(result).substring(0, 500));
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            }
+        );
 
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Gemini API error:', errorText);
+            return Response.json({ 
+                error: 'Gemini API request failed',
+                details: errorText
+            }, { status: 500 });
+        }
+
+        const data = await response.json();
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!content) {
+            console.error('No content in Gemini response:', JSON.stringify(data));
+            return Response.json({ error: 'No content from Gemini' }, { status: 500 });
+        }
+
+        console.log('Result preview:', content.substring(0, 500));
+
+        // Parse the JSON response
+        const result = JSON.parse(content);
         return Response.json(result);
 
     } catch (error) {
