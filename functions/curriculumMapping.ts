@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
                 responseSchema: response_json_schema
             },
             tools: [{
-                google_search: {}
+                googleSearch: {}
             }]
         };
 
@@ -59,7 +59,19 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json();
-        const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        // Handle grounding - content might be in different places
+        let content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        // If no text part, check if there's grounded content
+        if (!content && data.candidates?.[0]?.content?.parts) {
+            for (const part of data.candidates[0].content.parts) {
+                if (part.text) {
+                    content = part.text;
+                    break;
+                }
+            }
+        }
 
         if (!content) {
             console.error('No content in Gemini response:', JSON.stringify(data));
