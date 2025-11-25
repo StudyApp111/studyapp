@@ -109,9 +109,9 @@ Deno.serve(async (req) => {
             image_url: file_url  // Direct string for images
         };
 
-        // Use smaller, faster Mistral model for OCR
+        // Use pixtral for vision/document understanding (mistral-small doesn't support vision)
         const requestBody = {
-            model: 'mistral-small-latest',
+            model: 'pixtral-12b-2409',
             messages: [
                 {
                     role: 'user',
