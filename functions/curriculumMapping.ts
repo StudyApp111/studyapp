@@ -15,17 +15,26 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
+        console.log('=== CURRICULUM MAPPING DEBUG ===');
+        console.log('Prompt length:', prompt.length);
+        console.log('Prompt preview (first 500 chars):', prompt.substring(0, 500));
+        console.log('Prompt preview (last 500 chars):', prompt.substring(prompt.length - 500));
+
         const result = await base44.integrations.Core.InvokeLLM({
             prompt: prompt,
             response_json_schema: response_json_schema,
             add_context_from_internet: true
         });
 
+        console.log('LLM Result preview:', JSON.stringify(result).substring(0, 500));
+
         return Response.json(result);
 
     } catch (error) {
+        console.error('Curriculum mapping error:', error);
         return Response.json({ 
-            error: 'Internal server error'
+            error: 'Internal server error',
+            details: error.message
         }, { status: 500 });
     }
 });
