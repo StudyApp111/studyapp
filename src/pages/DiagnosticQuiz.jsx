@@ -279,7 +279,10 @@ Provide your response as a single, valid JSON object with the following structur
     );
   }
 
-  if (!quiz) return null;
+  if (!quiz || !quiz.questions || quiz.questions.length === 0) return null;
+
+  const currentQ = quiz.questions[currentQuestion];
+  if (!currentQ) return null;
 
   const progress = ((currentQuestion + 1) / quiz.questions.length) * 100;
   const currentMetadata = questionMetadata[currentQuestion] || {};
