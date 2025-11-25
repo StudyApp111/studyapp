@@ -9,35 +9,65 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { prompt, response_json_schema } = await req.json();
+        const { prompt, response_json_schema, extracted_content, course_name, school, grade, city } = await req.json();
 
         if (!prompt) {
             return Response.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
-        // For large content, we need a two-step approach:
-        // 1. First analyze the user content directly (no web search to avoid interference)
-        // 2. Then enhance with web context using the extracted topics
-
         console.log('=== CURRICULUM MAPPING DEBUG ===');
         console.log('Prompt length:', prompt.length);
-
-        // Extract course info for targeted web search
-        const courseMatch = prompt.match(/Course\/Unit Name:\s*([^\n]+)/);
-        const schoolMatch = prompt.match(/School Context:\s*([^\n]+)/);
-        const gradeMatch = prompt.match(/Student Grade Level:\s*([^\n]+)/);
+        console.log('Course:', course_name, 'School:', school, 'Grade:', grade);
         
-        const courseName = courseMatch?.[1]?.trim() || '';
-        const school = schoolMatch?.[1]?.trim() || '';
-        const grade = gradeMatch?.[1]?.trim() || '';
+        // Two-step approach for reliability:
+        // Step 1: Analyze the user's uploaded content directly (this is the PRIMARY source)
+        console.log('Step 1: Analyzing user content...');
+        
+        const contentAnalysisPrompt = `You are analyzing educational content provided by a student for ${course_name} at ${school || 'their school'}.
 
-        console.log('Extracted - Course:', courseName, 'School:', school, 'Grade:', grade);
+STUDENT'S UPLOADED CONTENT (THIS IS YOUR PRIMARY SOURCE - ANALYZE THIS THOROUGHLY):
+---BEGIN CONTENT---
+${extracted_content || ''}
+---END CONTENT---
 
-        // Step 1: Analyze user content directly WITHOUT web search
-        const result = await base44.integrations.Core.InvokeLLM({
-            prompt: prompt,
-            response_json_schema: response_json_schema,
+Based on the above content, identify:
+1. The main topics and concepts covered
+2. Key terminology and vocabulary used
+3. Any learning objectives mentioned or implied
+4. Important figures, authors, or theorists referenced
+5. Assessment types or question formats mentioned
+
+Provide a detailed analysis focusing ONLY on what is in the student's content above.`;
+
+        const contentAnalysis = await base44.integrations.Core.InvokeLLM({
+            prompt: contentAnalysisPrompt,
             add_context_from_internet: false
+        });
+
+        console.log('Content analysis done, length:', String(contentAnalysis).length);
+
+        // Step 2: Now do web search for curriculum standards, but CONSTRAINED by what we found
+        console.log('Step 2: Enhancing with curriculum standards...');
+        
+        const enhancedPrompt = `${prompt}
+
+CRITICAL INSTRUCTION: The student has provided their own course materials. Your analysis MUST be grounded in their content.
+
+Here is what we found in the student's uploaded materials:
+${contentAnalysis}
+
+Your curriculum profile MUST reflect the topics, terminology, and focus areas from the student's materials above.
+Use web search ONLY to:
+1. Find official curriculum standards for ${course_name} at ${school || grade + ' level'} to validate competency weightings
+2. Identify standard assessment formats for this type of course
+3. Find common misconceptions related to the specific topics in the student's materials
+
+DO NOT generate a generic curriculum. Every competency, focal point, and misconception must relate to what's in the student's uploaded content.`;
+
+        const result = await base44.integrations.Core.InvokeLLM({
+            prompt: enhancedPrompt,
+            response_json_schema: response_json_schema,
+            add_context_from_internet: true
         });
 
         console.log('LLM Result preview:', JSON.stringify(result).substring(0, 500));
