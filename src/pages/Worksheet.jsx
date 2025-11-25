@@ -297,7 +297,7 @@ ${contentDescription}
   "General Construction Rules": [
     "Allowed question_type values: 'Multiple Choice', 'Short Answer', 'Structured Response'.",
     "Before writing each question, decide question_type based on curriculum_map.question_formats and the reasoning demand.",
-    "Hard constraint 1: If the stem contains MCQ cues like 'Which of the following', 'Which statement', 'Select', 'is/are true about', 'Identify the correct', you MUST set question_type = 'Multiple Choice' and generate exactly four options A–D.",
+    "Hard constraint 1: If the stem contains MCQ cues like 'Which of the following', 'Which statement', 'Select', 'is/are true about', 'Identify the correct', you MUST set question_type = 'Multiple Choice' and generate EXACTLY four options A–D.",
     "Hard constraint 2: If question_type = 'Multiple Choice', options MUST contain four distinct, plausible choices (A–D).",
     "Hard constraint 3: If question_type ≠ 'Multiple Choice', the stem MUST NOT use MCQ cue phrases and options MUST be []. Write these as direct prompts for a word, number, explanation, or worked solution.",
     "Use clear, grade-appropriate language for ${learningProfile.grade}.",
