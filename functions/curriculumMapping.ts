@@ -17,11 +17,15 @@ Deno.serve(async (req) => {
 
         console.log('=== CURRICULUM MAPPING ===');
         console.log('Prompt length:', prompt.length);
+        console.log('Prompt preview (first 500 chars):', prompt.substring(0, 500));
 
+        // CRITICAL: Do NOT use add_context_from_internet as it pollutes the response
+        // with irrelevant web search results that override the actual curriculum content.
+        // The prompt already contains all the extracted content from the uploaded document.
         const result = await base44.integrations.Core.InvokeLLM({
             prompt: prompt,
             response_json_schema: response_json_schema,
-            add_context_from_internet: true
+            add_context_from_internet: false
         });
 
         console.log('Result preview:', JSON.stringify(result).substring(0, 500));
