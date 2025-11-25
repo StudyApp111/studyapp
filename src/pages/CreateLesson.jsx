@@ -266,7 +266,12 @@ Output Format: JSON object matching the specified schema`;
 
       const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
         prompt: curriculumPrompt,
-        response_json_schema: curriculumResponseJsonSchema
+        response_json_schema: curriculumResponseJsonSchema,
+        extracted_content: extractedContent,
+        course_name: courseName,
+        school: learningProfile.school || "",
+        grade: learningProfile.grade || "",
+        city: learningProfile.city || ""
       });
 
       const curriculumMap = generatedMap;
