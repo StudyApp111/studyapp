@@ -20,10 +20,12 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        const requestBody = {
+        // Google Search grounding cannot be used with JSON response mode
+        // Use two-step: first get grounded info, then format as JSON
+        const groundedRequestBody = {
             contents: [{
                 parts: [{
-                    text: prompt
+                    text: prompt + "\n\nProvide your response as a valid JSON object."
                 }]
             }],
             generationConfig: {
@@ -32,20 +34,17 @@ Deno.serve(async (req) => {
                 maxOutputTokens: 8192
             },
             safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_LOW_AND_ABOVE" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_LOW_AND_ABOVE" }
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
             ],
             tools: [{
-                googleSearch: {}
+                google_search: {}
             }]
         };
 
-        if (response_json_schema) {
-            requestBody.generationConfig.responseMimeType = "application/json";
-            requestBody.generationConfig.responseSchema = response_json_schema;
-        }
+        const requestBody = groundedRequestBody;
 
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
