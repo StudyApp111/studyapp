@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
                 }]
             }],
             generationConfig: {
-                temperature: 0.2,
+                temperature: 0.1,
                 topP: 0.95,
                 maxOutputTokens: 8192
             },
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
         if (!response.ok) {
             return Response.json({ 
                 error: 'Failed to generate content' 
-            }, { status: 500 });
+            }, { status: 501 });
         }
 
         const data = await response.json();
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
         if (!generatedText) {
             return Response.json({ 
                 error: 'No content generated' 
-            }, { status: 500 });
+            }, { status: 502 });
         }
 
         if (response_json_schema) {
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
             } catch (parseError) {
                 return Response.json({ 
                     error: 'Failed to process response' 
-                }, { status: 500 });
+                }, { status: 503 });
             }
         }
 
@@ -86,6 +86,6 @@ Deno.serve(async (req) => {
     } catch (error) {
         return Response.json({ 
             error: 'Internal server error' 
-        }, { status: 500 });
+        }, { status: 504 });
     }
 });
