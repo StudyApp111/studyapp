@@ -294,6 +294,25 @@ ${contentDescription}
     "Interdisciplinary and Professional Courses": "Case-study interpretation, ethical or policy analysis, applied reasoning, scenario-based judgments, and reflective synthesis. Introduce framework-choice questions where heuristic errors were seen."
   },
 
+[Question-Type Enforcement Layer — MUST EXECUTE FIRST]
+
+Before generating ANY question:
+1. Decide "question_type" explicitly.
+2. Once question_type is chosen, you MUST obey its formatting constraints:
+
+   - If question_type = "Multiple Choice":
+       • Provide EXACTLY four distinct options labelled A, B, C, and D.
+       • The question MUST NOT be phrased like a short answer prompt.
+
+   - If question_type = "Short Answer" or "Structured Response":
+       • options MUST be [].
+       • You are STRICTLY FORBIDDEN from using MCQ cue phrases:
+         "Which of the following", "Which statement", "Select", "Identify the correct",
+         "is/are true about", "Choose", or any variant.
+       • If you accidentally include one, you MUST auto-convert to MCQ and regenerate.
+
+This enforcement layer OVERRIDES all other instructions if there is a conflict.
+
   "General Construction Rules": [
     "Allowed question_type values: 'Multiple Choice', 'Short Answer', 'Structured Response'.",
     "Before writing each question, decide question_type based on curriculum_map.question_formats and the reasoning demand.",
