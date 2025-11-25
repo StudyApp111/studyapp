@@ -17,13 +17,9 @@ Deno.serve(async (req) => {
 
         const apiKey = Deno.env.get("API_KEY");
         if (!apiKey) {
-            return Response.json({ error: 'Gemini API key not configured' }, { status: 500 });
+            return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        console.log('=== CURRICULUM MAPPING WITH GEMINI ===');
-        console.log('Prompt length:', prompt.length);
-
-        // Use Gemini 2.5 Flash with Google Search grounding
         const requestBody = {
             contents: [{
                 parts: [{
@@ -32,63 +28,67 @@ Deno.serve(async (req) => {
             }],
             generationConfig: {
                 temperature: 0.2,
-                responseMimeType: "application/json",
-                responseSchema: response_json_schema
+                topP: 0.95,
+                maxOutputTokens: 8192
             },
+            safetySettings: [
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_LOW_AND_ABOVE" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_LOW_AND_ABOVE" }
+            ],
             tools: [{
                 googleSearch: {}
             }]
         };
 
+        if (response_json_schema) {
+            requestBody.generationConfig.responseMimeType = "application/json";
+            requestBody.generationConfig.responseSchema = response_json_schema;
+        }
+
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify(requestBody)
             }
         );
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Gemini API error:', errorText);
             return Response.json({ 
-                error: 'Gemini API request failed',
-                details: errorText
+                error: 'Failed to generate content' 
             }, { status: 500 });
         }
 
         const data = await response.json();
+        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
-        // Handle grounding - content might be in different places
-        let content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        // If no text part, check if there's grounded content
-        if (!content && data.candidates?.[0]?.content?.parts) {
-            for (const part of data.candidates[0].content.parts) {
-                if (part.text) {
-                    content = part.text;
-                    break;
-                }
+        if (!generatedText) {
+            return Response.json({ 
+                error: 'No content generated' 
+            }, { status: 500 });
+        }
+
+        if (response_json_schema) {
+            try {
+                const parsedResponse = JSON.parse(generatedText);
+                return Response.json(parsedResponse);
+            } catch (parseError) {
+                return Response.json({ 
+                    error: 'Failed to process response' 
+                }, { status: 500 });
             }
         }
 
-        if (!content) {
-            console.error('No content in Gemini response:', JSON.stringify(data));
-            return Response.json({ error: 'No content from Gemini' }, { status: 500 });
-        }
-
-        console.log('Result preview:', content.substring(0, 500));
-
-        // Parse the JSON response
-        const result = JSON.parse(content);
-        return Response.json(result);
+        return Response.json({ text: generatedText });
 
     } catch (error) {
-        console.error('Curriculum mapping error:', error);
         return Response.json({ 
-            error: 'Internal server error',
-            details: error.message
+            error: 'Internal server error' 
         }, { status: 500 });
     }
 });
