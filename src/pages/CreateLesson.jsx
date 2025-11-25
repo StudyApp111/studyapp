@@ -269,7 +269,28 @@ Output Format: JSON object matching the specified schema`;
         response_json_schema: curriculumResponseJsonSchema
       });
 
-      const curriculumMap = generatedMap;
+      // Normalize the response to ensure all fields are correct types
+      const curriculumMap = {
+        core_competencies: (generatedMap.core_competencies || []).map(c => ({
+          name: String(c?.name || ""),
+          description: String(c?.description || "")
+        })),
+        competency_weightings: (generatedMap.competency_weightings || []).map(w => ({
+          competency_name: String(w?.competency_name || ""),
+          weight_percentage: String(w?.weight_percentage || "0%")
+        })),
+        question_formats: (generatedMap.question_formats || []).map(q => ({
+          type: String(q?.type || ""),
+          frequency: String(q?.frequency || ""),
+          examples: (q?.examples || []).map(e => String(e || ""))
+        })),
+        high_yield_focal_points: (generatedMap.high_yield_focal_points || []).map(p => 
+          typeof p === 'object' ? String(p?.name || p?.topic || p?.description || JSON.stringify(p)) : String(p || "")
+        ),
+        common_misconceptions: (generatedMap.common_misconceptions || []).map(m => 
+          typeof m === 'object' ? String(m?.misconception || m?.description || m?.name || JSON.stringify(m)) : String(m || "")
+        )
+      };
 
       // Save the new curriculum map
       await base44.entities.CurriculumMap.create({
