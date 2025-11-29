@@ -38,6 +38,8 @@ export default function Worksheet() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfetti, setShowConfetti] = React.useState(false);
   const [newBadges, setNewBadges] = React.useState([]);
+  const gradingTimeoutRef = useRef(null);
+  const [gradingInProgress, setGradingInProgress] = useState({});
   
   // Timer state
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -606,6 +608,70 @@ Output Format: Valid JSON object matching the schema.`;
            type.includes("multi-step");
   };
 
+  const gradeSubjectiveQuestion = async (question, questionIndex) => {
+    if (!question.user_answer || question.user_answer.trim() === "") {
+      return;
+    }
+
+    try {
+      setGradingInProgress(prev => ({ ...prev, [questionIndex]: true }));
+
+      const profile = await base44.entities.LearningProfile.filter({ 
+        id: (await base44.auth.me()).learning_profile_id 
+      });
+      const learningProfile = profile[0] || {};
+
+      const { data: gradingResult } = await base44.functions.invoke('gradeShortAnswer', {
+        question_text: question.question_text,
+        question_type: question.question_type,
+        difficulty_index: question.difficulty_index,
+        correct_answer: question.correct_answer,
+        explanation: question.explanation,
+        assessed_competencies: question.assessed_competencies,
+        targeted_misconception: question.targeted_misconception,
+        student_answer: question.user_answer,
+        student_grade_level: learningProfile.grade || "N/A",
+        course_name: lesson.course_name
+      });
+
+      const updatedQuestions = [...worksheet.questions];
+      updatedQuestions[questionIndex] = {
+        ...updatedQuestions[questionIndex],
+        ai_score_out_of_10: gradingResult.score_out_of_10,
+        ai_verdict: gradingResult.verdict,
+        ai_rationale_short: gradingResult.rationale_short,
+        ai_keypoints_hit: gradingResult.keypoints_hit,
+        ai_keypoints_missed: gradingResult.keypoints_missed,
+        ai_misconception_detected: gradingResult.misconception_detected,
+        ai_grading_pending: false
+      };
+      
+      if (JSON.stringify(worksheet.questions) !== JSON.stringify(updatedQuestions)) {
+        await base44.entities.Worksheet.update(worksheet.id, {
+          questions: updatedQuestions
+        });
+      }
+
+      setWorksheet(prev => ({
+        ...prev,
+        questions: updatedQuestions
+      }));
+
+      setGradingInProgress(prev => ({ ...prev, [questionIndex]: false }));
+    } catch (error) {
+      console.error("Error grading question:", error);
+      setGradingInProgress(prev => ({ ...prev, [questionIndex]: false }));
+      const updatedQuestions = [...worksheet.questions];
+      if (updatedQuestions[questionIndex]) {
+        updatedQuestions[questionIndex].ai_grading_pending = false;
+        setWorksheet(prev => ({
+          ...prev,
+          questions: updatedQuestions
+        }));
+      }
+    }
+  };
+
   const handleAnswer = (answer) => {
     const updatedQuestions = [...worksheet.questions];
     updatedQuestions[currentQuestion].user_answer = answer;
@@ -615,6 +681,22 @@ Output Format: Valid JSON object matching the schema.`;
       ...prev,
       questions: updatedQuestions
     }));
+
+    if (gradingTimeoutRef.current) {
+      clearTimeout(gradingTimeoutRef.current);
+    }
+
+    if (isSubjectiveQuestion(updatedQuestions[currentQuestion].question_type)) {
+      updatedQuestions[currentQuestion].ai_grading_pending = true;
+      setWorksheet(prev => ({
+        ...prev,
+        questions: updatedQuestions
+      }));
+      
+      gradingTimeoutRef.current = setTimeout(() => {
+        gradeSubjectiveQuestion(updatedQuestions[currentQuestion], currentQuestion);
+      }, 2000);
+    }
   };
 
   const handleNext = () => {
@@ -624,6 +706,14 @@ Output Format: Valid JSON object matching the schema.`;
     recordQuestionTime(currentQuestion);
     
     if (currentQuestion < worksheet.questions.length - 1) {
+      if (gradingTimeoutRef.current) {
+        clearTimeout(gradingTimeoutRef.current);
+        const currentQ = worksheet.questions[currentQuestion];
+        if (isSubjectiveQuestion(currentQ.question_type) && currentQ.user_answer) {
+          gradeSubjectiveQuestion(currentQ, currentQuestion);
+        }
+      }
+      
       // Reset timer for next question
       currentQuestionStartTimeRef.current = Date.now();
       setCurrentQuestion(prev => prev + 1);
@@ -666,42 +756,7 @@ Output Format: Valid JSON object matching the schema.`;
       });
       const learningProfile = profile[0] || {};
 
-      // Grade subjective questions in parallel
-      const gradedQuestions = await Promise.all(worksheet.questions.map(async (q) => {
-        if (isSubjectiveQuestion(q.question_type) && q.user_answer && q.user_answer.trim() !== "") {
-          try {
-            const { data: gradingResult } = await base44.functions.invoke('gradeShortAnswer', {
-              question_text: q.question_text,
-              question_type: q.question_type,
-              difficulty_index: q.difficulty_index,
-              correct_answer: q.correct_answer,
-              explanation: q.explanation,
-              assessed_competencies: q.assessed_competencies,
-              targeted_misconception: q.targeted_misconception,
-              student_answer: q.user_answer,
-              student_grade_level: learningProfile.grade || "N/A",
-              course_name: lesson.course_name
-            });
-
-            return {
-              ...q,
-              ai_score_out_of_10: gradingResult.score_out_of_10,
-              ai_verdict: gradingResult.verdict,
-              ai_rationale_short: gradingResult.rationale_short,
-              ai_keypoints_hit: gradingResult.keypoints_hit,
-              ai_keypoints_missed: gradingResult.keypoints_missed,
-              ai_misconception_detected: gradingResult.misconception_detected,
-              ai_grading_pending: false
-            };
-          } catch (error) {
-            console.error("Error grading question:", error);
-            return q; // Fallback to original question if grading fails
-          }
-        }
-        return q;
-      }));
-
-      const questionsWithGrading = gradedQuestions.map((q) => {
+      const questionsWithGrading = worksheet.questions.map((q) => {
         const questionType = q.question_type.toLowerCase();
         
         if (questionType.includes("multiple choice") || 
