@@ -73,11 +73,11 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
 
     if (questionType.includes("short answer") || questionType.includes("fill")) {
       return (
-        <Input
+        <Textarea
           value={answer}
           onChange={(e) => handleAnswerChange(e.target.value)}
           placeholder="Type your answer here..."
-          className="text-base p-4"
+          className="min-h-[200px] text-base p-4"
         />
       );
     }
