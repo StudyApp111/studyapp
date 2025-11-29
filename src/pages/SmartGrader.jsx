@@ -22,8 +22,8 @@ export default function SmartGrader() {
   const handleAssignmentFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      if (selectedFile.size > 50 * 1024 * 1024) {
-        setError("File is too large. Please upload files smaller than 50MB.");
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setError("File is too large. Please upload files smaller than 5MB.");
         setAssignmentFile(null);
         e.target.value = '';
         return;
@@ -36,8 +36,8 @@ export default function SmartGrader() {
   const handleCurriculumFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        setError("Curriculum file is too large. Please upload files smaller than 10MB.");
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setError("Curriculum file is too large. Please upload files smaller than 5MB.");
         setCurriculumFile(null);
         e.target.value = '';
         return;
@@ -446,7 +446,7 @@ Output valid JSON matching the expected schema.`;
                   type="file"
                   onChange={handleAssignmentFileChange}
                   disabled={isProcessing}
-                  accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
                 />
                 {assignmentFile && (
                   <div className="flex items-center gap-2 text-sm text-emerald-600">
@@ -466,7 +466,7 @@ Output valid JSON matching the expected schema.`;
                   type="file"
                   onChange={handleCurriculumFileChange}
                   disabled={isProcessing}
-                  accept=".pdf,.doc,.docx,.txt"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
                 />
                 {curriculumFile && (
                   <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg p-2">

@@ -48,9 +48,9 @@ export default function CreateLesson() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      // Check file size (50MB limit)
-      if (selectedFile.size > 50 * 1024 * 1024) {
-        setError("File is too large. Please upload files smaller than 50MB.");
+      // Check file size (5MB limit)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setError("File is too large. Please upload files smaller than 5MB.");
         setFile(null);
         e.target.value = '';
         return;
@@ -432,7 +432,7 @@ Output Format: JSON object matching the specified schema`;
                       <Upload className="w-5 h-5 text-purple-600" />
                       <div>
                         <p className="font-medium">Upload a File</p>
-                        <p className="text-xs text-slate-500">PDF, Word, Images - Max 50MB</p>
+                        <p className="text-xs text-slate-500">PDF, PPT, Word, Images - Max 5MB</p>
                       </div>
                     </Label>
                   </div>
@@ -466,7 +466,7 @@ Output Format: JSON object matching the specified schema`;
                       onChange={handleFileChange}
                       disabled={isProcessing}
                       className="text-base"
-                      accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
                     />
                   </div>
                   {file && (

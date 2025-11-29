@@ -69,10 +69,10 @@ Deno.serve(async (req) => {
         const fileSize = fileBlob.size;
         console.log('📊 File size:', fileSize, 'bytes');
 
-        if (fileSize > 50 * 1024 * 1024) {
+        if (fileSize > 5 * 1024 * 1024) {
             console.error('❌ File too large:', fileSize);
             return Response.json({ 
-                error: 'File too large. Please upload files smaller than 50MB.' 
+                error: 'File too large. Please upload files smaller than 5MB.' 
             }, { status: 400 });
         }
 
