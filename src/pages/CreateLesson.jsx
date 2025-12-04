@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, History } from "lucide-react";
+import FriendlyLoadingMessage from "@/components/ui/FriendlyLoadingMessage";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
@@ -378,12 +379,15 @@ Output Format: JSON object matching the specified schema`;
               )}
 
               {processingStep && (
-                <Alert className="bg-purple-50 border-purple-200">
-                  <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                  <AlertDescription className="text-purple-900 ml-2">
-                    {processingStep}
-                  </AlertDescription>
-                </Alert>
+                <div className="space-y-4">
+                  <Alert className="bg-purple-50 border-purple-200">
+                    <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                    <AlertDescription className="text-purple-900 ml-2">
+                      {processingStep}
+                    </AlertDescription>
+                  </Alert>
+                  <FriendlyLoadingMessage />
+                </div>
               )}
 
               <div className="space-y-2">

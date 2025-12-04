@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import MathText from "../components/math/MathText";
+import FriendlyLoadingMessage from "@/components/ui/FriendlyLoadingMessage";
 
 const formatTime = (seconds) => {
   if (!seconds) return '0s';
@@ -189,8 +190,9 @@ export default function Feedback() {
 
   if (isLoading || !worksheet) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40">
         <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+        <FriendlyLoadingMessage />
       </div>
     );
   }

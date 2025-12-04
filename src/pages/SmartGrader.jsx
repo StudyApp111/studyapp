@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, CheckCircle2, Code2, Calculator, Microscope, FileEdit } from "lucide-react";
+import FriendlyLoadingMessage from "@/components/ui/FriendlyLoadingMessage";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
@@ -407,12 +408,15 @@ Output valid JSON matching the expected schema.`;
               )}
 
               {processingStep && (
-                <Alert className="bg-purple-50 border-purple-200">
-                  <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                  <AlertDescription className="text-purple-900 ml-2">
-                    {processingStep}
-                  </AlertDescription>
-                </Alert>
+                <div className="space-y-4">
+                  <Alert className="bg-purple-50 border-purple-200">
+                    <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                    <AlertDescription className="text-purple-900 ml-2">
+                      {processingStep}
+                    </AlertDescription>
+                  </Alert>
+                  <FriendlyLoadingMessage />
+                </div>
               )}
 
               <div className="grid md:grid-cols-2 gap-4">

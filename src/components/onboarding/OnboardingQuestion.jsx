@@ -28,7 +28,7 @@ export default function OnboardingQuestion({ question, value, onChange }) {
       return (
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-slate-900">{question.question}</h2>
-          <ScrollArea className="h-[400px] pr-4">
+          <ScrollArea className="h-[50vh] max-h-[400px] pr-4">
             <RadioGroup value={value} onValueChange={onChange} className="space-y-6">
               {gradeGroups.map((group, groupIdx) => (
                 <div key={groupIdx} className="space-y-3">

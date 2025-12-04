@@ -10,6 +10,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 import { Sparkles } from "lucide-react";
+import FriendlyLoadingMessage from "@/components/ui/FriendlyLoadingMessage";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -1251,6 +1252,7 @@ Output Format: Valid JSON matching the required schema.`;
               : "Creating a personalized exam based on your diagnostic results..."}
           </p>
           <Loader2 className="w-6 h-6 md:w-8 md:h-8 mx-auto animate-spin text-purple-600" />
+          <FriendlyLoadingMessage />
         </Card>
       </div>
     );

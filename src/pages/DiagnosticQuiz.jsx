@@ -9,6 +9,7 @@ import { Loader2, Brain } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import QuizQuestion from "../components/quiz/QuizQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
+import FriendlyLoadingMessage from "@/components/ui/FriendlyLoadingMessage";
 
 export default function DiagnosticQuiz() {
   const navigate = useNavigate();
@@ -274,6 +275,7 @@ Provide your response as a single, valid JSON object with the following structur
               : "Our AI is analyzing the curriculum and creating personalized questions..."}
           </p>
           <Loader2 className="w-6 h-6 md:w-8 md:h-8 mx-auto animate-spin text-purple-600" />
+          <FriendlyLoadingMessage />
         </Card>
       </div>
     );
