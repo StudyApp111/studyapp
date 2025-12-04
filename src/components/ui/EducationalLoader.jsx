@@ -69,9 +69,9 @@ export default function EducationalLoader({ grade }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4 md:p-6">
       <Card className="w-full max-w-lg text-center p-8 md:p-10 shadow-2xl border-0 bg-white/90 backdrop-blur-xl">
-        <div className="mb-8 relative">
-          <div className="absolute inset-0 bg-purple-100 rounded-full scale-150 opacity-20 animate-pulse" />
-          <Loader2 className="w-12 h-12 md:w-16 md:h-16 mx-auto text-purple-600 animate-spin relative z-10" />
+        <div className="mb-8 relative flex justify-center items-center">
+          <div className="absolute w-20 h-20 bg-purple-100 rounded-full scale-150 opacity-20 animate-pulse" />
+          <Loader2 className="w-12 h-12 md:w-16 md:h-16 text-purple-600 animate-spin relative z-10" />
         </div>
         
         <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">
@@ -102,7 +102,7 @@ export default function EducationalLoader({ grade }) {
                   Did You Know? • {currentFact.category}
                 </span>
                 <p className="text-lg md:text-xl font-medium text-slate-800 leading-relaxed max-w-sm">
-                  "{currentFact.text}"
+                  {currentFact.text}
                 </p>
               </div>
             </motion.div>
