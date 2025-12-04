@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, History } from "lucide-react";
-import FriendlyLoadingMessage from "@/components/ui/FriendlyLoadingMessage";
+import EducationalLoader from "@/components/ui/EducationalLoader";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
@@ -23,8 +23,10 @@ export default function CreateLesson() {
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
+  const [userGrade, setUserGrade] = useState("");
 
   useEffect(() => {
+    loadUserProfile();
     const urlParams = new URLSearchParams(window.location.search);
     const suggestedId = urlParams.get('suggestedId');
     
@@ -32,6 +34,20 @@ export default function CreateLesson() {
       loadSuggestedLesson(suggestedId);
     }
   }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      const user = await base44.auth.me();
+      if (user.learning_profile_id) {
+        const profile = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
+        if (profile.length > 0) {
+          setUserGrade(profile[0].grade);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading profile:", error);
+    }
+  };
 
   const loadSuggestedLesson = async (suggestedId) => {
     try {
@@ -332,6 +348,10 @@ Output Format: JSON object matching the specified schema`;
     }
   };
 
+  if (isProcessing) {
+    return <EducationalLoader grade={userGrade} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-3xl mx-auto">
@@ -376,18 +396,6 @@ Output Format: JSON object matching the specified schema`;
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
-              )}
-
-              {processingStep && (
-                <div className="space-y-4">
-                  <Alert className="bg-purple-50 border-purple-200">
-                    <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                    <AlertDescription className="text-purple-900 ml-2">
-                      {processingStep}
-                    </AlertDescription>
-                  </Alert>
-                  <FriendlyLoadingMessage />
-                </div>
               )}
 
               <div className="space-y-2">
