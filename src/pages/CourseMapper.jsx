@@ -10,6 +10,7 @@ import { Upload, FileText, BookOpen, ArrowRight, CheckCircle2, AlertCircle, Map 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { useQuery } from "@tanstack/react-query";
+import LearningStyleQuestionnaire from "@/components/course-mapper/LearningStyleQuestionnaire";
 
 export default function CourseMapper() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function CourseMapper() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [mappedCourse, setMappedCourse] = useState(null);
-  const [step, setStep] = useState(1); // 1: Upload, 2: Verify/Questions
+  const [step, setStep] = useState(1); // 1: Upload, 2: Verified, 3: Questionnaire
 
   // Fetch user grade for loader
   const { data: userGrade } = useQuery({
@@ -79,6 +80,21 @@ export default function CourseMapper() {
       console.error("Mapping error:", err);
       setError("Failed to map course. Please try again or check your file.");
     } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleQuestionnaireComplete = async (answers) => {
+    setIsProcessing(true);
+    try {
+      await base44.entities.Course.update(mappedCourse.id, {
+        learning_style_answers: answers,
+        status: "active"
+      });
+      navigate(createPageUrl("Home"));
+    } catch (err) {
+      console.error("Error saving answers:", err);
+      setError("Failed to save your profile. Please try again.");
       setIsProcessing(false);
     }
   };
@@ -234,10 +250,7 @@ export default function CourseMapper() {
                 </div>
                 <Button 
                   className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6 text-lg shadow-lg shadow-blue-500/30"
-                  onClick={() => {
-                    // Placeholder for next step - waiting for user questions
-                    alert("Ready for baseline questions! (Coming in next step)");
-                  }}
+                  onClick={() => setStep(3)}
                 >
                   Start Personalization
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -245,6 +258,13 @@ export default function CourseMapper() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {step === 3 && mappedCourse && (
+          <LearningStyleQuestionnaire 
+            subjectCategory={mappedCourse.subject_category}
+            onComplete={handleQuestionnaireComplete}
+          />
         )}
 
       </div>
