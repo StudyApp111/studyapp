@@ -78,7 +78,9 @@ export default function CourseMapper() {
 
     } catch (err) {
       console.error("Mapping error:", err);
-      setError("Failed to map course. Please try again or check your file.");
+      // Show more detailed error from backend if available
+      const errorMsg = err.response?.data?.error || err.message || "Failed to map course. Please try again.";
+      setError(errorMsg);
     } finally {
       setIsProcessing(false);
     }
