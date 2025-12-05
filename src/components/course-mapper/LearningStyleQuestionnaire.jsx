@@ -204,18 +204,6 @@ const questions = {
       ]
     }
   ],
-  universal: [
-    {
-      id: "q8",
-      text: "What is your target grade and how many hours/week can you commit?",
-      type: "structured",
-      fields: [
-        { name: "target_grade", label: "Target Grade", type: "select", options: ["A", "B", "C"] },
-        { name: "weekly_hours", label: "Weekly Hours", type: "number" },
-        { name: "weeks_until_exam", label: "Weeks Until Exam", type: "number" }
-      ]
-    }
-  ]
 };
 
 const getSubjectIcon = (subject) => {
@@ -227,15 +215,25 @@ const getSubjectIcon = (subject) => {
   return BookOpen;
 };
 
-export default function LearningStyleQuestionnaire({ subjectCategory, onComplete }) {
+import { Loader2 } from "lucide-react";
+
+export default function LearningStyleQuestionnaire({ courseName, subjectCategory, onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
   
-  const subjectQuestions = questions[subjectCategory] || questions["Written & Interpretive Subjects (Humanities / Social Sciences)"];
-  const allQuestions = [...questions.general, ...subjectQuestions, ...questions.universal];
+  // Only include subject questions if we have a category
+  const subjectQuestions = subjectCategory ? (questions[subjectCategory] || []) : [];
+  
+  // Combine questions (removed universal/Q8)
+  // If we don't have a subject yet, we only show general questions initially
+  // We'll handle the "waiting" state logic in rendering
+  const allQuestions = [...questions.general, ...subjectQuestions];
   
   const currentQ = allQuestions[currentStep];
   const SubjectIcon = getSubjectIcon(subjectCategory);
+
+  // Check if we need to wait for analysis
+  const isWaitingForAnalysis = !subjectCategory && currentStep >= questions.general.length;
 
   const handleAnswer = (value) => {
     setAnswers(prev => ({ ...prev, [currentQ.id]: value }));
@@ -272,6 +270,13 @@ export default function LearningStyleQuestionnaire({ subjectCategory, onComplete
   };
 
   const handleNext = () => {
+    // If we are at the end of general questions and still no subject, we wait
+    if (!subjectCategory && currentStep === questions.general.length - 1) {
+       // Just increment step to trigger the waiting view
+       setCurrentStep(prev => prev + 1);
+       return;
+    }
+
     if (currentStep < allQuestions.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
@@ -281,14 +286,43 @@ export default function LearningStyleQuestionnaire({ subjectCategory, onComplete
 
   const progress = ((currentStep + 1) / allQuestions.length) * 100;
 
+  if (isWaitingForAnalysis) {
+    return (
+      <div className="w-full max-w-2xl mx-auto text-center py-20">
+        <div className="mb-6 relative inline-block">
+           <div className="absolute inset-0 bg-purple-200 rounded-full blur-xl opacity-50 animate-pulse"></div>
+           <Loader2 className="w-16 h-16 text-purple-600 animate-spin relative z-10" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Analyzing Course Content...</h2>
+        <p className="text-slate-500 max-w-md mx-auto">
+          We're just finishing the deep analysis of your course outline to determine the best questions for you.
+        </p>
+      </div>
+    );
+  }
+
+  // Calculate progress based on assumed total of 7 questions (5 general + 2 subject)
+  // This prevents the progress bar from jumping when subject questions are added
+  const totalEstQuestions = 7; 
+  const displayProgress = ((currentStep + 1) / totalEstQuestions) * 100;
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="mb-8 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-100 mb-4 transition-all duration-500">
           <SubjectIcon className="w-8 h-8 text-purple-600" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900">Learning Style Profile</h2>
-        <p className="text-slate-500">Help us personalize your study plan</p>
+        <h2 className="text-2xl font-bold text-slate-900 transition-all">
+          {courseName || "Learning Style Profile"}
+        </h2>
+        <p className="text-slate-500">
+          {subjectCategory ? 
+            <span className="inline-flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              {subjectCategory}
+            </span> 
+            : "Personalizing your study plan..."}
+        </p>
       </div>
 
       <div className="mb-6">
@@ -296,13 +330,13 @@ export default function LearningStyleQuestionnaire({ subjectCategory, onComplete
           <motion.div 
             className="h-full bg-purple-600"
             initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
+            animate={{ width: `${displayProgress}%` }}
             transition={{ duration: 0.3 }}
           />
         </div>
         <div className="flex justify-between mt-2 text-xs text-slate-400 font-medium uppercase tracking-wider">
-          <span>Question {currentStep + 1} of {allQuestions.length}</span>
-          <span>{Math.round(progress)}% Complete</span>
+          <span>Question {currentStep + 1} of {totalEstQuestions}</span>
+          <span>{Math.round(displayProgress)}% Complete</span>
         </div>
       </div>
 
@@ -310,7 +344,7 @@ export default function LearningStyleQuestionnaire({ subjectCategory, onComplete
         <CardContent className="p-6 md:p-8">
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentQ.id}
+              key={currentQ?.id || 'loading'}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
