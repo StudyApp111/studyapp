@@ -19,7 +19,8 @@ export default function CourseMapper() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [mappedCourse, setMappedCourse] = useState(null);
-  const [step, setStep] = useState(1); // 1: Upload, 2: Verified, 3: Questionnaire
+  const [step, setStep] = useState(1); // 1: Upload, 3: Questionnaire (Step 2 skipped for background processing)
+  const [pendingAnswers, setPendingAnswers] = useState(null); // Store answers if waiting for analysis
 
   // Fetch user grade for loader
   const { data: userGrade } = useQuery({
@@ -52,19 +53,35 @@ export default function CourseMapper() {
       return;
     }
 
-    setIsProcessing(true);
+    // Start with UI transition immediately
+    setIsProcessing(true); // Brief loading for upload
     setError("");
 
     try {
-      // 1. Upload File
+      // 1. Upload File (Await this to ensure we have the file)
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       
-      // 2. Extract Data
+      // Move to questionnaire immediately
+      setStep(3);
+      setIsProcessing(false);
+
+      // 2. Trigger Background Analysis
+      runBackgroundAnalysis(file_url);
+
+    } catch (err) {
+      console.error("Upload error:", err);
+      setError("Failed to upload file. Please try again.");
+      setIsProcessing(false);
+    }
+  };
+
+  const runBackgroundAnalysis = async (file_url) => {
+    try {
+      console.log("Starting background analysis...");
       const { data: extractedData } = await base44.functions.invoke('extractCourseOutline', {
         file_url
       });
 
-      // 3. Save Course Entity
       const courseData = {
         ...extractedData,
         full_name: manualCourseName || extractedData.full_name || extractedData.course_code || "Untitled Course",
@@ -73,31 +90,45 @@ export default function CourseMapper() {
       };
 
       const savedCourse = await base44.entities.Course.create(courseData);
+      console.log("Course analyzed and saved:", savedCourse);
       setMappedCourse(savedCourse);
-      setStep(2);
 
     } catch (err) {
-      console.error("Mapping error:", err);
-      // Show more detailed error from backend if available
-      const errorMsg = err.response?.data?.error || err.message || "Failed to map course. Please try again.";
-      setError(errorMsg);
-    } finally {
-      setIsProcessing(false);
+      console.error("Background mapping error:", err);
+      setError("Background analysis failed. Please try re-uploading.");
     }
   };
 
-  const handleQuestionnaireComplete = async (answers) => {
-    setIsProcessing(true);
-    try {
-      await base44.entities.Course.update(mappedCourse.id, {
-        learning_style_answers: answers,
-        status: "active"
-      });
-      navigate(createPageUrl("Home"));
-    } catch (err) {
-      console.error("Error saving answers:", err);
-      setError("Failed to save your profile. Please try again.");
-      setIsProcessing(false);
+  // Effect to handle completion once both analysis and answers are ready
+  React.useEffect(() => {
+    const saveAndRedirect = async () => {
+      if (mappedCourse && pendingAnswers) {
+        setIsProcessing(true);
+        try {
+          await base44.entities.Course.update(mappedCourse.id, {
+            learning_style_answers: pendingAnswers,
+            status: "active"
+          });
+          navigate(createPageUrl("Home"));
+        } catch (err) {
+          console.error("Error saving answers:", err);
+          setError("Failed to save your profile. Please try again.");
+          setIsProcessing(false);
+        }
+      }
+    };
+
+    saveAndRedirect();
+  }, [mappedCourse, pendingAnswers, navigate]);
+
+  const handleQuestionnaireComplete = (answers) => {
+    if (!mappedCourse) {
+      // Analysis still running, store answers and wait (Effect will trigger)
+      setPendingAnswers(answers);
+      setIsProcessing(true); // Show loader while waiting
+    } else {
+      // Analysis done, proceed directly
+      setPendingAnswers(answers);
     }
   };
 
@@ -262,9 +293,10 @@ export default function CourseMapper() {
           </Card>
         )}
 
-        {step === 3 && mappedCourse && (
+        {step === 3 && (
           <LearningStyleQuestionnaire 
-            subjectCategory={mappedCourse.subject_category}
+            courseName={mappedCourse?.full_name || manualCourseName}
+            subjectCategory={mappedCourse?.subject_category}
             onComplete={handleQuestionnaireComplete}
           />
         )}
