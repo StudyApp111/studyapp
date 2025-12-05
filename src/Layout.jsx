@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -25,13 +25,17 @@ const navigationItems = [
     title: "Home",
     url: createPageUrl("Home"),
     icon: Home,
-  },
-  {
+    },
+    {
+    title: "Course Mapper",
+    url: createPageUrl("CourseMapper"),
+    icon: Map,
+    },
+    {
     title: "Smart Grader",
     url: createPageUrl("SmartGrader"),
     icon: FileCheck,
-    isNew: true, // Add flag for new feature
-  },
+    },
   {
     title: "Leaderboard",
     url: createPageUrl("Leaderboard"),
