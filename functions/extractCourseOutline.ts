@@ -15,9 +15,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'File URL is required' }, { status: 400 });
     }
 
-    const apiKey = Deno.env.get("MistralDocumentAIKey");
+    const apiKey = Deno.env.get("API_KEY");
     if (!apiKey) {
-      return Response.json({ error: 'Mistral API configuration missing' }, { status: 500 });
+      return Response.json({ error: 'API configuration missing' }, { status: 500 });
     }
 
     // 1. Download the file
@@ -25,80 +25,86 @@ Deno.serve(async (req) => {
     if (!fileResponse.ok) {
       throw new Error(`Failed to download file: ${fileResponse.statusText}`);
     }
-    const fileBlob = await fileResponse.blob();
+    const fileArrayBuffer = await fileResponse.arrayBuffer();
+    const base64File = btoa(String.fromCharCode(...new Uint8Array(fileArrayBuffer)));
+    
+    // Determine mime type - simple check, default to pdf if unknown or extract from url
+    let mimeType = "application/pdf";
+    if (file_url.toLowerCase().endsWith(".png")) mimeType = "image/png";
+    if (file_url.toLowerCase().endsWith(".jpg") || file_url.toLowerCase().endsWith(".jpeg")) mimeType = "image/jpeg";
+    
+    // 2. Gemini API Call (gemini-1.5-flash)
+    const promptText = `
+    Analyze this course outline/syllabus document and extract the following details into a JSON structure.
+    
+    CRITICAL: You must also classify the course into EXACTLY ONE of the following 5 subject categories based on its content:
+    1. "Written & Interpretive Subjects (Humanities / Social Sciences)"
+    2. "Problem-Solving & Conceptual Subjects (Math / Physics / Engineering)"
+    3. "Applied & Empirical Subjects (Biology / Chemistry / Earth Sciences / Health Sciences)"
+    4. "Computational & Logical Subjects (Computer Science / Programming / Data Structures)"
+    5. "Quantitative Applied Subjects (Statistics / Economics / Finance / Business Analytics)"
 
-    // 2. Mistral API Call (using pixtral for document understanding)
-    // We send the file as a base64 data URL or just rely on the public URL if Mistral supports it.
-    // Mistral usually takes a prompt + image/text. For PDFs/Docs, we might need to use their specific OCR endpoint or just vision if we convert to image.
-    // For simplicity in this specific environment context, assuming we treat it as an "image" url or extract text first.
-    // However, the previous 'extractDocumentContent' used chat/completions with a specific model.
-    // Let's stick to the pattern of sending the URL directly if supported, or base64.
-    // Since `extractDocumentContent` used `pixtral-12b-2409`, we will use that.
+    Data to Extract:
+    - Course Code (e.g. GRST 211 L01)
+    - Full Course Name (e.g. Technical Terms of Medical and Life Sciences)
+    - Course Description (Summary of what the course covers)
+    - Learning Outcomes (List of specific goals/outcomes)
+    - Learning Resources (Textbooks, websites, etc.)
+    - Assignments & Assessments (Title, Type [assignment/quiz/exam/project/other], Due Date, Weight %)
+    - Required Readings (Specific chapters, articles, pages)
+    - Grading System (Grade letter, Min %, Max %)
 
-    const chatResponse = await fetch("https://api.mistral.ai/v1/chat/completions", {
+    Response JSON Schema:
+    {
+      "subject_category": "string (one of the 5 categories above)",
+      "course_code": "string",
+      "full_name": "string",
+      "description": "string",
+      "learning_outcomes": ["string"],
+      "learning_resources": ["string"],
+      "assessments": [{"title": "string", "type": "string", "due_date": "string", "weight": "string"}],
+      "required_readings": ["string"],
+      "grading_scale": [{"grade": "string", "min_score": number, "max_score": number}]
+    }
+    `;
+
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "pixtral-12b-2409",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { 
-                type: "text", 
-                text: `Extract the following information from this course outline document into a structured JSON format:
-                - Course Code (e.g. GRST 211 L01)
-                - Full Course Name (e.g. Technical Terms of Medical and Life Sciences)
-                - Course Description
-                - Learning Outcomes (as a list)
-                - Learning Resources (textbooks, websites, etc.)
-                - Assignments & Assessments (title, type [assignment/quiz/exam], due date, weight)
-                - Required Readings (chapters, articles)
-                - Grading System (letter grade, min % score, max % score)
-
-                Return ONLY valid JSON matching this schema:
-                {
-                  "course_code": "string",
-                  "full_name": "string",
-                  "description": "string",
-                  "learning_outcomes": ["string"],
-                  "learning_resources": ["string"],
-                  "assessments": [{"title": "string", "type": "string", "due_date": "string", "weight": "string"}],
-                  "required_readings": ["string"],
-                  "grading_scale": [{"grade": "string", "min_score": number, "max_score": number}]
-                }
-                ` 
-              },
-              {
-                type: "image_url",
-                image_url: file_url 
+        contents: [{
+          parts: [
+            { text: promptText },
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: base64File
               }
-            ]
-          }
-        ],
-        response_format: { type: "json_object" }
+            }
+          ]
+        }],
+        generationConfig: {
+          response_mime_type: "application/json"
+        }
       })
     });
 
-    if (!chatResponse.ok) {
-      const err = await chatResponse.text();
-      console.error("Mistral API Error:", err);
+    if (!geminiResponse.ok) {
+      const errText = await geminiResponse.text();
+      console.error("Gemini API Error:", errText);
       throw new Error("Failed to process document with AI");
     }
 
-    const mistralData = await chatResponse.json();
-    const content = mistralData.choices[0].message.content;
+    const geminiData = await geminiResponse.json();
+    const contentText = geminiData.candidates[0].content.parts[0].text;
     
-    // Parse the JSON content
     let extractedData;
     try {
-      extractedData = JSON.parse(content);
+      extractedData = JSON.parse(contentText);
     } catch (e) {
-      console.error("Failed to parse Mistral JSON response", content);
-      // Fallback or partial parse could go here, but for now throw
+      console.error("Failed to parse Gemini JSON response", contentText);
       throw new Error("AI returned invalid JSON structure");
     }
 

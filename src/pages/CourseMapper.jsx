@@ -206,6 +206,14 @@ export default function CourseMapper() {
                   <p className="text-sm text-slate-500 uppercase tracking-wider font-semibold">Course Name</p>
                   <p className="font-bold text-slate-800">{mappedCourse.full_name}</p>
                 </div>
+                {mappedCourse.subject_category && (
+                  <div>
+                    <p className="text-sm text-slate-500 uppercase tracking-wider font-semibold">Subject Category</p>
+                    <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-medium mt-1">
+                      {mappedCourse.subject_category}
+                    </span>
+                  </div>
+                )}
                 {mappedCourse.description && (
                   <div>
                     <p className="text-sm text-slate-500 uppercase tracking-wider font-semibold">Description</p>
