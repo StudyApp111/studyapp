@@ -953,6 +953,9 @@ Output ONLY a single JSON object matching the response_json_schema:
 
 Output Format: Valid JSON matching the required schema.`;
 
+      console.log("Calling feedbackGrade function...");
+      console.log("Prompt length:", feedbackPrompt.length);
+      
       const { data: feedbackData } = await retryOperation(() => 
         base44.functions.invoke('feedbackGrade', {
           prompt: feedbackPrompt,
@@ -996,6 +999,11 @@ Output Format: Valid JSON matching the required schema.`;
         }
         })
       );
+      
+      console.log("feedbackGrade response received:", {
+        hasFeedbackData: !!feedbackData,
+        keys: feedbackData ? Object.keys(feedbackData) : []
+      });
 
       const questionFeedback = questionsWithGrading.map((q, idx) => {
         let feedback = "";
@@ -1262,17 +1270,25 @@ Output Format: Valid JSON matching the required schema.`;
         navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
       }, earnedNow.length > 0 ? 2000 : 500);
     } catch (error) {
-      console.error("Error submitting worksheet:", error);
-      
-      // Extract detailed error message
-      const errorDetails = error.response?.data?.error || error.response?.data?.message || error.message || String(error);
-      const errorMessage = `Failed to submit worksheet: ${errorDetails}`;
-      
-      console.error("Detailed error:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
+    console.error("=== Error submitting worksheet ===");
+    console.error("Error object:", error);
+    console.error("Error type:", error.constructor.name);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+
+    // Extract detailed error message
+    const errorDetails = error.response?.data?.error || error.response?.data?.details || error.response?.data?.message || error.message || String(error);
+    const errorMessage = `Failed to submit worksheet: ${errorDetails}`;
+
+    console.error("Detailed error context:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      worksheetId: worksheet.id,
+      lessonId: lesson.id,
+      courseName: lesson.course_name
+    });
       
       alert(errorMessage);
       setIsSubmitting(false);
