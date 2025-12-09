@@ -56,17 +56,24 @@ Deno.serve(async (req) => {
         );
 
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Gemini API Error:', response.status, errorText);
             return Response.json({ 
-                error: 'Failed to generate feedback' 
+                error: 'Failed to generate feedback',
+                details: errorText.substring(0, 500)
             }, { status: 500 });
         }
 
         const data = await response.json();
+        console.log('Gemini response structure:', JSON.stringify(data).substring(0, 500));
+        
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
+            console.error('No content in Gemini response:', JSON.stringify(data));
             return Response.json({ 
-                error: 'No content generated' 
+                error: 'No content generated',
+                details: `Response structure: ${JSON.stringify(data).substring(0, 300)}`
             }, { status: 500 });
         }
 
@@ -84,8 +91,11 @@ Deno.serve(async (req) => {
         return Response.json({ text: generatedText });
 
     } catch (error) {
+        console.error('feedbackGrade function error:', error);
         return Response.json({ 
-            error: 'Internal server error' 
+            error: 'Internal server error',
+            message: error.message,
+            details: error.toString().substring(0, 500)
         }, { status: 500 });
     }
 });
