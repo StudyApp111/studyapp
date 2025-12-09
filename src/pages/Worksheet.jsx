@@ -1038,19 +1038,50 @@ Output Format: Valid JSON matching the required schema.`;
       }
 
       // Save worksheet with timer data and question laps
-      await retryOperation(() => 
-        base44.entities.Worksheet.update(worksheet.id, {
-          questions: questionsWithGrading,
-          feedback: questionFeedback,
-          total_score: isNaN(scoreNum) ? 0 : scoreNum,
-          predicted_grade: letterGrade,
-          ai_feedback: feedbackData,
-          time_taken_seconds: elapsedSeconds,
-          question_time_laps: questionTimeLaps,
-          status: "completed",
-          completed: true
-        })
-      );
+      console.log("Attempting to save worksheet:", {
+        worksheetId: worksheet.id,
+        questionCount: questionsWithGrading.length,
+        score: scoreNum,
+        grade: letterGrade,
+        elapsedSeconds
+      });
+
+      try {
+        await retryOperation(() => 
+          base44.entities.Worksheet.update(worksheet.id, {
+            questions: questionsWithGrading,
+            feedback: questionFeedback,
+            total_score: isNaN(scoreNum) ? 0 : scoreNum,
+            predicted_grade: letterGrade,
+            ai_feedback: feedbackData,
+            time_taken_seconds: elapsedSeconds,
+            question_time_laps: questionTimeLaps,
+            status: "completed",
+            completed: true
+          })
+        );
+        console.log("Worksheet saved successfully");
+      } catch (worksheetUpdateError) {
+        console.error("Failed to update worksheet:", worksheetUpdateError);
+        
+        // Log to ErrorLog entity
+        await base44.entities.ErrorLog.create({
+          error_type: "worksheet_submission",
+          error_message: worksheetUpdateError.message || String(worksheetUpdateError),
+          error_stack: worksheetUpdateError.stack || "",
+          context: {
+            worksheet_id: worksheet.id,
+            lesson_id: lesson.id,
+            course_name: lesson.course_name,
+            worksheet_number: worksheet.worksheet_number,
+            question_count: questionsWithGrading.length,
+            score: scoreNum
+          },
+          user_email: user.email
+        });
+        
+        throw worksheetUpdateError;
+      }
 
       if (worksheet.worksheet_number === 1 && feedbackData.suggested_future_sessions_plan) {
         await Promise.all(
