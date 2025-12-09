@@ -1324,13 +1324,13 @@ Output Format: Valid JSON matching the required schema.`;
     }
 
     if (isGrading) {
-    return (
-      <EducationalLoader
-        title="Predicting Your Grade"
-        description="Our AI is analyzing your answers and predicting your exam performance..."
-        userGrade={lesson?.grade}
-      />
-    );
+      return (
+        <EducationalLoader
+          title="Predicting Your Grade"
+          description="Our AI is analyzing your answers and predicting your exam performance..."
+          grade={lesson?.grade}
+        />
+      );
     }
 
     if (!worksheet || !lesson) return null;
