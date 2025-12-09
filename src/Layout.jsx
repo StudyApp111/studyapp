@@ -25,17 +25,19 @@ const navigationItems = [
     title: "Home",
     url: createPageUrl("Home"),
     icon: Home,
-    },
-    {
+  },
+  {
     title: "Course Mapper",
     url: createPageUrl("CourseMapper"),
     icon: Map,
-    },
-    {
+    isComingSoon: true,
+  },
+  {
     title: "Smart Grader",
     url: createPageUrl("SmartGrader"),
     icon: FileCheck,
-    },
+    isNew: true,
+  },
   {
     title: "Leaderboard",
     url: createPageUrl("Leaderboard"),
@@ -159,6 +161,11 @@ export default function Layout({ children, currentPageName }) {
                             {item.isNew && (
                               <span className="ml-auto bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
                                 NEW
+                              </span>
+                            )}
+                            {item.isComingSoon && (
+                              <span className="ml-auto bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                                SOON
                               </span>
                             )}
                           </Link>
