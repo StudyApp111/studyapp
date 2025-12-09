@@ -155,16 +155,18 @@ export default function Layout({ children, currentPageName }) {
                             location.pathname === item.url ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 shadow-lg shadow-yellow-500/30 font-semibold' : ''
                           }`}
                         >
-                          <Link to={item.url} className="flex items-center gap-3 px-4 py-3 relative">
-                            <item.icon className="w-5 h-5" />
-                            <span className="font-medium">{item.title}</span>
+                          <Link to={item.url} className="flex items-center justify-between gap-3 px-4 py-3 w-full">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <item.icon className="w-5 h-5 flex-shrink-0" />
+                              <span className="font-medium whitespace-nowrap">{item.title}</span>
+                            </div>
                             {item.isNew && (
-                              <span className="ml-auto bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                              <span className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
                                 NEW
                               </span>
                             )}
                             {item.isComingSoon && (
-                              <span className="ml-auto bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">
+                              <span className="bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
                                 SOON
                               </span>
                             )}
