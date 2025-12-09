@@ -65,29 +65,50 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json();
-        console.log('Gemini response structure:', JSON.stringify(data).substring(0, 500));
+        console.log('Gemini response received');
         
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
-            console.error('No content in Gemini response:', JSON.stringify(data));
+            console.error('No content in Gemini response');
             return Response.json({ 
                 error: 'No content generated',
-                details: `Response structure: ${JSON.stringify(data).substring(0, 300)}`
+                details: 'Gemini returned empty response'
             }, { status: 500 });
         }
 
+        console.log('Generated text length:', generatedText.length);
+
         if (response_json_schema) {
             try {
+                console.log('Attempting to parse JSON...');
                 const parsedResponse = JSON.parse(generatedText);
+                console.log('JSON parsed successfully');
                 return Response.json(parsedResponse);
             } catch (parseError) {
-                console.error('JSON Parse Error:', parseError.message);
-                console.error('Generated text preview:', generatedText.substring(0, 1000));
+                console.error('=== JSON PARSE ERROR ===');
+                console.error('Error:', parseError.message);
+                console.error('Full generated text:', generatedText);
+                console.error('Text length:', generatedText.length);
+                
+                // Try to find where the JSON becomes invalid
+                let validUpTo = 0;
+                for (let i = 0; i < generatedText.length; i++) {
+                    try {
+                        JSON.parse(generatedText.substring(0, i + 1));
+                        validUpTo = i + 1;
+                    } catch {}
+                }
+                console.error('Valid JSON up to position:', validUpTo);
+                console.error('Text around error:', generatedText.substring(Math.max(0, validUpTo - 100), validUpTo + 100));
+                
                 return Response.json({ 
                     error: 'Failed to process feedback',
                     details: parseError.message,
-                    textPreview: generatedText.substring(0, 500)
+                    textLength: generatedText.length,
+                    validUpTo: validUpTo,
+                    textPreview: generatedText.substring(0, 1000),
+                    errorPosition: generatedText.substring(Math.max(0, validUpTo - 50), validUpTo + 50)
                 }, { status: 500 });
             }
         }
