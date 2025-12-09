@@ -733,32 +733,36 @@ Output Format: Valid JSON object matching the schema.`;
 
   const submitWorksheet = async () => {
     setIsSubmitting(true);
-    
+    console.log('[SUBMIT] Starting worksheet submission...');
+
     // Record final question time
     recordQuestionTime(currentQuestion);
-    
+
     // Stop the timer
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    
+
     // Convert question times to laps format
     const questionTimeLaps = Object.keys(questionTimesRef.current).map(key => ({
       question_index: parseInt(key),
       total_seconds: questionTimesRef.current[key]
     }));
-    
+
     try {
       const user = await base44.auth.me();
+      console.log('[SUBMIT] User authenticated:', user.email);
+
       const profile = await base44.entities.LearningProfile.filter({ 
         id: user.learning_profile_id 
       });
       const learningProfile = profile[0] || {};
+      console.log('[SUBMIT] Learning profile loaded:', learningProfile);
 
       const questionsWithGrading = worksheet.questions.map((q) => {
         const questionType = q.question_type.toLowerCase();
-        
+
         if (questionType.includes("multiple choice") || 
             questionType.includes("mcq") ||
             (questionType.includes("true") && questionType.includes("false"))) {
@@ -767,7 +771,7 @@ Output Format: Valid JSON object matching the schema.`;
             is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
           };
         }
-        
+
         if (isSubjectiveQuestion(q.question_type)) {
           if (q.ai_score_out_of_10 !== undefined) {
             return {
@@ -781,12 +785,14 @@ Output Format: Valid JSON object matching the schema.`;
             };
           }
         }
-        
+
         return {
           ...q,
           is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
         };
       });
+
+      console.log('[SUBMIT] Questions graded. Total:', questionsWithGrading.length);
 
       let contentDescription = "";
       if (lesson.input_type === "description" && lesson.description) {
@@ -819,6 +825,8 @@ Output Format: Valid JSON object matching the schema.`;
           keypoints_missed: q.ai_keypoints_missed
         } : null
       }));
+
+      console.log('[SUBMIT] Worksheet performance data prepared:', worksheetPerformanceData.length, 'questions');
 
       const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student’s 10-question worksheet performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
 
@@ -953,11 +961,11 @@ Output ONLY a single JSON object matching the response_json_schema:
 
 Output Format: Valid JSON matching the required schema.`;
 
-      console.log("Calling feedbackGrade function...");
-      console.log("Prompt length:", feedbackPrompt.length);
-      
-      const { data: feedbackData } = await retryOperation(() => 
-        base44.functions.invoke('feedbackGrade', {
+    console.log('[SUBMIT] Prompt length:', feedbackPrompt.length, 'characters');
+    console.log('[SUBMIT] Calling feedbackGrade function...');
+
+    const { data: feedbackData } = await retryOperation(() => 
+      base44.functions.invoke('feedbackGrade', {
           prompt: feedbackPrompt,
           response_json_schema: {
           type: "object",
@@ -998,14 +1006,14 @@ Output Format: Valid JSON matching the required schema.`;
           required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan", "learning_patterns"]
         }
         })
-      );
-      
-      console.log("feedbackGrade response received:", {
-        hasFeedbackData: !!feedbackData,
-        keys: feedbackData ? Object.keys(feedbackData) : []
-      });
+        );
 
-      const questionFeedback = questionsWithGrading.map((q, idx) => {
+        console.log('[SUBMIT] Feedback data received:', feedbackData ? 'SUCCESS' : 'NULL');
+        if (feedbackData) {
+        console.log('[SUBMIT] Feedback keys:', Object.keys(feedbackData));
+        }
+
+        const questionFeedback = questionsWithGrading.map((q, idx) => {
         let feedback = "";
         let pointsEarned = 0;
         
@@ -1046,7 +1054,7 @@ Output Format: Valid JSON matching the required schema.`;
       }
 
       // Save worksheet with timer data and question laps
-      console.log("Attempting to save worksheet:", {
+      console.log('[SUBMIT] Attempting to save worksheet:', {
         worksheetId: worksheet.id,
         questionCount: questionsWithGrading.length,
         score: scoreNum,
@@ -1067,11 +1075,11 @@ Output Format: Valid JSON matching the required schema.`;
             status: "completed",
             completed: true
           })
-        );
-        console.log("Worksheet saved successfully");
+          );
+          console.log('[SUBMIT] Worksheet saved successfully');
       } catch (worksheetUpdateError) {
-        console.error("Failed to update worksheet:", worksheetUpdateError);
-        
+        console.error('[SUBMIT ERROR] Failed to update worksheet:', worksheetUpdateError);
+
         // Log to ErrorLog entity
         await base44.entities.ErrorLog.create({
           error_type: "worksheet_submission",
@@ -1270,26 +1278,21 @@ Output Format: Valid JSON matching the required schema.`;
         navigate(createPageUrl("Feedback") + `?lessonId=${lesson.id}&worksheet=${worksheet.worksheet_number}`);
       }, earnedNow.length > 0 ? 2000 : 500);
     } catch (error) {
-    console.error("=== Error submitting worksheet ===");
-    console.error("Error object:", error);
-    console.error("Error type:", error.constructor.name);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-
-    // Extract detailed error message
-    const errorDetails = error.response?.data?.error || error.response?.data?.details || error.response?.data?.message || error.message || String(error);
-    const errorMessage = `Failed to submit worksheet: ${errorDetails}`;
-
-    console.error("Detailed error context:", {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message,
-      worksheetId: worksheet.id,
-      lessonId: lesson.id,
-      courseName: lesson.course_name
-    });
+      console.error('[SUBMIT ERROR] Error submitting worksheet:', error);
       
+      // Extract detailed error message
+      const errorDetails = error.response?.data?.error || error.response?.data?.message || error.message || String(error);
+      const fullError = error.response?.data || error;
+      
+      console.error('[SUBMIT ERROR] Full error object:', JSON.stringify(fullError, null, 2));
+      console.error('[SUBMIT ERROR] Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      const errorMessage = `Failed to submit worksheet: ${errorDetails}`;
       alert(errorMessage);
       setIsSubmitting(false);
     }
