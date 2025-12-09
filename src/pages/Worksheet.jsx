@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Loader2, FileText, Clock } from "lucide-react";
+import EducationalLoader from "../components/ui/EducationalLoader";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
@@ -1306,22 +1307,15 @@ Output Format: Valid JSON matching the required schema.`;
 
   if (isGenerating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4 md:p-6">
-        <Card className="w-full max-w-md text-center p-6 md:p-8 shadow-2xl">
-          <FileText className="w-12 h-12 md:w-16 md:h-16 mx-auto text-purple-600 mb-4 animate-pulse" />
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">
-            {worksheet ? "Loading Your Worksheet" : "Generating Your Worksheet"}
-          </h2>
-          <p className="text-sm md:text-base text-slate-600 mb-6">
-            {worksheet 
-              ? `Retrieving your saved Worksheet ${worksheet.worksheet_number || ''}...`
-              : "Creating a personalized exam based on your diagnostic results..."}
-          </p>
-          <Loader2 className="w-6 h-6 md:w-8 md:h-8 mx-auto animate-spin text-purple-600" />
-        </Card>
-      </div>
+      <EducationalLoader
+        title={worksheet ? "Loading Your Worksheet" : "Generating Your Worksheet"}
+        description={worksheet 
+          ? `Retrieving your saved Worksheet ${worksheet.worksheet_number || ''}...`
+          : "Creating a personalized exam based on your diagnostic results..."}
+        grade={lesson?.grade}
+      />
     );
-    }
+  }
 
     if (isGrading) {
       return (
