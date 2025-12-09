@@ -36,6 +36,7 @@ export default function Worksheet() {
   const [isGenerating, setIsGenerating] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGrading, setIsGrading] = useState(false);
   const [showConfetti, setShowConfetti] = React.useState(false);
   const [newBadges, setNewBadges] = React.useState([]);
   const gradingTimeoutRef = useRef(null);
@@ -733,6 +734,7 @@ Output Format: Valid JSON object matching the schema.`;
 
   const submitWorksheet = async () => {
     setIsSubmitting(true);
+    setIsGrading(false);
     console.log('[SUBMIT] Starting worksheet submission...');
 
     // Record final question time
@@ -1279,11 +1281,11 @@ Output Format: Valid JSON matching the required schema.`;
       }, earnedNow.length > 0 ? 2000 : 500);
     } catch (error) {
       console.error('[SUBMIT ERROR] Error submitting worksheet:', error);
-      
+
       // Extract detailed error message
       const errorDetails = error.response?.data?.error || error.response?.data?.message || error.message || String(error);
       const fullError = error.response?.data || error;
-      
+
       console.error('[SUBMIT ERROR] Full error object:', JSON.stringify(fullError, null, 2));
       console.error('[SUBMIT ERROR] Error details:', {
         status: error.response?.status,
@@ -1291,10 +1293,14 @@ Output Format: Valid JSON matching the required schema.`;
         message: error.message,
         stack: error.stack
       });
-      
+
       const errorMessage = `Failed to submit worksheet: ${errorDetails}`;
       alert(errorMessage);
+
+      // Return to last question
       setIsSubmitting(false);
+      setIsGrading(false);
+      setCurrentQuestion(worksheet.questions.length - 1);
     }
   };
 
@@ -1315,9 +1321,19 @@ Output Format: Valid JSON matching the required schema.`;
         </Card>
       </div>
     );
-  }
+    }
 
-  if (!worksheet || !lesson) return null;
+    if (isGrading) {
+    return (
+      <EducationalLoader
+        title="Predicting Your Grade"
+        description="Our AI is analyzing your answers and predicting your exam performance..."
+        userGrade={lesson?.grade}
+      />
+    );
+    }
+
+    if (!worksheet || !lesson) return null;
 
   const progress = ((currentQuestion + 1) / worksheet.questions.length) * 100;
   const isLastQuestion = currentQuestion === worksheet.questions.length - 1;
