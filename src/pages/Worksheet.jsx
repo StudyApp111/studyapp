@@ -1263,7 +1263,18 @@ Output Format: Valid JSON matching the required schema.`;
       }, earnedNow.length > 0 ? 2000 : 500);
     } catch (error) {
       console.error("Error submitting worksheet:", error);
-      alert("Failed to submit worksheet. Please try again. Error: " + error.message);
+      
+      // Extract detailed error message
+      const errorDetails = error.response?.data?.error || error.response?.data?.message || error.message || String(error);
+      const errorMessage = `Failed to submit worksheet: ${errorDetails}`;
+      
+      console.error("Detailed error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      alert(errorMessage);
       setIsSubmitting(false);
     }
   };
