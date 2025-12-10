@@ -15,6 +15,7 @@ import SmartGrader from './pages/SmartGrader';
 import GradeResults from './pages/GradeResults';
 import AssignmentHistory from './pages/AssignmentHistory';
 import CourseMapper from './pages/CourseMapper';
+import Analytics from './pages/Analytics';
 import __Layout from './Layout.jsx';
 
 
@@ -36,6 +37,7 @@ export const PAGES = {
     "GradeResults": GradeResults,
     "AssignmentHistory": AssignmentHistory,
     "CourseMapper": CourseMapper,
+    "Analytics": Analytics,
 }
 
 export const pagesConfig = {
