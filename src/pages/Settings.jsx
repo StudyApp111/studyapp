@@ -21,7 +21,8 @@ import {
   Trash2,
   LogOut,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  BarChart3
 } from "lucide-react";
 import {
   Dialog,
@@ -155,6 +156,13 @@ export default function Settings() {
                 label="History"
                 onClick={() => navigate(createPageUrl("LessonHistory"))}
               />
+              {user?.role === 'admin' && (
+                <SettingsItem
+                  icon={BarChart3}
+                  label="Analytics"
+                  onClick={() => navigate(createPageUrl("Analytics"))}
+                />
+              )}
             </SettingsSection>
 
             <Separator className="my-6" />
