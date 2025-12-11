@@ -250,6 +250,17 @@ Provide your response as a single, valid JSON object with the following structur
         status: "diagnostic_completed"
       });
 
+      // Award 10 points for completing diagnostic quiz
+      const user = await base44.auth.me();
+      const currentPoints = user.total_points || 0;
+      const newTotalPoints = currentPoints + 10;
+      const newLevel = Math.floor(newTotalPoints / 100) + 1;
+
+      await base44.auth.updateMe({
+        total_points: newTotalPoints,
+        level: newLevel
+      });
+
       setShowConfetti(true);
       setTimeout(() => {
         navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);

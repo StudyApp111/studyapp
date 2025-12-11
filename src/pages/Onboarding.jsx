@@ -149,8 +149,15 @@ export default function Onboarding() {
         });
       }
 
+      // Award 5 points for completing onboarding
+      const currentPoints = user.total_points || 0;
+      const newTotalPoints = currentPoints + 5;
+      const newLevel = Math.floor(newTotalPoints / 100) + 1;
+
       await base44.auth.updateMe({
-        onboarding_completed: true
+        onboarding_completed: true,
+        total_points: newTotalPoints,
+        level: newLevel
       });
 
       await new Promise(resolve => setTimeout(resolve, 500));

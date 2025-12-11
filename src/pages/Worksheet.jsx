@@ -1126,31 +1126,8 @@ Output Format: Valid JSON matching the required schema.`;
         })
       );
 
-      const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
-      let pointsEarned = 50;
-      
-      questionsWithGrading.forEach(q => {
-        if (isSubjectiveQuestion(q.question_type) && q.ai_score_out_of_10 !== undefined) {
-          pointsEarned += Math.round(q.ai_score_out_of_10 * 2.5);
-        } else if (q.is_correct) {
-          const difficultyMultiplier = {
-            "Foundational": 5,
-            "Conceptual": 10,
-            "Moderate Exam-Level": 15,
-            "Challenging Exam-Level": 20,
-            "High Challenge Exam-Level": 25
-          }[q.difficulty_index] || 10;
-          pointsEarned += difficultyMultiplier;
-        }
-      });
-
-      if (correctCount === questionsWithGrading.length) {
-        pointsEarned += 100;
-      }
-
-      if (letterGrade.startsWith('A')) {
-        pointsEarned += 50;
-      }
+      // Award 15 points for completing a worksheet
+      let pointsEarned = 15;
 
       const today = new Date().toDateString();
       const lastActivity = user.last_activity_date ? new Date(user.last_activity_date).toDateString() : null;
