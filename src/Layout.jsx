@@ -67,6 +67,7 @@ export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
   const [gtmId, setGtmId] = React.useState(null);
+  const [gaId, setGaId] = React.useState(null);
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -86,20 +87,21 @@ export default function Layout({ children, currentPageName }) {
     checkUser();
   }, [location.pathname, navigate]);
 
-  // Load GTM configuration
+  // Load analytics configuration
   React.useEffect(() => {
-    const loadGTM = async () => {
+    const loadAnalytics = async () => {
       try {
         const configs = await base44.entities.AppConfiguration.list();
-        if (configs.length > 0 && configs[0].gtm_container_id) {
-          setGtmId(configs[0].gtm_container_id);
+        if (configs.length > 0) {
+          if (configs[0].gtm_container_id) setGtmId(configs[0].gtm_container_id);
+          if (configs[0].ga_tracking_id) setGaId(configs[0].ga_tracking_id);
         }
       } catch (error) {
-        console.error("Error loading GTM config:", error);
+        console.error("Error loading analytics config:", error);
       }
     };
     
-    loadGTM();
+    loadAnalytics();
   }, []);
 
   // Inject GTM scripts
@@ -145,7 +147,7 @@ export default function Layout({ children, currentPageName }) {
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
   const showMobileBottomNav = !pagesWithCustomNav.includes(currentPageName);
 
-  // Render GTM noscript iframe for non-JS users
+  // Render GTM noscript iframe
   const renderGTMNoScript = () => {
     const adminPages = ["Settings", "Analytics", "ProfileInformation", "ChangePassword", "PricingPlans"];
     if (!gtmId || adminPages.includes(currentPageName)) return null;
