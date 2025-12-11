@@ -27,6 +27,12 @@ const navigationItems = [
     icon: Home,
   },
   {
+    title: "Learning Progress",
+    url: createPageUrl("LearningProgress"),
+    icon: TrendingUp,
+    isNew: true,
+  },
+  {
     title: "Course Mapper",
     url: createPageUrl("CourseMapper"),
     icon: Map,
@@ -36,7 +42,6 @@ const navigationItems = [
     title: "Smart Grader",
     url: createPageUrl("SmartGrader"),
     icon: FileCheck,
-    isNew: true,
   },
   {
     title: "Leaderboard",

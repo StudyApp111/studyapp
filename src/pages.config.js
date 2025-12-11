@@ -16,6 +16,7 @@ import GradeResults from './pages/GradeResults';
 import AssignmentHistory from './pages/AssignmentHistory';
 import CourseMapper from './pages/CourseMapper';
 import Analytics from './pages/Analytics';
+import LearningProgress from './pages/LearningProgress';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "AssignmentHistory": AssignmentHistory,
     "CourseMapper": CourseMapper,
     "Analytics": Analytics,
+    "LearningProgress": LearningProgress,
 }
 
 export const pagesConfig = {
