@@ -189,6 +189,24 @@ export default function Worksheet() {
       }
     } catch (error) {
       console.error("Error loading or generating worksheet:", error);
+      
+      // Log error to database
+      try {
+        const user = await base44.auth.me();
+        await base44.entities.ErrorLog.create({
+          error_type: "worksheet_load",
+          error_message: error.message || String(error),
+          error_stack: error.stack || "",
+          context: {
+            lesson_id: lessonId,
+            error_details: error.response?.data || {}
+          },
+          user_email: user.email
+        });
+      } catch (logError) {
+        console.error("Failed to log error:", logError);
+      }
+      
       alert("Failed to load or generate worksheet. Please try again. Error: " + error.message);
       navigate(createPageUrl("Home"));
     }
@@ -522,43 +540,47 @@ Explanations MUST:
 Output Format: Valid JSON object matching the schema.`;
       }
 
-      const { data: worksheetData } = await base44.functions.invoke('generateWorksheet', {
-        prompt: aiPrompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            worksheet_title: { type: "string" },
-            analysis_summary_for_worksheet_design: {
-              type: "object",
-              properties: {
-                targeted_weak_competencies: { type: "array", items: { type: "string" } },
-                key_gaps_or_misconceptions_addressed: { type: "array", items: { type: "string" } },
-                focused_differentiating_competencies: { type: "array", items: { type: "string" } }
-              },
-              required: ["targeted_weak_competencies", "key_gaps_or_misconceptions_addressed", "focused_differentiating_competencies"]
-            },
-            worksheet_questions: {
-              type: "array",
-              items: {
+      const { data: worksheetData } = await retryOperation(
+        () => base44.functions.invoke('generateWorksheet', {
+          prompt: aiPrompt,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              worksheet_title: { type: "string" },
+              analysis_summary_for_worksheet_design: {
                 type: "object",
                 properties: {
-                  question_number: { type: "integer" },
-                  question_type: { type: "string" },
-                  difficulty_index: { type: "string" },
-                  question_text: { type: "string" },
-                  options: { type: "array", items: { type: "string" } },
-                  correct_answer: { type: "string" },
-                  explanation: { type: "string" },
-                  assessed_competencies: { type: "array", items: { type: "string" } },
-                  targeted_misconception: { type: "string" }
+                  targeted_weak_competencies: { type: "array", items: { type: "string" } },
+                  key_gaps_or_misconceptions_addressed: { type: "array", items: { type: "string" } },
+                  focused_differentiating_competencies: { type: "array", items: { type: "string" } }
                 },
-                required: ["question_number", "question_type", "difficulty_index", "question_text", "correct_answer", "explanation", "assessed_competencies", "targeted_misconception"]
+                required: ["targeted_weak_competencies", "key_gaps_or_misconceptions_addressed", "focused_differentiating_competencies"]
+              },
+              worksheet_questions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    question_number: { type: "integer" },
+                    question_type: { type: "string" },
+                    difficulty_index: { type: "string" },
+                    question_text: { type: "string" },
+                    options: { type: "array", items: { type: "string" } },
+                    correct_answer: { type: "string" },
+                    explanation: { type: "string" },
+                    assessed_competencies: { type: "array", items: { type: "string" } },
+                    targeted_misconception: { type: "string" }
+                  },
+                  required: ["question_number", "question_type", "difficulty_index", "question_text", "correct_answer", "explanation", "assessed_competencies", "targeted_misconception"]
+                }
               }
-            }
-          },
-          required: ["worksheet_title", "analysis_summary_for_worksheet_design", "worksheet_questions"]
-        }
-      });
+            },
+            required: ["worksheet_title", "analysis_summary_for_worksheet_design", "worksheet_questions"]
+          }
+        }),
+        3,
+        2000
+      );
 
 
 
@@ -596,6 +618,26 @@ Output Format: Valid JSON object matching the schema.`;
       setWorksheet(updatedWorksheet);
     } catch (error) {
       console.error("Error generating worksheet:", error);
+      
+      // Log error to database
+      try {
+        const user = await base44.auth.me();
+        await base44.entities.ErrorLog.create({
+          error_type: "worksheet_generation",
+          error_message: error.message || String(error),
+          error_stack: error.stack || "",
+          context: {
+            lesson_id: lessonId,
+            course_name: lessonData?.course_name,
+            worksheet_number: worksheetNum,
+            error_details: error.response?.data || {}
+          },
+          user_email: user.email
+        });
+      } catch (logError) {
+        console.error("Failed to log error:", logError);
+      }
+      
       alert("Failed to generate worksheet. Please try again. Error: " + error.message);
       navigate(createPageUrl("Home"));
     }
@@ -1126,8 +1168,31 @@ Output Format: Valid JSON matching the required schema.`;
         })
       );
 
-      // Award 15 points for completing a worksheet
-      let pointsEarned = 15;
+      const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
+      let pointsEarned = 50;
+      
+      questionsWithGrading.forEach(q => {
+        if (isSubjectiveQuestion(q.question_type) && q.ai_score_out_of_10 !== undefined) {
+          pointsEarned += Math.round(q.ai_score_out_of_10 * 2.5);
+        } else if (q.is_correct) {
+          const difficultyMultiplier = {
+            "Foundational": 5,
+            "Conceptual": 10,
+            "Moderate Exam-Level": 15,
+            "Challenging Exam-Level": 20,
+            "High Challenge Exam-Level": 25
+          }[q.difficulty_index] || 10;
+          pointsEarned += difficultyMultiplier;
+        }
+      });
+
+      if (correctCount === questionsWithGrading.length) {
+        pointsEarned += 100;
+      }
+
+      if (letterGrade.startsWith('A')) {
+        pointsEarned += 50;
+      }
 
       const today = new Date().toDateString();
       const lastActivity = user.last_activity_date ? new Date(user.last_activity_date).toDateString() : null;
