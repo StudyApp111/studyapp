@@ -13,7 +13,6 @@ import { ArrowLeft, BarChart3, CheckCircle2, AlertCircle, ExternalLink } from "l
 export default function Analytics() {
   const navigate = useNavigate();
   const [gtmId, setGtmId] = useState("");
-  const [gaId, setGaId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -38,7 +37,6 @@ export default function Analytics() {
       const configs = await base44.entities.AppConfiguration.list();
       if (configs.length > 0) {
         setGtmId(configs[0].gtm_container_id || "");
-        setGaId(configs[0].ga_tracking_id || "");
         setConfigId(configs[0].id);
       }
     } catch (err) {
@@ -53,35 +51,23 @@ export default function Analytics() {
     return gtmPattern.test(id);
   };
 
-  const validateGaId = (id) => {
-    const gaPattern = /^G-[A-Z0-9]{10,}$/;
-    return gaPattern.test(id);
-  };
-
   const handleSave = async () => {
     setError("");
     setSuccess(false);
 
-    if (!gtmId.trim() && !gaId.trim()) {
-      setError("Please enter at least one tracking ID (GTM or GA)");
+    if (!gtmId.trim()) {
+      setError("Please enter your GTM Container ID");
       return;
     }
 
-    if (gtmId.trim() && !validateGtmId(gtmId.trim())) {
+    if (!validateGtmId(gtmId.trim())) {
       setError("Invalid GTM ID format. Should be GTM-XXXXXXX");
-      return;
-    }
-
-    if (gaId.trim() && !validateGaId(gaId.trim())) {
-      setError("Invalid GA ID format. Should be G-XXXXXXXXXX");
       return;
     }
 
     setIsSaving(true);
     try {
-      const data = {};
-      if (gtmId.trim()) data.gtm_container_id = gtmId.trim();
-      if (gaId.trim()) data.ga_tracking_id = gaId.trim();
+      const data = { gtm_container_id: gtmId.trim() };
 
       if (configId) {
         await base44.entities.AppConfiguration.update(configId, data);
@@ -145,10 +131,10 @@ export default function Analytics() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Analytics Configuration</CardTitle>
-                  <CardDescription>Configure Google Analytics and Tag Manager</CardDescription>
+                  <CardTitle>Google Tag Manager</CardTitle>
+                  <CardDescription>Configure GTM tracking for your app</CardDescription>
                 </div>
-                {((gtmId && validateGtmId(gtmId)) || (gaId && validateGaId(gaId))) && (
+                {(gtmId && validateGtmId(gtmId)) && (
                   <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
                     <CheckCircle2 className="w-3 h-3 mr-1" />
                     Active
@@ -174,21 +160,7 @@ export default function Analytics() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="gaId">Google Analytics Tracking ID</Label>
-                <Input
-                  id="gaId"
-                  value={gaId}
-                  onChange={(e) => setGaId(e.target.value)}
-                  placeholder="G-XXXXXXXXXX"
-                  className="text-base font-mono"
-                />
-                <p className="text-xs text-slate-500">
-                  Format: G-XXXXXXXXXX (e.g., G-J5CF3WKGDR)
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="gtmId">GTM Container ID (Optional)</Label>
+                <Label htmlFor="gtmId">GTM Container ID</Label>
                 <Input
                   id="gtmId"
                   value={gtmId}
@@ -204,24 +176,15 @@ export default function Analytics() {
               <div className="bg-slate-50 rounded-lg p-4 space-y-3">
                 <h3 className="font-semibold text-slate-900 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-slate-600" />
-                  How to get your tracking IDs
+                  How to get your GTM Container ID
                 </h3>
-                <div className="space-y-3 text-sm text-slate-600">
-                  <div>
-                    <p className="font-medium text-slate-700 mb-1">Google Analytics (GA4):</p>
-                    <ol className="ml-6 list-decimal space-y-1">
-                      <li>Go to <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline inline-flex items-center gap-1">Google Analytics <ExternalLink className="w-3 h-3" /></a></li>
-                      <li>Admin → Data Streams → Select your stream</li>
-                      <li>Copy the Measurement ID (starts with G-)</li>
-                    </ol>
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-700 mb-1">Google Tag Manager (Optional):</p>
-                    <ol className="ml-6 list-decimal space-y-1">
-                      <li>Go to <a href="https://tagmanager.google.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline inline-flex items-center gap-1">Google Tag Manager <ExternalLink className="w-3 h-3" /></a></li>
-                      <li>Find the Container ID in the top right (starts with GTM-)</li>
-                    </ol>
-                  </div>
+                <div className="text-sm text-slate-600">
+                  <ol className="ml-6 list-decimal space-y-1">
+                    <li>Go to <a href="https://tagmanager.google.com" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:underline inline-flex items-center gap-1">Google Tag Manager <ExternalLink className="w-3 h-3" /></a></li>
+                    <li>Create or select your container</li>
+                    <li>Find the Container ID in the top right (starts with GTM-)</li>
+                    <li>Copy and paste it above</li>
+                  </ol>
                 </div>
               </div>
 

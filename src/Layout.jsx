@@ -67,7 +67,6 @@ export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
   const [gtmId, setGtmId] = React.useState(null);
-  const [gaId, setGaId] = React.useState(null);
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -87,17 +86,16 @@ export default function Layout({ children, currentPageName }) {
     checkUser();
   }, [location.pathname, navigate]);
 
-  // Load analytics configuration
+  // Load GTM configuration
   React.useEffect(() => {
     const loadAnalytics = async () => {
       try {
         const configs = await base44.entities.AppConfiguration.list();
-        if (configs.length > 0) {
-          if (configs[0].gtm_container_id) setGtmId(configs[0].gtm_container_id);
-          if (configs[0].ga_tracking_id) setGaId(configs[0].ga_tracking_id);
+        if (configs.length > 0 && configs[0].gtm_container_id) {
+          setGtmId(configs[0].gtm_container_id);
         }
       } catch (error) {
-        console.error("Error loading analytics config:", error);
+        console.error("Error loading GTM config:", error);
       }
     };
     
