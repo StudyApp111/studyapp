@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +30,7 @@ export default function Analytics() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
 
-      if (currentUser.role !== 'admin') {
+      if (currentUser.email !== 'kartikeya2159@gmail.com') {
         navigate(createPageUrl("Home"));
         return;
       }
@@ -109,7 +107,7 @@ export default function Analytics() {
     );
   }
 
-  if (!user || user.role !== 'admin') {
+  if (!user || user.email !== 'kartikeya2159@gmail.com') {
     return null;
   }
 
