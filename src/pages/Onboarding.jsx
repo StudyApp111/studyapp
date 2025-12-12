@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, LogOut, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
+import AddToHomeScreen from "../components/onboarding/AddToHomeScreen";
 
 const questions = [
   {
@@ -56,6 +57,14 @@ export default function Onboarding() {
 
   useEffect(() => {
     loadExistingProfile();
+
+    // Detect if mobile
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isMobileDevice = /mobile|android|iphone|ipad|ipod/.test(userAgent);
+      setIsMobile(isMobileDevice);
+    };
+    checkMobile();
   }, []);
 
   const loadExistingProfile = async () => {
@@ -94,8 +103,18 @@ export default function Onboarding() {
     if (currentStep < questions.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
-      handleSubmit();
+      // If mobile and last step, show Add to Home Screen
+      if (isMobile) {
+        setShowAddToHome(true);
+      } else {
+        handleSubmit();
+      }
     }
+  };
+
+  const handleContinueAfterAddToHome = () => {
+    setShowAddToHome(false);
+    handleSubmit();
   };
 
   const handleBack = () => {
@@ -171,6 +190,11 @@ export default function Onboarding() {
         <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
       </div>
     );
+  }
+
+  // Show Add to Home Screen for mobile users after completing step 3
+  if (showAddToHome) {
+    return <AddToHomeScreen onContinue={handleContinueAfterAddToHome} />;
   }
 
   const currentQuestion = questions[currentStep];
