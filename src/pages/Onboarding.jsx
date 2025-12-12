@@ -51,6 +51,8 @@ export default function Onboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showAddToHome, setShowAddToHome] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     loadExistingProfile();
@@ -149,15 +151,8 @@ export default function Onboarding() {
         });
       }
 
-      // Award 5 points for completing onboarding
-      const currentPoints = user.total_points || 0;
-      const newTotalPoints = currentPoints + 5;
-      const newLevel = Math.floor(newTotalPoints / 100) + 1;
-
       await base44.auth.updateMe({
-        onboarding_completed: true,
-        total_points: newTotalPoints,
-        level: newLevel
+        onboarding_completed: true
       });
 
       await new Promise(resolve => setTimeout(resolve, 500));
