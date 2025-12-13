@@ -405,10 +405,22 @@ export default function AddToHomeScreen({ onContinue }) {
             transition={{ delay: 0.8 }}
           >
             <Button
-              onClick={onContinue}
-              className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-semibold py-6 text-base shadow-lg"
+              onClick={canContinue ? onContinue : undefined}
+              disabled={!canContinue}
+              className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-semibold py-6 text-base shadow-lg relative overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Continue to StudyApp
+              {!canContinue && (
+                <motion.div
+                  className="absolute inset-0 bg-white/30"
+                  initial={{ width: '100%' }}
+                  animate={{ width: '0%' }}
+                  transition={{ duration: 15, ease: "linear" }}
+                  style={{ transformOrigin: 'left' }}
+                />
+              )}
+              <span className="relative z-10">
+                {canContinue ? 'Continue to StudyApp' : `Continue to StudyApp (${countdown}s)`}
+              </span>
             </Button>
             <p className="text-xs text-center text-slate-500 mt-3">
               You can always add it later from your browser menu
