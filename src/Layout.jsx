@@ -376,13 +376,13 @@ export default function Layout({ children, currentPageName }) {
             </header>
           )}
 
-          <div className="flex-1 overflow-auto pb-20 md:pb-0">
+          <div className="flex-1 overflow-auto pb-24 md:pb-0">
             {children}
           </div>
 
           {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
           {showNavigation && !isOnboardingPage && showMobileBottomNav && (
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-4 py-3 safe-area-inset-bottom z-50">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-4 py-4 safe-area-inset-bottom z-50">
               <div className="flex items-center justify-between max-w-lg mx-auto relative">
                 <Link
                   to={createPageUrl("Home")}
@@ -392,7 +392,7 @@ export default function Layout({ children, currentPageName }) {
                       : 'text-slate-600'
                   }`}
                 >
-                  <Home className="w-6 h-6" />
+                  <Home className="w-7 h-7" />
                 </Link>
 
                 <Link
@@ -403,14 +403,14 @@ export default function Layout({ children, currentPageName }) {
                       : 'text-slate-600'
                   }`}
                 >
-                  <FileCheck className="w-6 h-6" />
+                  <FileCheck className="w-7 h-7" />
                   <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                     NEW
                   </span>
                 </Link>
 
-                {/* Elevated CTA Button - Centered with spacing */}
-                <div className="w-14" />
+                {/* Space for center CTA */}
+                <div className="w-16" />
 
                 <Link
                   to={createPageUrl("Leaderboard")}
@@ -420,7 +420,7 @@ export default function Layout({ children, currentPageName }) {
                       : 'text-slate-600'
                   }`}
                 >
-                  <Trophy className="w-6 h-6" />
+                  <Trophy className="w-7 h-7" />
                 </Link>
 
                 <button
@@ -431,15 +431,31 @@ export default function Layout({ children, currentPageName }) {
                       : 'text-slate-600'
                   }`}
                 >
-                  <Settings className="w-6 h-6" />
+                  <Settings className="w-7 h-7" />
                 </button>
 
-                {/* Centered Floating CTA Button */}
+                {/* Redesigned Elevated CTA Button */}
                 <button
                   onClick={() => navigate(createPageUrl("CreateLesson"))}
-                  className="absolute left-1/2 -translate-x-1/2 -top-8 w-14 h-14 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 rounded-full shadow-xl shadow-yellow-500/40 flex items-center justify-center transition-transform hover:scale-110"
+                  className="absolute left-1/2 -translate-x-1/2 -top-10 group"
                 >
-                  <Plus className="w-6 h-6 text-slate-900" />
+                  <div className="relative">
+                    {/* Pulsing glow ring */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 animate-pulse blur-xl opacity-60" />
+
+                    {/* Rotating gradient border */}
+                    <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-yellow-400 to-purple-600 opacity-75 group-hover:opacity-100 transition-opacity animate-spin-slow" 
+                         style={{ animationDuration: '3s' }} />
+
+                    {/* Main button */}
+                    <div className="relative w-16 h-16 bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600 rounded-full shadow-2xl flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+                      <Plus className="w-8 h-8 text-white drop-shadow-lg" strokeWidth={3} />
+                    </div>
+
+                    {/* Sparkle effects */}
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-ping opacity-75" />
+                    <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
+                  </div>
                 </button>
               </div>
             </nav>
