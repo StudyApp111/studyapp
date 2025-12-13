@@ -210,7 +210,11 @@ export default function AddToHomeScreen({ onContinue }) {
             <div className="relative inline-block mb-4">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-yellow-500 rounded-2xl blur-xl opacity-50" />
               <div className="relative bg-gradient-to-br from-purple-600 to-yellow-500 p-4 rounded-2xl shadow-lg">
-                <Smartphone className="w-12 h-12 text-white" />
+                <img 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
+                  alt="StudyApp.AI"
+                  className="w-12 h-12 rounded-xl"
+                />
               </div>
               <motion.div
                 animate={{ 
@@ -229,21 +233,18 @@ export default function AddToHomeScreen({ onContinue }) {
             </div>
             
             <h2 className="text-2xl font-bold text-slate-900 mb-2">
-              Save StudyApp like an app
+              Save StudyApp Like An App
             </h2>
             <p className="text-slate-600 text-sm mb-4">
               No download required — access instantly from your home screen
             </p>
-            <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-xs font-semibold">
-              Follow these 3 steps ↓
+            <div className="inline-flex items-center gap-2 bg-purple-100 text-purple-700 px-5 py-3 rounded-full text-lg font-bold">
+              Follow These 3 Steps ↓
             </div>
           </motion.div>
 
           {/* Instructions - Step by Step */}
           <div className="space-y-3 mb-8">
-            <div className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 text-center">
-              Follow these steps in order:
-            </div>
             {instructions.steps.map((step, index) => {
               const StepIcon = step.icon;
               const CustomIcon = step.CustomIcon;
