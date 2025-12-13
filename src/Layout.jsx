@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
+import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 
 const navigationItems = [
   {
@@ -74,10 +75,18 @@ export default function Layout({ children, currentPageName }) {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
         
+        // Track user session
+        await trackUserSession();
+        
+        // Start tracking session duration
+        const cleanup = trackSessionDuration();
+        
         // Redirect to onboarding if not completed and not already on onboarding page
         if (!currentUser.onboarding_completed && location.pathname !== createPageUrl("Onboarding")) {
           navigate(createPageUrl("Onboarding"));
         }
+        
+        return cleanup;
       } catch (error) {
         console.error("Error fetching user:", error);
       }

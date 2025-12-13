@@ -10,6 +10,7 @@ import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, LogOut, Loader2 } fro
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
 import AddToHomeScreen from "../components/onboarding/AddToHomeScreen";
+import { trackUserSession } from "../components/utils/userTracking";
 
 const questions = [
   {
@@ -174,8 +175,11 @@ export default function Onboarding() {
         onboarding_completed: true
       });
 
+      // Track user session after onboarding
+      await trackUserSession();
+
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       navigate(createPageUrl("Home"), { replace: true });
     } catch (error) {
       console.error("Error saving profile:", error);
