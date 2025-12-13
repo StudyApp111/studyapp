@@ -72,20 +72,20 @@ export default function AddToHomeScreen({ onContinue }) {
         steps: [
           { 
             text: "Tap the Share button at the BOTTOM CENTER",
-            detail: "(box with arrow pointing up)",
+            detail: "To open the share menu",
             CustomIcon: IOSShareIcon,
             showArrow: false
           },
           { 
-            text: "Scroll down and tap 'Add to Home Screen'",
-            detail: "(look for the plus icon)",
-            CustomIcon: IOSAddIcon,
+            text: "Tap the three dots (More...) in the popup",
+            detail: "To see more options",
+            icon: MoreVertical,
             showArrow: false
           },
           { 
-            text: "Tap 'Add' in the TOP RIGHT",
-            detail: "and you're all set!",
-            icon: Home,
+            text: "Tap 'Add to Home Screen' and then 'Add'",
+            detail: "And you're all set!",
+            CustomIcon: IOSAddIcon,
             showArrow: false
           }
         ]
@@ -95,20 +95,20 @@ export default function AddToHomeScreen({ onContinue }) {
         arrowPosition: "top-right",
         steps: [
           { 
-            text: "Tap the three dots in the TOP RIGHT corner",
-            detail: "to open the share menu",
-            icon: MoreVertical,
+            text: "Tap the Share button in the TOP RIGHT corner",
+            detail: "To open the share menu",
+            CustomIcon: IOSShareIcon,
             showArrow: false
           },
           { 
-            text: "Tap 'More...' (three dots) in the BOTTOM RIGHT of the popup",
-            detail: "to see more options",
+            text: "Tap the three dots (More...) in the popup",
+            detail: "To see more options",
             icon: MoreVertical,
             showArrow: false
           },
           { 
             text: "Tap 'Add to Home Screen' and then 'Add'",
-            detail: "and you're all set!",
+            detail: "And you're all set!",
             CustomIcon: IOSAddIcon,
             showArrow: false
           }
@@ -120,19 +120,19 @@ export default function AddToHomeScreen({ onContinue }) {
         steps: [
           { 
             text: "Tap the three dots (⋮) in the TOP RIGHT corner",
-            detail: "to open the menu",
+            detail: "To open the menu",
             icon: MoreVertical,
             showArrow: false
           },
           { 
             text: "Tap 'Add to Home screen'",
-            detail: "(with a plus icon)",
+            detail: "With a plus icon",
             icon: Plus,
             showArrow: false
           },
           { 
             text: "Tap 'Add' to confirm",
-            detail: "and you're all set!",
+            detail: "And you're all set!",
             icon: Home,
             showArrow: false
           }
@@ -144,19 +144,19 @@ export default function AddToHomeScreen({ onContinue }) {
         steps: [
           { 
             text: "Tap your browser menu in the TOP RIGHT",
-            detail: "(three dots or lines)",
+            detail: "Three dots or lines",
             icon: MoreVertical,
             showArrow: false
           },
           { 
             text: "Look for 'Add to Home screen'",
-            detail: "or 'Install app'",
+            detail: "Or 'Install app'",
             icon: Plus,
             showArrow: false
           },
           { 
             text: "Tap 'Add' or 'Install'",
-            detail: "and you're all set!",
+            detail: "And you're all set!",
             icon: Home,
             showArrow: false
           }
