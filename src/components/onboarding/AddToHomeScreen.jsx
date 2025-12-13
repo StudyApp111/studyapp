@@ -243,96 +243,69 @@ export default function AddToHomeScreen({ onContinue }) {
             </div>
           </motion.div>
 
-          {/* Visual Arrow Indicator */}
+          {/* Visual Arrow Indicator - Static and positioned correctly */}
           {instructions.steps[0]?.showArrow && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
+            <div
               className="fixed z-50 pointer-events-none"
               style={{
                 ...(instructions.arrowPosition === 'top-right' && {
-                  top: '10px',
-                  right: '10px'
+                  top: '60px',
+                  right: '15px'
                 }),
                 ...(instructions.arrowPosition === 'bottom-right' && {
-                  bottom: '80px',
-                  right: '20px'
+                  bottom: '100px',
+                  right: '15px'
                 }),
                 ...(instructions.arrowPosition === 'bottom-center' && {
-                  bottom: '80px',
+                  bottom: '100px',
                   left: '50%',
                   transform: 'translateX(-50%)'
                 })
               }}
             >
               <motion.div
-                animate={{ 
-                  y: instructions.arrowPosition === 'top-right' ? [-10, 0, -10] : [10, 0, 10],
-                  x: instructions.arrowPosition === 'top-right' ? [10, 0, 10] : 0
-                }}
-                transition={{ 
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="relative"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5, duration: 0.3 }}
               >
-                {/* Curved Arrow SVG */}
-                <svg 
-                  width="80" 
-                  height="80" 
-                  viewBox="0 0 80 80" 
-                  className="drop-shadow-lg"
-                  style={{
-                    transform: instructions.arrowPosition === 'top-right' 
-                      ? 'rotate(45deg)' 
-                      : instructions.arrowPosition === 'bottom-right'
-                      ? 'rotate(135deg)'
-                      : 'rotate(180deg)'
-                  }}
-                >
-                  {/* Curved path */}
-                  <path
-                    d="M 10 70 Q 10 10, 70 10"
-                    stroke="#EAB308"
-                    strokeWidth="4"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                  {/* Arrow head */}
-                  <path
-                    d="M 70 10 L 60 5 L 65 15 Z"
-                    fill="#EAB308"
-                  />
-                </svg>
-                <div 
-                  className="absolute bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap shadow-lg"
-                  style={{
-                    ...(instructions.arrowPosition === 'top-right' && {
-                      bottom: '-10px',
-                      left: '-30px'
-                    }),
-                    ...(instructions.arrowPosition === 'bottom-right' && {
-                      top: '-10px',
-                      left: '-30px'
-                    }),
-                    ...(instructions.arrowPosition === 'bottom-center' && {
-                      top: '-10px',
-                      left: '50%',
-                      transform: 'translateX(-50%)'
-                    })
-                  }}
-                >
-                  Look here!
+                {/* Simple Arrow pointing to browser UI */}
+                <div className="relative">
+                  <svg 
+                    width="60" 
+                    height="60" 
+                    viewBox="0 0 60 60"
+                    className="drop-shadow-xl"
+                  >
+                    {instructions.arrowPosition === 'top-right' && (
+                      <>
+                        <line x1="30" y1="50" x2="30" y2="10" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
+                        <polygon points="30,5 25,15 35,15" fill="#F59E0B" />
+                      </>
+                    )}
+                    {instructions.arrowPosition === 'bottom-right' && (
+                      <>
+                        <line x1="30" y1="10" x2="30" y2="50" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
+                        <polygon points="30,55 25,45 35,45" fill="#F59E0B" />
+                      </>
+                    )}
+                    {instructions.arrowPosition === 'bottom-center' && (
+                      <>
+                        <line x1="30" y1="10" x2="30" y2="50" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
+                        <polygon points="30,55 25,45 35,45" fill="#F59E0B" />
+                      </>
+                    )}
+                  </svg>
+                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-lg">
+                    Look here!
+                  </div>
                 </div>
               </motion.div>
-            </motion.div>
+            </div>
           )}
 
           {/* Instructions - Step by Step */}
           <div className="space-y-3 mb-8">
-            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+            <div className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 text-center">
               Follow these steps in order:
             </div>
             {instructions.steps.map((step, index) => {
@@ -346,11 +319,6 @@ export default function AddToHomeScreen({ onContinue }) {
                   transition={{ delay: 0.3 + index * 0.15 }}
                   className="relative"
                 >
-                  {/* Connecting line */}
-                  {index < instructions.steps.length - 1 && (
-                    <div className="absolute left-6 top-12 w-0.5 h-8 bg-gradient-to-b from-purple-300 to-yellow-300" />
-                  )}
-                  
                   <div className="flex gap-4 items-start p-4 rounded-xl bg-white border-2 border-slate-200 shadow-sm hover:shadow-md hover:border-purple-300 transition-all">
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-yellow-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
