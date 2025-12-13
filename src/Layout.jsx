@@ -391,79 +391,78 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
           {showNavigation && !isOnboardingPage && showMobileBottomNav && (
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-4 py-4 safe-area-inset-bottom z-50">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-2 py-3 safe-area-inset-bottom z-50">
               <div className="flex items-center justify-between max-w-lg mx-auto relative">
                 <Link
                   to={createPageUrl("Home")}
-                  className={`flex items-center justify-center p-3 rounded-lg transition-all ${
+                  className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all min-w-0 ${
                     location.pathname === createPageUrl("Home")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <Home className="w-7 h-7" />
+                  <Home className="w-6 h-6" />
+                  <span className="text-[10px] font-medium">Home</span>
                 </Link>
 
                 <Link
                   to={createPageUrl("SmartGrader")}
-                  className={`flex items-center justify-center p-3 rounded-lg transition-all relative ${
+                  className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all relative min-w-0 ${
                     location.pathname === createPageUrl("SmartGrader")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <FileCheck className="w-7 h-7" />
-                  <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                    NEW
-                  </span>
+                  <div className="relative">
+                    <FileCheck className="w-6 h-6" />
+                    <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full">
+                      NEW
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-medium">Grader</span>
                 </Link>
 
                 {/* Space for center CTA */}
-                <div className="w-16" />
+                <div className="w-14" />
 
                 <Link
                   to={createPageUrl("Leaderboard")}
-                  className={`flex items-center justify-center p-3 rounded-lg transition-all ${
+                  className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all min-w-0 ${
                     location.pathname === createPageUrl("Leaderboard")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <Trophy className="w-7 h-7" />
+                  <Trophy className="w-6 h-6" />
+                  <span className="text-[10px] font-medium">Ranks</span>
                 </Link>
 
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}
-                  className={`flex items-center justify-center p-3 rounded-lg transition-all ${
+                  className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all min-w-0 ${
                     location.pathname === createPageUrl("Settings")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <Settings className="w-7 h-7" />
+                  <Settings className="w-6 h-6" />
+                  <span className="text-[10px] font-medium">Settings</span>
                 </button>
 
-                {/* Redesigned Elevated CTA Button */}
+                {/* Sleek Elevated CTA Button */}
                 <button
                   onClick={() => navigate(createPageUrl("CreateLesson"))}
-                  className="absolute left-1/2 -translate-x-1/2 -top-10 group"
+                  className="absolute left-1/2 -translate-x-1/2 -top-8 group"
                 >
                   <div className="relative">
-                    {/* Pulsing glow ring */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 animate-pulse blur-xl opacity-60" />
+                    {/* Subtle glow */}
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
 
-                    {/* Rotating gradient border */}
-                    <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-600 via-yellow-400 to-purple-600 opacity-75 group-hover:opacity-100 transition-opacity animate-spin-slow" 
-                         style={{ animationDuration: '3s' }} />
-
-                    {/* Main button */}
-                    <div className="relative w-16 h-16 bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600 rounded-full shadow-2xl flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
-                      <Plus className="w-8 h-8 text-white drop-shadow-lg" strokeWidth={3} />
+                    {/* Main button - sleek and minimal */}
+                    <div className="relative w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl shadow-xl flex flex-col items-center justify-center transform group-hover:scale-105 transition-all duration-200 border-2 border-white">
+                      <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
+                      <span className="text-[9px] font-bold text-white mt-0.5">Create</span>
                     </div>
-
-                    {/* Sparkle effects */}
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full animate-ping opacity-75" />
-                    <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-purple-400 rounded-full animate-pulse" />
                   </div>
                 </button>
               </div>
