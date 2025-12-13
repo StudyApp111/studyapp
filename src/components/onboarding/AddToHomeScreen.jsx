@@ -10,16 +10,21 @@ export default function AddToHomeScreen({ onContinue }) {
     isAndroid: false,
     isSafari: false,
     isChrome: false,
+    isIOSChrome: false,
     isFirefox: false,
     isMobile: false
   });
+  const [countdown, setCountdown] = useState(15);
+  const [canContinue, setCanContinue] = useState(false);
 
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase();
     const isIOS = /iphone|ipad|ipod/.test(userAgent);
     const isAndroid = /android/.test(userAgent);
-    const isSafari = /safari/.test(userAgent) && !/chrome/.test(userAgent);
-    const isChrome = /chrome/.test(userAgent) && !/edg/.test(userAgent);
+    // Chrome on iOS still uses Safari's WebKit, so we check for CriOS
+    const isIOSChrome = isIOS && /crios/.test(userAgent);
+    const isSafari = isIOS && /safari/.test(userAgent) && !isIOSChrome;
+    const isChrome = /chrome/.test(userAgent) && !/edg/.test(userAgent) && !isIOS;
     const isFirefox = /firefox/.test(userAgent);
     const isMobile = /mobile|android|iphone|ipad|ipod/.test(userAgent);
 
@@ -28,10 +33,21 @@ export default function AddToHomeScreen({ onContinue }) {
       isAndroid,
       isSafari,
       isChrome,
+      isIOSChrome,
       isFirefox,
       isMobile
     });
   }, []);
+
+  // Countdown timer
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setCanContinue(true);
+    }
+  }, [countdown]);
 
   // iOS Safari Share icon (box with arrow up)
   const IOSShareIcon = () => (
@@ -52,7 +68,7 @@ export default function AddToHomeScreen({ onContinue }) {
   const getInstructions = () => {
     if (deviceInfo.isIOS && deviceInfo.isSafari) {
       return {
-        arrowPosition: "bottom",
+        arrowPosition: "bottom-center",
         steps: [
           { 
             text: "Tap the Share button", 
@@ -70,39 +86,39 @@ export default function AddToHomeScreen({ onContinue }) {
           { 
             text: "Tap 'Add' in the top right",
             detail: "and you're all set!",
-            icon: null,
+            icon: Home,
             showArrow: false
           }
         ]
       };
-    } else if (deviceInfo.isIOS && deviceInfo.isChrome) {
+    } else if (deviceInfo.isIOSChrome) {
       return {
-        arrowPosition: "bottom",
+        arrowPosition: "bottom-right",
         steps: [
           { 
             text: "Tap the Share button",
-            detail: "(at the bottom of your screen)",
-            CustomIcon: IOSShareIcon,
+            detail: "(at the bottom right - three dots)",
+            icon: MoreVertical,
             showArrow: true,
             arrowDirection: "down"
           },
           { 
             text: "Scroll and tap 'Add to Home Screen'",
-            detail: "",
+            detail: "(look for the plus icon)",
             CustomIcon: IOSAddIcon,
             showArrow: false
           },
           { 
             text: "Tap 'Add' to confirm",
-            detail: "",
-            icon: null,
+            detail: "and you're all set!",
+            icon: Home,
             showArrow: false
           }
         ]
       };
     } else if (deviceInfo.isAndroid && deviceInfo.isChrome) {
       return {
-        arrowPosition: "top",
+        arrowPosition: "top-right",
         steps: [
           { 
             text: "Tap the three dots menu",
@@ -120,14 +136,14 @@ export default function AddToHomeScreen({ onContinue }) {
           { 
             text: "Tap 'Add' to confirm",
             detail: "and you're all set!",
-            icon: null,
+            icon: Home,
             showArrow: false
           }
         ]
       };
     } else if (deviceInfo.isAndroid) {
       return {
-        arrowPosition: "top",
+        arrowPosition: "top-right",
         steps: [
           { 
             text: "Tap your browser menu",
@@ -144,15 +160,15 @@ export default function AddToHomeScreen({ onContinue }) {
           },
           { 
             text: "Tap 'Add' or 'Install'",
-            detail: "",
-            icon: null,
+            detail: "and you're all set!",
+            icon: Home,
             showArrow: false
           }
         ]
       };
     } else {
       return {
-        arrowPosition: "top",
+        arrowPosition: "top-right",
         steps: [
           { 
             text: "Open your browser menu",
@@ -168,8 +184,8 @@ export default function AddToHomeScreen({ onContinue }) {
           },
           { 
             text: "Follow the prompts",
-            detail: "",
-            icon: null,
+            detail: "and you're all set!",
+            icon: Home,
             showArrow: false
           }
         ]
@@ -233,32 +249,84 @@ export default function AddToHomeScreen({ onContinue }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className={`${instructions.arrowPosition === 'bottom' ? 'mb-4' : 'mb-4'}`}
+              className="fixed z-50 pointer-events-none"
+              style={{
+                ...(instructions.arrowPosition === 'top-right' && {
+                  top: '10px',
+                  right: '10px'
+                }),
+                ...(instructions.arrowPosition === 'bottom-right' && {
+                  bottom: '80px',
+                  right: '20px'
+                }),
+                ...(instructions.arrowPosition === 'bottom-center' && {
+                  bottom: '80px',
+                  left: '50%',
+                  transform: 'translateX(-50%)'
+                })
+              }}
             >
-              <div className={`relative ${instructions.arrowPosition === 'bottom' ? 'mb-2' : 'mb-2'}`}>
-                <motion.div
-                  animate={{ 
-                    y: instructions.arrowPosition === 'bottom' ? [0, 10, 0] : [0, -10, 0]
+              <motion.div
+                animate={{ 
+                  y: instructions.arrowPosition === 'top-right' ? [-10, 0, -10] : [10, 0, 10],
+                  x: instructions.arrowPosition === 'top-right' ? [10, 0, 10] : 0
+                }}
+                transition={{ 
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="relative"
+              >
+                {/* Curved Arrow SVG */}
+                <svg 
+                  width="80" 
+                  height="80" 
+                  viewBox="0 0 80 80" 
+                  className="drop-shadow-lg"
+                  style={{
+                    transform: instructions.arrowPosition === 'top-right' 
+                      ? 'rotate(45deg)' 
+                      : instructions.arrowPosition === 'bottom-right'
+                      ? 'rotate(135deg)'
+                      : 'rotate(180deg)'
                   }}
-                  transition={{ 
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                  className={`flex justify-${instructions.arrowPosition === 'bottom' ? 'center' : 'end'} ${instructions.arrowPosition === 'bottom' ? '' : 'pr-8'}`}
                 >
-                  <div className="text-yellow-600">
-                    {instructions.arrowPosition === 'bottom' ? (
-                      <ArrowUp className="w-8 h-8 transform rotate-180" strokeWidth={3} />
-                    ) : (
-                      <ArrowUp className="w-8 h-8" strokeWidth={3} />
-                    )}
-                  </div>
-                </motion.div>
-                <p className={`text-xs font-semibold text-yellow-700 text-${instructions.arrowPosition === 'bottom' ? 'center' : 'right'} ${instructions.arrowPosition === 'bottom' ? '' : 'pr-6'}`}>
+                  {/* Curved path */}
+                  <path
+                    d="M 10 70 Q 10 10, 70 10"
+                    stroke="#EAB308"
+                    strokeWidth="4"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                  {/* Arrow head */}
+                  <path
+                    d="M 70 10 L 60 5 L 65 15 Z"
+                    fill="#EAB308"
+                  />
+                </svg>
+                <div 
+                  className="absolute bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap shadow-lg"
+                  style={{
+                    ...(instructions.arrowPosition === 'top-right' && {
+                      bottom: '-10px',
+                      left: '-30px'
+                    }),
+                    ...(instructions.arrowPosition === 'bottom-right' && {
+                      top: '-10px',
+                      left: '-30px'
+                    }),
+                    ...(instructions.arrowPosition === 'bottom-center' && {
+                      top: '-10px',
+                      left: '50%',
+                      transform: 'translateX(-50%)'
+                    })
+                  }}
+                >
                   Look here!
-                </p>
-              </div>
+                </div>
+              </motion.div>
             </motion.div>
           )}
 
