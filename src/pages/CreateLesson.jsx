@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, History } from "lucide-react";
+import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, History, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 
 export default function CreateLesson() {
@@ -24,6 +24,7 @@ export default function CreateLesson() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
   const [userGrade, setUserGrade] = useState("");
+  const [showHints, setShowHints] = useState(false);
 
   useEffect(() => {
     loadUserProfile();
@@ -424,20 +425,6 @@ Output Format: JSON object matching the specified schema`;
                     </Label>
                   </div>
 
-                  <div className="relative">
-                    <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 bg-slate-50 opacity-60">
-                      <RadioGroupItem value="url" id="url" disabled />
-                      <Label htmlFor="url" className="flex items-center gap-2 flex-1 cursor-not-allowed">
-                        <LinkIcon className="w-5 h-5 text-slate-400" />
-                        <div>
-                          <p className="font-medium text-slate-500">Provide a URL</p>
-                          <p className="text-xs text-slate-400">Link to course materials, syllabus, or educational content</p>
-                        </div>
-                      </Label>
-                      <Badge className="bg-yellow-100 text-yellow-800 border border-yellow-300">Coming Soon</Badge>
-                    </div>
-                  </div>
-
                   <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
                     <RadioGroupItem value="file" id="file" />
                     <Label htmlFor="file" className="flex items-center gap-2 flex-1 cursor-pointer">
@@ -452,19 +439,52 @@ Output Format: JSON object matching the specified schema`;
               </div>
 
               {inputType === "description" && (
-                <div className="space-y-2">
-                  <Label htmlFor="description">Course Description *</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="description">Describe what you want to study</Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe what this course covers, key topics, learning objectives..."
+                    placeholder="Paste or describe anything you want help with — a unit, chapter, lecture notes, article, or even exam topics. You can include specific areas you're struggling with or want to focus on. The more context you provide, the more personalized and accurate your lessons will be."
                     disabled={isProcessing}
                     className="min-h-[150px] text-base"
                   />
-                  <p className="text-xs text-slate-500">
-                    Provide as much detail as possible for better personalization
-                  </p>
+                  
+                  {/* Expandable Hints Section */}
+                  <div className="border border-purple-200 rounded-lg overflow-hidden bg-gradient-to-r from-purple-50 to-yellow-50">
+                    <button
+                      type="button"
+                      onClick={() => setShowHints(!showHints)}
+                      className="w-full flex items-center justify-between p-4 hover:bg-purple-100/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-purple-600" />
+                        <span className="font-semibold text-purple-900">Need inspiration? See example prompts</span>
+                      </div>
+                      {showHints ? (
+                        <ChevronUp className="w-5 h-5 text-purple-600" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-purple-600" />
+                      )}
+                    </button>
+                    
+                    {showHints && (
+                      <div className="px-4 pb-4 space-y-3 border-t border-purple-200 pt-4">
+                        <div className="bg-white rounded-lg p-3 border border-purple-200 hover:border-purple-400 transition-colors cursor-pointer"
+                             onClick={() => setDescription("I need help on my final exam that's primarily reading comprehension")}>
+                          <p className="text-sm text-slate-700 italic">"I need help on my final exam that's primarily reading comprehension"</p>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-purple-200 hover:border-purple-400 transition-colors cursor-pointer"
+                             onClick={() => setDescription("I have a test on the following news article")}>
+                          <p className="text-sm text-slate-700 italic">"I have a test on the following news article"</p>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 border border-purple-200 hover:border-purple-400 transition-colors cursor-pointer"
+                             onClick={() => setDescription("I would like to learn about chapter 5 (cell respiration) in my biology textbook")}>
+                          <p className="text-sm text-slate-700 italic">"I would like to learn about chapter 5 (cell respiration) in my biology textbook"</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
