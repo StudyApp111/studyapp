@@ -71,11 +71,10 @@ export default function AddToHomeScreen({ onContinue }) {
         arrowPosition: "bottom-center",
         steps: [
           { 
-            text: "Tap the Share button", 
-            detail: "(box with arrow at bottom center)",
+            text: "Tap the Share button at the BOTTOM CENTER",
+            detail: "(box with arrow pointing up)",
             CustomIcon: IOSShareIcon,
-            showArrow: true,
-            arrowDirection: "down"
+            showArrow: false
           },
           { 
             text: "Scroll down and tap 'Add to Home Screen'",
@@ -84,7 +83,7 @@ export default function AddToHomeScreen({ onContinue }) {
             showArrow: false
           },
           { 
-            text: "Tap 'Add' in the top right",
+            text: "Tap 'Add' in the TOP RIGHT",
             detail: "and you're all set!",
             icon: Home,
             showArrow: false
@@ -93,25 +92,24 @@ export default function AddToHomeScreen({ onContinue }) {
       };
     } else if (deviceInfo.isIOSChrome) {
       return {
-        arrowPosition: "bottom-right",
+        arrowPosition: "top-right",
         steps: [
           { 
-            text: "Tap the Share button",
-            detail: "(at the bottom right - three dots)",
+            text: "Tap the three dots in the TOP RIGHT corner",
+            detail: "to open the share menu",
             icon: MoreVertical,
-            showArrow: true,
-            arrowDirection: "down"
-          },
-          { 
-            text: "Scroll and tap 'Add to Home Screen'",
-            detail: "(look for the plus icon)",
-            CustomIcon: IOSAddIcon,
             showArrow: false
           },
           { 
-            text: "Tap 'Add' to confirm",
+            text: "Tap 'More...' (three dots) in the BOTTOM RIGHT of the popup",
+            detail: "to see more options",
+            icon: MoreVertical,
+            showArrow: false
+          },
+          { 
+            text: "Tap 'Add to Home Screen' and then 'Add'",
             detail: "and you're all set!",
-            icon: Home,
+            CustomIcon: IOSAddIcon,
             showArrow: false
           }
         ]
@@ -121,11 +119,10 @@ export default function AddToHomeScreen({ onContinue }) {
         arrowPosition: "top-right",
         steps: [
           { 
-            text: "Tap the three dots menu",
-            detail: "(⋮ at top right corner)",
+            text: "Tap the three dots (⋮) in the TOP RIGHT corner",
+            detail: "to open the menu",
             icon: MoreVertical,
-            showArrow: true,
-            arrowDirection: "up"
+            showArrow: false
           },
           { 
             text: "Tap 'Add to Home screen'",
@@ -146,11 +143,10 @@ export default function AddToHomeScreen({ onContinue }) {
         arrowPosition: "top-right",
         steps: [
           { 
-            text: "Tap your browser menu",
-            detail: "(three dots or lines at top)",
+            text: "Tap your browser menu in the TOP RIGHT",
+            detail: "(three dots or lines)",
             icon: MoreVertical,
-            showArrow: true,
-            arrowDirection: "up"
+            showArrow: false
           },
           { 
             text: "Look for 'Add to Home screen'",
@@ -243,66 +239,6 @@ export default function AddToHomeScreen({ onContinue }) {
             </div>
           </motion.div>
 
-          {/* Visual Arrow Indicator - Static and positioned correctly */}
-          {instructions.steps[0]?.showArrow && (
-            <div
-              className="fixed z-50 pointer-events-none"
-              style={{
-                ...(instructions.arrowPosition === 'top-right' && {
-                  top: '60px',
-                  right: '15px'
-                }),
-                ...(instructions.arrowPosition === 'bottom-right' && {
-                  bottom: '100px',
-                  right: '15px'
-                }),
-                ...(instructions.arrowPosition === 'bottom-center' && {
-                  bottom: '100px',
-                  left: '50%',
-                  transform: 'translateX(-50%)'
-                })
-              }}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5, duration: 0.3 }}
-              >
-                {/* Simple Arrow pointing to browser UI */}
-                <div className="relative">
-                  <svg 
-                    width="60" 
-                    height="60" 
-                    viewBox="0 0 60 60"
-                    className="drop-shadow-xl"
-                  >
-                    {instructions.arrowPosition === 'top-right' && (
-                      <>
-                        <line x1="30" y1="50" x2="30" y2="10" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
-                        <polygon points="30,5 25,15 35,15" fill="#F59E0B" />
-                      </>
-                    )}
-                    {instructions.arrowPosition === 'bottom-right' && (
-                      <>
-                        <line x1="30" y1="10" x2="30" y2="50" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
-                        <polygon points="30,55 25,45 35,45" fill="#F59E0B" />
-                      </>
-                    )}
-                    {instructions.arrowPosition === 'bottom-center' && (
-                      <>
-                        <line x1="30" y1="10" x2="30" y2="50" stroke="#F59E0B" strokeWidth="4" strokeLinecap="round" />
-                        <polygon points="30,55 25,45 35,45" fill="#F59E0B" />
-                      </>
-                    )}
-                  </svg>
-                  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-lg">
-                    Look here!
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-
           {/* Instructions - Step by Step */}
           <div className="space-y-3 mb-8">
             <div className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 text-center">
@@ -337,11 +273,11 @@ export default function AddToHomeScreen({ onContinue }) {
                           )}
                         </div>
                         <div className="flex-1">
-                          <p className="font-bold text-slate-900 text-base leading-tight">
+                          <p className="font-extrabold text-slate-900 text-base leading-tight">
                             {step.text}
                           </p>
                           {step.detail && (
-                            <p className="text-sm text-slate-600 mt-1">
+                            <p className="text-sm font-medium text-slate-700 mt-1">
                               {step.detail}
                             </p>
                           )}
