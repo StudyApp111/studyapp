@@ -110,7 +110,7 @@ button[class*="inline-flex"] {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* Increase tap target size for small buttons on mobile */
   button::before, a[role="button"]::before {
     content: '';
@@ -121,4 +121,18 @@ button[class*="inline-flex"] {
     bottom: -8px;
     z-index: -1;
   }
+}
+
+/* Slow spin animation for CTA button */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
 }
