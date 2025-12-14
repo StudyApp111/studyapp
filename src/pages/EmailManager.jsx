@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, Send, Clock, Users, AlertCircle, CheckCircle, Zap, Edit, AlertTriangle } from "lucide-react";
+import { Mail, Send, Clock, Users, AlertCircle, CheckCircle, Zap, Edit, AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -41,6 +41,15 @@ export default function EmailManager() {
   const [confirmEnableId, setConfirmEnableId] = useState(null);
   const [testingAutoEmail, setTestingAutoEmail] = useState(null);
   const [autoTestRecipient, setAutoTestRecipient] = useState("");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newTemplate, setNewTemplate] = useState({
+    name: "",
+    trigger_type: "",
+    subject: "",
+    body: "",
+    trigger_config: {}
+  });
+  const [autoQuillRef, setAutoQuillRef] = useState(null);
 
   useEffect(() => {
     checkAdminAccess();
@@ -223,6 +232,64 @@ export default function EmailManager() {
       setError(err.message || "Failed to send test email");
     } finally {
       setTestingAutoEmail(null);
+    }
+  };
+
+  const insertAutoDynamicField = (field) => {
+    if (editingTemplate) {
+      if (autoQuillRef) {
+        const editor = autoQuillRef.getEditor();
+        const cursorPosition = editor.getSelection()?.index || editor.getLength();
+        editor.insertText(cursorPosition, `{{${field}}}`);
+        editor.setSelection(cursorPosition + field.length + 4);
+      } else {
+        setEditingTemplate({
+          ...editingTemplate,
+          body: editingTemplate.body + `{{${field}}}`
+        });
+      }
+    } else if (showCreateDialog) {
+      setNewTemplate({
+        ...newTemplate,
+        body: newTemplate.body + `{{${field}}}`
+      });
+    }
+  };
+
+  const handleCreateTemplate = async () => {
+    if (!newTemplate.name || !newTemplate.trigger_type || !newTemplate.subject || !newTemplate.body) {
+      setError("All fields are required");
+      return;
+    }
+
+    try {
+      const created = await base44.entities.AutomaticEmail.create(newTemplate);
+      setAutomaticEmails(prev => [...prev, created]);
+      setSuccess("Email template created successfully");
+      setTimeout(() => setSuccess(""), 3000);
+      setShowCreateDialog(false);
+      setNewTemplate({
+        name: "",
+        trigger_type: "",
+        subject: "",
+        body: "",
+        trigger_config: {}
+      });
+    } catch (error) {
+      setError("Failed to create template");
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId) => {
+    if (!confirm("Are you sure you want to delete this email template?")) return;
+    
+    try {
+      await base44.entities.AutomaticEmail.delete(templateId);
+      setAutomaticEmails(prev => prev.filter(email => email.id !== templateId));
+      setSuccess("Email template deleted successfully");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      setError("Failed to delete template");
     }
   };
 
@@ -429,6 +496,12 @@ export default function EmailManager() {
 
         {/* Automatic Email Tab */}
         <TabsContent value="automatic">
+          <div className="mb-4">
+            <Button onClick={() => setShowCreateDialog(true)} className="bg-purple-600 hover:bg-purple-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Automatic Email
+            </Button>
+          </div>
           <div className="space-y-4">
             {automaticEmails.map(email => (
               <Card key={email.id} className={email.enabled ? 'border-green-300' : ''}>
@@ -458,6 +531,22 @@ export default function EmailManager() {
                 <CardContent>
                   {editingTemplate?.id === email.id ? (
                     <div className="space-y-4">
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-xs font-semibold text-blue-900 mb-2">Dynamic Fields:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                            <Button
+                              key={field}
+                              size="sm"
+                              variant="outline"
+                              onClick={() => insertAutoDynamicField(field)}
+                              className="text-xs"
+                            >
+                              {`{{${field}}}`}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
                       <div className="space-y-2">
                         <Label>Subject</Label>
                         <Input
@@ -469,6 +558,7 @@ export default function EmailManager() {
                         <Label>Body</Label>
                         <div className="border rounded-lg overflow-hidden">
                           <ReactQuill
+                            ref={(el) => setAutoQuillRef(el)}
                             theme="snow"
                             value={editingTemplate.body}
                             onChange={(value) => setEditingTemplate({...editingTemplate, body: value})}
@@ -554,15 +644,24 @@ export default function EmailManager() {
                           </div>
                         </div>
                         
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditingTemplate({...email})}
-                          className="w-full"
-                        >
-                          <Edit className="w-3 h-3 mr-1" />
-                          Edit Template
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingTemplate({...email})}
+                            className="flex-1"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteTemplate(email.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -592,6 +691,127 @@ export default function EmailManager() {
             </Button>
             <Button onClick={confirmEnableEmail} className="bg-amber-600 hover:bg-amber-700">
               Yes, Enable
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Email Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Automatic Email</DialogTitle>
+            <DialogDescription>
+              Set up a new automated email that will be sent when specific triggers occur.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-xs font-semibold text-blue-900 mb-2">Dynamic Fields:</p>
+              <div className="flex flex-wrap gap-2">
+                {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                  <Button
+                    key={field}
+                    size="sm"
+                    variant="outline"
+                    onClick={() => insertAutoDynamicField(field)}
+                    className="text-xs"
+                  >
+                    {`{{${field}}}`}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Template Name *</Label>
+              <Input
+                value={newTemplate.name}
+                onChange={(e) => setNewTemplate({...newTemplate, name: e.target.value})}
+                placeholder="e.g., Welcome Email"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Trigger Type *</Label>
+              <Select 
+                value={newTemplate.trigger_type} 
+                onValueChange={(value) => setNewTemplate({...newTemplate, trigger_type: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select trigger" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="onboarding_completed">User Completes Onboarding</SelectItem>
+                  <SelectItem value="first_lesson_created">User Creates First Lesson</SelectItem>
+                  <SelectItem value="first_diagnostic_completed">User Completes First Diagnostic</SelectItem>
+                  <SelectItem value="first_worksheet_created">User Creates First Worksheet</SelectItem>
+                  <SelectItem value="first_worksheet_completed">User Completes First Worksheet</SelectItem>
+                  <SelectItem value="lesson_all_worksheets_completed">User Completes All 6 Worksheets</SelectItem>
+                  <SelectItem value="first_assignment_created">User Creates First Assignment</SelectItem>
+                  <SelectItem value="first_assignment_graded">User Completes First Graded Assignment</SelectItem>
+                  <SelectItem value="level_milestone">User Reaches Level Milestone</SelectItem>
+                  <SelectItem value="badge_earned">User Earns First Badge</SelectItem>
+                  <SelectItem value="streak_milestone">User Reaches Streak Milestone</SelectItem>
+                  <SelectItem value="streak_broken">User Breaks Streak</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {(newTemplate.trigger_type === 'level_milestone' || newTemplate.trigger_type === 'streak_milestone') && (
+              <div className="space-y-2">
+                <Label>Milestone Value</Label>
+                <Input
+                  type="number"
+                  value={newTemplate.trigger_config?.milestone_value || ''}
+                  onChange={(e) => setNewTemplate({
+                    ...newTemplate,
+                    trigger_config: { milestone_value: parseInt(e.target.value) || 0 }
+                  })}
+                  placeholder="e.g., 5 for level 5, or 7 for 7-day streak"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Subject *</Label>
+              <Input
+                value={newTemplate.subject}
+                onChange={(e) => setNewTemplate({...newTemplate, subject: e.target.value})}
+                placeholder="Email subject..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Body *</Label>
+              <div className="border rounded-lg overflow-hidden">
+                <ReactQuill
+                  theme="snow"
+                  value={newTemplate.body}
+                  onChange={(value) => setNewTemplate({...newTemplate, body: value})}
+                  placeholder="Write your email here..."
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, 3, false] }],
+                      ['bold', 'italic', 'underline', 'strike'],
+                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                      [{ 'indent': '-1'}, { 'indent': '+1' }],
+                      [{ 'align': [] }],
+                      ['link', 'image'],
+                      ['clean']
+                    ]
+                  }}
+                  style={{ minHeight: '200px', background: 'white' }}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateTemplate}>
+              Create Template
             </Button>
           </DialogFooter>
         </DialogContent>
