@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
                         reply_to: 'info@studyappai.com',
                         to: targetUser.email,
                         subject: subject,
-                        html: personalizedBody
+                        html: `<style>h1, h2, h3, h4, h5, h6 { font-weight: normal; }</style>${personalizedBody}`
                     })
                 });
 

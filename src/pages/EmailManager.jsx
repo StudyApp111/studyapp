@@ -9,7 +9,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, Send, Clock, Users, AlertCircle, CheckCircle, Zap, Edit } from "lucide-react";
+import { Mail, Send, Clock, Users, AlertCircle, CheckCircle, Zap, Edit, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReactQuill from 'react-quill';
@@ -37,6 +38,9 @@ export default function EmailManager() {
   // Automatic email state
   const [automaticEmails, setAutomaticEmails] = useState([]);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [confirmEnableId, setConfirmEnableId] = useState(null);
+  const [testingAutoEmail, setTestingAutoEmail] = useState(null);
+  const [autoTestRecipient, setAutoTestRecipient] = useState("");
 
   useEffect(() => {
     checkAdminAccess();
@@ -45,6 +49,19 @@ export default function EmailManager() {
   useEffect(() => {
     if (user) {
       loadAutomaticEmails();
+      
+      // Refresh user count every 10 seconds
+      const interval = setInterval(async () => {
+        try {
+          const { data } = await base44.functions.invoke('getUserCount', {});
+          setUserCount(data.count || 0);
+          setAllUsers(data.users || []);
+        } catch (error) {
+          console.error("Error refreshing user count:", error);
+        }
+      }, 10000);
+      
+      return () => clearInterval(interval);
     }
   }, [user]);
 
@@ -151,15 +168,61 @@ export default function EmailManager() {
   };
 
   const handleToggleAutomaticEmail = async (templateId, enabled) => {
+    if (enabled) {
+      setConfirmEnableId(templateId);
+      return;
+    }
+    
     try {
       await base44.entities.AutomaticEmail.update(templateId, { enabled });
       setAutomaticEmails(prev => 
         prev.map(email => email.id === templateId ? { ...email, enabled } : email)
       );
-      setSuccess(`Email ${enabled ? 'enabled' : 'disabled'} successfully`);
+      setSuccess(`Email disabled successfully`);
       setTimeout(() => setSuccess(""), 3000);
     } catch (error) {
       setError("Failed to update email status");
+    }
+  };
+
+  const confirmEnableEmail = async () => {
+    try {
+      await base44.entities.AutomaticEmail.update(confirmEnableId, { enabled: true });
+      setAutomaticEmails(prev => 
+        prev.map(email => email.id === confirmEnableId ? { ...email, enabled: true } : email)
+      );
+      setSuccess(`Email enabled successfully`);
+      setTimeout(() => setSuccess(""), 3000);
+      setConfirmEnableId(null);
+    } catch (error) {
+      setError("Failed to enable email");
+      setConfirmEnableId(null);
+    }
+  };
+
+  const handleSendAutoTestEmail = async (template) => {
+    if (!autoTestRecipient) {
+      setError("Please select a recipient for test email");
+      return;
+    }
+
+    setTestingAutoEmail(template.id);
+    setError("");
+    setSuccess("");
+
+    try {
+      const { data } = await base44.functions.invoke('sendTestEmail', {
+        recipient: autoTestRecipient,
+        subject: template.subject,
+        body: template.body
+      });
+
+      setSuccess(`Test email sent successfully to ${autoTestRecipient}!`);
+      setAutoTestRecipient("");
+    } catch (err) {
+      setError(err.message || "Failed to send test email");
+    } finally {
+      setTestingAutoEmail(null);
     }
   };
 
@@ -221,7 +284,7 @@ export default function EmailManager() {
           </TabsTrigger>
           <TabsTrigger value="automatic">
             <Clock className="w-4 h-4 mr-2" />
-            Automatic (Coming Soon)
+            Automatic
           </TabsTrigger>
         </TabsList>
 
@@ -387,6 +450,7 @@ export default function EmailManager() {
                       <Switch
                         checked={email.enabled}
                         onCheckedChange={(checked) => handleToggleAutomaticEmail(email.id, checked)}
+                        disabled={confirmEnableId === email.id}
                       />
                     </div>
                   </div>
@@ -455,14 +519,46 @@ export default function EmailManager() {
                           dangerouslySetInnerHTML={{ __html: email.body }}
                         />
                       </div>
-                      <div className="flex items-center justify-between pt-2">
+                      <div className="space-y-3 pt-2">
                         <p className="text-xs text-slate-500">
                           Sent: {email.send_count || 0} times
                         </p>
+                        
+                        <div className="flex flex-col gap-2">
+                          <Label className="text-xs">Test Email</Label>
+                          <div className="flex gap-2">
+                            <Select 
+                              value={autoTestRecipient} 
+                              onValueChange={setAutoTestRecipient}
+                              disabled={testingAutoEmail === email.id}
+                            >
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Select user" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {allUsers.map(u => (
+                                  <SelectItem key={u.email} value={u.email}>
+                                    {u.full_name} ({u.email})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSendAutoTestEmail(email)}
+                              disabled={!autoTestRecipient || testingAutoEmail === email.id}
+                            >
+                              {testingAutoEmail === email.id ? "Sending..." : "Send Test"}
+                            </Button>
+                          </div>
+                        </div>
+                        
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => setEditingTemplate({...email})}
+                          className="w-full"
                         >
                           <Edit className="w-3 h-3 mr-1" />
                           Edit Template
@@ -476,6 +572,30 @@ export default function EmailManager() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={!!confirmEnableId} onOpenChange={() => setConfirmEnableId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              Enable Automatic Email?
+            </DialogTitle>
+            <DialogDescription>
+              This will automatically send emails to users based on the trigger conditions. 
+              Are you sure you want to enable this automated email?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmEnableId(null)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmEnableEmail} className="bg-amber-600 hover:bg-amber-700">
+              Yes, Enable
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
