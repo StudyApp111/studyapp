@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'StudyApp.AI <noreply@studyapp.ai>',
+                from: 'StudyApp.AI <updates@updates.studyappai.com>',
                 to: recipient,
                 subject: subject,
                 html: personalizedBody

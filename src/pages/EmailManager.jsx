@@ -19,9 +19,11 @@ export default function EmailManager() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
+  const [sendingBulk, setSendingBulk] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [quillRef, setQuillRef] = useState(null);
   
   // Manual email state
   const [subject, setSubject] = useState("");
@@ -92,7 +94,7 @@ export default function EmailManager() {
       return;
     }
 
-    setSending(true);
+    setSendingBulk(true);
     setError("");
     setSuccess("");
 
@@ -108,12 +110,19 @@ export default function EmailManager() {
     } catch (err) {
       setError(err.message || "Failed to send email");
     } finally {
-      setSending(false);
+      setSendingBulk(false);
     }
   };
 
   const insertDynamicField = (field) => {
-    setBody(body + `{{${field}}}`);
+    if (quillRef) {
+      const editor = quillRef.getEditor();
+      const cursorPosition = editor.getSelection()?.index || editor.getLength();
+      editor.insertText(cursorPosition, `{{${field}}}`);
+      editor.setSelection(cursorPosition + field.length + 4);
+    } else {
+      setBody(body + `{{${field}}}`);
+    }
   };
 
   const handleSendTestEmail = async () => {
@@ -122,7 +131,7 @@ export default function EmailManager() {
       return;
     }
 
-    setSending(true);
+    setSendingTest(true);
     setError("");
     setSuccess("");
 
@@ -137,7 +146,7 @@ export default function EmailManager() {
     } catch (err) {
       setError(err.message || "Failed to send test email");
     } finally {
-      setSending(false);
+      setSendingTest(false);
     }
   };
 
@@ -263,7 +272,7 @@ export default function EmailManager() {
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Email subject..."
-                  disabled={sending}
+                  disabled={sendingTest || sendingBulk}
                 />
               </div>
 
@@ -271,6 +280,7 @@ export default function EmailManager() {
                 <Label htmlFor="body">Email Body *</Label>
                 <div className="border rounded-lg overflow-hidden">
                   <ReactQuill
+                    ref={(el) => setQuillRef(el)}
                     theme="snow"
                     value={body}
                     onChange={setBody}
@@ -315,11 +325,11 @@ export default function EmailManager() {
               <div className="flex gap-3">
                 <Button
                   onClick={handleSendTestEmail}
-                  disabled={sending || !subject.trim() || !body.trim() || !testRecipient}
+                  disabled={sendingTest || sendingBulk || !subject.trim() || !body.trim() || !testRecipient}
                   variant="outline"
                   className="border-purple-300"
                 >
-                  {sending ? (
+                  {sendingTest ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-2" />
                       Sending...
@@ -334,10 +344,10 @@ export default function EmailManager() {
 
                 <Button
                   onClick={handleSendEmail}
-                  disabled={sending || !subject.trim() || !body.trim()}
+                  disabled={sendingTest || sendingBulk || !subject.trim() || !body.trim()}
                   className="bg-purple-600 hover:bg-purple-700"
                 >
-                  {sending ? (
+                  {sendingBulk ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
                       Sending...
