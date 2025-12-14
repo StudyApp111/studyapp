@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mail, Send, Clock, Users, AlertCircle, CheckCircle, Zap, Edit, AlertTriangle, Plus, Trash2 } from "lucide-react";
+import { Mail, Send, Clock, Users, AlertCircle, CheckCircle, Zap, Edit, AlertTriangle, Plus, Trash2, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -307,6 +307,25 @@ export default function EmailManager() {
     }
   };
 
+  const handleExportUsers = async () => {
+    try {
+      const { data } = await base44.functions.invoke('exportUsers', {});
+      const blob = new Blob([data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      setSuccess("Users exported successfully");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      setError("Failed to export users");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -331,12 +350,23 @@ export default function EmailManager() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <Users className="w-8 h-8 text-blue-600" />
-              <div>
-                <p className="text-sm text-slate-600">Total Users</p>
-                <p className="text-2xl font-bold text-slate-900">{userCount}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Users className="w-8 h-8 text-blue-600" />
+                <div>
+                  <p className="text-sm text-slate-600">Total Users</p>
+                  <p className="text-2xl font-bold text-slate-900">{userCount}</p>
+                </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportUsers}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export
+              </Button>
             </div>
           </CardContent>
         </Card>
