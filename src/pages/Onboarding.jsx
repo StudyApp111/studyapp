@@ -178,6 +178,16 @@ export default function Onboarding() {
       // Track user session after onboarding
       await trackUserSession();
 
+      // Trigger welcome email
+      try {
+        await base44.functions.invoke('triggerAutomaticEmails', {
+          trigger_type: 'onboarding_completed',
+          user_email: user.email
+        });
+      } catch (emailError) {
+        console.error('Error triggering welcome email:', emailError);
+      }
+
       await new Promise(resolve => setTimeout(resolve, 500));
 
       navigate(createPageUrl("Home"), { replace: true });
