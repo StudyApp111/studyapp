@@ -28,26 +28,8 @@ export default function Leaderboard() {
     queryFn: async () => {
       const users = await base44.entities.User.list('-total_points', 100);
       
-      // Give default points to users with 0 points for demo purposes
-      const updatePromises = users.map(async user => {
-        if (!user.total_points || user.total_points === 0) {
-          const demoPoints = Math.floor(Math.random() * 10) * 5 + 5; // Random 5-50 points in multiples of 5
-          const newLevel = Math.floor(demoPoints / 100) + 1;
-          await base44.entities.User.update(user.id, {
-            total_points: demoPoints,
-            level: newLevel
-          });
-          return { ...user, total_points: demoPoints, level: newLevel };
-        }
-        return user;
-      });
-
-      const updatedUsers = await Promise.all(updatePromises);
-      
-      // Sort by points after updates
-      const sortedUsers = updatedUsers.sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
-      
-      const profilePromises = sortedUsers.map(user => 
+      // Show all users, including those with 0 points
+      const profilePromises = users.map(user => 
         user.learning_profile_id 
           ? base44.entities.LearningProfile.filter({ id: user.learning_profile_id })
           : Promise.resolve([])
@@ -55,9 +37,9 @@ export default function Leaderboard() {
       
       const profiles = await Promise.all(profilePromises);
       
-      return sortedUsers.map((user, idx) => ({
+      return users.map((user, idx) => ({
         ...user,
-        country: profiles[idx][0]?.country || "Unknown"
+        city: profiles[idx][0]?.city || null
       }));
     },
     initialData: [],
@@ -81,27 +63,27 @@ export default function Leaderboard() {
     ? allUsers.findIndex(u => u.id === currentUser.id) + 1 
     : 0;
 
-  const getCountryFlag = (country) => {
-    // Simple country to flag emoji mapping (can be expanded)
-    const flagMap = {
-      "Canada": "🇨🇦",
-      "United States": "🇺🇸",
-      "USA": "🇺🇸",
-      "United Kingdom": "🇬🇧",
-      "UK": "🇬🇧",
-      "Australia": "🇦🇺",
-      "Germany": "🇩🇪",
-      "France": "🇫🇷",
-      "Spain": "🇪🇸",
-      "Italy": "🇮🇹",
-      "Japan": "🇯🇵",
-      "China": "🇨🇳",
-      "India": "🇮🇳",
-      "Brazil": "🇧🇷",
-      "Mexico": "🇲🇽",
-      "Unknown": "🌍"
+  const getCityCountry = (city) => {
+    if (!city) return { flag: '🌍' };
+    
+    const cityLower = city.toLowerCase();
+    
+    const cityMap = {
+      // Canada
+      'toronto': '🇨🇦', 'vancouver': '🇨🇦', 'montreal': '🇨🇦', 'calgary': '🇨🇦', 'ottawa': '🇨🇦', 'edmonton': '🇨🇦',
+      // USA
+      'new york': '🇺🇸', 'los angeles': '🇺🇸', 'chicago': '🇺🇸', 'houston': '🇺🇸', 'phoenix': '🇺🇸', 'philadelphia': '🇺🇸', 'san antonio': '🇺🇸', 'san diego': '🇺🇸', 'dallas': '🇺🇸', 'san francisco': '🇺🇸', 'boston': '🇺🇸', 'seattle': '🇺🇸', 'miami': '🇺🇸',
+      // UK
+      'london': '🇬🇧', 'manchester': '🇬🇧', 'birmingham': '🇬🇧', 'liverpool': '🇬🇧', 'edinburgh': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'glasgow': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+      // Australia
+      'sydney': '🇦🇺', 'melbourne': '🇦🇺', 'brisbane': '🇦🇺', 'perth': '🇦🇺',
+      // India
+      'mumbai': '🇮🇳', 'delhi': '🇮🇳', 'bangalore': '🇮🇳', 'hyderabad': '🇮🇳', 'chennai': '🇮🇳', 'kolkata': '🇮🇳',
+      // Other
+      'paris': '🇫🇷', 'berlin': '🇩🇪', 'madrid': '🇪🇸', 'rome': '🇮🇹', 'tokyo': '🇯🇵', 'beijing': '🇨🇳', 'shanghai': '🇨🇳', 'singapore': '🇸🇬', 'dubai': '🇦🇪', 'mexico city': '🇲🇽'
     };
-    return flagMap[country] || "🌍";
+    
+    return { flag: cityMap[cityLower] || '🌍' };
   };
 
   if (isLoading || !currentUser) {
@@ -113,7 +95,7 @@ export default function Leaderboard() {
   }
 
   return (
-    <div className="p-4 md:p-10 max-w-6xl mx-auto">
+    <div className="p-4 md:p-10 max-w-6xl mx-auto overflow-x-hidden">
       <div className="mb-6 md:mb-8 text-center md:text-left">
         <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center justify-center md:justify-start gap-2 md:gap-3">
           <Trophy className="w-8 h-8 md:w-10 md:h-10 text-yellow-500" />
@@ -167,55 +149,10 @@ export default function Leaderboard() {
         </Card>
       </motion.div>
 
-      {/* Achievement Milestones */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mb-6 md:mb-8"
-      >
-        <Card className="shadow-lg border-0 bg-gradient-to-r from-amber-50 to-yellow-50">
-          <CardContent className="p-4 md:p-6">
-            <h3 className="text-base md:text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <Award className="w-5 h-5 text-amber-600" />
-              Achievement Milestones
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-              <div className="bg-white p-3 rounded-lg border border-amber-200 text-center">
-                <p className="text-2xl font-bold text-amber-600">🏆</p>
-                <p className="text-xs md:text-sm font-semibold text-slate-700 mt-1">Top 10</p>
-                <p className="text-xs text-slate-500">Elite Status</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg border border-purple-200 text-center">
-                <p className="text-2xl font-bold text-purple-600">⭐</p>
-                <p className="text-xs md:text-sm font-semibold text-slate-700 mt-1">100+ Points</p>
-                <p className="text-xs text-slate-500">Level Up!</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg border border-emerald-200 text-center">
-                <p className="text-2xl font-bold text-emerald-600">🔥</p>
-                <p className="text-xs md:text-sm font-semibold text-slate-700 mt-1">Daily Streak</p>
-                <p className="text-xs text-slate-500">Keep Going</p>
-              </div>
-              <div className="bg-white p-3 rounded-lg border border-blue-200 text-center">
-                <p className="text-2xl font-bold text-blue-600">🎯</p>
-                <p className="text-xs md:text-sm font-semibold text-slate-700 mt-1">10 Worksheets</p>
-                <p className="text-xs text-slate-500">Dedicated</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
       {/* Leaderboard List */}
       <Card className="shadow-xl border-0">
         <CardHeader className="p-4 md:p-6">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg md:text-2xl">Top 100 Learners</CardTitle>
-            <Badge className="bg-purple-100 text-purple-700 border border-purple-300 px-3 py-1">
-              <Zap className="w-3 h-3 mr-1" />
-              Live Rankings
-            </Badge>
-          </div>
+          <CardTitle className="text-lg md:text-2xl">Top 100 Learners</CardTitle>
         </CardHeader>
         <CardContent className="p-4 md:p-6">
           {isLoading ? (
@@ -241,7 +178,7 @@ export default function Leaderboard() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className={`p-3 md:p-4 rounded-xl border-2 transition-all hover:shadow-lg hover:scale-[1.02] ${
+                    className={`p-3 md:p-4 rounded-xl border-2 transition-all ${
                       isCurrentUser 
                         ? 'border-purple-400 bg-purple-50 shadow-md' 
                         : getRankBg(rank)
@@ -260,26 +197,20 @@ export default function Leaderboard() {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-2">
                             <h4 className="font-bold text-sm md:text-base text-slate-900 truncate">
                               {user.full_name || `User ${rank}`}
                             </h4>
                             {isCurrentUser && (
                               <Badge className="bg-purple-600 text-white text-xs flex-shrink-0">You</Badge>
                             )}
-                            {rank <= 10 && (
-                              <Badge className="bg-amber-100 text-amber-700 border border-amber-300 text-xs flex-shrink-0">
-                                Elite
-                              </Badge>
-                            )}
-                            {user.current_streak >= 7 && (
-                              <span className="text-xs flex-shrink-0">🔥</span>
-                            )}
                           </div>
-                          <p className="text-xs md:text-sm text-slate-600 flex items-center gap-1">
-                            <span>{getCountryFlag(user.country)}</span>
-                            <span className="truncate">{user.country}</span>
-                          </p>
+                          {user.city && (
+                            <p className="text-xs md:text-sm text-slate-600 flex items-center gap-1">
+                              <span className="flex-shrink-0">{getCityCountry(user.city).flag}</span>
+                              <span className="truncate">{user.city}</span>
+                            </p>
+                          )}
                         </div>
                       </div>
 
