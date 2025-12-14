@@ -418,6 +418,7 @@ export default function EmailManager() {
                     modules={{
                       toolbar: [
                         [{ 'header': [1, 2, 3, false] }],
+                        [{ 'size': ['small', false, 'large', 'huge'] }],
                         ['bold', 'italic', 'underline', 'strike'],
                         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                         [{ 'indent': '-1'}, { 'indent': '+1' }],
@@ -548,6 +549,45 @@ export default function EmailManager() {
                         </div>
                       </div>
                       <div className="space-y-2">
+                        <Label>Trigger Type</Label>
+                        <Select 
+                          value={editingTemplate.trigger_type} 
+                          onValueChange={(value) => setEditingTemplate({...editingTemplate, trigger_type: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="onboarding_completed">User Completes Onboarding</SelectItem>
+                            <SelectItem value="first_lesson_created">User Creates First Lesson</SelectItem>
+                            <SelectItem value="first_diagnostic_completed">User Completes First Diagnostic</SelectItem>
+                            <SelectItem value="first_worksheet_created">User Creates First Worksheet</SelectItem>
+                            <SelectItem value="first_worksheet_completed">User Completes First Worksheet</SelectItem>
+                            <SelectItem value="lesson_all_worksheets_completed">User Completes All 6 Worksheets</SelectItem>
+                            <SelectItem value="first_assignment_created">User Creates First Assignment</SelectItem>
+                            <SelectItem value="first_assignment_graded">User Completes First Graded Assignment</SelectItem>
+                            <SelectItem value="level_milestone">User Reaches Level Milestone</SelectItem>
+                            <SelectItem value="badge_earned">User Earns First Badge</SelectItem>
+                            <SelectItem value="streak_milestone">User Reaches Streak Milestone</SelectItem>
+                            <SelectItem value="streak_broken">User Breaks Streak</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {(editingTemplate.trigger_type === 'level_milestone' || editingTemplate.trigger_type === 'streak_milestone') && (
+                        <div className="space-y-2">
+                          <Label>Milestone Value</Label>
+                          <Input
+                            type="number"
+                            value={editingTemplate.trigger_config?.milestone_value || ''}
+                            onChange={(e) => setEditingTemplate({
+                              ...editingTemplate,
+                              trigger_config: { milestone_value: parseInt(e.target.value) || 0 }
+                            })}
+                            placeholder="e.g., 5 for level 5, or 7 for 7-day streak"
+                          />
+                        </div>
+                      )}
+                      <div className="space-y-2">
                         <Label>Subject</Label>
                         <Input
                           value={editingTemplate.subject}
@@ -565,6 +605,7 @@ export default function EmailManager() {
                             modules={{
                               toolbar: [
                                 [{ 'header': [1, 2, 3, false] }],
+                                [{ 'size': ['small', false, 'large', 'huge'] }],
                                 ['bold', 'italic', 'underline', 'strike'],
                                 [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                                 [{ 'indent': '-1'}, { 'indent': '+1' }],
@@ -581,6 +622,8 @@ export default function EmailManager() {
                         <Button
                           size="sm"
                           onClick={() => handleUpdateTemplate(email.id, {
+                            trigger_type: editingTemplate.trigger_type,
+                            trigger_config: editingTemplate.trigger_config,
                             subject: editingTemplate.subject,
                             body: editingTemplate.body
                           })}
@@ -793,6 +836,7 @@ export default function EmailManager() {
                   modules={{
                     toolbar: [
                       [{ 'header': [1, 2, 3, false] }],
+                      [{ 'size': ['small', false, 'large', 'huge'] }],
                       ['bold', 'italic', 'underline', 'strike'],
                       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                       [{ 'indent': '-1'}, { 'indent': '+1' }],
