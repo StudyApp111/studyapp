@@ -354,41 +354,37 @@ Output Format: JSON object matching the specified schema`;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10 overflow-x-hidden">
       <div className="max-w-3xl mx-auto">
-        {/* History Button */}
-        <div className="flex justify-end mb-4">
-          <Button
-            onClick={() => navigate(createPageUrl("LessonHistory"))}
-            variant="outline"
-            className="gap-2"
-          >
-            <History className="w-4 h-4" />
-            History
-          </Button>
-        </div>
-
-        {/* Hero Header Section */}
-        <div className="mb-8">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-6 md:p-8 shadow-xl">
+        <Card className="shadow-2xl border-0 overflow-hidden">
+          {/* Compact Hero Header Inside Card */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-6 md:p-8">
             <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-2xl -mr-24 -mt-24" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-xl -ml-16 -mb-16" />
             
-            <div className="relative flex items-center gap-4">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg">
-                <Plus className="w-8 h-8 text-white" />
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg flex-shrink-0">
+                  <Plus className="w-8 h-8 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Create New Lesson</h1>
+                  <p className="text-white/90 text-sm">AI-powered practice tests tailored to your learning style</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Create New Lesson</h1>
-                <p className="text-white/90 text-sm md:text-base">Set up your personalized learning experience</p>
-              </div>
+              <Button
+                onClick={() => navigate(createPageUrl("LessonHistory"))}
+                variant="outline"
+                className="gap-2 bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30 flex-shrink-0 hidden md:flex"
+              >
+                <History className="w-4 h-4" />
+                History
+              </Button>
             </div>
           </div>
-        </div>
 
-        <Card className="shadow-2xl border-0">
-          <CardHeader>
-            <CardTitle>Lesson Details</CardTitle>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl">Setup Your Lesson</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -405,7 +401,7 @@ Output Format: JSON object matching the specified schema`;
                   id="courseName"
                   value={courseName}
                   onChange={(e) => setCourseName(e.target.value)}
-                  placeholder="e.g., AP Calculus, World History, Biology 101"
+                  placeholder="e.g., ECON2152, POLI418"
                   disabled={isProcessing}
                   className="text-base"
                 />
@@ -445,9 +441,9 @@ Output Format: JSON object matching the specified schema`;
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Paste or describe anything you want help with — a unit, chapter, lecture notes, article, or even exam topics. You can include specific areas you're struggling with or want to focus on. The more context you provide, the more personalized and accurate your lessons will be."
+                    placeholder="Describe your course content, paste lecture notes, or list exam topics..."
                     disabled={isProcessing}
-                    className="min-h-[150px] text-base"
+                    className="min-h-[120px] text-base"
                   />
                   
                   {/* Expandable Hints Section */}

@@ -419,7 +419,7 @@ export default function Layout({ children, currentPageName }) {
                       NEW
                     </span>
                   </div>
-                  <span className="text-[10px] font-medium">Grader</span>
+                  <span className="text-[10px] font-medium whitespace-nowrap">Smart Grader</span>
                 </Link>
 
                 {/* Space for center CTA */}
@@ -461,7 +461,7 @@ export default function Layout({ children, currentPageName }) {
                     {/* Main button - sleek and minimal */}
                     <div className="relative w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl shadow-xl flex flex-col items-center justify-center transform group-hover:scale-105 transition-all duration-200 border-2 border-white">
                       <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
-                      <span className="text-[9px] font-bold text-white mt-0.5">Create</span>
+                      <span className="text-[9px] font-bold text-white mt-0.5 whitespace-nowrap">New Lesson</span>
                     </div>
                   </div>
                 </button>
