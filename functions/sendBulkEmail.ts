@@ -63,7 +63,17 @@ Deno.serve(async (req) => {
                         reply_to: 'info@studyappai.com',
                         to: targetUser.email,
                         subject: subject,
-                        html: `<style>h1, h2, h3, h4, h5, h6 { font-weight: normal; }</style>${personalizedBody}`
+                        html: `<style>
+                            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #000; }
+                            p { margin: 0 0 15px 0; }
+                            h1 { font-size: 2em; font-weight: normal; margin: 0.67em 0; }
+                            h2 { font-size: 1.5em; font-weight: normal; margin: 0.75em 0; }
+                            h3 { font-size: 1.17em; font-weight: normal; margin: 0.83em 0; }
+                            h4, h5, h6 { font-weight: normal; margin: 1em 0; }
+                            .ql-size-small { font-size: 0.75em; }
+                            .ql-size-large { font-size: 1.5em; }
+                            .ql-size-huge { font-size: 2.5em; }
+                        </style>${personalizedBody}`
                     })
                 });
 
