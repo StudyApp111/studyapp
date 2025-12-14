@@ -25,9 +25,22 @@ Deno.serve(async (req) => {
         // Send emails to all users
         for (const targetUser of allUsers) {
             try {
+                // Get learning profile for school and grade
+                let learningProfile = null;
+                if (targetUser.learning_profile_id) {
+                    const profiles = await base44.asServiceRole.entities.LearningProfile.filter({
+                        id: targetUser.learning_profile_id
+                    });
+                    if (profiles.length > 0) {
+                        learningProfile = profiles[0];
+                    }
+                }
+
                 // Replace dynamic fields
                 let personalizedBody = body
                     .replace(/\{\{name\}\}/g, targetUser.full_name || 'there')
+                    .replace(/\{\{school\}\}/g, learningProfile?.school || 'your school')
+                    .replace(/\{\{grade\}\}/g, learningProfile?.grade || 'your grade')
                     .replace(/\{\{level\}\}/g, targetUser.level || 1)
                     .replace(/\{\{total_points\}\}/g, targetUser.total_points || 0)
                     .replace(/\{\{current_streak\}\}/g, targetUser.current_streak || 0)

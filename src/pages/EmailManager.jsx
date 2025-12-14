@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, Send, Clock, Users, AlertCircle, CheckCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Mail, Send, Clock, Users, AlertCircle, CheckCircle, Zap, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
@@ -24,10 +26,24 @@ export default function EmailManager() {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [userCount, setUserCount] = useState(0);
+  
+  // Test email state
+  const [testRecipient, setTestRecipient] = useState("");
+  const [allUsers, setAllUsers] = useState([]);
+  
+  // Automatic email state
+  const [automaticEmails, setAutomaticEmails] = useState([]);
+  const [editingTemplate, setEditingTemplate] = useState(null);
 
   useEffect(() => {
     checkAdminAccess();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadAutomaticEmails();
+    }
+  }, [user]);
 
   const checkAdminAccess = async () => {
     try {
@@ -40,14 +56,32 @@ export default function EmailManager() {
       
       setUser(currentUser);
       
-      // Get user count
+      // Get user count and all users
       const { data } = await base44.functions.invoke('getUserCount', {});
       setUserCount(data.count || 0);
+      setAllUsers(data.users || []);
       
       setLoading(false);
     } catch (error) {
       console.error("Access denied:", error);
       navigate(createPageUrl("Home"));
+    }
+  };
+
+  const loadAutomaticEmails = async () => {
+    try {
+      const templates = await base44.entities.AutomaticEmail.list();
+      
+      // Initialize templates if none exist
+      if (templates.length === 0) {
+        await base44.functions.invoke('initializeAutomaticEmails', {});
+        const newTemplates = await base44.entities.AutomaticEmail.list();
+        setAutomaticEmails(newTemplates);
+      } else {
+        setAutomaticEmails(templates);
+      }
+    } catch (error) {
+      console.error("Error loading automatic emails:", error);
     }
   };
 
@@ -79,6 +113,58 @@ export default function EmailManager() {
 
   const insertDynamicField = (field) => {
     setBody(body + `{{${field}}}`);
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!subject.trim() || !body.trim() || !testRecipient) {
+      setError("Subject, body, and recipient are required for test email");
+      return;
+    }
+
+    setSending(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const { data } = await base44.functions.invoke('sendTestEmail', {
+        recipient: testRecipient,
+        subject,
+        body
+      });
+
+      setSuccess(`Test email sent successfully to ${testRecipient}!`);
+    } catch (err) {
+      setError(err.message || "Failed to send test email");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleToggleAutomaticEmail = async (templateId, enabled) => {
+    try {
+      await base44.entities.AutomaticEmail.update(templateId, { enabled });
+      setAutomaticEmails(prev => 
+        prev.map(email => email.id === templateId ? { ...email, enabled } : email)
+      );
+      setSuccess(`Email ${enabled ? 'enabled' : 'disabled'} successfully`);
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      setError("Failed to update email status");
+    }
+  };
+
+  const handleUpdateTemplate = async (templateId, updates) => {
+    try {
+      await base44.entities.AutomaticEmail.update(templateId, updates);
+      setAutomaticEmails(prev => 
+        prev.map(email => email.id === templateId ? { ...email, ...updates } : email)
+      );
+      setEditingTemplate(null);
+      setSuccess("Template updated successfully");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (error) {
+      setError("Failed to update template");
+    }
   };
 
   if (loading) {
@@ -154,7 +240,7 @@ export default function EmailManager() {
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm font-semibold text-blue-900 mb-2">Dynamic Fields:</p>
                 <div className="flex flex-wrap gap-2">
-                  {['name', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                  {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
                     <Button
                       key={field}
                       size="sm"
@@ -195,36 +281,159 @@ export default function EmailManager() {
                 </p>
               </div>
 
-              <Button
-                onClick={handleSendEmail}
-                disabled={sending || !subject.trim() || !body.trim()}
-                className="w-full md:w-auto bg-purple-600 hover:bg-purple-700"
-              >
-                {sending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Send to All Users
-                  </>
-                )}
-              </Button>
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex-1 space-y-2">
+                  <Label htmlFor="testRecipient">Test Email (Optional)</Label>
+                  <Select value={testRecipient} onValueChange={setTestRecipient}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a user to test email" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allUsers.map(u => (
+                        <SelectItem key={u.email} value={u.email}>
+                          {u.full_name} ({u.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSendTestEmail}
+                  disabled={sending || !subject.trim() || !body.trim() || !testRecipient}
+                  variant="outline"
+                  className="border-purple-300"
+                >
+                  {sending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-2" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Test Email
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  onClick={handleSendEmail}
+                  disabled={sending || !subject.trim() || !body.trim()}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {sending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send to All {userCount} Users
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Automatic Email Tab */}
         <TabsContent value="automatic">
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Clock className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">Coming Soon</h3>
-              <p className="text-slate-500">Automatic milestone-based emails will be available here</p>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            {automaticEmails.map(email => (
+              <Card key={email.id} className={email.enabled ? 'border-green-300' : ''}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Zap className={`w-5 h-5 ${email.enabled ? 'text-green-600' : 'text-slate-400'}`} />
+                      <div>
+                        <CardTitle className="text-lg">{email.name}</CardTitle>
+                        <p className="text-sm text-slate-500 mt-1">
+                          Trigger: {email.trigger_type.replace(/_/g, ' ')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant={email.enabled ? "default" : "secondary"}>
+                        {email.enabled ? 'Active' : 'Disabled'}
+                      </Badge>
+                      <Switch
+                        checked={email.enabled}
+                        onCheckedChange={(checked) => handleToggleAutomaticEmail(email.id, checked)}
+                      />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {editingTemplate?.id === email.id ? (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Subject</Label>
+                        <Input
+                          value={editingTemplate.subject}
+                          onChange={(e) => setEditingTemplate({...editingTemplate, subject: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Body</Label>
+                        <Textarea
+                          value={editingTemplate.body}
+                          onChange={(e) => setEditingTemplate({...editingTemplate, body: e.target.value})}
+                          className="min-h-[200px] font-mono text-sm"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleUpdateTemplate(email.id, {
+                            subject: editingTemplate.subject,
+                            body: editingTemplate.body
+                          })}
+                        >
+                          Save Changes
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingTemplate(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700 mb-1">Subject:</p>
+                        <p className="text-sm text-slate-600">{email.subject}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700 mb-1">Body Preview:</p>
+                        <p className="text-sm text-slate-600 whitespace-pre-wrap line-clamp-4">{email.body}</p>
+                      </div>
+                      <div className="flex items-center justify-between pt-2">
+                        <p className="text-xs text-slate-500">
+                          Sent: {email.send_count || 0} times
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingTemplate({...email})}
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit Template
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -13,7 +13,14 @@ Deno.serve(async (req) => {
         // Get user count using service role
         const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 1000);
 
-        return Response.json({ count: allUsers.length });
+        return Response.json({ 
+            count: allUsers.length,
+            users: allUsers.map(u => ({
+                email: u.email,
+                full_name: u.full_name,
+                id: u.id
+            }))
+        });
     } catch (error) {
         console.error('Get user count error:', error);
         return Response.json({ error: error.message }, { status: 500 });
