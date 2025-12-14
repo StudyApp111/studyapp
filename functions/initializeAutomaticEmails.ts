@@ -5,120 +5,122 @@ const emailTemplates = [
     name: "Welcome Email",
     trigger_type: "onboarding_completed",
     subject: "Welcome to StudyApp",
-    body: `Hi {{name}},
+    body: `<p>Hi {{name}},</p>
 
-Thanks for signing up for StudyApp. We're glad you're here.
+<p>Thanks for signing up for StudyApp. We're glad you're here.</p>
 
-StudyApp exists because most students work hard but study without clarity. They don't know what matters, what to fix, or whether they're actually improving.
+<p>StudyApp exists because most students work hard but study without clarity. They don't know what matters, what to fix, or whether they're actually improving.</p>
 
-This system is built to change that.
+<p>This system is built to change that.</p>
 
-There's nothing you need to prove right now. All we ask is that you use the platform honestly. Answer questions the way you truly think. That's how the intelligence adapts to you.
+<p>There's nothing you need to prove right now. All we ask is that you use the platform honestly. Answer questions the way you truly think. That's how the intelligence adapts to you.</p>
 
-If anything feels unclear, reply to this email. It goes straight to our team.
+<p>If anything feels unclear, reply to this email. It goes straight to our team.</p>
 
-When you're ready, start your first lesson. Everything builds from there.
+<p>When you're ready, start your first lesson. Everything builds from there.</p>
 
-The StudyApp Team
+<p>The StudyApp Team</p>
 
-→ Start your first lesson at https://app.studyapp.ai`,
+<p><a href="https://app.studyapp.ai">→ Start your first lesson</a></p>`,
     enabled: false
   },
   {
     name: "Grade Ready",
     trigger_type: "worksheet_completed",
     subject: "Your grade is taking shape",
-    body: `Hi {{name}},
+    body: `<p>Hi {{name}},</p>
 
-Your latest worksheet has been analyzed.
+<p>Your latest worksheet has been analyzed.</p>
 
-If the exam were today, your predicted score would be:
-{{predicted_grade}}
+<p>If the exam were today, your predicted score would be:<br/>
+<strong>{{predicted_grade}}</strong></p>
 
-This is not a final result. It's a direction.
+<p>This is not a final result. It's a direction.</p>
 
-Some students stop here and hope things improve on their own. Others look at what's holding the number back and fix it deliberately.
+<p>Some students stop here and hope things improve on their own. Others look at what's holding the number back and fix it deliberately.</p>
 
-That choice matters.
+<p>That choice matters.</p>
 
-→ See what's affecting your grade at https://app.studyapp.ai
+<p><a href="https://app.studyapp.ai">→ See what's affecting your grade</a></p>
 
-The StudyApp Team`,
+<p>The StudyApp Team</p>`,
     enabled: false
   },
   {
     name: "Assignment Graded",
     trigger_type: "assignment_graded",
     subject: "Your assignment has been graded",
-    body: `Hi {{name}},
+    body: `<p>Hi {{name}},</p>
 
-Your assignment has been reviewed.
+<p>Your assignment has been reviewed.</p>
 
-Beyond the score, the system identified the exact reasoning errors costing you marks. These are the same mistakes exams repeatedly punish when they go unnoticed.
+<p>Beyond the score, the system identified the exact reasoning errors costing you marks. These are the same mistakes exams repeatedly punish when they go unnoticed.</p>
 
-You don't have to repeat them.
+<p>You don't have to repeat them.</p>
 
-→ Review your feedback at https://app.studyapp.ai
+<p><a href="https://app.studyapp.ai">→ Review your feedback</a></p>
 
-The StudyApp Team`,
+<p>The StudyApp Team</p>`,
     enabled: false
   },
   {
     name: "Weekly Progress Report",
     trigger_type: "weekly_report",
     subject: "Your weekly progress",
-    body: `Hi {{name}},
+    body: `<p>Hi {{name}},</p>
 
-Here's what changed this week:
+<p>Here's what changed this week:</p>
 
-Worksheets completed: {{worksheet_count}}
-Average score: {{average_score}}%
-Predicted grade change: {{grade_delta}}
+<ul>
+<li>Worksheets completed: <strong>{{worksheet_count}}</strong></li>
+<li>Average score: <strong>{{average_score}}%</strong></li>
+<li>Predicted grade change: <strong>{{grade_delta}}</strong></li>
+</ul>
 
-This is what progress actually looks like. Not hours studied. Not intentions. Measurable movement.
+<p>This is what progress actually looks like. Not hours studied. Not intentions. Measurable movement.</p>
 
-Next week compounds this one.
+<p>Next week compounds this one.</p>
 
-→ View full report at https://app.studyapp.ai
+<p><a href="https://app.studyapp.ai">→ View full report</a></p>
 
-The StudyApp Team`,
+<p>The StudyApp Team</p>`,
     enabled: false
   },
   {
     name: "Lesson Reminder",
     trigger_type: "incomplete_lesson",
     subject: "You left something unfinished",
-    body: `Hi {{name}},
+    body: `<p>Hi {{name}},</p>
 
-You started a lesson but didn't finish it.
+<p>You started a lesson but didn't finish it.</p>
 
-The unfinished section targets a weakness that shows up often in grading. Skipping it has an outsized cost. Finishing it has outsized impact.
+<p>The unfinished section targets a weakness that shows up often in grading. Skipping it has an outsized cost. Finishing it has outsized impact.</p>
 
-This is leverage, not busywork.
+<p>This is leverage, not busywork.</p>
 
-→ Finish the lesson at https://app.studyapp.ai
+<p><a href="https://app.studyapp.ai">→ Finish the lesson</a></p>
 
-The StudyApp Team`,
+<p>The StudyApp Team</p>`,
     enabled: false
   },
   {
     name: "Personalized Tips",
     trigger_type: "pattern_detected",
     subject: "One pattern is costing you marks",
-    body: `Hi {{name}},
+    body: `<p>Hi {{name}},</p>
 
-The system noticed a pattern.
+<p>The system noticed a pattern.</p>
 
-When questions involve {{weak_concept}}, your accuracy drops. Not due to lack of knowledge, but due to how you approach them.
+<p>When questions involve <strong>{{weak_concept}}</strong>, your accuracy drops. Not due to lack of knowledge, but due to how you approach them.</p>
 
-Most students never see this. You can fix it now.
+<p>Most students never see this. You can fix it now.</p>
 
-Next time, do this instead:
-{{actionable_tip}}
+<p>Next time, do this instead:<br/>
+<em>{{actionable_tip}}</em></p>
 
-→ Apply this insight at https://app.studyapp.ai
+<p><a href="https://app.studyapp.ai">→ Apply this insight</a></p>
 
-The StudyApp Team`,
+<p>The StudyApp Team</p>`,
     enabled: false
   }
 ];

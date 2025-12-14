@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Mail, Send, Clock, Users, AlertCircle, CheckCircle, Zap, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export default function EmailManager() {
   const navigate = useNavigate();
@@ -268,14 +269,26 @@ export default function EmailManager() {
 
               <div className="space-y-2">
                 <Label htmlFor="body">Email Body *</Label>
-                <Textarea
-                  id="body"
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  placeholder="Write your email here... Use {{name}}, {{level}}, etc. for dynamic content"
-                  className="min-h-[300px] font-mono text-sm"
-                  disabled={sending}
-                />
+                <div className="border rounded-lg overflow-hidden">
+                  <ReactQuill
+                    theme="snow"
+                    value={body}
+                    onChange={setBody}
+                    placeholder="Write your email here... Use {{name}}, {{school}}, {{grade}}, etc. for dynamic content"
+                    modules={{
+                      toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'indent': '-1'}, { 'indent': '+1' }],
+                        [{ 'align': [] }],
+                        ['link', 'image'],
+                        ['clean']
+                      ]
+                    }}
+                    style={{ minHeight: '300px', background: 'white' }}
+                  />
+                </div>
                 <p className="text-xs text-slate-500">
                   Emails will be sent to all {userCount} users
                 </p>
@@ -380,11 +393,25 @@ export default function EmailManager() {
                       </div>
                       <div className="space-y-2">
                         <Label>Body</Label>
-                        <Textarea
-                          value={editingTemplate.body}
-                          onChange={(e) => setEditingTemplate({...editingTemplate, body: e.target.value})}
-                          className="min-h-[200px] font-mono text-sm"
-                        />
+                        <div className="border rounded-lg overflow-hidden">
+                          <ReactQuill
+                            theme="snow"
+                            value={editingTemplate.body}
+                            onChange={(value) => setEditingTemplate({...editingTemplate, body: value})}
+                            modules={{
+                              toolbar: [
+                                [{ 'header': [1, 2, 3, false] }],
+                                ['bold', 'italic', 'underline', 'strike'],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                                [{ 'align': [] }],
+                                ['link', 'image'],
+                                ['clean']
+                              ]
+                            }}
+                            style={{ minHeight: '200px', background: 'white' }}
+                          />
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -413,7 +440,10 @@ export default function EmailManager() {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-slate-700 mb-1">Body Preview:</p>
-                        <p className="text-sm text-slate-600 whitespace-pre-wrap line-clamp-4">{email.body}</p>
+                        <div 
+                          className="text-sm text-slate-600 line-clamp-4 prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: email.body }}
+                        />
                       </div>
                       <div className="flex items-center justify-between pt-2">
                         <p className="text-xs text-slate-500">

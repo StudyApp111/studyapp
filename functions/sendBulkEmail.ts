@@ -16,13 +16,18 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Subject and body are required' }, { status: 400 });
         }
 
+        const resendApiKey = Deno.env.get("RESEND_API_KEY");
+        if (!resendApiKey) {
+            return Response.json({ error: 'Resend API key not configured' }, { status: 500 });
+        }
+
         // Get all users using service role
         const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 1000);
 
         let sent = 0;
         let failed = 0;
 
-        // Send emails to all users
+        // Send emails to all users via Resend
         for (const targetUser of allUsers) {
             try {
                 // Get learning profile for school and grade
@@ -46,14 +51,27 @@ Deno.serve(async (req) => {
                     .replace(/\{\{current_streak\}\}/g, targetUser.current_streak || 0)
                     .replace(/\{\{questions_completed\}\}/g, targetUser.questions_completed || 0);
 
-                await base44.asServiceRole.integrations.Core.SendEmail({
-                    from_name: 'StudyApp.AI',
-                    to: targetUser.email,
-                    subject: subject,
-                    body: personalizedBody
+                // Send via Resend API
+                const resendResponse = await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${resendApiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        from: 'StudyApp.AI <noreply@studyapp.ai>',
+                        to: targetUser.email,
+                        subject: subject,
+                        html: personalizedBody
+                    })
                 });
 
-                sent++;
+                if (resendResponse.ok) {
+                    sent++;
+                } else {
+                    console.error(`Resend failed for ${targetUser.email}:`, await resendResponse.text());
+                    failed++;
+                }
             } catch (emailError) {
                 console.error(`Failed to send to ${targetUser.email}:`, emailError);
                 failed++;

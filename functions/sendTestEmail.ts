@@ -16,6 +16,11 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Recipient, subject, and body are required' }, { status: 400 });
         }
 
+        const resendApiKey = Deno.env.get("RESEND_API_KEY");
+        if (!resendApiKey) {
+            return Response.json({ error: 'Resend API key not configured' }, { status: 500 });
+        }
+
         // Get the target user to personalize the email
         const targetUsers = await base44.asServiceRole.entities.User.filter({ email: recipient });
         
@@ -46,12 +51,25 @@ Deno.serve(async (req) => {
             .replace(/\{\{current_streak\}\}/g, targetUser.current_streak || 0)
             .replace(/\{\{questions_completed\}\}/g, targetUser.questions_completed || 0);
 
-        await base44.asServiceRole.integrations.Core.SendEmail({
-            from_name: 'StudyApp.AI',
-            to: recipient,
-            subject: subject,
-            body: personalizedBody
+        // Send via Resend API
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${resendApiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: 'StudyApp.AI <noreply@studyapp.ai>',
+                to: recipient,
+                subject: subject,
+                html: personalizedBody
+            })
         });
+
+        if (!resendResponse.ok) {
+            const errorText = await resendResponse.text();
+            throw new Error(`Resend API error: ${errorText}`);
+        }
 
         return Response.json({ 
             success: true,
