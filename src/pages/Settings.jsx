@@ -22,7 +22,8 @@ import {
   LogOut,
   ArrowRight,
   ArrowLeft,
-  BarChart3
+  BarChart3,
+  Mail
 } from "lucide-react";
 import {
   Dialog,
@@ -166,6 +167,19 @@ export default function Settings() {
             </SettingsSection>
 
             <Separator className="my-6" />
+
+            {user?.email === 'kartikeya2159@gmail.com' && (
+              <>
+                <SettingsSection title="Admin">
+                  <SettingsItem
+                    icon={Mail}
+                    label="Email Manager"
+                    onClick={() => navigate(createPageUrl("EmailManager"))}
+                  />
+                </SettingsSection>
+                <Separator className="my-6" />
+              </>
+            )}
 
             <SettingsSection title="Others">
               <div className="flex items-center justify-between p-4 rounded-lg border border-slate-200">
