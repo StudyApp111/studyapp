@@ -26,21 +26,8 @@ export default function Leaderboard() {
   const { data: allUsers = [], isLoading } = useQuery({
     queryKey: ['leaderboard'],
     queryFn: async () => {
-      const users = await base44.entities.User.list('-total_points', 100);
-      
-      // Show all users, including those with 0 points
-      const profilePromises = users.map(user => 
-        user.learning_profile_id 
-          ? base44.entities.LearningProfile.filter({ id: user.learning_profile_id })
-          : Promise.resolve([])
-      );
-      
-      const profiles = await Promise.all(profilePromises);
-      
-      return users.map((user, idx) => ({
-        ...user,
-        city: profiles[idx][0]?.city || null
-      }));
+      const response = await base44.functions.invoke('getLeaderboard', {});
+      return response.data.users || [];
     },
     initialData: [],
   });
@@ -63,28 +50,7 @@ export default function Leaderboard() {
     ? allUsers.findIndex(u => u.id === currentUser.id) + 1 
     : 0;
 
-  const getCityCountry = (city) => {
-    if (!city) return { flag: '🌍' };
-    
-    const cityLower = city.toLowerCase();
-    
-    const cityMap = {
-      // Canada
-      'toronto': '🇨🇦', 'vancouver': '🇨🇦', 'montreal': '🇨🇦', 'calgary': '🇨🇦', 'ottawa': '🇨🇦', 'edmonton': '🇨🇦',
-      // USA
-      'new york': '🇺🇸', 'los angeles': '🇺🇸', 'chicago': '🇺🇸', 'houston': '🇺🇸', 'phoenix': '🇺🇸', 'philadelphia': '🇺🇸', 'san antonio': '🇺🇸', 'san diego': '🇺🇸', 'dallas': '🇺🇸', 'san francisco': '🇺🇸', 'boston': '🇺🇸', 'seattle': '🇺🇸', 'miami': '🇺🇸',
-      // UK
-      'london': '🇬🇧', 'manchester': '🇬🇧', 'birmingham': '🇬🇧', 'liverpool': '🇬🇧', 'edinburgh': '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'glasgow': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-      // Australia
-      'sydney': '🇦🇺', 'melbourne': '🇦🇺', 'brisbane': '🇦🇺', 'perth': '🇦🇺',
-      // India
-      'mumbai': '🇮🇳', 'delhi': '🇮🇳', 'bangalore': '🇮🇳', 'hyderabad': '🇮🇳', 'chennai': '🇮🇳', 'kolkata': '🇮🇳',
-      // Other
-      'paris': '🇫🇷', 'berlin': '🇩🇪', 'madrid': '🇪🇸', 'rome': '🇮🇹', 'tokyo': '🇯🇵', 'beijing': '🇨🇳', 'shanghai': '🇨🇳', 'singapore': '🇸🇬', 'dubai': '🇦🇪', 'mexico city': '🇲🇽'
-    };
-    
-    return { flag: cityMap[cityLower] || '🌍' };
-  };
+
 
   if (isLoading || !currentUser) {
     return (
@@ -206,9 +172,8 @@ export default function Leaderboard() {
                             )}
                           </div>
                           {user.city && (
-                            <p className="text-xs md:text-sm text-slate-600 flex items-center gap-1">
-                              <span className="flex-shrink-0">{getCityCountry(user.city).flag}</span>
-                              <span className="truncate">{user.city}</span>
+                            <p className="text-xs md:text-sm text-slate-600 truncate">
+                              {user.city}
                             </p>
                           )}
                         </div>
