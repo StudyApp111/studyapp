@@ -105,7 +105,7 @@ School: ${learningProfile.school || "N/A"}
 City/Region: ${learningProfile.city || "N/A"}
 Detailed Curriculum Profile: ${JSON.stringify(lessonData.curriculum_map)}
 
-LESSON CONTENT (Questions MUST be based on this content but should not be taken literally. If user asks for help on a specific unit, or midterm, or final, or chapter, find that topic(s) within the curriculum or online and adhere to that. Do not produce questions like 'What does it mean to ask for a final exam' when user enters in the description 'I need help on my final exam'):
+LESSON CONTENT (Questions MUST be based on this content but should not be taken literally. If user asks for help on a specific unit, or midterm, or final, or chapter, find that topic(s) within the curriculum and adhere to that. Do not produce questions like 'What does it mean to ask for a final exam' when user enters in the description 'I need help on my final exam'):
 ${contentDescription}
 
 Task: Design the 5-Question Diagnostic Quiz
