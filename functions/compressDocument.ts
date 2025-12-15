@@ -1,24 +1,34 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
+    console.log('=== compressDocument Function Start ===');
+    
     try {
         const base44 = createClientFromRequest(req);
+        console.log('✅ Base44 client created');
+        
         const user = await base44.auth.me();
+        console.log('✅ User authenticated:', user?.email);
 
         if (!user) {
+            console.error('❌ Authentication failed - no user');
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { content } = await req.json();
+        console.log('✅ Request body parsed, content length:', content?.length);
 
         if (!content) {
+            console.error('❌ Missing content in request');
             return Response.json({ error: 'Content is required' }, { status: 400 });
         }
 
         const apiKey = Deno.env.get('API_KEY');
         if (!apiKey) {
+            console.error('❌ CRITICAL: API_KEY not found in environment');
             return Response.json({ error: 'API key not configured' }, { status: 500 });
         }
+        console.log('✅ API key found');
 
         const prompt = `Context You are a document compression and structuring engine.
 Your sole function is to extract and reorganize information that is explicitly present in the provided content and compress it to <1500 characters. You must not interpret, infer, explain, prioritize, or add any knowledge.

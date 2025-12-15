@@ -1,15 +1,24 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
+    console.log('=== curriculumMapping Function Start ===');
+    
     try {
         const base44 = createClientFromRequest(req);
+        console.log('✅ Base44 client created');
+        
         const user = await base44.auth.me();
+        console.log('✅ User authenticated:', user?.email);
 
         if (!user) {
+            console.error('❌ Authentication failed - no user');
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { prompt, response_json_schema } = await req.json();
+        console.log('✅ Request body parsed');
+        console.log('📝 Prompt length:', prompt?.length);
+        console.log('📋 Schema provided:', !!response_json_schema);
 
         if (!prompt) {
             return Response.json({ error: 'Prompt is required' }, { status: 400 });
