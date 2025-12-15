@@ -364,7 +364,7 @@ Output valid JSON matching the expected schema.`;
               </div>
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Smart Grader</h1>
-                <p className="text-white/90 text-sm md:text-base">Get instant AI-powered feedback on your work</p>
+                <p className="text-white/90 text-sm md:text-base">Upload your completed work and get instant AI grading with detailed feedback, rubric breakdown, and actionable improvements</p>
               </div>
             </div>
           </div>
