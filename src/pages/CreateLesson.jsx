@@ -140,6 +140,22 @@ export default function CreateLesson() {
           if (extractedContent.length < 50) {
             throw new Error("Extracted content is too short. Please ensure your file contains readable text.");
           }
+
+          // Store full content for later reference
+          const fullExtractedContent = extractedContent;
+
+          // Compress if content is too long
+          if (extractedContent.length > 1500) {
+            setProcessingStep("Compressing document for optimal processing...");
+            
+            const compressionResult = await base44.functions.invoke('compressDocument', {
+              content: extractedContent
+            });
+
+            if (compressionResult?.data?.compressed_content) {
+              extractedContent = compressionResult.data.compressed_content;
+            }
+          }
           
         } catch (fileError) {
           console.error("Error processing file:", fileError);
@@ -333,10 +349,10 @@ Output Format: JSON object matching the specified schema`;
         lessonData.description = description;
       } else if (inputType === "url") {
         lessonData.url = url;
-        lessonData.extracted_content = extractedContent;
+        lessonData.extracted_content = fullExtractedContent || extractedContent;
       } else if (inputType === "file") {
         lessonData.file_url = fileUrl;
-        lessonData.extracted_content = extractedContent;
+        lessonData.extracted_content = fullExtractedContent || extractedContent;
       }
 
       const lesson = await base44.entities.Lesson.create(lessonData);
