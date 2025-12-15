@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
 
         // Use pixtral for vision/document understanding (mistral-small doesn't support vision)
         const requestBody = {
-            model: 'pixtral-12b-2409',
+            model: 'mistral-ocr-2505',
             messages: [
                 {
                     role: 'user',
