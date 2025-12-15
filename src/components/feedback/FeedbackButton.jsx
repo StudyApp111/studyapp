@@ -43,38 +43,10 @@ export default function FeedbackButton() {
     setIsSending(true);
 
     try {
-      await base44.integrations.Core.SendEmail({
-        from_name: "StudyApp.AI Feedback",
-        to: "info@studyappai.com",
-        subject: `New Feedback from ${name || email}`,
-        body: `
-<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-  <div style="background: linear-gradient(135deg, #9333ea 0%, #fbbf24 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    <h1 style="margin: 0; font-size: 24px;">📬 New Feedback Received</h1>
-  </div>
-  
-  <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
-    <div style="margin-bottom: 20px;">
-      <div style="font-weight: bold; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">FROM</div>
-      <div style="margin-top: 5px; padding: 12px; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">${name || "Anonymous User"}</div>
-    </div>
-    
-    <div style="margin-bottom: 20px;">
-      <div style="font-weight: bold; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">EMAIL</div>
-      <div style="margin-top: 5px; padding: 12px; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">${email}</div>
-    </div>
-    
-    <div style="margin-bottom: 20px;">
-      <div style="font-weight: bold; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">MESSAGE</div>
-      <div style="margin-top: 5px; padding: 12px; background: white; border-radius: 6px; border: 1px solid #e5e7eb; white-space: pre-wrap;">${message}</div>
-    </div>
-  </div>
-  
-  <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
-    Sent via StudyApp.AI Feedback System
-  </div>
-</div>
-        `.trim()
+      await base44.functions.invoke('sendFeedback', {
+        name,
+        email,
+        message
       });
 
       setSent(true);
