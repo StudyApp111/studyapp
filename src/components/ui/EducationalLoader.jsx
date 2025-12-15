@@ -163,7 +163,7 @@ export default function EducationalLoader({ title = "Creating Your Lesson", desc
         setCurrentFact(relevantFacts[randomIndex]);
         setShownFactIndices(prev => new Set([...prev, randomIndex]));
       }
-    }, 3500);
+    }, 6500);
 
     return () => clearInterval(timer);
   }, [relevantFacts, shownFactIndices]);
