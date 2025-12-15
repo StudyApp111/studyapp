@@ -16,7 +16,7 @@ import EducationalLoader from "@/components/ui/EducationalLoader";
 export default function CreateLesson() {
   const navigate = useNavigate();
   const [courseName, setCourseName] = useState("");
-  const [inputType, setInputType] = useState("description");
+  const [inputType, setInputType] = useState("file");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
   const [file, setFile] = useState(null);

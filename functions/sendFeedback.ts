@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
         `;
 
         await resend.emails.send({
-            from: 'StudyApp.AI Feedback <no-reply@studyappai.com>',
+            from: 'StudyApp.AI Feedback <no-reply@updates.studyappai.com>',
             to: 'info@studyappai.com',
             subject: `New Feedback from ${name || email}`,
             html: htmlBody
