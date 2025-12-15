@@ -46,48 +46,34 @@ export default function FeedbackButton() {
       await base44.integrations.Core.SendEmail({
         from_name: "StudyApp.AI Feedback",
         to: "info@studyappai.com",
-        subject: `Feedback from ${name || email}`,
+        subject: `New Feedback from ${name || email}`,
         body: `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #9333ea 0%, #fbbf24 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
-    .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none; }
-    .field { margin-bottom: 20px; }
-    .label { font-weight: bold; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .value { margin-top: 5px; padding: 12px; background: white; border-radius: 6px; border: 1px solid #e5e7eb; }
-    .message { white-space: pre-wrap; }
-    .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1 style="margin: 0; font-size: 24px;">📬 New Feedback Received</h1>
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+  <div style="background: linear-gradient(135deg, #9333ea 0%, #fbbf24 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="margin: 0; font-size: 24px;">📬 New Feedback Received</h1>
+  </div>
+  
+  <div style="background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
+    <div style="margin-bottom: 20px;">
+      <div style="font-weight: bold; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">FROM</div>
+      <div style="margin-top: 5px; padding: 12px; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">${name || "Anonymous User"}</div>
     </div>
-    <div class="content">
-      <div class="field">
-        <div class="label">From</div>
-        <div class="value">${name || "Anonymous User"}</div>
-      </div>
-      <div class="field">
-        <div class="label">Email</div>
-        <div class="value">${email}</div>
-      </div>
-      <div class="field">
-        <div class="label">Feedback Message</div>
-        <div class="value message">${message}</div>
-      </div>
+    
+    <div style="margin-bottom: 20px;">
+      <div style="font-weight: bold; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">EMAIL</div>
+      <div style="margin-top: 5px; padding: 12px; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">${email}</div>
     </div>
-    <div class="footer">
-      Sent via StudyApp.AI Feedback System
+    
+    <div style="margin-bottom: 20px;">
+      <div style="font-weight: bold; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">MESSAGE</div>
+      <div style="margin-top: 5px; padding: 12px; background: white; border-radius: 6px; border: 1px solid #e5e7eb; white-space: pre-wrap;">${message}</div>
     </div>
   </div>
-</body>
-</html>
+  
+  <div style="text-align: center; padding: 20px; color: #6b7280; font-size: 12px;">
+    Sent via StudyApp.AI Feedback System
+  </div>
+</div>
         `.trim()
       });
 
