@@ -1,25 +1,35 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
-    console.log('=== feedbackGrade called ===');
+    console.log('=== feedbackGrade Function Start ===');
     try {
         const base44 = createClientFromRequest(req);
+        console.log('✅ Base44 client created');
+        
         const user = await base44.auth.me();
+        console.log('✅ User authenticated:', user?.email);
 
         if (!user) {
+            console.error('❌ Authentication failed - no user');
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { prompt, response_json_schema } = await req.json();
+        console.log('✅ Request body parsed');
+        console.log('📝 Prompt length:', prompt?.length);
+        console.log('📋 Schema provided:', !!response_json_schema);
 
         if (!prompt) {
+            console.error('❌ Missing prompt in request');
             return Response.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
         const apiKey = Deno.env.get("API_KEY");
         if (!apiKey) {
+            console.error('❌ CRITICAL: API_KEY not found in environment');
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
+        console.log('✅ API key found');
 
         const requestBody = {
             contents: [{
@@ -45,7 +55,7 @@ Deno.serve(async (req) => {
             requestBody.generationConfig.responseSchema = response_json_schema;
         }
 
-        console.log('Calling Gemini API...');
+        console.log('⏳ Calling Gemini API for feedback grading...');
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
             {
@@ -57,9 +67,11 @@ Deno.serve(async (req) => {
             }
         );
 
+        console.log('📥 Gemini API response status:', response.status);
+
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Gemini API error:', response.status, errorText);
+            console.error('❌ Gemini API error:', response.status, errorText);
             return Response.json({ 
                 error: 'Gemini API error',
                 details: errorText.substring(0, 500)
@@ -67,6 +79,7 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json();
+        console.log('✅ Gemini API response received');
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
@@ -77,12 +90,13 @@ Deno.serve(async (req) => {
             }, { status: 500 });
         }
 
-        console.log('Generated text length:', generatedText.length);
+        console.log('✅ Generated text extracted, length:', generatedText.length);
 
         if (response_json_schema) {
             try {
                 const parsedResponse = JSON.parse(generatedText);
-                console.log('JSON parsed successfully');
+                console.log('✅ JSON parsed successfully');
+                console.log('=== feedbackGrade Function Complete ===');
                 return Response.json(parsedResponse);
             } catch (parseError) {
                 console.error('=== JSON PARSE ERROR ===');
@@ -97,11 +111,12 @@ Deno.serve(async (req) => {
             }
         }
 
+        console.log('=== feedbackGrade Function Complete ===');
         return Response.json({ text: generatedText });
 
     } catch (error) {
-        console.error('feedbackGrade error:', error.message);
-        console.error('Stack:', error.stack);
+        console.error('❌ CRITICAL ERROR in feedbackGrade:', error.message);
+        console.error('Error stack:', error.stack);
         return Response.json({ 
             error: 'Internal server error',
             details: error.message
