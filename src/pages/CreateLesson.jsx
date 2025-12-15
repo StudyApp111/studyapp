@@ -91,6 +91,7 @@ export default function CreateLesson() {
       }
 
       let extractedContent = "";
+      let fullExtractedContent = "";
       let fileUrl = "";
 
       // Handle URL input
