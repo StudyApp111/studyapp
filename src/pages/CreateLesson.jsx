@@ -369,7 +369,7 @@ Output Format: JSON object matching the specified schema`;
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Create New Lesson</h1>
-                  <p className="text-white/90 text-sm">Enter your course details to get a personalized lesson that diagnoses your weaknesses, gives you exam style practice, and predicts your grade for you</p>
+                  <p className="text-white/90 text-sm">Enter your course details to get a personalized lesson that diagnoses your weaknesses, gives you exam style practice, predicts your grade for you, and maps your personalized road to an A+.</p>
                 </div>
               </div>
               <Button
