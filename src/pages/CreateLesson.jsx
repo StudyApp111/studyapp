@@ -369,7 +369,7 @@ Output Format: JSON object matching the specified schema`;
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Create New Lesson</h1>
-                  <p className="text-white/90 text-sm">AI-powered practice tests tailored to your learning style</p>
+                  <p className="text-white/90 text-sm">Enter your course details to get a personalized lesson that diagnoses your weaknesses, gives you exam style practice, and predicts your grade for you</p>
                 </div>
               </div>
               <Button
@@ -411,23 +411,23 @@ Output Format: JSON object matching the specified schema`;
                 <Label>How would you like to provide the course content? *</Label>
                 <RadioGroup value={inputType} onValueChange={setInputType} disabled={isProcessing}>
                   <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
-                    <RadioGroupItem value="description" id="description" />
-                    <Label htmlFor="description" className="flex items-center gap-2 flex-1 cursor-pointer">
-                      <FileText className="w-5 h-5 text-purple-600" />
-                      <div>
-                        <p className="font-medium">Write a Description</p>
-                        <p className="text-xs text-slate-500">Describe the course content in your own words</p>
-                      </div>
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
                     <RadioGroupItem value="file" id="file" />
                     <Label htmlFor="file" className="flex items-center gap-2 flex-1 cursor-pointer">
                       <Upload className="w-5 h-5 text-purple-600" />
                       <div>
                         <p className="font-medium">Upload a File</p>
                         <p className="text-xs text-slate-500">PDF, PPT, Word, Images - Max 5MB</p>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
+                    <RadioGroupItem value="description" id="description" />
+                    <Label htmlFor="description" className="flex items-center gap-2 flex-1 cursor-pointer">
+                      <FileText className="w-5 h-5 text-purple-600" />
+                      <div>
+                        <p className="font-medium">Write a Description</p>
+                        <p className="text-xs text-slate-500">Describe the course content in your own words</p>
                       </div>
                     </Label>
                   </div>
