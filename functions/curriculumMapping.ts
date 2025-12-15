@@ -21,13 +21,16 @@ Deno.serve(async (req) => {
         console.log('📋 Schema provided:', !!response_json_schema);
 
         if (!prompt) {
+            console.error('❌ Missing prompt in request');
             return Response.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
         const apiKey = Deno.env.get("API_KEY");
         if (!apiKey) {
+            console.error('❌ CRITICAL: API_KEY not found in environment');
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
+        console.log('✅ API key found');
 
         // Google Search grounding cannot be combined with JSON response mode
         // So we request grounded content and ask for JSON in the prompt
@@ -53,6 +56,7 @@ Deno.serve(async (req) => {
             }]
         };
 
+        console.log('⏳ Calling Gemini API with Google Search grounding...');
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
             {
@@ -64,9 +68,11 @@ Deno.serve(async (req) => {
             }
         );
 
+        console.log('📥 Gemini API response status:', response.status);
+
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Gemini API error:', response.status, errorText);
+            console.error('❌ Gemini API error:', response.status, errorText);
             return Response.json({ 
                 error: 'Failed to generate content',
                 details: errorText
@@ -74,6 +80,7 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json();
+        console.log('✅ Gemini API response received');
         
         // Find text content from grounded response (may be in different parts)
         let generatedText = null;
@@ -86,11 +93,13 @@ Deno.serve(async (req) => {
         }
         
         if (!generatedText) {
-            console.error('No content in response:', JSON.stringify(data));
+            console.error('❌ No content in response:', JSON.stringify(data));
             return Response.json({ 
                 error: 'No content generated' 
             }, { status: 500 });
         }
+        
+        console.log('✅ Generated text extracted, length:', generatedText.length);
 
         // Extract JSON - handle markdown code blocks if present
         let jsonStr = generatedText.trim();
@@ -101,10 +110,13 @@ Deno.serve(async (req) => {
 
         try {
             const parsedResponse = JSON.parse(jsonStr);
+            console.log('✅ JSON parsed successfully');
+            console.log('📊 Response keys:', Object.keys(parsedResponse).join(', '));
+            console.log('=== curriculumMapping Function Complete ===');
             return Response.json(parsedResponse);
         } catch (parseError) {
-            console.error('JSON parse error:', parseError.message);
-            console.error('Raw text:', generatedText.substring(0, 1000));
+            console.error('❌ JSON parse error:', parseError.message);
+            console.error('Raw text preview:', generatedText.substring(0, 1000));
             return Response.json({ 
                 error: 'Failed to parse response as JSON',
                 raw: generatedText.substring(0, 500)
@@ -112,6 +124,9 @@ Deno.serve(async (req) => {
         }
 
     } catch (error) {
+        console.error('❌ CRITICAL ERROR in curriculumMapping:', error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
         return Response.json({ 
             error: 'Internal server error' 
         }, { status: 500 });
