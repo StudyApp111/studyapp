@@ -84,31 +84,72 @@ Deno.serve(async (req) => {
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
-            console.error('No content generated:', JSON.stringify(data).substring(0, 500));
+            console.error('❌ No content generated:', JSON.stringify(data).substring(0, 500));
             return Response.json({ 
                 error: 'No content generated',
+                code: 'API_002',
                 details: 'Empty response from Gemini'
-            }, { status: 500 });
+            }, { status: 503 });
         }
 
         console.log('✅ Generated text extracted, length:', generatedText.length);
 
         if (response_json_schema) {
             try {
+                // Validate JSON completeness before parsing
+                if (!generatedText.trim().endsWith('}') && !generatedText.trim().endsWith(']')) {
+                    console.error('❌ Incomplete JSON detected - missing closing bracket');
+                    console.error('Last 200 chars:', generatedText.slice(-200));
+                    return Response.json({ 
+                        error: 'Incomplete JSON response from AI',
+                        code: 'JSON_001',
+                        details: 'Response was truncated or incomplete',
+                        textPreview: generatedText.substring(0, 1000)
+                    }, { status: 504 });
+                }
+
                 const parsedResponse = JSON.parse(generatedText);
+                
+                // Validate required fields
+                const requiredFields = [
+                    'feedback_session_title',
+                    'predicted_exam_score_percentage',
+                    'prediction_calculation_rationale',
+                    'overall_performance_summary_text',
+                    'identified_strengths_list',
+                    'key_areas_for_improvement_list'
+                ];
+                
+                const missingFields = requiredFields.filter(field => !parsedResponse[field]);
+                
+                if (missingFields.length > 0) {
+                    console.error('❌ Missing required fields:', missingFields);
+                    return Response.json({ 
+                        error: 'Incomplete feedback data',
+                        code: 'JSON_002',
+                        details: `Missing fields: ${missingFields.join(', ')}`,
+                        partialData: parsedResponse
+                    }, { status: 505 });
+                }
+                
                 console.log('✅ JSON parsed successfully');
+                console.log('✅ All required fields present');
                 console.log('=== feedbackGrade Function Complete ===');
                 return Response.json(parsedResponse);
             } catch (parseError) {
                 console.error('=== JSON PARSE ERROR ===');
                 console.error('Error message:', parseError.message);
+                console.error('Error position:', parseError.message.match(/position (\d+)/)?.[1]);
+                console.error('Full text length:', generatedText.length);
                 console.error('Full text:', generatedText);
                 
                 return Response.json({ 
                     error: 'Failed to parse JSON response',
+                    code: 'JSON_003',
                     details: parseError.message,
-                    textPreview: generatedText.substring(0, 1000)
-                }, { status: 500 });
+                    textPreview: generatedText.substring(0, 1000),
+                    textEnd: generatedText.slice(-200)
+                }, { status: 506 });
             }
         }
 
