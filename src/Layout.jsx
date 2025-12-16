@@ -20,6 +20,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
+import { logError } from "@/components/utils/errorLogger";
 
 const navigationItems = [
   {
@@ -94,6 +95,31 @@ export default function Layout({ children, currentPageName }) {
     
     checkUser();
   }, [location.pathname, navigate]);
+
+  // Global UI error tracking
+  React.useEffect(() => {
+    const onWindowError = (event) => {
+      try {
+        logError('ui_error', event?.error || event?.message || 'Unknown window error', {
+          source: 'window.error',
+        });
+      } catch {}
+    };
+    const onUnhandledRejection = (event) => {
+      try {
+        logError('ui_error', event?.reason || 'Unhandled promise rejection', {
+          source: 'unhandledrejection',
+        });
+      } catch {}
+    };
+
+    window.addEventListener('error', onWindowError);
+    window.addEventListener('unhandledrejection', onUnhandledRejection);
+    return () => {
+      window.removeEventListener('error', onWindowError);
+      window.removeEventListener('unhandledrejection', onUnhandledRejection);
+    };
+  }, []);
 
   // Load GTM configuration
   React.useEffect(() => {

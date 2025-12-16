@@ -19,19 +19,34 @@ export async function logError(errorType, error, context = {}) {
       // User not authenticated, that's fine
     }
 
+    const enrichedContext = {
+      ...context,
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
+      timestamp: new Date().toISOString(),
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+    };
+
     await base44.entities.ErrorLog.create({
       error_type: errorType,
       error_message: errorMessage,
       error_stack: errorStack,
-      context: {
-        ...context,
-        url: window.location.href,
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent
-      },
+      context: enrichedContext,
       user_email: userEmail,
       resolved: false
     });
+
+    // Fire-and-forget support email via backend function
+    try {
+      await base44.functions.invoke('reportError', {
+        subject: `${errorType.toUpperCase()} - ${errorMessage.substring(0, 140)}`,
+        body: errorStack || errorMessage,
+        severity: 'error',
+        context: enrichedContext,
+      });
+    } catch (e) {
+      // swallow email errors
+      console.warn('[ErrorLog] Failed to notify support:', e?.message || e);
+    }
 
     // Also log to console for development
     console.error(`[ErrorLog] ${errorType}:`, errorMessage, context);

@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "../components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "../components/gamification/ConfettiEffect";
 import { Sparkles } from "lucide-react";
+import { logError } from "@/components/utils/errorLogger";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -1363,6 +1364,15 @@ Output Format: Valid JSON matching the required schema.`;
         message: error.message,
         stack: error.stack
       });
+
+      // Send to centralized logger (emails support automatically)
+      try {
+        await logError('worksheet_submission', error, {
+          lesson_id: lesson?.id,
+          worksheet_id: worksheet?.id,
+          worksheet_number: worksheet?.worksheet_number,
+        });
+      } catch {}
 
       const errorMessage = `Failed to submit worksheet: ${errorDetails}`;
       alert(errorMessage);
