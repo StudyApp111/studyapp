@@ -42,8 +42,22 @@ Use "difficulty_index" only to judge expected rigor (don't explain the rubric ma
 
 The input will be provided as a JSON object containing: question_text, question_type, difficulty_index, correct_answer, explanation, assessed_competencies, targeted_misconception, student_answer, student_grade_level, course_name.
 
+CRITICAL: FORMAT TOLERANCE
+• Treat answers with different formatting but identical semantic meaning as equivalent.
+• For numerical answers, normalize both the correct answer and student answer before comparison:
+  - Strip currency symbols ($, €, £, ¥, etc.)
+  - Remove commas in numbers (1,000 → 1000)
+  - Strip percentage signs if both answers contain or omit them consistently
+  - Ignore leading/trailing whitespace
+  - Treat "30" and "$30" as equivalent for currency questions
+  - Treat "50%" and "50" as equivalent for percentage questions if the question context implies percentage
+• For text answers, ignore capitalization differences, extra spaces, and minor punctuation variations
+• If the normalized student answer matches the normalized correct answer, award full credit (9-10 points)
+• Only deduct for formatting if it fundamentally changes the meaning (e.g., decimal placement, sign errors, unit confusion like meters vs. kilometers)
+
 TASK
 • Read the question, exemplar explanation, competencies, and the student's answer.
+• Normalize both correct_answer and student_answer for format comparison.
 • Judge content accuracy, reasoning soundness, and coverage of key competencies.
 • If the targeted misconception appears, reflect that in the score and note it.
 • Keep the rationale short (one sentence). Do not reveal a full solution.
@@ -61,6 +75,7 @@ Return ONLY a strict JSON object with these fields:
 
 CONSTRAINTS
 • Be consistent and proportional: full coverage and correct reasoning ≈ 9–10; solid but incomplete ≈ 7–8.5; partial/fragmentary ≈ 4–6.5; minimal/relevant fragments ≈ 1–3.5; off-topic/incorrect = 0.
+• Format tolerance: If the student's answer is semantically correct but formatted differently (e.g., "$30" vs "30" for a price question), award 9-10 points, not 0.
 • Keep language age-appropriate for the student_grade_level.
 • Do not include extra commentary, markdown, or text outside the JSON.`;
 
