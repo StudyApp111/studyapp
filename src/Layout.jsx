@@ -477,9 +477,9 @@ export default function Layout({ children, currentPageName }) {
 
                 {/* Sleek Elevated CTA Button */}
                 <button
-                                        onClick={() => navigate(createPageUrl("CreateLesson"))}
-                                        className="absolute left-1/2 -translate-x-1/2 -top-10 group"
-                                      >
+                                                              onClick={() => navigate(createPageUrl("CreateLesson"))}
+                                                              className="absolute left-1/2 -translate-x-1/2 -top-6 group"
+                                                            >
                   <div className="relative">
                     {/* Subtle glow */}
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
