@@ -477,18 +477,17 @@ export default function Layout({ children, currentPageName }) {
 
                 {/* Sleek Elevated CTA Button */}
                 <button
-                  onClick={() => navigate(createPageUrl("CreateLesson"))}
-                  className="absolute left-1/2 -translate-x-1/2 -top-8 group"
-                >
+                                        onClick={() => navigate(createPageUrl("CreateLesson"))}
+                                        className="absolute left-1/2 -translate-x-1/2 -top-10 group"
+                                      >
                   <div className="relative">
                     {/* Subtle glow */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-yellow-400 to-amber-500 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
 
                     {/* Main button - sleek and minimal */}
-                    <div className="relative w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl shadow-xl flex flex-col items-center justify-center transform group-hover:scale-105 transition-all duration-200 border-2 border-white">
-                      <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
-                      <span className="text-[9px] font-bold text-white mt-0.5 whitespace-nowrap">New Lesson</span>
-                    </div>
+                    <div className="relative w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full shadow-2xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
+                                                <Plus className="w-8 h-8 text-white drop-shadow" strokeWidth={2.5} />
+                                              </div>
                   </div>
                 </button>
               </div>
