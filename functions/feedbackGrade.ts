@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
 
         if (!user) {
             console.error('❌ Authentication failed - no user');
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+            return Response.json({ error: 'Unauthorized', code: 'AUTH_001' }, { status: 401 });
         }
 
         const { prompt, response_json_schema } = await req.json();
@@ -21,13 +21,13 @@ Deno.serve(async (req) => {
 
         if (!prompt) {
             console.error('❌ Missing prompt in request');
-            return Response.json({ error: 'Prompt is required' }, { status: 400 });
+            return Response.json({ error: 'Prompt is required', code: 'PARAM_001' }, { status: 400 });
         }
 
         const apiKey = Deno.env.get("API_KEY");
         if (!apiKey) {
             console.error('❌ CRITICAL: API_KEY not found in environment');
-            return Response.json({ error: 'Service configuration error' }, { status: 500 });
+            return Response.json({ error: 'Service configuration error', code: 'CONFIG_001' }, { status: 500 });
         }
         console.log('✅ API key found');
 
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
             generationConfig: {
                 temperature: 0.2,
                 topP: 0.95,
-                maxOutputTokens: 8192
+                maxOutputTokens: 16384
             },
             safetySettings: [
                 { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
@@ -74,8 +74,9 @@ Deno.serve(async (req) => {
             console.error('❌ Gemini API error:', response.status, errorText);
             return Response.json({ 
                 error: 'Gemini API error',
+                code: 'API_001',
                 details: errorText.substring(0, 500)
-            }, { status: 500 });
+            }, { status: 502 });
         }
 
         const data = await response.json();
@@ -119,7 +120,8 @@ Deno.serve(async (req) => {
         console.error('Error stack:', error.stack);
         return Response.json({ 
             error: 'Internal server error',
+            code: 'INTERNAL_001',
             details: error.message
-        }, { status: 500 });
+        }, { status: 507 });
     }
 });
