@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 /**
  * Log an error to the ErrorLog entity for internal tracking
@@ -24,13 +25,19 @@ export async function logError(errorType, error, context = {}) {
       url: typeof window !== 'undefined' ? window.location.href : undefined,
       timestamp: new Date().toISOString(),
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      pageName: typeof window !== 'undefined' ? window.__currentPageName : undefined,
+      appStep: typeof window !== 'undefined' ? window.__appStep : undefined,
+      lastAction: typeof window !== 'undefined' ? window.__lastAction : undefined,
+      device: (() => { try { return detectDeviceInfo(); } catch { return undefined; } })(),
     };
+
+    const errorCode = (error && error.response && error.response.data && error.response.data.code) || error?.code || null;
 
     await base44.entities.ErrorLog.create({
       error_type: errorType,
       error_message: errorMessage,
       error_stack: errorStack,
-      context: enrichedContext,
+      context: { ...enrichedContext, error_code: errorCode },
       user_email: userEmail,
       resolved: false
     });
@@ -41,7 +48,7 @@ export async function logError(errorType, error, context = {}) {
         subject: `${errorType.toUpperCase()} - ${errorMessage.substring(0, 140)}`,
         body: errorStack || errorMessage,
         severity: 'error',
-        context: enrichedContext,
+        context: { ...enrichedContext, error_code: errorCode },
       });
     } catch (e) {
       // swallow email errors

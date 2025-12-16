@@ -25,12 +25,30 @@ Deno.serve(async (req) => {
     const errorId = `ERR-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
     // Compose email
-    const emailSubject = `[${severity.toUpperCase()}][${errorId}] ${subject}`;
-    const emailBody = `Error ID: ${errorId}\n` +
-      `User: ${user.email}\n` +
-      `Time: ${new Date().toISOString()}\n` +
-      `\nMessage:\n${messageBody}\n` +
-      `\nContext:\n${JSON.stringify(context || {}, null, 2)}`;
+    const page = context?.pageName || context?.page || 'Unknown';
+    const url = context?.url || (typeof location !== 'undefined' ? location.href : '');
+    const step = context?.step || context?.appStep || 'Unknown';
+    const lastAction = context?.lastAction || {};
+    const errorCode = context?.error_code || 'N/A';
+
+    const emailSubject = `[${severity.toUpperCase()}][${errorCode}][${errorId}] ${subject}`;
+    const emailBody = [
+      `Error ID: ${errorId}`,
+      `Severity: ${severity}`,
+      `User: ${user.email}`,
+      `Time: ${new Date().toISOString()}`,
+      `Page: ${page}`,
+      `URL: ${url}`,
+      `Step: ${step}`,
+      `Last Action: ${lastAction.type || 'n/a'} | Label: ${(lastAction.label || '').slice(0,120)} | id: ${lastAction.id || ''} | role: ${lastAction.role || ''} | href: ${lastAction.href || ''}`,
+      `Error Code: ${errorCode}`,
+      '',
+      'Message:',
+      String(messageBody || '').slice(0, 4000),
+      '',
+      'Context:',
+      JSON.stringify(context || {}, null, 2).slice(0, 6000)
+    ].join('\n');
 
     // Send email to support
     await base44.integrations.Core.SendEmail({

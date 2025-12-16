@@ -62,14 +62,25 @@ export const trackUserSession = async () => {
     if (!user) return;
     
     const deviceInfo = detectDeviceInfo();
-    const now = new Date().toISOString();
-    
+    const nowISO = new Date().toISOString();
+    const nowTs = Date.now();
+
+    const lastStartTs = user.last_session_start_at ? Date.parse(user.last_session_start_at) : 0;
+    const isNewSession = !lastStartTs || (nowTs - lastStartTs) > (30 * 60 * 1000); // 30-min window
+
     const updateData = {
       ...deviceInfo,
-      last_active_date: now,
-      session_count: (user.session_count || 0) + 1,
-      total_logins: (user.total_logins || 0) + 1
+      last_active_date: nowISO,
+      last_session_start_at: isNewSession ? nowISO : user.last_session_start_at,
+      session_count: isNewSession ? (user.session_count || 0) + 1 : (user.session_count || 0),
     };
+
+    // Only bump total_logins if it's clearly a fresh login (12h+ since last login)
+    const lastLoginTs = user.last_login_at ? Date.parse(user.last_login_at) : 0;
+    if (!lastLoginTs || (nowTs - lastLoginTs) > (12 * 60 * 60 * 1000)) {
+      updateData.total_logins = (user.total_logins || 0) + 1;
+      updateData.last_login_at = nowISO;
+    }
     
     // Set first visit if not set
     if (!user.first_visit_date) {

@@ -804,6 +804,7 @@ Output Format: Valid JSON object matching the schema.`;
   };
 
   const submitWorksheet = async () => {
+    try { window.__appStep = 'worksheet_submit_start'; } catch {}
     setIsSubmitting(true);
     setIsGrading(false);
     console.log('[SUBMIT] Starting worksheet submission...');
