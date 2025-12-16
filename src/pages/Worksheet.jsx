@@ -246,8 +246,23 @@ export default function Worksheet() {
         }));
         
         aiPrompt = `Context
-[Role Definition]
-You are a master assessment designer and expert tutor (simulated 180 IQ). Your function is to generate a 10-question predictive worksheet that accurately forecasts a student’s performance on their actual exam for ${lessonData.course_name}. The worksheet must be personalized to the student’s demonstrated weaknesses and misconceptions, strictly using the data provided below.
+You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name}, optimized to forecast exam performance and target the student’s weaknesses.
+
+Input Context
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course/Unit Name: ${lessonData.course_name}
+School: ${learningProfile.school || "N/A"}
+
+Curriculum Map (authoritative scope, weightings, and formats):
+${JSON.stringify(lessonData.curriculum_map, null, 2)}
+
+Condensed Lesson Content (grounding terminology, examples, and emphasis):
+${contentDescription}
+
+Diagnostic Quiz Results (5Q with performance signals):
+${JSON.stringify(diagnosticResults, null, 2)}
+
+────────────────────────────────
 
 Internal Analysis (Do Not Output)
 - Identify weak, borderline, and strong competencies using diagnostic accuracy and curriculum weightings.
@@ -307,9 +322,25 @@ MCQ cue phrases are STRICTLY FORBIDDEN in non-MCQ questions:
 If any MCQ cue phrase appears in a non-MCQ question, you MUST auto-convert the question to Multiple Choice and regenerate it immediately.
 
 This enforcement layer overrides all other instructions.
-
 ────────────────────────────────
+TOPIC SCOPE OVERRIDE (CRITICAL)
 
+If contentDescription specifies a narrow topic, skill, or operation
+(e.g., "factoring", "solving linear equations", "photosynthesis",
+"Du Bois double-consciousness"),
+
+THEN:
+- Treat this topic as the PRIMARY scope.
+- Generate ALL questions exclusively from this topic.
+- Do NOT include prerequisite review, adjacent topics, or general curriculum coverage
+  unless they are strictly required to perform the named task.
+- Ignore other curriculum areas even if they appear in the curriculum map.
+
+Only broaden scope if:
+- The user explicitly asks for "review", "mixed practice", or "exam prep",
+OR
+- The specified topic cannot be meaningfully assessed in isolation.
+────────────────────────────────
 Worksheet Generation (Output Only)
 
 Generate EXACTLY 10 questions.
@@ -348,6 +379,7 @@ For EACH question include:
 
 When relevant, explicitly reference a likely reasoning error (e.g., guessing, pattern reliance, formula misuse) and explain how to avoid it next time.
 
+────────────────────────────────
 
 Output Format:
 Provide your response as a single, valid JSON object with the structure specified.`;
