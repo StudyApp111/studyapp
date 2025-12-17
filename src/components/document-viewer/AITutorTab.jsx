@@ -60,8 +60,8 @@ export default function AITutorTab({ lesson, extractedContent }) {
 
   return (
     <div className="flex flex-col h-[600px]">
-      <CardHeader className="border-b border-purple-800/30">
-        <CardTitle className="text-purple-100 flex items-center gap-2">
+      <CardHeader className="border-b border-purple-200">
+        <CardTitle className="text-slate-900 flex items-center gap-2">
           <Bot className="w-5 h-5" />
           AI Tutor - Ask me anything about {lesson?.course_name}
         </CardTitle>
@@ -84,8 +84,8 @@ export default function AITutorTab({ lesson, extractedContent }) {
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                     message.role === 'user'
-                      ? 'bg-yellow-500 text-slate-900'
-                      : 'bg-slate-800 text-purple-100 border border-purple-700/30'
+                      ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 shadow-lg'
+                      : 'bg-purple-50 text-slate-800 border border-purple-200'
                   }`}
                 >
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
@@ -102,8 +102,8 @@ export default function AITutorTab({ lesson, extractedContent }) {
                 <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
                   <Bot className="w-5 h-5 text-white" />
                 </div>
-                <div className="bg-slate-800 border border-purple-700/30 rounded-2xl px-4 py-3">
-                  <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+                <div className="bg-purple-50 border border-purple-200 rounded-2xl px-4 py-3">
+                  <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
                 </div>
               </div>
             )}
@@ -111,9 +111,9 @@ export default function AITutorTab({ lesson, extractedContent }) {
         </ScrollArea>
 
         {/* Input */}
-        <div className="border-t border-purple-800/30 p-4">
-          <Alert className="mb-3 bg-purple-900/20 border-purple-700/30">
-            <AlertDescription className="text-xs text-purple-300">
+        <div className="border-t border-purple-200 p-4">
+          <Alert className="mb-3 bg-purple-50 border-purple-200">
+            <AlertDescription className="text-xs text-slate-600">
               Note: AI Tutor prompt and model will be configured. For now, this is a UI placeholder.
             </AlertDescription>
           </Alert>
@@ -124,12 +124,12 @@ export default function AITutorTab({ lesson, extractedContent }) {
               onKeyPress={handleKeyPress}
               placeholder="Ask a question about your course material..."
               disabled={isLoading}
-              className="flex-1 bg-slate-800 border-purple-700/30 text-purple-100 placeholder:text-purple-400/50"
+              className="flex-1"
             />
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
             >
               <Send className="w-4 h-4" />
             </Button>

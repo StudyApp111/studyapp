@@ -61,8 +61,8 @@ Comprehensive notes will be generated based on your course material using AI. Th
 
   return (
     <div className="flex flex-col h-[600px]">
-      <CardHeader className="border-b border-purple-800/30">
-        <CardTitle className="text-purple-100 flex items-center justify-between">
+      <CardHeader className="border-b border-purple-200">
+        <CardTitle className="text-slate-900 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5" />
             AI-Generated Notes
@@ -72,7 +72,7 @@ Comprehensive notes will be generated based on your course material using AI. Th
               onClick={handleDownload}
               variant="outline"
               size="sm"
-              className="border-purple-700/30 text-purple-300 hover:bg-purple-900/30"
+              className="border-purple-200 text-slate-700"
             >
               <Download className="w-4 h-4 mr-2" />
               Download
@@ -84,17 +84,17 @@ Comprehensive notes will be generated based on your course material using AI. Th
       <CardContent className="flex-1 flex flex-col p-6">
         {!notes ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
-            <div className="w-20 h-20 rounded-full bg-purple-900/30 flex items-center justify-center">
-              <FileText className="w-10 h-10 text-purple-400" />
+            <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center">
+              <FileText className="w-10 h-10 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-purple-100 mb-2">Generate AI-Powered Notes</h3>
-              <p className="text-purple-300 text-sm max-w-md">
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">Generate AI-Powered Notes</h3>
+              <p className="text-slate-600 text-sm max-w-md">
                 Our AI will analyze your course material and create comprehensive, structured notes highlighting the most important concepts and topics.
               </p>
             </div>
-            <Alert className="max-w-md bg-purple-900/20 border-purple-700/30">
-              <AlertDescription className="text-xs text-purple-300">
+            <Alert className="max-w-md bg-purple-50 border-purple-200">
+              <AlertDescription className="text-xs text-slate-600">
                 Note: Notes generation prompt will be configured. This is a UI placeholder.
               </AlertDescription>
             </Alert>
@@ -118,7 +118,7 @@ Comprehensive notes will be generated based on your course material using AI. Th
           </div>
         ) : (
           <ScrollArea className="flex-1">
-            <div className="prose prose-invert prose-purple max-w-none">
+            <div className="prose prose-slate max-w-none">
               <ReactMarkdown>{notes}</ReactMarkdown>
             </div>
           </ScrollArea>

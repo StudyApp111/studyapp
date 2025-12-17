@@ -70,16 +70,16 @@ export default function DocumentViewer() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-purple-400" />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40">
       {/* Header */}
-      <div className="border-b border-purple-800/30 bg-slate-950/50 backdrop-blur-xl">
+      <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -87,13 +87,13 @@ export default function DocumentViewer() {
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(createPageUrl("Home"))}
-                className="text-purple-300 hover:text-purple-100 hover:bg-purple-900/30"
+                className="text-slate-700 hover:text-slate-900 hover:bg-purple-100"
               >
                 <ChevronLeft className="w-5 h-5" />
               </Button>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white">{lesson?.course_name}</h1>
-                <p className="text-sm text-purple-300">Interactive Learning Document</p>
+                <h1 className="text-xl md:text-2xl font-bold text-slate-900">{lesson?.course_name}</h1>
+                <p className="text-sm text-slate-600">Interactive Learning Document</p>
               </div>
             </div>
           </div>
@@ -104,10 +104,10 @@ export default function DocumentViewer() {
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Tab Navigation - Responsive */}
-          <TabsList className="w-full bg-slate-900/50 border border-purple-800/30 p-1 grid grid-cols-3 md:grid-cols-6 gap-1">
+          <TabsList className="w-full bg-white border border-purple-200 p-1 grid grid-cols-3 md:grid-cols-6 gap-1">
             <TabsTrigger 
               value="tutor" 
-              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <MessageCircle className="w-4 h-4" />
               <span className="hidden sm:inline">AI Tutor</span>
@@ -115,21 +115,21 @@ export default function DocumentViewer() {
             </TabsTrigger>
             <TabsTrigger 
               value="notes"
-              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <FileText className="w-4 h-4" />
               <span>Notes</span>
             </TabsTrigger>
             <TabsTrigger 
               value="quiz"
-              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <Brain className="w-4 h-4" />
               <span>Quiz</span>
             </TabsTrigger>
             <TabsTrigger 
               value="grade"
-              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Predicted Grade</span>
@@ -137,7 +137,7 @@ export default function DocumentViewer() {
             </TabsTrigger>
             <TabsTrigger 
               value="flashcards"
-              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <Layers className="w-4 h-4" />
               <span className="hidden sm:inline">Flashcards</span>
@@ -145,7 +145,7 @@ export default function DocumentViewer() {
             </TabsTrigger>
             <TabsTrigger 
               value="curriculum"
-              className="data-[state=active]:bg-purple-600 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <BookOpen className="w-4 h-4" />
               <span className="hidden sm:inline">Curriculum</span>
@@ -157,7 +157,7 @@ export default function DocumentViewer() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Panel - Interactive Content */}
             <div className="lg:col-span-2">
-              <Card className="bg-slate-900/50 border-purple-800/30 backdrop-blur-xl">
+              <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl">
                 <TabsContent value="tutor" className="m-0">
                   <AITutorTab lesson={lesson} extractedContent={extractedContent} />
                 </TabsContent>
