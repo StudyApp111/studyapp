@@ -48,7 +48,7 @@ export default function PredictedGradeTab({ lesson, quiz }) {
   };
 
   return (
-    <div className="flex flex-col h-[600px]">
+    <div className="flex flex-col h-[calc(100vh-200px)]">
       <CardHeader className="border-b border-purple-200">
         <CardTitle className="text-slate-900 flex items-center gap-2">
           <TrendingUp className="w-5 h-5" />

@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button";
 export default function DocumentDisplay({ lesson }) {
   if (!lesson?.file_url) {
     return (
-      <Card className="sticky top-6 bg-white/90 border-purple-200 backdrop-blur-xl h-[600px] shadow-xl">
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl h-[calc(100vh-200px)] shadow-xl">
         <CardHeader className="border-b border-purple-200">
           <CardTitle className="text-slate-900 text-sm flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Course Material
+            Your Document
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center justify-center h-[calc(100%-80px)]">
+        <CardContent className="flex items-center justify-center h-[calc(100%-60px)]">
           <div className="text-center text-slate-500">
             <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p className="text-sm">No document uploaded</p>
+            <p className="text-xs text-slate-400 mt-2">This lesson was created from a description</p>
           </div>
         </CardContent>
       </Card>
@@ -27,30 +28,32 @@ export default function DocumentDisplay({ lesson }) {
   const isPDF = lesson.file_url.toLowerCase().endsWith('.pdf');
 
   return (
-    <Card className="sticky top-6 bg-white/90 border-purple-200 backdrop-blur-xl h-[600px] overflow-hidden shadow-xl">
+    <Card className="bg-white/90 border-purple-200 backdrop-blur-xl h-[calc(100vh-200px)] overflow-hidden shadow-xl">
       <CardHeader className="border-b border-purple-200">
         <CardTitle className="text-slate-900 text-sm flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Document
+            Your Document
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="text-slate-600 hover:text-slate-900"
-          >
-            <a href={lesson.file_url} target="_blank" rel="noopener noreferrer">
-              <Download className="w-4 h-4" />
-            </a>
-          </Button>
+          {lesson.file_url && (
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="text-slate-600 hover:text-slate-900"
+            >
+              <a href={lesson.file_url} target="_blank" rel="noopener noreferrer" download>
+                <Download className="w-4 h-4" />
+              </a>
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0 h-[calc(100%-80px)]">
+      <CardContent className="p-0 h-[calc(100%-60px)]">
         {isPDF ? (
           <iframe
-            src={lesson.file_url}
-            className="w-full h-full"
+            src={`${lesson.file_url}#view=FitH`}
+            className="w-full h-full border-0"
             title="Course Document"
           />
         ) : (
@@ -63,9 +66,9 @@ export default function DocumentDisplay({ lesson }) {
                 asChild
                 className="border-purple-200 text-slate-700"
               >
-                <a href={lesson.file_url} target="_blank" rel="noopener noreferrer">
+                <a href={lesson.file_url} target="_blank" rel="noopener noreferrer" download>
                   <Download className="w-4 h-4 mr-2" />
-                  Download File
+                  View File
                 </a>
               </Button>
             </div>

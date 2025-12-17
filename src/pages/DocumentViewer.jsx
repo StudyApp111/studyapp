@@ -132,7 +132,7 @@ export default function DocumentViewer() {
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Predicted Grade</span>
+              <span className="hidden sm:inline">Grade</span>
               <span className="sm:hidden">Grade</span>
             </TabsTrigger>
             <TabsTrigger 
@@ -155,8 +155,13 @@ export default function DocumentViewer() {
 
           {/* Tab Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Right Panel - Document Display */}
+            <div className="lg:col-span-2 order-2 lg:order-1">
+              <DocumentDisplay lesson={lesson} />
+            </div>
+
             {/* Left Panel - Interactive Content */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-1 order-1 lg:order-2">
               <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl">
                 <TabsContent value="tutor" className="m-0">
                   <AITutorTab lesson={lesson} extractedContent={extractedContent} />
@@ -182,11 +187,6 @@ export default function DocumentViewer() {
                   <CurriculumTab lesson={lesson} />
                 </TabsContent>
               </Card>
-            </div>
-
-            {/* Right Panel - Document Display (hidden on mobile when in certain tabs) */}
-            <div className="hidden lg:block lg:col-span-1">
-              <DocumentDisplay lesson={lesson} />
             </div>
           </div>
         </Tabs>

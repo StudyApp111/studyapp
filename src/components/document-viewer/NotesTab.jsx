@@ -60,7 +60,7 @@ Comprehensive notes will be generated based on your course material using AI. Th
   };
 
   return (
-    <div className="flex flex-col h-[600px]">
+    <div className="flex flex-col h-[calc(100vh-200px)]">
       <CardHeader className="border-b border-purple-200">
         <CardTitle className="text-slate-900 flex items-center justify-between">
           <div className="flex items-center gap-2">

@@ -227,7 +227,7 @@ Provide your response as a single, valid JSON object with the following structur
 
   if (isGenerating) {
     return (
-      <div className="flex flex-col h-[600px]">
+      <div className="flex flex-col h-[calc(100vh-200px)]">
         <CardHeader className="border-b border-purple-200">
           <CardTitle className="text-slate-900 flex items-center gap-2">
             <Brain className="w-5 h-5" />
@@ -244,7 +244,7 @@ Provide your response as a single, valid JSON object with the following structur
 
   if (!quiz || !quiz.questions || quiz.questions.length === 0) {
     return (
-      <div className="flex flex-col h-[600px]">
+      <div className="flex flex-col h-[calc(100vh-200px)]">
         <CardHeader className="border-b border-purple-200">
           <CardTitle className="text-slate-900 flex items-center gap-2">
             <Brain className="w-5 h-5" />
@@ -277,7 +277,7 @@ Provide your response as a single, valid JSON object with the following structur
 
   if (quiz.completed) {
     return (
-      <div className="flex flex-col h-[600px]">
+      <div className="flex flex-col h-[calc(100vh-200px)]">
         <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
         <CardHeader className="border-b border-purple-200">
           <CardTitle className="text-slate-900 flex items-center gap-2">
@@ -315,7 +315,7 @@ Provide your response as a single, valid JSON object with the following structur
   const isLastQuestion = currentQuestion === quiz.questions.length - 1;
 
   return (
-    <div className="flex flex-col h-[600px]">
+    <div className="flex flex-col h-[calc(100vh-200px)]">
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
       <CardHeader className="border-b border-purple-200">
