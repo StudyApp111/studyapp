@@ -450,6 +450,17 @@ Output Format: JSON object matching the specified schema`;
                   </div>
 
                   <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
+                    <RadioGroupItem value="url" id="url" />
+                    <Label htmlFor="url" className="flex items-center gap-2 flex-1 cursor-pointer">
+                      <LinkIcon className="w-5 h-5 text-purple-600" />
+                      <div>
+                        <p className="font-medium">Paste a Link</p>
+                        <p className="text-xs text-slate-500">Course page, article, PDF link, Google Doc</p>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
                     <RadioGroupItem value="description" id="description" />
                     <Label htmlFor="description" className="flex items-center gap-2 flex-1 cursor-pointer">
                       <FileText className="w-5 h-5 text-purple-600" />
@@ -512,7 +523,22 @@ Output Format: JSON object matching the specified schema`;
                 </div>
               )}
 
-              {inputType === "file" && (
+              {inputType === "url" && (
+                <div className="space-y-2">
+                  <Label htmlFor="url">Paste a link *</Label>
+                  <Input
+                    id="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="https://example.com/course-outline-or-article"
+                    disabled={isProcessing}
+                    className="text-base"
+                  />
+                  <p className="text-xs text-slate-500">Well fetch the page and build your lesson from it.</p>
+                </div>
+              )}
+
+               {inputType === "file" && (
                 <div className="space-y-2">
                   <Label htmlFor="file">Upload Course Material *</Label>
                   <div className="flex items-center gap-3">
