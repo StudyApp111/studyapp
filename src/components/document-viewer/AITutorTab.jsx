@@ -7,15 +7,14 @@ import { MessageCircle, Send, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 export default function AITutorTab({ lesson, extractedContent }) {
-  const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [contextData, setContextData] = useState(null);
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    initializeConversation();
+    initializeContext();
   }, [lesson?.id]);
 
   useEffect(() => {
@@ -24,79 +23,81 @@ export default function AITutorTab({ lesson, extractedContent }) {
     }
   }, [messages]);
 
-  const initializeConversation = async () => {
+  const initializeContext = async () => {
     try {
-      setIsInitializing(true);
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({
         id: user.learning_profile_id
       });
       const learningProfile = profile[0] || {};
 
-      // Create conversation with context
-      const contextMessage = `Student Context:
-- School: ${learningProfile.school || "N/A"}
-- Grade Level: ${learningProfile.grade || "N/A"}
-- Course: ${lesson?.course_name || "N/A"}
+      // Compress content if needed
+      let content = extractedContent || lesson?.description || "";
+      if (content.length > 1000) {
+        const { data: compressed } = await base44.functions.invoke('compressDocument', {
+          content: content
+        });
+        content = compressed.compressed_content || content;
+      }
 
-Lesson Content (OCR Transcript):
-${extractedContent || lesson?.description || "No content available"}
-
----
-
-Please help the student understand this material. Tailor your responses to their grade level and use the lesson content as your reference.`;
-
-      const conv = await base44.agents.createConversation({
-        agent_name: "aiTutor",
-        metadata: {
-          lesson_id: lesson?.id,
-          course_name: lesson?.course_name
-        }
+      setContextData({
+        school: learningProfile.school || "N/A",
+        grade: learningProfile.grade || "N/A",
+        course: lesson?.course_name || "N/A",
+        content: content
       });
 
-      setConversation(conv);
-
-      // Add initial context message (hidden from UI)
-      await base44.agents.addMessage(conv, {
-        role: "user",
-        content: contextMessage
-      });
-
-      // Get welcome message
-      const welcomeMsg = await base44.agents.addMessage(conv, {
-        role: "user",
-        content: "Hello! I'm ready to learn."
-      });
-
-      setMessages(welcomeMsg.messages.filter(m => m.role === "assistant"));
-    } catch (error) {
-      console.error("Error initializing conversation:", error);
       setMessages([{
         role: "assistant",
-        content: "Hi! I'm your AI tutor. I'm here to help you understand the course material. What would you like to learn about?"
+        content: "Hi! I'm your AI tutor. I've reviewed your course material and I'm ready to help you understand it better. What would you like to learn about?"
       }]);
-    } finally {
-      setIsInitializing(false);
+    } catch (error) {
+      console.error("Error initializing:", error);
+      setMessages([{
+        role: "assistant",
+        content: "Hi! I'm your AI tutor. Ask me anything about your course material!"
+      }]);
     }
   };
 
   const handleSend = async () => {
-    if (!input.trim() || !conversation || isLoading) return;
+    if (!input.trim() || isLoading) return;
 
     const userInput = input.trim();
+    const userMessage = { role: "user", content: userInput };
+    setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
-      const updatedConv = await base44.agents.addMessage(conversation, {
-        role: "user",
-        content: userInput
+      const systemPrompt = `You are an expert AI tutor helping a ${contextData?.grade || 'student'} at ${contextData?.school || 'their school'} with ${contextData?.course || 'their course'}.
+
+Course Material:
+${contextData?.content || 'No content available'}
+
+---
+
+Your role:
+- Answer questions clearly and concisely for the student's grade level
+- Use the course material as your primary reference
+- Break down complex concepts into simple explanations
+- Provide examples and analogies
+- Encourage understanding, not just memorization
+- Be supportive and patient
+
+Student's question: ${userInput}`;
+
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: systemPrompt,
+        add_context_from_internet: true
       });
 
-      setMessages(updatedConv.messages.filter(m => 
-        m.role === "assistant" || m.role === "user"
-      ).slice(1)); // Skip the initial context message
-      setConversation(updatedConv);
+      const aiMessage = {
+        role: "assistant",
+        content: response
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error("Error sending message:", error);
       setMessages(prev => [...prev, {
@@ -107,22 +108,6 @@ Please help the student understand this material. Tailor your responses to their
       setIsLoading(false);
     }
   };
-
-  if (isInitializing) {
-    return (
-      <div className="flex flex-col h-[calc(100vh-200px)] bg-white/90 border border-purple-200 backdrop-blur-xl rounded-xl shadow-xl">
-        <div className="border-b border-purple-200 px-6 py-4">
-          <div className="flex items-center gap-2 text-slate-900 font-semibold">
-            <MessageCircle className="w-5 h-5" />
-            AI Tutor
-          </div>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-200px)] bg-white/90 border border-purple-200 backdrop-blur-xl rounded-xl shadow-xl">

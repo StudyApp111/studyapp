@@ -57,10 +57,27 @@ export default function DocumentViewer() {
         setExtractedContent(lessonData.extracted_content);
       }
 
-      // Check if quiz exists
+      // Check if quiz exists and load worksheets to get predicted grade
       const quizzes = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
       if (quizzes.length > 0) {
-        setQuiz(quizzes[0]);
+        const quizData = quizzes[0];
+        setQuiz(quizData);
+        
+        // Try to get the most recent worksheet with predicted grade
+        if (quizData.completed) {
+          const worksheets = await base44.entities.Worksheet.filter({ 
+            lesson_id: lessonId 
+          });
+          
+          // Find worksheet with predicted grade
+          const worksheetWithGrade = worksheets
+            .filter(w => w.completed && w.predicted_grade)
+            .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+          
+          if (worksheetWithGrade) {
+            setQuiz({ ...quizData, predicted_grade: worksheetWithGrade.predicted_grade });
+          }
+        }
       }
 
       setLoading(false);
@@ -94,13 +111,33 @@ export default function DocumentViewer() {
               variant="ghost"
               size="icon"
               onClick={() => navigate(createPageUrl("Home"))}
-              className="text-slate-700 hover:text-slate-900 hover:bg-purple-100"
+              className="text-slate-700 hover:text-slate-900 hover:bg-purple-100 flex-shrink-0"
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-base md:text-xl font-bold text-slate-900 truncate">{lesson?.course_name}</h1>
-              <p className="text-xs md:text-sm text-slate-600 hidden sm:block">Interactive Learning</p>
+            <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base md:text-xl font-bold text-slate-900 truncate">{lesson?.course_name}</h1>
+                <p className="text-xs md:text-sm text-slate-600 hidden sm:block">Interactive Learning</p>
+              </div>
+
+              {/* Predicted Grade Badge */}
+              {quiz?.predicted_grade ? (
+                <div className="flex-shrink-0 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg shadow-lg">
+                  <div className="text-[10px] md:text-xs font-semibold opacity-90">Predicted Grade</div>
+                  <div className="text-sm md:text-lg font-bold">{quiz.predicted_grade}</div>
+                </div>
+              ) : quiz?.completed ? (
+                <div className="flex-shrink-0 bg-gradient-to-r from-purple-400 to-purple-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg shadow-lg">
+                  <div className="text-[10px] md:text-xs font-semibold opacity-90">Quiz Complete</div>
+                  <div className="text-xs md:text-sm font-bold">Start Worksheet</div>
+                </div>
+              ) : (
+                <div className="flex-shrink-0 bg-gradient-to-r from-slate-300 to-slate-400 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg shadow">
+                  <div className="text-[10px] md:text-xs font-semibold opacity-90">Take Quiz</div>
+                  <div className="text-xs md:text-sm font-bold">To Unlock</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
