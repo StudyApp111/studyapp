@@ -1,5 +1,4 @@
 import React from "react";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BookOpen, Target, FileQuestion, AlertCircle, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -9,35 +8,34 @@ export default function CurriculumTab({ lesson }) {
 
   if (!curriculumMap) {
     return (
-      <div className="flex flex-col h-[calc(100vh-200px)]">
-        <CardHeader className="border-b border-purple-800/30">
-          <CardTitle className="text-purple-100 flex items-center gap-2">
+      <div className="bg-white/90 border border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] rounded-xl shadow-xl overflow-hidden">
+        <div className="border-b border-purple-200 px-6 py-4">
+          <div className="flex items-center gap-2 text-slate-900 font-semibold">
             <BookOpen className="w-5 h-5" />
             Curriculum Map
-          </CardTitle>
-        </CardHeader>
+          </div>
+        </div>
 
-        <CardContent className="flex-1 flex items-center justify-center p-6">
+        <div className="flex items-center justify-center h-[calc(100%-70px)] p-6">
           <div className="text-center text-slate-500">
             <p>No curriculum map available</p>
           </div>
-        </CardContent>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)]">
-      <CardHeader className="border-b border-purple-200">
-        <CardTitle className="text-slate-900 flex items-center gap-2">
+    <div className="bg-white/90 border border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] rounded-xl shadow-xl overflow-hidden">
+      <div className="border-b border-purple-200 px-6 py-4">
+        <div className="flex items-center gap-2 text-slate-900 font-semibold">
           <BookOpen className="w-5 h-5" />
-          Curriculum Map - {lesson.course_name}
-        </CardTitle>
-      </CardHeader>
+          Curriculum Map
+        </div>
+      </div>
 
-      <CardContent className="flex-1 p-0">
-        <ScrollArea className="h-full">
-          <div className="p-6 space-y-8">
+      <ScrollArea className="h-[calc(100%-70px)]">
+        <div className="p-6 space-y-8">
             {/* Core Competencies */}
             {curriculumMap.core_competencies && curriculumMap.core_competencies.length > 0 && (
               <section>
@@ -155,9 +153,8 @@ export default function CurriculumTab({ lesson }) {
                 </div>
               </section>
             )}
-          </div>
-        </ScrollArea>
-      </CardContent>
+        </div>
+      </ScrollArea>
     </div>
   );
 }

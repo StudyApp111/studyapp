@@ -99,7 +99,7 @@ export default function PredictedGradeTab({ lesson, quiz }) {
             </div>
           </div>
         </div>
-      </CardContent>
+      </div>
     </div>
   );
 }

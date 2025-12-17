@@ -244,13 +244,13 @@ Provide your response as a single, valid JSON object with the following structur
 
   if (!quiz || !quiz.questions || quiz.questions.length === 0) {
     return (
-      <div className="flex flex-col h-[calc(100vh-200px)]">
-        <CardHeader className="border-b border-purple-200">
-          <CardTitle className="text-slate-900 flex items-center gap-2">
+      <div className="bg-white/90 border border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] rounded-xl shadow-xl overflow-hidden">
+        <div className="border-b border-purple-200 px-6 py-4">
+          <div className="flex items-center gap-2 text-slate-900 font-semibold">
             <Brain className="w-5 h-5" />
             Diagnostic Quiz
-          </CardTitle>
-        </CardHeader>
+          </div>
+        </div>
         <CardContent className="flex-1 flex flex-col items-center justify-center p-6">
           <div className="text-center space-y-6 max-w-md">
             <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center mx-auto">
