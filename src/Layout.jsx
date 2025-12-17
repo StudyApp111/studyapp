@@ -221,15 +221,7 @@ function LayoutContent({ children, currentPageName }) {
         
         {/* Desktop Sidebar - Hidden during onboarding */}
         {showNavigation && !isOnboardingPage && (
-          <Sidebar collapsible="offcanvas" className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl hidden md:flex relative">
-            {/* Elegant Arrow Toggle - On sidebar edge */}
-            <button
-              onClick={toggleSidebar}
-              className="absolute top-1/2 -right-4 -translate-y-1/2 w-8 h-16 bg-white/90 backdrop-blur-xl border border-purple-200/60 rounded-r-xl shadow-lg hover:shadow-xl hover:bg-purple-50 transition-all duration-200 flex items-center justify-center text-purple-600 z-50"
-            >
-              {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-            </button>
-
+          <Sidebar collapsible="offcanvas" className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl hidden md:flex">
             <SidebarHeader className="border-b border-purple-200/60 p-6">
               <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                 <img 
@@ -353,6 +345,17 @@ function LayoutContent({ children, currentPageName }) {
               )}
             </SidebarFooter>
           </Sidebar>
+        )}
+
+        {/* Sidebar Toggle Button - Always visible on desktop */}
+        {showNavigation && !isOnboardingPage && currentPageName !== "DocumentViewer" && (
+          <button
+            onClick={toggleSidebar}
+            className="hidden md:flex fixed top-1/2 left-0 -translate-y-1/2 w-8 h-16 bg-white/90 backdrop-blur-xl border border-purple-200/60 rounded-r-xl shadow-lg hover:shadow-xl hover:bg-purple-50 transition-all duration-200 items-center justify-center text-purple-600 z-50"
+            style={{ left: open ? '256px' : '0' }}
+          >
+            {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          </button>
         )}
 
         <main className="flex-1 flex flex-col">
