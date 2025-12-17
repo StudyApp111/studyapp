@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, Sparkles, Download, Loader2 } from "lucide-react";
@@ -60,10 +59,10 @@ Comprehensive notes will be generated based on your course material using AI. Th
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)]">
-      <CardHeader className="border-b border-purple-200">
-        <CardTitle className="text-slate-900 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+    <div className="bg-white/90 border border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] rounded-xl shadow-xl overflow-hidden">
+      <div className="border-b border-purple-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-slate-900 font-semibold">
             <FileText className="w-5 h-5" />
             AI-Generated Notes
           </div>
@@ -78,12 +77,12 @@ Comprehensive notes will be generated based on your course material using AI. Th
               Download
             </Button>
           )}
-        </CardTitle>
-      </CardHeader>
+        </div>
+      </div>
 
-      <CardContent className="flex-1 flex flex-col p-6">
+      <div className="h-[calc(100%-70px)] overflow-auto">
         {!notes ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-6 p-6">
             <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center">
               <FileText className="w-10 h-10 text-purple-600" />
             </div>
@@ -117,13 +116,13 @@ Comprehensive notes will be generated based on your course material using AI. Th
             </Button>
           </div>
         ) : (
-          <ScrollArea className="flex-1">
+          <ScrollArea className="h-full p-6">
             <div className="prose prose-slate max-w-none">
               <ReactMarkdown>{notes}</ReactMarkdown>
             </div>
           </ScrollArea>
         )}
-      </CardContent>
+      </div>
     </div>
   );
 }

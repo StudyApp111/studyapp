@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Brain, Play, CheckCircle, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
@@ -227,17 +226,17 @@ Provide your response as a single, valid JSON object with the following structur
 
   if (isGenerating) {
     return (
-      <div className="flex flex-col h-[calc(100vh-200px)]">
-        <CardHeader className="border-b border-purple-200">
-          <CardTitle className="text-slate-900 flex items-center gap-2">
+      <div className="bg-white/90 border border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] rounded-xl shadow-xl overflow-hidden">
+        <div className="border-b border-purple-200 px-6 py-4">
+          <div className="flex items-center gap-2 text-slate-900 font-semibold">
             <Brain className="w-5 h-5" />
             Generating Quiz...
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col items-center justify-center p-6">
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center h-[calc(100%-70px)] p-6">
           <Loader2 className="w-12 h-12 animate-spin text-purple-600 mb-4" />
           <p className="text-slate-600 text-sm">Creating personalized questions for you...</p>
-        </CardContent>
+        </div>
       </div>
     );
   }
@@ -251,7 +250,7 @@ Provide your response as a single, valid JSON object with the following structur
             Diagnostic Quiz
           </div>
         </div>
-        <CardContent className="flex-1 flex flex-col items-center justify-center p-6">
+        <div className="flex flex-col items-center justify-center h-[calc(100%-70px)] p-6">
           <div className="text-center space-y-6 max-w-md">
             <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center mx-auto">
               <Brain className="w-10 h-10 text-purple-600" />
@@ -270,22 +269,22 @@ Provide your response as a single, valid JSON object with the following structur
               Generate Quiz
             </Button>
           </div>
-        </CardContent>
+        </div>
       </div>
     );
   }
 
   if (quiz.completed) {
     return (
-      <div className="flex flex-col h-[calc(100vh-200px)]">
+      <div className="bg-white/90 border border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] rounded-xl shadow-xl overflow-hidden">
         <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
-        <CardHeader className="border-b border-purple-200">
-          <CardTitle className="text-slate-900 flex items-center gap-2">
+        <div className="border-b border-purple-200 px-6 py-4">
+          <div className="flex items-center gap-2 text-slate-900 font-semibold">
             <Brain className="w-5 h-5" />
             Quiz Results
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col items-center justify-center p-6">
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center h-[calc(100%-70px)] p-6">
           <div className="text-center space-y-6 max-w-md">
             <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
               <CheckCircle className="w-10 h-10 text-green-600" />
@@ -300,7 +299,7 @@ Provide your response as a single, valid JSON object with the following structur
               </p>
             </div>
           </div>
-        </CardContent>
+        </div>
       </div>
     );
   }
@@ -315,20 +314,20 @@ Provide your response as a single, valid JSON object with the following structur
   const isLastQuestion = currentQuestion === quiz.questions.length - 1;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)]">
+    <div className="bg-white/90 border border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] rounded-xl shadow-xl overflow-hidden flex flex-col">
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
-      <CardHeader className="border-b border-purple-200">
+      <div className="border-b border-purple-200 px-6 py-4">
         <div className="flex items-center justify-between mb-2">
-          <CardTitle className="text-slate-900 flex items-center gap-2">
+          <div className="flex items-center gap-2 text-slate-900 font-semibold">
             <Brain className="w-5 h-5" />
             Question {currentQuestion + 1} of {quiz.questions.length}
-          </CardTitle>
+          </div>
         </div>
         <Progress value={progress} className="h-2" />
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6">
         <AnimatePresence mode="wait">
           <QuizQuestion
             key={currentQuestion}
@@ -340,7 +339,7 @@ Provide your response as a single, valid JSON object with the following structur
             onMetadataChange={handleMetadataChange}
           />
         </AnimatePresence>
-      </CardContent>
+      </div>
 
       <div className="border-t border-purple-200 p-4">
         <div className="flex gap-4">
