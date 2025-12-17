@@ -1,3 +1,4 @@
+css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -105,15 +106,6 @@ button, a, [role="button"] {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-}
-
-/* Completely hide sidebar when collapsed */
-[data-state="collapsed"] aside[data-sidebar="sidebar"] {
-  width: 0 !important;
-  min-width: 0 !important;
-  max-width: 0 !important;
-  overflow: hidden !important;
-  border: none !important;
 }
 
 /* Center sidebar trigger button */
