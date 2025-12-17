@@ -107,6 +107,22 @@ button, a, [role="button"] {
   touch-action: manipulation;
 }
 
+/* Hide sidebar text when collapsed to icon mode */
+[data-state="collapsed"] [data-sidebar="menu"] span:not([class*="lucide"]) {
+  display: none;
+}
+
+[data-state="collapsed"] [data-sidebar="group-label"] {
+  display: none;
+}
+
+/* Center sidebar trigger button */
+button[data-sidebar="trigger"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Fix for shadcn button component - ensure full clickable area */
 button[class*="inline-flex"] {
   display: inline-flex !important;

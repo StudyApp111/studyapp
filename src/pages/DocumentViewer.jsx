@@ -123,19 +123,25 @@ export default function DocumentViewer() {
 
               {/* Predicted Grade Badge */}
               {quiz?.predicted_grade ? (
-                <div className="flex-shrink-0 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg shadow-lg">
-                  <div className="text-[10px] md:text-xs font-semibold opacity-90">Predicted Grade</div>
-                  <div className="text-sm md:text-lg font-bold">{quiz.predicted_grade}</div>
+                <div className="flex-shrink-0 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl shadow-lg min-w-[180px] md:min-w-[240px]">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs md:text-sm font-semibold whitespace-nowrap">Predicted Grade:</span>
+                    <span className="text-lg md:text-2xl font-bold">{quiz.predicted_grade}</span>
+                  </div>
                 </div>
               ) : quiz?.completed ? (
-                <div className="flex-shrink-0 bg-gradient-to-r from-purple-400 to-purple-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg shadow-lg">
-                  <div className="text-[10px] md:text-xs font-semibold opacity-90">Quiz Complete</div>
-                  <div className="text-xs md:text-sm font-bold">Start Worksheet</div>
+                <div className="flex-shrink-0 bg-gradient-to-r from-purple-400 to-purple-600 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl shadow-lg min-w-[180px] md:min-w-[240px]">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs md:text-sm font-semibold whitespace-nowrap">Predicted Grade:</span>
+                    <span className="text-xs md:text-sm font-bold">Start Worksheet</span>
+                  </div>
                 </div>
               ) : (
-                <div className="flex-shrink-0 bg-gradient-to-r from-slate-300 to-slate-400 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg shadow">
-                  <div className="text-[10px] md:text-xs font-semibold opacity-90">Take Quiz</div>
-                  <div className="text-xs md:text-sm font-bold">To Unlock</div>
+                <div className="flex-shrink-0 bg-gradient-to-r from-slate-300 to-slate-400 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl shadow min-w-[180px] md:min-w-[240px]">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs md:text-sm font-semibold whitespace-nowrap">Predicted Grade:</span>
+                    <span className="text-[10px] md:text-xs font-medium">Take Quiz to Unlock</span>
+                  </div>
                 </div>
               )}
             </div>
