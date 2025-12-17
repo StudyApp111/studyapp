@@ -374,7 +374,7 @@ export default function Home() {
             className="hidden md:flex bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold shadow-lg shadow-yellow-500/30"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Create New Lesson
+            Start Now
           </Button>
         </div>
 
@@ -404,7 +404,7 @@ export default function Home() {
                     className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold mb-3"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Lesson
+                    Start Now
                   </Button>
                   <p className="text-sm text-slate-600 max-w-md mx-auto">
                     Get predicted grades, discover your cognitive biases, identify weaknesses, and map your personalized road to an A+
