@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, FileText, Brain, TrendingUp, Layers, BookOpen, ChevronLeft, Loader2 } from "lucide-react";
-import { useSidebar, SidebarTrigger } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import AITutorTab from "@/components/document-viewer/AITutorTab";
 import NotesTab from "@/components/document-viewer/NotesTab";
 import QuizTab from "@/components/document-viewer/QuizTab";
@@ -106,7 +106,6 @@ export default function DocumentViewer() {
       <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <SidebarTrigger className="text-slate-700 hidden md:block" />
             <Button
               variant="ghost"
               size="icon"

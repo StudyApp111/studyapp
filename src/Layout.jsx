@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -16,6 +16,7 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
@@ -64,9 +65,10 @@ const formatTime = (seconds) => {
   return `${hours}h ${mins}m`;
 };
 
-export default function Layout({ children, currentPageName }) {
+function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { open, toggleSidebar } = useSidebar();
   const [user, setUser] = React.useState(null);
   const [gtmId, setGtmId] = React.useState(null);
 
@@ -198,7 +200,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <SidebarProvider>
+    <>
       {renderGTMNoScript()}
       <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 relative">
         <style>{`
@@ -219,7 +221,15 @@ export default function Layout({ children, currentPageName }) {
         
         {/* Desktop Sidebar - Hidden during onboarding */}
         {showNavigation && !isOnboardingPage && (
-          <Sidebar collapsible="offcanvas" className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl hidden md:flex">
+          <Sidebar collapsible="offcanvas" className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl hidden md:flex relative">
+            {/* Elegant Arrow Toggle - On sidebar edge */}
+            <button
+              onClick={toggleSidebar}
+              className="absolute top-1/2 -right-4 -translate-y-1/2 w-8 h-16 bg-white/90 backdrop-blur-xl border border-purple-200/60 rounded-r-xl shadow-lg hover:shadow-xl hover:bg-purple-50 transition-all duration-200 flex items-center justify-center text-purple-600 z-50"
+            >
+              {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            </button>
+
             <SidebarHeader className="border-b border-purple-200/60 p-6">
               <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                 <img 
@@ -346,13 +356,6 @@ export default function Layout({ children, currentPageName }) {
         )}
 
         <main className="flex-1 flex flex-col">
-          {/* Desktop Sidebar Trigger - Always visible */}
-          {showNavigation && !isOnboardingPage && (
-            <div className="hidden md:block fixed top-4 left-4 z-50">
-              <SidebarTrigger className="w-10 h-10 bg-white/90 backdrop-blur-xl border border-purple-200/60 rounded-xl shadow-lg hover:shadow-xl hover:bg-purple-50 transition-all duration-200 flex items-center justify-center text-purple-600" />
-            </div>
-          )}
-          
           {/* Mobile Header - Hidden during onboarding */}
           {showNavigation && !isOnboardingPage && (
             <header className="bg-white/90 backdrop-blur-xl border-b border-purple-200/60 px-6 py-4 md:hidden">
@@ -466,6 +469,14 @@ export default function Layout({ children, currentPageName }) {
         {/* Global Feedback Button - Always visible on authenticated pages */}
         {showNavigation && !isOnboardingPage && <FeedbackButton />}
       </div>
+    </>
+  );
+}
+
+export default function Layout({ children, currentPageName }) {
+  return (
+    <SidebarProvider>
+      <LayoutContent children={children} currentPageName={currentPageName} />
     </SidebarProvider>
   );
 }
