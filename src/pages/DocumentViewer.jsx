@@ -13,7 +13,7 @@ import QuizTab from "@/components/document-viewer/QuizTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import CurriculumTab from "@/components/document-viewer/CurriculumTab";
-import DocumentDisplay from "@/components/document-viewer/DocumentDisplay";
+import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ export default function DocumentViewer() {
       <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <SidebarTrigger className="text-slate-700" />
+            <SidebarTrigger className="text-slate-700 hidden md:block" />
             <Button
               variant="ghost"
               size="icon"
@@ -162,7 +162,7 @@ export default function DocumentViewer() {
             {/* Right Panel - Tab Content */}
             <div className="lg:col-span-2 order-2">
               <TabsContent value="doc" className="mt-0">
-                <DocumentDisplay lesson={lesson} />
+                <DocumentViewerTabs lesson={lesson} />
               </TabsContent>
 
               <TabsContent value="notes" className="mt-0">
