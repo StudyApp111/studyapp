@@ -5,8 +5,8 @@ import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, FileText, Brain, TrendingUp, Layers, BookOpen, ChevronLeft, Loader2, Menu } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar";
+import { MessageCircle, FileText, Brain, TrendingUp, Layers, BookOpen, ChevronLeft, Loader2 } from "lucide-react";
+import { useSidebar, SidebarTrigger } from "@/components/ui/sidebar";
 import AITutorTab from "@/components/document-viewer/AITutorTab";
 import NotesTab from "@/components/document-viewer/NotesTab";
 import QuizTab from "@/components/document-viewer/QuizTab";
@@ -88,28 +88,19 @@ export default function DocumentViewer() {
       {/* Header */}
       <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setOpen(true)}
-                className="text-slate-700 hover:text-slate-900 hover:bg-purple-100 md:hidden"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(createPageUrl("Home"))}
-                className="text-slate-700 hover:text-slate-900 hover:bg-purple-100"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-              <div className="min-w-0">
-                <h1 className="text-base md:text-xl font-bold text-slate-900 truncate">{lesson?.course_name}</h1>
-                <p className="text-xs md:text-sm text-slate-600 hidden sm:block">Interactive Learning</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <SidebarTrigger className="text-slate-700" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(createPageUrl("Home"))}
+              className="text-slate-700 hover:text-slate-900 hover:bg-purple-100"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base md:text-xl font-bold text-slate-900 truncate">{lesson?.course_name}</h1>
+              <p className="text-xs md:text-sm text-slate-600 hidden sm:block">Interactive Learning</p>
             </div>
           </div>
         </div>

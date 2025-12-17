@@ -51,7 +51,7 @@ export default function DocumentDisplay({ lesson }) {
       <CardContent className="p-0 h-[calc(100%-56px)]">
         {isPDF ? (
           <iframe
-            src={lesson.file_url}
+            src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
             className="w-full h-full border-0"
             title="Course Document"
             style={{ minHeight: '100%' }}
