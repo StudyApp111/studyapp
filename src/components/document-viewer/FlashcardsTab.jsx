@@ -62,8 +62,8 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
   if (!flashcards) {
     return (
       <div className="flex flex-col h-[600px]">
-        <CardHeader className="border-b border-purple-800/30">
-          <CardTitle className="text-purple-100 flex items-center gap-2">
+        <CardHeader className="border-b border-purple-200">
+          <CardTitle className="text-slate-900 flex items-center gap-2">
             <Layers className="w-5 h-5" />
             AI Flashcards
           </CardTitle>
@@ -71,17 +71,17 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
 
         <CardContent className="flex-1 flex flex-col items-center justify-center p-6">
           <div className="text-center space-y-6 max-w-md">
-            <div className="w-20 h-20 rounded-full bg-purple-900/30 flex items-center justify-center mx-auto">
-              <Layers className="w-10 h-10 text-purple-400" />
+            <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center mx-auto">
+              <Layers className="w-10 h-10 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-purple-100 mb-2">Generate Smart Flashcards</h3>
-              <p className="text-purple-300 text-sm">
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">Generate Smart Flashcards</h3>
+              <p className="text-slate-600 text-sm">
                 Our AI will create flashcards from your notes to help you memorize key concepts and test your knowledge effectively.
               </p>
             </div>
-            <Alert className="max-w-md bg-purple-900/20 border-purple-700/30">
-              <AlertDescription className="text-xs text-purple-300">
+            <Alert className="max-w-md bg-purple-50 border-purple-200">
+              <AlertDescription className="text-xs text-slate-600">
                 Flashcards will be generated using Gemini 2.5 Flash based on your notes.
               </AlertDescription>
             </Alert>
@@ -112,13 +112,13 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
 
   return (
     <div className="flex flex-col h-[600px]">
-      <CardHeader className="border-b border-purple-800/30">
-        <CardTitle className="text-purple-100 flex items-center justify-between">
+      <CardHeader className="border-b border-purple-200">
+        <CardTitle className="text-slate-900 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Layers className="w-5 h-5" />
             Flashcards
           </div>
-          <span className="text-sm text-purple-300">
+          <span className="text-sm text-slate-600">
             {currentIndex + 1} / {flashcards.length}
           </span>
         </CardTitle>
@@ -138,16 +138,16 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
                 animate={{ rotateY: 0, opacity: 1 }}
                 exit={{ rotateY: -90, opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="absolute inset-0 bg-gradient-to-br from-purple-900/50 to-slate-900/50 border-2 border-purple-700/30 rounded-2xl p-8 flex items-center justify-center"
+                className="absolute inset-0 bg-gradient-to-br from-purple-50 to-white border-2 border-purple-300 rounded-2xl p-8 flex items-center justify-center shadow-xl"
               >
                 <div className="text-center">
-                  <p className="text-xs text-purple-400 mb-4">
+                  <p className="text-xs text-purple-600 font-semibold mb-4">
                     {isFlipped ? 'Answer' : 'Question'}
                   </p>
-                  <p className="text-lg md:text-xl text-purple-100 leading-relaxed">
+                  <p className="text-lg md:text-xl text-slate-900 leading-relaxed">
                     {isFlipped ? currentCard.back : currentCard.front}
                   </p>
-                  <p className="text-xs text-purple-400 mt-6">
+                  <p className="text-xs text-slate-600 mt-6">
                     Click to {isFlipped ? 'see question' : 'reveal answer'}
                   </p>
                 </div>
@@ -162,7 +162,7 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
             onClick={handlePrev}
             disabled={currentIndex === 0}
             variant="outline"
-            className="border-purple-700/30 text-purple-300 hover:bg-purple-900/30"
+            className="border-purple-200 text-slate-700"
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -170,7 +170,7 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
           <Button
             onClick={handleFlip}
             variant="outline"
-            className="border-purple-700/30 text-purple-300 hover:bg-purple-900/30"
+            className="border-purple-200 text-slate-700"
           >
             <RotateCw className="w-4 h-4 mr-2" />
             Flip
@@ -180,7 +180,7 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
             onClick={handleNext}
             disabled={currentIndex === flashcards.length - 1}
             variant="outline"
-            className="border-purple-700/30 text-purple-300 hover:bg-purple-900/30"
+            className="border-purple-200 text-slate-700"
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
@@ -188,7 +188,7 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
 
         {/* Progress */}
         <div className="w-full max-w-2xl mt-6">
-          <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-purple-600 to-yellow-500 transition-all duration-300"
               style={{ width: `${((currentIndex + 1) / flashcards.length) * 100}%` }}
