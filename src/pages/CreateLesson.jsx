@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, History, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, History, Lightbulb, ChevronDown, ChevronUp, Calculator, Beaker, Globe, BookText, Languages, Code, Briefcase } from "lucide-react";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 
 export default function CreateLesson() {
@@ -385,8 +385,8 @@ Output Format: JSON object matching the specified schema`;
                   <Plus className="w-8 h-8 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Create New Lesson</h1>
-                  <p className="text-white/90 text-sm">Enter your course details to get a personalized lesson that diagnoses your weaknesses, gives you exam style practice, predicts your grade for you, and maps your personalized road to an A+.</p>
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Start a Lesson for Any Course</h1>
+                  <p className="text-white/90 text-sm">Works with any subject — STEM, Humanities, Languages, Business. Upload notes, paste a link, or describe your course to get a tailored diagnostic, practice, and a grade prediction.</p>
                 </div>
               </div>
               <Button
@@ -398,10 +398,21 @@ Output Format: JSON object matching the specified schema`;
                 History
               </Button>
             </div>
+
+            {/* Subject chips to make it obvious this works for any course */}
+            <div className="relative mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Calculator className="w-3.5 h-3.5" /> Math</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Beaker className="w-3.5 h-3.5" /> Biology</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" /> Geography</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><BookText className="w-3.5 h-3.5" /> History</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Economics</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Code className="w-3.5 h-3.5" /> CompSci</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Languages className="w-3.5 h-3.5" /> Languages</Badge>
+            </div>
           </div>
 
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl">Setup Your Lesson</CardTitle>
+            <CardTitle className="text-xl">Tell us about your course</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -418,7 +429,7 @@ Output Format: JSON object matching the specified schema`;
                   id="courseName"
                   value={courseName}
                   onChange={(e) => setCourseName(e.target.value)}
-                  placeholder="e.g., ECON2152, POLI418"
+                  placeholder="e.g., MATH 101, Biology 12, POLI 418, ECON 2152, AP US History"
                   disabled={isProcessing}
                   className="text-base"
                 />
@@ -540,7 +551,7 @@ Output Format: JSON object matching the specified schema`;
                 ) : (
                   <>
                     <Plus className="w-5 h-5 mr-2" />
-                    Create Lesson & Start Diagnostic
+                    Start Now
                   </>
                 )}
               </Button>
