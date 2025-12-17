@@ -114,35 +114,37 @@ export default function DocumentViewer() {
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-base md:text-xl font-bold text-slate-900 truncate">{lesson?.course_name}</h1>
+            <div className="flex-1 min-w-0 flex items-center gap-3 md:gap-4">
+              <div className="flex-shrink-0">
+                <h1 className="text-base md:text-xl font-bold text-slate-900">{lesson?.course_name}</h1>
                 <p className="text-xs md:text-sm text-slate-600 hidden sm:block">Interactive Learning</p>
               </div>
 
-              {/* Predicted Grade Badge */}
-              {quiz?.predicted_grade ? (
-                <div className="flex-shrink-0 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl shadow-lg min-w-[180px] md:min-w-[240px]">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs md:text-sm font-semibold whitespace-nowrap">Predicted Grade:</span>
-                    <span className="text-lg md:text-2xl font-bold">{quiz.predicted_grade}</span>
+              {/* Predicted Grade Badge - Wider */}
+              <div className="flex-1 min-w-0 max-w-2xl">
+                {quiz?.predicted_grade ? (
+                  <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-6 py-3 rounded-xl shadow-lg">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-sm font-semibold whitespace-nowrap">Predicted Grade:</span>
+                      <span className="text-2xl font-bold">{quiz.predicted_grade}</span>
+                    </div>
                   </div>
-                </div>
-              ) : quiz?.completed ? (
-                <div className="flex-shrink-0 bg-gradient-to-r from-purple-400 to-purple-600 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl shadow-lg min-w-[180px] md:min-w-[240px]">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs md:text-sm font-semibold whitespace-nowrap">Predicted Grade:</span>
-                    <span className="text-xs md:text-sm font-bold">Start Worksheet</span>
+                ) : quiz?.completed ? (
+                  <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-6 py-3 rounded-xl shadow-lg">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-sm font-semibold whitespace-nowrap">Predicted Grade:</span>
+                      <span className="text-sm font-bold">Start Worksheet</span>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex-shrink-0 bg-gradient-to-r from-slate-300 to-slate-400 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl shadow min-w-[180px] md:min-w-[240px]">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs md:text-sm font-semibold whitespace-nowrap">Predicted Grade:</span>
-                    <span className="text-[10px] md:text-xs font-medium">Take Quiz to Unlock</span>
+                ) : (
+                  <div className="bg-gradient-to-r from-slate-300 to-slate-400 text-white px-6 py-3 rounded-xl shadow">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-sm font-semibold whitespace-nowrap">Predicted Grade:</span>
+                      <span className="text-xs font-medium">Take Quiz to Unlock</span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
