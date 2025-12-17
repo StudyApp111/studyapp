@@ -107,13 +107,13 @@ button, a, [role="button"] {
   touch-action: manipulation;
 }
 
-/* Hide sidebar text when collapsed to icon mode */
-[data-state="collapsed"] [data-sidebar="menu"] span:not([class*="lucide"]) {
-  display: none;
-}
-
-[data-state="collapsed"] [data-sidebar="group-label"] {
-  display: none;
+/* Completely hide sidebar when collapsed */
+[data-state="collapsed"] aside[data-sidebar="sidebar"] {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  border: none !important;
 }
 
 /* Center sidebar trigger button */
