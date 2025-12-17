@@ -346,6 +346,13 @@ export default function Layout({ children, currentPageName }) {
         )}
 
         <main className="flex-1 flex flex-col">
+          {/* Desktop Sidebar Trigger - Always visible */}
+          {showNavigation && !isOnboardingPage && (
+            <div className="hidden md:block fixed top-4 left-4 z-50">
+              <SidebarTrigger className="w-10 h-10 bg-white/90 backdrop-blur-xl border border-purple-200/60 rounded-xl shadow-lg hover:shadow-xl hover:bg-purple-50 transition-all duration-200 flex items-center justify-center text-purple-600" />
+            </div>
+          )}
+          
           {/* Mobile Header - Hidden during onboarding */}
           {showNavigation && !isOnboardingPage && (
             <header className="bg-white/90 backdrop-blur-xl border-b border-purple-200/60 px-6 py-4 md:hidden">
