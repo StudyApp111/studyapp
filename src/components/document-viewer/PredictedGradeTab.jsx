@@ -1,5 +1,4 @@
 import React from "react";
-import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, Lock, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -10,35 +9,29 @@ export default function PredictedGradeTab({ lesson, quiz }) {
 
   if (!quiz || !quiz.completed) {
     return (
-      <div className="flex flex-col h-[600px]">
-        <CardHeader className="border-b border-purple-200">
-          <CardTitle className="text-slate-900 flex items-center gap-2">
+      <div className="bg-white/90 border border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] rounded-xl shadow-xl overflow-hidden">
+        <div className="border-b border-purple-200 px-6 py-4">
+          <div className="flex items-center gap-2 text-slate-900 font-semibold">
             <TrendingUp className="w-5 h-5" />
-            Predicted Grade & Practice
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="text-center space-y-6 max-w-md">
-            <div className="w-20 h-20 rounded-full bg-purple-100 border border-purple-300 flex items-center justify-center mx-auto">
-              <Lock className="w-10 h-10 text-purple-600" />
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">Complete Quiz to Unlock</h3>
-              <p className="text-slate-600 text-sm">
-                Finish the diagnostic quiz first to unlock your predicted grade and personalized practice worksheets.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              className="border-purple-200 text-slate-400"
-              disabled
-            >
-              <Lock className="w-4 h-4 mr-2" />
-              Locked
-            </Button>
+            Predicted Grade
           </div>
-        </CardContent>
+        </div>
+
+        <div className="flex items-center justify-center h-[calc(100%-70px)] p-6">
+          <div className="text-center space-y-4">
+            <Lock className="w-12 h-12 text-slate-400 mx-auto" />
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Complete Quiz First</h3>
+              <p className="text-sm text-slate-600 mb-4">
+                Take the diagnostic quiz to unlock your predicted grade and practice worksheets
+              </p>
+              <Button disabled className="bg-slate-300 cursor-not-allowed">
+                <Lock className="w-4 h-4 mr-2" />
+                Locked
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -48,17 +41,17 @@ export default function PredictedGradeTab({ lesson, quiz }) {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)]">
-      <CardHeader className="border-b border-purple-200">
-        <CardTitle className="text-slate-900 flex items-center gap-2">
+    <div className="bg-white/90 border border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] rounded-xl shadow-xl overflow-hidden">
+      <div className="border-b border-purple-200 px-6 py-4">
+        <div className="flex items-center gap-2 text-slate-900 font-semibold">
           <TrendingUp className="w-5 h-5" />
-          Predicted Grade & Practice
-        </CardTitle>
-      </CardHeader>
+          Predicted Grade
+        </div>
+      </div>
 
-      <CardContent className="flex-1 flex flex-col p-6">
+      <div className="h-[calc(100%-70px)] p-6 overflow-auto space-y-6">
         {/* Predicted Grade Display */}
-        <div className="bg-gradient-to-br from-purple-50 to-yellow-50 border border-yellow-300 rounded-xl p-6 mb-6">
+        <div className="bg-gradient-to-br from-purple-50 to-yellow-50 border border-yellow-300 rounded-xl p-6">
           <div className="text-center">
             <p className="text-slate-600 text-sm mb-2">Your Predicted Exam Grade</p>
             <div className="text-5xl font-bold text-yellow-600 mb-2">
