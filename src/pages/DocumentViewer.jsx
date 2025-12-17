@@ -110,21 +110,13 @@ export default function DocumentViewer() {
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
           {/* Tab Navigation - Responsive */}
-          <TabsList className="w-full bg-white border border-purple-200 p-1 grid grid-cols-3 md:grid-cols-6 gap-1">
+          <TabsList className="w-full bg-white border border-purple-200 p-1 grid grid-cols-5 gap-1">
             <TabsTrigger 
               value="doc" 
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <FileText className="w-4 h-4" />
               <span>Doc</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="tutor" 
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Tutor</span>
-              <span className="sm:hidden">AI</span>
             </TabsTrigger>
             <TabsTrigger 
               value="notes"
@@ -145,7 +137,7 @@ export default function DocumentViewer() {
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <TrendingUp className="w-4 h-4" />
-              <span className="hidden sm:inline">Grade</span>
+              <span className="hidden sm:inline">Predicted Grade</span>
               <span className="sm:hidden">Grade</span>
             </TabsTrigger>
             <TabsTrigger 
@@ -153,47 +145,43 @@ export default function DocumentViewer() {
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
             >
               <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Map</span>
-              <span className="sm:hidden">Map</span>
+              <span className="hidden sm:inline">Curriculum</span>
+              <span className="sm:hidden">Curr</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Tab Content */}
-          {activeTab === "doc" ? (
-            <DocumentDisplay lesson={lesson} />
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-              {/* Right Panel - Document Display */}
-              <div className="lg:col-span-2 order-2 lg:order-1">
-                <DocumentDisplay lesson={lesson} />
-              </div>
-
-              {/* Left Panel - Interactive Content */}
-              <div className="lg:col-span-1 order-1 lg:order-2">
-                <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl">
-                  <TabsContent value="tutor" className="m-0">
-                    <AITutorTab lesson={lesson} extractedContent={extractedContent} />
-                  </TabsContent>
-
-                  <TabsContent value="notes" className="m-0">
-                    <NotesTab lesson={lesson} extractedContent={extractedContent} />
-                  </TabsContent>
-
-                  <TabsContent value="quiz" className="m-0">
-                    <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
-                  </TabsContent>
-
-                  <TabsContent value="grade" className="m-0">
-                    <PredictedGradeTab lesson={lesson} quiz={quiz} />
-                  </TabsContent>
-
-                  <TabsContent value="curriculum" className="m-0">
-                    <CurriculumTab lesson={lesson} />
-                  </TabsContent>
-                </Card>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+            {/* Left Panel - AI Tutor (Always Visible) */}
+            <div className="lg:col-span-1 order-1">
+              <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl">
+                <AITutorTab lesson={lesson} extractedContent={extractedContent} />
+              </Card>
             </div>
-          )}
+
+            {/* Right Panel - Tab Content */}
+            <div className="lg:col-span-2 order-2">
+              <TabsContent value="doc" className="mt-0">
+                <DocumentDisplay lesson={lesson} />
+              </TabsContent>
+
+              <TabsContent value="notes" className="mt-0">
+                <NotesTab lesson={lesson} extractedContent={extractedContent} />
+              </TabsContent>
+
+              <TabsContent value="quiz" className="mt-0">
+                <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
+              </TabsContent>
+
+              <TabsContent value="grade" className="mt-0">
+                <PredictedGradeTab lesson={lesson} quiz={quiz} />
+              </TabsContent>
+
+              <TabsContent value="curriculum" className="mt-0">
+                <CurriculumTab lesson={lesson} />
+              </TabsContent>
+            </div>
+          </div>
         </Tabs>
       </div>
     </div>
