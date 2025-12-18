@@ -141,9 +141,9 @@ export default function Layout({ children, currentPageName }) {
   React.useEffect(() => {
     if (!gtmId) return;
 
-    // Exclude admin pages
-    const adminPages = ["Settings", "Analytics", "ProfileInformation", "ChangePassword", "PricingPlans"];
-    if (adminPages.includes(currentPageName)) return;
+    // Exclude admin pages and critical user flows
+    const excludedPages = ["Settings", "Analytics", "ProfileInformation", "ChangePassword", "PricingPlans", "Onboarding"];
+    if (excludedPages.includes(currentPageName)) return;
 
     // Check if GTM is already loaded
     if (window.dataLayer) {
