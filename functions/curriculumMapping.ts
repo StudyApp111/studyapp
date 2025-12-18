@@ -73,8 +73,35 @@ Deno.serve(async (req) => {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ Gemini API error:', response.status, errorText);
+            
+            // Log error and send email
+            try {
+                await base44.asServiceRole.entities.ErrorLog.create({
+                    error_type: 'api_error',
+                    error_message: `Gemini API error: ${response.status}`,
+                    error_stack: errorText,
+                    context: {
+                        function: 'curriculumMapping',
+                        api_status: response.status,
+                        user_email: user.email,
+                        error_code: 'CURR_MAP_001'
+                    },
+                    user_email: user.email,
+                    resolved: false
+                });
+                
+                await base44.asServiceRole.integrations.Core.SendEmail({
+                    to: 'support@study-app.ai',
+                    subject: `[CURR_MAP_001] Gemini API Error - ${response.status}`,
+                    body: `User: ${user.email}\nStatus: ${response.status}\nError: ${errorText}`
+                });
+            } catch (logError) {
+                console.error('Failed to log error:', logError);
+            }
+            
             return Response.json({ 
                 error: 'Failed to generate content',
+                code: 'CURR_MAP_001',
                 details: errorText
             }, { status: 500 });
         }
@@ -94,8 +121,34 @@ Deno.serve(async (req) => {
         
         if (!generatedText) {
             console.error('❌ No content in response:', JSON.stringify(data));
+            
+            // Log error and send email
+            try {
+                await base44.asServiceRole.entities.ErrorLog.create({
+                    error_type: 'function_error',
+                    error_message: 'No content generated from Gemini API',
+                    error_stack: JSON.stringify(data),
+                    context: {
+                        function: 'curriculumMapping',
+                        user_email: user.email,
+                        error_code: 'CURR_MAP_002'
+                    },
+                    user_email: user.email,
+                    resolved: false
+                });
+                
+                await base44.asServiceRole.integrations.Core.SendEmail({
+                    to: 'support@study-app.ai',
+                    subject: `[CURR_MAP_002] No Content Generated`,
+                    body: `User: ${user.email}\nResponse: ${JSON.stringify(data)}`
+                });
+            } catch (logError) {
+                console.error('Failed to log error:', logError);
+            }
+            
             return Response.json({ 
-                error: 'No content generated' 
+                error: 'No content generated',
+                code: 'CURR_MAP_002'
             }, { status: 500 });
         }
         
@@ -117,8 +170,35 @@ Deno.serve(async (req) => {
         } catch (parseError) {
             console.error('❌ JSON parse error:', parseError.message);
             console.error('Raw text preview:', generatedText.substring(0, 1000));
+            
+            // Log error and send email
+            try {
+                await base44.asServiceRole.entities.ErrorLog.create({
+                    error_type: 'function_error',
+                    error_message: `JSON parse error: ${parseError.message}`,
+                    error_stack: parseError.stack,
+                    context: {
+                        function: 'curriculumMapping',
+                        user_email: user.email,
+                        raw_preview: generatedText.substring(0, 500),
+                        error_code: 'CURR_MAP_003'
+                    },
+                    user_email: user.email,
+                    resolved: false
+                });
+                
+                await base44.asServiceRole.integrations.Core.SendEmail({
+                    to: 'support@study-app.ai',
+                    subject: `[CURR_MAP_003] JSON Parse Error`,
+                    body: `User: ${user.email}\nError: ${parseError.message}\nRaw: ${generatedText.substring(0, 500)}`
+                });
+            } catch (logError) {
+                console.error('Failed to log error:', logError);
+            }
+            
             return Response.json({ 
                 error: 'Failed to parse response as JSON',
+                code: 'CURR_MAP_003',
                 raw: generatedText.substring(0, 500)
             }, { status: 500 });
         }
@@ -127,8 +207,37 @@ Deno.serve(async (req) => {
         console.error('❌ CRITICAL ERROR in curriculumMapping:', error);
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
+        
+        // Log critical error and send email
+        try {
+            const base44 = createClientFromRequest(req);
+            const user = await base44.auth.me().catch(() => null);
+            
+            await base44.asServiceRole.entities.ErrorLog.create({
+                error_type: 'function_error',
+                error_message: error.message || 'Unknown error',
+                error_stack: error.stack,
+                context: {
+                    function: 'curriculumMapping',
+                    user_email: user?.email,
+                    error_code: 'CURR_MAP_000'
+                },
+                user_email: user?.email,
+                resolved: false
+            });
+            
+            await base44.asServiceRole.integrations.Core.SendEmail({
+                to: 'support@study-app.ai',
+                subject: `[CURR_MAP_000] Critical Error in curriculumMapping`,
+                body: `User: ${user?.email || 'Unknown'}\nError: ${error.message}\nStack: ${error.stack}`
+            });
+        } catch (logError) {
+            console.error('Failed to log critical error:', logError);
+        }
+        
         return Response.json({ 
-            error: 'Internal server error' 
+            error: 'Internal server error',
+            code: 'CURR_MAP_000'
         }, { status: 500 });
     }
 });
