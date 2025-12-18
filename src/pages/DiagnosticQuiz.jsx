@@ -21,10 +21,6 @@ export default function DiagnosticQuiz() {
   const [questionMetadata, setQuestionMetadata] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  
-  // Check if we should return to DocumentViewer
-  const urlParams = new URLSearchParams(window.location.search);
-  const returnTo = urlParams.get('returnTo');
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -267,11 +263,7 @@ Provide your response as a single, valid JSON object with the following structur
 
       setShowConfetti(true);
       setTimeout(() => {
-        if (returnTo === 'documentViewer') {
-          navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
-        } else {
-          navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
-        }
+        navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
       }, 3500);
     } catch (error) {
       console.error("Error submitting quiz:", error);

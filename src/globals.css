@@ -1,4 +1,3 @@
-css
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -106,13 +105,6 @@ button, a, [role="button"] {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-}
-
-/* Center sidebar trigger button */
-button[data-sidebar="trigger"] {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* Fix for shadcn button component - ensure full clickable area */

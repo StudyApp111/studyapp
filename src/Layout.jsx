@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -16,7 +16,6 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
@@ -65,10 +64,9 @@ const formatTime = (seconds) => {
   return `${hours}h ${mins}m`;
 };
 
-function LayoutContent({ children, currentPageName }) {
+export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { open, toggleSidebar } = useSidebar();
   const [user, setUser] = React.useState(null);
   const [gtmId, setGtmId] = React.useState(null);
 
@@ -200,7 +198,7 @@ function LayoutContent({ children, currentPageName }) {
   };
 
   return (
-    <>
+    <SidebarProvider>
       {renderGTMNoScript()}
       <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 relative">
         <style>{`
@@ -221,7 +219,7 @@ function LayoutContent({ children, currentPageName }) {
         
         {/* Desktop Sidebar - Hidden during onboarding */}
         {showNavigation && !isOnboardingPage && (
-          <Sidebar collapsible="offcanvas" className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl hidden md:flex">
+          <Sidebar className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl">
             <SidebarHeader className="border-b border-purple-200/60 p-6">
               <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                 <img 
@@ -347,17 +345,6 @@ function LayoutContent({ children, currentPageName }) {
           </Sidebar>
         )}
 
-        {/* Sidebar Toggle Button - Always visible on desktop */}
-        {showNavigation && !isOnboardingPage && currentPageName !== "DocumentViewer" && (
-          <button
-            onClick={toggleSidebar}
-            className="hidden md:flex fixed top-1/2 left-0 -translate-y-1/2 w-8 h-16 bg-white/90 backdrop-blur-xl border border-purple-200/60 rounded-r-xl shadow-lg hover:shadow-xl hover:bg-purple-50 transition-all duration-200 items-center justify-center text-purple-600 z-50"
-            style={{ left: open ? '256px' : '0' }}
-          >
-            {open ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-          </button>
-        )}
-
         <main className="flex-1 flex flex-col">
           {/* Mobile Header - Hidden during onboarding */}
           {showNavigation && !isOnboardingPage && (
@@ -472,14 +459,6 @@ function LayoutContent({ children, currentPageName }) {
         {/* Global Feedback Button - Always visible on authenticated pages */}
         {showNavigation && !isOnboardingPage && <FeedbackButton />}
       </div>
-    </>
-  );
-}
-
-export default function Layout({ children, currentPageName }) {
-  return (
-    <SidebarProvider>
-      <LayoutContent children={children} currentPageName={currentPageName} />
     </SidebarProvider>
   );
 }

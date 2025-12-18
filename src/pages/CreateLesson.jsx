@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, FileText, Upload, FileCheck, AlertCircle, History, Lightbulb, ChevronDown, ChevronUp, Calculator, Beaker, Globe, BookText, Languages, Code, Briefcase } from "lucide-react";
+import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, History, Lightbulb, ChevronDown, ChevronUp, Calculator, Beaker, Globe, BookText, Languages, Code, Briefcase } from "lucide-react";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 
 export default function CreateLesson() {
@@ -18,7 +18,7 @@ export default function CreateLesson() {
   const [courseName, setCourseName] = useState("");
   const [inputType, setInputType] = useState("file");
   const [description, setDescription] = useState("");
-  
+  const [url, setUrl] = useState("");
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -66,9 +66,9 @@ export default function CreateLesson() {
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      // Check file size (10MB limit)
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        setError("File is too large. Please upload files smaller than 10MB.");
+      // Check file size (5MB limit)
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setError("File is too large. Please upload files smaller than 5MB.");
         setFile(null);
         e.target.value = '';
         return;
@@ -93,6 +93,26 @@ export default function CreateLesson() {
       let extractedContent = "";
       let fullExtractedContent = "";
       let fileUrl = "";
+
+      // Handle URL input
+      if (inputType === "url") {
+        if (!url.trim()) {
+          throw new Error("Please enter a URL");
+        }
+
+        try {
+          setProcessingStep("Extracting content from URL...");
+          const { data: urlContent } = await base44.integrations.Core.InvokeLLM({
+            prompt: `Extract and summarize all educational content from the following URL in detail. Provide a comprehensive transcript or summary of the content that captures all key concepts, topics, and learning materials. URL: ${url}`,
+            add_context_from_internet: true
+          });
+          
+          extractedContent = urlContent;
+        } catch (urlError) {
+          console.error("Error extracting URL content:", urlError);
+          throw new Error("Failed to extract content from URL. Please check the URL and try again.");
+        }
+      }
 
       // Handle file upload - Using Mistral
       if (inputType === "file") {
@@ -328,6 +348,9 @@ Output Format: JSON object matching the specified schema`;
 
       if (inputType === "description") {
         lessonData.description = description;
+      } else if (inputType === "url") {
+        lessonData.url = url;
+        lessonData.extracted_content = fullExtractedContent || extractedContent;
       } else if (inputType === "file") {
         lessonData.file_url = fileUrl;
         lessonData.extracted_content = fullExtractedContent || extractedContent;
@@ -335,7 +358,7 @@ Output Format: JSON object matching the specified schema`;
 
       const lesson = await base44.entities.Lesson.create(lessonData);
 
-      navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
+      navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lesson.id}`);
     } catch (err) {
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
@@ -356,14 +379,14 @@ Output Format: JSON object matching the specified schema`;
             <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-2xl -mr-24 -mt-24" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-xl -ml-16 -mb-16" />
             
-            <div className="relative flex items-start md:items-center justify-between">
+            <div className="relative flex items-center justify-between">
               <div className="flex items-center gap-4 flex-1 min-w-0">
                 <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg flex-shrink-0">
                   <Plus className="w-8 h-8 text-white" />
                 </div>
-                <div className="min-w-0 max-w-2xl">
+                <div className="min-w-0">
                   <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Start a Lesson for Any Course</h1>
-                  <p className="text-white/90 text-sm md:text-base leading-relaxed">Works with any subject — STEM, Humanities, Languages, Business. Upload notes or describe your course to get a tailored diagnostic, practice, and a grade prediction.</p>
+                  <p className="text-white/90 text-sm">Works with any subject — STEM, Humanities, Languages, Business. Upload notes, paste a link, or describe your course to get a tailored diagnostic, practice, and a grade prediction.</p>
                 </div>
               </div>
               <Button
@@ -377,14 +400,14 @@ Output Format: JSON object matching the specified schema`;
             </div>
 
             {/* Subject chips to make it obvious this works for any course */}
-            <div className="relative mt-6 md:ml-14 max-w-3xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              <Badge className="w-full justify-center py-2 rounded-xl bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm flex items-center gap-1.5"><Calculator className="w-3.5 h-3.5" /> Math</Badge>
-              <Badge className="w-full justify-center py-2 rounded-xl bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm flex items-center gap-1.5"><Beaker className="w-3.5 h-3.5" /> Biology</Badge>
-              <Badge className="w-full justify-center py-2 rounded-xl bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" /> Geography</Badge>
-              <Badge className="w-full justify-center py-2 rounded-xl bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm flex items-center gap-1.5"><BookText className="w-3.5 h-3.5" /> History</Badge>
-              <Badge className="w-full justify-center py-2 rounded-xl bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Economics</Badge>
-              <Badge className="w-full justify-center py-2 rounded-xl bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm flex items-center gap-1.5"><Code className="w-3.5 h-3.5" /> CompSci</Badge>
-              <Badge className="w-full justify-center py-2 rounded-xl bg-white/15 text-white ring-1 ring-white/30 backdrop-blur-sm flex items-center gap-1.5"><Languages className="w-3.5 h-3.5" /> Languages</Badge>
+            <div className="relative mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Calculator className="w-3.5 h-3.5" /> Math</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Beaker className="w-3.5 h-3.5" /> Biology</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" /> Geography</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><BookText className="w-3.5 h-3.5" /> History</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Economics</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Code className="w-3.5 h-3.5" /> CompSci</Badge>
+              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Languages className="w-3.5 h-3.5" /> Languages</Badge>
             </div>
           </div>
 
@@ -421,12 +444,23 @@ Output Format: JSON object matching the specified schema`;
                       <Upload className="w-5 h-5 text-purple-600" />
                       <div>
                         <p className="font-medium">Upload a File</p>
-                        <p className="text-xs text-slate-500">PDF, PPT, Word, Images - Max 10MB</p>
+                        <p className="text-xs text-slate-500">PDF, PPT, Word, Images - Max 5MB</p>
                       </div>
                     </Label>
                   </div>
 
-<div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
+                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
+                    <RadioGroupItem value="url" id="url" />
+                    <Label htmlFor="url" className="flex items-center gap-2 flex-1 cursor-pointer">
+                      <LinkIcon className="w-5 h-5 text-purple-600" />
+                      <div>
+                        <p className="font-medium">Paste a Link</p>
+                        <p className="text-xs text-slate-500">Course page, article, PDF link, Google Doc</p>
+                      </div>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
                     <RadioGroupItem value="description" id="description" />
                     <Label htmlFor="description" className="flex items-center gap-2 flex-1 cursor-pointer">
                       <FileText className="w-5 h-5 text-purple-600" />
@@ -489,7 +523,20 @@ Output Format: JSON object matching the specified schema`;
                 </div>
               )}
 
-
+              {inputType === "url" && (
+                <div className="space-y-2">
+                  <Label htmlFor="url">Paste a link *</Label>
+                  <Input
+                    id="url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="https://example.com/course-outline-or-article"
+                    disabled={isProcessing}
+                    className="text-base"
+                  />
+                  <p className="text-xs text-slate-500">Well fetch the page and build your lesson from it.</p>
+                </div>
+              )}
 
                {inputType === "file" && (
                 <div className="space-y-2">
