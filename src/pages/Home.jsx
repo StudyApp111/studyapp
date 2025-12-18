@@ -369,13 +369,15 @@ export default function Home() {
       <div className="mb-8 max-w-6xl mx-auto">
         <Card className="text-center py-12 md:py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
           <CardContent className="max-w-3xl mx-auto">
+            <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto text-yellow-600 mb-6" />
             <div className="space-y-6">
               <div className="text-center">
                 <Button
                   onClick={() => navigate(createPageUrl("CreateLesson"))}
-                  className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold mb-3"
+                  className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold mb-3 text-base px-8 py-6"
+                  size="lg"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
+                  <Plus className="w-5 h-5 mr-2" />
                   Upload Now
                 </Button>
                 <p className="text-sm text-slate-600 max-w-md mx-auto">
@@ -419,102 +421,7 @@ export default function Home() {
         </div>
       )}
 
-        {/* Mobile-Optimized Stats - 2x2 Grid - Centered */}
-        <div className="max-w-5xl mx-auto mb-6 md:mb-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-700 opacity-10" />
-              <CardContent className="p-4 md:p-6 relative">
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 shadow-lg">
-                      <Award className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Completed</p>
-                    <p className="text-2xl md:text-3xl font-bold text-slate-900">{completedWorksheets}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-yellow-600 opacity-10" />
-              <CardContent className="p-4 md:p-6 relative">
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-lg">
-                      <Clock className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">In Progress</p>
-                    <p className="text-2xl md:text-3xl font-bold text-slate-900">{inProgressWorksheets}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-purple-800 opacity-10" />
-              <CardContent className="p-4 md:p-6 relative">
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-purple-600 to-purple-800 shadow-lg">
-                      <Zap className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Total Tests</p>
-                    <p className="text-2xl md:text-3xl font-bold text-slate-900">{totalQuizzes}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-          >
-            <Card className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="absolute inset-0 bg-gradient-to-br from-yellow-500 to-amber-600 opacity-10" />
-              <CardContent className="p-4 md:p-6 relative">
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <div className="p-2 md:p-3 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 shadow-lg">
-                      <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs md:text-sm font-medium text-slate-600 mb-1">Avg Score</p>
-                    <p className="text-2xl md:text-3xl font-bold text-slate-900">{avgScore}%</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-        </div>
 
 
     </div>
