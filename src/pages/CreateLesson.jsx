@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, FileText, Link as LinkIcon, Upload, FileCheck, AlertCircle, History, Lightbulb, ChevronDown, ChevronUp, Calculator, Beaker, Globe, BookText, Languages, Code, Briefcase } from "lucide-react";
+import { Loader2, Plus, FileText, Upload, FileCheck, AlertCircle, History, Lightbulb, ChevronDown, ChevronUp, Calculator, Beaker, Globe, BookText, Languages, Code, Briefcase } from "lucide-react";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 
 export default function CreateLesson() {
@@ -18,7 +18,6 @@ export default function CreateLesson() {
   const [courseName, setCourseName] = useState("");
   const [inputType, setInputType] = useState("file");
   const [description, setDescription] = useState("");
-  const [url, setUrl] = useState("");
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -93,26 +92,6 @@ export default function CreateLesson() {
       let extractedContent = "";
       let fullExtractedContent = "";
       let fileUrl = "";
-
-      // Handle URL input
-      if (inputType === "url") {
-        if (!url.trim()) {
-          throw new Error("Please enter a URL");
-        }
-
-        try {
-          setProcessingStep("Extracting content from URL...");
-          const { data: urlContent } = await base44.integrations.Core.InvokeLLM({
-            prompt: `Extract and summarize all educational content from the following URL in detail. Provide a comprehensive transcript or summary of the content that captures all key concepts, topics, and learning materials. URL: ${url}`,
-            add_context_from_internet: true
-          });
-          
-          extractedContent = urlContent;
-        } catch (urlError) {
-          console.error("Error extracting URL content:", urlError);
-          throw new Error("Failed to extract content from URL. Please check the URL and try again.");
-        }
-      }
 
       // Handle file upload - Using Mistral
       if (inputType === "file") {
@@ -348,9 +327,6 @@ Output Format: JSON object matching the specified schema`;
 
       if (inputType === "description") {
         lessonData.description = description;
-      } else if (inputType === "url") {
-        lessonData.url = url;
-        lessonData.extracted_content = fullExtractedContent || extractedContent;
       } else if (inputType === "file") {
         lessonData.file_url = fileUrl;
         lessonData.extracted_content = fullExtractedContent || extractedContent;
@@ -386,7 +362,7 @@ Output Format: JSON object matching the specified schema`;
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Start a Lesson for Any Course</h1>
-                  <p className="text-white/90 text-sm">Works with any subject — STEM, Humanities, Languages, Business. Upload notes, paste a link, or describe your course to get a tailored diagnostic, practice, and a grade prediction.</p>
+                  <p className="text-white/90 text-sm">Works with any subject — STEM, Humanities, Languages, Business. Upload notes or describe your course to get a tailored diagnostic, practice, and a grade prediction.</p>
                 </div>
               </div>
               <Button
@@ -449,8 +425,6 @@ Output Format: JSON object matching the specified schema`;
                     </Label>
                   </div>
 
-
-
                   <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
                     <RadioGroupItem value="description" id="description" />
                     <Label htmlFor="description" className="flex items-center gap-2 flex-1 cursor-pointer">
@@ -511,21 +485,6 @@ Output Format: JSON object matching the specified schema`;
                       </div>
                     )}
                   </div>
-                </div>
-              )}
-
-              {inputType === "url" && (
-                <div className="space-y-2">
-                  <Label htmlFor="url">Paste a link *</Label>
-                  <Input
-                    id="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://example.com/course-outline-or-article"
-                    disabled={isProcessing}
-                    className="text-base"
-                  />
-                  <p className="text-xs text-slate-500">Well fetch the page and build your lesson from it.</p>
                 </div>
               )}
 
