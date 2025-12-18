@@ -68,7 +68,6 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
-  const [gtmId, setGtmId] = React.useState(null);
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -121,56 +120,9 @@ export default function Layout({ children, currentPageName }) {
     };
   }, []);
 
-  // Load GTM configuration
-  React.useEffect(() => {
-    const loadAnalytics = async () => {
-      try {
-        const configs = await base44.entities.AppConfiguration.list();
-        if (configs.length > 0 && configs[0].gtm_container_id) {
-          setGtmId(configs[0].gtm_container_id);
-        }
-      } catch (error) {
-        console.error("Error loading GTM config:", error);
-      }
-    };
-    
-    loadAnalytics();
-  }, []);
 
-  // Inject GTM scripts
-  React.useEffect(() => {
-    if (!gtmId) return;
 
-    // Exclude admin pages and critical user flows
-    const excludedPages = ["Settings", "Analytics", "ProfileInformation", "ChangePassword", "PricingPlans", "Onboarding"];
-    if (excludedPages.includes(currentPageName)) return;
 
-    // Check if GTM is already loaded
-    if (window.dataLayer) {
-      console.log("GTM already initialized");
-      return;
-    }
-
-    // Initialize dataLayer
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
-
-    // Inject GTM script in head
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`;
-    document.head.appendChild(script);
-
-    console.log(`GTM loaded: ${gtmId}`);
-
-    return () => {
-      // Cleanup on unmount
-      const existingScript = document.querySelector(`script[src*="${gtmId}"]`);
-      if (existingScript) {
-        existingScript.remove();
-      }
-    };
-  }, [gtmId, currentPageName]);
 
   // Don't render layout navigation if onboarding not completed
   const isOnboardingPage = location.pathname === createPageUrl("Onboarding");
@@ -180,26 +132,10 @@ export default function Layout({ children, currentPageName }) {
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
   const showMobileBottomNav = !pagesWithCustomNav.includes(currentPageName);
 
-  // Render GTM noscript iframe
-  const renderGTMNoScript = () => {
-    const adminPages = ["Settings", "Analytics", "ProfileInformation", "ChangePassword", "PricingPlans"];
-    if (!gtmId || adminPages.includes(currentPageName)) return null;
 
-    return (
-      <noscript>
-        <iframe
-          src={`https://www.googletagmanager.com/ns.html?id=${gtmId}`}
-          height="0"
-          width="0"
-          style={{ display: 'none', visibility: 'hidden' }}
-        />
-      </noscript>
-    );
-  };
 
   return (
     <SidebarProvider>
-      {renderGTMNoScript()}
       <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 relative">
         <style>{`
           :root {
