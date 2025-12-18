@@ -351,39 +351,54 @@ Output Format: JSON object matching the specified schema`;
       <div className="max-w-3xl mx-auto">
         <Card className="shadow-2xl border-0 overflow-hidden">
           {/* Compact Hero Header Inside Card */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-6 md:p-8">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-2xl -mr-24 -mt-24" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-xl -ml-16 -mb-16" />
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-8 md:p-10">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-2xl -ml-24 -mb-24" />
             
-            <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg flex-shrink-0">
-                  <Plus className="w-8 h-8 text-white" />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Start a Lesson for Any Course</h1>
-                  <p className="text-white/90 text-sm">Works with any subject — STEM, Humanities, Languages, Business. Upload notes or describe your course to get a tailored diagnostic, practice, and a grade prediction.</p>
+            <div className="relative text-center space-y-6">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl shadow-2xl">
+                  <Plus className="w-10 h-10 text-white" />
                 </div>
               </div>
-              <Button
-                onClick={() => navigate(createPageUrl("LessonHistory"))}
-                variant="outline"
-                className="gap-2 bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30 flex-shrink-0 hidden md:flex"
-              >
-                <History className="w-4 h-4" />
-                History
-              </Button>
-            </div>
+              
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Start a Lesson for Any Course</h1>
+                <p className="text-white/90 text-base max-w-2xl mx-auto">Works with any subject — STEM, Humanities, Business. Upload notes or describe your course to get a tailored diagnostic, practice, and a grade prediction.</p>
+              </div>
 
-            {/* Subject chips to make it obvious this works for any course */}
-            <div className="relative mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Calculator className="w-3.5 h-3.5" /> Math</Badge>
-              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Beaker className="w-3.5 h-3.5" /> Biology</Badge>
-              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" /> Geography</Badge>
-              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><BookText className="w-3.5 h-3.5" /> History</Badge>
-              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Economics</Badge>
-              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Code className="w-3.5 h-3.5" /> CompSci</Badge>
-              <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5"><Languages className="w-3.5 h-3.5" /> Languages</Badge>
+              {/* Subject chips - cleaner grid */}
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5 px-3 py-1.5">
+                  <Calculator className="w-3.5 h-3.5" /> Math
+                </Badge>
+                <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5 px-3 py-1.5">
+                  <Beaker className="w-3.5 h-3.5" /> Biology
+                </Badge>
+                <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5 px-3 py-1.5">
+                  <Globe className="w-3.5 h-3.5" /> Geography
+                </Badge>
+                <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5 px-3 py-1.5">
+                  <BookText className="w-3.5 h-3.5" /> History
+                </Badge>
+                <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5 px-3 py-1.5">
+                  <Briefcase className="w-3.5 h-3.5" /> Economics
+                </Badge>
+                <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1.5 px-3 py-1.5">
+                  <Code className="w-3.5 h-3.5" /> CompSci
+                </Badge>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  onClick={() => navigate(createPageUrl("LessonHistory"))}
+                  variant="outline"
+                  className="gap-2 bg-white/20 backdrop-blur-sm border-white/40 text-white hover:bg-white/30"
+                >
+                  <History className="w-4 h-4" />
+                  View History
+                </Button>
+              </div>
             </div>
           </div>
 
