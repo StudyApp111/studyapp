@@ -449,16 +449,7 @@ Output Format: JSON object matching the specified schema`;
                     </Label>
                   </div>
 
-                  <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
-                    <RadioGroupItem value="url" id="url" />
-                    <Label htmlFor="url" className="flex items-center gap-2 flex-1 cursor-pointer">
-                      <LinkIcon className="w-5 h-5 text-purple-600" />
-                      <div>
-                        <p className="font-medium">Paste a Link</p>
-                        <p className="text-xs text-slate-500">Course page, article, PDF link, Google Doc</p>
-                      </div>
-                    </Label>
-                  </div>
+
 
                   <div className="flex items-center space-x-3 p-4 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
                     <RadioGroupItem value="description" id="description" />
