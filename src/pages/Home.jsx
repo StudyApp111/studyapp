@@ -388,9 +388,10 @@ export default function Home() {
               <div className="text-center">
                 <Button
                   onClick={() => navigate(createPageUrl("SmartGrader"))}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold mb-3"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold mb-3 text-base px-8 py-6"
+                  size="lg"
                 >
-                  <FileCheck className="w-4 h-4 mr-2" />
+                  <FileCheck className="w-5 h-5 mr-2" />
                   Grade Assignment
                 </Button>
                 <p className="text-sm text-slate-600 max-w-md mx-auto">
