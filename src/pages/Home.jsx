@@ -365,68 +365,48 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Recent Lessons - Centered */}
+      {/* CTA Box - Always Displayed */}
       <div className="mb-8 max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900">Recent Activity</h2>
-          <Button
-            onClick={() => navigate(createPageUrl("CreateLesson"))}
-            className="hidden md:flex bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold shadow-lg shadow-yellow-500/30"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Start Now
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {[1, 2, 3].map(i => (
-              <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-3/4" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-20 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : recentItems.length === 0 ? (
-          <Card className="text-center py-12 md:py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
-            <CardContent className="max-w-3xl mx-auto">
-              <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto text-yellow-600 mb-6" />
-              <h3 className="text-lg md:text-xl font-semibold text-slate-700 mb-8">Nothing here yet</h3>
-
-              <div className="space-y-6">
-                <div className="text-center">
-                  <Button
-                    onClick={() => navigate(createPageUrl("CreateLesson"))}
-                    className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold mb-3"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Start Now
-                  </Button>
-                  <p className="text-sm text-slate-600 max-w-md mx-auto">
-                    Get predicted grades, discover your cognitive biases, identify weaknesses, and map your personalized road to an A+
-                  </p>
-                </div>
-
-                <div className="text-center">
-                  <Button
-                    onClick={() => navigate(createPageUrl("SmartGrader"))}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold mb-3"
-                  >
-                    <FileCheck className="w-4 h-4 mr-2" />
-                    Grade Assignment
-                  </Button>
-                  <p className="text-sm text-slate-600 max-w-md mx-auto">
-                    Upload your completed work and get instant AI grading with detailed feedback, rubric breakdown, and actionable improvements
-                  </p>
-                </div>
+        <Card className="text-center py-12 md:py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
+          <CardContent className="max-w-3xl mx-auto">
+            <div className="space-y-6">
+              <div className="text-center">
+                <Button
+                  onClick={() => navigate(createPageUrl("CreateLesson"))}
+                  className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold mb-3"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Upload Now
+                </Button>
+                <p className="text-sm text-slate-600 max-w-md mx-auto">
+                  Get predicted grades, discover your cognitive biases, identify weaknesses, and map your personalized road to an A+
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        ) : (
+
+              <div className="text-center">
+                <Button
+                  onClick={() => navigate(createPageUrl("SmartGrader"))}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold mb-3"
+                >
+                  <FileCheck className="w-4 h-4 mr-2" />
+                  Grade Assignment
+                </Button>
+                <p className="text-sm text-slate-600 max-w-md mx-auto">
+                  Upload your completed work and get instant AI grading with detailed feedback, rubric breakdown, and actionable improvements
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity - Below CTA */}
+      {!isLoading && recentItems.length > 0 && (
+        <div className="mb-8 max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900">Recent Activity</h2>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {recentItems.map(item => (
               item.type === 'lesson' ? (
@@ -436,8 +416,8 @@ export default function Home() {
               )
             ))}
           </div>
-        )}
         </div>
+      )}
 
         {/* Mobile-Optimized Stats - 2x2 Grid - Centered */}
         <div className="max-w-5xl mx-auto mb-6 md:mb-10">
@@ -536,13 +516,7 @@ export default function Home() {
         </div>
         </div>
 
-        {/* Badges Section - Centered */}
-      {user.badges && user.badges.length > 0 && (
-        <div className="mb-8 max-w-6xl mx-auto">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 mb-4">Your Badges</h2>
-          <BadgeDisplay badges={user.badges} size="compact" />
-        </div>
-      )}
+
     </div>
   );
 }

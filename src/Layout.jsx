@@ -242,7 +242,7 @@ export default function Layout({ children, currentPageName }) {
                   className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold shadow-lg shadow-yellow-500/30"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Start Now
+                  Upload Now
                 </Button>
               </div>
 
