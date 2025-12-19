@@ -17,10 +17,36 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
     review: 0
   });
 
+  useEffect(() => {
+    loadFlashcards();
+  }, [lesson?.id]);
+
+  const loadFlashcards = async () => {
+    if (!lesson) return;
+    
+    try {
+      const existingCards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
+      if (existingCards.length > 0) {
+        setCards(existingCards);
+        updateCardStats(existingCards);
+      }
+    } catch (error) {
+      console.error("Error loading flashcards:", error);
+    }
+  };
+
+  const updateCardStats = (flashcards) => {
+    const stats = {
+      new: flashcards.filter(c => c.status === 'new').length,
+      learning: flashcards.filter(c => c.status === 'learning').length,
+      review: flashcards.filter(c => c.status === 'review').length
+    };
+    setCardStats(stats);
+  };
+
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
-      // Generate 20 flashcards
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate 20 high-quality flashcards for this course: ${lesson.course_name}
 
@@ -31,17 +57,7 @@ Create flashcards that:
 2. Are clear and concise
 3. Have a question/front side and detailed answer/back side
 4. Include topic tags for categorization
-5. Vary in difficulty (mark as easy/medium/hard)
-
-Return as JSON array with this structure:
-[
-  {
-    "question": "Clear, specific question",
-    "answer": "Detailed, comprehensive answer",
-    "topics": ["topic1", "topic2"],
-    "difficulty": "medium"
-  }
-]`,
+5. Vary in difficulty (mark as easy/medium/hard)`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -54,8 +70,7 @@ Return as JSON array with this structure:
                   answer: { type: "string" },
                   topics: { type: "array", items: { type: "string" } },
                   difficulty: { type: "string", enum: ["easy", "medium", "hard"] }
-                },
-                required: ["question", "answer", "topics", "difficulty"]
+                }
               }
             }
           }
@@ -63,12 +78,23 @@ Return as JSON array with this structure:
       });
 
       const generatedCards = response.flashcards || [];
-      setCards(generatedCards);
-      setCardStats({
-        new: generatedCards.length,
-        learning: 0,
-        review: 0
-      });
+      
+      // Save to database
+      const savedCards = await Promise.all(
+        generatedCards.map(card => 
+          base44.entities.Flashcard.create({
+            lesson_id: lesson.id,
+            question: card.question,
+            answer: card.answer,
+            topics: card.topics,
+            difficulty: card.difficulty,
+            status: "new"
+          })
+        )
+      );
+
+      setCards(savedCards);
+      updateCardStats(savedCards);
     } catch (error) {
       console.error("Error generating flashcards:", error);
     }
@@ -79,16 +105,32 @@ Return as JSON array with this structure:
     setShowAnswer(!showAnswer);
   };
 
-  const handleRating = (rating) => {
-    // Update stats based on rating
-    const newStats = { ...cardStats };
-    if (newStats.new > 0) {
-      newStats.new--;
-      newStats.learning++;
+  const handleRating = async (rating) => {
+    const currentCard = cards[currentIndex];
+    
+    // Update card status based on rating
+    let newStatus = currentCard.status;
+    if (currentCard.status === 'new') {
+      newStatus = 'learning';
+    } else if (rating === 'easy' && currentCard.status === 'learning') {
+      newStatus = 'review';
     }
-    setCardStats(newStats);
 
-    // Move to next card
+    // Save to database
+    try {
+      await base44.entities.Flashcard.update(currentCard.id, {
+        status: newStatus,
+        last_reviewed: new Date().toISOString()
+      });
+
+      const updatedCards = [...cards];
+      updatedCards[currentIndex] = { ...currentCard, status: newStatus };
+      setCards(updatedCards);
+      updateCardStats(updatedCards);
+    } catch (error) {
+      console.error("Error updating flashcard:", error);
+    }
+
     setShowAnswer(false);
     if (currentIndex < cards.length - 1) {
       setCurrentIndex(currentIndex + 1);

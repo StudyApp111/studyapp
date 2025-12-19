@@ -7,11 +7,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Brain, TrendingUp, Trophy, ChevronLeft, Loader2, Clock, BookMarked } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useRef } from "react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import QuizTab from "@/components/document-viewer/QuizTab";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
+import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ export default function DocumentViewer() {
   const [studyTime, setStudyTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [timerInterval, setTimerInterval] = useState(null);
+  const saveProgressRef = useRef(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -69,6 +72,30 @@ export default function DocumentViewer() {
       clearInterval(timerInterval);
     }
   }, [isTimerRunning]);
+
+  // Save progress every 30 seconds
+  useEffect(() => {
+    if (saveProgressRef.current) {
+      clearInterval(saveProgressRef.current);
+    }
+
+    saveProgressRef.current = setInterval(async () => {
+      try {
+        const user = await base44.auth.me();
+        await base44.auth.updateMe({
+          time_spent_seconds: (user.time_spent_seconds || 0) + 30
+        });
+      } catch (error) {
+        console.error("Error saving progress:", error);
+      }
+    }, 30000);
+
+    return () => {
+      if (saveProgressRef.current) {
+        clearInterval(saveProgressRef.current);
+      }
+    };
+  }, []);
 
   const formatStudyTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
@@ -281,6 +308,13 @@ export default function DocumentViewer() {
           </div>
         </Tabs>
       </div>
+
+      {isTimerRunning && (
+        <PomodoroTimer 
+          elapsedSeconds={studyTime} 
+          onBreakComplete={() => {}} 
+        />
+      )}
     </div>
   );
 }
