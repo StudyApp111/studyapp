@@ -98,8 +98,8 @@ export default function SmartGrader() {
         throw new Error("Failed to extract content from rubric");
       }
 
-      const extractedContent = assignmentExtract.data.extracted_content;
-      const customRubricText = rubricExtract.data.extracted_content;
+      let extractedContent = assignmentExtract.data.extracted_content;
+      let customRubricText = rubricExtract.data.extracted_content;
 
       if (extractedContent.length < 50) {
         throw new Error("Extracted content is too short. Please ensure your file contains readable text.");
