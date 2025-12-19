@@ -120,36 +120,81 @@ export default function GradeResults() {
   const handleExportPDF = async () => {
     setIsExporting(true);
     try {
+      // Add watermark class temporarily
       const element = document.getElementById('grade-results-content');
+      element.classList.add('pdf-export-mode');
       
       const opt = {
-        margin: 0.5,
+        margin: [0.4, 0.4, 0.4, 0.4],
         filename: `${assignment.assignment_title}_Grade_Report.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
           scale: 2,
           useCORS: true,
           logging: false,
-          backgroundColor: '#f9fafb'
+          backgroundColor: '#ffffff',
+          windowWidth: 1200
         },
         jsPDF: { 
           unit: 'in', 
           format: 'letter', 
           orientation: 'portrait'
-        }
+        },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
 
       await html2pdf().set(opt).from(element).save();
+      
+      // Remove watermark class after export
+      element.classList.remove('pdf-export-mode');
     } catch (error) {
       console.error('PDF export failed:', error);
+      document.getElementById('grade-results-content')?.classList.remove('pdf-export-mode');
     }
     setIsExporting(false);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
+      <style>{`
+        @media print {
+          .no-print {
+            display: none !important;
+          }
+        }
+        
+        .pdf-export-mode .no-print {
+          display: none !important;
+        }
+        
+        .pdf-export-mode::before {
+          content: 'StudyApp';
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-45deg);
+          font-size: 120px;
+          font-weight: 900;
+          color: rgba(147, 51, 234, 0.08);
+          z-index: 9999;
+          pointer-events: none;
+          white-space: nowrap;
+          letter-spacing: 0.1em;
+        }
+        
+        .pdf-export-mode {
+          position: relative;
+        }
+        
+        #grade-results-content {
+          background: white;
+          padding: 2rem;
+          border-radius: 0;
+        }
+      `}</style>
+      
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end mb-4 no-print">
           <Button
             onClick={handleExportPDF}
             disabled={isExporting}
@@ -370,7 +415,7 @@ export default function GradeResults() {
           </motion.div>
         )}
 
-        <div className="flex justify-center gap-4 mb-8">
+        <div className="flex justify-center gap-4 mb-8 no-print">
           <Button
             onClick={() => navigate(createPageUrl("SmartGrader"))}
             size="lg"
@@ -379,17 +424,9 @@ export default function GradeResults() {
           >
             Grade Another Assignment
           </Button>
-          <Button
-            onClick={() => navigate(createPageUrl("Home"))}
-            size="lg"
-            className="bg-gradient-to-r from-slate-700 to-slate-900 hover:from-slate-800 hover:to-black shadow-xl"
-          >
-            <Home className="w-5 h-5 mr-2" />
-            Back to Home
-          </Button>
         </div>
 
-        {/* PDF Watermark - Only visible in PDF export */}
+        {/* PDF Footer - Only visible in PDF export */}
         <div className="mt-8 pt-6 border-t-2 border-purple-200 text-center">
           <div className="flex items-center justify-center gap-3 mb-2">
             <img 
@@ -402,14 +439,9 @@ export default function GradeResults() {
               <p className="text-xs text-slate-500">AI-Powered Learning & Grading</p>
             </div>
           </div>
-          <a 
-            href="https://studyapp.ai" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm text-purple-600 hover:text-purple-800 font-medium"
-          >
-            www.studyapp.ai
-          </a>
+          <p className="text-sm text-purple-600 font-medium">
+            www.studyappai.com
+          </p>
           <p className="text-xs text-slate-400 mt-1">
             Graded with AI • {new Date().toLocaleDateString()}
           </p>
