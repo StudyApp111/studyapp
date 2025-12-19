@@ -4,7 +4,6 @@ import CreateLesson from './pages/CreateLesson';
 import DiagnosticQuiz from './pages/DiagnosticQuiz';
 import Worksheet from './pages/Worksheet';
 import Feedback from './pages/Feedback';
-import LessonDetail from './pages/LessonDetail';
 import LessonHistory from './pages/LessonHistory';
 import Settings from './pages/Settings';
 import ProfileInformation from './pages/ProfileInformation';
@@ -29,7 +28,6 @@ export const PAGES = {
     "DiagnosticQuiz": DiagnosticQuiz,
     "Worksheet": Worksheet,
     "Feedback": Feedback,
-    "LessonDetail": LessonDetail,
     "LessonHistory": LessonHistory,
     "Settings": Settings,
     "ProfileInformation": ProfileInformation,

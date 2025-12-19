@@ -20,6 +20,7 @@ export default function DocumentViewer() {
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quiz, setQuiz] = useState(null);
+  const [exams, setExams] = useState([]);
   const [extractedContent, setExtractedContent] = useState("");
   const [studyTime, setStudyTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
@@ -108,11 +109,12 @@ export default function DocumentViewer() {
         setQuiz(quizData);
         
         if (quizData.completed) {
-          const exams = await base44.entities.Exam.filter({ 
+          const examsData = await base44.entities.Exam.filter({ 
             lesson_id: lessonId 
           });
+          setExams(examsData);
           
-          const examWithGrade = exams
+          const examWithGrade = examsData
             .filter(e => e.completed && e.predicted_grade)
             .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
           
@@ -267,7 +269,7 @@ export default function DocumentViewer() {
             </TabsContent>
 
             <TabsContent value="grade" className="mt-0">
-              <PredictedGradeTab lesson={lesson} quiz={quiz} />
+              <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
             </TabsContent>
 
             <TabsContent value="flashcards" className="mt-0">

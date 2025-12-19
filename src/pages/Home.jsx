@@ -226,7 +226,7 @@ export default function Home() {
     const SubjectIcon = getSubjectIcon(lesson.course_name);
 
     const handleClick = () => {
-      navigate(createPageUrl("LessonDetail") + `?lessonId=${lesson.id}`);
+      navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
     };
 
     return (
