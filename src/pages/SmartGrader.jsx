@@ -117,7 +117,7 @@ export default function SmartGrader() {
         : `Assignment-Specific Rubric:\n${JSON.stringify(rubric, null, 2)}`;
 
       const gradingPrompt = ` Grade this ${courseName} assignment for a ${learningProfile.grade || "N/A"} student as if you were a veteran teacher for ${courseName} 
-at ${learningProfile.school || "the school"}.
+at ${learningProfile.school || "the school"} in the year 2026.
 
 CRITICAL: You MUST read the ENTIRE assignment content below from beginning to end, including ALL sections, paragraphs, 
 and especially the CONCLUSION. Do NOT stop reading partway through. 
@@ -142,7 +142,7 @@ END OF ASSIGNMENT CONTENT - You must have read everything above including any co
 - For essays/humanities/social sciences: 
   evaluate prompt adherence, thesis/claim, textual/primary-source use, depth of analysis and counter-argument, 
   structure/organization, clarity/style, and citation integrity — strictly through the rubric’s criteria.
-- For work including a specific citation style (MLA, APA, Chicago, Turabian, IEEE) ensure the work adheres to this citation style correctly both in-text and in the references. If you do not know the norms of a citation style, check online. For the YEARS of a citation, remember that the year currently 2026. 
+- For work including a specific citation style (MLA, APA, Chicago, Turabian, IEEE) ensure the work adheres to this citation style correctly both in-text and in the references. If you do not know the norms of a citation style, check online.
 - Academic integrity: neutrally flag citation gaps or dubious references with specific evidence to review; 
   do not accuse — just note concerns.
 - Grade bands: if grade bands are specified in the rubric, follow them; 
