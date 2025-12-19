@@ -370,7 +370,7 @@ export default function GradeResults() {
           </motion.div>
         )}
 
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 mb-8">
           <Button
             onClick={() => navigate(createPageUrl("SmartGrader"))}
             size="lg"
@@ -387,6 +387,32 @@ export default function GradeResults() {
             <Home className="w-5 h-5 mr-2" />
             Back to Home
           </Button>
+        </div>
+
+        {/* PDF Watermark - Only visible in PDF export */}
+        <div className="mt-8 pt-6 border-t-2 border-purple-200 text-center">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
+              alt="StudyApp.AI Logo"
+              className="w-12 h-12 rounded-lg"
+            />
+            <div className="text-left">
+              <p className="text-lg font-bold text-purple-700">StudyApp.AI</p>
+              <p className="text-xs text-slate-500">AI-Powered Learning & Grading</p>
+            </div>
+          </div>
+          <a 
+            href="https://studyapp.ai" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm text-purple-600 hover:text-purple-800 font-medium"
+          >
+            www.studyapp.ai
+          </a>
+          <p className="text-xs text-slate-400 mt-1">
+            Graded with AI • {new Date().toLocaleDateString()}
+          </p>
         </div>
         </div>
       </div>
