@@ -120,32 +120,62 @@ export default function GradeResults() {
   const handleExportPDF = async () => {
     setIsExporting(true);
     try {
-      // Add watermark class temporarily
       const element = document.getElementById('grade-results-content');
       element.classList.add('pdf-export-mode');
       
-      const opt = {
-        margin: [0.4, 0.4, 0.4, 0.4],
-        filename: `${assignment.assignment_title}_Grade_Report.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: 1200
-        },
-        jsPDF: { 
-          unit: 'in', 
-          format: 'letter', 
-          orientation: 'portrait'
-        },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      };
+      const worker = html2pdf()
+        .set({
+          margin: [0.5, 0.5, 0.5, 0.5],
+          filename: `${assignment.assignment_title}_Grade_Report.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            windowWidth: 1000
+          },
+          jsPDF: { 
+            unit: 'in', 
+            format: 'letter', 
+            orientation: 'portrait'
+          },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        })
+        .from(element)
+        .toPdf()
+        .get('pdf')
+        .then((pdf) => {
+          const totalPages = pdf.internal.getNumberOfPages();
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+          
+          // Add watermark to each page
+          for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            pdf.setFontSize(80);
+            pdf.setTextColor(147, 51, 234, 0.08);
+            pdf.setFont(undefined, 'bold');
+            
+            // Center and rotate watermark
+            const text = 'StudyApp';
+            pdf.saveGraphicsState();
+            pdf.setGState(new pdf.GState({ opacity: 0.08 }));
+            
+            const centerX = pageWidth / 2;
+            const centerY = pageHeight / 2;
+            
+            pdf.text(text, centerX, centerY, {
+              angle: 45,
+              align: 'center',
+              baseline: 'middle'
+            });
+            
+            pdf.restoreGraphicsState();
+          }
+        });
 
-      await html2pdf().set(opt).from(element).save();
-      
-      // Remove watermark class after export
+      await worker.save();
       element.classList.remove('pdf-export-mode');
     } catch (error) {
       console.error('PDF export failed:', error);
@@ -167,29 +197,28 @@ export default function GradeResults() {
           display: none !important;
         }
         
-        .pdf-export-mode::before {
-          content: 'StudyApp';
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) rotate(-45deg);
-          font-size: 120px;
-          font-weight: 900;
-          color: rgba(147, 51, 234, 0.08);
-          z-index: 9999;
-          pointer-events: none;
-          white-space: nowrap;
-          letter-spacing: 0.1em;
+        .pdf-export-mode {
+          background: white;
+          padding: 1.5rem;
         }
         
-        .pdf-export-mode {
-          position: relative;
+        .pdf-export-mode .motion-div {
+          animation: none !important;
+          opacity: 1 !important;
+          transform: none !important;
         }
         
         #grade-results-content {
-          background: white;
-          padding: 2rem;
-          border-radius: 0;
+          line-height: 1.6;
+        }
+        
+        .pdf-export-mode h1, .pdf-export-mode h2, .pdf-export-mode h3 {
+          page-break-after: avoid;
+        }
+        
+        .pdf-export-mode .card {
+          page-break-inside: avoid;
+          margin-bottom: 1rem;
         }
       `}</style>
       
