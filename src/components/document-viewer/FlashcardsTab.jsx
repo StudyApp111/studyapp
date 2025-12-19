@@ -1,162 +1,330 @@
 import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { Sparkles, Loader2, Eye, EyeOff, Shuffle, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 export default function FlashcardsTab({ lesson, extractedContent }) {
-  const [cards] = useState([
-    { front: "What is a variable?", back: "A named storage location that can hold different values during program execution" },
-    { front: "Define algorithm", back: "A step-by-step procedure for solving a problem or performing a task" },
-    { front: "What is recursion?", back: "A programming technique where a function calls itself to solve a problem" }
-  ]);
-  
+  const [cards, setCards] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [cardStats, setCardStats] = useState({
+    new: 0,
+    learning: 0,
+    review: 0
+  });
 
-  const handleFlip = () => {
-    setIsFlipped(!isFlipped);
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    try {
+      // Generate 20 flashcards
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: `Generate 20 high-quality flashcards for this course: ${lesson.course_name}
+
+Content: ${extractedContent || lesson.description || 'General course material'}
+
+Create flashcards that:
+1. Cover key concepts, definitions, and important facts
+2. Are clear and concise
+3. Have a question/front side and detailed answer/back side
+4. Include topic tags for categorization
+5. Vary in difficulty (mark as easy/medium/hard)
+
+Return as JSON array with this structure:
+[
+  {
+    "question": "Clear, specific question",
+    "answer": "Detailed, comprehensive answer",
+    "topics": ["topic1", "topic2"],
+    "difficulty": "medium"
+  }
+]`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            flashcards: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  question: { type: "string" },
+                  answer: { type: "string" },
+                  topics: { type: "array", items: { type: "string" } },
+                  difficulty: { type: "string", enum: ["easy", "medium", "hard"] }
+                },
+                required: ["question", "answer", "topics", "difficulty"]
+              }
+            }
+          }
+        }
+      });
+
+      const generatedCards = response.flashcards || [];
+      setCards(generatedCards);
+      setCardStats({
+        new: generatedCards.length,
+        learning: 0,
+        review: 0
+      });
+    } catch (error) {
+      console.error("Error generating flashcards:", error);
+    }
+    setIsGenerating(false);
+  };
+
+  const handleReveal = () => {
     setShowAnswer(!showAnswer);
   };
 
-  const handleNext = () => {
-    setIsFlipped(false);
+  const handleRating = (rating) => {
+    // Update stats based on rating
+    const newStats = { ...cardStats };
+    if (newStats.new > 0) {
+      newStats.new--;
+      newStats.learning++;
+    }
+    setCardStats(newStats);
+
+    // Move to next card
     setShowAnswer(false);
-    setCurrentIndex((prev) => (prev + 1) % cards.length);
+    if (currentIndex < cards.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      setCurrentIndex(0);
+    }
   };
 
-  const handlePrevious = () => {
-    setIsFlipped(false);
+  const handleShuffle = () => {
+    const shuffled = [...cards].sort(() => Math.random() - 0.5);
+    setCards(shuffled);
+    setCurrentIndex(0);
     setShowAnswer(false);
-    setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length);
   };
 
-  const handleAgain = () => {
-    // Anki logic: card goes to beginning of queue
-    handleNext();
+  const handleRegenerate = () => {
+    setCards(null);
+    setCurrentIndex(0);
+    setShowAnswer(false);
+    setCardStats({ new: 0, learning: 0, review: 0 });
   };
 
-  const handleGood = () => {
-    // Anki logic: card scheduled for later review
-    handleNext();
-  };
+  // Initial state - not generated
+  if (!cards && !isGenerating) {
+    return (
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[400px] shadow-xl flex items-center justify-center p-8">
+        <div className="text-center space-y-6 max-w-2xl">
+          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto">
+            <Sparkles className="w-10 h-10 text-white" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-3">AI-Powered Flashcards</h3>
+            <p className="text-slate-600 leading-relaxed">
+              Generate intelligent flashcards using spaced repetition (Anki-style) to maximize retention and ace your exams.
+            </p>
+          </div>
+          <Button
+            onClick={handleGenerate}
+            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white px-8 py-6 text-lg"
+            size="lg"
+          >
+            <Sparkles className="w-5 h-5 mr-2" />
+            Generate Flashcards
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
-  const handleEasy = () => {
-    // Anki logic: card scheduled for much later
-    handleNext();
+  // Loading state
+  if (isGenerating) {
+    return (
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[400px] shadow-xl flex items-center justify-center p-8">
+        <div className="text-center space-y-6 max-w-2xl">
+          <Loader2 className="w-16 h-16 animate-spin text-purple-600 mx-auto" />
+          <div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-3">Creating Your Flashcards</h3>
+            <p className="text-slate-600">Generating intelligent flashcards from your course material...</p>
+          </div>
+          <div className="mt-8 p-6 bg-purple-50 rounded-xl border border-purple-200">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Sparkles className="w-5 h-5 text-yellow-500" />
+              <p className="text-sm font-semibold text-purple-900">DID YOU KNOW? • {lesson.course_name.toUpperCase()}</p>
+            </div>
+            <p className="text-slate-600 text-sm leading-relaxed">
+              Spaced repetition is proven to improve long-term retention by up to 200% compared to traditional study methods.
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  // Flashcard display
+  if (!cards || cards.length === 0) return null;
+
+  const currentCard = cards[currentIndex];
+  const progress = ((currentIndex + 1) / cards.length) * 100;
+
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case "easy": return "bg-green-100 text-green-700";
+      case "hard": return "bg-red-100 text-red-700";
+      default: return "bg-yellow-100 text-yellow-700";
+    }
   };
 
   return (
-    <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[500px] shadow-xl p-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="w-6 h-6 text-yellow-500" />
-            <h3 className="text-2xl font-bold text-slate-900">Flashcards</h3>
-          </div>
-          <p className="text-slate-600">
-            Spaced repetition learning • Card {currentIndex + 1} of {cards.length}
-          </p>
-        </div>
-
-        <div className="perspective-1000 mb-8">
-          <motion.div
-            className="relative h-80 cursor-pointer"
-            onClick={handleFlip}
-            animate={{ rotateY: isFlipped ? 180 : 0 }}
-            transition={{ duration: 0.6 }}
-            style={{ transformStyle: "preserve-3d" }}
-          >
-            {/* Front of card */}
-            <div
-              className={`absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl shadow-2xl flex items-center justify-center p-8 ${
-                isFlipped ? "invisible" : "visible"
-              }`}
-              style={{ backfaceVisibility: "hidden" }}
-            >
-              <p className="text-2xl font-medium text-white text-center">
-                {cards[currentIndex].front}
-              </p>
-            </div>
-
-            {/* Back of card */}
-            <div
-              className={`absolute inset-0 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl shadow-2xl flex items-center justify-center p-8 ${
-                !isFlipped ? "invisible" : "visible"
-              }`}
-              style={{
-                backfaceVisibility: "hidden",
-                transform: "rotateY(180deg)",
-              }}
-            >
-              <p className="text-xl text-slate-900 text-center leading-relaxed">
-                {cards[currentIndex].back}
-              </p>
-            </div>
-          </motion.div>
-        </div>
-
-        <div className="text-center text-sm text-slate-500 mb-6">
-          {!showAnswer && "Click card to reveal answer"}
-          {showAnswer && "Rate your recall to continue"}
-        </div>
-
-        {!showAnswer ? (
-          <div className="flex gap-4 justify-center">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              className="w-32"
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Previous
-            </Button>
-            <Button
-              onClick={handleFlip}
-              className="w-32 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-            >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Flip
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleNext}
-              className="w-32"
-            >
-              Next
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-4">
-            <Button
-              onClick={handleAgain}
-              variant="outline"
-              className="border-red-200 hover:bg-red-50 hover:border-red-300"
-            >
-              <span className="text-red-600 font-semibold">Again</span>
-              <span className="text-xs text-slate-500 block mt-1">1 min</span>
-            </Button>
-            <Button
-              onClick={handleGood}
-              variant="outline"
-              className="border-yellow-200 hover:bg-yellow-50 hover:border-yellow-300"
-            >
-              <span className="text-yellow-600 font-semibold">Good</span>
-              <span className="text-xs text-slate-500 block mt-1">10 min</span>
-            </Button>
-            <Button
-              onClick={handleEasy}
-              variant="outline"
-              className="border-green-200 hover:bg-green-50 hover:border-green-300"
-            >
-              <span className="text-green-600 font-semibold">Easy</span>
-              <span className="text-xs text-slate-500 block mt-1">4 days</span>
-            </Button>
-          </div>
-        )}
+    <div className="space-y-4">
+      {/* Progress header */}
+      <div className="flex items-center justify-between text-sm">
+        <span className="font-medium text-slate-700">Card {currentIndex + 1} of {cards.length}</span>
+        <span className="font-medium text-slate-700">{Math.round(progress)}%</span>
       </div>
-    </Card>
+      <Progress value={progress} className="h-2" />
+
+      {/* Card */}
+      <Card className="border-0 shadow-2xl overflow-hidden">
+        {showAnswer ? (
+          <>
+            {/* Answer view */}
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white">
+                <Eye className="w-5 h-5" />
+                <span className="font-semibold">Answer</span>
+              </div>
+              <Badge className={getDifficultyColor(currentCard.difficulty)}>
+                {currentCard.difficulty}
+              </Badge>
+            </div>
+            <div className="p-8 bg-white">
+              <p className="text-slate-900 text-lg leading-relaxed mb-6">
+                {currentCard.answer}
+              </p>
+              <button
+                onClick={handleReveal}
+                className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-2"
+              >
+                <EyeOff className="w-4 h-4" />
+                Click to hide answer
+              </button>
+            </div>
+
+            {/* Rating buttons */}
+            <div className="grid grid-cols-4 gap-0 border-t border-slate-200">
+              <button
+                onClick={() => handleRating('again')}
+                className="p-6 hover:bg-red-50 transition-colors border-r border-slate-200 group"
+              >
+                <div className="text-center">
+                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-red-200">
+                    <span className="text-red-600 text-lg">↻</span>
+                  </div>
+                  <div className="font-semibold text-slate-900">Again</div>
+                  <div className="text-xs text-slate-500">&lt;1 day</div>
+                </div>
+              </button>
+              <button
+                onClick={() => handleRating('hard')}
+                className="p-6 hover:bg-orange-50 transition-colors border-r border-slate-200 group"
+              >
+                <div className="text-center">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-orange-200">
+                    <span className="text-orange-600 text-lg">⟲</span>
+                  </div>
+                  <div className="font-semibold text-slate-900">Hard</div>
+                  <div className="text-xs text-slate-500">1 day</div>
+                </div>
+              </button>
+              <button
+                onClick={() => handleRating('good')}
+                className="p-6 hover:bg-blue-50 transition-colors border-r border-slate-200 group"
+              >
+                <div className="text-center">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-blue-200">
+                    <span className="text-blue-600 text-lg">✓</span>
+                  </div>
+                  <div className="font-semibold text-slate-900">Good</div>
+                  <div className="text-xs text-slate-500">3 days</div>
+                </div>
+              </button>
+              <button
+                onClick={() => handleRating('easy')}
+                className="p-6 hover:bg-emerald-50 transition-colors group"
+              >
+                <div className="text-center">
+                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-emerald-200">
+                    <span className="text-emerald-600 text-lg">⚡</span>
+                  </div>
+                  <div className="font-semibold text-slate-900">Easy</div>
+                  <div className="text-xs text-slate-500">4 days</div>
+                </div>
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Question view */}
+            <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-white">
+                <Sparkles className="w-5 h-5" />
+                <span className="font-semibold">Question</span>
+              </div>
+              <div className="flex gap-2">
+                {currentCard.topics.slice(0, 2).map((topic, i) => (
+                  <Badge key={i} className="bg-purple-400 text-white border-0">
+                    {topic}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <div className="p-8 bg-white min-h-[300px] flex flex-col items-center justify-center">
+              <p className="text-slate-900 text-xl leading-relaxed text-center mb-8">
+                {currentCard.question}
+              </p>
+              <button
+                onClick={handleReveal}
+                className="text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                Click to reveal answer
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Stats footer */}
+        <div className="border-t border-slate-200 p-4 bg-slate-50">
+          <div className="flex items-center justify-between">
+            <div className="flex gap-6">
+              <div>
+                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">New</Badge>
+                <span className="ml-2 font-bold text-slate-900">{cardStats.new}</span>
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Learning</Badge>
+                <span className="ml-2 font-bold text-slate-900">{cardStats.learning}</span>
+              </div>
+              <div>
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Review</Badge>
+                <span className="ml-2 font-bold text-slate-900">{cardStats.review}</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleShuffle}>
+                <Shuffle className="w-4 h-4 mr-2" />
+                Shuffle
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleRegenerate}>
+                <Plus className="w-4 h-4 mr-2" />
+                Regenerate
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
   );
 }
