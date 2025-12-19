@@ -14,6 +14,7 @@ import ExamTab from "@/components/document-viewer/ExamTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
+import AITutorChat from "@/components/document-viewer/AITutorChat";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -319,6 +320,11 @@ export default function DocumentViewer() {
           onBreakComplete={() => {}} 
         />
       )}
-    </div>
-  );
-}
+
+      <AITutorChat 
+        lesson={lesson} 
+        extractedContent={extractedContent}
+      />
+      </div>
+      );
+      }
