@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import pdf from 'npm:pdf-parse@1.1.1';
 
 Deno.serve(async (req) => {
     console.log('=== extractDocumentContent Function Start ===');
@@ -97,6 +98,33 @@ Deno.serve(async (req) => {
         }
 
         console.log('✅ File type detected:', isImage ? 'IMAGE' : 'DOCUMENT');
+
+        // For PDFs, try direct text extraction first (much faster)
+        if (fileExt === 'pdf') {
+            try {
+                console.log('⏳ Attempting direct PDF text extraction...');
+                const arrayBuffer = await fileBlob.arrayBuffer();
+                const pdfData = await pdf(new Uint8Array(arrayBuffer));
+                const extractedText = pdfData.text?.trim();
+                
+                // If we got substantial text (more than 100 chars), use it
+                if (extractedText && extractedText.length > 100) {
+                    console.log('✅ Direct PDF extraction successful, length:', extractedText.length);
+                    console.log('=== extractDocumentContent Function Complete (Direct PDF) ===');
+                    return Response.json({ 
+                        extracted_content: extractedText,
+                        characters: extractedText.length,
+                        file_size: fileSize,
+                        file_type: 'PDF',
+                        method: 'direct_pdf_parse'
+                    });
+                } else {
+                    console.log('⚠️ Direct PDF extraction returned minimal text, falling back to OCR');
+                }
+            } catch (pdfError) {
+                console.log('⚠️ Direct PDF extraction failed, falling back to OCR:', pdfError.message);
+            }
+        }
 
         const prompt = `Extract the COMPLETE, FULL, VERBATIM text from this document. 
 
@@ -217,7 +245,7 @@ Your output should be the full document text, word-for-word, as if you copied an
             characters: extractedContent.length,
             file_size: fileSize,
             file_type: isImage ? 'IMAGE' : 'DOCUMENT',
-            method: 'mistral_pixtral_large'
+            method: 'mistral_pixtral_ocr'
         });
 
     } catch (error) {
