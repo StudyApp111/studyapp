@@ -54,7 +54,7 @@ export default function DiagnosticQuiz() {
         setQuiz(loadedQuiz);
 
         if (loadedQuiz.completed) {
-          navigate(createPageUrl("Worksheet") + `?lessonId=${lessonId}`);
+          navigate(createPageUrl("DocumentViewer") + `?lessonId=${lessonId}&tab=exam`);
           return;
         } else {
           setUserAnswers(loadedQuiz.user_answers || new Array(loadedQuiz.questions.length).fill(null));
@@ -263,7 +263,7 @@ Provide your response as a single, valid JSON object with the following structur
 
       setShowConfetti(true);
       setTimeout(() => {
-        navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
+        navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}&tab=exam`);
       }, 3500);
     } catch (error) {
       console.error("Error submitting quiz:", error);

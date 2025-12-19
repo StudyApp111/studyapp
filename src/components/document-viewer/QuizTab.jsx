@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import QuizQuestion from "@/components/quiz/QuizQuestion";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
@@ -257,13 +257,18 @@ e. Targeted Misconception: If this question tests a known common misconception, 
       <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[400px] shadow-xl flex items-center justify-center p-8">
         <div className="text-center space-y-4">
           <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-yellow-500 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-3xl font-bold text-white">{Math.round(localQuiz.score)}%</span>
+            <CheckCircle className="w-10 h-10 text-white" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-slate-900">Quiz Completed!</h3>
-            <p className="text-slate-600 mt-2">You scored {Math.round(localQuiz.score)}%</p>
-            <p className="text-sm text-slate-500 mt-1">Move to the Exam tab to continue</p>
+            <p className="text-slate-600 mt-2">Move to the Exam tab to start your practice</p>
           </div>
+          <Button
+            onClick={() => window.dispatchEvent(new Event('switchToExamTab'))}
+            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+          >
+            Go to Exams
+          </Button>
         </div>
       </Card>
     );
