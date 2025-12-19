@@ -11,10 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import BadgeDisplay from "@/components/gamification/BadgeDisplay";
+import CreateLessonModal from "@/components/modals/CreateLessonModal";
 
 export default function Home() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [createLessonModalOpen, setCreateLessonModalOpen] = useState(false);
 
   useEffect(() => {
     const checkOnboarding = async () => {
@@ -373,7 +375,7 @@ export default function Home() {
             <div className="space-y-6">
               <div className="text-center">
                 <Button
-                  onClick={() => navigate(createPageUrl("CreateLesson"))}
+                  onClick={() => setCreateLessonModalOpen(true)}
                   className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold mb-3 text-base px-8 py-6"
                   size="lg"
                 >
@@ -422,9 +424,11 @@ export default function Home() {
         </div>
       )}
 
-
-
-
-    </div>
-  );
+{/* Create Lesson Modal */}
+<CreateLessonModal 
+  open={createLessonModalOpen} 
+  onOpenChange={setCreateLessonModalOpen} 
+/>
+</div>
+);
 }

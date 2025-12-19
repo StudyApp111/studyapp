@@ -21,6 +21,7 @@ import { base44 } from "@/api/base44Client";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
+import CreateLessonModal from "@/components/modals/CreateLessonModal";
 
 const navigationItems = [
         {
@@ -68,6 +69,7 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
+  const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -174,7 +176,7 @@ export default function Layout({ children, currentPageName }) {
               {/* Start Now Button - Above Navigation */}
               <div className="mb-4 px-2">
                 <Button
-                  onClick={() => navigate(createPageUrl("CreateLesson"))}
+                  onClick={() => setCreateLessonModalOpen(true)}
                   className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold shadow-lg shadow-yellow-500/30"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -374,9 +376,9 @@ export default function Layout({ children, currentPageName }) {
 
                 {/* Sleek Elevated CTA Button */}
                 <button
-                                                              onClick={() => navigate(createPageUrl("CreateLesson"))}
-                                                              className="absolute left-1/2 -translate-x-1/2 -top-6 group"
-                                                            >
+                  onClick={() => setCreateLessonModalOpen(true)}
+                  className="absolute left-1/2 -translate-x-1/2 -top-6 group"
+                >
                   <div className="relative">
                     {/* Subtle glow */}
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
@@ -394,7 +396,13 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Global Feedback Button - Always visible on authenticated pages */}
         {showNavigation && !isOnboardingPage && <FeedbackButton />}
-      </div>
-    </SidebarProvider>
-  );
-}
+
+        {/* Create Lesson Modal */}
+        <CreateLessonModal 
+          open={createLessonModalOpen} 
+          onOpenChange={setCreateLessonModalOpen} 
+        />
+        </div>
+        </SidebarProvider>
+        );
+        }
