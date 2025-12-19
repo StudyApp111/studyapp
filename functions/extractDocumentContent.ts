@@ -98,7 +98,18 @@ Deno.serve(async (req) => {
 
         console.log('✅ File type detected:', isImage ? 'IMAGE' : 'DOCUMENT');
 
-        const prompt = `Extract ALL educational content from this document. Include every detail - text, questions, rubrics, criteria, and instructions. Be extremely thorough and preserve all information verbatim.`;
+        const prompt = `Extract the COMPLETE, FULL, VERBATIM text from this document. 
+
+CRITICAL INSTRUCTIONS:
+- Do NOT summarize, condense, or paraphrase ANY content
+- Do NOT create bullet points or restructured formats
+- Extract EVERY SINGLE WORD, SENTENCE, and PARAGRAPH exactly as written
+- Preserve ALL tables, data, numbers, and formatting
+- Include ALL sections from start to finish
+- If there are 20 pages, extract all 20 pages worth of text
+- Return the complete original text in its entirety
+
+Your output should be the full document text, word-for-word, as if you copied and pasted the entire document.`;
 
         // Use document_url for documents (PDF, PPTX, DOCX) and image_url for images
         const contentItem = isDocument ? {
