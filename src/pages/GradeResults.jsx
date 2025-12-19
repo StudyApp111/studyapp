@@ -5,15 +5,17 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Award, TrendingUp, CheckCircle, Target, Home, TrendingDown, AlertTriangle, BookOpen, FileText, AlertCircle } from "lucide-react";
+import { Loader2, Award, TrendingUp, CheckCircle, Target, Home, TrendingDown, AlertTriangle, BookOpen, FileText, AlertCircle, Download } from "lucide-react";
 import { motion } from "framer-motion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import MathText from "../components/math/MathText";
+import html2pdf from "html2pdf.js";
 
 export default function GradeResults() {
   const navigate = useNavigate();
   const [assignment, setAssignment] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -115,9 +117,60 @@ export default function GradeResults() {
     return '🎯';
   };
 
+  const handleExportPDF = async () => {
+    setIsExporting(true);
+    try {
+      const element = document.getElementById('grade-results-content');
+      
+      const opt = {
+        margin: 0.5,
+        filename: `${assignment.assignment_title}_Grade_Report.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#f9fafb'
+        },
+        jsPDF: { 
+          unit: 'in', 
+          format: 'letter', 
+          orientation: 'portrait'
+        }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      console.error('PDF export failed:', error);
+    }
+    setIsExporting(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10">
       <div className="max-w-6xl mx-auto">
+        <div className="flex justify-end mb-4">
+          <Button
+            onClick={handleExportPDF}
+            disabled={isExporting}
+            variant="outline"
+            className="shadow-lg gap-2"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Export as PDF
+              </>
+            )}
+          </Button>
+        </div>
+
+        <div id="grade-results-content">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -334,6 +387,7 @@ export default function GradeResults() {
             <Home className="w-5 h-5 mr-2" />
             Back to Home
           </Button>
+        </div>
         </div>
       </div>
     </div>
