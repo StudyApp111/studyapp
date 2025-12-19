@@ -203,19 +203,16 @@ export default function DocumentViewer() {
             <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3 overflow-hidden">
               <div className="flex-1 min-w-0 bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl shadow-lg">
                 <div className="flex items-center justify-between gap-2 md:gap-4">
-                  <div className="flex items-center gap-2 md:gap-3 min-w-0">
-                    <span className="text-xs sm:text-sm md:text-base font-bold truncate">{lesson?.course_name}</span>
-                    <div className="w-px h-4 md:h-6 bg-white/30 hidden sm:block" />
-                    <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                      <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90">Grade:</span>
-                      {quiz?.predicted_grade ? (
-                        <span className="text-base sm:text-lg md:text-2xl font-bold">{quiz.predicted_grade}</span>
-                      ) : quiz?.completed ? (
-                        <span className="text-[10px] sm:text-xs md:text-sm font-semibold">Start</span>
-                      ) : (
-                        <span className="text-[10px] sm:text-xs md:text-sm opacity-70">Locked</span>
-                      )}
-                    </div>
+                  <span className="text-xs sm:text-sm md:text-base font-bold truncate">{lesson?.course_name}</span>
+                  <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                    <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90">Predicted Grade:</span>
+                    {quiz?.predicted_grade ? (
+                      <span className="text-base sm:text-lg md:text-2xl font-bold">{quiz.predicted_grade}</span>
+                    ) : quiz?.completed ? (
+                      <span className="text-[10px] sm:text-xs md:text-sm font-semibold">Complete Exam</span>
+                    ) : (
+                      <span className="text-[10px] sm:text-xs md:text-sm opacity-70">Locked</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -232,9 +229,16 @@ export default function DocumentViewer() {
                   className="h-6 w-6 md:h-7 md:w-7 p-0 hover:bg-purple-50"
                 >
                   {isTimerRunning ? (
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-purple-600 rounded-sm" />
+                    <div className="flex items-center justify-center w-full h-full">
+                      <div className="flex gap-0.5">
+                        <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
+                        <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
+                      </div>
+                    </div>
                   ) : (
-                    <div className="w-0 h-0 border-l-[5px] md:border-l-[6px] border-l-purple-600 border-t-[3px] md:border-t-[4px] border-t-transparent border-b-[3px] md:border-b-[4px] border-b-transparent ml-0.5" />
+                    <div className="flex items-center justify-center w-full h-full">
+                      <div className="w-0 h-0 border-l-[6px] border-l-purple-600 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-0.5" />
+                    </div>
                   )}
                 </Button>
               </div>

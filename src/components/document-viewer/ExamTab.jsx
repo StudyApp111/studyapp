@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Lock, Loader2, Clock, Sparkles } from "lucide-react";
+import { Lock, Loader2, Clock, Sparkles, Play, Pause } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "@/components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
@@ -640,13 +640,36 @@ Provide predicted grade, analysis, strengths, improvements, and learning pattern
 
   if (isGenerating) {
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[400px] shadow-xl flex items-center justify-center p-8">
-        <EducationalLoader
-          title="Generating Exam 1"
-          description="Creating personalized exam questions based on your diagnostic results..."
-          grade={lesson?.course_name}
-        />
-      </Card>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-6 max-w-2xl mx-auto">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 mx-auto"
+          >
+            <Loader2 className="w-16 h-16 text-purple-600" />
+          </motion.div>
+          
+          <div>
+            <h3 className="text-2xl font-bold text-slate-900 mb-2">Creating Your Exam</h3>
+            <p className="text-slate-600">
+              Generating personalized exam questions based on your diagnostic results...
+            </p>
+          </div>
+
+          <Card className="bg-gradient-to-r from-purple-50 to-yellow-50 border-purple-200 p-6">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">⭐</span>
+              <div className="text-left">
+                <p className="font-semibold text-purple-900 mb-1">DID YOU KNOW? • {lesson?.course_name}</p>
+                <p className="text-sm text-slate-700">
+                  Practice testing is one of the most effective learning strategies, improving retention by up to 50% compared to passive review.
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
     );
   }
 
