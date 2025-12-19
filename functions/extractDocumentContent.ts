@@ -43,7 +43,6 @@ Deno.serve(async (req) => {
         }
         console.log('✅ File URL received:', file_url);
 
-        // Check API key
         const apiKey = Deno.env.get("MistralDocumentAIKey");
         if (!apiKey) {
             console.error('❌ CRITICAL: MistralDocumentAIKey not found in environment');
@@ -70,10 +69,10 @@ Deno.serve(async (req) => {
         const fileSize = fileBlob.size;
         console.log('📊 File size:', fileSize, 'bytes');
 
-        if (fileSize > 5 * 1024 * 1024) {
+        if (fileSize > 10 * 1024 * 1024) {
             console.error('❌ File too large:', fileSize);
             return Response.json({ 
-                error: 'File too large. Please upload files smaller than 5MB.' 
+                error: 'File too large. Please upload files smaller than 10MB.' 
             }, { status: 400 });
         }
 
@@ -83,17 +82,33 @@ Deno.serve(async (req) => {
         const fileExt = fileName.split('.').pop();
         console.log('📄 File type:', fileExt, 'Content-Type:', contentType);
 
+        // Try direct text extraction first for .txt files
+        if (fileExt === 'txt') {
+            console.log('📝 TXT file detected - direct extraction');
+            const text = await fileBlob.text();
+            if (text && text.trim().length > 0) {
+                console.log('✅ Text extracted directly, length:', text.length);
+                return Response.json({ 
+                    extracted_content: text.trim(),
+                    characters: text.trim().length,
+                    file_size: fileSize,
+                    file_type: 'TEXT',
+                    method: 'direct_text_extraction'
+                });
+            }
+        }
+
         const imageFormats = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff', 'heif', 'avif', 'mpo'];
         const documentFormats = ['pdf', 'pptx', 'docx', 'doc', 'ppt'];
         
         const isImage = imageFormats.includes(fileExt);
         const isDocument = documentFormats.includes(fileExt);
 
-        if (!isImage && !isDocument) {
+        if (!isImage && !isDocument && fileExt !== 'txt') {
             console.error('❌ Unsupported file format:', fileExt);
             return Response.json({ 
                 error: 'Unsupported file format',
-                details: `File type .${fileExt} is not supported. Supported formats: ${[...imageFormats, ...documentFormats].join(', ')}`
+                details: `File type .${fileExt} is not supported. Supported formats: ${[...imageFormats, ...documentFormats, 'txt'].join(', ')}`
             }, { status: 400 });
         }
 
@@ -107,8 +122,7 @@ Deno.serve(async (req) => {
                 const pdfData = await pdf(new Uint8Array(arrayBuffer));
                 const extractedText = pdfData.text?.trim();
                 
-                // If we got substantial text (more than 100 chars), use it
-                if (extractedText && extractedText.length > 100) {
+                if (extractedText && extractedText.length > 50) {
                     console.log('✅ Direct PDF extraction successful, length:', extractedText.length);
                     console.log('=== extractDocumentContent Function Complete (Direct PDF) ===');
                     return Response.json({ 
@@ -116,7 +130,8 @@ Deno.serve(async (req) => {
                         characters: extractedText.length,
                         file_size: fileSize,
                         file_type: 'PDF',
-                        method: 'direct_pdf_parse'
+                        method: 'direct_pdf_parse',
+                        pages: pdfData.numpages
                     });
                 } else {
                     console.log('⚠️ Direct PDF extraction returned minimal text, falling back to OCR');
@@ -126,18 +141,33 @@ Deno.serve(async (req) => {
             }
         }
 
-        const prompt = `Extract the COMPLETE, FULL, VERBATIM text from this document. 
+        // For DOCX, try mammoth extraction
+        if (fileExt === 'docx') {
+            console.log('📝 DOCX file detected - attempting direct text extraction');
+            try {
+                const mammoth = await import('npm:mammoth@1.6.0');
+                const arrayBuffer = await fileBlob.arrayBuffer();
+                const buffer = new Uint8Array(arrayBuffer);
+                const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+                
+                if (result.value && result.value.trim().length > 50) {
+                    console.log('✅ DOCX text extracted directly, length:', result.value.length);
+                    return Response.json({ 
+                        extracted_content: result.value.trim(),
+                        characters: result.value.trim().length,
+                        file_size: fileSize,
+                        file_type: 'DOCX',
+                        method: 'direct_docx_extraction'
+                    });
+                } else {
+                    console.log('⚠️ DOCX text extraction yielded minimal content, falling back to OCR');
+                }
+            } catch (docxError) {
+                console.log('⚠️ Direct DOCX extraction failed, falling back to OCR:', docxError.message);
+            }
+        }
 
-CRITICAL INSTRUCTIONS:
-- Do NOT summarize, condense, or paraphrase ANY content
-- Do NOT create bullet points or restructured formats
-- Extract EVERY SINGLE WORD, SENTENCE, and PARAGRAPH exactly as written
-- Preserve ALL tables, data, numbers, and formatting
-- Include ALL sections from start to finish
-- If there are 20 pages, extract all 20 pages worth of text
-- Return the complete original text in its entirety
-
-Your output should be the full document text, word-for-word, as if you copied and pasted the entire document.`;
+        const prompt = `Extract ALL educational content from this document. Include every detail - text, questions, rubrics, criteria, and instructions. Be extremely thorough and preserve all information verbatim.`;
 
         // Use document_url for documents (PDF, PPTX, DOCX) and image_url for images
         const contentItem = isDocument ? {
