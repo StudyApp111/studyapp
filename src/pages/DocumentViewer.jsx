@@ -5,9 +5,13 @@ import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Brain, TrendingUp, Trophy, ChevronLeft, Loader2, MessageCircle, Clock, BookMarked } from "lucide-react";
+import { FileText, Brain, TrendingUp, Trophy, ChevronLeft, Loader2, Clock, BookMarked } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
+import QuizTab from "@/components/document-viewer/QuizTab";
+import ExamTab from "@/components/document-viewer/ExamTab";
+import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
+import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -30,14 +34,18 @@ export default function DocumentViewer() {
   }, []);
 
   useEffect(() => {
-    const handleSwitchToGrade = () => {
-      setActiveTab('grade');
-    };
+    const handleSwitchToGrade = () => setActiveTab('grade');
+    const handleSwitchToExam = () => setActiveTab('exam');
+    const handleSwitchToQuiz = () => setActiveTab('quiz');
     
     window.addEventListener('switchToGradeTab', handleSwitchToGrade);
+    window.addEventListener('switchToExamTab', handleSwitchToExam);
+    window.addEventListener('switchToQuizTab', handleSwitchToQuiz);
     
     return () => {
       window.removeEventListener('switchToGradeTab', handleSwitchToGrade);
+      window.removeEventListener('switchToExamTab', handleSwitchToExam);
+      window.removeEventListener('switchToQuizTab', handleSwitchToQuiz);
     };
   }, []);
 
@@ -100,16 +108,16 @@ export default function DocumentViewer() {
         setQuiz(quizData);
         
         if (quizData.completed) {
-          const worksheets = await base44.entities.Worksheet.filter({ 
+          const exams = await base44.entities.Exam.filter({ 
             lesson_id: lessonId 
           });
           
-          const worksheetWithGrade = worksheets
-            .filter(w => w.completed && w.predicted_grade)
+          const examWithGrade = exams
+            .filter(e => e.completed && e.predicted_grade)
             .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
           
-          if (worksheetWithGrade) {
-            setQuiz({ ...quizData, predicted_grade: worksheetWithGrade.predicted_grade });
+          if (examWithGrade) {
+            setQuiz({ ...quizData, predicted_grade: examWithGrade.predicted_grade });
           }
         }
       }
@@ -206,13 +214,41 @@ export default function DocumentViewer() {
       <div className="container mx-auto px-2 sm:px-4 py-4 md:py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
           <div className="overflow-x-auto -mx-2 px-2">
-            <TabsList className="w-full min-w-max bg-white border border-purple-200 p-1">
+            <TabsList className="w-full min-w-max bg-white border border-purple-200 p-1 grid grid-cols-5 gap-1">
               <TabsTrigger 
                 value="doc"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
               >
                 <FileText className="w-4 h-4" />
-                <span>Document</span>
+                <span>Doc</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="quiz"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              >
+                <Brain className="w-4 h-4" />
+                <span>Quiz</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="exam"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              >
+                <FileText className="w-4 h-4" />
+                <span>Exam</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="grade"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              >
+                <Trophy className="w-4 h-4" />
+                <span>Grade</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="flashcards"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+              >
+                <BookMarked className="w-4 h-4" />
+                <span>Cards</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -220,6 +256,22 @@ export default function DocumentViewer() {
           <div className="space-y-4 md:space-y-6">
             <TabsContent value="doc" className="mt-0">
               <DocumentViewerTabs lesson={lesson} />
+            </TabsContent>
+
+            <TabsContent value="quiz" className="mt-0">
+              <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
+            </TabsContent>
+
+            <TabsContent value="exam" className="mt-0">
+              <ExamTab lesson={lesson} quiz={quiz} />
+            </TabsContent>
+
+            <TabsContent value="grade" className="mt-0">
+              <PredictedGradeTab lesson={lesson} quiz={quiz} />
+            </TabsContent>
+
+            <TabsContent value="flashcards" className="mt-0">
+              <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
             </TabsContent>
           </div>
         </Tabs>
