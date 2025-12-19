@@ -109,12 +109,15 @@ export default function DocumentViewer() {
         setQuiz(quizData);
         
         if (quizData.completed) {
-          const examsData = await base44.entities.Exam.filter({ 
-            lesson_id: lessonId 
-          });
-          setExams(examsData);
+          // Check both Exam entity and legacy Worksheet entity
+          const [examsData, worksheetsData] = await Promise.all([
+            base44.entities.Exam.filter({ lesson_id: lessonId }),
+            base44.entities.Worksheet.filter({ lesson_id: lessonId })
+          ]);
           
-          const examWithGrade = examsData
+          setExams([...examsData, ...worksheetsData]);
+          
+          const examWithGrade = [...examsData, ...worksheetsData]
             .filter(e => e.completed && e.predicted_grade)
             .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
           

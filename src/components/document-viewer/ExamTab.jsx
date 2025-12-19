@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
@@ -7,13 +8,28 @@ import { Lock } from "lucide-react";
 
 export default function ExamTab({ lesson, quiz }) {
   const navigate = useNavigate();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    // Auto-redirect to Exam 1 when quiz is completed
-    if (quiz && quiz.completed && lesson) {
-      navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}`);
+    // Auto-redirect to Exam 1 when quiz is completed (only once)
+    if (quiz && quiz.completed && lesson && !hasRedirected) {
+      setHasRedirected(true);
+      
+      // Check if Exam 1 exists
+      base44.entities.Exam.filter({ 
+        lesson_id: lesson.id,
+        exam_number: 1
+      }).then(exams => {
+        if (exams.length > 0 && !exams[0].completed) {
+          // If exam exists but not completed, redirect to it
+          navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}&worksheet=1`);
+        } else if (exams.length === 0) {
+          // If no exam exists, create placeholder and redirect
+          navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}&worksheet=1`);
+        }
+      });
     }
-  }, [quiz, lesson, navigate]);
+  }, [quiz?.completed, lesson?.id, hasRedirected, navigate]);
 
   if (!quiz || !quiz.completed) {
     return (
