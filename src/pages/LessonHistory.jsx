@@ -58,7 +58,7 @@ export default function LessonHistory() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        onClick={() => navigate(createPageUrl("LessonDetail") + `?lessonId=${lesson.id}`)}
+        onClick={() => navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`)}
         className="cursor-pointer"
       >
         <Card className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
