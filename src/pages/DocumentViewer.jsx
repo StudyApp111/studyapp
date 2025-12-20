@@ -192,7 +192,7 @@ export default function DocumentViewer() {
       <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10">
         <div className="w-full px-2 py-2">
           <div className="flex flex-col gap-2">
-            {/* Back Button + Course Name Row */}
+            {/* Back Button + Course Name + Grade Row */}
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -203,25 +203,24 @@ export default function DocumentViewer() {
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <div className="flex-1 min-w-0 bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-3 py-2 rounded-lg shadow-lg">
-                <span className="text-xs font-bold truncate block">{lesson?.course_name}</span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold truncate">{lesson?.course_name}</span>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <span className="text-[9px] font-medium opacity-90">Grade:</span>
+                    {quiz?.predicted_grade ? (
+                      <span className="text-sm font-bold">{quiz.predicted_grade}</span>
+                    ) : quiz?.completed ? (
+                      <span className="text-[9px] font-semibold">Exam</span>
+                    ) : (
+                      <span className="text-[9px] opacity-70">-</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Grade + Timer Row */}
+            {/* Timer Row */}
             <div className="flex items-center gap-2">
-              <div className="flex-1 bg-purple-50 rounded-lg px-3 py-1.5 border border-purple-200">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-medium text-purple-700">Grade:</span>
-                  {quiz?.predicted_grade ? (
-                    <span className="text-sm font-bold text-purple-900">{quiz.predicted_grade}</span>
-                  ) : quiz?.completed ? (
-                    <span className="text-[10px] font-semibold text-purple-700">Complete Exam</span>
-                  ) : (
-                    <span className="text-[10px] text-purple-600">Locked</span>
-                  )}
-                </div>
-              </div>
-
               <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 shadow-sm border border-purple-200">
                 <Clock className="w-3 h-3 text-purple-600" />
                 <span className="text-xs font-mono font-semibold text-slate-900 min-w-[40px]">
@@ -250,39 +249,39 @@ export default function DocumentViewer() {
 
       <div className="w-full px-2 py-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
-          <div className="w-full overflow-x-hidden">
-            <TabsList className="w-full bg-white border border-purple-200 p-1 grid grid-cols-5 gap-1">
+          <div className="w-full">
+            <TabsList className="w-full bg-white border border-purple-200 p-1 grid grid-cols-5 gap-1 h-auto">
               <TabsTrigger 
                 value="doc"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 py-2 text-xs h-auto"
               >
                 <FileText className="w-4 h-4" />
                 <span className="text-[10px]">Doc</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="quiz"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 py-2 text-xs h-auto"
               >
                 <Brain className="w-4 h-4" />
                 <span className="text-[10px]">Quiz</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="exam"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 py-2 text-xs h-auto"
               >
                 <FileText className="w-4 h-4" />
                 <span className="text-[10px]">Exam</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="grade"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 py-2 text-xs h-auto"
               >
                 <Trophy className="w-4 h-4" />
                 <span className="text-[10px]">Grade</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="flashcards"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 py-2 text-xs h-auto"
               >
                 <BookMarked className="w-4 h-4" />
                 <span className="text-[10px]">Cards</span>
