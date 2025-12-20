@@ -22,7 +22,7 @@ import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
-import AITutorModal from "@/components/modals/AITutorModal";
+import AITutorModal from "@/components/modals/AITutorModal.jsx";
 
 const navigationItems = [
         {
