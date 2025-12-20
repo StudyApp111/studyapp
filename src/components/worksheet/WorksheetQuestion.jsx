@@ -21,25 +21,26 @@ export default function WorksheetQuestion({ question, answer, onAnswer }) {
         <RadioGroup value={answer} onValueChange={handleAnswerChange} className="space-y-3">
           {question.options.map((option, index) => {
             const optionLetter = String.fromCharCode(65 + index);
+            const optionText = typeof option === 'string' ? option : option?.text || JSON.stringify(option);
             return (
               <label
                 key={index}
                 htmlFor={`option-${index}`}
                 className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all cursor-pointer touch-manipulation active:scale-[0.99] ${
-                  answer === option
+                  answer === optionText
                     ? "border-purple-500 bg-purple-50"
                     : "border-slate-200 hover:border-purple-300 bg-white"
                 }`}
                 onClick={(e) => {
                   e.preventDefault();
-                  handleAnswerChange(option);
+                  handleAnswerChange(optionText);
                 }}
               >
-                <RadioGroupItem value={option} id={`option-${index}`} className="mt-1 pointer-events-none" />
+                <RadioGroupItem value={optionText} id={`option-${index}`} className="mt-1 pointer-events-none" />
                 <div className="flex-1 pointer-events-none">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-700">{optionLetter}.</span>
-                    <MathText inline className="text-slate-700">{option}</MathText>
+                    <MathText inline className="text-slate-700">{optionText}</MathText>
                   </div>
                 </div>
               </label>
