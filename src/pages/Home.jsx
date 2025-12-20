@@ -319,8 +319,8 @@ export default function Home() {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-2xl -ml-24 -mb-24" />
           
           <div className="relative text-center">
-            <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">
-              Welcome back, {user.full_name?.split(' ')[0] || 'Learner'}! 👋
+            <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 whitespace-nowrap">
+              Welcome {user.full_name?.split(' ')[0] || 'Learner'}!
             </h1>
             <p className="text-white/90 text-sm md:text-lg max-w-2xl mx-auto">
               {learningProfile?.grade && learningProfile?.school && learningProfile?.city ? (

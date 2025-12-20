@@ -398,7 +398,7 @@ export default function Layout({ children, currentPageName }) {
 
                 {/* AI Tutor CTA Button */}
                 <button
-                  onClick={() => setAiTutorModalOpen(true)}
+                  onClick={() => navigate(createPageUrl("Home"))}
                   className="absolute left-1/2 -translate-x-1/2 -top-4 group"
                 >
                   <div className="relative">
@@ -419,7 +419,7 @@ export default function Layout({ children, currentPageName }) {
         {/* Desktop AI Tutor CTA - Hidden on mobile, positioned in bottom right */}
         {showNavigation && !isOnboardingPage && (
           <button
-            onClick={() => setAiTutorModalOpen(true)}
+            onClick={() => navigate(createPageUrl("Home"))}
             className="hidden md:flex fixed bottom-6 right-6 z-40 group"
           >
             <div className="relative">
