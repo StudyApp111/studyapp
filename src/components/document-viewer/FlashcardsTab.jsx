@@ -182,26 +182,7 @@ Create flashcards that:
 
   // Loading state
   if (isGenerating) {
-    return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[400px] shadow-xl flex items-center justify-center p-8">
-        <div className="text-center space-y-6 max-w-2xl">
-          <Loader2 className="w-16 h-16 animate-spin text-purple-600 mx-auto" />
-          <div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-3">Creating Your Flashcards</h3>
-            <p className="text-slate-600">Generating intelligent flashcards from your course material...</p>
-          </div>
-          <div className="mt-8 p-6 bg-purple-50 rounded-xl border border-purple-200">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5 text-yellow-500" />
-              <p className="text-sm font-semibold text-purple-900">DID YOU KNOW? • {lesson.course_name.toUpperCase()}</p>
-            </div>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Spaced repetition is proven to improve long-term retention by up to 200% compared to traditional study methods.
-            </p>
-          </div>
-        </div>
-      </Card>
-    );
+    return null; // Will use EducationalLoader from parent
   }
 
   // Flashcard display
@@ -231,27 +212,33 @@ Create flashcards that:
       <Card className="border-0 shadow-2xl overflow-hidden">
         {showAnswer ? (
           <>
-            {/* Answer view */}
-            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white">
-                <Eye className="w-5 h-5" />
-                <span className="font-semibold">Answer</span>
+            {/* Answer view with flip animation */}
+            <div className="relative" style={{ perspective: '1000px' }}>
+              <div className={`transition-all duration-500 transform-style-3d ${showAnswer ? '' : 'rotate-y-180'}`}>
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 flex items-center justify-between rounded-t-lg">
+                  <div className="flex items-center gap-2 text-white">
+                    <Eye className="w-5 h-5" />
+                    <span className="font-semibold">Answer</span>
+                  </div>
+                  <Badge className={`${getDifficultyColor(currentCard.difficulty)} font-semibold`}>
+                    {currentCard.difficulty}
+                  </Badge>
+                </div>
+                <div className="p-12 bg-white rounded-b-lg">
+                  <p className="text-slate-900 text-lg leading-relaxed mb-8 text-center">
+                    {currentCard.answer}
+                  </p>
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleReveal}
+                      className="text-emerald-600 hover:text-emerald-700 font-semibold text-lg flex items-center gap-2 transition-all hover:scale-105"
+                    >
+                      <EyeOff className="w-5 h-5" />
+                      Click to hide answer
+                    </button>
+                  </div>
+                </div>
               </div>
-              <Badge className={getDifficultyColor(currentCard.difficulty)}>
-                {currentCard.difficulty}
-              </Badge>
-            </div>
-            <div className="p-8 bg-white">
-              <p className="text-slate-900 text-lg leading-relaxed mb-6">
-                {currentCard.answer}
-              </p>
-              <button
-                onClick={handleReveal}
-                className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-2"
-              >
-                <EyeOff className="w-4 h-4" />
-                Click to hide answer
-              </button>
             </div>
 
             {/* Rating buttons */}
@@ -308,31 +295,35 @@ Create flashcards that:
           </>
         ) : (
           <>
-            {/* Question view */}
-            <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white">
-                <Sparkles className="w-5 h-5" />
-                <span className="font-semibold">Question</span>
+            {/* Question view with flip animation */}
+            <div className="relative" style={{ perspective: '1000px' }}>
+              <div className={`transition-all duration-500 transform-style-3d ${showAnswer ? 'rotate-y-180' : ''}`}>
+                <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-4 flex items-center justify-between rounded-t-lg">
+                  <div className="flex items-center gap-2 text-white">
+                    <Sparkles className="w-5 h-5" />
+                    <span className="font-semibold">Question</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {currentCard.topics.slice(0, 2).map((topic, i) => (
+                      <Badge key={i} className="bg-purple-400 text-white border-0">
+                        {topic}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="p-12 bg-white min-h-[300px] flex flex-col items-center justify-center rounded-b-lg">
+                  <p className="text-slate-900 text-2xl font-medium leading-relaxed text-center mb-12">
+                    {currentCard.question}
+                  </p>
+                  <button
+                    onClick={handleReveal}
+                    className="text-purple-600 hover:text-purple-700 font-semibold text-lg flex items-center gap-2 transition-all hover:scale-105"
+                  >
+                    <Eye className="w-5 h-5" />
+                    Click to reveal answer
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                {currentCard.topics.slice(0, 2).map((topic, i) => (
-                  <Badge key={i} className="bg-purple-400 text-white border-0">
-                    {topic}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <div className="p-8 bg-white min-h-[300px] flex flex-col items-center justify-center">
-              <p className="text-slate-900 text-xl leading-relaxed text-center mb-8">
-                {currentCard.question}
-              </p>
-              <button
-                onClick={handleReveal}
-                className="text-purple-600 hover:text-purple-700 font-medium flex items-center gap-2"
-              >
-                <Eye className="w-4 h-4" />
-                Click to reveal answer
-              </button>
             </div>
           </>
         )}

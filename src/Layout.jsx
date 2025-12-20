@@ -159,7 +159,7 @@ export default function Layout({ children, currentPageName }) {
         {/* Desktop Sidebar - Hidden during onboarding */}
         {showNavigation && !isOnboardingPage && (
           <>
-          <Sidebar className={`border-r border-purple-200/60 bg-white/90 backdrop-blur-xl transition-all duration-300 ${sidebarCollapsed ? 'w-0 -ml-64' : ''}`}>
+          <Sidebar className={`border-r border-purple-200/60 bg-white/90 backdrop-blur-xl transition-all duration-300 ${sidebarCollapsed ? 'hidden' : ''}`}>
             <SidebarHeader className="border-b border-purple-200/60 p-6">
               <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                 <img 

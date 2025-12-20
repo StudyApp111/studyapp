@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2 } from "lucide-react";
+import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "@/components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
@@ -27,7 +27,7 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
   }
 };
 
-export default function ExamTab({ lesson, quiz }) {
+export default function ExamTab({ lesson, quiz, exams }) {
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -807,22 +807,88 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
   if (!exam) return null;
 
   if (exam.completed) {
-    // Automatically switch to grade tab when completed
-    setTimeout(() => {
-      window.dispatchEvent(new Event('switchToGradeTab'));
-    }, 500);
-
+    // Show roadmap for completed exams
+    const allExamsForLesson = exams || [];
+    const sortedExams = allExamsForLesson.sort((a, b) => a.exam_number - b.exam_number);
+    
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[400px] shadow-xl flex items-center justify-center p-8">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto shadow-xl animate-pulse">
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-6 space-y-6">
+        <div className="text-center pb-6 border-b border-purple-200">
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
             <CheckCircle2 className="w-8 h-8 text-white" />
           </div>
-          <div>
-            <h3 className="text-2xl font-bold text-slate-900">Exam Submitted!</h3>
-            <p className="text-slate-600 mt-2">Switching to your predicted grade...</p>
-          </div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-2">Exam {exam.exam_number} Complete!</h3>
+          <p className="text-slate-600">Predicted Grade: <span className="text-2xl font-bold text-purple-600">{exam.predicted_grade}</span></p>
         </div>
+
+        {exam.ai_feedback?.suggested_future_sessions_plan && (
+          <div className="space-y-4">
+            <h4 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Trophy className="w-6 h-6 text-yellow-500" />
+              Your Roadmap to 90%+
+            </h4>
+            <div className="grid gap-3">
+              {sortedExams.map((e) => {
+                const isCompleted = e.completed;
+                const isCurrent = e.exam_number === exam.exam_number;
+                const isNext = !isCompleted && e.exam_number > exam.exam_number;
+                const sessionPlan = exam.ai_feedback.suggested_future_sessions_plan?.find(
+                  s => s.session_number === e.exam_number
+                );
+
+                return (
+                  <div
+                    key={e.id}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      isCompleted
+                        ? 'bg-emerald-50 border-emerald-300'
+                        : isNext
+                        ? 'bg-purple-50 border-purple-300 shadow-md'
+                        : 'bg-slate-50 border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                        ) : isNext ? (
+                          <Play className="w-5 h-5 text-purple-600" />
+                        ) : (
+                          <Lock className="w-5 h-5 text-slate-400" />
+                        )}
+                        <h5 className="font-bold text-slate-900">
+                          Exam {e.exam_number}: {sessionPlan?.session_name || e.focus_description || 'Diagnostic'}
+                        </h5>
+                      </div>
+                      {isCompleted && e.predicted_grade && (
+                        <Badge className="bg-emerald-600 text-white font-bold">
+                          {e.predicted_grade}
+                        </Badge>
+                      )}
+                      {isCurrent && (
+                        <Badge className="bg-purple-600 text-white font-bold">
+                          Current
+                        </Badge>
+                      )}
+                    </div>
+                    {sessionPlan && (
+                      <p className="text-sm text-slate-600 ml-8">
+                        {sessionPlan.session_focus_description}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        <Button
+          onClick={() => window.dispatchEvent(new Event('switchToGradeTab'))}
+          className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+        >
+          View Full Feedback
+        </Button>
       </Card>
     );
   }

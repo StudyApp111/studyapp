@@ -300,7 +300,7 @@ export default function DocumentViewer() {
             </TabsContent>
 
             <TabsContent value="exam" className="mt-0">
-              <ExamTab lesson={lesson} quiz={quiz} />
+              <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
             </TabsContent>
 
             <TabsContent value="grade" className="mt-0">
