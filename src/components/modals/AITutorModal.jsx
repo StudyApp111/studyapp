@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Send, Loader2, Sparkles } from "lucide-react";
+import { Send, Loader2, Sparkles, X, Minimize2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AITutorModal({ open, onOpenChange }) {
   const [messages, setMessages] = useState([]);
@@ -12,6 +12,7 @@ export default function AITutorModal({ open, onOpenChange }) {
   const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState("");
   const messagesEndRef = useRef(null);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   useEffect(() => {
     const initializeChat = async () => {
@@ -76,75 +77,141 @@ export default function AITutorModal({ open, onOpenChange }) {
     }
   };
 
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm h-[80vh] p-0 bg-white/30 backdrop-blur-xl border border-white/40 shadow-2xl mx-6 rounded-3xl overflow-hidden">
-        <div className="bg-[#fff9eb] p-4 flex flex-col h-full">
-          <div className="bg-violet-600 mt-1 mb-4 px-3 py-3 flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/25 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg">Polli</h3>
-              <p className="text-xs text-white/90">Your AI study buddy</p>
-            </div>
-          </div>
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => onOpenChange(false)}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+          />
 
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-            {messages.map((msg, idx) =>
-            <div
-              key={idx}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-
-                <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 backdrop-blur-md ${
-                msg.role === 'user' ?
-                'bg-purple-600/85 text-white shadow-lg' :
-                'bg-white/60 text-slate-900 shadow-md border border-white/30'}`
-                }>
-
-                  {msg.role === 'assistant' ?
-                <ReactMarkdown className="text-[15px] leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2">
-                      {msg.content}
-                    </ReactMarkdown> :
-
-                <p className="text-[15px] leading-relaxed font-medium">{msg.content}</p>
-                }
+          {/* Chat Widget */}
+          <motion.div
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "100%", opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 md:bottom-6 md:right-6 md:left-auto md:w-[400px] bg-white rounded-t-3xl md:rounded-3xl shadow-2xl z-50 flex flex-col max-h-[85vh] md:max-h-[600px]"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-3xl md:rounded-t-3xl px-4 py-3 flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-base">Polli</h3>
+                  <p className="text-xs text-white/80">Your AI study buddy</p>
                 </div>
               </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsMinimized(!isMinimized)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <Minimize2 className="w-4 h-4 text-white" />
+                </button>
+                <button
+                  onClick={() => onOpenChange(false)}
+                  className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {!isMinimized && (
+              <>
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-purple-50/30 to-white">
+                  {messages.map((msg, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ duration: 0.2 }}
+                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
+                          msg.role === 'user'
+                            ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white shadow-md'
+                            : 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                        }`}
+                      >
+                        {msg.role === 'assistant' ? (
+                          <ReactMarkdown className="text-sm leading-relaxed prose prose-sm max-w-none [&>p]:my-0.5 [&>ul]:my-1 [&>ol]:my-1">
+                            {msg.content}
+                          </ReactMarkdown>
+                        ) : (
+                          <p className="text-sm leading-relaxed">{msg.content}</p>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                  {isLoading && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex justify-start"
+                    >
+                      <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-slate-200">
+                        <div className="flex gap-1">
+                          <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
+                            className="w-2 h-2 bg-purple-600 rounded-full"
+                          />
+                          <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
+                            className="w-2 h-2 bg-purple-600 rounded-full"
+                          />
+                          <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
+                            className="w-2 h-2 bg-purple-600 rounded-full"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="p-4 bg-white border-t border-slate-200 rounded-b-3xl md:rounded-b-3xl">
+                  <div className="flex gap-2">
+                    <Input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                      placeholder="Ask me anything..."
+                      disabled={isLoading}
+                      className="flex-1 border-slate-200 focus-visible:ring-purple-500 text-sm rounded-xl"
+                    />
+                    <Button
+                      onClick={handleSend}
+                      disabled={isLoading || !input.trim()}
+                      size="icon"
+                      className="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 rounded-xl shadow-md"
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
-            {isLoading &&
-            <div className="flex justify-start">
-                <div className="bg-white/60 backdrop-blur-md rounded-2xl px-4 py-3 shadow-md border border-white/30">
-                  <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
-                </div>
-              </div>
-            }
-            <div ref={messagesEndRef} />
-          </div>
-
-          <div className="px-5 py-4 bg-white/20 backdrop-blur-md border-t border-white/20">
-            <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                placeholder="Type your question..."
-                disabled={isLoading}
-                className="flex-1 bg-white/70 backdrop-blur-sm border-white/40 focus:border-purple-400/60 text-[15px] placeholder:text-slate-500/70" />
-
-              <Button
-                onClick={handleSend}
-                disabled={isLoading || !input.trim()}
-                className="bg-purple-600/90 hover:bg-purple-700/90 backdrop-blur-sm shadow-lg"
-                size="icon">
-
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>);
-
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
 }
