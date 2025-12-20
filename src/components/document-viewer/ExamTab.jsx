@@ -732,11 +732,11 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         setNewBadges(earnedNow);
       }
 
-      // Reload exam data and switch to grade tab
-      await loadOrGenerateExam();
+      // Reload lesson data to refresh exams list
+      window.dispatchEvent(new Event('reloadLesson'));
       setTimeout(() => {
         window.dispatchEvent(new Event('switchToGradeTab'));
-      }, 500);
+      }, 1000);
     } catch (error) {
       console.error("Error submitting exam:", error);
       await logError('exam_submission', error, { lesson_id: lesson?.id, exam_id: exam?.id });
