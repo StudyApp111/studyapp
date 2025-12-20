@@ -312,17 +312,17 @@ export default function Home() {
   return (
     <div className="p-4 md:p-10 max-w-7xl mx-auto">
       {/* Centered Hero Section with Gradient */}
-      <div className="mb-8 md:mb-12">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-8 md:p-12 shadow-2xl">
+      <div className="mb-6 md:mb-8">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-6 md:p-8 shadow-2xl">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-2xl -ml-24 -mb-24" />
           
           <div className="relative text-center">
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
+            <h1 className="text-2xl md:text-4xl font-bold text-white mb-2">
               Welcome back, {user.full_name?.split(' ')[0] || 'Learner'}! 👋
             </h1>
-            <p className="text-white/90 text-base md:text-xl mb-6 max-w-2xl mx-auto">
+            <p className="text-white/90 text-sm md:text-lg max-w-2xl mx-auto">
               {learningProfile?.grade && learningProfile?.school && learningProfile?.city ? (
                 <>
                   {learningProfile.grade} student at {learningProfile.school} • {learningProfile.city}
@@ -331,22 +331,19 @@ export default function Home() {
                 "Ready to continue your learning journey?"
               )}
             </p>
-            
-
           </div>
         </div>
       </div>
 
       {/* CTA Box - Always Displayed */}
-      <div className="mb-8 max-w-6xl mx-auto">
-        <Card className="text-center py-9 md:py-12 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
+      <div className="mb-6 max-w-6xl mx-auto">
+        <Card className="text-center py-5 md:py-6 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
           <CardContent className="max-w-3xl mx-auto">
-            <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto text-yellow-600 mb-6" />
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="text-center">
                 <Button
                   onClick={() => setCreateLessonModalOpen(true)}
-                  className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold mb-3 text-base px-8 py-6"
+                  className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold mb-2 text-base px-8 py-6"
                   size="lg"
                 >
                   <Plus className="w-5 h-5 mr-2" />
@@ -360,7 +357,7 @@ export default function Home() {
               <div className="text-center">
                 <Button
                   onClick={() => navigate(createPageUrl("SmartGrader"))}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold mb-3 text-base px-8 py-6"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold mb-2 text-base px-8 py-6"
                   size="lg"
                 >
                   <FileCheck className="w-5 h-5 mr-2" />
