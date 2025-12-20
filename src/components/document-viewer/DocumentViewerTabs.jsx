@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, ExternalLink, Copy, Download, Search, Highlighter, StickyNote, Send, Loader2, Sparkles } from "lucide-react";
+import { FileText, ExternalLink, Copy, Highlighter, StickyNote } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import {
@@ -12,7 +12,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import ReactMarkdown from "react-markdown";
 
 export default function DocumentViewerTabs({ lesson }) {
   const [viewMode, setViewMode] = useState("pdf");
@@ -26,26 +25,11 @@ export default function DocumentViewerTabs({ lesson }) {
   const [showAnnotationPopover, setShowAnnotationPopover] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
 
-  // AI Chat state
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: `Hi! I'm your AI tutor for ${lesson?.course_name || 'this course'}. Ask me anything about the material! 🎓`
-    }
-  ]);
-  const [chatInput, setChatInput] = useState("");
-  const [isChatLoading, setIsChatLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-
   React.useEffect(() => {
     if (lesson?.id) {
       loadAnnotations();
     }
   }, [lesson?.id]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const loadAnnotations = async () => {
     try {
@@ -121,56 +105,9 @@ export default function DocumentViewerTabs({ lesson }) {
     }
   };
 
-  const handleDownloadTranscript = () => {
-    if (!lesson?.extracted_content) return;
-    
-    const blob = new Blob([lesson.extracted_content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${lesson.course_name}-transcript.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success("Transcript downloaded");
-  };
 
-  const handleChatSend = async () => {
-    if (!chatInput.trim() || isChatLoading) return;
 
-    const userMessage = chatInput.trim();
-    setChatInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
-    setIsChatLoading(true);
 
-    try {
-      const response = await base44.functions.invoke('aiTutorChat', {
-        messages: [...messages, { role: "user", content: userMessage }],
-        lessonContext: {
-          course_name: lesson?.course_name,
-          extracted_content: lesson?.extracted_content?.substring(0, 3000)
-        }
-      });
-
-      if (response.data.error) {
-        throw new Error(response.data.error);
-      }
-
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
-        content: response.data.reply 
-      }]);
-    } catch (error) {
-      console.error("Tutor error:", error);
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
-        content: "Sorry, I encountered an error. Please try again." 
-      }]);
-    } finally {
-      setIsChatLoading(false);
-    }
-  };
 
   if (!lesson?.file_url && !lesson?.extracted_content) {
     return (
@@ -190,9 +127,9 @@ export default function DocumentViewerTabs({ lesson }) {
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(lesson?.file_url || '');
 
   return (
-    <div className="flex gap-4 h-[calc(100vh-180px)]">
-      {/* Main Document Area - 2/3 width */}
-      <Card className="flex-[2] bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
+    <div className="h-[calc(100vh-180px)]">
+      {/* Main Document Area - Full width */}
+      <Card className="h-full bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
         <div className="h-full flex flex-col">
         {/* Header with Controls */}
         <div className="border-b border-purple-200 px-4 py-3 space-y-3">
@@ -473,68 +410,6 @@ export default function DocumentViewerTabs({ lesson }) {
           </div>
         </div>
       </div>
-      </Card>
-
-      {/* AI Chat Sidebar - 1/3 width */}
-      <Card className="flex-1 flex flex-col bg-white/95 backdrop-blur-xl shadow-xl border-purple-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4 flex items-center gap-2 flex-shrink-0">
-          <Sparkles className="w-5 h-5" />
-          <h3 className="font-semibold">AI Tutor</h3>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[85%] rounded-lg px-4 py-2 ${
-                  msg.role === 'user'
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-slate-100 text-slate-900'
-                }`}
-              >
-                {msg.role === 'assistant' ? (
-                  <ReactMarkdown className="text-sm prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                    {msg.content}
-                  </ReactMarkdown>
-                ) : (
-                  <p className="text-sm">{msg.content}</p>
-                )}
-              </div>
-            </div>
-          ))}
-          {isChatLoading && (
-            <div className="flex justify-start">
-              <div className="bg-slate-100 rounded-lg px-4 py-2">
-                <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="p-4 border-t border-slate-200 flex-shrink-0">
-          <div className="flex gap-2">
-            <Input
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleChatSend()}
-              placeholder="Ask a question..."
-              disabled={isChatLoading}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleChatSend}
-              disabled={isChatLoading || !chatInput.trim()}
-              size="icon"
-              className="bg-purple-600 hover:bg-purple-700 flex-shrink-0"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
       </Card>
     </div>
   );
