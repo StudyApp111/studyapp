@@ -23,7 +23,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
   const [courseName, setCourseName] = useState("");
   const [inputType, setInputType] = useState("file");
   const [description, setDescription] = useState("");
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
@@ -37,7 +37,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       setCourseName("");
       setInputType("file");
       setDescription("");
-      setFile(null);
+      setFiles([]);
       setError("");
       setShowHints(false);
     }
@@ -58,18 +58,18 @@ export default function CreateLessonModal({ open, onOpenChange }) {
   };
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      if (selectedFile.size > 5 * 1024 * 1024) {
-        setError("File is too large. Please upload files smaller than 5MB.");
-        setFile(null);
-        e.target.value = '';
-        return;
-      }
-      
-      setFile(selectedFile);
-      setError("");
+    const selectedFiles = Array.from(e.target.files);
+    const maxSize = 15 * 1024 * 1024; // 15MB per file
+    
+    const oversizedFiles = selectedFiles.filter(f => f.size > maxSize);
+    if (oversizedFiles.length > 0) {
+      setError(`Files must be less than 15MB each. ${oversizedFiles.length} file(s) too large.`);
+      e.target.value = '';
+      return;
     }
+    
+    setFiles(selectedFiles);
+    setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -85,39 +85,49 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       let extractedContent = "";
       let fullExtractedContent = "";
-      let fileUrl = "";
+      let fileUrls = [];
 
       if (inputType === "file") {
-        if (!file) {
-          throw new Error("Please select a file");
+        if (files.length === 0) {
+          throw new Error("Please select at least one file");
         }
 
         try {
-          setProcessingStep("Uploading file...");
+          setProcessingStep(`Uploading ${files.length} file(s)...`);
           
-          const { file_url } = await base44.integrations.Core.UploadFile({ file });
-          fileUrl = file_url;
-
-          setProcessingStep("Extracting content from your document...");
-          
-          const extractResult = await base44.functions.invoke('extractDocumentContent', {
-            file_url: file_url
-          });
-
-          if (!extractResult?.data?.extracted_content) {
-            throw new Error("Failed to extract content from document");
+          // Upload all files
+          for (const file of files) {
+            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+            fileUrls.push(file_url);
           }
 
-          extractedContent = extractResult.data.extracted_content;
+          setProcessingStep("Extracting content from your documents...");
+          
+          // Extract content from all files
+          const allExtractedContent = [];
+          for (const fileUrl of fileUrls) {
+            const extractResult = await base44.functions.invoke('extractDocumentContent', {
+              file_url: fileUrl
+            });
+
+            if (!extractResult?.data?.extracted_content) {
+              throw new Error("Failed to extract content from one or more documents");
+            }
+
+            allExtractedContent.push(extractResult.data.extracted_content);
+          }
+
+          // Combine all content
+          extractedContent = allExtractedContent.join("\n\n--- NEXT DOCUMENT ---\n\n");
+          fullExtractedContent = extractedContent;
 
           if (extractedContent.length < 50) {
-            throw new Error("Extracted content is too short. Please ensure your file contains readable text.");
+            throw new Error("Extracted content is too short. Please ensure your files contain readable text.");
           }
 
-          const fullExtractedContent = extractedContent;
-
-          if (extractedContent.length > 1500) {
-            setProcessingStep("Compressing document for optimal processing...");
+          // Compress if needed
+          if (extractedContent.length > 8000) {
+            setProcessingStep("Compressing documents for optimal processing...");
             
             const compressionResult = await base44.functions.invoke('compressDocument', {
               content: extractedContent
@@ -129,8 +139,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           }
           
         } catch (fileError) {
-          console.error("Error processing file:", fileError);
-          throw new Error(fileError.message || "Failed to process file. Please try again.");
+          console.error("Error processing files:", fileError);
+          throw new Error(fileError.message || "Failed to process files. Please try again.");
         }
       }
 
@@ -315,7 +325,8 @@ Output Format: JSON object matching the specified schema`;
       if (inputType === "description") {
         lessonData.description = description;
       } else if (inputType === "file") {
-        lessonData.file_url = fileUrl;
+        lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
+        lessonData.file_urls = fileUrls;
         lessonData.extracted_content = fullExtractedContent || extractedContent;
       }
 
@@ -403,8 +414,8 @@ Output Format: JSON object matching the specified schema`;
                       <Label htmlFor="modal-file" className="flex items-center gap-2 flex-1 cursor-pointer">
                         <Upload className="w-4 h-4 text-purple-600" />
                         <div>
-                          <p className="font-medium text-sm">Upload a File</p>
-                          <p className="text-xs text-slate-500">PDF, PPT, Word, Images - Max 5MB</p>
+                          <p className="font-medium text-sm">Upload Files</p>
+                          <p className="text-xs text-slate-500">PDF, PPT, Word, Images - Max 15MB each, multiple files</p>
                         </div>
                       </Label>
                     </div>
@@ -438,20 +449,28 @@ Output Format: JSON object matching the specified schema`;
 
                 {inputType === "file" && (
                   <div className="space-y-2">
-                    <Label htmlFor="modal-file-input">Upload Course Material *</Label>
+                    <Label htmlFor="modal-file-input">Upload Course Materials *</Label>
                     <Input
                       id="modal-file-input"
                       type="file"
                       onChange={handleFileChange}
                       disabled={isProcessing}
+                      multiple
                       accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
                     />
-                    {file && (
-                      <div className="flex items-center gap-2 text-sm text-emerald-600">
-                        <FileCheck className="w-4 h-4" />
-                        <span>{file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    {files.length > 0 && (
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {files.map((f, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-sm text-emerald-600">
+                            <FileCheck className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)</span>
+                          </div>
+                        ))}
                       </div>
                     )}
+                    <p className="text-xs text-slate-500">
+                      Upload multiple files (max 15MB each)
+                    </p>
                   </div>
                 )}
 
