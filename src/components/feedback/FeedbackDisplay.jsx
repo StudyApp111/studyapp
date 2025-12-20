@@ -301,36 +301,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
         </motion.div>
       )}
 
-      {/* Roadmap CTA */}
-      {futureWorksheets.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-600 to-indigo-700 text-white overflow-hidden">
-            <CardContent className="p-4">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <MapPin className="w-5 h-5" />
-                  <h3 className="text-lg font-bold">Your Roadmap to 90%+</h3>
-                </div>
-                <p className="text-purple-100 text-xs mb-3">
-                  {futureWorksheets.length} personalized session{futureWorksheets.length > 1 ? 's' : ''} ready
-                </p>
-                <Button
-                  onClick={() => setShowRoadmapModal(true)}
-                  size="sm"
-                  className="bg-white text-purple-700 hover:bg-purple-50 shadow-xl font-semibold w-full"
-                >
-                  <MapPin className="w-4 h-4 mr-1.5" />
-                  View Learning Path
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+
 
       {/* Question Breakdown */}
       {exam.questions && exam.feedback && (

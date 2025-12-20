@@ -277,7 +277,7 @@ export default function DocumentViewer() {
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-2 py-2 h-auto"
               >
                 <BookMarked className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Cards</span>
+                <span className="text-[11px] font-medium">Flashcards</span>
               </TabsTrigger>
             </TabsList>
           </div>
