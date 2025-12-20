@@ -780,16 +780,16 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
     const sortedExams = allExamsForLesson.sort((a, b) => a.exam_number - b.exam_number);
     
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-6">
-        <div className="mb-6">
-          <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-            <Trophy className="w-7 h-7 text-yellow-500" />
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-4 mx-2">
+        <div className="mb-4">
+          <h3 className="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-yellow-500" />
             Your Roadmap to 90%+
           </h3>
-          <p className="text-slate-600">Complete exams to track your progress and improve your predicted grade</p>
+          <p className="text-xs text-slate-600">Complete exams to track your progress</p>
         </div>
         
-        <div className="grid gap-3">
+        <div className="grid gap-2">
           {sortedExams.length > 0 ? sortedExams.map((e) => {
             const isCompleted = e.completed;
             const canStart = e.exam_number === 1 || sortedExams.find(ex => ex.exam_number === e.exam_number - 1)?.completed;
@@ -799,80 +799,66 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
                 key={e.id}
                 onClick={() => {
                   if (isCompleted) {
-                    // Navigate to grade tab to view feedback
                     window.dispatchEvent(new Event('switchToGradeTab'));
                   } else if (canStart) {
                     setSelectedExamNumber(e.exam_number);
                   }
                 }}
                 disabled={!canStart && !isCompleted}
-                className={`p-5 rounded-xl border-2 transition-all text-left ${
+                className={`p-3 rounded-lg border transition-all text-left ${
                   isCompleted
-                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300 hover:shadow-lg'
+                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300'
                     : canStart
-                    ? 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02]'
+                    ? 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300'
                     : 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
                     {isCompleted ? (
-                      <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
-                        <CheckCircle2 className="w-6 h-6 text-white" />
+                      <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="w-4 h-4 text-white" />
                       </div>
                     ) : canStart ? (
-                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                        <Play className="w-6 h-6 text-white" />
+                      <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Play className="w-4 h-4 text-white" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 bg-slate-300 rounded-full flex items-center justify-center">
-                        <Lock className="w-6 h-6 text-white" />
+                      <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Lock className="w-4 h-4 text-white" />
                       </div>
                     )}
-                    <div>
-                      <h5 className="font-bold text-slate-900 text-lg">
+                    <div className="flex-1 min-w-0">
+                      <h5 className="font-bold text-slate-900 text-sm truncate">
                         Exam {e.exam_number}
                       </h5>
-                      <p className="text-sm text-slate-600">
-                        {e.focus_description || (e.exam_number === 1 ? 'Diagnostic Assessment' : 'Practice Exam')}
+                      <p className="text-xs text-slate-600 truncate">
+                        {e.focus_description || (e.exam_number === 1 ? 'Diagnostic' : 'Practice')}
                       </p>
                     </div>
                   </div>
                   {isCompleted && e.predicted_grade && (
-                    <Badge className="bg-emerald-600 text-white font-bold text-lg px-4 py-2">
+                    <Badge className="bg-emerald-600 text-white font-bold text-sm px-2 py-1 flex-shrink-0">
                       {e.predicted_grade}
                     </Badge>
                   )}
                 </div>
-                {isCompleted && (
-                  <p className="text-sm text-emerald-700 font-medium ml-12">
-                    Click to view feedback →
-                  </p>
-                )}
-                {canStart && !isCompleted && (
-                  <p className="text-sm text-purple-700 font-medium ml-12">
-                    Click to start exam →
-                  </p>
-                )}
               </button>
             );
           }) : (
             <button
               onClick={() => setSelectedExamNumber(1)}
-              className="p-5 rounded-xl border-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02] transition-all text-left"
+              className="p-3 rounded-lg border bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 transition-all text-left"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                  <Play className="w-6 h-6 text-white" />
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                  <Play className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h5 className="font-bold text-slate-900 text-lg">Exam 1</h5>
-                  <p className="text-sm text-slate-600">Diagnostic Assessment</p>
+                  <h5 className="font-bold text-slate-900 text-sm">Exam 1</h5>
+                  <p className="text-xs text-slate-600">Start diagnostic</p>
                 </div>
               </div>
-              <p className="text-sm text-purple-700 font-medium ml-12 mt-2">
-                Click to start your first exam →
-              </p>
             </button>
           )}
         </div>
@@ -930,24 +916,24 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         </motion.div>
       )}
 
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
-        <div className="border-b border-purple-200/60 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-bold text-slate-900">Exam 1</h2>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
-                <Clock className="w-4 h-4 text-purple-600" />
-                <span className="text-sm font-semibold text-purple-700">{formatTime(elapsedSeconds)}</span>
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden mx-2">
+        <div className="border-b border-purple-200/60 p-2">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-sm font-bold text-slate-900">Exam {exam.exam_number}</h2>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-purple-50 px-2 py-1 rounded-lg border border-purple-200">
+                <Clock className="w-3 h-3 text-purple-600" />
+                <span className="text-xs font-semibold text-purple-700">{formatTime(elapsedSeconds)}</span>
               </div>
-              <span className="text-sm font-medium text-slate-600">
+              <span className="text-xs font-medium text-slate-600">
                 {currentQuestion + 1}/{exam.questions.length}
               </span>
             </div>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-1.5" />
         </div>
 
-        <div className="p-6">
+        <div className="p-3">
           <AnimatePresence mode="wait">
             <WorksheetQuestion
               key={currentQuestion}
@@ -957,12 +943,12 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
             />
           </AnimatePresence>
 
-          <div className="mt-6 flex gap-4">
+          <div className="mt-4 flex gap-2">
             <Button
               variant="outline"
               onClick={handlePrevious}
               disabled={currentQuestion === 0}
-              className="flex-1"
+              className="flex-1 h-10 text-sm"
             >
               Previous
             </Button>
@@ -970,11 +956,11 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
               <Button
                 onClick={submitExam}
                 disabled={!canProceed || isSubmitting}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                className="flex-1 h-10 text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                     Submitting...
                   </>
                 ) : (
@@ -985,7 +971,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
               <Button
                 onClick={handleNext}
                 disabled={!canProceed}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+                className="flex-1 h-10 text-sm bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
               >
                 Next Question
               </Button>
