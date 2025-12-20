@@ -19,11 +19,12 @@ export default function DocumentViewerTabs({ lesson }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedText, setSelectedText] = useState("");
   const [annotations, setAnnotations] = useState([]);
-  const [showAnnotations, setShowAnnotations] = useState(true);
+  const [showAnnotations, setShowAnnotations] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [highlightColor, setHighlightColor] = useState("yellow");
   const [selectionPosition, setSelectionPosition] = useState({ x: 0, y: 0 });
   const [showAnnotationPopover, setShowAnnotationPopover] = useState(false);
+  const [annotationMode, setAnnotationMode] = useState(false);
 
   // AI Chat state
   const [messages, setMessages] = useState([
@@ -214,12 +215,16 @@ export default function DocumentViewerTabs({ lesson }) {
                   </Button>
                   {viewMode === "transcript" && (
                     <Button
-                      variant="outline"
+                      variant={annotationMode ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setShowAnnotations(!showAnnotations)}
+                      onClick={() => {
+                        setAnnotationMode(!annotationMode);
+                        setShowAnnotations(!annotationMode);
+                      }}
+                      className={annotationMode ? "bg-yellow-500 hover:bg-yellow-600 text-slate-900" : ""}
                     >
                       <Highlighter className="w-4 h-4 mr-2" />
-                      {showAnnotations ? "Hide" : "Show"} Notes
+                      {annotationMode ? "Exit Annotate" : "Annotate"}
                     </Button>
                   )}
                 </>
@@ -228,21 +233,23 @@ export default function DocumentViewerTabs({ lesson }) {
           </div>
 
           {/* Search Bar - Only in transcript mode */}
-          {viewMode === "transcript" && lesson?.extracted_content && (
-            <div className="space-y-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search within document..."
-                  className="pl-10"
-                />
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-600 bg-purple-50 p-2 rounded-lg border border-purple-200">
-                <Highlighter className="w-4 h-4 text-purple-600" />
-                <span>💡 Select any text to highlight and add notes</span>
-              </div>
+          {viewMode === "transcript" && lesson?.extracted_content && !annotationMode && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search within document..."
+                className="pl-10"
+              />
+            </div>
+          )}
+          
+          {annotationMode && (
+            <div className="flex items-center gap-2 text-sm text-slate-700 bg-yellow-50 p-3 rounded-lg border border-yellow-300">
+              <Highlighter className="w-5 h-5 text-yellow-600" />
+              <span className="font-medium">Annotation Mode Active</span>
+              <span className="text-slate-600">- Select text to highlight and add notes</span>
             </div>
           )}
         </div>
@@ -306,7 +313,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   </div>
                   <div 
                     className="flex-1 overflow-auto p-6"
-                    onMouseUp={handleTextSelection}
+                    onMouseUp={annotationMode ? handleTextSelection : undefined}
                   >
                     <div className="max-w-4xl mx-auto">
                       <div 
@@ -316,7 +323,7 @@ export default function DocumentViewerTabs({ lesson }) {
                     </div>
 
                     {/* Floating Annotation Button */}
-                    {showAnnotationPopover && selectedText && (
+                    {annotationMode && showAnnotationPopover && selectedText && (
                       <div 
                         className="fixed z-50"
                         style={{ 
