@@ -75,19 +75,19 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
   const totalWorksheets = allExams.length || 6;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 px-2">
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center"
       >
-        <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg mb-6">
-          <Award className="w-5 h-5 text-purple-600" />
-          <span className="text-sm font-medium text-slate-700">Exam {exam.exam_number} Complete</span>
+        <div className="inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-lg mb-4">
+          <Award className="w-4 h-4 text-purple-600" />
+          <span className="text-xs font-medium text-slate-700">Exam {exam.exam_number} Complete</span>
         </div>
         
-        <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">
           Your Predicted Grade
         </h1>
         
@@ -97,73 +97,74 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
           transition={{ delay: 0.2 }}
           className="inline-block"
         >
-          <div className={`px-16 py-8 rounded-3xl bg-gradient-to-r ${getGradeColor(exam.predicted_grade)} shadow-2xl mb-4`}>
-            <div className="text-8xl font-bold text-white mb-2">
+          <div className={`px-10 py-6 rounded-2xl bg-gradient-to-r ${getGradeColor(exam.predicted_grade)} shadow-xl mb-3`}>
+            <div className="text-5xl font-bold text-white mb-1">
               {exam.predicted_grade} {getGradeEmoji(exam.predicted_grade)}
             </div>
-            <div className="text-2xl text-white font-semibold">
+            <div className="text-lg text-white font-semibold">
               {getPredictedScore()}
             </div>
           </div>
         </motion.div>
 
         {exam.ai_feedback?.overall_performance_summary_text && (
-          <p className="text-lg text-slate-700 max-w-3xl mx-auto mt-6 leading-relaxed">
+          <p className="text-sm text-slate-700 mx-auto mt-4 leading-relaxed px-2">
             {exam.ai_feedback.overall_performance_summary_text}
           </p>
         )}
 
         {exam.ai_feedback?.prediction_calculation_rationale && (
-          <div className="mt-6 max-w-3xl mx-auto">
-            <details className="bg-white rounded-lg p-4 shadow">
-              <summary className="cursor-pointer font-semibold text-purple-700 hover:text-purple-900">
+          <div className="mt-4">
+            <details className="bg-white rounded-lg p-3 shadow text-left">
+              <summary className="cursor-pointer font-semibold text-purple-700 hover:text-purple-900 text-sm">
                 How was this grade calculated?
               </summary>
-              <p className="mt-3 text-sm text-slate-600 text-left">
+              <p className="mt-2 text-xs text-slate-600">
                 {exam.ai_feedback.prediction_calculation_rationale}
               </p>
             </details>
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-6 text-slate-600 text-lg mt-6 flex-wrap">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
+        <div className="grid grid-cols-2 gap-2 text-slate-600 text-xs mt-4">
+          <div className="flex items-center justify-center gap-1.5 bg-white rounded-lg py-2 shadow-sm">
+            <TrendingUp className="w-4 h-4 text-purple-600" />
             <span className="font-semibold">{Math.round(exam.total_score)}%</span>
           </div>
-          <div className="w-1 h-6 bg-slate-300 rounded-full" />
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-purple-700" />
+          <div className="flex items-center justify-center gap-1.5 bg-white rounded-lg py-2 shadow-sm">
+            <Clock className="w-4 h-4 text-purple-700" />
             <span className="font-semibold">{formatTime(exam.time_taken_seconds || 0)}</span>
           </div>
-          <div className="w-1 h-6 bg-slate-300 rounded-full" />
-          <span>Exam {exam.exam_number} of {totalWorksheets}</span>
-          <div className="w-1 h-6 bg-slate-300 rounded-full" />
-          <span>{exam.feedback?.filter(f => f.is_correct).length || 0} Correct</span>
+          <div className="flex items-center justify-center bg-white rounded-lg py-2 shadow-sm">
+            <span>Exam {exam.exam_number}/{totalWorksheets}</span>
+          </div>
+          <div className="flex items-center justify-center bg-white rounded-lg py-2 shadow-sm">
+            <span>{exam.feedback?.filter(f => f.is_correct).length || 0} Correct</span>
+          </div>
         </div>
       </motion.div>
 
       {/* Strengths & Weaknesses */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-emerald-50 to-teal-50/50 overflow-hidden">
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-emerald-50 to-teal-50/50 overflow-hidden">
             <CardHeader 
-              className="cursor-pointer hover:bg-emerald-100/50 transition-colors"
+              className="cursor-pointer hover:bg-emerald-100/50 transition-colors py-3 px-4"
               onClick={() => toggleSection('strengths')}
             >
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-emerald-700 text-lg">
-                  <TrendingUp className="w-5 h-5" />
+                <CardTitle className="flex items-center gap-2 text-emerald-700 text-base">
+                  <TrendingUp className="w-4 h-4" />
                   Your Strengths
                 </CardTitle>
                 {sectionsExpanded.strengths ? (
-                  <ChevronUp className="w-5 h-5 text-emerald-700" />
+                  <ChevronUp className="w-4 h-4 text-emerald-700" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-emerald-700" />
+                  <ChevronDown className="w-4 h-4 text-emerald-700" />
                 )}
               </div>
             </CardHeader>
@@ -175,15 +176,15 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <CardContent>
-                    <ul className="space-y-3">
+                  <CardContent className="px-4 pb-4">
+                    <ul className="space-y-2">
                       {strengths.length > 0 ? strengths.map((strength, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-slate-700 text-sm">{strength}</span>
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-slate-700 text-xs">{strength}</span>
                         </li>
                       )) : (
-                        <li className="text-slate-500 italic text-sm">Complete more questions to identify strengths</li>
+                        <li className="text-slate-500 italic text-xs">Complete more questions to identify strengths</li>
                       )}
                     </ul>
                   </CardContent>
@@ -198,20 +199,20 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="shadow-xl border-0 h-full bg-gradient-to-br from-amber-50 to-orange-50/50 overflow-hidden">
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-amber-50 to-orange-50/50 overflow-hidden">
             <CardHeader 
-              className="cursor-pointer hover:bg-amber-100/50 transition-colors"
+              className="cursor-pointer hover:bg-amber-100/50 transition-colors py-3 px-4"
               onClick={() => toggleSection('weaknesses')}
             >
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-amber-700 text-lg">
-                  <TrendingDown className="w-5 h-5" />
+                <CardTitle className="flex items-center gap-2 text-amber-700 text-base">
+                  <TrendingDown className="w-4 h-4" />
                   Areas for Improvement
                 </CardTitle>
                 {sectionsExpanded.weaknesses ? (
-                  <ChevronUp className="w-5 h-5 text-amber-700" />
+                  <ChevronUp className="w-4 h-4 text-amber-700" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-amber-700" />
+                  <ChevronDown className="w-4 h-4 text-amber-700" />
                 )}
               </div>
             </CardHeader>
@@ -223,15 +224,15 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <CardContent>
-                    <ul className="space-y-3">
+                  <CardContent className="px-4 pb-4">
+                    <ul className="space-y-2">
                       {weaknesses.length > 0 ? weaknesses.map((weakness, idx) => (
-                        <li key={idx} className="flex items-start gap-3">
-                          <Target className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-slate-700 text-sm">{weakness}</span>
+                        <li key={idx} className="flex items-start gap-2">
+                          <Target className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-slate-700 text-xs">{weakness}</span>
                         </li>
                       )) : (
-                        <li className="text-slate-500 italic text-sm">Great job! Keep up the excellent work</li>
+                        <li className="text-slate-500 italic text-xs">Great job! Keep up the excellent work</li>
                       )}
                     </ul>
                   </CardContent>
@@ -249,23 +250,23 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card className="shadow-xl border-0 overflow-hidden">
+          <Card className="shadow-lg border-0 overflow-hidden">
             <CardHeader 
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white cursor-pointer hover:brightness-110 transition-all"
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white cursor-pointer hover:brightness-110 transition-all py-3 px-4"
               onClick={() => toggleSection('insights')}
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-2xl">
-                    <Brain className="w-6 h-6" />
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Brain className="w-4 h-4" />
                     Learning Insights
                   </CardTitle>
-                  <p className="text-purple-100 text-sm mt-1">Understanding how you learn helps you improve faster</p>
+                  <p className="text-purple-100 text-xs mt-0.5">How you learn</p>
                 </div>
                 {sectionsExpanded.insights ? (
-                  <ChevronUp className="w-6 h-6 text-white" />
+                  <ChevronUp className="w-4 h-4 text-white flex-shrink-0" />
                 ) : (
-                  <ChevronDown className="w-6 h-6 text-white" />
+                  <ChevronDown className="w-4 h-4 text-white flex-shrink-0" />
                 )}
               </div>
             </CardHeader>
@@ -277,40 +278,20 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <CardContent className="p-0">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="bg-slate-50 border-b border-slate-200">
-                            <th className="text-left px-6 py-4 font-semibold text-slate-700">Pattern Type</th>
-                            <th className="text-left px-6 py-4 font-semibold text-slate-700">What It Means</th>
-                            <th className="text-left px-6 py-4 font-semibold text-slate-700">How to Improve</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {exam.ai_feedback.learning_patterns.map((pattern, idx) => (
-                            <tr 
-                              key={idx} 
-                              className={`border-b border-slate-100 hover:bg-purple-50/30 transition-colors ${
-                                idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-                              }`}
-                            >
-                              <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-2xl">{getPatternIcon(pattern.pattern_type)}</span>
-                                  <span className="font-semibold text-slate-900">{pattern.pattern_type}</span>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-slate-700">{pattern.what_it_means}</td>
-                              <td className="px-6 py-4 text-slate-700">
-                                <div className="bg-purple-50 px-3 py-2 rounded-lg border border-purple-200">
-                                  {pattern.how_to_improve}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  <CardContent className="p-3">
+                    <div className="space-y-3">
+                      {exam.ai_feedback.learning_patterns.map((pattern, idx) => (
+                        <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">{getPatternIcon(pattern.pattern_type)}</span>
+                            <span className="font-semibold text-slate-900 text-xs">{pattern.pattern_type}</span>
+                          </div>
+                          <p className="text-xs text-slate-700 mb-2">{pattern.what_it_means}</p>
+                          <div className="bg-purple-50 px-2 py-1.5 rounded-lg border border-purple-200">
+                            <p className="text-xs text-slate-700">{pattern.how_to_improve}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </motion.div>
@@ -327,24 +308,22 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card className="shadow-xl border-0 bg-gradient-to-br from-purple-600 to-indigo-700 text-white overflow-hidden">
-            <CardContent className="p-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <MapPin className="w-6 h-6" />
-                    <h3 className="text-3xl font-bold">Your Roadmap to 90%+</h3>
-                  </div>
-                  <p className="text-purple-100 text-lg">
-                    {futureWorksheets.length} personalized session{futureWorksheets.length > 1 ? 's' : ''} to master this subject
-                  </p>
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-600 to-indigo-700 text-white overflow-hidden">
+            <CardContent className="p-4">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <MapPin className="w-5 h-5" />
+                  <h3 className="text-lg font-bold">Your Roadmap to 90%+</h3>
                 </div>
+                <p className="text-purple-100 text-xs mb-3">
+                  {futureWorksheets.length} personalized session{futureWorksheets.length > 1 ? 's' : ''} ready
+                </p>
                 <Button
                   onClick={() => setShowRoadmapModal(true)}
-                  size="lg"
-                  className="bg-white text-purple-700 hover:bg-purple-50 shadow-xl font-semibold"
+                  size="sm"
+                  className="bg-white text-purple-700 hover:bg-purple-50 shadow-xl font-semibold w-full"
                 >
-                  <MapPin className="w-5 h-5 mr-2" />
+                  <MapPin className="w-4 h-4 mr-1.5" />
                   View Learning Path
                 </Button>
               </div>
@@ -360,14 +339,14 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="shadow-2xl border-0 overflow-hidden">
-            <CardHeader>
-              <CardTitle className="text-2xl">Question-by-Question Breakdown</CardTitle>
-              <p className="text-slate-600 text-sm mt-1">Review your answers and learn from detailed feedback</p>
+          <Card className="shadow-lg border-0 overflow-hidden">
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-base">Question Breakdown</CardTitle>
+              <p className="text-slate-600 text-xs mt-0.5">Review your answers</p>
             </CardHeader>
             
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="px-3 pb-3">
+              <div className="space-y-2">
                 {exam.feedback.map((feedback, idx) => {
                   const question = exam.questions[feedback.question_index];
                   const questionTime = getQuestionTime(feedback.question_index);
@@ -379,54 +358,49 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className={`rounded-xl border-2 overflow-hidden transition-all ${
+                      className={`rounded-lg border overflow-hidden transition-all ${
                         feedback.is_correct 
-                          ? 'border-emerald-100 bg-white' 
-                          : 'border-amber-100 bg-white'
+                          ? 'border-emerald-200 bg-white' 
+                          : 'border-amber-200 bg-white'
                       }`}
                     >
                       <div 
-                        className={`p-4 cursor-pointer flex items-center gap-4 hover:bg-slate-50 transition-colors ${
+                        className={`p-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 transition-colors ${
                           isExpanded ? 'border-b border-slate-100' : ''
                         }`}
                         onClick={() => toggleQuestion(idx)}
                       >
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${
                           feedback.is_correct 
                             ? 'bg-emerald-500 text-white' 
                             : 'bg-amber-500 text-white'
                         }`}>
                           {feedback.is_correct ? (
-                            <CheckCircle className="w-5 h-5" />
+                            <CheckCircle className="w-4 h-4" />
                           ) : (
-                            <XCircle className="w-5 h-5" />
+                            <XCircle className="w-4 h-4" />
                           )}
                         </div>
                         
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-semibold text-slate-900">
-                              Question {question.question_number}
-                            </h4>
-                            
-                            <div className="flex gap-1.5 flex-wrap">
-                              <Badge variant="secondary" className="text-xs">{question.question_type}</Badge>
-                              <Badge variant="secondary" className="text-xs">{question.difficulty_index}</Badge>
-                              <Badge className={`text-xs ${feedback.is_correct ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                                {feedback.points_earned}/10 pts
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-slate-900 text-xs mb-1">
+                            Q{question.question_number}
+                          </h4>
+                          <div className="flex gap-1 flex-wrap">
+                            <Badge className={`text-[9px] px-1.5 py-0 ${feedback.is_correct ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                              {feedback.points_earned}/10
+                            </Badge>
+                            {questionTime > 0 && (
+                              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-purple-50 text-purple-700">
+                                <Clock className="w-2.5 h-2.5 mr-0.5" />
+                                {formatTime(questionTime)}
                               </Badge>
-                              {questionTime > 0 && (
-                                <Badge variant="secondary" className="text-xs bg-purple-50 text-purple-700">
-                                  <Clock className="w-3 h-3 mr-1" />
-                                  {formatTime(questionTime)}
-                                </Badge>
-                              )}
-                            </div>
+                            )}
                           </div>
                         </div>
 
-                        <div className="text-slate-400">
-                          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        <div className="text-slate-400 flex-shrink-0">
+                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                         </div>
                       </div>
 
@@ -438,63 +412,63 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <div className="p-6 bg-slate-50/30 space-y-4">
-                              <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-                                <MathText className="text-slate-800 font-medium mb-3">
+                            <div className="p-3 bg-slate-50/30 space-y-2">
+                              <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+                                <MathText className="text-slate-800 font-medium text-xs mb-2">
                                   {question.question_text}
                                 </MathText>
                                 {question.options && question.options.length > 0 && (
-                                  <div className="mt-3 space-y-1 bg-slate-50 p-3 rounded-lg">
+                                  <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
                                     {question.options.map((opt, i) => (
-                                      <MathText key={i} className="text-sm text-slate-600 block py-1" inline>
-                                        <span className="font-semibold w-6 inline-block">{String.fromCharCode(65 + i)}.</span> {opt}
+                                      <MathText key={i} className="text-xs text-slate-600 block py-0.5" inline>
+                                        <span className="font-semibold w-5 inline-block">{String.fromCharCode(65 + i)}.</span> {opt}
                                       </MathText>
                                     ))}
                                   </div>
                                 )}
-                                <div className="mt-4 grid grid-cols-2 gap-3">
-                                  <div className="bg-blue-50 p-3 rounded-lg">
-                                    <p className="text-xs font-bold text-blue-700 uppercase mb-1">Your Answer</p>
-                                    <MathText className="text-sm text-slate-700 font-medium">
+                                <div className="mt-2 grid grid-cols-2 gap-2">
+                                  <div className="bg-blue-50 p-2 rounded-lg">
+                                    <p className="text-[9px] font-bold text-blue-700 uppercase mb-0.5">Your Answer</p>
+                                    <MathText className="text-xs text-slate-700 font-medium">
                                       {question.user_answer || "No answer"}
                                     </MathText>
                                   </div>
-                                  <div className="bg-emerald-50 p-3 rounded-lg">
-                                    <p className="text-xs font-bold text-emerald-700 uppercase mb-1">Correct Answer</p>
-                                    <MathText className="text-sm text-slate-700 font-medium">
+                                  <div className="bg-emerald-50 p-2 rounded-lg">
+                                    <p className="text-[9px] font-bold text-emerald-700 uppercase mb-0.5">Correct</p>
+                                    <MathText className="text-xs text-slate-700 font-medium">
                                       {question.correct_answer}
                                     </MathText>
                                   </div>
                                 </div>
                               </div>
 
-                              <div className={`p-4 rounded-lg ${
+                              <div className={`p-2 rounded-lg ${
                                 feedback.is_correct ? 'bg-emerald-50' : 'bg-amber-50'
                               }`}>
-                                <div className="flex items-start gap-3">
-                                  {feedback.is_correct ? <Sparkles className="w-5 h-5 text-emerald-600 mt-0.5" /> : <Zap className="w-5 h-5 text-amber-600 mt-0.5" />}
+                                <div className="flex items-start gap-2">
+                                  {feedback.is_correct ? <Sparkles className="w-3.5 h-3.5 text-emerald-600 mt-0.5" /> : <Zap className="w-3.5 h-3.5 text-amber-600 mt-0.5" />}
                                   <div>
-                                    <p className={`text-sm font-bold mb-1 ${feedback.is_correct ? 'text-emerald-800' : 'text-amber-800'}`}>
-                                      {feedback.is_correct ? 'Excellent work!' : 'Learning Opportunity'}
+                                    <p className={`text-[10px] font-bold mb-0.5 ${feedback.is_correct ? 'text-emerald-800' : 'text-amber-800'}`}>
+                                      {feedback.is_correct ? 'Excellent!' : 'Learning Opportunity'}
                                     </p>
-                                    <MathText className="text-sm text-slate-700">
+                                    <MathText className="text-xs text-slate-700">
                                       {feedback.feedback}
                                     </MathText>
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="bg-purple-50 p-4 rounded-lg">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Brain className="w-4 h-4 text-purple-600" />
-                                  <p className="text-xs font-bold text-purple-700 uppercase">Explanation & Key Concepts</p>
+                              <div className="bg-purple-50 p-2 rounded-lg">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <Brain className="w-3 h-3 text-purple-600" />
+                                  <p className="text-[9px] font-bold text-purple-700 uppercase">Explanation</p>
                                 </div>
-                                <MathText className="text-sm text-slate-700 mb-3">
+                                <MathText className="text-xs text-slate-700 mb-2">
                                   {question.explanation}
                                 </MathText>
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-1">
                                   {question.assessed_competencies?.map((comp, i) => (
-                                    <Badge key={i} variant="outline" className="bg-white text-purple-700">
+                                    <Badge key={i} variant="outline" className="bg-white text-purple-700 text-[9px] px-1.5 py-0">
                                       {comp}
                                     </Badge>
                                   ))}
