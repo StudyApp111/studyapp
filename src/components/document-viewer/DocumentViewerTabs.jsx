@@ -269,7 +269,7 @@ export default function DocumentViewerTabs({ lesson }) {
                           transform: 'translate(-50%, -100%)'
                         }}
                       >
-                        <Popover open={showAnnotationPopover} onOpenChange={setShowAnnotationPopover}>
+                        <Popover open={showAnnotationPopover} onOpenChange={setShowAnnotationPopover} modal={false}>
                           <PopoverTrigger asChild>
                             <Button 
                               size="sm" 
@@ -279,7 +279,7 @@ export default function DocumentViewerTabs({ lesson }) {
                               Annotate
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-80" align="center">
+                          <PopoverContent className="w-80" align="center" onOpenAutoFocus={(e) => e.preventDefault()}>
                             <div className="space-y-3">
                               <div>
                                 <p className="text-xs font-semibold text-slate-600 mb-2">Selected Text:</p>

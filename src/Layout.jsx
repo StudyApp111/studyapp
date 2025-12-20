@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -18,7 +18,6 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
-import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
@@ -51,6 +50,11 @@ const navigationItems = [
           title: "Lesson History",
           url: createPageUrl("LessonHistory"),
           icon: History,
+        },
+        {
+          title: "Feedback",
+          url: createPageUrl("Feedback"),
+          icon: MessageSquare,
         },
       ];
 
@@ -371,14 +375,14 @@ export default function Layout({ children, currentPageName }) {
                 <div className="w-14" />
 
                 <Link
-                  to={createPageUrl("Leaderboard")}
+                  to={createPageUrl("Feedback")}
                   className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                    location.pathname === createPageUrl("Leaderboard")
+                    location.pathname === createPageUrl("Feedback")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <Trophy className="w-6 h-6" />
+                  <MessageSquare className="w-6 h-6" />
                 </Link>
 
                 <button
@@ -412,8 +416,23 @@ export default function Layout({ children, currentPageName }) {
           )}
         </main>
 
-        {/* Global Feedback Button - Always visible on authenticated pages */}
-        {showNavigation && !isOnboardingPage && <FeedbackButton />}
+        {/* Desktop AI Tutor CTA - Hidden on mobile, positioned in bottom right */}
+        {showNavigation && !isOnboardingPage && (
+          <button
+            onClick={() => setAiTutorModalOpen(true)}
+            className="hidden md:flex fixed bottom-6 right-6 z-40 group"
+          >
+            <div className="relative">
+              {/* Subtle glow */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
+
+              {/* Main button */}
+              <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full shadow-2xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
+                <Sparkles className="w-6 h-6 text-white drop-shadow" strokeWidth={2.5} />
+              </div>
+            </div>
+          </button>
+        )}
 
         {/* Create Lesson Modal */}
         <CreateLessonModal 
