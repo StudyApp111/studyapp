@@ -166,11 +166,11 @@ export default function Layout({ children, currentPageName }) {
               <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
-                  alt="StudyApp.AI Logo"
+                  alt="StudyApp Logo"
                   className="w-10 h-10 rounded-xl shadow-lg"
                 />
                 <div>
-                  <h2 className="font-bold text-slate-900 text-lg">StudyApp.AI</h2>
+                  <h2 className="font-bold text-slate-900 text-lg">StudyApp</h2>
                   <p className="text-xs text-slate-500">AI-Powered Learning</p>
                 </div>
               </Link>
@@ -313,10 +313,10 @@ export default function Layout({ children, currentPageName }) {
                 <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                   <img 
                     src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
-                    alt="StudyApp.AI Logo"
+                    alt="StudyApp Logo"
                     className="w-8 h-8 rounded-lg"
                   />
-                  <h1 className="text-xl font-bold text-slate-900">StudyApp.AI</h1>
+                  <h1 className="text-xl font-bold text-slate-900">StudyApp</h1>
                 </Link>
                 {user && (
                   <button

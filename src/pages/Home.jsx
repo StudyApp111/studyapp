@@ -332,44 +332,14 @@ export default function Home() {
               )}
             </p>
             
-            {/* Stats Badges */}
-            <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
-              {user.total_points > 0 && (
-                <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg">
-                  <Trophy className="w-5 h-5 text-yellow-600" />
-                  <span className="text-sm font-semibold text-slate-700">Level {user.level || 1}</span>
-                  <span className="text-xs text-slate-500">• {user.total_points || 0} pts</span>
-                </div>
-              )}
-              
-              {(user.current_streak || 0) > 0 && (
-                <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg">
-                  <Flame className="w-5 h-5 text-orange-500" />
-                  <span className="text-sm font-semibold text-slate-700">{user.current_streak} day streak</span>
-                </div>
-              )}
-              
-              {user.badges && user.badges.length > 0 && (
-                <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg">
-                  <Award className="w-5 h-5 text-purple-600" />
-                  <span className="text-sm font-semibold text-slate-700">{user.badges.length} {user.badges.length === 1 ? 'badge' : 'badges'}</span>
-                </div>
-              )}
-              
-              {(user.time_spent_seconds || 0) > 0 && (
-                <div className="flex items-center gap-2 bg-white/95 backdrop-blur-sm px-4 py-2.5 rounded-full shadow-lg">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-semibold text-slate-700">{formatTime(user.time_spent_seconds)}</span>
-                </div>
-              )}
-            </div>
+
           </div>
         </div>
       </div>
 
       {/* CTA Box - Always Displayed */}
       <div className="mb-8 max-w-6xl mx-auto">
-        <Card className="text-center py-12 md:py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
+        <Card className="text-center py-9 md:py-12 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
           <CardContent className="max-w-3xl mx-auto">
             <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto text-yellow-600 mb-6" />
             <div className="space-y-6">
