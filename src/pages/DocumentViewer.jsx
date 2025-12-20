@@ -192,13 +192,13 @@ export default function DocumentViewer() {
       <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10">
         <div className="w-full px-2 py-2">
           <div className="flex flex-col gap-2">
-            {/* Back Button + Course Name + Grade Row */}
+            {/* Combined Header Row */}
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate(createPageUrl("Home"))}
-                className="text-slate-700 hover:text-slate-900 hover:bg-purple-100 flex-shrink-0 h-8 w-8"
+                className="hidden md:flex text-slate-700 hover:text-slate-900 hover:bg-purple-100 flex-shrink-0 h-8 w-8"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -217,11 +217,7 @@ export default function DocumentViewer() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Timer Row */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 shadow-sm border border-purple-200">
+              <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 shadow-sm border border-purple-200 flex-shrink-0">
                 <Clock className="w-3 h-3 text-purple-600" />
                 <span className="text-xs font-mono font-semibold text-slate-900 min-w-[40px]">
                   {formatStudyTime(studyTime)}
