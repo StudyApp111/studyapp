@@ -190,56 +190,56 @@ export default function DocumentViewer() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40">
       <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10">
-        <div className="container mx-auto px-2 sm:px-4 py-3 md:py-4">
-          <div className="flex items-center gap-2 md:gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(createPageUrl("Home"))}
-              className="text-slate-700 hover:text-slate-900 hover:bg-purple-100 flex-shrink-0"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
+        <div className="w-full px-2 py-2">
+          <div className="flex flex-col gap-2">
+            {/* Back Button + Course Name Row */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(createPageUrl("Home"))}
+                className="text-slate-700 hover:text-slate-900 hover:bg-purple-100 flex-shrink-0 h-8 w-8"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <div className="flex-1 min-w-0 bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-3 py-2 rounded-lg shadow-lg">
+                <span className="text-xs font-bold truncate block">{lesson?.course_name}</span>
+              </div>
+            </div>
 
-            <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3 overflow-hidden">
-              <div className="flex-1 min-w-0 bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl shadow-lg">
-                <div className="flex items-center justify-between gap-2 md:gap-4">
-                  <span className="text-xs sm:text-sm md:text-base font-bold truncate">{lesson?.course_name}</span>
-                  <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                    <span className="text-[10px] sm:text-xs md:text-sm font-medium opacity-90">Predicted Grade:</span>
-                    {quiz?.predicted_grade ? (
-                      <span className="text-base sm:text-lg md:text-2xl font-bold">{quiz.predicted_grade}</span>
-                    ) : quiz?.completed ? (
-                      <span className="text-[10px] sm:text-xs md:text-sm font-semibold">Complete Exam</span>
-                    ) : (
-                      <span className="text-[10px] sm:text-xs md:text-sm opacity-70">Locked</span>
-                    )}
-                  </div>
+            {/* Grade + Timer Row */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-purple-50 rounded-lg px-3 py-1.5 border border-purple-200">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-medium text-purple-700">Grade:</span>
+                  {quiz?.predicted_grade ? (
+                    <span className="text-sm font-bold text-purple-900">{quiz.predicted_grade}</span>
+                  ) : quiz?.completed ? (
+                    <span className="text-[10px] font-semibold text-purple-700">Complete Exam</span>
+                  ) : (
+                    <span className="text-[10px] text-purple-600">Locked</span>
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 md:gap-2 bg-white rounded-lg px-2 md:px-3 py-1.5 md:py-2 shadow-md border border-purple-200 flex-shrink-0">
-                <Clock className="w-3 h-3 md:w-4 md:h-4 text-purple-600" />
-                <span className="text-xs md:text-sm font-mono font-semibold text-slate-900 min-w-[45px] md:min-w-[60px]">
+              <div className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 shadow-sm border border-purple-200">
+                <Clock className="w-3 h-3 text-purple-600" />
+                <span className="text-xs font-mono font-semibold text-slate-900 min-w-[40px]">
                   {formatStudyTime(studyTime)}
                 </span>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => setIsTimerRunning(!isTimerRunning)}
-                  className="h-6 w-6 md:h-7 md:w-7 p-0 hover:bg-purple-50"
+                  className="h-5 w-5 p-0 hover:bg-purple-50"
                 >
                   {isTimerRunning ? (
-                    <div className="flex items-center justify-center w-full h-full">
-                      <div className="flex gap-0.5">
-                        <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
-                        <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
-                      </div>
+                    <div className="flex gap-0.5">
+                      <div className="w-0.5 h-2 bg-purple-600 rounded-full" />
+                      <div className="w-0.5 h-2 bg-purple-600 rounded-full" />
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center w-full h-full">
-                      <div className="w-0 h-0 border-l-[6px] border-l-purple-600 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-0.5" />
-                    </div>
+                    <div className="w-0 h-0 border-l-[5px] border-l-purple-600 border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5" />
                   )}
                 </Button>
               </div>
@@ -248,66 +248,66 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="container mx-auto px-2 sm:px-4 py-4 md:py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <div className="overflow-x-auto -mx-2 px-2">
-            <TabsList className="w-full min-w-max bg-white border border-purple-200 p-1 grid grid-cols-5 gap-1">
+      <div className="w-full px-2 py-2">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
+          <div className="w-full overflow-x-hidden">
+            <TabsList className="w-full bg-white border border-purple-200 p-1 grid grid-cols-5 gap-1">
               <TabsTrigger 
                 value="doc"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
               >
                 <FileText className="w-4 h-4" />
-                <span>Doc</span>
+                <span className="text-[10px]">Doc</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="quiz"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
               >
                 <Brain className="w-4 h-4" />
-                <span>Quiz</span>
+                <span className="text-[10px]">Quiz</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="exam"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
               >
                 <FileText className="w-4 h-4" />
-                <span>Exam</span>
+                <span className="text-[10px]">Exam</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="grade"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
               >
                 <Trophy className="w-4 h-4" />
-                <span>Grade</span>
+                <span className="text-[10px]">Grade</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="flashcards"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center gap-2 text-xs md:text-sm"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-2 text-xs"
               >
                 <BookMarked className="w-4 h-4" />
-                <span>Cards</span>
+                <span className="text-[10px]">Cards</span>
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <div className="space-y-4 md:space-y-6">
-            <TabsContent value="doc" className="mt-0">
+          <div className="w-full">
+            <TabsContent value="doc" className="mt-0 p-0">
               <DocumentViewerTabs lesson={lesson} />
             </TabsContent>
 
-            <TabsContent value="quiz" className="mt-0">
+            <TabsContent value="quiz" className="mt-0 p-0">
               <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
             </TabsContent>
 
-            <TabsContent value="exam" className="mt-0">
+            <TabsContent value="exam" className="mt-0 p-0">
               <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
             </TabsContent>
 
-            <TabsContent value="grade" className="mt-0">
+            <TabsContent value="grade" className="mt-0 p-0">
               <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
             </TabsContent>
 
-            <TabsContent value="flashcards" className="mt-0">
+            <TabsContent value="flashcards" className="mt-0 p-0">
               <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
             </TabsContent>
           </div>

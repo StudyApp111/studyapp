@@ -127,66 +127,58 @@ export default function DocumentViewerTabs({ lesson }) {
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(lesson?.file_url || '');
 
   return (
-    <div className="h-[calc(100vh-180px)]">
+    <div className="h-[calc(100vh-250px)]">
       {/* Main Document Area - Full width */}
       <Card className="h-full bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
         <div className="h-full flex flex-col">
         {/* Header with Controls */}
-        <div className="border-b border-purple-200 px-4 py-3 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-slate-900 font-semibold">
-              <FileText className="w-5 h-5 text-purple-600" />
-              Document Viewer
-            </div>
-
-            <div className="flex items-center gap-2">
-              {lesson?.extracted_content && (
-                <>
+        <div className="border-b border-purple-200 px-2 py-2 space-y-2">
+          <div className="flex flex-col gap-2">
+            {lesson?.extracted_content && (
+              <div className="flex items-center gap-1 flex-wrap">
+                <Button
+                  variant={viewMode === "transcript" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode(viewMode === "pdf" ? "transcript" : "pdf")}
+                  className={`text-xs h-8 ${viewMode === "transcript" ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+                >
+                  {viewMode === "transcript" ? "PDF" : "Text"}
+                </Button>
+                {viewMode === "transcript" && (
                   <Button
-                    variant={viewMode === "transcript" ? "default" : "outline"}
+                    variant={annotationMode ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setViewMode(viewMode === "pdf" ? "transcript" : "pdf")}
-                    className={viewMode === "transcript" ? "bg-purple-600 hover:bg-purple-700" : ""}
+                    onClick={() => {
+                      setAnnotationMode(!annotationMode);
+                      setShowAnnotations(!annotationMode);
+                    }}
+                    className={`text-xs h-8 ${annotationMode ? "bg-yellow-500 hover:bg-yellow-600 text-slate-900" : ""}`}
                   >
-                    {viewMode === "transcript" ? "Show PDF" : "Show Transcript"}
+                    <Highlighter className="w-3 h-3 mr-1" />
+                    {annotationMode ? "Exit" : "Annotate"}
                   </Button>
-                  {viewMode === "transcript" && (
-                    <Button
-                      variant={annotationMode ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        setAnnotationMode(!annotationMode);
-                        setShowAnnotations(!annotationMode);
-                      }}
-                      className={annotationMode ? "bg-yellow-500 hover:bg-yellow-600 text-slate-900" : ""}
-                    >
-                      <Highlighter className="w-4 h-4 mr-2" />
-                      {annotationMode ? "Exit Annotate" : "Annotate"}
-                    </Button>
-                  )}
-                </>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Search Bar - Only in transcript mode */}
           {viewMode === "transcript" && lesson?.extracted_content && !annotationMode && (
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search within document..."
-                className="pl-10"
+                placeholder="Search..."
+                className="pl-7 h-8 text-xs"
               />
             </div>
           )}
           
           {annotationMode && (
-            <div className="flex items-center gap-2 text-sm text-slate-700 bg-yellow-50 p-3 rounded-lg border border-yellow-300">
-              <Highlighter className="w-5 h-5 text-yellow-600" />
-              <span className="font-medium">Annotation Mode Active</span>
-              <span className="text-slate-600">- Select text to highlight and add notes</span>
+            <div className="flex items-center gap-1 text-xs text-slate-700 bg-yellow-50 p-2 rounded border border-yellow-300">
+              <Highlighter className="w-3 h-3 text-yellow-600 flex-shrink-0" />
+              <span className="font-medium">Select text to annotate</span>
             </div>
           )}
         </div>
@@ -233,28 +225,28 @@ export default function DocumentViewerTabs({ lesson }) {
                 </div>
               ) : viewMode === "transcript" && lesson?.extracted_content ? (
                 <div className="h-full flex flex-col bg-slate-50">
-                  <div className="border-b border-purple-200 px-6 py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm">
-                      <FileText className="w-4 h-4 text-purple-600" />
+                  <div className="border-b border-purple-200 px-3 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-slate-900 font-semibold text-xs">
+                      <FileText className="w-3 h-3 text-purple-600" />
                       Transcript
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleCopyTranscript}
-                      className="border-purple-200"
+                      className="border-purple-200 h-7 text-xs"
                     >
-                      <Copy className="w-4 h-4 mr-2" />
+                      <Copy className="w-3 h-3 mr-1" />
                       Copy
                     </Button>
                   </div>
                   <div 
-                    className="flex-1 overflow-auto p-6"
+                    className="flex-1 overflow-auto p-3"
                     onMouseUp={annotationMode ? handleTextSelection : undefined}
                   >
-                    <div className="max-w-4xl mx-auto">
+                    <div className="w-full">
                       <div 
-                        className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap"
+                        className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap"
                         dangerouslySetInnerHTML={{ __html: highlightSearchTerm(lesson.extracted_content) }}
                       />
                     </div>
@@ -273,13 +265,13 @@ export default function DocumentViewerTabs({ lesson }) {
                           <PopoverTrigger asChild>
                             <Button 
                               size="sm" 
-                              className="bg-purple-600 hover:bg-purple-700 shadow-xl animate-in fade-in zoom-in duration-200"
+                              className="bg-purple-600 hover:bg-purple-700 shadow-xl animate-in fade-in zoom-in duration-200 text-xs h-8"
                             >
-                              <Highlighter className="w-4 h-4 mr-2" />
+                              <Highlighter className="w-3 h-3 mr-1" />
                               Annotate
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-80" align="center" onOpenAutoFocus={(e) => e.preventDefault()}>
+                          <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm" align="center" onOpenAutoFocus={(e) => e.preventDefault()}>
                             <div className="space-y-3">
                               <div>
                                 <p className="text-xs font-semibold text-slate-600 mb-2">Selected Text:</p>
@@ -353,22 +345,22 @@ export default function DocumentViewerTabs({ lesson }) {
               ) : null}
             </div>
 
-            {/* Annotations Sidebar */}
+            {/* Annotations Sidebar - Hidden on mobile */}
             {viewMode === "transcript" && showAnnotations && annotations.length > 0 && (
-              <div className="hidden lg:block lg:w-1/3 border-l border-purple-200 bg-white">
+              <div className="hidden md:block md:w-1/3 border-l border-purple-200 bg-white">
                 <div className="h-full flex flex-col">
-                  <div className="border-b border-purple-200 px-4 py-3">
-                    <h3 className="font-semibold text-sm text-slate-900 flex items-center gap-2">
-                      <StickyNote className="w-4 h-4 text-purple-600" />
-                      Your Notes ({annotations.length})
+                  <div className="border-b border-purple-200 px-3 py-2">
+                    <h3 className="font-semibold text-xs text-slate-900 flex items-center gap-1">
+                      <StickyNote className="w-3 h-3 text-purple-600" />
+                      Notes ({annotations.length})
                     </h3>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <div className="flex-1 overflow-y-auto p-2 space-y-2">
                     {annotations.map((annotation) => (
-                      <Card key={annotation.id} className="p-3 border-slate-200">
-                        <div className="space-y-2">
+                      <Card key={annotation.id} className="p-2 border-slate-200">
+                        <div className="space-y-1">
                           <div 
-                            className="p-2 rounded border"
+                            className="p-1.5 rounded border"
                             style={{
                               backgroundColor: annotation.color === 'yellow' ? '#fef9c3' : 
                                             annotation.color === 'green' ? '#dcfce7' : 
@@ -380,22 +372,22 @@ export default function DocumentViewerTabs({ lesson }) {
                                           annotation.color === 'pink' ? '#f9a8d4' : '#d8b4fe'
                             }}
                           >
-                            <p className="text-xs font-medium text-slate-700">
-                              "{annotation.highlight_text.substring(0, 80)}{annotation.highlight_text.length > 80 ? '...' : ''}"
+                            <p className="text-[10px] font-medium text-slate-700">
+                              "{annotation.highlight_text.substring(0, 60)}{annotation.highlight_text.length > 60 ? '...' : ''}"
                             </p>
                           </div>
                           {annotation.note && (
-                            <p className="text-xs text-slate-600 italic">{annotation.note}</p>
+                            <p className="text-[10px] text-slate-600 italic">{annotation.note}</p>
                           )}
-                          <div className="flex justify-between items-center pt-1">
-                            <Badge variant="outline" className="text-xs capitalize">
+                          <div className="flex justify-between items-center pt-0.5">
+                            <Badge variant="outline" className="text-[9px] capitalize h-5">
                               {annotation.color}
                             </Badge>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDeleteAnnotation(annotation.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 px-2 text-xs"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 h-6 px-1.5 text-[10px]"
                             >
                               Delete
                             </Button>
