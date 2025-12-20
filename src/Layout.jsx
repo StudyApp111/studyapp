@@ -70,6 +70,7 @@ export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
   const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -157,7 +158,8 @@ export default function Layout({ children, currentPageName }) {
         
         {/* Desktop Sidebar - Hidden during onboarding */}
         {showNavigation && !isOnboardingPage && (
-          <Sidebar className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl">
+          <>
+          <Sidebar className={`border-r border-purple-200/60 bg-white/90 backdrop-blur-xl transition-all duration-300 ${sidebarCollapsed ? 'w-0 -ml-64' : ''}`}>
             <SidebarHeader className="border-b border-purple-200/60 p-6">
               <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                 <img 
@@ -280,8 +282,26 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               )}
             </SidebarFooter>
-          </Sidebar>
-        )}
+            </Sidebar>
+
+            {/* Desktop Sidebar Toggle Button */}
+            <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="hidden md:flex fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-white border border-purple-200 rounded-r-lg shadow-lg hover:bg-purple-50 transition-all p-2"
+            style={{ left: sidebarCollapsed ? '0' : '256px' }}
+            >
+            {sidebarCollapsed ? (
+              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            )}
+            </button>
+            </>
+            )}
 
         <main className="flex-1 flex flex-col">
           {/* Mobile Header - Hidden during onboarding */}
