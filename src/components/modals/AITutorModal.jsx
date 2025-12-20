@@ -78,29 +78,29 @@ export default function AITutorModal({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm h-[80vh] p-0 bg-white/30 backdrop-blur-xl border border-white/40 shadow-2xl mx-6 rounded-3xl overflow-hidden">
-        <div className="flex flex-col h-full">
-          <div className="bg-gradient-to-r from-purple-600/60 to-purple-700/60 backdrop-blur-md text-white px-6 py-4 flex items-center gap-3 border-b border-white/20">
-            <div className="w-10 h-10 bg-white/25 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <Sparkles className="w-5 h-5" />
+      <DialogContent className="max-w-[340px] h-[75vh] p-0 bg-gradient-to-b from-purple-600/50 to-purple-700/40 backdrop-blur-2xl border border-white/30 shadow-2xl mx-auto rounded-[32px] overflow-hidden">
+        <div className="flex flex-col h-full p-4">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-11 h-11 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm shadow-lg">
+              <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-lg">Polli</h3>
-              <p className="text-xs text-white/90">Your AI study buddy</p>
+              <h3 className="font-bold text-white text-lg">Polli</h3>
+              <p className="text-xs text-white/80">Your AI study buddy</p>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+          <div className="flex-1 overflow-y-auto space-y-3 mb-4">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 backdrop-blur-md ${
+                  className={`max-w-[85%] rounded-3xl px-4 py-3 backdrop-blur-md ${
                     msg.role === 'user'
-                      ? 'bg-purple-600/85 text-white shadow-lg'
-                      : 'bg-white/60 text-slate-900 shadow-md border border-white/30'
+                      ? 'bg-purple-700/90 text-white shadow-lg'
+                      : 'bg-white/80 text-slate-900 shadow-md'
                   }`}
                 >
                   {msg.role === 'assistant' ? (
@@ -115,7 +115,7 @@ export default function AITutorModal({ open, onOpenChange }) {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-white/60 backdrop-blur-md rounded-2xl px-4 py-3 shadow-md border border-white/30">
+                <div className="bg-white/80 backdrop-blur-md rounded-3xl px-4 py-3 shadow-md">
                   <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
                 </div>
               </div>
@@ -123,25 +123,22 @@ export default function AITutorModal({ open, onOpenChange }) {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="px-5 py-4 bg-white/20 backdrop-blur-md border-t border-white/20">
-            <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                placeholder="Type your question..."
-                disabled={isLoading}
-                className="flex-1 bg-white/70 backdrop-blur-sm border-white/40 focus:border-purple-400/60 text-[15px] placeholder:text-slate-500/70"
-              />
-              <Button
-                onClick={handleSend}
-                disabled={isLoading || !input.trim()}
-                className="bg-purple-600/90 hover:bg-purple-700/90 backdrop-blur-sm shadow-lg"
-                size="icon"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+              placeholder="Type your question..."
+              disabled={isLoading}
+              className="flex-1 bg-white/80 backdrop-blur-sm border-0 focus:ring-2 focus:ring-white/40 text-[15px] placeholder:text-slate-500/70 rounded-full px-5"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={isLoading || !input.trim()}
+              className="bg-white/90 hover:bg-white text-purple-700 backdrop-blur-sm shadow-lg rounded-full w-11 h-11 p-0"
+            >
+              <Send className="w-5 h-5" />
+            </Button>
           </div>
         </div>
       </DialogContent>
