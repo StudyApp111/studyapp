@@ -173,9 +173,10 @@ export default function DocumentViewer() {
     };
   }, []);
 
-  const handleQuizComplete = (completedQuiz) => {
+  const handleQuizComplete = async (completedQuiz) => {
     setQuiz(completedQuiz);
-    setActiveTab("grade");
+    // Reload lesson data to refresh exams list
+    await loadLesson();
   };
 
   if (loading) {
