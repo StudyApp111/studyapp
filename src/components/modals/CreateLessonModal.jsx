@@ -101,8 +101,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           setProcessingStep("Extracting content from your document...");
           
           const extractResult = await base44.functions.invoke('extractDocumentContent', {
-            file_url: file_url,
-            file: file
+            file_url: file_url
           });
 
           if (!extractResult?.data?.extracted_content) {
