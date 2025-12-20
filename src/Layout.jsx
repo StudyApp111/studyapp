@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -22,6 +22,7 @@ import FeedbackButton from "@/components/feedback/FeedbackButton";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
+import AITutorModal from "@/components/modals/AITutorModal";
 
 const navigationItems = [
         {
@@ -70,6 +71,7 @@ export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
   const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
+  const [aiTutorModalOpen, setAiTutorModalOpen] = React.useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
   React.useEffect(() => {
@@ -394,19 +396,19 @@ export default function Layout({ children, currentPageName }) {
                   <span className="text-[10px] font-medium">Settings</span>
                 </button>
 
-                {/* Sleek Elevated CTA Button */}
+                {/* AI Tutor CTA Button */}
                 <button
-                  onClick={() => setCreateLessonModalOpen(true)}
-                  className="absolute left-1/2 -translate-x-1/2 -top-6 group"
+                  onClick={() => setAiTutorModalOpen(true)}
+                  className="absolute left-1/2 -translate-x-1/2 -top-5 group"
                 >
                   <div className="relative">
                     {/* Subtle glow */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
 
                     {/* Main button - sleek and minimal */}
-                    <div className="relative w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full shadow-2xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
-                                                <Plus className="w-8 h-8 text-white drop-shadow" strokeWidth={2.5} />
-                                              </div>
+                    <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full shadow-2xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
+                      <Sparkles className="w-6 h-6 text-white drop-shadow" strokeWidth={2.5} />
+                    </div>
                   </div>
                 </button>
               </div>
@@ -421,6 +423,12 @@ export default function Layout({ children, currentPageName }) {
         <CreateLessonModal 
           open={createLessonModalOpen} 
           onOpenChange={setCreateLessonModalOpen} 
+        />
+        
+        {/* AI Tutor Modal */}
+        <AITutorModal 
+          open={aiTutorModalOpen} 
+          onOpenChange={setAiTutorModalOpen} 
         />
         </div>
         </SidebarProvider>
