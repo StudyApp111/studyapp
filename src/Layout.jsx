@@ -293,8 +293,8 @@ export default function Layout({ children, currentPageName }) {
             {/* Desktop Sidebar Toggle Button */}
             <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="hidden md:flex fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-white border border-purple-200 rounded-r-lg shadow-lg hover:bg-purple-50 transition-all p-2"
-            style={{ left: sidebarCollapsed ? '0' : '256px' }}
+            className="hidden md:flex fixed top-1/2 -translate-y-1/2 z-50 bg-white border border-purple-200 rounded-r-lg shadow-lg hover:bg-purple-50 transition-all p-2"
+            style={{ left: sidebarCollapsed ? '0' : '256px', transition: 'left 0.3s' }}
             >
             {sidebarCollapsed ? (
               <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -374,8 +374,8 @@ export default function Layout({ children, currentPageName }) {
                 {/* Space for center CTA */}
                 <div className="w-14" />
 
-                <Link
-                  to={createPageUrl("Feedback")}
+                <button
+                  onClick={() => navigate(createPageUrl("Feedback"))}
                   className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
                     location.pathname === createPageUrl("Feedback")
                       ? 'text-yellow-600 bg-yellow-50'
@@ -383,7 +383,7 @@ export default function Layout({ children, currentPageName }) {
                   }`}
                 >
                   <MessageSquare className="w-6 h-6" />
-                </Link>
+                </button>
 
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}

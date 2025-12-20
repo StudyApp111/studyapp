@@ -246,38 +246,38 @@ export default function DocumentViewer() {
       <div className="w-full px-2 py-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
           <div className="w-full">
-            <TabsList className="w-full bg-white border border-purple-200 p-1 grid grid-cols-5 gap-1 h-auto">
+            <TabsList className="w-full bg-white border border-purple-200 p-0.5 grid grid-cols-5 gap-0.5 h-auto">
               <TabsTrigger 
                 value="doc"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-1 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-1.5 h-auto"
               >
                 <FileText className="w-5 h-5" />
                 <span className="text-[10px] font-medium">Doc</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="quiz"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-1 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-1.5 h-auto"
               >
                 <Brain className="w-5 h-5" />
                 <span className="text-[10px] font-medium">Quiz</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="exam"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-1 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-1.5 h-auto"
               >
                 <FileText className="w-5 h-5" />
                 <span className="text-[10px] font-medium">Exam</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="grade"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-1 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-1.5 h-auto"
               >
                 <Trophy className="w-5 h-5" />
                 <span className="text-[10px] font-medium">Grade</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="flashcards"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-1 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center gap-0.5 py-1.5 h-auto"
               >
                 <BookMarked className="w-5 h-5" />
                 <span className="text-[10px] font-medium">Cards</span>
