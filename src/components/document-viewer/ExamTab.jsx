@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Lock, Loader2, Clock, Sparkles, Play, Pause } from "lucide-react";
+import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import WorksheetQuestion from "@/components/worksheet/WorksheetQuestion";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
@@ -732,11 +732,11 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         setNewBadges(earnedNow);
       }
 
-      // Reload to show completed state
+      // Reload exam data and switch to grade tab
+      await loadOrGenerateExam();
       setTimeout(() => {
-        loadOrGenerateExam();
         window.dispatchEvent(new Event('switchToGradeTab'));
-      }, 2000);
+      }, 500);
     } catch (error) {
       console.error("Error submitting exam:", error);
       await logError('exam_submission', error, { lesson_id: lesson?.id, exam_id: exam?.id });
@@ -807,23 +807,21 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
   if (!exam) return null;
 
   if (exam.completed) {
+    // Automatically switch to grade tab when completed
+    setTimeout(() => {
+      window.dispatchEvent(new Event('switchToGradeTab'));
+    }, 500);
+
     return (
       <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[400px] shadow-xl flex items-center justify-center p-8">
         <div className="text-center space-y-4">
-          <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-yellow-500 rounded-full flex items-center justify-center mx-auto shadow-xl">
-            <span className="text-4xl font-bold text-white">{exam.predicted_grade}</span>
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto shadow-xl animate-pulse">
+            <CheckCircle2 className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-slate-900">Exam 1 Completed!</h3>
-            <p className="text-slate-600 mt-2">Predicted Grade: {exam.predicted_grade} ({Math.round(exam.total_score)}%)</p>
-            <p className="text-sm text-slate-500 mt-1">View your detailed feedback in the Grade tab</p>
+            <h3 className="text-2xl font-bold text-slate-900">Exam Submitted!</h3>
+            <p className="text-slate-600 mt-2">Switching to your predicted grade...</p>
           </div>
-          <Button
-            onClick={() => window.dispatchEvent(new Event('switchToGradeTab'))}
-            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-          >
-            View Predicted Grade
-          </Button>
         </div>
       </Card>
     );
