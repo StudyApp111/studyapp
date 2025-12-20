@@ -338,23 +338,22 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
           {showNavigation && !isOnboardingPage && showMobileBottomNav && (
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-2 py-3 safe-area-inset-bottom z-50">
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-purple-200/60 px-2 py-2 safe-area-inset-bottom z-50">
               <div className="flex items-center justify-between max-w-lg mx-auto relative">
                 <Link
                   to={createPageUrl("Home")}
-                  className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all min-w-0 ${
+                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
                     location.pathname === createPageUrl("Home")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
                   <Home className="w-6 h-6" />
-                  <span className="text-[10px] font-medium">Home</span>
                 </Link>
 
                 <Link
                   to={createPageUrl("SmartGrader")}
-                  className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all relative min-w-0 ${
+                  className={`flex items-center justify-center p-2 rounded-lg transition-all relative min-w-0 ${
                     location.pathname === createPageUrl("SmartGrader")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
@@ -362,11 +361,10 @@ export default function Layout({ children, currentPageName }) {
                 >
                   <div className="relative">
                     <FileCheck className="w-6 h-6" />
-                    <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full">
+                    <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full">
                       NEW
                     </span>
                   </div>
-                  <span className="text-[10px] font-medium whitespace-nowrap">Smart Grader</span>
                 </Link>
 
                 {/* Space for center CTA */}
@@ -374,32 +372,30 @@ export default function Layout({ children, currentPageName }) {
 
                 <Link
                   to={createPageUrl("Leaderboard")}
-                  className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all min-w-0 ${
+                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
                     location.pathname === createPageUrl("Leaderboard")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
                   <Trophy className="w-6 h-6" />
-                  <span className="text-[10px] font-medium">Ranks</span>
                 </Link>
 
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}
-                  className={`flex flex-col items-center justify-center gap-1 p-2 rounded-lg transition-all min-w-0 ${
+                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
                     location.pathname === createPageUrl("Settings")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
                   <Settings className="w-6 h-6" />
-                  <span className="text-[10px] font-medium">Settings</span>
                 </button>
 
                 {/* AI Tutor CTA Button */}
                 <button
                   onClick={() => setAiTutorModalOpen(true)}
-                  className="absolute left-1/2 -translate-x-1/2 -top-5 group"
+                  className="absolute left-1/2 -translate-x-1/2 -top-4 group"
                 >
                   <div className="relative">
                     {/* Subtle glow */}

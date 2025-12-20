@@ -67,8 +67,8 @@ export default function AITutorModal({ open, onOpenChange }) {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg">AI Tutor</h3>
-              <p className="text-xs text-white/90">Ask me anything</p>
+              <h3 className="font-bold text-lg">Polli</h3>
+              <p className="text-xs text-white/90">Your AI study buddy</p>
             </div>
           </div>
 
