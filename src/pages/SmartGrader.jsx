@@ -86,8 +86,8 @@ export default function SmartGrader() {
       
       // Extract content from both files in parallel
       const [assignmentExtract, rubricExtract] = await Promise.all([
-        base44.functions.invoke('extractDocumentContent', { file_url: assignmentUpload.file_url }),
-        base44.functions.invoke('extractDocumentContent', { file_url: rubricUpload.file_url })
+        base44.functions.invoke('extractDocumentContent', { file_url: assignmentUpload.file_url, file: assignmentFile }),
+        base44.functions.invoke('extractDocumentContent', { file_url: rubricUpload.file_url, file: curriculumFile })
       ]);
 
       if (!assignmentExtract?.data?.extracted_content) {
