@@ -78,7 +78,7 @@ export default function AITutorModal({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md h-[80vh] p-0 bg-white/30 backdrop-blur-xl border border-white/40 shadow-2xl mx-4 rounded-3xl overflow-hidden">
+      <DialogContent className="max-w-sm h-[80vh] p-0 bg-white/30 backdrop-blur-xl border border-white/40 shadow-2xl mx-6 rounded-3xl overflow-hidden">
         <div className="flex flex-col h-full">
           <div className="bg-gradient-to-r from-purple-600/60 to-purple-700/60 backdrop-blur-md text-white px-6 py-4 flex items-center gap-3 border-b border-white/20">
             <div className="w-10 h-10 bg-white/25 rounded-full flex items-center justify-center backdrop-blur-sm">
