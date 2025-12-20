@@ -5,11 +5,18 @@ import { Button } from "@/components/ui/button";
 import FeedbackDisplay from "../feedback/FeedbackDisplay";
 
 export default function PredictedGradeTab({ lesson, quiz, exams }) {
-  const latestExamWithGrade = exams
-    ?.filter(e => e.completed && e.predicted_grade)
-    .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+  // Find any completed exam with AI feedback
+  const completedExamsWithFeedback = (exams || []).filter(e => 
+    e.completed === true && 
+    e.ai_feedback && 
+    Object.keys(e.ai_feedback).length > 0
+  );
+  
+  const latestExamWithGrade = completedExamsWithFeedback.sort((a, b) => 
+    new Date(b.updated_date) - new Date(a.updated_date)
+  )[0];
 
-  if (!quiz?.completed || !latestExamWithGrade) {
+  if (!latestExamWithGrade) {
     return (
       <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl">
         <CardContent className="p-12 text-center">
