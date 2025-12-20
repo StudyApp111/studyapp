@@ -7,15 +7,33 @@ import { Send, Loader2, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 export default function AITutorModal({ open, onOpenChange }) {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: `Hi! I'm your AI tutor. Ask me anything about your studies and I'll help explain concepts, answer questions, and guide your learning. 🎓`
-    }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userName, setUserName] = useState("");
   const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    const initializeChat = async () => {
+      if (open && messages.length === 0) {
+        try {
+          const user = await base44.auth.me();
+          const firstName = user.full_name?.split(' ')[0] || 'there';
+          setUserName(firstName);
+          setMessages([{
+            role: "assistant",
+            content: `Hey ${firstName}! 👋 I'm Polli, your AI study buddy. What can I help you learn today?`
+          }]);
+        } catch (error) {
+          setMessages([{
+            role: "assistant",
+            content: `Hey there! 👋 I'm Polli, your AI study buddy. What can I help you learn today?`
+          }]);
+        }
+      }
+    };
+    initializeChat();
+  }, [open]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
