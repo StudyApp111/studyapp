@@ -242,39 +242,39 @@ export default function DocumentViewer() {
 
       <div className="w-full px-2 py-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
-          <div className="w-full">
-            <TabsList className="w-full bg-white border border-purple-200 p-1 grid grid-cols-5 gap-1 h-auto">
+          <div className="w-full overflow-x-auto scrollbar-hide">
+            <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto min-w-full">
               <TabsTrigger 
                 value="doc"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-2 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
               >
                 <FileText className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Doc</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="quiz"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-2 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
               >
                 <Brain className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Quiz</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="exam"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-2 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
               >
                 <FileText className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Exam</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="grade"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-2 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
               >
                 <Trophy className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Grade</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="flashcards"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-2 py-2 h-auto"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
               >
                 <BookMarked className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Flashcards</span>
