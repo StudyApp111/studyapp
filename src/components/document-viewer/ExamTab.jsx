@@ -656,6 +656,30 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         })
       );
 
+      // Create all 6 exams after completing exam 1
+      if (exam.exam_number === 1 && feedbackData.suggested_future_sessions_plan) {
+        const existingExams = await base44.entities.Exam.filter({ lesson_id: lesson.id });
+        const existingNumbers = existingExams.map(e => e.exam_number);
+        
+        await Promise.all(
+          feedbackData.suggested_future_sessions_plan.map(async (session) => {
+            if (!existingNumbers.includes(session.session_number)) {
+              await base44.entities.Exam.create({
+                lesson_id: lesson.id,
+                exam_number: session.session_number,
+                focus_description: session.session_focus_description,
+                status: "not_started",
+                completed: false,
+                questions: [],
+                feedback: [],
+                time_taken_seconds: 0,
+                question_time_laps: []
+              });
+            }
+          })
+        );
+      }
+
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
       let pointsEarned = 50;
       
