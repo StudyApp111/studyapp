@@ -242,53 +242,53 @@ Create flashcards that:
             </div>
 
             {/* Rating buttons */}
-            <div className="grid grid-cols-4 gap-0 border-t border-slate-200">
+            <div className="grid grid-cols-4 gap-3 p-4">
               <button
                 onClick={() => handleRating('again')}
-                className="p-6 hover:bg-red-50 transition-colors border-r border-slate-200 group"
+                className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl p-6 shadow-lg transition-all hover:scale-105"
               >
                 <div className="text-center">
-                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-red-200">
-                    <span className="text-red-600 text-lg">↻</span>
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white text-2xl">✕</span>
                   </div>
-                  <div className="font-semibold text-slate-900">Again</div>
-                  <div className="text-xs text-slate-500">&lt;1 day</div>
+                  <div className="font-bold text-lg mb-1">Again</div>
+                  <div className="text-xs opacity-90">&lt;1 day</div>
                 </div>
               </button>
               <button
                 onClick={() => handleRating('hard')}
-                className="p-6 hover:bg-orange-50 transition-colors border-r border-slate-200 group"
+                className="bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-2xl p-6 shadow-lg transition-all hover:scale-105"
               >
                 <div className="text-center">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-orange-200">
-                    <span className="text-orange-600 text-lg">⟲</span>
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white text-2xl">⏱</span>
                   </div>
-                  <div className="font-semibold text-slate-900">Hard</div>
-                  <div className="text-xs text-slate-500">1 day</div>
+                  <div className="font-bold text-lg mb-1">Hard</div>
+                  <div className="text-xs opacity-90">1 day</div>
                 </div>
               </button>
               <button
                 onClick={() => handleRating('good')}
-                className="p-6 hover:bg-blue-50 transition-colors border-r border-slate-200 group"
+                className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl p-6 shadow-lg transition-all hover:scale-105"
               >
                 <div className="text-center">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-blue-200">
-                    <span className="text-blue-600 text-lg">✓</span>
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white text-2xl">✓</span>
                   </div>
-                  <div className="font-semibold text-slate-900">Good</div>
-                  <div className="text-xs text-slate-500">3 days</div>
+                  <div className="font-bold text-lg mb-1">Good</div>
+                  <div className="text-xs opacity-90">3 days</div>
                 </div>
               </button>
               <button
                 onClick={() => handleRating('easy')}
-                className="p-6 hover:bg-emerald-50 transition-colors group"
+                className="bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-2xl p-6 shadow-lg transition-all hover:scale-105"
               >
                 <div className="text-center">
-                  <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:bg-emerald-200">
-                    <span className="text-emerald-600 text-lg">⚡</span>
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white text-2xl">⚡</span>
                   </div>
-                  <div className="font-semibold text-slate-900">Easy</div>
-                  <div className="text-xs text-slate-500">4 days</div>
+                  <div className="font-bold text-lg mb-1">Easy</div>
+                  <div className="text-xs opacity-90">4 days</div>
                 </div>
               </button>
             </div>

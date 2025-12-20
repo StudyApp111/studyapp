@@ -37,6 +37,7 @@ export default function ExamTab({ lesson, quiz, exams }) {
   const [newBadges, setNewBadges] = useState([]);
   const gradingTimeoutRef = useRef(null);
   const [gradingInProgress, setGradingInProgress] = useState({});
+  const [selectedExamNumber, setSelectedExamNumber] = useState(null);
   
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef(null);
@@ -46,10 +47,10 @@ export default function ExamTab({ lesson, quiz, exams }) {
   const examIdRef = useRef(null);
 
   useEffect(() => {
-    if (quiz && quiz.completed && lesson) {
-      loadOrGenerateExam();
+    if (quiz && quiz.completed && lesson && selectedExamNumber) {
+      loadOrGenerateExam(selectedExamNumber);
     }
-  }, [quiz?.completed, lesson?.id]);
+  }, [quiz?.completed, lesson?.id, selectedExamNumber]);
 
   useEffect(() => {
     if (exam && !exam.completed && exam.id !== examIdRef.current) {
@@ -101,12 +102,12 @@ export default function ExamTab({ lesson, quiz, exams }) {
     }
   };
 
-  const loadOrGenerateExam = async () => {
+  const loadOrGenerateExam = async (examNumber) => {
     setIsGenerating(true);
     try {
       const existingExams = await base44.entities.Exam.filter({ 
         lesson_id: lesson.id,
-        exam_number: 1
+        exam_number: examNumber
       });
 
       if (existingExams.length > 0) {
@@ -120,12 +121,12 @@ export default function ExamTab({ lesson, quiz, exams }) {
         }
         
         if (!loadedExam.questions || loadedExam.questions.length === 0) {
-          await generateExam(loadedExam.id);
+          await generateExam(loadedExam.id, examNumber);
         } else {
           setExam(loadedExam);
         }
       } else {
-        await generateExam();
+        await generateExam(null, examNumber);
       }
     } catch (error) {
       console.error("Error loading exam:", error);
@@ -133,7 +134,7 @@ export default function ExamTab({ lesson, quiz, exams }) {
     setIsGenerating(false);
   };
 
-  const generateExam = async (existingExamId = null) => {
+  const generateExam = async (existingExamId = null, examNumber = 1) => {
     try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
@@ -233,8 +234,8 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       } else {
         createdExam = await base44.entities.Exam.create({
           lesson_id: lesson.id,
-          exam_number: 1,
-          diagnostic_quiz_id: quiz.id,
+          exam_number: examNumber,
+          diagnostic_quiz_id: examNumber === 1 ? quiz.id : null,
           questions: questionsWithPlaceholder,
           analysis_summary: examData.analysis_summary_for_worksheet_design,
           status: "in_progress",
@@ -746,6 +747,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
     }
   };
 
+  // Show exam selection view if no exam is selected or currently taking
   if (!quiz || !quiz.completed) {
     return (
       <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[400px] shadow-xl flex items-center justify-center p-8">
@@ -765,6 +767,112 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           >
             Go to Diagnostic Quiz
           </Button>
+        </div>
+      </Card>
+    );
+  }
+  
+  // Show exam selection if no exam in progress
+  if (!exam && !isGenerating && !selectedExamNumber) {
+    const allExamsForLesson = exams || [];
+    const sortedExams = allExamsForLesson.sort((a, b) => a.exam_number - b.exam_number);
+    
+    return (
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-6">
+        <div className="mb-6">
+          <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+            <Trophy className="w-7 h-7 text-yellow-500" />
+            Your Roadmap to 90%+
+          </h3>
+          <p className="text-slate-600">Complete exams to track your progress and improve your predicted grade</p>
+        </div>
+        
+        <div className="grid gap-3">
+          {sortedExams.length > 0 ? sortedExams.map((e) => {
+            const isCompleted = e.completed;
+            const canStart = e.exam_number === 1 || sortedExams.find(ex => ex.exam_number === e.exam_number - 1)?.completed;
+            
+            return (
+              <button
+                key={e.id}
+                onClick={() => {
+                  if (isCompleted) {
+                    // Navigate to grade tab to view feedback
+                    window.dispatchEvent(new Event('switchToGradeTab'));
+                  } else if (canStart) {
+                    setSelectedExamNumber(e.exam_number);
+                  }
+                }}
+                disabled={!canStart && !isCompleted}
+                className={`p-5 rounded-xl border-2 transition-all text-left ${
+                  isCompleted
+                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300 hover:shadow-lg'
+                    : canStart
+                    ? 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02]'
+                    : 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    {isCompleted ? (
+                      <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
+                        <CheckCircle2 className="w-6 h-6 text-white" />
+                      </div>
+                    ) : canStart ? (
+                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                        <Play className="w-6 h-6 text-white" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 bg-slate-300 rounded-full flex items-center justify-center">
+                        <Lock className="w-6 h-6 text-white" />
+                      </div>
+                    )}
+                    <div>
+                      <h5 className="font-bold text-slate-900 text-lg">
+                        Exam {e.exam_number}
+                      </h5>
+                      <p className="text-sm text-slate-600">
+                        {e.focus_description || (e.exam_number === 1 ? 'Diagnostic Assessment' : 'Practice Exam')}
+                      </p>
+                    </div>
+                  </div>
+                  {isCompleted && e.predicted_grade && (
+                    <Badge className="bg-emerald-600 text-white font-bold text-lg px-4 py-2">
+                      {e.predicted_grade}
+                    </Badge>
+                  )}
+                </div>
+                {isCompleted && (
+                  <p className="text-sm text-emerald-700 font-medium ml-12">
+                    Click to view feedback →
+                  </p>
+                )}
+                {canStart && !isCompleted && (
+                  <p className="text-sm text-purple-700 font-medium ml-12">
+                    Click to start exam →
+                  </p>
+                )}
+              </button>
+            );
+          }) : (
+            <button
+              onClick={() => setSelectedExamNumber(1)}
+              className="p-5 rounded-xl border-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02] transition-all text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                  <Play className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h5 className="font-bold text-slate-900 text-lg">Exam 1</h5>
+                  <p className="text-sm text-slate-600">Diagnostic Assessment</p>
+                </div>
+              </div>
+              <p className="text-sm text-purple-700 font-medium ml-12 mt-2">
+                Click to start your first exam →
+              </p>
+            </button>
+          )}
         </div>
       </Card>
     );
@@ -808,90 +916,11 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
   if (!exam) return null;
 
   if (exam.completed) {
-    // Show roadmap for completed exams
-    const allExamsForLesson = exams || [];
-    const sortedExams = allExamsForLesson.sort((a, b) => a.exam_number - b.exam_number);
-    
-    return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-6 space-y-6">
-        <div className="text-center pb-6 border-b border-purple-200">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
-            <CheckCircle2 className="w-8 h-8 text-white" />
-          </div>
-          <h3 className="text-2xl font-bold text-slate-900 mb-2">Exam {exam.exam_number} Complete!</h3>
-          <p className="text-slate-600">Predicted Grade: <span className="text-2xl font-bold text-purple-600">{exam.predicted_grade}</span></p>
-        </div>
-
-        {exam.ai_feedback?.suggested_future_sessions_plan && (
-          <div className="space-y-4">
-            <h4 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <Trophy className="w-6 h-6 text-yellow-500" />
-              Your Roadmap to 90%+
-            </h4>
-            <div className="grid gap-3">
-              {sortedExams.map((e) => {
-                const isCompleted = e.completed;
-                const isCurrent = e.exam_number === exam.exam_number;
-                const isNext = !isCompleted && e.exam_number > exam.exam_number;
-                const sessionPlan = exam.ai_feedback.suggested_future_sessions_plan?.find(
-                  s => s.session_number === e.exam_number
-                );
-
-                return (
-                  <div
-                    key={e.id}
-                    className={`p-4 rounded-lg border-2 transition-all ${
-                      isCompleted
-                        ? 'bg-emerald-50 border-emerald-300'
-                        : isNext
-                        ? 'bg-purple-50 border-purple-300 shadow-md'
-                        : 'bg-slate-50 border-slate-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        {isCompleted ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                        ) : isNext ? (
-                          <Play className="w-5 h-5 text-purple-600" />
-                        ) : (
-                          <Lock className="w-5 h-5 text-slate-400" />
-                        )}
-                        <h5 className="font-bold text-slate-900">
-                          Exam {e.exam_number}: {sessionPlan?.session_name || e.focus_description || 'Diagnostic'}
-                        </h5>
-                      </div>
-                      {isCompleted && e.predicted_grade && (
-                        <Badge className="bg-emerald-600 text-white font-bold">
-                          {e.predicted_grade}
-                        </Badge>
-                      )}
-                      {isCurrent && (
-                        <Badge className="bg-purple-600 text-white font-bold">
-                          Current
-                        </Badge>
-                      )}
-                    </div>
-                    {sessionPlan && (
-                      <p className="text-sm text-slate-600 ml-8">
-                        {sessionPlan.session_focus_description}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-        
-        <Button
-          onClick={() => window.dispatchEvent(new Event('switchToGradeTab'))}
-          className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-        >
-          View Full Feedback
-        </Button>
-      </Card>
-    );
+    // Go back to selection view after completion
+    setExam(null);
+    setSelectedExamNumber(null);
+    window.dispatchEvent(new Event('reloadLesson'));
+    return null;
   }
 
   const progress = ((currentQuestion + 1) / exam.questions.length) * 100;
