@@ -18,23 +18,23 @@ export default function PredictedGradeTab({ lesson, quiz, exams }) {
 
   if (!latestExamWithGrade) {
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl">
-        <CardContent className="p-12 text-center">
-          <div className="max-w-md mx-auto space-y-6">
-            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-100 to-yellow-100 rounded-full flex items-center justify-center">
-              <Lock className="w-10 h-10 text-purple-600" />
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-2">
+        <CardContent className="p-6 text-center">
+          <div className="space-y-4">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-purple-100 to-yellow-100 rounded-full flex items-center justify-center">
+              <Lock className="w-8 h-8 text-purple-600" />
             </div>
             
-            <div className="space-y-3">
-              <h3 className="text-2xl font-bold text-slate-900">Predicted Grade Locked</h3>
-              <p className="text-slate-600">
-                Complete at least one exam to unlock your predicted grade and performance insights.
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-slate-900">Predicted Grade Locked</h3>
+              <p className="text-sm text-slate-600">
+                Complete at least one exam to unlock your predicted grade.
               </p>
             </div>
 
             <Button 
               onClick={() => window.dispatchEvent(new CustomEvent('switchToExamTab'))}
-              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 w-full"
             >
               Go to Exams
             </Button>
@@ -45,7 +45,7 @@ export default function PredictedGradeTab({ lesson, quiz, exams }) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full px-2">
       <FeedbackDisplay 
         exam={latestExamWithGrade} 
         lesson={lesson} 
