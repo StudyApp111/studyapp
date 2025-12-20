@@ -145,6 +145,8 @@ export default function ExamTab({ lesson, quiz, exams }) {
       let contentDescription = "";
       if (lesson.input_type === "description" && lesson.description) {
         contentDescription = lesson.description;
+      } else if (lesson.compressed_content) {
+        contentDescription = lesson.compressed_content;
       } else if (lesson.extracted_content) {
         contentDescription = lesson.extracted_content;
       } else {
@@ -412,7 +414,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         };
       });
 
-      let contentDescription = lesson.extracted_content || lesson.description || "N/A";
+      let contentDescription = lesson.compressed_content || lesson.extracted_content || lesson.description || "N/A";
 
       const examPerformanceData = questionsWithGrading.map((q) => ({
         question_number: q.question_number,
@@ -879,38 +881,10 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
   }
 
   if (isGenerating) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center space-y-6 max-w-2xl mx-auto">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 mx-auto"
-          >
-            <Loader2 className="w-16 h-16 text-purple-600" />
-          </motion.div>
-          
-          <div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-2">Creating Your Exam</h3>
-            <p className="text-slate-600">
-              Generating personalized exam questions based on your diagnostic results...
-            </p>
-          </div>
-
-          <Card className="bg-gradient-to-r from-purple-50 to-yellow-50 border-purple-200 p-6">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">⭐</span>
-              <div className="text-left">
-                <p className="font-semibold text-purple-900 mb-1">DID YOU KNOW? • {lesson?.course_name}</p>
-                <p className="text-sm text-slate-700">
-                  Practice testing is one of the most effective learning strategies, improving retention by up to 50% compared to passive review.
-                </p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
+    return <EducationalLoader 
+      title="Creating Your Exam" 
+      description="Generating personalized exam questions based on your diagnostic results..."
+    />;
   }
 
   if (!exam) return null;
