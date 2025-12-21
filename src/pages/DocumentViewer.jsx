@@ -319,9 +319,10 @@ export default function DocumentViewer() {
                 <span className="text-[11px] font-medium">Flashcards</span>
               </TabsTrigger>
             </TabsList>
-          </div>
+            </div>
+            </div>
 
-          <div className="w-full flex-1 overflow-auto">
+            <div className="w-full flex-1 overflow-auto">
             <TabsContent value="doc" className="mt-0 p-0 h-full">
               <DocumentViewerTabs lesson={lesson} />
             </TabsContent>
