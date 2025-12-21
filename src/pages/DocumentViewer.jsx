@@ -5,8 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Brain, TrendingUp, Trophy, ChevronLeft, Loader2, Clock, BookMarked } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar";
+import { FileText, Brain, TrendingUp, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Sparkles } from "lucide-react";
 import { useRef } from "react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import QuizTab from "@/components/document-viewer/QuizTab";
@@ -14,10 +13,10 @@ import ExamTab from "@/components/document-viewer/ExamTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
+import AITutorModal from "@/components/modals/AITutorModal";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
-  const { setOpen } = useSidebar();
   const [activeTab, setActiveTab] = useState("doc");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +27,7 @@ export default function DocumentViewer() {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [timerInterval, setTimerInterval] = useState(null);
   const saveProgressRef = useRef(null);
+  const [aiTutorModalOpen, setAiTutorModalOpen] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -53,9 +53,7 @@ export default function DocumentViewer() {
     };
   }, []);
 
-  useEffect(() => {
-    setOpen(false);
-  }, [setOpen]);
+
 
   useEffect(() => {
     loadLesson();
@@ -242,7 +240,20 @@ export default function DocumentViewer() {
 
       <div className="w-full px-2 py-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
-          <div className="w-full overflow-x-auto scrollbar-hide">
+          <div className="w-full overflow-x-auto scrollbar-hide relative">
+            {/* AI Tutor Button - Desktop Only */}
+            <button
+              onClick={() => setAiTutorModalOpen(true)}
+              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -ml-14 z-10 group"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
+                <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full shadow-xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
+                  <Sparkles className="w-5 h-5 text-white drop-shadow" strokeWidth={2.5} />
+                </div>
+              </div>
+            </button>
+            
             <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto min-w-full">
               <TabsTrigger 
                 value="doc"
@@ -312,6 +323,12 @@ export default function DocumentViewer() {
           onBreakComplete={() => {}} 
         />
       )}
+
+      {/* AI Tutor Modal */}
+      <AITutorModal 
+        open={aiTutorModalOpen} 
+        onOpenChange={setAiTutorModalOpen} 
+      />
       </div>
       );
       }

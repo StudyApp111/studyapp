@@ -375,12 +375,8 @@ export default function Layout({ children, currentPageName }) {
                 <div className="w-14" />
 
                 <button
-                  onClick={() => navigate(createPageUrl("Feedback"))}
-                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                    location.pathname === createPageUrl("Feedback")
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-slate-600'
-                  }`}
+                  onClick={() => setAiTutorModalOpen(true)}
+                  className="flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600"
                 >
                   <MessageSquare className="w-6 h-6" />
                 </button>
