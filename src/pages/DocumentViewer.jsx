@@ -227,8 +227,8 @@ export default function DocumentViewer() {
             <div className="flex-1 min-w-0 max-w-full bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-2 md:px-4 py-2 md:py-3 rounded-xl shadow-lg overflow-hidden">
               <div className="flex items-center justify-between gap-1.5 md:gap-2 w-full">
                 <span className="text-sm md:text-base font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
-                <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0 whitespace-nowrap">
-                  <span className="text-[10px] md:text-xs font-medium opacity-90">Grade:</span>
+                <div className="flex items-center gap-1 md:gap-1.5 flex-shrink-0 whitespace-nowrap">
+                  <span className="text-sm md:text-base font-normal">Predicted Grade:</span>
                   {quiz?.predicted_grade ? (
                     <span className="text-base md:text-xl font-bold">{quiz.predicted_grade}</span>
                   ) : quiz?.completed ? (
@@ -352,38 +352,38 @@ export default function DocumentViewer() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full max-w-full">
             <div className="flex-shrink-0 pb-2 w-full max-w-full overflow-hidden">
               <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
-                <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto">
+                <TabsList className="flex w-full bg-white border border-purple-200 p-1 gap-1 h-auto">
                   <TabsTrigger 
                     value="doc"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
                   >
                     <FileText className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Doc</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="quiz"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
                   >
                     <Brain className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Quiz</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
                   >
                     <FileText className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Exam</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="grade"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
                   >
                     <Trophy className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Grade</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
                   >
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Cards</span>

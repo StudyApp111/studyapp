@@ -380,8 +380,9 @@ export default function Layout({ children, currentPageName }) {
 
                 <button
                   onClick={() => setAiTutorModalOpen(true)}
-                  className="flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600"
+                  className="flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600 relative"
                 >
+                  <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
                   <MessageSquare className="w-6 h-6" />
                 </button>
 
