@@ -238,22 +238,22 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full px-2 py-2">
+      <div className="w-full px-2 py-2 relative">
+        {/* AI Tutor Button - Desktop Only - Fixed to left side */}
+        <button
+          onClick={() => setAiTutorModalOpen(true)}
+          className="hidden md:flex fixed left-[270px] top-1/2 -translate-y-1/2 z-50 group"
+        >
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
+            <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full shadow-xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
+              <Sparkles className="w-5 h-5 text-white drop-shadow" strokeWidth={2.5} />
+            </div>
+          </div>
+        </button>
+        
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
-          <div className="w-full overflow-x-auto scrollbar-hide relative">
-            {/* AI Tutor Button - Desktop Only */}
-            <button
-              onClick={() => setAiTutorModalOpen(true)}
-              className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -ml-14 z-10 group"
-            >
-              <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
-                <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full shadow-xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
-                  <Sparkles className="w-5 h-5 text-white drop-shadow" strokeWidth={2.5} />
-                </div>
-              </div>
-            </button>
-            
+          <div className="w-full overflow-x-auto scrollbar-hide">
             <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto min-w-full">
               <TabsTrigger 
                 value="doc"

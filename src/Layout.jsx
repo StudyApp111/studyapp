@@ -77,6 +77,10 @@ export default function Layout({ children, currentPageName }) {
   const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
   const [aiTutorModalOpen, setAiTutorModalOpen] = React.useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  
+  // Special handling for DocumentViewer page - always show sidebar
+  const isDocumentViewerPage = currentPageName === "DocumentViewer";
+  const showSidebar = showNavigation && !isOnboardingPage && (!sidebarCollapsed || isDocumentViewerPage);
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -163,7 +167,7 @@ export default function Layout({ children, currentPageName }) {
         `}</style>
         
         {/* Desktop Sidebar - Hidden during onboarding */}
-        {showNavigation && !isOnboardingPage && !sidebarCollapsed && (
+        {showSidebar && (
           <>
           <Sidebar className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl transition-all duration-300">
             <SidebarHeader className="border-b border-purple-200/60 p-6">

@@ -89,7 +89,7 @@ export default function AITutorModal({ open, onOpenChange }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => onOpenChange(false)}
-            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/20 md:backdrop-blur-sm z-50"
           />
 
           {/* Chat Widget */}
