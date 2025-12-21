@@ -878,6 +878,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           )}
         </div>
       </Card>
+      </div>
     );
   }
 
