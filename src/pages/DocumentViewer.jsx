@@ -264,7 +264,7 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-100px)]">
+      <div className="w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-80px)]">
         {/* Desktop: Flex container for AI tutor + tabs */}
         <div className="hidden md:flex gap-2 h-full">{/* AI Tutor Panel - Left 1/3 */}
           <AITutorPanel 
@@ -348,9 +348,9 @@ export default function DocumentViewer() {
           </div>
         
         {/* Mobile: Original layout without AI tutor panel */}
-        <div className="md:hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
-            <div className="flex-shrink-0">
+        <div className="md:hidden h-full flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+            <div className="flex-shrink-0 pb-2">
               <div className="w-full overflow-x-auto scrollbar-hide">
                 <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-max">
                   <TabsTrigger 
@@ -392,24 +392,24 @@ export default function DocumentViewer() {
               </div>
             </div>
 
-            <div className="w-full">
-              <TabsContent value="doc" className="mt-0 p-0">
+            <div className="flex-1 overflow-auto">
+              <TabsContent value="doc" className="mt-0 p-0 h-full">
                 <DocumentViewerTabs lesson={lesson} />
               </TabsContent>
 
-              <TabsContent value="quiz" className="mt-0 p-0">
+              <TabsContent value="quiz" className="mt-0 p-0 h-full">
                 <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
               </TabsContent>
 
-              <TabsContent value="exam" className="mt-0 p-0">
+              <TabsContent value="exam" className="mt-0 p-0 h-full">
                 <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
               </TabsContent>
 
-              <TabsContent value="grade" className="mt-0 p-0">
+              <TabsContent value="grade" className="mt-0 p-0 h-full">
                 <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
               </TabsContent>
 
-              <TabsContent value="flashcards" className="mt-0 p-0">
+              <TabsContent value="flashcards" className="mt-0 p-0 h-full">
                 <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
               </TabsContent>
             </div>
