@@ -416,23 +416,7 @@ export default function Layout({ children, currentPageName }) {
           )}
         </main>
 
-        {/* Desktop AI Tutor CTA - Hidden on mobile, positioned in bottom right */}
-        {showNavigation && !isOnboardingPage && (
-          <button
-            onClick={() => navigate(createPageUrl("Home"))}
-            className="hidden md:flex fixed bottom-6 right-6 z-40 group"
-          >
-            <div className="relative">
-              {/* Subtle glow */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
 
-              {/* Main button */}
-              <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full shadow-2xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
-                <Sparkles className="w-6 h-6 text-white drop-shadow" strokeWidth={2.5} />
-              </div>
-            </div>
-          </button>
-        )}
 
         {/* Create Lesson Modal */}
         <CreateLessonModal 
