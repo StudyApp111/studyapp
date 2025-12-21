@@ -393,23 +393,23 @@ export default function DocumentViewer() {
             </div>
 
             <div className="flex-1 overflow-auto w-full max-w-full">
-              <TabsContent value="doc" className="mt-0 p-0 h-full w-full max-w-full">
+              <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full">
                 <DocumentViewerTabs lesson={lesson} />
               </TabsContent>
 
-              <TabsContent value="quiz" className="mt-0 p-0 h-full w-full max-w-full">
+              <TabsContent value="quiz" className="mt-0 p-0 w-full max-w-full">
                 <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
               </TabsContent>
 
-              <TabsContent value="exam" className="mt-0 p-0 h-full w-full max-w-full">
+              <TabsContent value="exam" className="mt-0 p-0 w-full max-w-full">
                 <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
               </TabsContent>
 
-              <TabsContent value="grade" className="mt-0 p-0 h-full w-full max-w-full">
+              <TabsContent value="grade" className="mt-0 p-0 w-full max-w-full">
                 <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
               </TabsContent>
 
-              <TabsContent value="flashcards" className="mt-0 p-0 h-full w-full max-w-full">
+              <TabsContent value="flashcards" className="mt-0 p-0 w-full max-w-full">
                 <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
               </TabsContent>
             </div>

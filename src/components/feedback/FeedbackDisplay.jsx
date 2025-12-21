@@ -357,13 +357,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
                           <h4 className="font-semibold text-slate-900 text-xs mb-1">
                             Q{question.question_number}
                           </h4>
-                          <p className="text-[10px] text-slate-600 mb-1.5 truncate">
-                            {question.question_text}
-                          </p>
                           <div className="flex gap-1 flex-wrap">
-                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-blue-50 text-blue-700 border-blue-200">
-                              {question.question_type}
-                            </Badge>
                             <Badge className={`text-[9px] px-1.5 py-0 ${feedback.is_correct ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
                               {feedback.points_earned}/10
                             </Badge>
