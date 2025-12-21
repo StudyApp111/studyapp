@@ -14,6 +14,7 @@ import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorModal from "@/components/modals/AITutorModal";
+import AITutorPanel from "@/components/document-viewer/AITutorPanel";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -28,6 +29,31 @@ export default function DocumentViewer() {
   const [timerInterval, setTimerInterval] = useState(null);
   const saveProgressRef = useRef(null);
   const [aiTutorModalOpen, setAiTutorModalOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  
+  // Initialize AI tutor chat
+  useEffect(() => {
+    const initChat = async () => {
+      if (messages.length === 0) {
+        try {
+          const user = await base44.auth.me();
+          const firstName = user.full_name?.split(' ')[0] || 'there';
+          setMessages([{
+            role: "assistant",
+            content: `Hey ${firstName}! 👋 I'm Polli, your AI study buddy. I can help you understand this material better. What would you like to know?`
+          }]);
+        } catch (error) {
+          setMessages([{
+            role: "assistant",
+            content: `Hey there! 👋 I'm Polli, your AI study buddy. What can I help you learn today?`
+          }]);
+        }
+      }
+    };
+    initChat();
+  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -239,19 +265,88 @@ export default function DocumentViewer() {
       </div>
 
       <div className="w-full px-2 py-2 relative">
-        {/* AI Tutor Button - Desktop Only - Fixed to left side */}
-        <button
-          onClick={() => setAiTutorModalOpen(true)}
-          className="hidden md:flex fixed left-[270px] top-1/2 -translate-y-1/2 z-50 group"
-        >
-          <div className="relative">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
-            <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full shadow-xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
-              <Sparkles className="w-5 h-5 text-white drop-shadow" strokeWidth={2.5} />
-            </div>
+        {/* Desktop: Flex container for AI tutor + tabs */}
+        <div className="hidden md:flex gap-2 h-full">{/* AI Tutor Panel - Left 1/3 */}
+          <AITutorPanel 
+            messages={messages}
+            setMessages={setMessages}
+            input={aiInput}
+            setInput={setAiInput}
+            isLoading={aiLoading}
+            setIsLoading={setAiLoading}
+            lesson={lesson}
+          />
+          
+          {/* Tabs - Right 2/3 */}
+          <div className="flex-[2]">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
+          <div className="w-full overflow-x-auto scrollbar-hide flex-shrink-0">
+            <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto min-w-full md:w-auto">
+              <TabsTrigger 
+                value="doc"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+              >
+                <FileText className="w-4 h-4 flex-shrink-0" />
+                <span className="text-[11px] font-medium">Doc</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="quiz"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+              >
+                <Brain className="w-4 h-4 flex-shrink-0" />
+                <span className="text-[11px] font-medium">Quiz</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="exam"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+              >
+                <FileText className="w-4 h-4 flex-shrink-0" />
+                <span className="text-[11px] font-medium">Exam</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="grade"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+              >
+                <Trophy className="w-4 h-4 flex-shrink-0" />
+                <span className="text-[11px] font-medium">Grade</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="flashcards"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+              >
+                <BookMarked className="w-4 h-4 flex-shrink-0" />
+                <span className="text-[11px] font-medium">Flashcards</span>
+              </TabsTrigger>
+            </TabsList>
           </div>
-        </button>
+
+          <div className="w-full flex-1 overflow-auto">
+            <TabsContent value="doc" className="mt-0 p-0 h-full">
+              <DocumentViewerTabs lesson={lesson} />
+            </TabsContent>
+
+            <TabsContent value="quiz" className="mt-0 p-0 h-full">
+              <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
+            </TabsContent>
+
+            <TabsContent value="exam" className="mt-0 p-0 h-full">
+              <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
+            </TabsContent>
+
+            <TabsContent value="grade" className="mt-0 p-0 h-full">
+              <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
+            </TabsContent>
+
+            <TabsContent value="flashcards" className="mt-0 p-0 h-full">
+              <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+            </TabsContent>
+          </div>
+        </Tabs>
+          </div>
+        </div>
         
+        {/* Mobile: Original layout without AI tutor panel */}
+        <div className="md:hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
           <div className="w-full overflow-x-auto scrollbar-hide">
             <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto min-w-full">
@@ -315,6 +410,7 @@ export default function DocumentViewer() {
             </TabsContent>
           </div>
         </Tabs>
+        </div>
       </div>
 
       {isTimerRunning && (
