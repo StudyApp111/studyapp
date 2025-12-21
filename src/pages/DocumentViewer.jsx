@@ -212,10 +212,10 @@ export default function DocumentViewer() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden">
       <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10">
-        <div className="w-full px-3 py-3">
-          <div className="flex items-center gap-2">
+        <div className="w-full px-2 md:px-3 py-2 md:py-3">
+          <div className="flex items-center gap-2 w-full max-w-full">
             <Button
               variant="ghost"
               size="icon"
@@ -224,13 +224,13 @@ export default function DocumentViewer() {
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <div className="flex-1 min-w-0 bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-4 py-3 rounded-xl shadow-lg">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-base font-bold truncate">{lesson?.course_name}</span>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <span className="text-xs font-medium opacity-90">Grade:</span>
+            <div className="flex-1 min-w-0 bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-3 md:px-4 py-2 md:py-3 rounded-xl shadow-lg">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm md:text-base font-bold truncate">{lesson?.course_name}</span>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <span className="text-[10px] md:text-xs font-medium opacity-90">Grade:</span>
                   {quiz?.predicted_grade ? (
-                    <span className="text-xl font-bold">{quiz.predicted_grade}</span>
+                    <span className="text-lg md:text-xl font-bold">{quiz.predicted_grade}</span>
                   ) : quiz?.completed ? (
                     <span className="text-xs font-semibold">Exam</span>
                   ) : (
@@ -239,7 +239,7 @@ export default function DocumentViewer() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 shadow-sm border border-purple-200 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-2 bg-white rounded-xl px-3 py-2 shadow-sm border border-purple-200 flex-shrink-0">
               <Clock className="w-4 h-4 text-purple-600" />
               <span className="text-sm font-mono font-semibold text-slate-900 min-w-[50px]">
                 {formatStudyTime(studyTime)}
@@ -264,7 +264,7 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-80px)]">
+      <div className="w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)] max-w-full overflow-x-hidden">
         {/* Desktop: Flex container for AI tutor + tabs */}
         <div className="hidden md:flex gap-2 h-full">{/* AI Tutor Panel - Left 1/3 */}
           <AITutorPanel 
