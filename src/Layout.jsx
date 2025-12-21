@@ -168,7 +168,6 @@ export default function Layout({ children, currentPageName }) {
         
         {/* Desktop Sidebar - Hidden during onboarding */}
         {showSidebar && (
-          <>
           <Sidebar className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl transition-all duration-300">
             <SidebarHeader className="border-b border-purple-200/60 p-6">
               <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
@@ -294,11 +293,15 @@ export default function Layout({ children, currentPageName }) {
             </SidebarFooter>
             </Sidebar>
 
-            {/* Desktop Sidebar Toggle Button */}
+            </>
+            )}
+            
+            {/* Desktop Sidebar Toggle Button - Always visible */}
+            {showNavigation && !isOnboardingPage && (
             <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="hidden md:flex fixed top-1/2 -translate-y-1/2 z-50 bg-white border border-purple-200 rounded-r-lg shadow-lg hover:bg-purple-50 transition-all p-2"
-            style={{ left: sidebarCollapsed ? '0' : '256px', transition: 'left 0.3s' }}
+            className="hidden md:flex fixed top-1/2 -translate-y-1/2 z-50 bg-white border-2 border-purple-300 rounded-r-xl shadow-xl hover:bg-purple-50 hover:shadow-2xl transition-all p-2.5"
+            style={{ left: sidebarCollapsed ? '0' : '244px', transition: 'all 0.3s ease' }}
             >
             {sidebarCollapsed ? (
               <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -310,7 +313,6 @@ export default function Layout({ children, currentPageName }) {
               </svg>
             )}
             </button>
-            </>
             )}
 
         <main className="flex-1 flex flex-col">
