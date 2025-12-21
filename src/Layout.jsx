@@ -77,10 +77,6 @@ export default function Layout({ children, currentPageName }) {
   const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
   const [aiTutorModalOpen, setAiTutorModalOpen] = React.useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
-  
-  // Special handling for DocumentViewer page - always show sidebar
-  const isDocumentViewerPage = currentPageName === "DocumentViewer";
-  const showSidebar = showNavigation && !isOnboardingPage && (!sidebarCollapsed || isDocumentViewerPage);
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -140,6 +136,10 @@ export default function Layout({ children, currentPageName }) {
   // Don't render layout navigation if onboarding not completed
   const isOnboardingPage = location.pathname === createPageUrl("Onboarding");
   const showNavigation = user?.onboarding_completed || isOnboardingPage;
+  
+  // Special handling for DocumentViewer page - always show sidebar
+  const isDocumentViewerPage = currentPageName === "DocumentViewer";
+  const showSidebar = showNavigation && !isOnboardingPage && (!sidebarCollapsed || isDocumentViewerPage);
   
   // Hide mobile bottom nav on pages with their own custom navigation
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
