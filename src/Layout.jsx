@@ -291,13 +291,11 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               )}
             </SidebarFooter>
-            </Sidebar>
-
-            </>
-            )}
+          </Sidebar>
+        )}
             
-            {/* Desktop Sidebar Toggle Button - Always visible */}
-            {showNavigation && !isOnboardingPage && (
+        {/* Desktop Sidebar Toggle Button - Always visible */}
+        {showNavigation && !isOnboardingPage && (
             <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className="hidden md:flex fixed top-1/2 -translate-y-1/2 z-50 bg-white border-2 border-purple-300 rounded-r-xl shadow-xl hover:bg-purple-50 hover:shadow-2xl transition-all p-2.5"
@@ -312,8 +310,8 @@ export default function Layout({ children, currentPageName }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             )}
-            </button>
-            )}
+          </button>
+        )}
 
         <main className="flex-1 flex flex-col">
           {/* Mobile Header - Hidden during onboarding */}
