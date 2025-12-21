@@ -33,6 +33,9 @@ export default function DocumentViewer() {
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   
+  // Check if lesson has a document
+  const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
+  
   // Initialize AI tutor chat
   useEffect(() => {
     const initChat = async () => {
@@ -353,17 +356,20 @@ export default function DocumentViewer() {
             <div className="flex-shrink-0 pb-2 w-full max-w-full">
               <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
                 <TabsList className="flex w-full bg-white border border-purple-200 p-1 gap-1 h-auto">
-                  <TabsTrigger 
-                    value="doc"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
-                  >
-                    <FileText className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[10px] font-medium">Doc</span>
-                  </TabsTrigger>
+                  {hasDocument && (
+                    <TabsTrigger 
+                      value="doc"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
+                    >
+                      <FileText className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[10px] font-medium">Doc</span>
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger 
                     value="quiz"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
                   >
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
                     <Brain className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Quiz</span>
                   </TabsTrigger>
@@ -376,8 +382,9 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="grade"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
                   >
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
                     <Trophy className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Grade</span>
                   </TabsTrigger>
@@ -393,9 +400,11 @@ export default function DocumentViewer() {
             </div>
 
             <div className="flex-1 overflow-y-auto w-full max-w-full">
-              <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full h-full">
-                <DocumentViewerTabs lesson={lesson} />
-              </TabsContent>
+              {hasDocument && (
+                <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full h-full">
+                  <DocumentViewerTabs lesson={lesson} />
+                </TabsContent>
+              )}
 
               <TabsContent value="quiz" className="mt-0 p-0 w-full max-w-full">
                 <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
