@@ -348,9 +348,9 @@ export default function DocumentViewer() {
           </div>
         
         {/* Mobile: Original layout without AI tutor panel */}
-        <div className="md:hidden h-full flex flex-col w-full max-w-full overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full max-w-full">
-            <div className="flex-shrink-0 pb-2 w-full max-w-full overflow-hidden">
+        <div className="md:hidden h-full flex flex-col w-full max-w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full max-w-full overflow-hidden">
+            <div className="flex-shrink-0 pb-2 w-full max-w-full">
               <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
                 <TabsList className="flex w-full bg-white border border-purple-200 p-1 gap-1 h-auto">
                   <TabsTrigger 
@@ -392,8 +392,8 @@ export default function DocumentViewer() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto w-full max-w-full">
-              <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full">
+            <div className="flex-1 overflow-y-auto w-full max-w-full">
+              <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full h-full">
                 <DocumentViewerTabs lesson={lesson} />
               </TabsContent>
 
