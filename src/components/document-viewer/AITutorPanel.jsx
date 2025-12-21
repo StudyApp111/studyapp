@@ -51,7 +51,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
   };
 
   return (
-    <div className="flex-1 bg-white rounded-xl shadow-xl border-2 border-purple-200 flex flex-col h-full overflow-hidden">
+    <div className="flex-1 bg-white rounded-xl shadow-xl border-2 border-purple-200 flex flex-col overflow-hidden" style={{ height: '100%' }}>
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-xl px-4 py-3 flex items-center gap-3 shadow-lg flex-shrink-0">
         <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
