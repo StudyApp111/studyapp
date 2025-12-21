@@ -212,10 +212,10 @@ export default function DocumentViewer() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden">
-      <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10">
-        <div className="w-full px-2 md:px-3 py-2 md:py-3">
-          <div className="flex items-center gap-2 w-full max-w-full">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full max-w-full">
+      <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10 w-full max-w-full overflow-hidden">
+        <div className="w-full max-w-full px-2 md:px-3 py-2 md:py-3 overflow-hidden">
+          <div className="flex items-center gap-1.5 md:gap-2 w-full max-w-full overflow-hidden">
             <Button
               variant="ghost"
               size="icon"
@@ -224,13 +224,13 @@ export default function DocumentViewer() {
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <div className="flex-1 min-w-0 bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-3 md:px-4 py-2 md:py-3 rounded-xl shadow-lg">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-sm md:text-base font-bold truncate">{lesson?.course_name}</span>
-                <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex-1 min-w-0 max-w-full bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-2 md:px-4 py-2 md:py-3 rounded-xl shadow-lg overflow-hidden">
+              <div className="flex items-center justify-between gap-1.5 md:gap-2 w-full">
+                <span className="text-sm md:text-base font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
+                <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0 whitespace-nowrap">
                   <span className="text-[10px] md:text-xs font-medium opacity-90">Grade:</span>
                   {quiz?.predicted_grade ? (
-                    <span className="text-lg md:text-xl font-bold">{quiz.predicted_grade}</span>
+                    <span className="text-base md:text-xl font-bold">{quiz.predicted_grade}</span>
                   ) : quiz?.completed ? (
                     <span className="text-xs font-semibold">Exam</span>
                   ) : (
@@ -264,9 +264,9 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)] max-w-full overflow-x-hidden">
+      <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)] overflow-hidden">
         {/* Desktop: Flex container for AI tutor + tabs */}
-        <div className="hidden md:flex gap-2 h-full">{/* AI Tutor Panel - Left 1/3 */}
+        <div className="hidden md:flex gap-2 h-full w-full max-w-full">{/* AI Tutor Panel - Left 1/3 */}
           <AITutorPanel 
             messages={messages}
             setMessages={setMessages}
@@ -348,68 +348,68 @@ export default function DocumentViewer() {
           </div>
         
         {/* Mobile: Original layout without AI tutor panel */}
-        <div className="md:hidden h-full flex flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <div className="flex-shrink-0 pb-2">
-              <div className="w-full overflow-x-auto scrollbar-hide">
-                <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-max">
+        <div className="md:hidden h-full flex flex-col w-full max-w-full overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full max-w-full">
+            <div className="flex-shrink-0 pb-2 w-full max-w-full overflow-hidden">
+              <div className="w-full max-w-full overflow-x-auto scrollbar-hide">
+                <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto">
                   <TabsTrigger 
                     value="doc"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
                   >
                     <FileText className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[11px] font-medium">Doc</span>
+                    <span className="text-[10px] font-medium">Doc</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="quiz"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
                   >
                     <Brain className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[11px] font-medium">Quiz</span>
+                    <span className="text-[10px] font-medium">Quiz</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
                   >
                     <FileText className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[11px] font-medium">Exam</span>
+                    <span className="text-[10px] font-medium">Exam</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="grade"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
                   >
                     <Trophy className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[11px] font-medium">Grade</span>
+                    <span className="text-[10px] font-medium">Grade</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap"
                   >
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[11px] font-medium">Flashcards</span>
+                    <span className="text-[10px] font-medium">Cards</span>
                   </TabsTrigger>
                 </TabsList>
               </div>
             </div>
 
-            <div className="flex-1 overflow-auto">
-              <TabsContent value="doc" className="mt-0 p-0 h-full">
+            <div className="flex-1 overflow-auto w-full max-w-full">
+              <TabsContent value="doc" className="mt-0 p-0 h-full w-full max-w-full overflow-hidden">
                 <DocumentViewerTabs lesson={lesson} />
               </TabsContent>
 
-              <TabsContent value="quiz" className="mt-0 p-0 h-full">
+              <TabsContent value="quiz" className="mt-0 p-0 h-full w-full max-w-full overflow-hidden">
                 <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
               </TabsContent>
 
-              <TabsContent value="exam" className="mt-0 p-0 h-full">
+              <TabsContent value="exam" className="mt-0 p-0 h-full w-full max-w-full overflow-hidden">
                 <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
               </TabsContent>
 
-              <TabsContent value="grade" className="mt-0 p-0 h-full">
+              <TabsContent value="grade" className="mt-0 p-0 h-full w-full max-w-full overflow-hidden">
                 <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
               </TabsContent>
 
-              <TabsContent value="flashcards" className="mt-0 p-0 h-full">
+              <TabsContent value="flashcards" className="mt-0 p-0 h-full w-full max-w-full overflow-hidden">
                 <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
               </TabsContent>
             </div>
