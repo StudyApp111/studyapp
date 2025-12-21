@@ -127,7 +127,7 @@ export default function DocumentViewerTabs({ lesson }) {
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(lesson?.file_url || '');
 
   return (
-    <div className="h-[calc(100vh-250px)]">
+    <div className="h-full">
       {/* Main Document Area - Full width */}
       <Card className="h-full bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
         <div className="h-full flex flex-col">
@@ -261,7 +261,7 @@ export default function DocumentViewerTabs({ lesson }) {
                           transform: 'translate(-50%, -100%)'
                         }}
                       >
-                        <Popover open={showAnnotationPopover} onOpenChange={setShowAnnotationPopover} modal={false}>
+                        <Popover open={showAnnotationPopover} onOpenChange={setShowAnnotationPopover}>
                           <PopoverTrigger asChild>
                             <Button 
                               size="sm" 
@@ -271,7 +271,14 @@ export default function DocumentViewerTabs({ lesson }) {
                               Annotate
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-[calc(100vw-2rem)] max-w-sm" align="center" onOpenAutoFocus={(e) => e.preventDefault()}>
+                          <PopoverContent 
+                            className="w-[calc(100vw-2rem)] max-w-sm" 
+                            align="center" 
+                            onOpenAutoFocus={(e) => e.preventDefault()}
+                            onInteractOutside={(e) => {
+                              e.preventDefault();
+                            }}
+                          >
                             <div className="space-y-3">
                               <div>
                                 <p className="text-xs font-semibold text-slate-600 mb-2">Selected Text:</p>
