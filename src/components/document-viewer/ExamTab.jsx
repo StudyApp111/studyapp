@@ -780,7 +780,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
     const sortedExams = allExamsForLesson.sort((a, b) => a.exam_number - b.exam_number);
     
     return (
-      <div className="h-full overflow-y-auto">
+      <div className="pb-4">
         <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-6 m-2">
         <div className="mb-6">
           <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
