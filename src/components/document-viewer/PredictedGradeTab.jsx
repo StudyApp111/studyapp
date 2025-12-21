@@ -45,7 +45,7 @@ export default function PredictedGradeTab({ lesson, quiz, exams }) {
   }
 
   return (
-    <div className="w-full px-2">
+    <div className="h-full overflow-y-auto w-full px-2">
       <FeedbackDisplay 
         exam={latestExamWithGrade} 
         lesson={lesson} 
