@@ -264,7 +264,7 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full px-2 py-2 relative h-[calc(100vh-120px)]">
+      <div className="w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-100px)]">
         {/* Desktop: Flex container for AI tutor + tabs */}
         <div className="hidden md:flex gap-2 h-full">{/* AI Tutor Panel - Left 1/3 */}
           <AITutorPanel 
@@ -280,8 +280,9 @@ export default function DocumentViewer() {
           {/* Tabs - Right 2/3 */}
           <div className="flex-[2]">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
-          <div className="w-full overflow-x-auto scrollbar-hide flex-shrink-0">
-            <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-auto">
+          <div className="flex-shrink-0">
+            <div className="w-full overflow-x-auto scrollbar-hide">
+              <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-max">
               <TabsTrigger 
                 value="doc"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
@@ -348,8 +349,9 @@ export default function DocumentViewer() {
         {/* Mobile: Original layout without AI tutor panel */}
         <div className="md:hidden">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
-          <div className="w-full overflow-x-auto scrollbar-hide">
-            <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto min-w-full">
+          <div className="flex-shrink-0">
+            <div className="w-full overflow-x-auto scrollbar-hide">
+            <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-max">
               <TabsTrigger 
                 value="doc"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
@@ -384,11 +386,12 @@ export default function DocumentViewer() {
               >
                 <BookMarked className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Flashcards</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+                </TabsTrigger>
+                </TabsList>
+                </div>
+                </div>
 
-          <div className="w-full">
+                <div className="w-full">
             <TabsContent value="doc" className="mt-0 p-0">
               <DocumentViewerTabs lesson={lesson} />
             </TabsContent>
