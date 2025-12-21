@@ -281,38 +281,38 @@ export default function DocumentViewer() {
           <div className="flex-[2]">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
           <div className="w-full overflow-x-auto scrollbar-hide flex-shrink-0">
-            <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto min-w-full md:w-auto">
+            <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-auto">
               <TabsTrigger 
                 value="doc"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
               >
                 <FileText className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Doc</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="quiz"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
               >
                 <Brain className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Quiz</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="exam"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
               >
                 <FileText className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Exam</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="grade"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
               >
                 <Trophy className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Grade</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="flashcards"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
               >
                 <BookMarked className="w-4 h-4 flex-shrink-0" />
                 <span className="text-[11px] font-medium">Flashcards</span>

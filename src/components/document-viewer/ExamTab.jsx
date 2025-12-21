@@ -817,15 +817,15 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     {isCompleted ? (
-                      <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
                         <CheckCircle2 className="w-6 h-6 text-white" />
                       </div>
                     ) : canStart ? (
-                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                         <Play className="w-6 h-6 text-white" />
                       </div>
                     ) : (
-                      <div className="w-10 h-10 bg-slate-300 rounded-full flex items-center justify-center">
+                      <div className="w-12 h-12 bg-slate-300 rounded-full flex items-center justify-center flex-shrink-0">
                         <Lock className="w-6 h-6 text-white" />
                       </div>
                     )}
@@ -862,7 +862,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
               className="p-5 rounded-xl border-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02] transition-all text-left"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                   <Play className="w-6 h-6 text-white" />
                 </div>
                 <div>
