@@ -279,141 +279,141 @@ export default function DocumentViewer() {
           
           {/* Tabs - Right 2/3 */}
           <div className="flex-[2]">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
-          <div className="flex-shrink-0">
-            <div className="w-full overflow-x-auto scrollbar-hide">
-              <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-max">
-              <TabsTrigger 
-                value="doc"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
-              >
-                <FileText className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Doc</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="quiz"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
-              >
-                <Brain className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Quiz</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="exam"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
-              >
-                <FileText className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Exam</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="grade"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
-              >
-                <Trophy className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Grade</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="flashcards"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
-              >
-                <BookMarked className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Flashcards</span>
-              </TabsTrigger>
-            </TabsList>
-            </div>
-            </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
+              <div className="flex-shrink-0">
+                <div className="w-full overflow-x-auto scrollbar-hide">
+                  <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-max">
+                    <TabsTrigger 
+                      value="doc"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
+                    >
+                      <FileText className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[11px] font-medium">Doc</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="quiz"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
+                    >
+                      <Brain className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[11px] font-medium">Quiz</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="exam"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
+                    >
+                      <FileText className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[11px] font-medium">Exam</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="grade"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
+                    >
+                      <Trophy className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[11px] font-medium">Grade</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="flashcards"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
+                    >
+                      <BookMarked className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[11px] font-medium">Flashcards</span>
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+              </div>
 
-            <div className="w-full flex-1 overflow-auto">
-            <TabsContent value="doc" className="mt-0 p-0 h-full">
-              <DocumentViewerTabs lesson={lesson} />
-            </TabsContent>
+              <div className="w-full flex-1 overflow-auto">
+                <TabsContent value="doc" className="mt-0 p-0 h-full">
+                  <DocumentViewerTabs lesson={lesson} />
+                </TabsContent>
 
-            <TabsContent value="quiz" className="mt-0 p-0 h-full">
-              <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
-            </TabsContent>
+                <TabsContent value="quiz" className="mt-0 p-0 h-full">
+                  <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
+                </TabsContent>
 
-            <TabsContent value="exam" className="mt-0 p-0 h-full">
-              <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
-            </TabsContent>
+                <TabsContent value="exam" className="mt-0 p-0 h-full">
+                  <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
+                </TabsContent>
 
-            <TabsContent value="grade" className="mt-0 p-0 h-full">
-              <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
-            </TabsContent>
+                <TabsContent value="grade" className="mt-0 p-0 h-full">
+                  <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
+                </TabsContent>
 
-            <TabsContent value="flashcards" className="mt-0 p-0 h-full">
-              <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
-            </TabsContent>
+                <TabsContent value="flashcards" className="mt-0 p-0 h-full">
+                  <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+                </TabsContent>
+              </div>
+            </Tabs>
           </div>
-        </Tabs>
           </div>
-        </div>
         
         {/* Mobile: Original layout without AI tutor panel */}
         <div className="md:hidden">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
-          <div className="flex-shrink-0">
-            <div className="w-full overflow-x-auto scrollbar-hide">
-            <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-max">
-              <TabsTrigger 
-                value="doc"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
-              >
-                <FileText className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Doc</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="quiz"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
-              >
-                <Brain className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Quiz</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="exam"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
-              >
-                <FileText className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Exam</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="grade"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
-              >
-                <Trophy className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Grade</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="flashcards"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap flex-1"
-              >
-                <BookMarked className="w-4 h-4 flex-shrink-0" />
-                <span className="text-[11px] font-medium">Flashcards</span>
-                </TabsTrigger>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2">
+            <div className="flex-shrink-0">
+              <div className="w-full overflow-x-auto scrollbar-hide">
+                <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-max">
+                  <TabsTrigger 
+                    value="doc"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                  >
+                    <FileText className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[11px] font-medium">Doc</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="quiz"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                  >
+                    <Brain className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[11px] font-medium">Quiz</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="exam"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                  >
+                    <FileText className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[11px] font-medium">Exam</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="grade"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                  >
+                    <Trophy className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[11px] font-medium">Grade</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="flashcards"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap"
+                  >
+                    <BookMarked className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[11px] font-medium">Flashcards</span>
+                  </TabsTrigger>
                 </TabsList>
-                </div>
-                </div>
+              </div>
+            </div>
 
-                <div className="w-full">
-            <TabsContent value="doc" className="mt-0 p-0">
-              <DocumentViewerTabs lesson={lesson} />
-            </TabsContent>
+            <div className="w-full">
+              <TabsContent value="doc" className="mt-0 p-0">
+                <DocumentViewerTabs lesson={lesson} />
+              </TabsContent>
 
-            <TabsContent value="quiz" className="mt-0 p-0">
-              <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
-            </TabsContent>
+              <TabsContent value="quiz" className="mt-0 p-0">
+                <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
+              </TabsContent>
 
-            <TabsContent value="exam" className="mt-0 p-0">
-              <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
-            </TabsContent>
+              <TabsContent value="exam" className="mt-0 p-0">
+                <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
+              </TabsContent>
 
-            <TabsContent value="grade" className="mt-0 p-0">
-              <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
-            </TabsContent>
+              <TabsContent value="grade" className="mt-0 p-0">
+                <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
+              </TabsContent>
 
-            <TabsContent value="flashcards" className="mt-0 p-0">
-              <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
-            </TabsContent>
-          </div>
-        </Tabs>
+              <TabsContent value="flashcards" className="mt-0 p-0">
+                <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+              </TabsContent>
+            </div>
+          </Tabs>
         </div>
       </div>
 
