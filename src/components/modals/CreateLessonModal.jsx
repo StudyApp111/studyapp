@@ -338,7 +338,17 @@ Output Format: JSON object matching the specified schema`;
       onOpenChange(false);
       navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
     } catch (err) {
-      setError(err.message || "Failed to create lesson. Please try again.");
+      console.error("Error creating lesson:", err);
+      let errorMessage = err.message || "Failed to create lesson. Please try again.";
+      
+      // Handle specific error cases
+      if (errorMessage.includes("JSON") || errorMessage.includes("parse")) {
+        errorMessage = "The AI had trouble analyzing your content. Please try again or upload a different file.";
+      } else if (errorMessage.includes("500")) {
+        errorMessage = "Server error while processing. Please try again in a moment.";
+      }
+      
+      setError(errorMessage);
       setIsProcessing(false);
       setProcessingStep("");
     }
