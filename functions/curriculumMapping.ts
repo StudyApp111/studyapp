@@ -289,6 +289,19 @@ Generate the curriculum profile with these exact keys: core_competencies, compet
             }
         }
         
+        // Handle wrapped responses - unwrap before returning
+        if (parsedResponse) {
+            // Check for common wrapper keys
+            const wrapperKeys = ['curriculum_profile', 'course_profile', 'profile', 'data', 'result'];
+            for (const key of wrapperKeys) {
+                if (!parsedResponse.core_competencies && parsedResponse[key]?.core_competencies) {
+                    console.log(`✅ Unwrapping response from "${key}"`);
+                    parsedResponse = parsedResponse[key];
+                    break;
+                }
+            }
+        }
+
         // If we have a valid response, return it
         if (parsedResponse && parsedResponse.core_competencies) {
             console.log('📊 Response keys:', Object.keys(parsedResponse).join(', '));
