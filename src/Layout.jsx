@@ -37,6 +37,12 @@ const navigationItems = [
           isNew: true,
         },
         {
+          title: "Collaborate",
+          url: createPageUrl("Collaborate"),
+          icon: Users,
+          isNew: true,
+        },
+        {
           title: "Course Mapper",
           url: createPageUrl("CourseMapper"),
           icon: Map,

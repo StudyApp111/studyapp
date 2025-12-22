@@ -18,6 +18,7 @@ import Analytics from './pages/Analytics';
 import LearningProgress from './pages/LearningProgress';
 import EmailManager from './pages/EmailManager';
 import DocumentViewer from './pages/DocumentViewer';
+import Collaborate from './pages/Collaborate';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +43,7 @@ export const PAGES = {
     "LearningProgress": LearningProgress,
     "EmailManager": EmailManager,
     "DocumentViewer": DocumentViewer,
+    "Collaborate": Collaborate,
 }
 
 export const pagesConfig = {
