@@ -4,7 +4,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { 
   Target, Plus, Search, Users, Calendar, Trophy,
-  ArrowRight, Copy, Check, Loader2, TrendingUp
+  ArrowRight, Copy, Check, Loader2, TrendingUp,
+  CheckSquare, FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +22,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import GroupTasks from "./GroupTasks";
+import GroupWhiteboard from "./GroupWhiteboard";
+import GroupCalendar from "./GroupCalendar";
 
 export default function StudyGroupsTab({ user }) {
   const queryClient = useQueryClient();
