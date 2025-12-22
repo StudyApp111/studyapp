@@ -273,10 +273,17 @@ Output Format: JSON object matching the specified schema`;
 
       setProcessingStep("Analyzing curriculum...");
 
-      const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
+      const curriculumResult = await base44.functions.invoke('curriculumMapping', {
         prompt: curriculumPrompt,
         response_json_schema: curriculumResponseJsonSchema
       });
+      
+      const generatedMap = curriculumResult.data;
+      
+      // Validate we got actual curriculum data
+      if (!generatedMap || generatedMap.error) {
+        throw new Error(generatedMap?.error || "Failed to analyze curriculum. Please try again.");
+      }
 
       const curriculumMap = {
         core_competencies: (generatedMap.core_competencies || []).map(c => ({
