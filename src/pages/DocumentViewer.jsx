@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Brain, TrendingUp, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Sparkles } from "lucide-react";
-import { useRef } from "react";
+import { FileText, Brain, Trophy, ChevronLeft, Loader2, Clock, BookMarked } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import QuizTab from "@/components/document-viewer/QuizTab";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
-import AITutorModal from "@/components/modals/AITutorModal";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
       
 export default function DocumentViewer() {
@@ -28,7 +25,6 @@ export default function DocumentViewer() {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [timerInterval, setTimerInterval] = useState(null);
   const saveProgressRef = useRef(null);
-  const [aiTutorModalOpen, setAiTutorModalOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -36,27 +32,16 @@ export default function DocumentViewer() {
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
   
-  // Initialize AI tutor chat
-  useEffect(() => {
-    const initChat = async () => {
-      if (messages.length === 0) {
-        try {
-          const user = await base44.auth.me();
-          const firstName = user.full_name?.split(' ')[0] || 'there';
-          setMessages([{
-            role: "assistant",
-            content: `Hey ${firstName}! 👋 I'm Polli, your AI study buddy. I can help you understand this material better. What would you like to know?`
-          }]);
-        } catch (error) {
-          setMessages([{
-            role: "assistant",
-            content: `Hey there! 👋 I'm Polli, your AI study buddy. What can I help you learn today?`
-          }]);
-        }
-      }
-    };
-    initChat();
-  }, []);
+  // Check if any exam is completed for red dot logic
+  const hasCompletedExam = exams.some(e => e.completed);
+  
+  // Red dot logic:
+  // - Quiz tab: show dot if quiz not completed
+  // - Exam tab: show dot if quiz completed but no exam completed
+  // - Grade tab: always show dot until first exam completed
+  const showQuizDot = !quiz?.completed;
+  const showExamDot = quiz?.completed && !hasCompletedExam;
+  const showGradeDot = !hasCompletedExam;
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -299,14 +284,15 @@ export default function DocumentViewer() {
                       value="quiz"
                       className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative"
                     >
-                      {!quiz?.completed && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
+                      {showQuizDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                       <Brain className="w-4 h-4 flex-shrink-0" />
                       <span className="text-[11px] font-medium">Quiz</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="exam"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative"
                     >
+                      {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                       <FileText className="w-4 h-4 flex-shrink-0" />
                       <span className="text-[11px] font-medium">Exam</span>
                     </TabsTrigger>
@@ -314,7 +300,7 @@ export default function DocumentViewer() {
                       value="grade"
                       className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative"
                     >
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                      {showGradeDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                       <Trophy className="w-4 h-4 flex-shrink-0" />
                       <span className="text-[11px] font-medium">Grade</span>
                     </TabsTrigger>
@@ -375,14 +361,15 @@ export default function DocumentViewer() {
                     value="quiz"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
                   >
-                    {!quiz?.completed && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                    {showQuizDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Brain className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Quiz</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
                   >
+                    {showExamDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <FileText className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Exam</span>
                   </TabsTrigger>
@@ -390,7 +377,7 @@ export default function DocumentViewer() {
                     value="grade"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
                   >
-                    <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
+                    {showGradeDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Trophy className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Grade</span>
                   </TabsTrigger>
@@ -439,11 +426,6 @@ export default function DocumentViewer() {
         />
       )}
 
-      {/* AI Tutor Modal */}
-      <AITutorModal 
-        open={aiTutorModalOpen} 
-        onOpenChange={setAiTutorModalOpen} 
-      />
-      </div>
-      );
-      }
+    </div>
+  );
+}
