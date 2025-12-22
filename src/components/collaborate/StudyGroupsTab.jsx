@@ -245,9 +245,12 @@ export default function StudyGroupsTab({ user }) {
 function GroupDetail({ group, user, onBack }) {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const [myProgress, setMyProgress] = useState(
     group.member_progress?.find(m => m.email === user?.email)?.progress || 0
   );
+
+  const isLeader = group.created_by === user?.email;
 
   const updateProgressMutation = useMutation({
     mutationFn: async (newProgress) => {
@@ -285,10 +288,13 @@ function GroupDetail({ group, user, onBack }) {
           <ArrowRight className="w-4 h-4 rotate-180" />
           Back
         </Button>
-        <Button variant="outline" onClick={copyInviteCode} className="gap-2">
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-          {group.invite_code}
-        </Button>
+        <div className="flex items-center gap-2">
+          {isLeader && <Badge className="bg-amber-100 text-amber-700">Leader</Badge>}
+          <Button variant="outline" onClick={copyInviteCode} className="gap-2">
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {group.invite_code}
+          </Button>
+        </div>
       </div>
 
       {/* Group Header */}
@@ -311,66 +317,108 @@ function GroupDetail({ group, user, onBack }) {
         </div>
       </div>
 
-      {/* Update Your Progress */}
-      <div className="bg-white rounded-2xl border p-6">
-        <h3 className="font-semibold text-slate-900 mb-4">Update Your Progress</h3>
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Input
-              type="range"
-              min="0"
-              max="100"
-              value={myProgress}
-              onChange={(e) => setMyProgress(Number(e.target.value))}
-              className="flex-1"
-            />
-            <span className="font-bold text-purple-600 w-12">{myProgress}%</span>
-          </div>
-          <Button 
-            onClick={() => updateProgressMutation.mutate(myProgress)}
-            disabled={updateProgressMutation.isPending}
-            className="bg-purple-600"
-          >
-            {updateProgressMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-            Save Progress
-          </Button>
-        </div>
-      </div>
+      {/* Tab Navigation */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-4 w-full bg-white border">
+          <TabsTrigger value="overview" className="gap-1 text-xs sm:text-sm">
+            <Trophy className="w-4 h-4" />
+            <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="gap-1 text-xs sm:text-sm">
+            <CheckSquare className="w-4 h-4" />
+            <span className="hidden sm:inline">Tasks</span>
+          </TabsTrigger>
+          <TabsTrigger value="notes" className="gap-1 text-xs sm:text-sm">
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">Notes</span>
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="gap-1 text-xs sm:text-sm">
+            <Calendar className="w-4 h-4" />
+            <span className="hidden sm:inline">Calendar</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Leaderboard */}
-      <div className="bg-white rounded-2xl border p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Trophy className="w-5 h-5 text-amber-500" />
-          <h3 className="font-semibold text-slate-900">Group Leaderboard</h3>
-        </div>
-        <div className="space-y-3">
-          {sortedMembers.map((member, idx) => (
-            <div 
-              key={member.email}
-              className={`flex items-center gap-3 p-3 rounded-xl ${
-                member.email === user?.email ? 'bg-purple-50 ring-1 ring-purple-200' : 'bg-slate-50'
-              }`}
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                idx === 0 ? 'bg-amber-100 text-amber-700' :
-                idx === 1 ? 'bg-slate-200 text-slate-700' :
-                idx === 2 ? 'bg-orange-100 text-orange-700' :
-                'bg-slate-100 text-slate-600'
-              }`}>
-                {idx + 1}
+        <TabsContent value="overview" className="space-y-6 mt-4">
+          {/* Update Your Progress */}
+          <div className="bg-white rounded-2xl border p-6">
+            <h3 className="font-semibold text-slate-900 mb-4">Update Your Progress</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={myProgress}
+                  onChange={(e) => setMyProgress(Number(e.target.value))}
+                  className="flex-1"
+                />
+                <span className="font-bold text-purple-600 w-12">{myProgress}%</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-slate-900 truncate">
-                  {member.name || "Member"}
-                  {member.email === user?.email && <span className="text-purple-600 ml-1">(You)</span>}
-                </div>
-                <Progress value={member.progress || 0} className="h-1.5 mt-1" />
-              </div>
-              <span className="font-bold text-purple-600">{member.progress || 0}%</span>
+              <Button 
+                onClick={() => updateProgressMutation.mutate(myProgress)}
+                disabled={updateProgressMutation.isPending}
+                className="bg-purple-600"
+              >
+                {updateProgressMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Save Progress
+              </Button>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+
+          {/* Leaderboard */}
+          <div className="bg-white rounded-2xl border p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy className="w-5 h-5 text-amber-500" />
+              <h3 className="font-semibold text-slate-900">Group Leaderboard</h3>
+            </div>
+            <div className="space-y-3">
+              {sortedMembers.map((member, idx) => (
+                <div 
+                  key={member.email}
+                  className={`flex items-center gap-3 p-3 rounded-xl ${
+                    member.email === user?.email ? 'bg-purple-50 ring-1 ring-purple-200' : 'bg-slate-50'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                    idx === 0 ? 'bg-amber-100 text-amber-700' :
+                    idx === 1 ? 'bg-slate-200 text-slate-700' :
+                    idx === 2 ? 'bg-orange-100 text-orange-700' :
+                    'bg-slate-100 text-slate-600'
+                  }`}>
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-slate-900 truncate">
+                      {member.name || "Member"}
+                      {member.email === user?.email && <span className="text-purple-600 ml-1">(You)</span>}
+                    </div>
+                    <Progress value={member.progress || 0} className="h-1.5 mt-1" />
+                  </div>
+                  <span className="font-bold text-purple-600">{member.progress || 0}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="tasks" className="mt-4">
+          <div className="bg-white rounded-2xl border p-6">
+            <GroupTasks group={group} user={user} isLeader={isLeader} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="notes" className="mt-4">
+          <div className="bg-white rounded-2xl border p-6">
+            <GroupWhiteboard group={group} user={user} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="mt-4">
+          <div className="bg-white rounded-2xl border p-6">
+            <GroupCalendar group={group} user={user} isLeader={isLeader} />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
