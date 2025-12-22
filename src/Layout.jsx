@@ -397,9 +397,9 @@ export default function Layout({ children, currentPageName }) {
                   <Settings className="w-6 h-6" />
                 </button>
 
-                {/* AI Tutor CTA Button */}
+                {/* New Lesson CTA Button */}
                 <button
-                  onClick={() => navigate(createPageUrl("Home"))}
+                  onClick={() => setCreateLessonModalOpen(true)}
                   className="absolute left-1/2 -translate-x-1/2 -top-4 group"
                 >
                   <div className="relative">
