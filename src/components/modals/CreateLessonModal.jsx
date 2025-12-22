@@ -281,24 +281,36 @@ Output Format: JSON object matching the specified schema`;
         response_json_schema: curriculumResponseJsonSchema
       });
 
+      // Handle wrapped responses (e.g., { course_profile: {...} })
+      let mapData = generatedMap;
+      if (!mapData?.core_competencies && mapData?.course_profile?.core_competencies) {
+        mapData = mapData.course_profile;
+      }
+      if (!mapData?.core_competencies && mapData?.curriculum_profile?.core_competencies) {
+        mapData = mapData.curriculum_profile;
+      }
+
+      // Ensure arrays exist
+      const safeArray = (arr) => Array.isArray(arr) ? arr : [];
+
       const curriculumMap = {
-        core_competencies: (generatedMap.core_competencies || []).map(c => ({
+        core_competencies: safeArray(mapData?.core_competencies).map(c => ({
           name: String(c?.name || ""),
           description: String(c?.description || "")
         })),
-        competency_weightings: (generatedMap.competency_weightings || []).map(w => ({
+        competency_weightings: safeArray(mapData?.competency_weightings).map(w => ({
           competency_name: String(w?.competency_name || ""),
           weight_percentage: String(w?.weight_percentage || "0%")
         })),
-        question_formats: (generatedMap.question_formats || []).map(q => ({
+        question_formats: safeArray(mapData?.question_formats).map(q => ({
           type: String(q?.type || ""),
           frequency: String(q?.frequency || ""),
-          examples: (q?.examples || []).map(e => String(e || ""))
+          examples: safeArray(q?.examples).map(e => String(e || ""))
         })),
-        high_yield_focal_points: (generatedMap.high_yield_focal_points || []).map(p => 
+        high_yield_focal_points: safeArray(mapData?.high_yield_focal_points).map(p => 
           typeof p === 'object' ? String(p?.name || p?.topic || p?.description || JSON.stringify(p)) : String(p || "")
         ),
-        common_misconceptions: (generatedMap.common_misconceptions || []).map(m => 
+        common_misconceptions: safeArray(mapData?.common_misconceptions).map(m => 
           typeof m === 'object' ? String(m?.misconception || m?.description || m?.name || JSON.stringify(m)) : String(m || "")
         )
       };
