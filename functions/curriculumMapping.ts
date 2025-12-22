@@ -224,16 +224,6 @@ Deno.serve(async (req) => {
         try {
             parsedResponse = JSON.parse(jsonStr);
             console.log('✅ JSON parsed successfully from grounded response');
-            
-            // Handle case where response is wrapped in a parent object
-            if (!parsedResponse.core_competencies && parsedResponse.course_profile?.core_competencies) {
-                parsedResponse = parsedResponse.course_profile;
-                console.log('✅ Unwrapped from course_profile');
-            }
-            if (!parsedResponse.core_competencies && parsedResponse.curriculum_profile?.core_competencies) {
-                parsedResponse = parsedResponse.curriculum_profile;
-                console.log('✅ Unwrapped from curriculum_profile');
-            }
         } catch (parseError) {
             console.log('⚠️ Grounded response was not JSON, making structured follow-up call...');
         }
@@ -290,16 +280,6 @@ Generate the curriculum profile with these exact keys: core_competencies, compet
                     try {
                         parsedResponse = JSON.parse(structuredJson);
                         console.log('✅ JSON parsed from structured follow-up call');
-                        
-                        // Handle case where response is wrapped in a parent object
-                        if (!parsedResponse.core_competencies && parsedResponse.course_profile?.core_competencies) {
-                            parsedResponse = parsedResponse.course_profile;
-                            console.log('✅ Unwrapped from course_profile');
-                        }
-                        if (!parsedResponse.core_competencies && parsedResponse.curriculum_profile?.core_competencies) {
-                            parsedResponse = parsedResponse.curriculum_profile;
-                            console.log('✅ Unwrapped from curriculum_profile');
-                        }
                     } catch (structuredParseError) {
                         console.error('❌ Structured call parse also failed:', structuredParseError.message);
                     }
