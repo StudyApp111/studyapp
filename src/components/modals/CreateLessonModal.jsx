@@ -320,7 +320,8 @@ Output Format: JSON object matching the specified schema`;
       };
 
       if (inputType === "description") {
-        lessonData.description = description;
+        lessonData.description = description.trim();
+        lessonData.extracted_content = description.trim();
       } else if (inputType === "file") {
         lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
         lessonData.file_urls = fileUrls;
