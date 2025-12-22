@@ -100,10 +100,9 @@ export default function BrowserCompatibilityBanner() {
     const info = getBrowserInfo();
     setBrowserInfo(info);
 
-    // Show banner if there are compatibility issues or using in-app browser
-    if (issues.length > 0 || info.isInApp) {
-      setShowBanner(true);
-    } else if (info.minVersion && info.version < info.minVersion) {
+    // Only show banner if there are ACTUAL compatibility issues (missing JS features)
+    // Don't warn just for being in-app browser - most modern in-app browsers work fine
+    if (issues.length > 0) {
       setShowBanner(true);
     }
   }, []);
