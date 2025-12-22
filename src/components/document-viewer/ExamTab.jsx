@@ -932,24 +932,24 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         </motion.div>
       )}
 
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
-        <div className="border-b border-purple-200/60 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-bold text-slate-900">Exam 1</h2>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200">
-                <Clock className="w-4 h-4 text-purple-600" />
-                <span className="text-sm font-semibold text-purple-700">{formatTime(elapsedSeconds)}</span>
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden mx-1 md:mx-0">
+        <div className="border-b border-purple-200/60 p-2 md:p-4">
+          <div className="flex items-center justify-between mb-1.5 md:mb-2">
+            <h2 className="text-sm md:text-lg font-bold text-slate-900">Exam {exam.exam_number}</h2>
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="flex items-center gap-1 md:gap-1.5 bg-purple-50 px-2 md:px-3 py-1 md:py-1.5 rounded-lg border border-purple-200">
+                <Clock className="w-3 h-3 md:w-4 md:h-4 text-purple-600" />
+                <span className="text-xs md:text-sm font-semibold text-purple-700">{formatTime(elapsedSeconds)}</span>
               </div>
-              <span className="text-sm font-medium text-slate-600">
+              <span className="text-xs md:text-sm font-medium text-slate-600">
                 {currentQuestion + 1}/{exam.questions.length}
               </span>
             </div>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-1.5 md:h-2" />
         </div>
 
-        <div className="p-6">
+        <div className="p-2 md:p-6">
           <AnimatePresence mode="wait">
             <WorksheetQuestion
               key={currentQuestion}
@@ -959,12 +959,12 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
             />
           </AnimatePresence>
 
-          <div className="mt-6 flex gap-4">
+          <div className="mt-3 md:mt-6 flex gap-2 md:gap-4">
             <Button
               variant="outline"
               onClick={handlePrevious}
               disabled={currentQuestion === 0}
-              className="flex-1"
+              className="flex-1 text-xs md:text-sm h-9 md:h-10"
             >
               Previous
             </Button>
@@ -972,11 +972,11 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
               <Button
                 onClick={submitExam}
                 disabled={!canProceed || isSubmitting}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs md:text-sm h-9 md:h-10"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2 animate-spin" />
                     Submitting...
                   </>
                 ) : (
@@ -987,7 +987,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
               <Button
                 onClick={handleNext}
                 disabled={!canProceed}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-xs md:text-sm h-9 md:h-10"
               >
                 Next Question
               </Button>
