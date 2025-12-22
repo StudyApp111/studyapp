@@ -36,6 +36,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       setFiles([]);
       setError("");
       setShowHints(false);
+      setIsProcessing(false);
+      setProcessingStep("");
     }
   }, [open]);
 
