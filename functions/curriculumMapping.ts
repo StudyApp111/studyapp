@@ -154,54 +154,134 @@ Deno.serve(async (req) => {
         
         console.log('✅ Generated text extracted, length:', generatedText.length);
 
-        // Extract JSON - handle markdown code blocks if present
+        // Extract JSON - try multiple strategies
         let jsonStr = generatedText.trim();
+        let parsedResponse = null;
+        
+        // Strategy 1: Check for markdown code blocks
         const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
         if (jsonMatch) {
             jsonStr = jsonMatch[1].trim();
         }
+        
+        // Strategy 2: Find JSON object boundaries
+        if (!jsonStr.startsWith('{')) {
+            const jsonStartIdx = jsonStr.indexOf('{');
+            const jsonEndIdx = jsonStr.lastIndexOf('}');
+            if (jsonStartIdx !== -1 && jsonEndIdx !== -1 && jsonEndIdx > jsonStartIdx) {
+                jsonStr = jsonStr.substring(jsonStartIdx, jsonEndIdx + 1);
+            }
+        }
 
+        // Try to parse the extracted JSON
         try {
-            const parsedResponse = JSON.parse(jsonStr);
-            console.log('✅ JSON parsed successfully');
+            parsedResponse = JSON.parse(jsonStr);
+            console.log('✅ JSON parsed successfully from grounded response');
+        } catch (parseError) {
+            console.log('⚠️ Grounded response was not JSON, making structured follow-up call...');
+        }
+        
+        // If parsing failed or no JSON found, make a second structured call
+        if (!parsedResponse) {
+            console.log('⏳ Making structured JSON call with grounded context...');
+            const structuredRequestBody = {
+                contents: [{
+                    parts: [{
+                        text: `Based on the following research context, generate a curriculum profile JSON.
+
+RESEARCH CONTEXT:
+${generatedText}
+
+ORIGINAL REQUEST:
+${prompt}
+
+Generate the curriculum profile with these exact keys: core_competencies, competency_weightings, question_formats, high_yield_focal_points, common_misconceptions.`
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.2,
+                    topP: 0.95,
+                    maxOutputTokens: 8192,
+                    responseMimeType: "application/json",
+                    responseSchema: response_json_schema
+                }
+            };
+            
+            const structuredResponse = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(structuredRequestBody)
+                }
+            );
+            
+            if (structuredResponse.ok) {
+                const structuredData = await structuredResponse.json();
+                const structuredText = structuredData.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (structuredText) {
+                    let structuredJson = structuredText.trim();
+                    if (!structuredJson.startsWith('{')) {
+                        const start = structuredJson.indexOf('{');
+                        const end = structuredJson.lastIndexOf('}');
+                        if (start !== -1 && end !== -1) {
+                            structuredJson = structuredJson.substring(start, end + 1);
+                        }
+                    }
+                    
+                    try {
+                        parsedResponse = JSON.parse(structuredJson);
+                        console.log('✅ JSON parsed from structured follow-up call');
+                    } catch (structuredParseError) {
+                        console.error('❌ Structured call parse also failed:', structuredParseError.message);
+                    }
+                }
+            } else {
+                console.error('❌ Structured call failed:', structuredResponse.status);
+            }
+        }
+        
+        // If we have a valid response, return it
+        if (parsedResponse && parsedResponse.core_competencies) {
             console.log('📊 Response keys:', Object.keys(parsedResponse).join(', '));
             console.log('=== curriculumMapping Function Complete ===');
             return Response.json(parsedResponse);
-        } catch (parseError) {
-            console.error('❌ JSON parse error:', parseError.message);
-            console.error('Raw text preview:', generatedText.substring(0, 1000));
-            
-            // Log error and send email
-            try {
-                await base44.asServiceRole.entities.ErrorLog.create({
-                    error_type: 'function_error',
-                    error_message: `JSON parse error: ${parseError.message}`,
-                    error_stack: parseError.stack,
-                    context: {
-                        function: 'curriculumMapping',
-                        user_email: user.email,
-                        raw_preview: generatedText.substring(0, 500),
-                        error_code: 'CURR_MAP_003'
-                    },
-                    user_email: user.email,
-                    resolved: false
-                });
-                
-                await base44.asServiceRole.integrations.Core.SendEmail({
-                    to: 'support@study-app.ai',
-                    subject: `[CURR_MAP_003] JSON Parse Error`,
-                    body: `User: ${user.email}\nError: ${parseError.message}\nRaw: ${generatedText.substring(0, 500)}`
-                });
-            } catch (logError) {
-                console.error('Failed to log error:', logError);
-            }
-            
-            return Response.json({ 
-                error: 'Failed to parse response as JSON',
-                code: 'CURR_MAP_003',
-                raw: generatedText.substring(0, 500)
-            }, { status: 500 });
         }
+        
+        // All strategies failed - log and return error
+        console.error('❌ All JSON extraction strategies failed');
+        console.error('Raw text preview:', generatedText.substring(0, 1000));
+        
+        try {
+            await base44.asServiceRole.entities.ErrorLog.create({
+                error_type: 'function_error',
+                error_message: 'Failed to extract JSON from response',
+                error_stack: null,
+                context: {
+                    function: 'curriculumMapping',
+                    user_email: user.email,
+                    raw_preview: generatedText.substring(0, 500),
+                    error_code: 'CURR_MAP_003'
+                },
+                user_email: user.email,
+                resolved: false
+            });
+            
+            await base44.asServiceRole.integrations.Core.SendEmail({
+                to: 'support@study-app.ai',
+                subject: `[CURR_MAP_003] JSON Parse Error`,
+                body: `User: ${user.email}\nRaw: ${generatedText.substring(0, 500)}`
+            });
+        } catch (logError) {
+            console.error('Failed to log error:', logError);
+        }
+        
+        return Response.json({ 
+            error: 'Failed to parse response as JSON',
+            code: 'CURR_MAP_003',
+            raw: generatedText.substring(0, 500)
+        }, { status: 500 });
 
     } catch (error) {
         console.error('❌ CRITICAL ERROR in curriculumMapping:', error);
