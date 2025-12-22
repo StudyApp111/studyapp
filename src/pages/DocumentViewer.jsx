@@ -375,7 +375,7 @@ export default function DocumentViewer() {
                     value="quiz"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
                   >
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
                     <Brain className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Quiz</span>
                   </TabsTrigger>
@@ -390,7 +390,7 @@ export default function DocumentViewer() {
                     value="grade"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
                   >
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
                     <Trophy className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Grade</span>
                   </TabsTrigger>
