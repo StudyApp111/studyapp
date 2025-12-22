@@ -281,13 +281,18 @@ Output Format: JSON object matching the specified schema`;
         response_json_schema: curriculumResponseJsonSchema
       });
 
-      // Handle wrapped responses (e.g., { course_profile: {...} })
+      // Handle wrapped responses (e.g., { course_profile: {...} } or { curriculum_profile: {...} })
       let mapData = generatedMap;
-      if (!mapData?.core_competencies && mapData?.course_profile?.core_competencies) {
-        mapData = mapData.course_profile;
-      }
-      if (!mapData?.core_competencies && mapData?.curriculum_profile?.core_competencies) {
-        mapData = mapData.curriculum_profile;
+      if (!mapData?.core_competencies) {
+        // Check common wrapper keys
+        const wrapperKeys = ['course_profile', 'curriculum_profile', 'profile', 'data', 'result'];
+        for (const key of wrapperKeys) {
+          if (mapData?.[key]?.core_competencies) {
+            mapData = mapData[key];
+            console.log(`Unwrapped curriculum data from "${key}"`);
+            break;
+          }
+        }
       }
 
       // Ensure arrays exist
