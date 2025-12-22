@@ -345,9 +345,7 @@ Output Format: JSON object matching the specified schema`;
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto p-0 gap-0 rounded-2xl">
         {isProcessing ? (
-          <div className="p-6">
-            <EducationalLoader grade={userGrade} />
-          </div>
+          <EducationalLoader />
         ) : (
           <>
             {/* Compact Header */}
