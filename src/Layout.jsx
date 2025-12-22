@@ -371,30 +371,28 @@ export default function Layout({ children, currentPageName }) {
 
                 <Link
                   to={createPageUrl("SmartGrader")}
-                  className={`flex items-center justify-center p-2 rounded-lg transition-all relative min-w-0 ${
+                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
                     location.pathname === createPageUrl("SmartGrader")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <div className="relative">
-                    <FileCheck className="w-6 h-6" />
-                    <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full">
-                      NEW
-                    </span>
-                  </div>
+                  <FileCheck className="w-6 h-6" />
                 </Link>
 
                 {/* Space for center CTA */}
                 <div className="w-14" />
 
-                <button
-                  onClick={() => setAiTutorModalOpen(true)}
-                  className="flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600 relative"
+                <Link
+                  to={createPageUrl("Collaborate")}
+                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                    location.pathname === createPageUrl("Collaborate")
+                      ? 'text-yellow-600 bg-yellow-50'
+                      : 'text-slate-600'
+                  }`}
                 >
-                  <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
-                  <MessageSquare className="w-6 h-6" />
-                </button>
+                  <Users className="w-6 h-6" />
+                </Link>
 
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}
