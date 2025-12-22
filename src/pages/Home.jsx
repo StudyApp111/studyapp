@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, TrendingUp, Award, Clock, Zap, Trophy, Flame, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, DollarSign, Briefcase, FileCheck } from "lucide-react";
+import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -161,55 +161,43 @@ export default function Home() {
 
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         onClick={handleClick}
-        className="cursor-pointer"
+        className="cursor-pointer group"
       >
-        <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 shadow-lg relative overflow-hidden hover:scale-105 bg-gradient-to-br from-emerald-50 to-teal-50">
-          {/* Decorative gradient bar */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
-
-          <CardHeader className="pb-4 pt-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <FileCheck className="w-7 h-7 flex-shrink-0 text-emerald-600" />
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg text-slate-900 truncate">{assignment.course_name}</CardTitle>
-                  <p className="text-xs text-slate-500 truncate mt-1">{assignment.assignment_title}</p>
-                </div>
+        <Card className="h-full hover:shadow-xl transition-all duration-300 border border-emerald-200 shadow-md overflow-hidden hover:border-emerald-400 bg-gradient-to-br from-emerald-50/50 to-white">
+          <CardContent className="p-4 md:p-5">
+            <div className="flex items-start gap-4">
+              {/* Icon */}
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-emerald-100 to-teal-100">
+                <FileCheck className="w-6 h-6 text-emerald-600" />
               </div>
-              <Badge className="flex-shrink-0 bg-emerald-100 text-emerald-700 border border-emerald-200">
-                Graded
-              </Badge>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <div className="space-y-4">
-              {assignment.grading_result ? (
-                <div className="p-4 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-lg border border-emerald-300 shadow-sm">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <p className="text-xs font-semibold text-slate-600 mb-1">Predicted Grade</p>
-                      <p className="text-3xl font-bold text-slate-900">{assignment.grading_result.predicted_grade}</p>
+              
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-slate-900 truncate mb-0.5 group-hover:text-emerald-700 transition-colors">
+                  {assignment.course_name}
+                </h3>
+                <p className="text-xs text-slate-500 truncate mb-2">{assignment.assignment_title}</p>
+                
+                {assignment.grading_result ? (
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-2xl font-bold text-emerald-600">{assignment.grading_result.predicted_grade}</span>
+                      <span className="text-xs text-slate-500">grade</span>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-xs text-slate-600 mb-1">Score</p>
-                      <p className="text-xl font-bold text-emerald-600">{Math.round(assignment.grading_result.total_score)}%</p>
-                    </div>
+                    <div className="h-4 w-px bg-slate-200" />
+                    <span className="text-sm text-slate-600">{Math.round(assignment.grading_result.total_score)}%</span>
                   </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                  <p className="text-sm text-slate-500">Processing...</p>
-                </div>
-              )}
-
-              <div className="pt-2 text-center">
-                <p className="text-xs text-slate-500">Click to view feedback →</p>
+                ) : (
+                  <span className="text-sm text-slate-500">Processing...</span>
+                )}
               </div>
+              
+              {/* Arrow */}
+              <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all flex-shrink-0 mt-1" />
             </div>
           </CardContent>
         </Card>
@@ -220,10 +208,10 @@ export default function Home() {
   const SimpleLessonCard = ({ lesson }) => {
     const worksheets = (lessonWorksheets[lesson.id] || []).sort((a, b) => a.worksheet_number - b.worksheet_number);
     const completedCount = worksheets.filter(w => w.completed).length;
-    const totalWorksheets = 6;
+    const totalExams = 6;
     const latestCompletedWorksheet = worksheets.filter(w => w.completed).pop();
-    const progress = (completedCount / totalWorksheets) * 100;
     const SubjectIcon = getSubjectIcon(lesson.course_name);
+    const hasStarted = completedCount > 0;
 
     const handleClick = () => {
       navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
@@ -231,77 +219,51 @@ export default function Home() {
 
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         onClick={handleClick}
-        className="cursor-pointer"
+        className="cursor-pointer group"
       >
-        <Card className="h-full hover:shadow-xl transition-all duration-300 border-0 shadow-lg relative overflow-hidden hover:scale-105">
-          {/* Progress Bar */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-slate-200">
-            <div 
-              className={`h-full transition-all duration-500 ${
-                completedCount === totalWorksheets ? 'bg-emerald-500' : 
-                completedCount > 0 ? 'bg-yellow-500' :
-                'bg-purple-500'
-              }`}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-          <CardHeader className="pb-4 pt-6">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <SubjectIcon className={`w-7 h-7 flex-shrink-0 ${
-                  completedCount === totalWorksheets ? 'text-emerald-600' :
-                  completedCount > 0 ? 'text-yellow-600' :
-                  'text-purple-600'
-                }`} />
-                <CardTitle className="text-lg text-slate-900 truncate">{lesson.course_name}</CardTitle>
+        <Card className="h-full hover:shadow-xl transition-all duration-300 border border-slate-200 shadow-md overflow-hidden hover:border-purple-300 bg-white">
+          <CardContent className="p-4 md:p-5">
+            <div className="flex items-start gap-4">
+              {/* Icon */}
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                hasStarted 
+                  ? 'bg-gradient-to-br from-purple-100 to-yellow-100' 
+                  : 'bg-gradient-to-br from-slate-100 to-slate-50'
+              }`}>
+                <SubjectIcon className={`w-6 h-6 ${hasStarted ? 'text-purple-600' : 'text-slate-500'}`} />
               </div>
-              <Badge className={`flex-shrink-0 ${
-                completedCount === totalWorksheets ? 'bg-emerald-100 text-emerald-700' :
-                completedCount > 0 ? 'bg-yellow-100 text-yellow-700' :
-                'bg-purple-100 text-purple-700'
-              } border`}>
-                {completedCount}/{totalWorksheets}
-              </Badge>
-            </div>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Progress</span>
-                  <span className="font-semibold text-slate-900">{completedCount} / {totalWorksheets} worksheets</span>
-                </div>
-                <Progress value={progress} className="h-2" />
-              </div>
-
-              {latestCompletedWorksheet ? (
-                <div className="p-4 bg-gradient-to-r from-purple-50 to-yellow-50 rounded-lg border border-yellow-300 shadow-sm">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <p className="text-xs font-semibold text-slate-600 mb-1">Current Predicted Grade</p>
-                      <p className="text-3xl font-bold text-slate-900">{latestCompletedWorksheet.predicted_grade}</p>
+              
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-slate-900 truncate mb-1 group-hover:text-purple-700 transition-colors">
+                  {lesson.course_name}
+                </h3>
+                
+                {latestCompletedWorksheet ? (
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-2xl font-bold text-purple-600">{latestCompletedWorksheet.predicted_grade}</span>
+                      <span className="text-xs text-slate-500">predicted</span>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-xs text-slate-600 mb-1">Score</p>
-                      <p className="text-xl font-bold text-purple-600">{Math.round(latestCompletedWorksheet.total_score)}%</p>
-                    </div>
+                    <div className="h-4 w-px bg-slate-200" />
+                    <span className="text-sm text-slate-600">{completedCount}/{totalExams} exams</span>
                   </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-center">
-                  <p className="text-sm text-slate-500">No grade yet - start your first worksheet</p>
-                </div>
-              )}
-
-              <div className="pt-2 text-center">
-                <p className="text-xs text-slate-500">Click to view details →</p>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 text-xs text-purple-600 font-medium">
+                      <Sparkles className="w-3 h-3" />
+                      Ready to start
+                    </span>
+                  </div>
+                )}
               </div>
+              
+              {/* Arrow */}
+              <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all flex-shrink-0 mt-1" />
             </div>
           </CardContent>
         </Card>
@@ -335,41 +297,71 @@ export default function Home() {
         </div>
       </div>
 
-      {/* CTA Box - Always Displayed */}
-      <div className="mb-6 max-w-6xl mx-auto">
-        <Card className="text-center py-5 md:py-6 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-yellow-300">
-          <CardContent className="max-w-3xl mx-auto">
-            <div className="space-y-4">
-              <div className="text-center">
-                <Button
-                  onClick={() => setCreateLessonModalOpen(true)}
-                  className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold mb-2 text-base px-8 py-6"
-                  size="lg"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Upload Now
-                </Button>
-                <p className="text-sm text-slate-600 max-w-md mx-auto">
-                  Get predicted grades, discover your cognitive biases, identify weaknesses, and map your personalized road to an A+
+      {/* Beautiful CTA Section */}
+      <div className="mb-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Upload Notes Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            onClick={() => setCreateLessonModalOpen(true)}
+            className="cursor-pointer group"
+          >
+            <Card className="h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 hover:scale-[1.02]">
+              <CardContent className="p-6 md:p-8">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Upload className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <ArrowRight className="w-5 h-5 text-slate-900" />
+                  </div>
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Upload Notes</h3>
+                <p className="text-white/80 text-sm md:text-base mb-4">
+                  Drop your lecture notes, textbook chapters, or study materials
                 </p>
-              </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">AI Quiz</span>
+                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Grade Prediction</span>
+                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Flashcards</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-              <div className="text-center">
-                <Button
-                  onClick={() => navigate(createPageUrl("SmartGrader"))}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold mb-2 text-base px-8 py-6"
-                  size="lg"
-                >
-                  <FileCheck className="w-5 h-5 mr-2" />
-                  Grade Assignment
-                </Button>
-                <p className="text-sm text-slate-600 max-w-md mx-auto">
-                  Upload your completed work and get instant AI grading with detailed feedback, rubric breakdown, and actionable improvements
+          {/* Grade Assignment Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            onClick={() => navigate(createPageUrl("SmartGrader"))}
+            className="cursor-pointer group"
+          >
+            <Card className="h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:scale-[1.02]">
+              <CardContent className="p-6 md:p-8">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <FileCheck className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <ArrowRight className="w-5 h-5 text-slate-900" />
+                  </div>
+                </div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Grade Assignment</h3>
+                <p className="text-white/80 text-sm md:text-base mb-4">
+                  Upload your work and get instant AI feedback with detailed analysis
                 </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Instant Grade</span>
+                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Rubric Analysis</span>
+                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Improvements</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
 
       {/* Recent Activity - Below CTA */}
