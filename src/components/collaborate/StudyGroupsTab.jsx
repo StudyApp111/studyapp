@@ -22,9 +22,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import GroupTasks from "./GroupTasks";
-import GroupWhiteboard from "./GroupWhiteboard";
-import GroupCalendar from "./GroupCalendar";
+import GroupTasks from "./GroupTasks.jsx";
+import GroupWhiteboard from "./GroupWhiteboard.jsx";
+import GroupCalendar from "./GroupCalendar.jsx";
 
 export default function StudyGroupsTab({ user }) {
   const queryClient = useQueryClient();
