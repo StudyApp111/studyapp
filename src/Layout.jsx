@@ -22,6 +22,7 @@ import { trackUserSession, trackSessionDuration } from "@/components/utils/userT
 import { logError } from "@/components/utils/errorLogger";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
 import AITutorModal from "@/components/modals/AITutorModal.jsx";
+import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
 
 const navigationItems = [
         {
@@ -149,6 +150,7 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
+      <BrowserCompatibilityBanner />
       <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 relative">
         <style>{`
           :root {
