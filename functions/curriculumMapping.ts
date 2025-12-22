@@ -118,15 +118,68 @@ Deno.serve(async (req) => {
                 break;
             }
         }
-        
-        if (!generatedText) {
+
+        // If grounded search returned empty, fall back to direct structured call
+        if (!generatedText || generatedText.trim() === '') {
+            console.log('⚠️ Grounded response empty, falling back to direct structured call...');
+
+            const directRequestBody = {
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.2,
+                    topP: 0.95,
+                    maxOutputTokens: 8192,
+                    responseMimeType: "application/json",
+                    responseSchema: response_json_schema
+                }
+            };
+
+            const directResponse = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(directRequestBody)
+                }
+            );
+
+            if (directResponse.ok) {
+                const directData = await directResponse.json();
+                const directText = directData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (directText) {
+                    let directJson = directText.trim();
+                    if (!directJson.startsWith('{')) {
+                        const start = directJson.indexOf('{');
+                        const end = directJson.lastIndexOf('}');
+                        if (start !== -1 && end !== -1) {
+                            directJson = directJson.substring(start, end + 1);
+                        }
+                    }
+
+                    try {
+                        const parsedDirect = JSON.parse(directJson);
+                        if (parsedDirect.core_competencies) {
+                            console.log('✅ Direct structured call succeeded');
+                            return Response.json(parsedDirect);
+                        }
+                    } catch (parseErr) {
+                        console.error('❌ Direct call parse failed:', parseErr.message);
+                    }
+                }
+            }
+
+            // If direct call also failed, return error
             console.error('❌ No content in response:', JSON.stringify(data));
-            
-            // Log error and send email
+
             try {
                 await base44.asServiceRole.entities.ErrorLog.create({
                     error_type: 'function_error',
-                    error_message: 'No content generated from Gemini API',
+                    error_message: 'No content generated from Gemini API (grounded + direct fallback failed)',
                     error_stack: JSON.stringify(data),
                     context: {
                         function: 'curriculumMapping',
@@ -136,16 +189,10 @@ Deno.serve(async (req) => {
                     user_email: user.email,
                     resolved: false
                 });
-                
-                await base44.asServiceRole.integrations.Core.SendEmail({
-                    to: 'support@study-app.ai',
-                    subject: `[CURR_MAP_002] No Content Generated`,
-                    body: `User: ${user.email}\nResponse: ${JSON.stringify(data)}`
-                });
             } catch (logError) {
                 console.error('Failed to log error:', logError);
             }
-            
+
             return Response.json({ 
                 error: 'No content generated',
                 code: 'CURR_MAP_002'
