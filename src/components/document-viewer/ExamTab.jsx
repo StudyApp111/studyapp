@@ -781,16 +781,16 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
     
     return (
       <div className="pb-4">
-        <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-6 m-2">
-        <div className="mb-6">
-          <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
-            <Trophy className="w-7 h-7 text-yellow-500" />
+        <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-3 md:p-6 m-1 md:m-2">
+        <div className="mb-3 md:mb-6">
+          <h3 className="text-base md:text-2xl font-bold text-slate-900 mb-1 md:mb-2 flex items-center gap-1.5 md:gap-2">
+            <Trophy className="w-5 h-5 md:w-7 md:h-7 text-yellow-500" />
             Your Roadmap to 90%+
           </h3>
-          <p className="text-slate-600">Complete exams to track your progress and improve your predicted grade</p>
+          <p className="text-xs md:text-base text-slate-600">Complete exams to track your progress and improve your predicted grade</p>
         </div>
         
-        <div className="grid gap-3">
+        <div className="grid gap-2 md:gap-3">
           {sortedExams.length > 0 ? sortedExams.map((e) => {
             const isCompleted = e.completed;
             const canStart = e.exam_number === 1 || sortedExams.find(ex => ex.exam_number === e.exam_number - 1)?.completed;
@@ -807,7 +807,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
                   }
                 }}
                 disabled={!canStart && !isCompleted}
-                className={`p-5 rounded-xl border-2 transition-all text-left ${
+                className={`p-3 md:p-5 rounded-xl border-2 transition-all text-left ${
                   isCompleted
                     ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300 hover:shadow-lg'
                     : canStart
@@ -815,43 +815,43 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
                     : 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between mb-1 md:mb-2">
+                  <div className="flex items-center gap-2 md:gap-3">
                     {isCompleted ? (
-                      <div className="w-12 h-12 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle2 className="w-6 h-6 text-white" />
+                      <div className="w-9 h-9 md:w-12 md:h-12 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-white" />
                       </div>
                     ) : canStart ? (
-                      <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Play className="w-6 h-6 text-white" />
+                      <div className="w-9 h-9 md:w-12 md:h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Play className="w-4 h-4 md:w-6 md:h-6 text-white" />
                       </div>
                     ) : (
-                      <div className="w-12 h-12 bg-slate-300 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Lock className="w-6 h-6 text-white" />
+                      <div className="w-9 h-9 md:w-12 md:h-12 bg-slate-300 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Lock className="w-4 h-4 md:w-6 md:h-6 text-white" />
                       </div>
                     )}
                     <div>
-                      <h5 className="font-bold text-slate-900 text-lg">
+                      <h5 className="font-bold text-slate-900 text-sm md:text-lg">
                         Exam {e.exam_number}
                       </h5>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-xs md:text-sm text-slate-600 line-clamp-1">
                         {e.focus_description || (e.exam_number === 1 ? 'Diagnostic Assessment' : 'Practice Exam')}
                       </p>
                     </div>
                   </div>
                   {isCompleted && e.predicted_grade && (
-                    <Badge className="bg-emerald-600 text-white font-bold text-lg px-4 py-2">
+                    <Badge className="bg-emerald-600 text-white font-bold text-sm md:text-lg px-2 py-1 md:px-4 md:py-2">
                       {e.predicted_grade}
                     </Badge>
                   )}
                 </div>
                 {isCompleted && (
-                  <p className="text-sm text-emerald-700 font-medium ml-12">
+                  <p className="text-xs md:text-sm text-emerald-700 font-medium ml-11 md:ml-12">
                     Click to view feedback →
                   </p>
                 )}
                 {canStart && !isCompleted && (
-                  <p className="text-sm text-purple-700 font-medium ml-12">
+                  <p className="text-xs md:text-sm text-purple-700 font-medium ml-11 md:ml-12">
                     Click to start exam →
                   </p>
                 )}
@@ -860,18 +860,18 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           }) : (
             <button
               onClick={() => setSelectedExamNumber(1)}
-              className="p-5 rounded-xl border-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02] transition-all text-left"
+              className="p-3 md:p-5 rounded-xl border-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02] transition-all text-left"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Play className="w-6 h-6 text-white" />
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-9 h-9 md:w-12 md:h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Play className="w-4 h-4 md:w-6 md:h-6 text-white" />
                 </div>
                 <div>
-                  <h5 className="font-bold text-slate-900 text-lg">Exam 1</h5>
-                  <p className="text-sm text-slate-600">Diagnostic Assessment</p>
+                  <h5 className="font-bold text-slate-900 text-sm md:text-lg">Exam 1</h5>
+                  <p className="text-xs md:text-sm text-slate-600">Diagnostic Assessment</p>
                 </div>
               </div>
-              <p className="text-sm text-purple-700 font-medium ml-12 mt-2">
+              <p className="text-xs md:text-sm text-purple-700 font-medium ml-11 md:ml-12 mt-1 md:mt-2">
                 Click to start your first exam →
               </p>
             </button>
