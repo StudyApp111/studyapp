@@ -154,11 +154,22 @@ Deno.serve(async (req) => {
         
         console.log('✅ Generated text extracted, length:', generatedText.length);
 
-        // Extract JSON - handle markdown code blocks if present
+        // Extract JSON - try multiple strategies
         let jsonStr = generatedText.trim();
+        
+        // Strategy 1: Check for markdown code blocks
         const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
         if (jsonMatch) {
             jsonStr = jsonMatch[1].trim();
+        }
+        
+        // Strategy 2: Find JSON object boundaries
+        if (!jsonStr.startsWith('{')) {
+            const jsonStartIdx = jsonStr.indexOf('{');
+            const jsonEndIdx = jsonStr.lastIndexOf('}');
+            if (jsonStartIdx !== -1 && jsonEndIdx !== -1 && jsonEndIdx > jsonStartIdx) {
+                jsonStr = jsonStr.substring(jsonStartIdx, jsonEndIdx + 1);
+            }
         }
 
         try {
@@ -168,6 +179,65 @@ Deno.serve(async (req) => {
             console.log('=== curriculumMapping Function Complete ===');
             return Response.json(parsedResponse);
         } catch (parseError) {
+            console.error('❌ Initial JSON parse failed, attempting repair...');
+            
+            // Strategy 3: Make a second API call to fix/extract JSON
+            console.log('⏳ Making repair call to extract JSON...');
+            const repairRequestBody = {
+                contents: [{
+                    parts: [{
+                        text: `Extract and return ONLY a valid JSON object from the following text. The JSON should have these keys: core_competencies, competency_weightings, question_formats, high_yield_focal_points, common_misconceptions.
+
+If you cannot find all the data, create reasonable defaults based on the context.
+
+TEXT TO EXTRACT FROM:
+${generatedText}
+
+Return ONLY the JSON object, no explanations.`
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    topP: 0.95,
+                    maxOutputTokens: 8192,
+                    responseMimeType: "application/json",
+                    responseSchema: response_json_schema
+                }
+            };
+            
+            const repairResponse = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(repairRequestBody)
+                }
+            );
+            
+            if (repairResponse.ok) {
+                const repairData = await repairResponse.json();
+                const repairText = repairData.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (repairText) {
+                    let repairJson = repairText.trim();
+                    if (!repairJson.startsWith('{')) {
+                        const start = repairJson.indexOf('{');
+                        const end = repairJson.lastIndexOf('}');
+                        if (start !== -1 && end !== -1) {
+                            repairJson = repairJson.substring(start, end + 1);
+                        }
+                    }
+                    
+                    try {
+                        const repairedResponse = JSON.parse(repairJson);
+                        console.log('✅ JSON repaired and parsed successfully');
+                        return Response.json(repairedResponse);
+                    } catch (repairParseError) {
+                        console.error('❌ Repair parse also failed');
+                    }
+                }
+            }
+            
             console.error('❌ JSON parse error:', parseError.message);
             console.error('Raw text preview:', generatedText.substring(0, 1000));
             
