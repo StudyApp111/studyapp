@@ -6,15 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, FileText, Upload, FileCheck, AlertCircle, Lightbulb, ChevronDown, ChevronUp, Calculator, Beaker, Globe, BookText, Code, Briefcase, X } from "lucide-react";
+import { Loader2, FileText, Upload, FileCheck, AlertCircle, Sparkles, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 
@@ -343,141 +339,132 @@ Output Format: JSON object matching the specified schema`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto p-0 gap-0 rounded-2xl">
         {isProcessing ? (
-          <div className="p-8">
+          <div className="p-6">
             <EducationalLoader grade={userGrade} />
           </div>
         ) : (
           <>
-            <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-6">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mr-24 -mt-24" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-yellow-400/20 rounded-full blur-2xl -ml-16 -mb-16" />
-              
-              <div className="relative text-center space-y-4">
-                <div className="flex justify-center mb-2">
-                  <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl shadow-xl">
-                    <Plus className="w-8 h-8 text-white" />
-                  </div>
+            {/* Compact Header */}
+            <div className="relative bg-gradient-to-r from-purple-600 to-indigo-700 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-2">Start a New Lesson</h2>
-                  <p className="text-white/90 text-sm">Upload notes or describe your course to get started</p>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1 px-2 py-1 text-xs">
-                    <Calculator className="w-3 h-3" /> Math
-                  </Badge>
-                  <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1 px-2 py-1 text-xs">
-                    <Beaker className="w-3 h-3" /> Biology
-                  </Badge>
-                  <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1 px-2 py-1 text-xs">
-                    <Globe className="w-3 h-3" /> Geography
-                  </Badge>
-                  <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1 px-2 py-1 text-xs">
-                    <BookText className="w-3 h-3" /> History
-                  </Badge>
-                  <Badge className="bg-white/15 text-white border-white/30 backdrop-blur-sm flex items-center gap-1 px-2 py-1 text-xs">
-                    <Code className="w-3 h-3" /> CompSci
-                  </Badge>
+                  <h2 className="text-lg font-bold text-white">New Lesson</h2>
+                  <p className="text-white/80 text-xs">Upload notes to get started</p>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            {/* Form */}
+            <div className="p-5">
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
-                  <Alert variant="destructive">
+                  <Alert variant="destructive" className="py-2">
                     <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription className="text-sm">{error}</AlertDescription>
                   </Alert>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="courseName">Course Name *</Label>
+                {/* Course Name */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="courseName" className="text-sm font-medium">Course Name</Label>
                   <Input
                     id="courseName"
                     value={courseName}
                     onChange={(e) => setCourseName(e.target.value)}
-                    placeholder="e.g., MATH 101, Biology 12, AP US History"
+                    placeholder="e.g., MATH 101, Biology 12"
                     disabled={isProcessing}
+                    className="h-11"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>How would you like to provide content? *</Label>
-                  <RadioGroup value={inputType} onValueChange={setInputType} disabled={isProcessing}>
-                    <div className="flex items-center space-x-2 p-3 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
-                      <RadioGroupItem value="file" id="modal-file" />
-                      <Label htmlFor="modal-file" className="flex items-center gap-2 flex-1 cursor-pointer">
-                        <Upload className="w-4 h-4 text-purple-600" />
-                        <div>
-                          <p className="font-medium text-sm">Upload Files</p>
-                          <p className="text-xs text-slate-500">PDF, PPT, Word, Images - Max 15MB each, multiple files</p>
-                        </div>
-                      </Label>
-                    </div>
-
-                    <div className="flex items-center space-x-2 p-3 rounded-lg border-2 border-slate-200 hover:border-purple-400 transition-colors">
-                      <RadioGroupItem value="description" id="modal-description" />
-                      <Label htmlFor="modal-description" className="flex items-center gap-2 flex-1 cursor-pointer">
-                        <FileText className="w-4 h-4 text-purple-600" />
-                        <div>
-                          <p className="font-medium text-sm">Write a Description</p>
-                          <p className="text-xs text-slate-500">Describe the course content</p>
-                        </div>
-                      </Label>
-                    </div>
-                  </RadioGroup>
+                {/* Content Type Toggle */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">Content Source</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setInputType("file")}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                        inputType === "file"
+                          ? "border-purple-500 bg-purple-50 text-purple-700"
+                          : "border-slate-200 hover:border-slate-300 text-slate-600"
+                      }`}
+                    >
+                      <Upload className="w-4 h-4" />
+                      <span className="text-sm font-medium">Upload</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInputType("description")}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                        inputType === "description"
+                          ? "border-purple-500 bg-purple-50 text-purple-700"
+                          : "border-slate-200 hover:border-slate-300 text-slate-600"
+                      }`}
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span className="text-sm font-medium">Describe</span>
+                    </button>
+                  </div>
                 </div>
 
+                {/* Description Input */}
                 {inputType === "description" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="modal-description-text">Describe what you want to study</Label>
+                  <div className="space-y-1.5">
                     <Textarea
-                      id="modal-description-text"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Describe your course content, paste lecture notes, or list exam topics..."
+                      placeholder="Describe your course content, paste lecture notes, or list topics..."
                       disabled={isProcessing}
-                      className="min-h-[100px]"
+                      className="min-h-[100px] resize-none"
                     />
                   </div>
                 )}
 
+                {/* File Upload */}
                 {inputType === "file" && (
                   <div className="space-y-2">
-                    <Label htmlFor="modal-file-input">Upload Course Materials *</Label>
-                    <Input
-                      id="modal-file-input"
-                      type="file"
-                      onChange={handleFileChange}
-                      disabled={isProcessing}
-                      multiple
-                      accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
-                    />
+                    <div 
+                      className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:border-purple-400 transition-colors cursor-pointer"
+                      onClick={() => document.getElementById('modal-file-input').click()}
+                    >
+                      <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600 font-medium">Click to upload files</p>
+                      <p className="text-xs text-slate-400 mt-1">PDF, Word, PPT, Images • Max 15MB</p>
+                      <Input
+                        id="modal-file-input"
+                        type="file"
+                        onChange={handleFileChange}
+                        disabled={isProcessing}
+                        multiple
+                        accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
+                        className="hidden"
+                      />
+                    </div>
                     {files.length > 0 && (
-                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                      <div className="space-y-1.5 max-h-24 overflow-y-auto">
                         {files.map((f, idx) => (
-                          <div key={idx} className="flex items-center gap-2 text-sm text-emerald-600">
+                          <div key={idx} className="flex items-center gap-2 text-sm bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg">
                             <FileCheck className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)</span>
+                            <span className="truncate flex-1">{f.name}</span>
+                            <span className="text-xs text-emerald-500">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
                           </div>
                         ))}
                       </div>
                     )}
-                    <p className="text-xs text-slate-500">
-                      Upload multiple files (max 15MB each)
-                    </p>
                   </div>
                 )}
 
+                {/* Submit Button */}
                 <Button
                   type="submit"
                   disabled={isProcessing}
-                  className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
+                  className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25"
                 >
                   {isProcessing ? (
                     <>
@@ -486,7 +473,7 @@ Output Format: JSON object matching the specified schema`;
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4 mr-2" />
+                      <Sparkles className="w-4 h-4 mr-2" />
                       Create Lesson
                     </>
                   )}
