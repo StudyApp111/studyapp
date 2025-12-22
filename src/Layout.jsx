@@ -318,22 +318,24 @@ export default function Layout({ children, currentPageName }) {
         <main className="flex-1 flex flex-col">
           {/* Mobile Header - Hidden during onboarding */}
           {showNavigation && !isOnboardingPage && (
-            <header className="bg-white/90 backdrop-blur-xl border-b border-purple-200/60 px-6 py-4 md:hidden">
-              <div className="flex items-center justify-between">
-                <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-4 py-2.5 md:hidden">
+              <div className="flex items-center justify-center relative">
+                {/* Centered Logo + Name */}
+                <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                   <img 
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
                     alt="StudyApp Logo"
-                    className="w-8 h-8 rounded-lg"
+                    className="w-7 h-7"
                   />
-                  <h1 className="text-xl font-bold text-slate-900">StudyApp</h1>
+                  <h1 className="text-lg font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">StudyApp</h1>
                 </Link>
+                {/* Profile button - absolute right */}
                 {user && (
                   <button
                     onClick={() => navigate(createPageUrl("Settings"))}
-                    className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center"
+                    className="absolute right-0 w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm"
                   >
-                    <span className="text-white font-semibold text-xs">
+                    <span className="text-white font-semibold text-[10px]">
                       {user.full_name?.[0]?.toUpperCase() || 'U'}
                     </span>
                   </button>
