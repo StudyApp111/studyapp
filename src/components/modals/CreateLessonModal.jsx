@@ -144,7 +144,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         if (!description.trim()) {
           throw new Error("Please enter a description");
         }
-        extractedContent = description;
+        extractedContent = description.trim();
+        fullExtractedContent = extractedContent;
       }
 
       const user = await base44.auth.me();
@@ -273,17 +274,10 @@ Output Format: JSON object matching the specified schema`;
 
       setProcessingStep("Analyzing curriculum...");
 
-      const curriculumResult = await base44.functions.invoke('curriculumMapping', {
+      const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
         prompt: curriculumPrompt,
         response_json_schema: curriculumResponseJsonSchema
       });
-      
-      const generatedMap = curriculumResult.data;
-      
-      // Validate we got actual curriculum data
-      if (!generatedMap || generatedMap.error) {
-        throw new Error(generatedMap?.error || "Failed to analyze curriculum. Please try again.");
-      }
 
       const curriculumMap = {
         core_competencies: (generatedMap.core_competencies || []).map(c => ({
@@ -338,17 +332,7 @@ Output Format: JSON object matching the specified schema`;
       onOpenChange(false);
       navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
     } catch (err) {
-      console.error("Error creating lesson:", err);
-      let errorMessage = err.message || "Failed to create lesson. Please try again.";
-      
-      // Handle specific error cases
-      if (errorMessage.includes("JSON") || errorMessage.includes("parse")) {
-        errorMessage = "The AI had trouble analyzing your content. Please try again or upload a different file.";
-      } else if (errorMessage.includes("500")) {
-        errorMessage = "Server error while processing. Please try again in a moment.";
-      }
-      
-      setError(errorMessage);
+      setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
       setProcessingStep("");
     }
