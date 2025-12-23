@@ -949,7 +949,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           <Progress value={progress} className="h-1.5 md:h-2" />
         </div>
 
-        <div className="p-2 md:p-6">
+        <div className="p-3 md:p-6">
           <AnimatePresence mode="wait">
             <ExamQuestion
               key={currentQuestion}
