@@ -85,7 +85,7 @@ export default function DocumentViewer() {
     }
   }, [isTimerRunning]);
 
-  // Save progress every 30 seconds
+  // Save progress every 30 seconds (both user total and lesson-specific time)
   useEffect(() => {
     if (saveProgressRef.current) {
       clearInterval(saveProgressRef.current);
@@ -97,6 +97,18 @@ export default function DocumentViewer() {
         await base44.auth.updateMe({
           time_spent_seconds: (user.time_spent_seconds || 0) + 30
         });
+        
+        // Also update lesson-specific study time
+        if (lesson?.id) {
+          await base44.entities.Lesson.update(lesson.id, {
+            total_study_time_seconds: (lesson.total_study_time_seconds || 0) + 30
+          });
+          // Update local state to reflect saved time
+          setLesson(prev => prev ? {
+            ...prev,
+            total_study_time_seconds: (prev.total_study_time_seconds || 0) + 30
+          } : prev);
+        }
       } catch (error) {
         console.error("Error saving progress:", error);
       }
@@ -107,7 +119,7 @@ export default function DocumentViewer() {
         clearInterval(saveProgressRef.current);
       }
     };
-  }, []);
+  }, [lesson?.id]);
 
   const formatStudyTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
