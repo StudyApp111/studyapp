@@ -279,10 +279,10 @@ e. Targeted Misconception: If this question tests a known common misconception, 
 
   const progress = ((currentQuestion + 1) / localQuiz.questions.length) * 100;
   const currentMetadata = questionMetadata[currentQuestion] || {};
-  const canProceed = userAnswers[currentQuestion] !== null && 
-                     userAnswers[currentQuestion] !== "" &&
-                     currentMetadata.reasoning_method &&
-                     currentMetadata.confidence_level;
+  const hasAnswer = userAnswers[currentQuestion] !== null && userAnswers[currentQuestion] !== undefined && userAnswers[currentQuestion] !== "";
+  const hasReasoning = currentMetadata.reasoning_method;
+  const hasConfidence = currentMetadata.confidence_level;
+  const canProceed = hasAnswer && hasReasoning && hasConfidence;
   const isLastQuestion = currentQuestion === localQuiz.questions.length - 1;
 
   return (
