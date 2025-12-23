@@ -201,8 +201,31 @@ Create flashcards that:
     );
   }
 
-  // Flashcard display
-  if (!cards || cards.length === 0) return null;
+  // No cards generated yet or empty result
+  if (!cards || cards.length === 0) {
+    return (
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-2 p-6">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto">
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 mb-2">AI-Powered Flashcards</h3>
+            <p className="text-sm text-slate-600">
+              Generate intelligent flashcards using spaced repetition to maximize retention.
+            </p>
+          </div>
+          <Button
+            onClick={handleGenerate}
+            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white w-full"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Generate Flashcards
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   const currentCard = cards[currentIndex];
   const progress = ((currentIndex + 1) / cards.length) * 100;
