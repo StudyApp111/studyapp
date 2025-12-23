@@ -324,7 +324,12 @@ e. Targeted Misconception: If this question tests a known common misconception, 
             </Button>
             {isLastQuestion ? (
               <Button
-                onClick={submitQuiz}
+                onClick={() => {
+                  console.log("Submit clicked", { canProceed, isSubmitting, hasAnswer, hasReasoning, hasConfidence });
+                  if (canProceed && !isSubmitting) {
+                    submitQuiz();
+                  }
+                }}
                 disabled={!canProceed || isSubmitting}
                 className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-xs md:text-sm h-9 md:h-10"
               >
@@ -333,6 +338,12 @@ e. Targeted Misconception: If this question tests a known common misconception, 
                     <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2 animate-spin" />
                     Submitting...
                   </>
+                ) : !hasAnswer ? (
+                  "Select Answer"
+                ) : !hasReasoning ? (
+                  "Select Reasoning"
+                ) : !hasConfidence ? (
+                  "Select Confidence"
                 ) : (
                   "Complete Quiz"
                 )}
