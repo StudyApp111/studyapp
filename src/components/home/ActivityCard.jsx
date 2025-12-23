@@ -58,15 +58,6 @@ const getSubjectInfo = (courseName) => {
   return { icon: BookOpen, theme: subjectThemes.default, label: "Study" };
 };
 
-const formatStudyTime = (seconds) => {
-  if (!seconds || seconds === 0) return null;
-  const mins = Math.floor(seconds / 60);
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  const remainingMins = mins % 60;
-  return `${hrs}h ${remainingMins}m`;
-};
-
 export function LessonActivityCard({ lesson, exams = [], index = 0 }) {
   const navigate = useNavigate();
   const { icon: SubjectIcon, theme, label } = getSubjectInfo(lesson.course_name);
