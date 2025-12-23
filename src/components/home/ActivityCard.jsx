@@ -58,13 +58,22 @@ const getSubjectInfo = (courseName) => {
   return { icon: BookOpen, theme: subjectThemes.default, label: "Study" };
 };
 
-export function LessonActivityCard({ lesson, worksheets = [], index = 0 }) {
+const formatStudyTime = (seconds) => {
+  if (!seconds || seconds === 0) return null;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+};
+
+export function LessonActivityCard({ lesson, exams = [], index = 0 }) {
   const navigate = useNavigate();
   const { icon: SubjectIcon, theme, label } = getSubjectInfo(lesson.course_name);
   
-  const completedCount = worksheets.filter(w => w.completed).length;
-  const latestCompleted = worksheets.filter(w => w.completed).sort((a, b) => b.worksheet_number - a.worksheet_number)[0];
+  const completedCount = exams.filter(e => e.completed).length;
+  const latestCompleted = exams.filter(e => e.completed).sort((a, b) => b.exam_number - a.exam_number)[0];
   const progress = Math.round((completedCount / 6) * 100);
+  const studyTime = formatStudyTime(lesson.total_study_time_seconds);
 
   const handleClick = () => {
     navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
