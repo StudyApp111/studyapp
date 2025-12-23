@@ -14,7 +14,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   const [selectedAnswer, setSelectedAnswer] = useState(answer || "");
   const [isCorrect, setIsCorrect] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [showWrongShake, setShowWrongShake] = useState(false);
+  const [showWrongPulse, setShowWrongPulse] = useState(false);
 
   const questionType = question.question_type?.toLowerCase() || "";
   const isMCQ = questionType.includes("multiple choice") || questionType.includes("mcq");
@@ -44,8 +44,8 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       if (correct) {
         setShowConfetti(true);
       } else {
-        setShowWrongShake(true);
-        setTimeout(() => setShowWrongShake(false), 500);
+        setShowWrongPulse(true);
+        setTimeout(() => setShowWrongPulse(false), 600);
       }
     }
   };
@@ -160,11 +160,11 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       animate={{ 
         opacity: 1, 
         y: 0,
-        x: showWrongShake ? [0, -8, 8, -8, 8, 0] : 0
+        scale: showWrongPulse ? [1, 0.98, 1] : 1
       }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: showWrongShake ? 0.4 : 0.2 }}
-      className="space-y-3"
+      transition={{ duration: 0.2 }}
+      className={`space-y-3 ${showWrongPulse ? 'ring-2 ring-amber-300 ring-opacity-50 rounded-xl' : ''}`}
     >
       {/* Question */}
       <div>
