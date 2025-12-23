@@ -187,41 +187,32 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       <div>{renderInput()}</div>
 
       {/* Instant Feedback for Objective Questions */}
-      <AnimatePresence>
-        {hasAnswered && isObjective && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className={`p-3 rounded-xl ${isCorrect ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}>
-              <div className="flex items-start gap-2">
-                {isCorrect ? (
-                  <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                ) : (
-                  <Lightbulb className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-semibold ${isCorrect ? 'text-emerald-700' : 'text-amber-700'}`}>
-                    {isCorrect ? "Correct!" : "Not quite right"}
-                  </p>
-                  {!isCorrect && (
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      <span className="font-medium">Answer:</span> {question.correct_answer}
-                    </p>
-                  )}
-                  {question.explanation && (
-                    <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                      {question.explanation}
-                    </p>
-                  )}
-                </div>
-              </div>
+      {hasAnswered && isObjective && (
+        <div className={`p-3 rounded-xl ${isCorrect ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}>
+          <div className="flex items-start gap-2">
+            {isCorrect ? (
+              <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+            ) : (
+              <Lightbulb className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+            )}
+            <div className="flex-1">
+              <p className={`text-xs font-semibold ${isCorrect ? 'text-emerald-700' : 'text-amber-700'}`}>
+                {isCorrect ? "Correct!" : "Not quite right"}
+              </p>
+              {!isCorrect && (
+                <p className="text-xs text-slate-600 mt-0.5">
+                  <span className="font-medium">Answer:</span> {question.correct_answer}
+                </p>
+              )}
+              {question.explanation && (
+                <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                  {question.explanation}
+                </p>
+              )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      )}
     </motion.div>
     </>
   );
