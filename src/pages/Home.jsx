@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import BadgeDisplay from "@/components/gamification/BadgeDisplay";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
+import { LessonActivityCard, AssignmentActivityCard } from "@/components/home/ActivityCard";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -154,122 +155,7 @@ export default function Home() {
     return BookOpen;
   };
 
-  const GradedAssignmentCard = ({ assignment }) => {
-    const handleClick = () => {
-      navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`);
-    };
 
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        onClick={handleClick}
-        className="cursor-pointer group"
-      >
-        <Card className="h-full hover:shadow-xl transition-all duration-300 border border-emerald-200 shadow-md overflow-hidden hover:border-emerald-400 bg-gradient-to-br from-emerald-50/50 to-white">
-          <CardContent className="p-4 md:p-5">
-            <div className="flex items-start gap-4">
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-emerald-100 to-teal-100">
-                <FileCheck className="w-6 h-6 text-emerald-600" />
-              </div>
-              
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-slate-900 truncate mb-0.5 group-hover:text-emerald-700 transition-colors">
-                  {assignment.course_name}
-                </h3>
-                <p className="text-xs text-slate-500 truncate mb-2">{assignment.assignment_title}</p>
-                
-                {assignment.grading_result ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-2xl font-bold text-emerald-600">{assignment.grading_result.predicted_grade}</span>
-                      <span className="text-xs text-slate-500">grade</span>
-                    </div>
-                    <div className="h-4 w-px bg-slate-200" />
-                    <span className="text-sm text-slate-600">{Math.round(assignment.grading_result.total_score)}%</span>
-                  </div>
-                ) : (
-                  <span className="text-sm text-slate-500">Processing...</span>
-                )}
-              </div>
-              
-              {/* Arrow */}
-              <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all flex-shrink-0 mt-1" />
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
-
-  const SimpleLessonCard = ({ lesson }) => {
-    const worksheets = (lessonWorksheets[lesson.id] || []).sort((a, b) => a.worksheet_number - b.worksheet_number);
-    const completedCount = worksheets.filter(w => w.completed).length;
-    const totalExams = 6;
-    const latestCompletedWorksheet = worksheets.filter(w => w.completed).pop();
-    const SubjectIcon = getSubjectIcon(lesson.course_name);
-    const hasStarted = completedCount > 0;
-
-    const handleClick = () => {
-      navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
-    };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        onClick={handleClick}
-        className="cursor-pointer group"
-      >
-        <Card className="h-full hover:shadow-xl transition-all duration-300 border border-slate-200 shadow-md overflow-hidden hover:border-purple-300 bg-white">
-          <CardContent className="p-4 md:p-5">
-            <div className="flex items-start gap-4">
-              {/* Icon */}
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                hasStarted 
-                  ? 'bg-gradient-to-br from-purple-100 to-yellow-100' 
-                  : 'bg-gradient-to-br from-slate-100 to-slate-50'
-              }`}>
-                <SubjectIcon className={`w-6 h-6 ${hasStarted ? 'text-purple-600' : 'text-slate-500'}`} />
-              </div>
-              
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-slate-900 truncate mb-1 group-hover:text-purple-700 transition-colors">
-                  {lesson.course_name}
-                </h3>
-                
-                {latestCompletedWorksheet ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-2xl font-bold text-purple-600">{latestCompletedWorksheet.predicted_grade}</span>
-                      <span className="text-xs text-slate-500">predicted</span>
-                    </div>
-                    <div className="h-4 w-px bg-slate-200" />
-                    <span className="text-sm text-slate-600">{completedCount}/{totalExams} exams</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 text-xs text-purple-600 font-medium">
-                      <Sparkles className="w-3 h-3" />
-                      Ready to start
-                    </span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Arrow */}
-              <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all flex-shrink-0 mt-1" />
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
 
   return (
     <div className="p-4 md:p-10 max-w-7xl mx-auto">
@@ -371,12 +257,21 @@ export default function Home() {
             <h2 className="text-xl md:text-2xl font-bold text-slate-900">Recent Activity</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {recentItems.map(item => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            {recentItems.map((item, idx) => (
               item.type === 'lesson' ? (
-                <SimpleLessonCard key={`lesson-${item.id}`} lesson={item} />
+                <LessonActivityCard 
+                  key={`lesson-${item.id}`} 
+                  lesson={item} 
+                  worksheets={lessonWorksheets[item.id] || []}
+                  index={idx}
+                />
               ) : (
-                <GradedAssignmentCard key={`assignment-${item.id}`} assignment={item} />
+                <AssignmentActivityCard 
+                  key={`assignment-${item.id}`} 
+                  assignment={item}
+                  index={idx}
+                />
               )
             ))}
           </div>
