@@ -60,14 +60,6 @@ const getSubjectInfo = (courseName) => {
 
 const formatStudyTime = (seconds) => {
   if (!seconds || seconds === 0) return null;
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
-};
-
-const formatStudyTime = (seconds) => {
-  if (!seconds || seconds === 0) return null;
   const mins = Math.floor(seconds / 60);
   if (mins < 60) return `${mins}m`;
   const hrs = Math.floor(mins / 60);
