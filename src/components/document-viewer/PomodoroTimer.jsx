@@ -56,44 +56,44 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
 
   return (
     <Dialog open={showBreakPrompt || isOnBreak} onOpenChange={(open) => !open && handleSkipBreak()}>
-      <DialogContent className="sm:max-w-md mx-4 rounded-2xl">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center flex-shrink-0">
-            <Coffee className="w-6 h-6 text-white" />
+      <DialogContent className="max-w-[280px] w-[calc(100%-2rem)] mx-auto rounded-2xl p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <Coffee className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-slate-900">
-              {isOnBreak ? "Break Time!" : "Time for a Break?"}
+            <h2 className="text-base font-bold text-slate-900">
+              {isOnBreak ? "Break Time!" : "Take a Break?"}
             </h2>
-            <p className="text-xs text-slate-600 mt-1">
+            <p className="text-[11px] text-slate-500 leading-snug">
               {isOnBreak 
-                ? "Take a quick break to refresh your mind!" 
-                : "You've been studying for 20 minutes. A short break can help improve focus."}
+                ? "Refresh your mind!" 
+                : "20 min passed. A break helps focus."}
             </p>
           </div>
         </div>
 
         {isOnBreak ? (
           <div className="space-y-3">
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-6 border border-emerald-200">
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
               <div className="text-center">
-                <p className="text-xs font-medium text-slate-600 mb-2">Time Remaining</p>
-                <div className="text-4xl font-bold text-emerald-600 font-mono tracking-tight">
+                <p className="text-[10px] font-medium text-slate-500 mb-1">Time Remaining</p>
+                <div className="text-3xl font-bold text-emerald-600 font-mono tracking-tight">
                   {formatTime(breakTimeLeft)}
                 </div>
               </div>
             </div>
 
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-              <p className="text-xs text-amber-900">
-                💡 <strong>Tip:</strong> Stand up, stretch, or take a short walk!
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+              <p className="text-[11px] text-amber-800">
+                💡 Stand up, stretch, or walk!
               </p>
             </div>
 
             <Button
               onClick={handleSkipBreak}
               variant="outline"
-              className="w-full h-11"
+              className="w-full h-9 text-sm"
             >
               End Break Early
             </Button>
@@ -102,17 +102,17 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
           <div className="flex flex-col gap-2">
             <Button
               onClick={handleStartBreak}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 h-11"
+              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 h-10 text-sm"
             >
-              <Coffee className="w-4 h-4 mr-2" />
-              Take Break (5 min)
+              <Coffee className="w-4 h-4 mr-1.5" />
+              Take 5 min Break
             </Button>
             <Button
               onClick={handleSkipBreak}
               variant="outline"
-              className="w-full h-11"
+              className="w-full h-9 text-sm"
             >
-              Continue Studying
+              Keep Studying
             </Button>
           </div>
         )}
