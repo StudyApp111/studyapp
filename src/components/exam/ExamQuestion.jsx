@@ -7,11 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, Lightbulb } from "lucide-react";
 import MathText from "@/components/math/MathText";
+import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 
 export default function ExamQuestion({ question, answer, onAnswer, showFeedback = false }) {
   const [hasAnswered, setHasAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(answer || "");
   const [isCorrect, setIsCorrect] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showWrongShake, setShowWrongShake] = useState(false);
 
   const questionType = question.question_type?.toLowerCase() || "";
   const isMCQ = questionType.includes("multiple choice") || questionType.includes("mcq");
@@ -37,6 +40,13 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       setHasAnswered(true);
       const correct = value?.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase();
       setIsCorrect(correct);
+      
+      if (correct) {
+        setShowConfetti(true);
+      } else {
+        setShowWrongShake(true);
+        setTimeout(() => setShowWrongShake(false), 500);
+      }
     }
   };
 
@@ -143,11 +153,17 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   };
 
   return (
+    <>
+    <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
     <motion.div
       initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        x: showWrongShake ? [0, -8, 8, -8, 8, 0] : 0
+      }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: showWrongShake ? 0.4 : 0.2 }}
       className="space-y-3"
     >
       {/* Question */}
@@ -208,5 +224,6 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
         )}
       </AnimatePresence>
     </motion.div>
+    </>
   );
 }
