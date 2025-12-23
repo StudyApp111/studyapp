@@ -51,7 +51,7 @@ export default function Collaborate() {
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,...')] opacity-10" />
-        <div className="relative max-w-6xl mx-auto px-4 py-8 md:py-12">
+        <div className="relative max-w-2xl mx-auto px-3 py-6 md:py-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -61,11 +61,11 @@ export default function Collaborate() {
               <Sparkles className="w-4 h-4" />
               <span className="text-sm font-medium">Learn Together</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+            <h1 className="text-2xl md:text-3xl font-bold mb-2">
               Collaborate & Grow
             </h1>
-            <p className="text-purple-100 max-w-xl mx-auto text-sm md:text-base">
-              Join study rooms, ask questions, and achieve your goals with fellow learners
+            <p className="text-purple-100 text-xs md:text-sm">
+              Study rooms, Q&A, and goal tracking
             </p>
           </motion.div>
 
@@ -74,26 +74,26 @@ export default function Collaborate() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="grid grid-cols-3 gap-3 mt-6 max-w-lg mx-auto"
+            className="grid grid-cols-3 gap-2 mt-4"
           >
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-              <div className="text-2xl font-bold">{stats.activeRooms}</div>
-              <div className="text-xs text-purple-200">Active Rooms</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
+              <div className="text-lg font-bold">{stats.activeRooms}</div>
+              <div className="text-[10px] text-purple-200">Rooms</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-              <div className="text-2xl font-bold">{stats.totalQuestions}</div>
-              <div className="text-xs text-purple-200">Questions</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
+              <div className="text-lg font-bold">{stats.totalQuestions}</div>
+              <div className="text-[10px] text-purple-200">Q&A</div>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-              <div className="text-2xl font-bold">{stats.activeGroups}</div>
-              <div className="text-xs text-purple-200">Study Groups</div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 text-center">
+              <div className="text-lg font-bold">{stats.activeGroups}</div>
+              <div className="text-[10px] text-purple-200">Groups</div>
             </div>
           </motion.div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-3 py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto bg-white shadow-sm border">
             <TabsTrigger value="rooms" className="gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700">
