@@ -190,11 +190,10 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       <AnimatePresence>
         {hasAnswered && isObjective && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden"
           >
             <div className={`p-3 rounded-xl ${isCorrect ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}>
               <div className="flex items-start gap-2">
