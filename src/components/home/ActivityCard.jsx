@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   BookOpen, Calculator, Beaker, Globe, BookText, Languages, 
-  Code, Palette, Music, Briefcase, FileCheck, Sparkles, ChevronRight
+  Code, Palette, Music, Briefcase, FileCheck, Sparkles, ChevronRight, Clock
 } from "lucide-react";
 
 // Unique gradient themes for different subjects
