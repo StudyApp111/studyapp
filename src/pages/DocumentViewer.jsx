@@ -32,16 +32,20 @@ export default function DocumentViewer() {
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
   
-  // Check if any exam is completed for red dot logic
-  const hasCompletedExam = exams.some(e => e.completed);
+  // Check exam completion status for red dot logic
+  const completedExamCount = exams.filter(e => e.completed).length;
+  const hasCompletedExam = completedExamCount > 0;
+  const hasViewedFirstGrade = completedExamCount >= 1;
   
   // Red dot logic:
   // - Quiz tab: show dot if quiz not completed
-  // - Exam tab: show dot if quiz completed but no exam completed
-  // - Grade tab: always show dot until first exam completed
+  // - Exam tab: show dot if quiz completed but no exam completed, OR if user has completed exams but not all 6
+  // - Grade tab: show dot only after completing first exam until user views it (we'll hide after first view)
+  // - Flashcards tab: always show dot until user views it
   const showQuizDot = !quiz?.completed;
-  const showExamDot = quiz?.completed && !hasCompletedExam;
-  const showGradeDot = !hasCompletedExam;
+  const showExamDot = quiz?.completed && completedExamCount < 6;
+  const showGradeDot = false; // No red dot on grade after first exam is done
+  const showFlashcardsDot = true; // Always show to encourage usage
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
