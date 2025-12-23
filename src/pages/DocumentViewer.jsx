@@ -21,7 +21,7 @@ export default function DocumentViewer() {
   const [quiz, setQuiz] = useState(null);
   const [exams, setExams] = useState([]);
   const [extractedContent, setExtractedContent] = useState("");
-  const [studyTime, setStudyTime] = useState(0);
+  const [studyTime, setStudyTime] = useState(null);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [timerInterval, setTimerInterval] = useState(null);
   const saveProgressRef = useRef(null);
@@ -74,7 +74,7 @@ export default function DocumentViewer() {
   }, []);
 
   useEffect(() => {
-    if (isTimerRunning) {
+    if (isTimerRunning && studyTime !== null) {
       const interval = setInterval(() => {
         setStudyTime(prev => prev + 1);
       }, 1000);
@@ -83,7 +83,7 @@ export default function DocumentViewer() {
     } else if (timerInterval) {
       clearInterval(timerInterval);
     }
-  }, [isTimerRunning]);
+  }, [isTimerRunning, studyTime !== null]);
 
   // Save progress every 30 seconds (both user total and lesson-specific time)
   useEffect(() => {
@@ -149,6 +149,9 @@ export default function DocumentViewer() {
 
       const lessonData = lessons[0];
       setLesson(lessonData);
+      
+      // Initialize study time from saved lesson data
+      setStudyTime(lessonData.total_study_time_seconds || 0);
       
       if (lessonData.extracted_content) {
         setExtractedContent(lessonData.extracted_content);
