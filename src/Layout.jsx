@@ -395,15 +395,18 @@ export default function Layout({ children, currentPageName }) {
                 <div className="w-14" />
 
                 <Link
-                  to={createPageUrl("Collaborate")}
-                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                    location.pathname === createPageUrl("Collaborate")
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-slate-600'
-                  }`}
-                >
-                  <Users className="w-6 h-6" />
-                </Link>
+                                        to={createPageUrl("Collaborate")}
+                                        className={`relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                                          location.pathname === createPageUrl("Collaborate")
+                                            ? 'text-yellow-600 bg-yellow-50'
+                                            : 'text-slate-600'
+                                        }`}
+                                      >
+                                        <Users className="w-6 h-6" />
+                                        <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+                                          NEW
+                                        </span>
+                                      </Link>
 
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}
