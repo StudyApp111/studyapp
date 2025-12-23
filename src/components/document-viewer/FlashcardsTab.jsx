@@ -181,7 +181,24 @@ Create flashcards that:
 
   // Loading state
   if (isGenerating) {
-    return null; // Will use EducationalLoader from parent
+    return (
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-2 p-6">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto animate-pulse">
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Generating Flashcards...</h3>
+            <p className="text-sm text-slate-600">
+              Creating intelligent flashcards from your course content.
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   // Flashcard display
