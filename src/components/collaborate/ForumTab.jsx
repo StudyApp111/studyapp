@@ -82,8 +82,8 @@ export default function ForumTab({ user }) {
   return (
     <div className="space-y-6">
       {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="space-y-2">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search questions..."
@@ -96,14 +96,14 @@ export default function ForumTab({ user }) {
           <select
             value={filterSubject}
             onChange={(e) => setFilterSubject(e.target.value)}
-            className="px-3 py-2 border rounded-lg text-sm bg-white"
+            className="px-2 py-2 border rounded-lg text-xs bg-white flex-1 sm:flex-none sm:w-32 truncate"
           >
-            <option value="all">All Subjects</option>
+            <option value="all">All</option>
             {subjects.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <Button onClick={() => setShowCreateModal(true)} className="bg-purple-600 hover:bg-purple-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Ask Question
+          <Button onClick={() => setShowCreateModal(true)} size="sm" className="bg-purple-600 hover:bg-purple-700">
+            <Plus className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Ask</span>
           </Button>
         </div>
       </div>
