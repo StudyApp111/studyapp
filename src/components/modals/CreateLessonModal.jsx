@@ -287,10 +287,37 @@ Output Format: JSON object matching the specified schema`;
         // Check common wrapper keys
         const wrapperKeys = ['course_profile', 'curriculum_profile', 'profile', 'data', 'result'];
         for (const key of wrapperKeys) {
-          if (mapData?.[key]?.core_competencies) {
-            mapData = mapData[key];
-            console.log(`Unwrapped curriculum data from "${key}"`);
-            break;
+          const innerObj = mapData?.[key];
+          if (innerObj && typeof innerObj === 'object') {
+            // Check for core_competencies or variations
+            const hasCompetencies = innerObj.core_competencies || 
+              Object.keys(innerObj).some(k => k.toLowerCase().includes('core competencies'));
+            if (hasCompetencies) {
+              mapData = innerObj;
+              console.log(`Unwrapped curriculum data from "${key}"`);
+              break;
+            }
+          }
+        }
+        
+        // Normalize keys if they have prefixes like "A. Core Competencies..."
+        if (!mapData?.core_competencies && mapData) {
+          const keyMapping = {
+            'core_competencies': ['core competencies', 'learning outcomes'],
+            'competency_weightings': ['competency weightings', 'emphasis'],
+            'question_formats': ['question formats', 'assessment'],
+            'high_yield_focal_points': ['high-yield', 'focal points', 'key topics'],
+            'common_misconceptions': ['misconceptions', 'difficulties']
+          };
+          
+          for (const [targetKey, searchTerms] of Object.entries(keyMapping)) {
+            for (const originalKey of Object.keys(mapData)) {
+              const lowerKey = originalKey.toLowerCase();
+              if (searchTerms.some(term => lowerKey.includes(term))) {
+                mapData[targetKey] = mapData[originalKey];
+                break;
+              }
+            }
           }
         }
       }
