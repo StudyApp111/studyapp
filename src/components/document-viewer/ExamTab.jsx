@@ -932,7 +932,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         </motion.div>
       )}
 
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden mx-1 md:mx-0">
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-1 md:mx-0">
         <div className="border-b border-purple-200/60 p-2 md:p-4">
           <div className="flex items-center justify-between mb-1.5 md:mb-2">
             <h2 className="text-sm md:text-lg font-bold text-slate-900">Exam {exam.exam_number}</h2>
