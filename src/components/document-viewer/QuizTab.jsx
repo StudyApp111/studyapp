@@ -190,8 +190,18 @@ e. Targeted Misconception: If this question tests a known common misconception, 
   const submitQuiz = async () => {
     setIsSubmitting(true);
     try {
-      const correctAnswers = userAnswers.filter((answer, idx) => {
-        const userAnswer = String(answer || "").trim().toLowerCase();
+      // Ensure all answers are strings
+      const cleanedAnswers = userAnswers.map(answer => String(answer || ""));
+      
+      // Ensure all metadata entries are proper objects
+      const cleanedMetadata = questionMetadata.map((meta, idx) => ({
+        question_index: idx,
+        reasoning_method: String(meta?.reasoning_method || ""),
+        confidence_level: String(meta?.confidence_level || "")
+      }));
+
+      const correctAnswers = cleanedAnswers.filter((answer, idx) => {
+        const userAnswer = answer.trim().toLowerCase();
         const correctAnswer = String(localQuiz.questions[idx].correct_answer || "").trim().toLowerCase();
         return userAnswer === correctAnswer;
       }).length;
@@ -199,8 +209,8 @@ e. Targeted Misconception: If this question tests a known common misconception, 
       const finalScore = (correctAnswers / localQuiz.questions.length) * 100;
 
       const updatedQuiz = await base44.entities.DiagnosticQuiz.update(localQuiz.id, {
-        user_answers: userAnswers,
-        question_metadata: questionMetadata,
+        user_answers: cleanedAnswers,
+        question_metadata: cleanedMetadata,
         score: finalScore,
         completed: true
       });
