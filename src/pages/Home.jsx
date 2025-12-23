@@ -68,19 +68,19 @@ export default function Home() {
     return combined.sort((a, b) => b.date - a.date).slice(0, 6);
   }, [lessons, gradedAssignments]);
 
-  const { data: allWorksheets = [] } = useQuery({
-    queryKey: ['worksheets'],
-    queryFn: () => base44.entities.Worksheet.list('-created_date'),
+  const { data: allExams = [] } = useQuery({
+    queryKey: ['exams'],
+    queryFn: () => base44.entities.Exam.list('-created_date'),
     initialData: [],
   });
 
-  // Group worksheets by lesson
-  const lessonWorksheets = {};
-  allWorksheets.forEach(w => {
-    if (!lessonWorksheets[w.lesson_id]) {
-      lessonWorksheets[w.lesson_id] = [];
+  // Group exams by lesson
+  const lessonExams = {};
+  allExams.forEach(e => {
+    if (!lessonExams[e.lesson_id]) {
+      lessonExams[e.lesson_id] = [];
     }
-    lessonWorksheets[w.lesson_id].push(w);
+    lessonExams[e.lesson_id].push(e);
   });
 
   // Calculate stats
