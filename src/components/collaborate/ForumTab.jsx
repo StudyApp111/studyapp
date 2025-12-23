@@ -131,13 +131,13 @@ export default function ForumTab({ user }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="bg-white rounded-xl border hover:shadow-md transition-all p-4 cursor-pointer"
+              className="bg-white rounded-xl border hover:shadow-md transition-all p-3 cursor-pointer"
               onClick={() => setActiveQuestion(question)}
             >
-              <div className="flex gap-4">
+              <div className="flex gap-2">
                 {/* Upvote */}
                 <div 
-                  className="flex flex-col items-center"
+                  className="flex flex-col items-center shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     upvoteMutation.mutate(question);
@@ -146,40 +146,35 @@ export default function ForumTab({ user }) {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className={`h-8 w-8 p-0 ${question.upvoted_by?.includes(user?.email) ? 'text-purple-600' : ''}`}
+                    className={`h-7 w-7 p-0 ${question.upvoted_by?.includes(user?.email) ? 'text-purple-600' : ''}`}
                   >
-                    <ThumbsUp className="w-4 h-4" />
+                    <ThumbsUp className="w-3.5 h-3.5" />
                   </Button>
-                  <span className="text-sm font-medium">{question.upvotes || 0}</span>
+                  <span className="text-xs font-medium">{question.upvotes || 0}</span>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="font-semibold text-slate-900 hover:text-purple-700 transition-colors line-clamp-1">
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <div className="flex items-start gap-1.5 mb-1">
+                    <h3 className="font-semibold text-sm text-slate-900 hover:text-purple-700 transition-colors line-clamp-1 flex-1 min-w-0">
                       {question.title}
                     </h3>
                     {question.is_resolved && (
-                      <Badge className="bg-green-100 text-green-700 shrink-0">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Resolved
+                      <Badge className="bg-green-100 text-green-700 shrink-0 text-[10px] px-1.5 py-0">
+                        <CheckCircle className="w-2.5 h-2.5" />
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-slate-500 line-clamp-2 mb-2">{question.content}</p>
-                  <div className="flex items-center gap-3 text-xs text-slate-400">
+                  <p className="text-xs text-slate-500 line-clamp-1 mb-1.5">{question.content}</p>
+                  <div className="flex items-center gap-2 text-[10px] text-slate-400 flex-wrap">
                     {question.subject && (
-                      <Badge variant="outline" className="text-[10px]">{question.subject}</Badge>
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0">{question.subject}</Badge>
                     )}
-                    <span className="flex items-center gap-1">
-                      <MessageCircle className="w-3 h-3" />
-                      {question.answer_count || 0} answers
+                    <span className="flex items-center gap-0.5">
+                      <MessageCircle className="w-2.5 h-2.5" />
+                      {question.answer_count || 0}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(question.created_date).toLocaleDateString()}
-                    </span>
-                    <span>by {question.author_name || "Anonymous"}</span>
+                    <span className="truncate">{question.author_name?.split(' ')[0] || "Anon"}</span>
                   </div>
                 </div>
               </div>
