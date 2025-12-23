@@ -84,11 +84,11 @@ export default function Home() {
   });
 
   // Calculate stats
-  const completedWorksheets = allWorksheets.filter(w => w.completed).length;
-  const inProgressWorksheets = allWorksheets.filter(w => w.status === "in_progress").length;
-  const totalQuizzes = allWorksheets.filter(w => w.completed).length;
-  const avgScore = totalQuizzes > 0
-    ? Math.round(allWorksheets.filter(w => w.completed).reduce((sum, w) => sum + (w.total_score || 0), 0) / totalQuizzes)
+  const completedExams = allExams.filter(e => e.completed).length;
+  const inProgressExams = allExams.filter(e => e.status === "in_progress").length;
+  const totalExams = allExams.filter(e => e.completed).length;
+  const avgScore = totalExams > 0
+    ? Math.round(allExams.filter(e => e.completed).reduce((sum, e) => sum + (e.total_score || 0), 0) / totalExams)
     : 0;
 
   if (!user) {
