@@ -932,71 +932,71 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         </motion.div>
       )}
 
-      <div className="mx-1 md:mx-0 space-y-4">
-        {/* Header */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-xl border border-purple-200 p-2 md:p-4">
-          <div className="flex items-center justify-between mb-1.5 md:mb-2">
-            <h2 className="text-sm md:text-lg font-bold text-slate-900">Exam {exam.exam_number}</h2>
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="flex items-center gap-1 md:gap-1.5 bg-purple-50 px-2 md:px-3 py-1 md:py-1.5 rounded-lg border border-purple-200">
-                <Clock className="w-3 h-3 md:w-4 md:h-4 text-purple-600" />
-                <span className="text-xs md:text-sm font-semibold text-purple-700">{formatTime(elapsedSeconds)}</span>
-              </div>
-              <span className="text-xs md:text-sm font-medium text-slate-600">
+      <div className="mx-1 md:mx-0 pb-4">
+        {/* Single unified card with header + question + buttons */}
+        <div className="bg-white/95 backdrop-blur-xl rounded-2xl border border-purple-200/80 shadow-sm">
+          {/* Compact inline header */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-purple-100">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
                 {currentQuestion + 1}/{exam.questions.length}
               </span>
+              <Progress value={progress} className="h-1 w-16 md:w-24" />
+            </div>
+            <div className="flex items-center gap-1 text-purple-600">
+              <Clock className="w-3 h-3" />
+              <span className="text-xs font-semibold">{formatTime(elapsedSeconds)}</span>
             </div>
           </div>
-          <Progress value={progress} className="h-1.5 md:h-2" />
-        </div>
 
-        {/* Question Content - no container, flows naturally */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-xl border border-purple-200 p-3 md:p-6">
-          <AnimatePresence mode="wait">
-            <ExamQuestion
-              key={currentQuestion}
-              question={currentQ}
-              answer={currentQ.user_answer}
-              onAnswer={handleAnswer}
-              showFeedback={true}
-            />
-          </AnimatePresence>
-        </div>
+          {/* Question Content */}
+          <div className="p-3 md:p-5">
+            <AnimatePresence mode="wait">
+              <ExamQuestion
+                key={currentQuestion}
+                question={currentQ}
+                answer={currentQ.user_answer}
+                onAnswer={handleAnswer}
+                showFeedback={true}
+              />
+            </AnimatePresence>
+          </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex gap-2 md:gap-4">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentQuestion === 0}
-            className="flex-1 text-xs md:text-sm h-9 md:h-10"
-          >
-            Previous
-          </Button>
-          {isLastQuestion ? (
+          {/* Navigation Buttons inside card */}
+          <div className="flex gap-2 px-3 pb-3 md:px-5 md:pb-4">
             <Button
-              onClick={submitExam}
-              disabled={!canProceed || isSubmitting}
-              className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs md:text-sm h-9 md:h-10"
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentQuestion === 0}
+              className="flex-1 text-xs h-9 rounded-xl"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Exam"
-              )}
+              Previous
             </Button>
-          ) : (
-            <Button
-              onClick={handleNext}
-              disabled={!canProceed}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-xs md:text-sm h-9 md:h-10"
-            >
-              Next Question
-            </Button>
-          )}
+            {isLastQuestion ? (
+              <Button
+                onClick={submitExam}
+                disabled={!canProceed || isSubmitting}
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs h-9 rounded-xl"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit"
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleNext}
+                disabled={!canProceed}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-xs h-9 rounded-xl"
+              >
+                Next
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </>
