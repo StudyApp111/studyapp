@@ -294,10 +294,43 @@ Generate the curriculum profile with these exact keys: core_competencies, compet
             // Check for common wrapper keys
             const wrapperKeys = ['curriculum_profile', 'course_profile', 'profile', 'data', 'result'];
             for (const key of wrapperKeys) {
-                if (!parsedResponse.core_competencies && parsedResponse[key]?.core_competencies) {
-                    console.log(`✅ Unwrapping response from "${key}"`);
-                    parsedResponse = parsedResponse[key];
-                    break;
+                const innerObj = parsedResponse[key];
+                if (innerObj && typeof innerObj === 'object') {
+                    // Check for core_competencies or variations like "A. Core Competencies..."
+                    const hasCompetencies = innerObj.core_competencies || 
+                        Object.keys(innerObj).some(k => k.toLowerCase().includes('core competencies'));
+                    if (hasCompetencies) {
+                        console.log(`✅ Unwrapping response from "${key}"`);
+                        parsedResponse = innerObj;
+                        break;
+                    }
+                }
+            }
+            
+            // Normalize keys if they have prefixes like "A. Core Competencies..."
+            if (!parsedResponse.core_competencies) {
+                const keyMapping = {
+                    'core_competencies': ['core competencies', 'learning outcomes'],
+                    'competency_weightings': ['competency weightings', 'emphasis'],
+                    'question_formats': ['question formats', 'assessment'],
+                    'high_yield_focal_points': ['high-yield', 'focal points', 'key topics'],
+                    'common_misconceptions': ['misconceptions', 'difficulties']
+                };
+                
+                const normalized = {};
+                for (const [targetKey, searchTerms] of Object.entries(keyMapping)) {
+                    for (const originalKey of Object.keys(parsedResponse)) {
+                        const lowerKey = originalKey.toLowerCase();
+                        if (searchTerms.some(term => lowerKey.includes(term))) {
+                            normalized[targetKey] = parsedResponse[originalKey];
+                            break;
+                        }
+                    }
+                }
+                
+                if (normalized.core_competencies) {
+                    console.log('✅ Normalized response keys');
+                    parsedResponse = { ...parsedResponse, ...normalized };
                 }
             }
         }
