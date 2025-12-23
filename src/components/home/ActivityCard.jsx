@@ -139,6 +139,14 @@ export function LessonActivityCard({ lesson, exams = [], index = 0 }) {
               <span className="text-xs text-slate-400 ml-1">{completedCount}/6</span>
             </div>
           </div>
+
+          {/* Study time */}
+          {studyTime && (
+            <div className="flex items-center gap-1 mt-2 pt-2 border-t border-slate-100">
+              <Clock className="w-3 h-3 text-slate-400" />
+              <span className="text-xs text-slate-500">{studyTime} studied</span>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
