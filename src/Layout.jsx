@@ -42,12 +42,7 @@ const navigationItems = [
           icon: Users,
           isNew: true,
         },
-        {
-          title: "Course Mapper",
-          url: createPageUrl("CourseMapper"),
-          icon: Map,
-          isComingSoon: true,
-        },
+
         {
           title: "Leaderboard",
           url: createPageUrl("Leaderboard"),

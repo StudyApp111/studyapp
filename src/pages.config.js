@@ -1,49 +1,47 @@
-import Onboarding from './pages/Onboarding';
-import Home from './pages/Home';
+import Analytics from './pages/Analytics';
+import AssignmentHistory from './pages/AssignmentHistory';
+import ChangePassword from './pages/ChangePassword';
+import Collaborate from './pages/Collaborate';
 import CreateLesson from './pages/CreateLesson';
 import DiagnosticQuiz from './pages/DiagnosticQuiz';
-import Worksheet from './pages/Worksheet';
-import Feedback from './pages/Feedback';
-import LessonHistory from './pages/LessonHistory';
-import Settings from './pages/Settings';
-import ProfileInformation from './pages/ProfileInformation';
-import ChangePassword from './pages/ChangePassword';
-import PricingPlans from './pages/PricingPlans';
-import Leaderboard from './pages/Leaderboard';
-import SmartGrader from './pages/SmartGrader';
-import GradeResults from './pages/GradeResults';
-import AssignmentHistory from './pages/AssignmentHistory';
-import CourseMapper from './pages/CourseMapper';
-import Analytics from './pages/Analytics';
-import LearningProgress from './pages/LearningProgress';
-import EmailManager from './pages/EmailManager';
 import DocumentViewer from './pages/DocumentViewer';
-import Collaborate from './pages/Collaborate';
+import EmailManager from './pages/EmailManager';
+import Feedback from './pages/Feedback';
+import GradeResults from './pages/GradeResults';
+import Home from './pages/Home';
+import Leaderboard from './pages/Leaderboard';
+import LearningProgress from './pages/LearningProgress';
+import LessonHistory from './pages/LessonHistory';
+import Onboarding from './pages/Onboarding';
+import PricingPlans from './pages/PricingPlans';
+import ProfileInformation from './pages/ProfileInformation';
+import Settings from './pages/Settings';
+import SmartGrader from './pages/SmartGrader';
+import Worksheet from './pages/Worksheet';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Onboarding": Onboarding,
-    "Home": Home,
+    "Analytics": Analytics,
+    "AssignmentHistory": AssignmentHistory,
+    "ChangePassword": ChangePassword,
+    "Collaborate": Collaborate,
     "CreateLesson": CreateLesson,
     "DiagnosticQuiz": DiagnosticQuiz,
-    "Worksheet": Worksheet,
-    "Feedback": Feedback,
-    "LessonHistory": LessonHistory,
-    "Settings": Settings,
-    "ProfileInformation": ProfileInformation,
-    "ChangePassword": ChangePassword,
-    "PricingPlans": PricingPlans,
-    "Leaderboard": Leaderboard,
-    "SmartGrader": SmartGrader,
-    "GradeResults": GradeResults,
-    "AssignmentHistory": AssignmentHistory,
-    "CourseMapper": CourseMapper,
-    "Analytics": Analytics,
-    "LearningProgress": LearningProgress,
-    "EmailManager": EmailManager,
     "DocumentViewer": DocumentViewer,
-    "Collaborate": Collaborate,
+    "EmailManager": EmailManager,
+    "Feedback": Feedback,
+    "GradeResults": GradeResults,
+    "Home": Home,
+    "Leaderboard": Leaderboard,
+    "LearningProgress": LearningProgress,
+    "LessonHistory": LessonHistory,
+    "Onboarding": Onboarding,
+    "PricingPlans": PricingPlans,
+    "ProfileInformation": ProfileInformation,
+    "Settings": Settings,
+    "SmartGrader": SmartGrader,
+    "Worksheet": Worksheet,
 }
 
 export const pagesConfig = {
