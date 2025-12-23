@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import WorksheetQuestion from "@/components/worksheet/WorksheetQuestion";
+import ExamQuestion from "@/components/exam/ExamQuestion.jsx";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { logError } from "@/components/utils/errorLogger";
@@ -949,17 +949,20 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           <Progress value={progress} className="h-1.5 md:h-2" />
         </div>
 
-        <div className="p-2 md:p-6">
+        <div className="p-2 md:p-6 max-h-[calc(100vh-280px)] md:max-h-none overflow-y-auto">
           <AnimatePresence mode="wait">
-            <WorksheetQuestion
+            <ExamQuestion
               key={currentQuestion}
               question={currentQ}
               answer={currentQ.user_answer}
               onAnswer={handleAnswer}
+              showFeedback={true}
             />
           </AnimatePresence>
+        </div>
 
-          <div className="mt-3 md:mt-6 flex gap-2 md:gap-4">
+        <div className="p-2 md:p-6 pt-0 md:pt-0">
+          <div className="flex gap-2 md:gap-4">
             <Button
               variant="outline"
               onClick={handlePrevious}
