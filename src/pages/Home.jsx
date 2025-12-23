@@ -263,7 +263,7 @@ export default function Home() {
                 <LessonActivityCard 
                   key={`lesson-${item.id}`} 
                   lesson={item} 
-                  worksheets={lessonWorksheets[item.id] || []}
+                  exams={lessonExams[item.id] || []}
                   index={idx}
                 />
               ) : (
