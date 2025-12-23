@@ -22,7 +22,7 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
 
   useEffect(() => {
     let interval;
-    if (isOnBreak && breakTimeLeft > 0) {
+    if (isOnBreak) {
       interval = setInterval(() => {
         setBreakTimeLeft(prev => {
           if (prev <= 1) {
@@ -35,8 +35,10 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
         });
       }, 1000);
     }
-    return () => clearInterval(interval);
-  }, [isOnBreak, breakTimeLeft, onBreakComplete]);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isOnBreak]);
 
   const handleStartBreak = () => {
     setIsOnBreak(true);
