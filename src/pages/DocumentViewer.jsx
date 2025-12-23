@@ -212,13 +212,35 @@ export default function DocumentViewer() {
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <div className="flex-1 min-w-0 max-w-full bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-2 md:px-4 py-2 md:py-3 rounded-xl shadow-lg overflow-hidden">
-              <div className="flex items-center justify-between gap-1.5 md:gap-2 w-full">
-                <span className="text-sm md:text-base font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
-                <div className="flex items-center gap-1 md:gap-1.5 flex-shrink-0 whitespace-nowrap">
-                  <span className="text-sm md:text-base font-normal">Predicted Grade:</span>
+            {/* Mobile Header - Two rows */}
+            <div className="flex-1 min-w-0 max-w-full bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-2.5 md:px-4 py-2 md:py-3 rounded-xl shadow-lg md:hidden">
+              <div className="flex items-center justify-between gap-2 w-full">
+                <span className="text-xs font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-1 bg-white/20 rounded-lg px-2 py-0.5">
+                    <span className="text-[10px] opacity-80">Grade:</span>
+                    {quiz?.predicted_grade ? (
+                      <span className="text-sm font-bold">{quiz.predicted_grade}</span>
+                    ) : (
+                      <span className="text-[10px] opacity-70">—</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 bg-white/20 rounded-lg px-2 py-0.5">
+                    <Clock className="w-3 h-3 opacity-80" />
+                    <span className="text-[10px] font-mono font-medium">{formatStudyTime(studyTime)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Desktop Header */}
+            <div className="hidden md:flex flex-1 min-w-0 max-w-full bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-4 py-3 rounded-xl shadow-lg">
+              <div className="flex items-center justify-between gap-2 w-full">
+                <span className="text-base font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
+                <div className="flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">
+                  <span className="text-base font-normal">Predicted Grade:</span>
                   {quiz?.predicted_grade ? (
-                    <span className="text-base md:text-xl font-bold">{quiz.predicted_grade}</span>
+                    <span className="text-xl font-bold">{quiz.predicted_grade}</span>
                   ) : quiz?.completed ? (
                     <span className="text-xs font-semibold">Exam</span>
                   ) : (
