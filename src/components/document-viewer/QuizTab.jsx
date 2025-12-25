@@ -3,9 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Lightbulb, Brain, Target } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import QuizQuestion from "@/components/quiz/QuizQuestion";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
+import MathText from "@/components/math/MathText";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 
 export default function QuizTab({ lesson, quiz, onQuizComplete }) {
