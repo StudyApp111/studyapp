@@ -174,9 +174,26 @@ e. Targeted Misconception: If this question tests a known common misconception, 
   };
 
   const handleAnswer = (answer) => {
+    // If already answered this question, don't allow changes
+    if (answeredQuestions[currentQuestion]) return;
+    
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestion] = answer;
     setUserAnswers(newAnswers);
+    
+    // Mark as answered and check correctness
+    const question = localQuiz.questions[currentQuestion];
+    const isCorrect = answer?.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase();
+    
+    setAnsweredQuestions(prev => ({ ...prev, [currentQuestion]: true }));
+    
+    if (isCorrect) {
+      setCorrectCount(prev => prev + 1);
+      setShowConfetti(true);
+    } else {
+      setShowWrongPulse(true);
+      setTimeout(() => setShowWrongPulse(false), 600);
+    }
   };
 
   const handleMetadataChange = (metadata) => {
