@@ -17,7 +17,16 @@ export default function QuizTab({ lesson, quiz, onQuizComplete }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
+  // Only run once on mount or when lesson.id changes
+  const lessonId = lesson?.id;
+  const quizId = quiz?.id;
+  
   useEffect(() => {
+    // If we already have a localQuiz loaded, don't reload
+    if (localQuiz && localQuiz.id) {
+      return;
+    }
+    
     if (quiz) {
       setLocalQuiz(quiz);
       setIsGenerating(false);
@@ -25,10 +34,10 @@ export default function QuizTab({ lesson, quiz, onQuizComplete }) {
         setUserAnswers(quiz.user_answers || new Array(quiz.questions.length).fill(null));
         setQuestionMetadata(quiz.question_metadata || new Array(quiz.questions.length).fill({}));
       }
-    } else {
+    } else if (lessonId) {
       generateQuiz();
     }
-  }, [quiz, lesson]);
+  }, [lessonId, quizId]);
 
   const generateQuiz = async () => {
     if (!lesson) return;
