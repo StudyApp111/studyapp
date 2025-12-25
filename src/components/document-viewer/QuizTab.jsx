@@ -16,8 +16,11 @@ export default function QuizTab({ lesson, quiz, onQuizComplete }) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [userAnswers, setUserAnswers] = useState([]);
   const [questionMetadata, setQuestionMetadata] = useState([]);
+  const [answeredQuestions, setAnsweredQuestions] = useState({}); // Track which questions have been answered
+  const [correctCount, setCorrectCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showWrongPulse, setShowWrongPulse] = useState(false);
 
   // Only run once on mount or when lesson.id changes
   const lessonId = lesson?.id;
