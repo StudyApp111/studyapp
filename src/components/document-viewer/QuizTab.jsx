@@ -184,7 +184,6 @@ e. Targeted Misconception: If this question tests a known common misconception, 
   };
 
   const handleNext = () => {
-    setShowConfetti(true);
     if (currentQuestion < localQuiz.questions.length - 1) {
       setCurrentQuestion(prev => prev + 1);
     }
