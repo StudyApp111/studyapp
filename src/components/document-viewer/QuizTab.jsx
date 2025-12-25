@@ -319,38 +319,225 @@ e. Targeted Misconception: If this question tests a known common misconception, 
 
   const progress = ((currentQuestion + 1) / localQuiz.questions.length) * 100;
   const currentMetadata = questionMetadata[currentQuestion] || {};
-  const hasAnswer = userAnswers[currentQuestion] !== null && userAnswers[currentQuestion] !== undefined && userAnswers[currentQuestion] !== "";
+  const hasAnsweredCurrent = answeredQuestions[currentQuestion];
   const hasReasoning = currentMetadata.reasoning_method;
   const hasConfidence = currentMetadata.confidence_level;
-  const canProceed = hasAnswer && hasReasoning && hasConfidence;
+  const canProceed = hasAnsweredCurrent && hasReasoning && hasConfidence;
   const isLastQuestion = currentQuestion === localQuiz.questions.length - 1;
+  
+  // Check if current answer is correct
+  const currentAnswer = userAnswers[currentQuestion];
+  const isCurrentCorrect = hasAnsweredCurrent && 
+    currentAnswer?.trim().toLowerCase() === currentQ.correct_answer?.trim().toLowerCase();
+
+  const getOptionStyle = (optionText) => {
+    if (!hasAnsweredCurrent) {
+      return currentAnswer === optionText
+        ? "border-purple-500 bg-purple-50"
+        : "border-slate-200 hover:border-purple-300 bg-white";
+    }
+
+    const isThisCorrect = optionText?.trim().toLowerCase() === currentQ.correct_answer?.trim().toLowerCase();
+    const isThisSelected = currentAnswer === optionText;
+
+    if (isThisCorrect) {
+      return "border-emerald-500 bg-emerald-50";
+    }
+    if (isThisSelected && !isThisCorrect) {
+      return "border-red-400 bg-red-50";
+    }
+    return "border-slate-200 bg-slate-50 opacity-60";
+  };
+
+  const getDifficultyColor = (difficulty) => {
+    if (!difficulty) return "bg-slate-100 text-slate-700";
+    if (difficulty.includes("Foundational")) return "bg-blue-100 text-blue-700";
+    if (difficulty.includes("Conceptual")) return "bg-green-100 text-green-700";
+    if (difficulty.includes("Applied") || difficulty.includes("Multi-step")) return "bg-orange-100 text-orange-700";
+    return "bg-slate-100 text-slate-700";
+  };
 
   return (
     <>
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden mx-1 md:mx-0">
+      <Card className={`bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden mx-1 md:mx-0 ${showWrongPulse ? 'ring-2 ring-amber-300 ring-opacity-50' : ''}`}>
         <div className="border-b border-purple-200/60 p-2 md:p-4">
           <div className="flex items-center justify-between mb-1.5 md:mb-2">
             <h2 className="text-sm md:text-lg font-bold text-slate-900">Diagnostic Quiz</h2>
-            <span className="text-xs md:text-sm font-medium text-slate-600">
-              {currentQuestion + 1}/{localQuiz.questions.length}
-            </span>
+            <div className="flex items-center gap-2">
+              {/* Score tally */}
+              <div className="flex items-center gap-1 bg-gradient-to-r from-emerald-50 to-emerald-100 px-2 py-1 rounded-full border border-emerald-200">
+                <CheckCircle className="w-3 h-3 text-emerald-600" />
+                <span className="text-xs font-bold text-emerald-700">{correctCount}/{localQuiz.questions.length}</span>
+              </div>
+              <span className="text-xs md:text-sm font-medium text-slate-600">
+                Q{currentQuestion + 1}/{localQuiz.questions.length}
+              </span>
+            </div>
           </div>
           <Progress value={progress} className="h-1.5 md:h-2" />
         </div>
 
         <div className="p-2 md:p-6">
           <AnimatePresence mode="wait">
-            <QuizQuestion
+            <motion.div
               key={currentQuestion}
-              question={localQuiz.questions[currentQuestion]}
-              questionNumber={currentQuestion + 1}
-              selectedAnswer={userAnswers[currentQuestion]}
-              onSelectAnswer={handleAnswer}
-              metadata={currentMetadata}
-              onMetadataChange={handleMetadataChange}
-            />
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="shadow-xl border-0 bg-white">
+                <div className="p-3 md:p-8">
+                  <div className="mb-3 md:mb-6">
+                    <div className="flex gap-1.5 mb-2 md:mb-4 flex-wrap">
+                      <Badge className="bg-purple-100 text-purple-700 text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1">
+                        Question {currentQuestion + 1}
+                      </Badge>
+                      <Badge className={`${getDifficultyColor(currentQ.difficulty_index)} text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1`}>
+                        {currentQ.difficulty_index}
+                      </Badge>
+                    </div>
+
+                    <MathText className="text-sm md:text-xl font-medium text-slate-900 leading-relaxed">
+                      {currentQ.question_text}
+                    </MathText>
+                  </div>
+
+                  {/* MCQ Options with feedback */}
+                  <RadioGroup 
+                    value={currentAnswer || ""} 
+                    onValueChange={handleAnswer} 
+                    className="space-y-2 md:space-y-3"
+                  >
+                    {currentQ.options.map((option, index) => {
+                      const optionLetter = String.fromCharCode(65 + index);
+                      const isThisCorrect = option?.trim().toLowerCase() === currentQ.correct_answer?.trim().toLowerCase();
+                      const isThisSelected = currentAnswer === option;
+
+                      return (
+                        <label
+                          key={index}
+                          htmlFor={`option-${index}`}
+                          className={`flex items-start space-x-2 md:space-x-3 p-2.5 md:p-4 rounded-lg border-2 transition-all ${hasAnsweredCurrent ? 'cursor-default' : 'cursor-pointer active:scale-[0.99]'} ${getOptionStyle(option)}`}
+                          onClick={() => !hasAnsweredCurrent && handleAnswer(option)}
+                        >
+                          <RadioGroupItem 
+                            value={option} 
+                            id={`option-${index}`} 
+                            className="mt-0.5 pointer-events-none" 
+                            disabled={hasAnsweredCurrent}
+                          />
+                          <div className="flex-1 pointer-events-none">
+                            <div className="flex items-start gap-1.5 md:gap-2">
+                              <span className="font-semibold text-slate-700 text-xs md:text-base">{optionLetter}.</span>
+                              <MathText inline className="text-slate-700 text-xs md:text-base leading-snug">{option}</MathText>
+                            </div>
+                          </div>
+                          {hasAnsweredCurrent && isThisCorrect && (
+                            <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 shrink-0" />
+                          )}
+                          {hasAnsweredCurrent && isThisSelected && !isThisCorrect && (
+                            <XCircle className="w-4 h-4 md:w-5 md:h-5 text-red-500 shrink-0" />
+                          )}
+                        </label>
+                      );
+                    })}
+                  </RadioGroup>
+
+                  {/* Instant Feedback */}
+                  {hasAnsweredCurrent && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`mt-4 p-3 rounded-xl ${isCurrentCorrect ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {isCurrentCorrect ? (
+                          <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                        ) : (
+                          <Lightbulb className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                        )}
+                        <div className="flex-1">
+                          <p className={`text-xs font-semibold ${isCurrentCorrect ? 'text-emerald-700' : 'text-amber-700'}`}>
+                            {isCurrentCorrect ? "Correct! 🎉" : "Not quite right"}
+                          </p>
+                          {!isCurrentCorrect && (
+                            <p className="text-xs text-slate-600 mt-0.5">
+                              <span className="font-medium">Correct answer:</span> {currentQ.correct_answer}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Metacognitive Questions - Only show after answering */}
+                  {hasAnsweredCurrent && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-slate-200 space-y-4 md:space-y-5"
+                    >
+                      {/* Reasoning Method */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-2 md:mb-3">
+                          <Brain className="w-3.5 h-3.5 md:w-4 md:h-4 text-purple-600" />
+                          <label className="text-xs md:text-sm font-semibold text-slate-700">
+                            How did you choose this answer?
+                          </label>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5 md:gap-2">
+                          {["I Knew It", "I Worked It Out", "I Guessed", "It Felt Right"].map((method) => (
+                            <button
+                              key={method}
+                              onClick={() => handleMetadataChange({ ...currentMetadata, reasoning_method: method })}
+                              className={`px-2 md:px-4 py-2 md:py-2.5 rounded-lg text-[10px] md:text-sm font-medium transition-all ${
+                                currentMetadata?.reasoning_method === method
+                                  ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
+                                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                              }`}
+                            >
+                              {method}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Confidence Level */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-2 md:mb-3">
+                          <Target className="w-3.5 h-3.5 md:w-4 md:h-4 text-purple-600" />
+                          <label className="text-xs md:text-sm font-semibold text-slate-700">
+                            How confident were you?
+                          </label>
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5 md:gap-2">
+                          {["Low", "Medium", "High"].map((level) => (
+                            <button
+                              key={level}
+                              onClick={() => handleMetadataChange({ ...currentMetadata, confidence_level: level })}
+                              className={`px-2 md:px-4 py-2 md:py-2.5 rounded-lg text-[10px] md:text-sm font-medium transition-all ${
+                                currentMetadata?.confidence_level === level
+                                  ? level === "Low"
+                                    ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                                    : level === "Medium"
+                                    ? "bg-yellow-500 text-white shadow-lg shadow-yellow-500/30"
+                                    : "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
+                                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                              }`}
+                            >
+                              {level}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </Card>
+            </motion.div>
           </AnimatePresence>
 
           <div className="mt-3 md:mt-6 flex gap-2 md:gap-4">
@@ -365,7 +552,6 @@ e. Targeted Misconception: If this question tests a known common misconception, 
             {isLastQuestion ? (
               <Button
                 onClick={() => {
-                  console.log("Submit clicked", { canProceed, isSubmitting, hasAnswer, hasReasoning, hasConfidence });
                   if (canProceed && !isSubmitting) {
                     submitQuiz();
                   }
@@ -378,7 +564,7 @@ e. Targeted Misconception: If this question tests a known common misconception, 
                     <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2 animate-spin" />
                     Submitting...
                   </>
-                ) : !hasAnswer ? (
+                ) : !hasAnsweredCurrent ? (
                   "Select Answer"
                 ) : !hasReasoning ? (
                   "Select Reasoning"
