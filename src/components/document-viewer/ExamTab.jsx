@@ -28,7 +28,7 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
   }
 };
 
-export default function ExamTab({ lesson, quiz, exams }) {
+export default function ExamTab({ lesson, exams, onExamComplete }) {
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -47,10 +47,10 @@ export default function ExamTab({ lesson, quiz, exams }) {
   const examIdRef = useRef(null);
 
   useEffect(() => {
-    if (quiz && quiz.completed && lesson && selectedExamNumber) {
+    if (lesson && selectedExamNumber) {
       loadOrGenerateExam(selectedExamNumber);
     }
-  }, [quiz?.completed, lesson?.id, selectedExamNumber]);
+  }, [lesson?.id, selectedExamNumber]);
 
   useEffect(() => {
     if (exam && !exam.completed && exam.id !== examIdRef.current) {
@@ -153,31 +153,21 @@ export default function ExamTab({ lesson, quiz, exams }) {
         contentDescription = lesson.description || "N/A";
       }
 
-      const diagnosticResults = quiz.questions.map((q, index) => ({
-        QuestionText: q.question_text,
-        QuestionType: q.question_type,
-        AssignedDifficultyIndex: q.difficulty_index,
-        TargetedMisconception: q.targeted_misconception || "N/A",
-        StudentAnswer: quiz.user_answers?.[index] || "No answer provided",
-        IsCorrect: quiz.user_answers?.[index] === q.correct_answer
-      }));
-
       const aiPrompt = `Context
-You are an expert assessment designer. Generate a 10-question predictive exam for ${lesson.course_name}, optimized to forecast exam performance and target the student's weaknesses.
+You are an expert assessment designer. Generate a 10-question predictive exam for ${lesson.course_name}, optimized to forecast exam performance and build an accurate learning baseline for this student.
+
+The exam must be tightly grounded in the provided lesson content and curriculum map.
 
 Input Context
 Student Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
 
-Curriculum Map:
+Curriculum Map (authoritative scope, competencies, weightings, formats):
 ${JSON.stringify(lesson.curriculum_map, null, 2)}
 
-Lesson Content:
+Lesson Content (notes, uploaded material, or student description):
 ${contentDescription}
-
-Diagnostic Quiz Results:
-${JSON.stringify(diagnosticResults, null, 2)}
 
 Generate exactly 10 adaptive, exam-authentic questions following the same format as worksheets.`;
 
@@ -237,7 +227,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         createdExam = await base44.entities.Exam.create({
           lesson_id: lesson.id,
           exam_number: examNumber,
-          diagnostic_quiz_id: examNumber === 1 ? quiz.id : null,
           questions: questionsWithPlaceholder,
           analysis_summary: examData.analysis_summary_for_worksheet_design,
           status: "in_progress",
@@ -437,7 +426,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         } : null
       }));
 
-      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student's 10-question exam performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
+      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map and the student's 10-question exam performance to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
 
       Input Data:
       Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -450,14 +439,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       Exam Performance:
       ${JSON.stringify(examPerformanceData, null, 2)}
 
-      Diagnostic Quiz (5Q) With Meta:
-      ${quiz ? JSON.stringify({
-      questions: quiz.questions,
-      user_answers: quiz.user_answers,
-      score: quiz.score,
-      question_metadata: quiz.question_metadata || []
-      }, null, 2) : 'N/A'}
-
       [Assumptions & Fields]
       Each exam item may include:
       question_number, question_type, difficulty_index, question_text,
@@ -466,18 +447,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       is_correct (boolean),
       ai_grading { score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[] }.
       Ignore missing fields; do not invent values.
-
-      [Part 0 — Diagnostic Meta Synthesis (Internal Only)]
-      - Pair each diagnostic question with its user_answer and question_metadata (reasoning_method, confidence_level) to compute:
-      • is_correct_d = (user_answer === correct_answer) when available.
-      • Overconfidence flag: is_correct_d=false AND confidence=High.
-      • Underconfidence flag: is_correct_d=true AND confidence=Low.
-      • Guess-correct risk: is_correct_d=true AND (reasoning_method=Guess OR confidence=Low).
-      • Method bias counts by competency/topic when mappable (Pattern, Formula, Algorithmic, Heuristic, Recall).
-      - Derive an "Early Insight Profile":
-      • dominant_methods: top 1–2 reasoning_method labels by frequency.
-      • confidence_alignment: accuracy when High vs Medium vs Low confidence (if computable).
-      • primary_risk: one of {Overconfidence, Underconfidence, Guess-correct, Method-mismatch} if observed ≥2 times or clearly indicated.
 
       [Part 1 — Performance Analysis & Prediction]
       Edge Handling
@@ -514,13 +483,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       - If AvgTypeScore ≥ 0.80 and ExamTypeFrequency ≥ 30% → +0 to +2 total.
       - Cap total style modifier to [−8, +4].
 
-      4b) Diagnostic Meta Adjustment (confidence/method calibration)
-      - If diagnostic primary_risk = Overconfidence → −2 to −4.
-      - If diagnostic primary_risk = Underconfidence → +1 to +2.
-      - If guess-correct risk ≥2 AND exam explanation alignment low → −1 to −3.
-      - If dominant_methods heavy Formula/Algorithmic AND misses conceptual → −1 to −2.
-      - Cap combined meta impact so overall modifier stays in [−8, +4].
-
       5) Coverage Reliability Adjustment
       - For any competency weight ≥25% and <2 assessed items → −2 each (max −4).
       - If ≥80% of weighted competencies assessed → +1 to +2.
@@ -531,12 +493,11 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       - Exception: if 0/10 → "Not Calculable".
 
       [Part 2 — Structured Multi-Signal Planning Pipeline (Internal Only)]
-      Before generating suggested_future_sessions_plan and learning_patterns, internally compute five planning signals:
+      Before generating suggested_future_sessions_plan and learning_patterns, internally compute planning signals:
       1. priority_competencies = bottom 2–3 competencies by weighted mastery.
       2. misconception_targets = misconceptions recurring across exam or tied to weighted competencies.
-      3. diagnostic_meta_risks = significant meta patterns (Overconfidence, Underconfidence, Guess-correct, Method-mismatch).
-      4. exam_format_deficits = question types where AvgTypeScore < 40% AND exam weight ≥ 20%.
-      5. trend_direction = {improving, plateauing, declining} based on difficulty × mastery trajectory.
+      3. exam_format_deficits = question types where AvgTypeScore < 40% AND exam weight ≥ 20%.
+      4. trend_direction = {improving, plateauing, declining} based on difficulty × mastery trajectory.
 
       These signals MUST shape both:
       - suggested_future_sessions_plan  
@@ -548,17 +509,16 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       Output ONLY a single JSON object matching the response_json_schema:
       - feedback_session_title: "Exam ${exam.exam_number} Performance & Grade Prediction"
       - predicted_exam_score_percentage: "% string" or "Not Calculable"
-      - prediction_calculation_rationale: 1–3 sentences referencing item difficulty, competency weighting, question-type frequency, coverage limits, AND the diagnostic meta influence.
+      - prediction_calculation_rationale: 1–3 sentences referencing item difficulty, competency weighting, question-type frequency, and coverage limits.
       - overall_performance_summary_text: 1–2 empathetic sentences with a clear next-focus cue.
       - identified_strengths_list: 2–3 specific competency or exam-format strengths.
-      - key_areas_for_improvement_list: 2–3 high-impact weaknesses tied to misconceptions or diagnostic meta risks.
+      - key_areas_for_improvement_list: 2–3 high-impact weaknesses tied to misconceptions.
       - suggested_future_sessions_plan:  
       5 objects with session_number (2..6), session_name, session_focus_description.  
-      Each session MUST be directly grounded in at least ONE of the internal planning signals:  
-      (priority_competencies, misconception_targets, diagnostic_meta_risks, exam_format_deficits, trend_direction).
+      Each session MUST be directly grounded in at least ONE of the internal planning signals.
       - learning_patterns:  
       3–5 objects with:
-      • pattern_type: behavior label based on reasoning_method + confidence data  
+      • pattern_type: behavior label  
       • what_it_means: 1 sentence explaining the pattern  
       • how_to_improve: 1 sentence linking to tactics the next sessions/exams will reinforce.   
       - No extra fields. No explanations outside the JSON. All percentages must be strings with "%".
@@ -738,6 +698,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
 
       // Reload lesson data to refresh exams list
       window.dispatchEvent(new Event('reloadLesson'));
+      if (onExamComplete) onExamComplete();
       setTimeout(() => {
         window.dispatchEvent(new Event('switchToGradeTab'));
       }, 1000);
@@ -749,31 +710,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
     }
   };
 
-  // Show exam selection view if no exam is selected or currently taking
-  if (!quiz || !quiz.completed) {
-    return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl min-h-[400px] shadow-xl flex items-center justify-center p-8">
-        <div className="text-center space-y-4 max-w-md">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
-            <Lock className="w-8 h-8 text-slate-400" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">Complete the Diagnostic Quiz First</h3>
-            <p className="text-slate-600 mt-2">
-              The exam is locked until you complete the diagnostic quiz.
-            </p>
-          </div>
-          <Button
-            onClick={() => window.dispatchEvent(new Event('switchToQuizTab'))}
-            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
-          >
-            Go to Diagnostic Quiz
-          </Button>
-        </div>
-      </Card>
-    );
-  }
-  
   // Show exam selection if no exam in progress
   if (!exam && !isGenerating && !selectedExamNumber) {
     const allExamsForLesson = exams || [];
