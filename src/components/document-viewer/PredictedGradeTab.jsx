@@ -4,7 +4,7 @@ import { Lock, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FeedbackDisplay from "../feedback/FeedbackDisplay";
 
-export default function PredictedGradeTab({ lesson, quiz, exams }) {
+export default function PredictedGradeTab({ lesson, exams }) {
   // Find any completed exam with AI feedback
   const completedExamsWithFeedback = (exams || []).filter(e => 
     e.completed === true && 
