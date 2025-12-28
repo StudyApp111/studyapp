@@ -72,11 +72,18 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     return "border-slate-200 bg-slate-50 opacity-60";
   };
 
+  // Strip leading letter prefix like "A)", "B.", "C) " from option text
+  const stripLetterPrefix = (text) => {
+    if (!text) return text;
+    return text.replace(/^[A-Da-d][\).\s]+\s*/g, '').trim();
+  };
+
   const renderMCQOptions = () => (
     <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} className="space-y-2">
       {question.options?.map((option, index) => {
         const optionLetter = String.fromCharCode(65 + index);
         const optionText = typeof option === 'string' ? option : option?.text || JSON.stringify(option);
+        const displayText = stripLetterPrefix(optionText);
         const isThisCorrect = optionText?.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase();
         const isThisSelected = selectedAnswer === optionText;
 
@@ -94,7 +101,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-1">
                 <span className="font-semibold text-slate-700 text-xs shrink-0">{optionLetter}.</span>
-                <MathText inline className="text-slate-700 text-xs leading-snug break-words">{optionText}</MathText>
+                <MathText inline className="text-slate-700 text-xs leading-snug break-words">{displayText}</MathText>
               </div>
             </div>
             {hasAnswered && isThisCorrect && (
