@@ -46,6 +46,19 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const currentQuestionStartTimeRef = useRef(null);
   const examIdRef = useRef(null);
 
+  // Auto-generate Exam 1 when tab loads
+  useEffect(() => {
+    if (lesson && !selectedExamNumber) {
+      const allExamsForLesson = exams || [];
+      const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
+      
+      // If no Exam 1 exists or it's not completed, auto-start it
+      if (!exam1 || !exam1.completed) {
+        setSelectedExamNumber(1);
+      }
+    }
+  }, [lesson?.id, exams]);
+
   useEffect(() => {
     if (lesson && selectedExamNumber) {
       loadOrGenerateExam(selectedExamNumber);
@@ -848,19 +861,19 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         <motion.div
           initial={{ opacity: 0, y: -100 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-2xl p-6 max-w-md"
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-2xl p-4 max-w-sm mx-4"
         >
-          <div className="flex items-center gap-3 mb-4">
-            <Sparkles className="w-8 h-8 text-yellow-500" />
-            <h3 className="text-xl font-bold text-slate-900">New Badge Earned!</h3>
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-6 h-6 text-yellow-500" />
+            <h3 className="text-base font-bold text-slate-900">New Badge Earned!</h3>
           </div>
           <div className="space-y-2">
             {newBadges.map((badge, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                <span className="text-2xl">{badge.badge_icon}</span>
+              <div key={idx} className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">
+                <span className="text-xl">{badge.badge_icon}</span>
                 <div>
-                  <p className="font-semibold text-slate-900">{badge.badge_name}</p>
-                  <p className="text-sm text-slate-600">{badge.badge_description}</p>
+                  <p className="font-semibold text-slate-900 text-sm">{badge.badge_name}</p>
+                  <p className="text-xs text-slate-600">{badge.badge_description}</p>
                 </div>
               </div>
             ))}
@@ -868,25 +881,25 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         </motion.div>
       )}
 
-      <div className="mx-1 md:mx-0 pb-4">
-        {/* Single unified card with header + question + buttons */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-2xl border border-purple-200/80 shadow-sm">
-          {/* Compact inline header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-purple-100">
+      {/* Mobile-optimized full-height layout */}
+      <div className="flex flex-col h-full md:h-auto md:pb-4">
+        <div className="flex-1 flex flex-col bg-white/95 backdrop-blur-xl md:rounded-2xl border-0 md:border border-purple-200/80 shadow-none md:shadow-sm md:mx-0 overflow-hidden">
+          {/* Sticky compact header */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-purple-100 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
                 {currentQuestion + 1}/{exam.questions.length}
               </span>
-              <Progress value={progress} className="h-1 w-16 md:w-24" />
+              <Progress value={progress} className="h-1.5 w-20" />
             </div>
-            <div className="flex items-center gap-1 text-purple-600">
+            <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">
               <Clock className="w-3 h-3" />
-              <span className="text-xs font-semibold">{formatTime(elapsedSeconds)}</span>
+              <span className="text-xs font-semibold tabular-nums">{formatTime(elapsedSeconds)}</span>
             </div>
           </div>
 
-          {/* Question Content */}
-          <div className="p-3 md:p-5">
+          {/* Scrollable question content */}
+          <div className="flex-1 overflow-y-auto overscroll-contain p-3 md:p-5">
             <AnimatePresence mode="wait">
               <ExamQuestion
                 key={currentQuestion}
@@ -898,13 +911,13 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
             </AnimatePresence>
           </div>
 
-          {/* Navigation Buttons inside card */}
-          <div className="flex gap-2 px-3 pb-3 md:px-5 md:pb-4">
+          {/* Fixed bottom navigation */}
+          <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-4 border-t border-purple-100 bg-white/95 backdrop-blur-sm shrink-0">
             <Button
               variant="outline"
               onClick={handlePrevious}
               disabled={currentQuestion === 0}
-              className="flex-1 text-xs h-9 rounded-xl"
+              className="flex-1 text-xs h-10 rounded-xl font-medium"
             >
               Previous
             </Button>
@@ -912,7 +925,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
               <Button
                 onClick={submitExam}
                 disabled={!canProceed || isSubmitting}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs h-9 rounded-xl"
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs h-10 rounded-xl font-medium"
               >
                 {isSubmitting ? (
                   <>
@@ -920,16 +933,16 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
                     Submitting...
                   </>
                 ) : (
-                  "Submit"
+                  "Submit Exam"
                 )}
               </Button>
             ) : (
               <Button
                 onClick={handleNext}
                 disabled={!canProceed}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-xs h-9 rounded-xl"
+                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-xs h-10 rounded-xl font-medium"
               >
-                Next
+                Next Question
               </Button>
             )}
           </div>

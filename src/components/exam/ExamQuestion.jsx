@@ -199,11 +199,6 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
               <p className={`text-xs font-semibold ${isCorrect ? 'text-emerald-700' : 'text-amber-700'}`}>
                 {isCorrect ? "Correct!" : "Not quite right"}
               </p>
-              {!isCorrect && (
-                <p className="text-xs text-slate-600 mt-0.5">
-                  <span className="font-medium">Answer:</span> {question.correct_answer}
-                </p>
-              )}
               {question.explanation && (
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                   {question.explanation}
