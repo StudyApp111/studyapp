@@ -247,46 +247,65 @@ export default function Worksheet() {
         }));
         
         aiPrompt = `Context
-You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name}, optimized to forecast exam performance and target the student’s weaknesses.
+You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name}, optimized to forecast exam performance and build an accurate learning baseline for this student.
 
-Input Context
+The worksheet must be tightly grounded in the provided lesson content and curriculum map. Do NOT assume prior diagnostic data.
+
+────────────────────────────────
+
+[Input Context]
+
 Student Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${lessonData.course_name}
+Course / Unit Name: ${lessonData.course_name}
 School: ${learningProfile.school || "N/A"}
 
-Curriculum Map (authoritative scope, weightings, and formats):
+Curriculum Map (authoritative scope, competencies, weightings, formats):
 ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
-Condensed Lesson Content (grounding terminology, examples, and emphasis):
+Lesson Content (notes, uploaded material, or student description):
 ${contentDescription}
 
-Diagnostic Quiz Results (5Q with performance signals):
-${JSON.stringify(diagnosticResults, null, 2)}
+────────────────────────────────
+
+[Internal Analysis — Do NOT Output]
+
+1. Topic Scope Detection
+- Determine whether contentDescription specifies:
+  a) A narrow skill or topic (e.g., "factoring", "cell respiration", "thesis statements")
+  b) A broader review or exam-prep request
+- If narrow → lock scope strictly to that topic.
+- If broad → use curriculum_map to distribute coverage by weightings.
+
+2. Competency Targeting
+- Map the lesson content to curriculum_map.core_competencies.
+- Identify:
+  - High-weight competencies
+  - Likely misconception-prone areas based on subject norms
+- Do NOT introduce topics not clearly implied by contentDescription.
+
+3. Difficulty Calibration (No prior performance available)
+- Begin with:
+  - Early questions: Moderate Exam-Level
+  - Middle questions: Challenging Exam-Level
+  - Final questions: Challenging → High Challenge Exam-Level
+- Escalate difficulty via reasoning depth, not topic expansion.
+
+4. Question Allocation
+- 6–7 questions → primary topic / skill
+- 2–3 questions → edge cases, applications, or conceptual traps
+- 1–2 questions → “twin items” (same concept, different reasoning demand)
+
+5. Exam Authenticity
+- Match question wording and formats to curriculum_map.question_formats.
+- Use language and rigor consistent with ${learningProfile.school || "the school"}.
 
 ────────────────────────────────
 
-Internal Analysis (Do Not Output)
-- Identify weak, borderline, and strong competencies using diagnostic accuracy and curriculum weightings.
-- Detect misconception patterns and risky reasoning behaviors (guessing, overconfidence, pattern reliance).
-- Personalize emphasis using observed errors, not generic difficulty.
-- Calibrate difficulty:
-  - Accuracy ≤ 50% → bias toward Moderate Exam-Level
-  - Accuracy 50–80% → progressive mix
-  - Accuracy ≥ 80% → Challenging / High Challenge
-- Allocate questions:
-  - 6–7 questions targeting weak competencies or misconceptions
-  - 2–3 questions on high-weight or exam-critical competencies
-  - 1–2 “twin” items testing the same concept with different reasoning demands
-- Match question formats and distributions to curriculum_map.question_formats.
+[QUESTION-TYPE ENFORCEMENT — MUST EXECUTE FIRST]
 
-────────────────────────────────
+For EACH question, execute these steps in order:
 
-QUESTION-TYPE ENFORCEMENT (MUST EXECUTE FIRST)
-
-For EACH question, perform these steps in order:
-
-1. Explicitly choose question_type.
-   Allowed values:
+1. Explicitly choose question_type from:
    - Multiple Choice
    - True/False
    - Fill in the Blank
@@ -297,20 +316,20 @@ For EACH question, perform these steps in order:
 
 If question_type = "Multiple Choice":
 - Provide EXACTLY four options labeled A, B, C, D.
-- The stem MAY include MCQ cue phrases.
+- MCQ cue phrases ARE allowed.
 
 If question_type = "True/False":
 - options MUST be ["True", "False"] only.
-- The stem MUST be a single clear declarative statement.
+- The stem MUST be a single declarative statement.
 
 If question_type = "Fill in the Blank":
 - options MUST be [].
-- The stem MUST contain a single blank represented by ____.
+- The stem MUST include exactly one blank written as ____.
 - The blank must correspond to a key term, value, or short phrase.
 
 If question_type = "Short Answer" or "Structured Response":
 - options MUST be [].
-- The stem MUST be a direct prompt requesting a word, value, explanation, or worked solution.
+- The stem MUST directly request a value, explanation, justification, or worked solution.
 
 MCQ cue phrases are STRICTLY FORBIDDEN in non-MCQ questions:
 - Which of the following
@@ -320,65 +339,61 @@ MCQ cue phrases are STRICTLY FORBIDDEN in non-MCQ questions:
 - Choose
 - is/are true about
 
-If any MCQ cue phrase appears in a non-MCQ question, you MUST auto-convert the question to Multiple Choice and regenerate it immediately.
+If any MCQ cue phrase appears in a non-MCQ question,
+you MUST immediately convert the question to Multiple Choice and regenerate it.
 
-This enforcement layer overrides all other instructions.
+This enforcement layer OVERRIDES all other instructions.
+
 ────────────────────────────────
-TOPIC SCOPE OVERRIDE (CRITICAL)
+
+[TOPIC SCOPE OVERRIDE — CRITICAL]
 
 If contentDescription specifies a narrow topic, skill, or operation
 (e.g., "factoring", "solving linear equations", "photosynthesis",
-"Du Bois double-consciousness"),
+"Du Bois double-consciousness"):
 
-THEN:
-- Treat this topic as the PRIMARY scope.
-- Generate ALL questions exclusively from this topic.
-- Do NOT include prerequisite review, adjacent topics, or general curriculum coverage
-  unless they are strictly required to perform the named task.
-- Ignore other curriculum areas even if they appear in the curriculum map.
+- Treat that topic as the PRIMARY and ONLY scope.
+- Generate ALL 10 questions exclusively from that topic.
+- Do NOT include prerequisite review or adjacent topics
+  unless they are strictly required to perform the task.
 
 Only broaden scope if:
-- The user explicitly asks for "review", "mixed practice", or "exam prep",
+- The user explicitly requests review, mixed practice, or exam prep
 OR
-- The specified topic cannot be meaningfully assessed in isolation.
+- The topic cannot be meaningfully assessed in isolation.
+
 ────────────────────────────────
-Worksheet Generation (Output Only)
+
+[Worksheet Generation — Output Only]
 
 Generate EXACTLY 10 questions.
 
 Each question MUST:
-- Be tied to a specific competency from the curriculum map
-- Reflect the student’s demonstrated weaknesses, misconceptions, or strengths
-- Use authentic exam wording consistent with ${learningProfile.school || "the school"}
+- Be clearly tied to one curriculum_map competency
+- Use authentic exam-style wording
 - Assign one difficulty_index:
   - Moderate Exam-Level
   - Challenging Exam-Level
   - High Challenge Exam-Level
 - Test a distinct concept or reasoning demand (no duplicates)
 
-Personalization rules:
-- If the student previously guessed or showed overconfidence, require justification or reasoning steps.
-- If the student showed underconfidence, include confidence-building items early.
-- If pattern-based errors were observed, include conceptual checks that break surface patterns.
-- When strong performance is observed, escalate difficulty while staying curriculum-aligned.
-
 Subject guidance:
-- Mathematics / Sciences: multi-step reasoning, application, interpretation, unit checking.
-- Humanities / Social Sciences: thesis alignment, evidence interpretation, argument evaluation.
-- Computer Science / Engineering: tracing, debugging, correctness, applied logic.
-- Business / Economics: case analysis, method selection, quantitative interpretation.
+- Mathematics / Sciences: multi-step reasoning, application, interpretation, unit checks
+- Humanities / Social Sciences: argument alignment, evidence interpretation, conceptual precision
+- Computer Science / Engineering: tracing, correctness, edge cases, applied logic
+- Business / Economics: method selection, case reasoning, quantitative interpretation
 
 ────────────────────────────────
 
-Answer Key Requirements
+[Answer Key Requirements]
 
 For EACH question include:
 - correct_answer
-- explanation (2–3 sentences; corrective and instructional)
+- explanation (2–3 sentences; instructional and corrective)
 - assessed_competencies
-- targeted_misconception
+- targeted_misconception (or null if none)
 
-When relevant, explicitly reference a likely reasoning error (e.g., guessing, pattern reliance, formula misuse) and explain how to avoid it next time.
+Explanations should teach the *reason* behind the answer and how to avoid common mistakes.
 
 ────────────────────────────────
 
