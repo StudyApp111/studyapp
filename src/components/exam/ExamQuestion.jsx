@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, Lightbulb } from "lucide-react";
+import { CheckCircle, XCircle, Lightbulb, Sparkles, Star } from "lucide-react";
 import MathText from "@/components/math/MathText";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 
@@ -15,6 +15,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   const [isCorrect, setIsCorrect] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showWrongPulse, setShowWrongPulse] = useState(false);
+  const [showCorrectBurst, setShowCorrectBurst] = useState(false);
 
   const questionType = question.question_type?.toLowerCase() || "";
   const isMCQ = questionType.includes("multiple choice") || questionType.includes("mcq");
@@ -43,9 +44,11 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       
       if (correct) {
         setShowConfetti(true);
+        setShowCorrectBurst(true);
+        setTimeout(() => setShowCorrectBurst(false), 1500);
       } else {
         setShowWrongPulse(true);
-        setTimeout(() => setShowWrongPulse(false), 600);
+        setTimeout(() => setShowWrongPulse(false), 800);
       }
     }
   };
@@ -155,17 +158,76 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   return (
     <>
     <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
+    
+    {/* Correct answer celebration overlay */}
+    <AnimatePresence>
+      {showCorrectBurst && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 1.2 }}
+          className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: [0, 1.2, 1], rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full p-6 shadow-2xl shadow-emerald-500/50"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+            >
+              <CheckCircle className="w-12 h-12 text-white" />
+            </motion.div>
+          </motion.div>
+          {/* Floating stars */}
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: 0, y: 0 }}
+              animate={{ 
+                opacity: [0, 1, 0],
+                x: Math.cos(i * 60 * Math.PI / 180) * 100,
+                y: Math.sin(i * 60 * Math.PI / 180) * 100,
+                scale: [0, 1, 0.5]
+              }}
+              transition={{ duration: 0.8, delay: 0.1 * i }}
+              className="absolute"
+            >
+              <Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ 
         opacity: 1, 
         y: 0,
+        x: showWrongPulse ? [0, -8, 8, -8, 8, -4, 4, 0] : 0,
         scale: showWrongPulse ? [1, 0.98, 1] : 1
       }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-      className={`space-y-3 ${showWrongPulse ? 'ring-2 ring-amber-300 ring-opacity-50 rounded-xl' : ''}`}
+      transition={{ 
+        duration: showWrongPulse ? 0.5 : 0.2,
+        x: { duration: 0.5, ease: "easeInOut" }
+      }}
+      className={`space-y-3 relative ${showWrongPulse ? 'ring-2 ring-red-400/60 rounded-xl' : ''}`}
     >
+      {/* Wrong answer flash overlay */}
+      <AnimatePresence>
+        {showWrongPulse && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.15, 0] }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 bg-red-500 rounded-xl pointer-events-none z-10"
+          />
+        )}
+      </AnimatePresence>
       {/* Question */}
       <div>
         <div className="flex gap-1 mb-2 flex-wrap">
@@ -188,16 +250,37 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
 
       {/* Instant Feedback for Objective Questions */}
       {hasAnswered && isObjective && (
-        <div className={`p-3 rounded-xl ${isCorrect ? 'bg-emerald-50 border border-emerald-200' : 'bg-amber-50 border border-amber-200'}`}>
+        <motion.div 
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+          className={`p-3 rounded-xl ${isCorrect ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-300 shadow-sm shadow-emerald-200' : 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-300 shadow-sm shadow-amber-200'}`}
+        >
           <div className="flex items-start gap-2">
             {isCorrect ? (
-              <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 200, damping: 10 }}
+              >
+                <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 text-white" />
+                </div>
+              </motion.div>
             ) : (
-              <Lightbulb className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.2, 1] }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center">
+                  <Lightbulb className="w-3.5 h-3.5 text-white" />
+                </div>
+              </motion.div>
             )}
             <div className="flex-1">
-              <p className={`text-xs font-semibold ${isCorrect ? 'text-emerald-700' : 'text-amber-700'}`}>
-                {isCorrect ? "Correct!" : "Not quite right"}
+              <p className={`text-xs font-bold ${isCorrect ? 'text-emerald-700' : 'text-amber-700'}`}>
+                {isCorrect ? "🎉 Excellent!" : "Keep learning!"}
               </p>
               {question.explanation && (
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
@@ -206,7 +289,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </motion.div>
     </>
