@@ -982,13 +982,6 @@ Edge Handling
 - If AvgTypeScore ≥ 0.80 and ExamTypeFrequency ≥ 30% → +0 to +2 total.
 - Cap total style modifier to [−8, +4].
 
-4b) Diagnostic Meta Adjustment (confidence/method calibration)
-- If diagnostic primary_risk = Overconfidence → −2 to −4.
-- If diagnostic primary_risk = Underconfidence → +1 to +2.
-- If guess-correct risk ≥2 AND worksheet explanation alignment low → −1 to −3.
-- If dominant_methods heavy Formula/Algorithmic AND misses conceptual → −1 to −2.
-- Cap combined meta impact so overall modifier stays in [−8, +4].
-
 5) Coverage Reliability Adjustment
 - For any competency weight ≥25% and <2 assessed items → −2 each (max −4).
 - If ≥80% of weighted competencies assessed → +1 to +2.
@@ -998,13 +991,12 @@ Edge Handling
 - PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then “%”.
 - Exception: if 0/10 → "Not Calculable".
 
-[Part 2 — **Structured Multi-Signal Planning Pipeline (Internal Only, New Section)**]
-Before generating suggested_future_sessions_plan and learning_patterns, internally compute five planning signals:
+[Part 2 — Structured Multi-Signal Planning Pipeline (Internal Only)]
+Before generating suggested_future_sessions_plan and learning_patterns, internally compute planning signals:
 1. priority_competencies = bottom 2–3 competencies by weighted mastery.
 2. misconception_targets = misconceptions recurring across worksheet or tied to weighted competencies.
-3. diagnostic_meta_risks = significant meta patterns (Overconfidence, Underconfidence, Guess-correct, Method-mismatch).
-4. exam_format_deficits = question types where AvgTypeScore < 40% AND exam weight ≥ 20%.
-5. trend_direction = {improving, plateauing, declining} based on difficulty × mastery trajectory.
+3. exam_format_deficits = question types where AvgTypeScore < 40% AND exam weight ≥ 20%.
+4. trend_direction = {improving, plateauing, declining} based on difficulty × mastery trajectory.
 
 These signals MUST shape both:
 - suggested_future_sessions_plan  
@@ -1389,7 +1381,7 @@ Output Format: Valid JSON matching the required schema.`;
         title={worksheet ? "Loading Your Worksheet" : "Generating Your Worksheet"}
         description={worksheet 
           ? `Retrieving your saved Worksheet ${worksheet.worksheet_number || ''}...`
-          : "Creating a personalized exam based on your diagnostic results..."}
+          : "Creating personalized questions based on your content..."}
         grade={lesson?.grade}
       />
     );
