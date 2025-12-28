@@ -377,7 +377,7 @@ Output Format: JSON object matching the specified schema`;
       const lesson = await base44.entities.Lesson.create(lessonData);
 
       onOpenChange(false);
-      navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
+      navigate(createPageUrl("Worksheet") + `?lessonId=${lesson.id}&worksheet=1`);
     } catch (err) {
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);

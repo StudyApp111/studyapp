@@ -147,21 +147,12 @@ export default function Worksheet() {
       }
       setLesson(lessonData[0]);
 
+      // No longer requiring diagnostic quiz - worksheets work directly from lesson content
       let quizData = null;
-      if (worksheetNum === 1) {
-        const diagnosticQuizData = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
-        if (diagnosticQuizData.length === 0) {
-          navigate(createPageUrl("DiagnosticQuiz") + `?lessonId=${lessonId}`);
-          return;
-        }
-        setQuiz(diagnosticQuizData[0]);
-        quizData = diagnosticQuizData[0];
-      } else {
-        const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
-        if (existingQuiz.length > 0) {
-          setQuiz(existingQuiz[0]);
-          quizData = existingQuiz[0];
-        }
+      const existingQuiz = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
+      if (existingQuiz.length > 0) {
+        setQuiz(existingQuiz[0]);
+        quizData = existingQuiz[0];
       }
 
       const existingWorksheet = await base44.entities.Worksheet.filter({ 
@@ -237,15 +228,7 @@ export default function Worksheet() {
       let aiPrompt = "";
 
       if (worksheetNum === 1) {
-        const diagnosticResults = quizData.questions.map((q, index) => ({
-          QuestionText: q.question_text,
-          QuestionType: q.question_type,
-          AssignedDifficultyIndex: q.difficulty_index,
-          TargetedMisconception: q.targeted_misconception || "N/A",
-          StudentAnswer: quizData.user_answers?.[index] || "No answer provided",
-          IsCorrect: quizData.user_answers?.[index] === q.correct_answer
-        }));
-        
+        // Worksheet 1 now uses lesson content directly without diagnostic quiz
         aiPrompt = `Context
 You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name}, optimized to forecast exam performance and build an accurate learning baseline for this student.
 
@@ -648,7 +631,7 @@ Output Format: Valid JSON object matching the schema.`;
         updatedWorksheet = await base44.entities.Worksheet.create({
           lesson_id: lessonId,
           worksheet_number: worksheetNum,
-          diagnostic_quiz_id: worksheetNum === 1 ? quizData?.id : undefined,
+          diagnostic_quiz_id: quizData?.id || undefined,
           questions: questionsWithPlaceholder,
           analysis_summary: worksheetData.analysis_summary_for_worksheet_design,
           status: "in_progress",
