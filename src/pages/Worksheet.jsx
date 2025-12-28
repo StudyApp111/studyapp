@@ -913,19 +913,6 @@ ${JSON.stringify(lesson.curriculum_map, null, 2)}
 Worksheet Performance:
 ${JSON.stringify(worksheetPerformanceData, null, 2)}
 
-Diagnostic Quiz (5Q) With Meta:
-${quiz ? JSON.stringify({
-  questions: quiz.questions,
-  user_answers: quiz.user_answers,
-  score: quiz.score,
-  question_metadata: quiz.question_metadata || []
-}, null, 2) : 'N/A'}
-// diagnosticResults includes:
-//   questions[], user_answers[], score (optional),
-//   question_metadata[] where
-//     question_metadata[i].reasoning_method ∈ {I Knew It, I Worked It Out, I Guessed, It Felt Right}
-//     question_metadata[i].confidence_level ∈ {High, Medium, Low}
-
 [Assumptions & Fields]
 Each worksheet item may include:
 question_number, question_type, difficulty_index, question_text,
@@ -1008,17 +995,16 @@ Do not output these internal signals directly; only use them to generate the req
 Output ONLY a single JSON object matching the response_json_schema:
 - feedback_session_title: "Worksheet ${worksheet.worksheet_number} Performance & Grade Prediction"
 - predicted_exam_score_percentage: "% string" or "Not Calculable"
-- prediction_calculation_rationale: 1–3 sentences referencing item difficulty, competency weighting, question-type frequency, coverage limits, AND the diagnostic meta influence.
+- prediction_calculation_rationale: 1–3 sentences referencing item difficulty, competency weighting, question-type frequency, and coverage limits.
 - overall_performance_summary_text: 1–2 empathetic sentences with a clear next-focus cue.
 - identified_strengths_list: 2–3 specific competency or exam-format strengths.
-- key_areas_for_improvement_list: 2–3 high-impact weaknesses tied to misconceptions or diagnostic meta risks.
+- key_areas_for_improvement_list: 2–3 high-impact weaknesses tied to misconceptions.
 - suggested_future_sessions_plan:  
-  5 objects with session_number (1..5), session_name, session_focus_description.  
-  Each session MUST be directly grounded in at least ONE of the internal planning signals:  
-  (priority_competencies, misconception_targets, diagnostic_meta_risks, exam_format_deficits, trend_direction).
+  5 objects with session_number (2..6), session_name, session_focus_description.  
+  Each session MUST be directly grounded in at least ONE of the internal planning signals.
 - learning_patterns:  
   3–5 objects with:
-    • pattern_type: behavior label based on reasoning_method + confidence data  
+    • pattern_type: behavior label  
     • what_it_means: 1 sentence explaining the pattern  
     • how_to_improve: 1 sentence linking to tactics the next sessions/worksheets will reinforce.   
 - No extra fields. No explanations outside the JSON. All percentages must be strings with “%”.
