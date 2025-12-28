@@ -4,9 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, Brain, Trophy, ChevronLeft, Loader2, Clock, BookMarked } from "lucide-react";
+import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
-import QuizTab from "@/components/document-viewer/QuizTab";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
@@ -15,10 +14,9 @@ import AITutorPanel from "@/components/document-viewer/AITutorPanel";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("quiz");
+  const [activeTab, setActiveTab] = useState("exam");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quiz, setQuiz] = useState(null);
   const [exams, setExams] = useState([]);
   const [extractedContent, setExtractedContent] = useState("");
   const [studyTime, setStudyTime] = useState(null);
@@ -28,24 +26,21 @@ export default function DocumentViewer() {
   const [messages, setMessages] = useState([]);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [predictedGrade, setPredictedGrade] = useState(null);
   
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
   
   // Check exam completion status for red dot logic
   const completedExamCount = exams.filter(e => e.completed).length;
-  const hasCompletedExam = completedExamCount > 0;
-  const hasViewedFirstGrade = completedExamCount >= 1;
   
-  // Red dot logic:
-  // - Quiz tab: show dot if quiz not completed
-  // - Exam tab: show dot if quiz completed but no exam completed, OR if user has completed exams but not all 6
-  // - Grade tab: show dot only after completing first exam until user views it (we'll hide after first view)
+  // Red dot logic (simplified without quiz):
+  // - Exam tab: show dot if no exam completed or not all 6 completed
+  // - Grade tab: no red dot
   // - Flashcards tab: always show dot until user views it
-  const showQuizDot = !quiz?.completed;
-  const showExamDot = quiz?.completed && completedExamCount < 6;
-  const showGradeDot = false; // No red dot on grade after first exam is done
-  const showFlashcardsDot = true; // Always show to encourage usage
+  const showExamDot = completedExamCount < 6;
+  const showGradeDot = false;
+  const showFlashcardsDot = true;
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -58,16 +53,13 @@ export default function DocumentViewer() {
   useEffect(() => {
     const handleSwitchToGrade = () => setActiveTab('grade');
     const handleSwitchToExam = () => setActiveTab('exam');
-    const handleSwitchToQuiz = () => setActiveTab('quiz');
     
     window.addEventListener('switchToGradeTab', handleSwitchToGrade);
     window.addEventListener('switchToExamTab', handleSwitchToExam);
-    window.addEventListener('switchToQuizTab', handleSwitchToQuiz);
     
     return () => {
       window.removeEventListener('switchToGradeTab', handleSwitchToGrade);
       window.removeEventListener('switchToExamTab', handleSwitchToExam);
-      window.removeEventListener('switchToQuizTab', handleSwitchToQuiz);
     };
   }, []);
 
@@ -161,28 +153,21 @@ export default function DocumentViewer() {
         setExtractedContent(lessonData.extracted_content);
       }
 
-      const quizzes = await base44.entities.DiagnosticQuiz.filter({ lesson_id: lessonId });
-      if (quizzes.length > 0) {
-        const quizData = quizzes[0];
-        setQuiz(quizData);
-        
-        if (quizData.completed) {
-          // Check both Exam entity and legacy Worksheet entity
-          const [examsData, worksheetsData] = await Promise.all([
-            base44.entities.Exam.filter({ lesson_id: lessonId }),
-            base44.entities.Worksheet.filter({ lesson_id: lessonId })
-          ]);
-          
-          setExams([...examsData, ...worksheetsData]);
-          
-          const examWithGrade = [...examsData, ...worksheetsData]
-            .filter(e => e.completed && e.predicted_grade)
-            .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
-          
-          if (examWithGrade) {
-            setQuiz({ ...quizData, predicted_grade: examWithGrade.predicted_grade });
-          }
-        }
+      // Load exams and worksheets (no longer dependent on quiz)
+      const [examsData, worksheetsData] = await Promise.all([
+        base44.entities.Exam.filter({ lesson_id: lessonId }),
+        base44.entities.Worksheet.filter({ lesson_id: lessonId })
+      ]);
+      
+      setExams([...examsData, ...worksheetsData]);
+      
+      // Get the latest predicted grade from completed exams/worksheets
+      const examWithGrade = [...examsData, ...worksheetsData]
+        .filter(e => e.completed && e.predicted_grade)
+        .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+      
+      if (examWithGrade) {
+        setPredictedGrade(examWithGrade.predicted_grade);
       }
 
       setLoading(false);
@@ -204,8 +189,7 @@ export default function DocumentViewer() {
     };
   }, []);
 
-  const handleQuizComplete = async (completedQuiz) => {
-    setQuiz(completedQuiz);
+  const handleExamComplete = async () => {
     // Reload lesson data to refresh exams list
     await loadLesson();
   };
@@ -238,8 +222,8 @@ export default function DocumentViewer() {
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <div className="flex items-center gap-1 bg-white/20 rounded-lg px-2 py-0.5">
                     <span className="text-[10px] opacity-80">Grade:</span>
-                    {quiz?.predicted_grade ? (
-                      <span className="text-sm font-bold">{quiz.predicted_grade}</span>
+                    {predictedGrade ? (
+                      <span className="text-sm font-bold">{predictedGrade}</span>
                     ) : (
                       <span className="text-[10px] opacity-70">—</span>
                     )}
@@ -258,10 +242,8 @@ export default function DocumentViewer() {
                 <span className="text-base font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
                 <div className="flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">
                   <span className="text-base font-normal">Predicted Grade:</span>
-                  {quiz?.predicted_grade ? (
-                    <span className="text-xl font-bold">{quiz.predicted_grade}</span>
-                  ) : quiz?.completed ? (
-                    <span className="text-xs font-semibold">Exam</span>
+                  {predictedGrade ? (
+                    <span className="text-xl font-bold">{predictedGrade}</span>
                   ) : (
                     <span className="text-xs opacity-70">-</span>
                   )}
@@ -322,14 +304,6 @@ export default function DocumentViewer() {
                       </TabsTrigger>
                     )}
                     <TabsTrigger 
-                      value="quiz"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative"
-                    >
-                      {showQuizDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                      <Brain className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-[11px] font-medium">Quiz</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
                       value="exam"
                       className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative"
                     >
@@ -364,16 +338,12 @@ export default function DocumentViewer() {
                   </TabsContent>
                 )}
 
-                <TabsContent value="quiz" className="mt-0 p-0 h-full">
-                  <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
-                </TabsContent>
-
                 <TabsContent value="exam" className="mt-0 p-0 h-full">
-                  <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
+                  <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
                 </TabsContent>
 
                 <TabsContent value="grade" className="mt-0 p-0 h-full">
-                  <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
+                  <PredictedGradeTab lesson={lesson} exams={exams} />
                 </TabsContent>
 
                 <TabsContent value="flashcards" className="mt-0 p-0 h-full">
@@ -399,14 +369,6 @@ export default function DocumentViewer() {
                       <span className="text-[10px] font-medium">Doc</span>
                     </TabsTrigger>
                   )}
-                  <TabsTrigger 
-                    value="quiz"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
-                  >
-                    {showQuizDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <Brain className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[10px] font-medium">Quiz</span>
-                  </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
@@ -442,16 +404,12 @@ export default function DocumentViewer() {
                 </TabsContent>
               )}
 
-              <TabsContent value="quiz" className="mt-0 p-0 w-full max-w-full">
-                <QuizTab lesson={lesson} quiz={quiz} onQuizComplete={handleQuizComplete} />
-              </TabsContent>
-
               <TabsContent value="exam" className="mt-0 p-0 w-full max-w-full">
-                <ExamTab lesson={lesson} quiz={quiz} exams={exams} />
+                <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
               </TabsContent>
 
               <TabsContent value="grade" className="mt-0 p-0 w-full max-w-full">
-                <PredictedGradeTab lesson={lesson} quiz={quiz} exams={exams} />
+                <PredictedGradeTab lesson={lesson} exams={exams} />
               </TabsContent>
 
               <TabsContent value="flashcards" className="mt-0 p-0 w-full max-w-full">
