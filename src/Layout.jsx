@@ -320,29 +320,30 @@ export default function Layout({ children, currentPageName }) {
           {/* Mobile Header - Hidden during onboarding */}
           {showNavigation && !isOnboardingPage && (
             <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-4 py-2.5 md:hidden">
-              <div className="flex items-center justify-center relative">
-                {/* Centered Logo + Name */}
-                <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                  <img 
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
-                    alt="StudyApp Logo"
-                    className="w-7 h-7"
-                  />
-                  <h1 className="text-lg font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">StudyApp</h1>
-                </Link>
-                {/* Profile button - absolute right */}
-                {user && (
-                  <button
-                    onClick={() => navigate(createPageUrl("Settings"))}
-                    className="absolute right-0 w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm"
-                  >
-                    <span className="text-white font-semibold text-[10px]">
-                      {user.full_name?.[0]?.toUpperCase() || 'U'}
-                    </span>
-                  </button>
-                )}
-              </div>
-            </header>
+                <div className="flex items-center relative">
+                  {/* Logo - left */}
+                  <Link to={createPageUrl("Home")} className="absolute left-0 hover:opacity-80 transition-opacity">
+                    <img 
+                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+                      alt="StudyApp Logo"
+                      className="w-7 h-7"
+                    />
+                  </Link>
+                  {/* Centered text */}
+                  <h1 className="flex-1 text-center text-lg font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">StudyApp</h1>
+                  {/* Profile button - absolute right */}
+                  {user && (
+                    <button
+                      onClick={() => navigate(createPageUrl("Settings"))}
+                      className="absolute right-0 w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm"
+                    >
+                      <span className="text-white font-semibold text-[10px]">
+                        {user.full_name?.[0]?.toUpperCase() || 'U'}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              </header>
           )}
 
           <div className="flex-1 overflow-auto pb-24 md:pb-0">
