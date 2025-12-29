@@ -116,7 +116,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   };
 
   const loadOrGenerateExam = async (examNumber) => {
-    setIsGenerating(true);
     try {
       const existingExams = await base44.entities.Exam.filter({ 
         lesson_id: lesson.id,
@@ -127,24 +126,35 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         const loadedExam = existingExams[0];
         
         if (loadedExam.completed) {
-          // Show completed state
           setExam(loadedExam);
-          setIsGenerating(false);
           return;
         }
         
         if (!loadedExam.questions || loadedExam.questions.length === 0) {
+          setIsGenerating(true);
           await generateExam(loadedExam.id, examNumber);
+          setIsGenerating(false);
         } else {
+          // Load existing in-progress exam and restore question position
           setExam(loadedExam);
+          // Find the first unanswered question to resume from
+          const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer || q.user_answer.trim() === "");
+          if (firstUnanswered >= 0) {
+            setCurrentQuestion(firstUnanswered);
+          } else {
+            // All answered, go to last question
+            setCurrentQuestion(loadedExam.questions.length - 1);
+          }
         }
       } else {
+        setIsGenerating(true);
         await generateExam(null, examNumber);
+        setIsGenerating(false);
       }
     } catch (error) {
       console.error("Error loading exam:", error);
+      setIsGenerating(false);
     }
-    setIsGenerating(false);
   };
 
   const generateExam = async (existingExamId = null, examNumber = 1) => {
