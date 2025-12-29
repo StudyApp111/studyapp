@@ -333,12 +333,12 @@ export default function Layout({ children, currentPageName }) {
                   <h1 className="flex-1 text-center text-lg font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">StudyApp</h1>
                   {/* Right side buttons */}
                   <div className="absolute right-0 flex items-center gap-2">
-                    <button
-                      onClick={() => navigate(createPageUrl("Feedback"))}
-                      className="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center"
+                    <Link
+                      to={createPageUrl("Feedback")}
+                      className="w-7 h-7 bg-amber-100 rounded-full flex items-center justify-center"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 text-purple-600" />
-                    </button>
+                      <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
+                    </Link>
                     {user && (
                       <button
                         onClick={() => navigate(createPageUrl("Settings"))}
@@ -367,7 +367,7 @@ export default function Layout({ children, currentPageName }) {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full blur-lg opacity-40 group-active:opacity-60 transition-opacity" />
                 <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full shadow-xl flex items-center justify-center border border-white/20">
-                  <MessageSquare className="w-5 h-5 text-white" />
+                  <span className="text-xl">🤖</span>
                   <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
                 </div>
               </div>
