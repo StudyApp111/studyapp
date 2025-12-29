@@ -245,7 +245,7 @@ export default function Onboarding() {
             <Sparkles className="w-5 h-5 text-yellow-600" />
             <span className="text-sm font-medium text-slate-700">Get Started</span>
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome to StudyApp.AI</h1>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome to StudyApp</h1>
           <p className="text-slate-600">Tell us a bit about yourself to personalize your experience</p>
         </motion.div>
 
