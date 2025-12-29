@@ -331,19 +331,27 @@ export default function Layout({ children, currentPageName }) {
                   </Link>
                   {/* Centered text */}
                   <h1 className="flex-1 text-center text-lg font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">StudyApp</h1>
-                  {/* Profile button - absolute right */}
-                  {user && (
+                  {/* Right side buttons */}
+                  <div className="absolute right-0 flex items-center gap-2">
                     <button
-                      onClick={() => navigate(createPageUrl("Settings"))}
-                      className="absolute right-0 w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm"
+                      onClick={() => navigate(createPageUrl("Feedback"))}
+                      className="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center"
                     >
-                      <span className="text-white font-semibold text-[10px]">
-                        {user.full_name?.[0]?.toUpperCase() || 'U'}
-                      </span>
+                      <MessageSquare className="w-3.5 h-3.5 text-purple-600" />
                     </button>
-                  )}
-                </div>
-              </header>
+                    {user && (
+                      <button
+                        onClick={() => navigate(createPageUrl("Settings"))}
+                        className="w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm"
+                      >
+                        <span className="text-white font-semibold text-[10px]">
+                          {user.full_name?.[0]?.toUpperCase() || 'U'}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                  </div>
+                  </header>
           )}
 
           <div className="flex-1 overflow-auto pb-24 md:pb-0">
