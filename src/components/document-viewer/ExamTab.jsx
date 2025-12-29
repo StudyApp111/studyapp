@@ -735,7 +735,15 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
   // Show exam selection if no exam in progress
   if (!exam && !isGenerating && !selectedExamNumber) {
     const allExamsForLesson = exams || [];
-    const sortedExams = allExamsForLesson.sort((a, b) => a.exam_number - b.exam_number);
+    // Deduplicate by exam_number, keeping the most recent or completed one
+    const examsByNumber = {};
+    allExamsForLesson.forEach(e => {
+      const existing = examsByNumber[e.exam_number];
+      if (!existing || e.completed || (!existing.completed && e.updated_date > existing.updated_date)) {
+        examsByNumber[e.exam_number] = e;
+      }
+    });
+    const sortedExams = Object.values(examsByNumber).sort((a, b) => a.exam_number - b.exam_number);
     
     return (
       <div className="pb-4">
