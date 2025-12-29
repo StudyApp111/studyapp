@@ -343,7 +343,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
   };
 
   const handleNext = () => {
-    setShowConfetti(true);
     recordQuestionTime(currentQuestion);
     
     if (currentQuestion < exam.questions.length - 1) {
