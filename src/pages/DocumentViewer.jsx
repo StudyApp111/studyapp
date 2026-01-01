@@ -493,14 +493,16 @@ export default function DocumentViewer() {
         />
       )}
 
-      {/* Study Session Milestone Tracker */}
-      {isTimerRunning && (
-        <StudySessionTracker
-          elapsedSeconds={studyTime}
-          onMilestoneReached={handleMilestoneReached}
-          minimized={false}
-        />
-      )}
+      {/* Study Session Milestone Tracker - Only show on desktop */}
+      <div className="hidden md:block fixed bottom-8 right-8 z-40">
+        {isTimerRunning && (
+          <StudySessionTracker
+            elapsedSeconds={studyTime}
+            onMilestoneReached={handleMilestoneReached}
+            minimized={false}
+          />
+        )}
+      </div>
 
       {/* XP Gain Toast */}
       <XPGainToast 
