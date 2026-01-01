@@ -6,11 +6,13 @@ import { Progress } from "@/components/ui/progress";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 
 const MILESTONES = [
+  { minutes: 2, xp: 5, message: "You started! 🌟", icon: "🌟" },
   { minutes: 5, xp: 10, message: "Great start! 🚀", icon: "🚀" },
   { minutes: 10, xp: 20, message: "You're on fire! 🔥", icon: "🔥" },
-  { minutes: 15, xp: 30, message: "Halfway to mastery! 💪", icon: "💪" },
+  { minutes: 15, xp: 35, message: "Keep it up! 💪", icon: "💪" },
   { minutes: 20, xp: 50, message: "Study champion! 🏆", icon: "🏆" },
-  { minutes: 30, xp: 75, message: "Incredible focus! ⭐", icon: "⭐" },
+  { minutes: 25, xp: 60, message: "Amazing focus! ⭐", icon: "⭐" },
+  { minutes: 30, xp: 75, message: "Incredible! 🌈", icon: "🌈" },
   { minutes: 45, xp: 100, message: "Study legend! 👑", icon: "👑" },
 ];
 
