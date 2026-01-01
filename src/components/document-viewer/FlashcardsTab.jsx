@@ -157,73 +157,7 @@ Create flashcards that:
     setSessionStats({ reviewed: 0, correct: 0 });
   };
 
-  // How to use modal
-  const HowToModal = () => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-      onClick={() => setShowHowTo(false)}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-slate-900">How to Use Flashcards</h3>
-          <button onClick={() => setShowHowTo(false)} className="p-1 hover:bg-slate-100 rounded-full">
-            <X className="w-5 h-5 text-slate-500" />
-          </button>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-purple-600 font-bold text-sm">1</span>
-            </div>
-            <div>
-              <p className="font-medium text-slate-900 text-sm">Read the question</p>
-              <p className="text-xs text-slate-500">Think about the answer in your head or say it out loud</p>
-            </div>
-          </div>
-          
-          <div className="flex gap-3">
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-purple-600 font-bold text-sm">2</span>
-            </div>
-            <div>
-              <p className="font-medium text-slate-900 text-sm">Tap to reveal</p>
-              <p className="text-xs text-slate-500">Click anywhere on the card to flip and see the answer</p>
-            </div>
-          </div>
-          
-          <div className="flex gap-3">
-            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-purple-600 font-bold text-sm">3</span>
-            </div>
-            <div>
-              <p className="font-medium text-slate-900 text-sm">Rate yourself honestly</p>
-              <p className="text-xs text-slate-500">Did you know it? This helps the app show you cards you need to practice more</p>
-            </div>
-          </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4">
-            <p className="text-xs text-amber-800">
-              <strong>💡 Tip:</strong> Don't type answers! Active recall (thinking before revealing) is proven to be more effective for memory.
-            </p>
-          </div>
-        </div>
-        
-        <Button onClick={() => setShowHowTo(false)} className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
-          Got it!
-        </Button>
-      </motion.div>
-    </motion.div>
-  );
 
   // Initial state - not generated
   if (!cards && !isGenerating) {
