@@ -65,18 +65,34 @@ export default function FeedbackButton() {
 
   return (
     <>
-      {/* Floating Feedback Button - Positioned to avoid mobile nav */}
+      {/* Floating Feedback Button - Desktop only, mobile uses bottom nav area */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-50"
+        className="hidden md:block fixed bottom-8 left-8 z-50"
       >
         <Button
           onClick={() => setIsOpen(true)}
-          size="icon"
-          className="h-14 w-14 rounded-full shadow-2xl bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 transition-all hover:scale-110 border-2 border-white"
+          className="h-11 px-4 rounded-full shadow-2xl bg-white hover:bg-slate-50 text-slate-700 transition-all hover:scale-105 border border-slate-200 gap-2"
         >
-          <MessageCircle className="h-6 w-6 text-white" />
+          <MessageCircle className="h-4 w-4 text-purple-600" />
+          <span className="text-sm font-medium">Feedback</span>
+        </Button>
+      </motion.div>
+
+      {/* Mobile: Small pill button in safe position */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="md:hidden fixed bottom-36 left-4 z-50"
+      >
+        <Button
+          onClick={() => setIsOpen(true)}
+          size="sm"
+          className="h-9 px-3 rounded-full shadow-lg bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 gap-1.5"
+        >
+          <MessageCircle className="h-3.5 w-3.5 text-purple-600" />
+          <span className="text-xs font-medium">Feedback</span>
         </Button>
       </motion.div>
 
