@@ -330,8 +330,19 @@ export default function Layout({ children, currentPageName }) {
                       className="w-7 h-7"
                     />
                   </Link>
-                  {/* Centered text */}
-                  <h1 className="flex-1 text-center text-lg font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">StudyApp</h1>
+                  {/* Centered - Streak and XP */}
+                  <div className="flex-1 flex items-center justify-center gap-2">
+                    {user?.current_streak > 0 && (
+                      <div className="flex items-center gap-1 bg-orange-100 px-2 py-0.5 rounded-full">
+                        <Flame className="w-3 h-3 text-orange-500" />
+                        <span className="text-[10px] font-bold text-orange-700">{user.current_streak}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1 bg-yellow-100 px-2 py-0.5 rounded-full">
+                      <Award className="w-3 h-3 text-yellow-600" />
+                      <span className="text-[10px] font-bold text-yellow-700">Lv{user?.level || 1}</span>
+                    </div>
+                  </div>
                   {/* Right side buttons */}
                   <div className="absolute right-0 flex items-center gap-2">
                       {user && (
