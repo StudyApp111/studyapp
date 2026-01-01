@@ -689,6 +689,29 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       }
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
+
+      // Award XP for exam completion
+      let examXP = 25; // Base XP for completing exam
+      if (correctCount >= 8) examXP += 25; // Bonus for high score
+      if (correctCount === questionsWithGrading.length) examXP += 50; // Perfect score bonus
+
+      try {
+        const currentUserXP = await base44.auth.me();
+        await base44.auth.updateMe({
+          daily_xp: (currentUserXP.daily_xp || 0) + examXP,
+          total_points: (currentUserXP.total_points || 0) + examXP,
+          total_exams_completed: (currentUserXP.total_exams_completed || 0) + 1
+        });
+
+        let xpReason = 'Exam completed!';
+        if (correctCount === questionsWithGrading.length) xpReason = 'Perfect exam! 🌟';
+        else if (correctCount >= 8) xpReason = 'Great score! 🎯';
+
+        setXpToast({ show: true, xp: examXP, reason: xpReason });
+      } catch (xpError) {
+        console.error("Error awarding exam XP:", xpError);
+      }
+
       let pointsEarned = 50;
       
       questionsWithGrading.forEach(q => {
