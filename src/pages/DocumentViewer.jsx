@@ -4,13 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked } from "lucide-react";
+import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
+import StudySessionTracker from "@/components/gamification/StudySessionTracker";
+import XPGainToast from "@/components/gamification/XPGainToast";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -27,6 +29,9 @@ export default function DocumentViewer() {
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [predictedGrade, setPredictedGrade] = useState(null);
+  const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
+  const [userStreak, setUserStreak] = useState(0);
+  const [userDailyXP, setUserDailyXP] = useState(0);
   
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
@@ -67,7 +72,52 @@ export default function DocumentViewer() {
 
   useEffect(() => {
     loadLesson();
+    loadUserStats();
   }, []);
+
+  const loadUserStats = async () => {
+    try {
+      const user = await base44.auth.me();
+      setUserStreak(user.current_streak || 0);
+      
+      // Reset daily XP if new day
+      const today = new Date().toISOString().split('T')[0];
+      if (user.last_xp_reset_date !== today) {
+        await base44.auth.updateMe({
+          daily_xp: 0,
+          last_xp_reset_date: today,
+          study_sessions_today: 0
+        });
+        setUserDailyXP(0);
+      } else {
+        setUserDailyXP(user.daily_xp || 0);
+      }
+    } catch (error) {
+      console.error("Error loading user stats:", error);
+    }
+  };
+
+  const awardXP = async (amount, reason) => {
+    try {
+      const user = await base44.auth.me();
+      const newDailyXP = (user.daily_xp || 0) + amount;
+      const newTotalXP = (user.total_points || 0) + amount;
+      
+      await base44.auth.updateMe({
+        daily_xp: newDailyXP,
+        total_points: newTotalXP
+      });
+      
+      setUserDailyXP(newDailyXP);
+      setXpToast({ show: true, xp: amount, reason });
+    } catch (error) {
+      console.error("Error awarding XP:", error);
+    }
+  };
+
+  const handleMilestoneReached = (milestone) => {
+    awardXP(milestone.xp, `${milestone.minutes} min milestone!`);
+  };
 
   useEffect(() => {
     if (isTimerRunning && studyTime !== null) {
@@ -250,26 +300,42 @@ export default function DocumentViewer() {
                 </div>
               </div>
             </div>
-            <div className="hidden md:flex items-center gap-2 bg-white rounded-xl px-3 py-2 shadow-sm border border-purple-200 flex-shrink-0">
-              <Clock className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-mono font-semibold text-slate-900 min-w-[50px]">
-                {formatStudyTime(studyTime)}
-              </span>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setIsTimerRunning(!isTimerRunning)}
-                className="h-6 w-6 p-0 hover:bg-purple-50"
-              >
-                {isTimerRunning ? (
-                  <div className="flex gap-0.5">
-                    <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
-                    <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
-                  </div>
-                ) : (
-                  <div className="w-0 h-0 border-l-[6px] border-l-purple-600 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-0.5" />
-                )}
-              </Button>
+            {/* Streak and XP indicators - Desktop */}
+            <div className="hidden md:flex items-center gap-2">
+              {/* Streak */}
+              <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border ${userStreak > 0 ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-200'}`}>
+                <Flame className={`w-4 h-4 ${userStreak > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
+                <span className={`text-sm font-bold ${userStreak > 0 ? 'text-orange-700' : 'text-slate-500'}`}>{userStreak}</span>
+              </div>
+              
+              {/* Daily XP */}
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-50 border border-yellow-200">
+                <Zap className="w-4 h-4 text-yellow-500" />
+                <span className="text-sm font-bold text-yellow-700">{userDailyXP}/50</span>
+              </div>
+              
+              {/* Timer */}
+              <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 shadow-sm border border-purple-200">
+                <Clock className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-mono font-semibold text-slate-900 min-w-[50px]">
+                  {formatStudyTime(studyTime)}
+                </span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsTimerRunning(!isTimerRunning)}
+                  className="h-6 w-6 p-0 hover:bg-purple-50"
+                >
+                  {isTimerRunning ? (
+                    <div className="flex gap-0.5">
+                      <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
+                      <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
+                    </div>
+                  ) : (
+                    <div className="w-0 h-0 border-l-[6px] border-l-purple-600 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-0.5" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -427,6 +493,22 @@ export default function DocumentViewer() {
         />
       )}
 
+      {/* Study Session Milestone Tracker */}
+      {isTimerRunning && (
+        <StudySessionTracker
+          elapsedSeconds={studyTime}
+          onMilestoneReached={handleMilestoneReached}
+          minimized={false}
+        />
+      )}
+
+      {/* XP Gain Toast */}
+      <XPGainToast 
+        xpGained={xpToast.xp}
+        reason={xpToast.reason}
+        show={xpToast.show}
+        onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
+      />
     </div>
   );
 }
