@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, FileText, Upload, FileCheck, AlertCircle, Sparkles, X } from "lucide-react";
+import { Loader2, FileText, Upload, FileCheck, AlertCircle, Sparkles, X, Lightbulb } from "lucide-react";
 import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
 import EducationalLoader from "@/components/ui/EducationalLoader";
+import ContentGuideModal from "@/components/modals/ContentGuideModal";
 
 export default function CreateLessonModal({ open, onOpenChange }) {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
   const [processingStep, setProcessingStep] = useState("");
   const [userGrade, setUserGrade] = useState("");
   const [showHints, setShowHints] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [hasSeenGuide, setHasSeenGuide] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -38,8 +41,20 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       setShowHints(false);
       setIsProcessing(false);
       setProcessingStep("");
+      
+      // Check if user has seen the guide
+      const seen = localStorage.getItem('hasSeenContentGuide');
+      if (!seen) {
+        setShowGuide(true);
+      }
+      setHasSeenGuide(!!seen);
     }
   }, [open]);
+
+  const handleGuideComplete = () => {
+    localStorage.setItem('hasSeenContentGuide', 'true');
+    setHasSeenGuide(true);
+  };
 
   const loadUserProfile = async () => {
     try {
@@ -415,6 +430,21 @@ Output Format: JSON object matching the specified schema`;
                   </Alert>
                 )}
 
+                {/* Help Button */}
+                {!hasSeenGuide && (
+                  <button
+                    type="button"
+                    onClick={() => setShowGuide(true)}
+                    className="flex items-center gap-2 w-full p-3 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl text-left hover:from-yellow-100 hover:to-amber-100 transition-colors"
+                  >
+                    <Lightbulb className="w-5 h-5 text-yellow-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">Need help?</p>
+                      <p className="text-xs text-slate-600">Learn what content works best</p>
+                    </div>
+                  </button>
+                )}
+
                 {/* Course Name */}
                 <div className="space-y-1.5">
                   <Label htmlFor="courseName" className="text-sm font-medium">Course Name</Label>
@@ -465,10 +495,14 @@ Output Format: JSON object matching the specified schema`;
                     <Textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Describe your course content, paste lecture notes, or list topics..."
+                      placeholder="Be specific! Example: 'Chapter 5 of Biology 101 covering photosynthesis, chloroplasts, light reactions, and the Calvin cycle...'"
                       disabled={isProcessing}
                       className="min-h-[100px] resize-none"
                     />
+                    <p className="text-xs text-slate-500 flex items-center gap-1">
+                      <Lightbulb className="w-3 h-3" />
+                      Tip: Include chapter names, specific topics, and key terms for best results
+                    </p>
                   </div>
                 )}
 
@@ -529,6 +563,13 @@ Output Format: JSON object matching the specified schema`;
           </>
         )}
       </DialogContent>
+
+      {/* Content Guide Modal */}
+      <ContentGuideModal 
+        open={showGuide} 
+        onOpenChange={setShowGuide}
+        onContinue={handleGuideComplete}
+      />
     </Dialog>
   );
 }
