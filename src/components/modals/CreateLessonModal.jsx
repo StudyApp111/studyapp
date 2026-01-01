@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, FileText, Upload, FileCheck, AlertCircle, Sparkles, X, Lightbulb } from "lucide-react";
+import { Loader2, FileText, Upload, FileCheck, AlertCircle, Sparkles, X, Lightbulb, Zap, Trophy } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -491,7 +491,7 @@ Output Format: JSON object matching the specified schema`;
 
                 {/* Description Input */}
                 {inputType === "description" && (
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <Textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -499,10 +499,34 @@ Output Format: JSON object matching the specified schema`;
                       disabled={isProcessing}
                       className="min-h-[100px] resize-none"
                     />
-                    <p className="text-xs text-slate-500 flex items-center gap-1">
-                      <Lightbulb className="w-3 h-3" />
-                      Tip: Include chapter names, specific topics, and key terms for best results
-                    </p>
+
+                    {/* Smart quality indicator */}
+                    {description.length > 0 && description.length < 50 && (
+                      <div className="flex items-center gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                        <p className="text-xs text-amber-800">
+                          <span className="font-medium">Too vague!</span> Add specific topics, chapter names, or key terms for better results.
+                        </p>
+                      </div>
+                    )}
+
+                    {description.length >= 50 && description.length < 100 && (
+                      <div className="flex items-center gap-2 p-2.5 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <Lightbulb className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                        <p className="text-xs text-yellow-800">
+                          <span className="font-medium">Getting better!</span> Add more details for even better quiz questions.
+                        </p>
+                      </div>
+                    )}
+
+                    {description.length >= 100 && (
+                      <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                        <FileCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                        <p className="text-xs text-emerald-800">
+                          <span className="font-medium">Great detail!</span> This will generate high-quality study materials.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -540,11 +564,18 @@ Output Format: JSON object matching the specified schema`;
                   </div>
                 )}
 
+                {/* XP Reward Preview */}
+                <div className="flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border border-yellow-200">
+                  <Zap className="w-4 h-4 text-yellow-600" />
+                  <span className="text-xs font-medium text-yellow-800">Complete this lesson to earn up to <span className="font-bold">+150 XP</span></span>
+                  <Trophy className="w-4 h-4 text-yellow-600" />
+                </div>
+
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  disabled={isProcessing}
-                  className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25"
+                  disabled={isProcessing || (inputType === "description" && description.length < 30)}
+                  className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 disabled:opacity-50"
                 >
                   {isProcessing ? (
                     <>
