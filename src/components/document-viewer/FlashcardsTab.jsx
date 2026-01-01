@@ -2,20 +2,18 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, Eye, EyeOff, Shuffle, Plus } from "lucide-react";
+import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function FlashcardsTab({ lesson, extractedContent }) {
   const [cards, setCards] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [cardStats, setCardStats] = useState({
-    new: 0,
-    learning: 0,
-    review: 0
-  });
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [showHowTo, setShowHowTo] = useState(false);
+  const [sessionStats, setSessionStats] = useState({ reviewed: 0, correct: 0 });
 
   useEffect(() => {
     loadFlashcards();
@@ -23,25 +21,14 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
 
   const loadFlashcards = async () => {
     if (!lesson) return;
-    
     try {
       const existingCards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
       if (existingCards.length > 0) {
         setCards(existingCards);
-        updateCardStats(existingCards);
       }
     } catch (error) {
       console.error("Error loading flashcards:", error);
     }
-  };
-
-  const updateCardStats = (flashcards) => {
-    const stats = {
-      new: flashcards.filter(c => c.status === 'new').length,
-      learning: flashcards.filter(c => c.status === 'learning').length,
-      review: flashcards.filter(c => c.status === 'review').length
-    };
-    setCardStats(stats);
   };
 
   const handleGenerate = async () => {
@@ -78,8 +65,6 @@ Create flashcards that:
       });
 
       const generatedCards = response.flashcards || [];
-      
-      // Save to database
       const savedCards = await Promise.all(
         generatedCards.map(card => 
           base44.entities.Flashcard.create({
@@ -88,70 +73,157 @@ Create flashcards that:
             answer: card.answer,
             topics: card.topics,
             difficulty: card.difficulty,
-            status: "new"
+            status: "new",
+            mastery_level: 0
           })
         )
       );
-
       setCards(savedCards);
-      updateCardStats(savedCards);
     } catch (error) {
       console.error("Error generating flashcards:", error);
     }
     setIsGenerating(false);
   };
 
-  const handleReveal = () => {
-    setShowAnswer(!showAnswer);
+  const handleFlip = () => {
+    setIsFlipped(!isFlipped);
   };
 
-  const handleRating = async (rating) => {
+  const handleRating = async (knew) => {
     const currentCard = cards[currentIndex];
     
-    // Update card status based on rating
-    let newStatus = currentCard.status;
-    if (currentCard.status === 'new') {
-      newStatus = 'learning';
-    } else if (rating === 'easy' && currentCard.status === 'learning') {
-      newStatus = 'review';
-    }
+    // Update mastery based on whether they knew it
+    const newMastery = knew 
+      ? Math.min((currentCard.mastery_level || 0) + 1, 5)
+      : Math.max((currentCard.mastery_level || 0) - 1, 0);
+    
+    const newStatus = newMastery >= 4 ? 'mastered' : newMastery >= 2 ? 'learning' : 'new';
 
-    // Save to database
     try {
       await base44.entities.Flashcard.update(currentCard.id, {
         status: newStatus,
+        mastery_level: newMastery,
         last_reviewed: new Date().toISOString()
       });
 
       const updatedCards = [...cards];
-      updatedCards[currentIndex] = { ...currentCard, status: newStatus };
+      updatedCards[currentIndex] = { ...currentCard, status: newStatus, mastery_level: newMastery };
       setCards(updatedCards);
-      updateCardStats(updatedCards);
+      
+      setSessionStats(prev => ({
+        reviewed: prev.reviewed + 1,
+        correct: knew ? prev.correct + 1 : prev.correct
+      }));
     } catch (error) {
       console.error("Error updating flashcard:", error);
     }
 
-    setShowAnswer(false);
-    if (currentIndex < cards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      setCurrentIndex(0);
-    }
+    // Move to next card
+    setIsFlipped(false);
+    setTimeout(() => {
+      if (currentIndex < cards.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      } else {
+        setCurrentIndex(0);
+      }
+    }, 200);
   };
 
   const handleShuffle = () => {
     const shuffled = [...cards].sort(() => Math.random() - 0.5);
     setCards(shuffled);
     setCurrentIndex(0);
-    setShowAnswer(false);
+    setIsFlipped(false);
   };
 
-  const handleRegenerate = () => {
+  const handlePrev = () => {
+    setIsFlipped(false);
+    setCurrentIndex(prev => prev > 0 ? prev - 1 : cards.length - 1);
+  };
+
+  const handleNext = () => {
+    setIsFlipped(false);
+    setCurrentIndex(prev => prev < cards.length - 1 ? prev + 1 : 0);
+  };
+
+  const handleRegenerate = async () => {
+    // Delete existing cards
+    if (cards && cards.length > 0) {
+      await Promise.all(cards.map(c => base44.entities.Flashcard.delete(c.id)));
+    }
     setCards(null);
     setCurrentIndex(0);
-    setShowAnswer(false);
-    setCardStats({ new: 0, learning: 0, review: 0 });
+    setIsFlipped(false);
+    setSessionStats({ reviewed: 0, correct: 0 });
   };
+
+  // How to use modal
+  const HowToModal = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      onClick={() => setShowHowTo(false)}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-slate-900">How to Use Flashcards</h3>
+          <button onClick={() => setShowHowTo(false)} className="p-1 hover:bg-slate-100 rounded-full">
+            <X className="w-5 h-5 text-slate-500" />
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="flex gap-3">
+            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-purple-600 font-bold text-sm">1</span>
+            </div>
+            <div>
+              <p className="font-medium text-slate-900 text-sm">Read the question</p>
+              <p className="text-xs text-slate-500">Think about the answer in your head or say it out loud</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-purple-600 font-bold text-sm">2</span>
+            </div>
+            <div>
+              <p className="font-medium text-slate-900 text-sm">Tap to reveal</p>
+              <p className="text-xs text-slate-500">Click anywhere on the card to flip and see the answer</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-purple-600 font-bold text-sm">3</span>
+            </div>
+            <div>
+              <p className="font-medium text-slate-900 text-sm">Rate yourself honestly</p>
+              <p className="text-xs text-slate-500">Did you know it? This helps the app show you cards you need to practice more</p>
+            </div>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4">
+            <p className="text-xs text-amber-800">
+              <strong>💡 Tip:</strong> Don't type answers! Active recall (thinking before revealing) is proven to be more effective for memory.
+            </p>
+          </div>
+        </div>
+        
+        <Button onClick={() => setShowHowTo(false)} className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
+          Got it!
+        </Button>
+      </motion.div>
+    </motion.div>
+  );
 
   // Initial state - not generated
   if (!cards && !isGenerating) {
@@ -163,8 +235,11 @@ Create flashcards that:
           </div>
           <div>
             <h3 className="text-lg font-bold text-slate-900 mb-2">AI-Powered Flashcards</h3>
-            <p className="text-sm text-slate-600">
-              Generate intelligent flashcards using spaced repetition to maximize retention.
+            <p className="text-sm text-slate-600 mb-1">
+              Generate smart flashcards from your notes.
+            </p>
+            <p className="text-xs text-slate-500">
+              Think of the answer, then reveal to check yourself!
             </p>
           </div>
           <Button
@@ -201,7 +276,6 @@ Create flashcards that:
     );
   }
 
-  // No cards generated yet or empty result
   if (!cards || cards.length === 0) {
     return (
       <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-2 p-6">
@@ -212,7 +286,7 @@ Create flashcards that:
           <div>
             <h3 className="text-lg font-bold text-slate-900 mb-2">AI-Powered Flashcards</h3>
             <p className="text-sm text-slate-600">
-              Generate intelligent flashcards using spaced repetition to maximize retention.
+              Generate intelligent flashcards from your notes.
             </p>
           </div>
           <Button
@@ -229,174 +303,198 @@ Create flashcards that:
 
   const currentCard = cards[currentIndex];
   const progress = ((currentIndex + 1) / cards.length) * 100;
+  const masteredCount = cards.filter(c => c.mastery_level >= 4).length;
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
-      case "easy": return "bg-green-100 text-green-700";
+      case "easy": return "bg-emerald-100 text-emerald-700";
       case "hard": return "bg-red-100 text-red-700";
-      default: return "bg-yellow-100 text-yellow-700";
+      default: return "bg-amber-100 text-amber-700";
     }
+  };
+
+  const getMasteryColor = (level) => {
+    if (level >= 4) return "bg-emerald-500";
+    if (level >= 2) return "bg-amber-500";
+    return "bg-slate-300";
   };
 
   return (
     <div className="space-y-3 px-2">
-      {/* Progress header */}
-      <div className="flex items-center justify-between text-xs">
-        <span className="font-medium text-slate-700">Card {currentIndex + 1} of {cards.length}</span>
-        <span className="font-medium text-slate-700">{Math.round(progress)}%</span>
+      <AnimatePresence>
+        {showHowTo && <HowToModal />}
+      </AnimatePresence>
+
+      {/* Header with help button */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-slate-600">
+            {currentIndex + 1} / {cards.length}
+          </span>
+          <span className="text-xs text-slate-400">•</span>
+          <span className="text-xs text-emerald-600 font-medium">
+            {masteredCount} mastered
+          </span>
+        </div>
+        <button
+          onClick={() => setShowHowTo(true)}
+          className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 font-medium"
+        >
+          <HelpCircle className="w-3.5 h-3.5" />
+          How to use
+        </button>
       </div>
+
       <Progress value={progress} className="h-1.5" />
 
-      {/* Card */}
-      <Card className="border-0 shadow-xl overflow-hidden">
-        {showAnswer ? (
-          <>
-            {/* Answer view with flip animation */}
-            <div className="relative" style={{ perspective: '1000px' }}>
-              <div className={`transition-all duration-500 transform-style-3d ${showAnswer ? '' : 'rotate-y-180'}`}>
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-3 flex items-center justify-between rounded-t-lg">
-                  <div className="flex items-center gap-1.5 text-white">
-                    <Eye className="w-4 h-4" />
-                    <span className="font-semibold text-sm">Answer</span>
+      {/* Session stats */}
+      {sessionStats.reviewed > 0 && (
+        <div className="flex justify-center gap-4 text-xs">
+          <span className="text-slate-500">
+            Session: <span className="font-semibold text-slate-700">{sessionStats.correct}/{sessionStats.reviewed}</span> correct
+          </span>
+        </div>
+      )}
+
+      {/* Flashcard */}
+      <div 
+        onClick={handleFlip}
+        className="cursor-pointer select-none"
+      >
+        <Card className="border-0 shadow-xl overflow-hidden min-h-[280px] relative">
+          <AnimatePresence mode="wait">
+            {!isFlipped ? (
+              <motion.div
+                key="question"
+                initial={{ rotateY: 90, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: -90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+              >
+                {/* Question side */}
+                <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-white" />
+                    <span className="font-semibold text-sm text-white">Question</span>
                   </div>
-                  <Badge className={`${getDifficultyColor(currentCard.difficulty)} font-semibold text-xs`}>
+                  <Badge className={`${getDifficultyColor(currentCard.difficulty)} text-[10px]`}>
                     {currentCard.difficulty}
                   </Badge>
                 </div>
-                <div className="p-6 bg-white rounded-b-lg min-h-[200px] flex flex-col items-center justify-center">
-                  <p className="text-slate-900 text-sm leading-relaxed mb-6 text-center">
-                    {currentCard.answer}
-                  </p>
-                  <div className="flex justify-center">
-                    <button
-                      onClick={handleReveal}
-                      className="text-emerald-600 hover:text-emerald-700 font-semibold text-xs flex items-center gap-1.5 transition-all hover:scale-105"
-                    >
-                      <EyeOff className="w-4 h-4" />
-                      Hide answer
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Rating buttons */}
-            <div className="grid grid-cols-4 gap-2 p-3">
-              <button
-                onClick={() => handleRating('again')}
-                className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl p-3 shadow-lg transition-all active:scale-95"
-              >
-                <div className="text-center">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span className="text-white text-lg">✕</span>
-                  </div>
-                  <div className="font-bold text-xs mb-0.5">Again</div>
-                  <div className="text-[10px] opacity-90">&lt;1d</div>
-                </div>
-              </button>
-              <button
-                onClick={() => handleRating('hard')}
-                className="bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl p-3 shadow-lg transition-all active:scale-95"
-              >
-                <div className="text-center">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span className="text-white text-lg">⏱</span>
-                  </div>
-                  <div className="font-bold text-xs mb-0.5">Hard</div>
-                  <div className="text-[10px] opacity-90">1d</div>
-                </div>
-              </button>
-              <button
-                onClick={() => handleRating('good')}
-                className="bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl p-3 shadow-lg transition-all active:scale-95"
-              >
-                <div className="text-center">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span className="text-white text-lg">✓</span>
-                  </div>
-                  <div className="font-bold text-xs mb-0.5">Good</div>
-                  <div className="text-[10px] opacity-90">3d</div>
-                </div>
-              </button>
-              <button
-                onClick={() => handleRating('easy')}
-                className="bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl p-3 shadow-lg transition-all active:scale-95"
-              >
-                <div className="text-center">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                    <span className="text-white text-lg">⚡</span>
-                  </div>
-                  <div className="font-bold text-xs mb-0.5">Easy</div>
-                  <div className="text-[10px] opacity-90">4d</div>
-                </div>
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Question view with flip animation */}
-            <div className="relative" style={{ perspective: '1000px' }}>
-              <div className={`transition-all duration-500 transform-style-3d ${showAnswer ? 'rotate-y-180' : ''}`}>
-                <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-3 flex items-center justify-between rounded-t-lg">
-                  <div className="flex items-center gap-1.5 text-white">
-                    <Sparkles className="w-4 h-4" />
-                    <span className="font-semibold text-sm">Question</span>
-                  </div>
-                  <div className="flex gap-1">
-                    {currentCard.topics.slice(0, 2).map((topic, i) => (
-                      <Badge key={i} className="bg-purple-400 text-white border-0 text-[10px] px-2 py-0.5">
-                        {topic}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div className="p-6 bg-white min-h-[200px] flex flex-col items-center justify-center rounded-b-lg">
+                <div className="p-6 flex flex-col items-center justify-center min-h-[220px] bg-white">
                   <p className="text-slate-900 text-base font-medium leading-relaxed text-center mb-6">
                     {currentCard.question}
                   </p>
-                  <button
-                    onClick={handleReveal}
-                    className="text-purple-600 hover:text-purple-700 font-semibold text-xs flex items-center gap-1.5 transition-all hover:scale-105"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Reveal answer
-                  </button>
+                  <div className="text-center">
+                    <p className="text-xs text-slate-400 mb-1">Think of the answer, then...</p>
+                    <p className="text-sm text-purple-600 font-semibold">Tap to reveal →</p>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </>
-        )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="answer"
+                initial={{ rotateY: -90, opacity: 0 }}
+                animate={{ rotateY: 0, opacity: 1 }}
+                exit={{ rotateY: 90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+              >
+                {/* Answer side */}
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-3 flex items-center justify-between">
+                  <span className="font-semibold text-sm text-white">Answer</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] text-white/80">Mastery:</span>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(i => (
+                        <div 
+                          key={i} 
+                          className={`w-2 h-2 rounded-full ${i <= (currentCard.mastery_level || 0) ? getMasteryColor(currentCard.mastery_level) : 'bg-white/30'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 flex flex-col min-h-[220px] bg-white">
+                  <p className="text-slate-900 text-sm leading-relaxed text-center flex-1 flex items-center justify-center">
+                    {currentCard.answer}
+                  </p>
+                  
+                  {/* Rating section */}
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <p className="text-xs text-center text-slate-500 mb-3">Did you know the answer?</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRating(false); }}
+                        className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl py-3 px-4 shadow-lg transition-all active:scale-95"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-lg">❌</span>
+                          <div className="text-left">
+                            <div className="font-bold text-sm">Nope</div>
+                            <div className="text-[10px] opacity-90">Show more often</div>
+                          </div>
+                        </div>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleRating(true); }}
+                        className="bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl py-3 px-4 shadow-lg transition-all active:scale-95"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-lg">✅</span>
+                          <div className="text-left">
+                            <div className="font-bold text-sm">Got it!</div>
+                            <div className="text-[10px] opacity-90">Show less often</div>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Card>
+      </div>
 
-        {/* Stats footer */}
-        <div className="border-t border-slate-200 p-3 bg-slate-50">
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-4 justify-center">
-              <div className="flex items-center gap-1">
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-[10px]">New</Badge>
-                <span className="text-xs font-bold text-slate-900">{cardStats.new}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-[10px]">Learning</Badge>
-                <span className="text-xs font-bold text-slate-900">{cardStats.learning}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">Review</Badge>
-                <span className="text-xs font-bold text-slate-900">{cardStats.review}</span>
-              </div>
-            </div>
-            <div className="flex gap-2 justify-center">
-              <Button variant="outline" size="sm" onClick={handleShuffle} className="text-xs h-8">
-                <Shuffle className="w-3 h-3 mr-1" />
-                Shuffle
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleRegenerate} className="text-xs h-8">
-                <Plus className="w-3 h-3 mr-1" />
-                Regenerate
-              </Button>
-            </div>
-          </div>
+      {/* Navigation & Actions */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={handlePrev}
+          className="p-2 rounded-full hover:bg-slate-100 transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5 text-slate-600" />
+        </button>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleShuffle}
+            className="text-xs h-8"
+          >
+            <Shuffle className="w-3 h-3 mr-1" />
+            Shuffle
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRegenerate}
+            className="text-xs h-8"
+          >
+            <RotateCcw className="w-3 h-3 mr-1" />
+            New Cards
+          </Button>
         </div>
-      </Card>
+        
+        <button
+          onClick={handleNext}
+          className="p-2 rounded-full hover:bg-slate-100 transition-colors"
+        >
+          <ChevronRight className="w-5 h-5 text-slate-600" />
+        </button>
+      </div>
     </div>
   );
 }
