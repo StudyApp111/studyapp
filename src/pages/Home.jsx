@@ -15,6 +15,7 @@ import CreateLessonModal from "@/components/modals/CreateLessonModal";
 import { LessonActivityCard, AssignmentActivityCard } from "@/components/home/ActivityCard";
 import XPProgressBar from "@/components/gamification/XPProgressBar";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
+import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 
 export default function Home() {
     const navigate = useNavigate();
@@ -24,6 +25,7 @@ export default function Home() {
     const [studyMinutesToday, setStudyMinutesToday] = useState(0);
     const [questionsToday, setQuestionsToday] = useState(0);
     const [flashcardsToday, setFlashcardsToday] = useState(0);
+    const [showWelcome, setShowWelcome] = useState(false);
 
     useEffect(() => {
       const checkOnboarding = async () => {
@@ -48,6 +50,12 @@ export default function Home() {
           setStudyMinutesToday(Math.floor((currentUser.time_spent_seconds || 0) / 60) % 60);
           setQuestionsToday(currentUser.questions_completed || 0);
           setFlashcardsToday(currentUser.total_flashcards_mastered || 0);
+
+          // Show welcome guide for new users
+          const hasSeenWelcome = localStorage.getItem('hasSeenWelcomeGuide');
+          if (!hasSeenWelcome && currentUser.session_count <= 2) {
+            setShowWelcome(true);
+          }
 
           if (!currentUser.onboarding_completed) {
             navigate(createPageUrl("Onboarding"));
@@ -345,6 +353,13 @@ export default function Home() {
 <CreateLessonModal 
   open={createLessonModalOpen} 
   onOpenChange={setCreateLessonModalOpen} 
+/>
+
+{/* First Session Welcome */}
+<FirstSessionWelcome 
+  open={showWelcome}
+  onOpenChange={setShowWelcome}
+  userName={user?.full_name?.split(' ')[0]}
 />
 </div>
 );
