@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload } from "lucide-react";
+import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -13,37 +13,61 @@ import { motion } from "framer-motion";
 import BadgeDisplay from "@/components/gamification/BadgeDisplay";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
 import { LessonActivityCard, AssignmentActivityCard } from "@/components/home/ActivityCard";
+import XPProgressBar from "@/components/gamification/XPProgressBar";
+import DailyChallenge from "@/components/gamification/DailyChallenge";
 
 export default function Home() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [createLessonModalOpen, setCreateLessonModalOpen] = useState(false);
+    const navigate = useNavigate();
+    const [user, setUser] = useState(null);
+    const [createLessonModalOpen, setCreateLessonModalOpen] = useState(false);
+    const [dailyXP, setDailyXP] = useState(0);
+    const [studyMinutesToday, setStudyMinutesToday] = useState(0);
+    const [questionsToday, setQuestionsToday] = useState(0);
+    const [flashcardsToday, setFlashcardsToday] = useState(0);
 
-  useEffect(() => {
-    const checkOnboarding = async () => {
-      try {
-        const currentUser = await base44.auth.me();
-        setUser(currentUser);
-        
-        if (!currentUser.onboarding_completed) {
-          navigate(createPageUrl("Onboarding"));
-        } else if (currentUser.learning_profile_id) {
-          const profile = await base44.entities.LearningProfile.filter({
-            id: currentUser.learning_profile_id
-          });
-          if (profile.length > 0) {
-            setLearningProfile(profile[0]);
+    useEffect(() => {
+      const checkOnboarding = async () => {
+        try {
+          const currentUser = await base44.auth.me();
+          setUser(currentUser);
+
+          // Reset daily stats if new day
+          const today = new Date().toISOString().split('T')[0];
+          if (currentUser.last_xp_reset_date !== today) {
+            await base44.auth.updateMe({
+              daily_xp: 0,
+              last_xp_reset_date: today,
+              study_sessions_today: 0
+            });
+            setDailyXP(0);
+          } else {
+            setDailyXP(currentUser.daily_xp || 0);
           }
-        }
-      } catch (error) {
-        console.error("Error checking user:", error);
-      }
-    };
-    
-    checkOnboarding();
-  }, [navigate]);
 
-  const [learningProfile, setLearningProfile] = useState(null);
+          // Calculate today's study minutes (rough estimate from time_spent)
+          setStudyMinutesToday(Math.floor((currentUser.time_spent_seconds || 0) / 60) % 60);
+          setQuestionsToday(currentUser.questions_completed || 0);
+          setFlashcardsToday(currentUser.total_flashcards_mastered || 0);
+
+          if (!currentUser.onboarding_completed) {
+            navigate(createPageUrl("Onboarding"));
+          } else if (currentUser.learning_profile_id) {
+            const profile = await base44.entities.LearningProfile.filter({
+              id: currentUser.learning_profile_id
+            });
+            if (profile.length > 0) {
+              setLearningProfile(profile[0]);
+            }
+          }
+        } catch (error) {
+          console.error("Error checking user:", error);
+        }
+      };
+
+      checkOnboarding();
+    }, [navigate]);
+
+    const [learningProfile, setLearningProfile] = useState(null);
 
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons'],
@@ -159,27 +183,61 @@ export default function Home() {
 
   return (
     <div className="p-4 md:p-10 max-w-7xl mx-auto">
-      {/* Hero Section */}
+      {/* Hero Section with Gamification */}
       <div className="mb-5 md:mb-8">
-        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-5 md:p-8 shadow-xl md:shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-4 md:p-8 shadow-xl md:shadow-2xl">
           <div className="absolute top-0 right-0 w-40 md:w-64 h-40 md:h-64 bg-white/10 rounded-full blur-3xl -mr-20 md:-mr-32 -mt-20 md:-mt-32" />
           <div className="absolute bottom-0 left-0 w-32 md:w-48 h-32 md:h-48 bg-yellow-400/20 rounded-full blur-2xl -ml-16 md:-ml-24 -mb-16 md:-mb-24" />
-          
-          <div className="relative text-center">
-            <h1 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2">
-              Hi {user.full_name?.split(' ')[0] || 'there'}! 👋
-            </h1>
-            <p className="text-white/90 text-sm md:text-lg max-w-2xl mx-auto">
-              {learningProfile?.grade && learningProfile?.school ? (
-                <>
-                  {learningProfile.grade} at {learningProfile.school}
-                </>
-              ) : (
-                "Ready to ace your next exam?"
-              )}
-            </p>
+
+          <div className="relative">
+            <div className="text-center mb-4">
+              <h1 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2">
+                Hi {user.full_name?.split(' ')[0] || 'there'}! 👋
+              </h1>
+              <p className="text-white/90 text-sm md:text-lg max-w-2xl mx-auto">
+                {learningProfile?.grade && learningProfile?.school ? (
+                  <>
+                    {learningProfile.grade} at {learningProfile.school}
+                  </>
+                ) : (
+                  "Ready to ace your next exam?"
+                )}
+              </p>
+            </div>
+
+            {/* Gamification Stats Row */}
+            <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
+              {/* Streak */}
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${user.current_streak > 0 ? 'bg-white/20' : 'bg-white/10'}`}>
+                <Flame className={`w-4 h-4 md:w-5 md:h-5 ${user.current_streak > 0 ? 'text-orange-400' : 'text-white/50'}`} />
+                <span className="text-white font-bold text-sm md:text-base">{user.current_streak || 0}</span>
+                <span className="text-white/70 text-xs md:text-sm">day streak</span>
+              </div>
+
+              {/* Daily XP */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20">
+                <Zap className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
+                <span className="text-white font-bold text-sm md:text-base">{dailyXP}</span>
+                <span className="text-white/70 text-xs md:text-sm">/ 50 XP today</span>
+              </div>
+
+              {/* Level */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20">
+                <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
+                <span className="text-white font-bold text-sm md:text-base">Lv {user.level || 1}</span>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Daily Challenges - Mobile only, compact */}
+      <div className="md:hidden mb-5">
+        <DailyChallenge 
+          studyMinutes={studyMinutesToday}
+          questionsAnswered={questionsToday}
+          flashcardsReviewed={flashcardsToday}
+        />
       </div>
 
       {/* CTA Cards - Full and descriptive */}
