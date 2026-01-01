@@ -456,12 +456,15 @@ export default function Layout({ children, currentPageName }) {
           open={createLessonModalOpen} 
           onOpenChange={setCreateLessonModalOpen} 
         />
-        
+
         {/* AI Tutor Modal */}
         <AITutorModal 
           open={aiTutorModalOpen} 
           onOpenChange={setAiTutorModalOpen} 
         />
+
+        {/* Floating Feedback Button */}
+        {showNavigation && !isOnboardingPage && <FeedbackButton />}
         </div>
         </SidebarProvider>
         );
