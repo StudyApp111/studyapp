@@ -158,42 +158,33 @@ export default function Home() {
 
 
   return (
-    <div className="p-3 md:p-10 max-w-7xl mx-auto">
-      {/* Compact Mobile Hero / Full Desktop Hero */}
-      <div className="mb-4 md:mb-8">
-        {/* Mobile: Minimal greeting */}
-        <div className="md:hidden">
-          <h1 className="text-xl font-bold text-slate-900 mb-1">
-            Hey {user.full_name?.split(' ')[0] || 'there'} 👋
-          </h1>
-          <p className="text-sm text-slate-600">What would you like to study today?</p>
-        </div>
-        
-        {/* Desktop: Full gradient hero */}
-        <div className="hidden md:block relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-8 shadow-2xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-2xl -ml-24 -mb-24" />
+    <div className="p-4 md:p-10 max-w-7xl mx-auto">
+      {/* Hero Section */}
+      <div className="mb-5 md:mb-8">
+        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-5 md:p-8 shadow-xl md:shadow-2xl">
+          <div className="absolute top-0 right-0 w-40 md:w-64 h-40 md:h-64 bg-white/10 rounded-full blur-3xl -mr-20 md:-mr-32 -mt-20 md:-mt-32" />
+          <div className="absolute bottom-0 left-0 w-32 md:w-48 h-32 md:h-48 bg-yellow-400/20 rounded-full blur-2xl -ml-16 md:-ml-24 -mb-16 md:-mb-24" />
           
           <div className="relative text-center">
-            <h1 className="text-4xl font-bold text-white mb-2">
-              Welcome {user.full_name?.split(' ')[0] || 'Learner'}!
+            <h1 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2">
+              Hi {user.full_name?.split(' ')[0] || 'there'}! 👋
             </h1>
-            <p className="text-white/90 text-lg max-w-2xl mx-auto">
-              {learningProfile?.grade && learningProfile?.school && learningProfile?.city ? (
+            <p className="text-white/90 text-sm md:text-lg max-w-2xl mx-auto">
+              {learningProfile?.grade && learningProfile?.school ? (
                 <>
-                  {learningProfile.grade} student at {learningProfile.school} • {learningProfile.city}
+                  {learningProfile.grade} at {learningProfile.school}
                 </>
               ) : (
-                "Ready to continue your learning journey?"
+                "Ready to ace your next exam?"
               )}
             </p>
           </div>
         </div>
       </div>
 
-      {/* CTA Cards - Compact on mobile */}
-      <div className="mb-4 md:mb-8 max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4">
+      {/* CTA Cards - Full and descriptive */}
+      <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {/* Upload Notes Card */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -202,24 +193,24 @@ export default function Home() {
             onClick={() => setCreateLessonModalOpen(true)}
             className="cursor-pointer group"
           >
-            <Card className="h-full border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 hover:scale-[1.02]">
-              <CardContent className="p-3 md:p-8">
-                <div className="flex items-center gap-2 md:flex-col md:items-start md:gap-0">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex items-center justify-center md:mb-4 flex-shrink-0">
-                    <Upload className="w-5 h-5 md:w-7 md:h-7 text-white" />
+            <Card className="h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 hover:scale-[1.02]">
+              <CardContent className="p-5 md:p-8">
+                <div className="flex items-start justify-between mb-3 md:mb-4">
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Upload className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm md:text-2xl font-bold text-white md:mb-2">Upload Notes</h3>
-                    <p className="hidden md:block text-white/80 text-base mb-4">
-                      Drop your lecture notes, textbook chapters, or study materials
-                    </p>
+                  <div className="w-9 h-9 md:w-10 md:h-10 bg-yellow-400 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-slate-900" />
                   </div>
-                  <ArrowRight className="w-4 h-4 md:hidden text-white/60 flex-shrink-0" />
                 </div>
-                <div className="hidden md:flex flex-wrap gap-2">
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">AI Quiz</span>
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Grade Prediction</span>
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Flashcards</span>
+                <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">Upload Notes</h3>
+                <p className="text-white/80 text-sm md:text-base mb-3 md:mb-4">
+                  Drop your lecture notes or textbook chapters and get AI-powered quizzes, flashcards & grade predictions
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">AI Quiz</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Grade Prediction</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Flashcards</span>
                 </div>
               </CardContent>
             </Card>
@@ -233,24 +224,24 @@ export default function Home() {
             onClick={() => navigate(createPageUrl("SmartGrader"))}
             className="cursor-pointer group"
           >
-            <Card className="h-full border-0 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:scale-[1.02]">
-              <CardContent className="p-3 md:p-8">
-                <div className="flex items-center gap-2 md:flex-col md:items-start md:gap-0">
-                  <div className="w-10 h-10 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex items-center justify-center md:mb-4 flex-shrink-0">
-                    <FileCheck className="w-5 h-5 md:w-7 md:h-7 text-white" />
+            <Card className="h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:scale-[1.02]">
+              <CardContent className="p-5 md:p-8">
+                <div className="flex items-start justify-between mb-3 md:mb-4">
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <FileCheck className="w-6 h-6 md:w-7 md:h-7 text-white" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm md:text-2xl font-bold text-white md:mb-2">Grade Work</h3>
-                    <p className="hidden md:block text-white/80 text-base mb-4">
-                      Upload your work and get instant AI feedback with detailed analysis
-                    </p>
+                  <div className="w-9 h-9 md:w-10 md:h-10 bg-yellow-400 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-slate-900" />
                   </div>
-                  <ArrowRight className="w-4 h-4 md:hidden text-white/60 flex-shrink-0" />
                 </div>
-                <div className="hidden md:flex flex-wrap gap-2">
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Instant Grade</span>
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Rubric Analysis</span>
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white/90">Improvements</span>
+                <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">Grade My Work</h3>
+                <p className="text-white/80 text-sm md:text-base mb-3 md:mb-4">
+                  Upload your assignment or essay and get instant AI feedback with a predicted grade & improvements
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Instant Grade</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Rubric Analysis</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Improvements</span>
                 </div>
               </CardContent>
             </Card>

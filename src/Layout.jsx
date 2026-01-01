@@ -390,14 +390,14 @@ export default function Layout({ children, currentPageName }) {
                 </Link>
 
                 <Link
-                  to={createPageUrl("SmartGrader")}
+                  to={createPageUrl("LessonHistory")}
                   className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                    location.pathname === createPageUrl("SmartGrader")
+                    location.pathname === createPageUrl("LessonHistory")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <FileCheck className="w-6 h-6" />
+                  <History className="w-6 h-6" />
                 </Link>
 
                 {/* Space for center CTA */}
