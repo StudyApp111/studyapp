@@ -4,12 +4,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy } from "lucide-react";
+import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import ExamQuestion from "@/components/exam/ExamQuestion.jsx";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { logError } from "@/components/utils/errorLogger";
+import XPGainToast from "@/components/gamification/XPGainToast";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -38,6 +39,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const gradingTimeoutRef = useRef(null);
   const [gradingInProgress, setGradingInProgress] = useState({});
   const [selectedExamNumber, setSelectedExamNumber] = useState(null);
+  const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
+  const [correctStreak, setCorrectStreak] = useState(0);
   
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef(null);
@@ -326,10 +329,24 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
     }
   };
 
+  const awardXP = async (amount, reason) => {
+    try {
+      const user = await base44.auth.me();
+      await base44.auth.updateMe({
+        daily_xp: (user.daily_xp || 0) + amount,
+        total_points: (user.total_points || 0) + amount,
+        questions_completed: (user.questions_completed || 0) + 1
+      });
+      setXpToast({ show: true, xp: amount, reason });
+    } catch (error) {
+      console.error("Error awarding XP:", error);
+    }
+  };
+
   const handleAnswer = (answer) => {
     const updatedQuestions = [...exam.questions];
     updatedQuestions[currentQuestion].user_answer = answer;
-    
+
     setExam(prev => ({
       ...prev,
       questions: updatedQuestions
@@ -345,7 +362,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         ...prev,
         questions: updatedQuestions
       }));
-      
+
       gradingTimeoutRef.current = setTimeout(() => {
         gradeSubjectiveQuestion(updatedQuestions[currentQuestion], currentQuestion);
       }, 2000);
@@ -354,16 +371,21 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
 
   const handleNext = () => {
     recordQuestionTime(currentQuestion);
-    
+
+    // Award XP for answering a question
+    const currentQ = exam.questions[currentQuestion];
+    if (currentQ.user_answer) {
+      awardXP(3, 'Question answered!');
+    }
+
     if (currentQuestion < exam.questions.length - 1) {
       if (gradingTimeoutRef.current) {
         clearTimeout(gradingTimeoutRef.current);
-        const currentQ = exam.questions[currentQuestion];
         if (isSubjectiveQuestion(currentQ.question_type) && currentQ.user_answer) {
           gradeSubjectiveQuestion(currentQ, currentQuestion);
         }
       }
-      
+
       currentQuestionStartTimeRef.current = Date.now();
       setCurrentQuestion(prev => prev + 1);
     }
