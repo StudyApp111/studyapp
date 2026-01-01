@@ -334,13 +334,7 @@ export default function Layout({ children, currentPageName }) {
                   <h1 className="flex-1 text-center text-lg font-bold bg-gradient-to-r from-purple-700 to-purple-900 bg-clip-text text-transparent">StudyApp</h1>
                   {/* Right side buttons */}
                   <div className="absolute right-0 flex items-center gap-2">
-                    <Link
-                      to={createPageUrl("Feedback")}
-                      className="w-7 h-7 bg-amber-100 rounded-full flex items-center justify-center"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
-                    </Link>
-                    {user && (
+                      {user && (
                       <button
                         onClick={() => navigate(createPageUrl("Settings"))}
                         className="w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm"
