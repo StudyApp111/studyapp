@@ -23,6 +23,7 @@ import { logError } from "@/components/utils/errorLogger";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
 import AITutorModal from "@/components/modals/AITutorModal.jsx";
 import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
+import FeedbackButton from "@/components/feedback/FeedbackButton";
 
 const navigationItems = [
         {
