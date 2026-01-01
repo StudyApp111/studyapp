@@ -17,23 +17,30 @@ import {
 
 const STEPS = [
   {
-    icon: Target,
-    title: "Set Your Daily Goal",
-    description: "Earn 50 XP each day to build your streak. Small daily wins lead to big results!",
+    icon: BookOpen,
+    title: "Upload Your Notes",
+    description: "Drop your lecture slides, textbook pages, or study guides. The more specific, the better your quizzes!",
     color: "from-purple-500 to-indigo-600",
+    emoji: "📚"
+  },
+  {
+    icon: Target,
+    title: "Practice with AI Quizzes",
+    description: "Take AI-generated exams based on YOUR content. Get instant feedback and see what you know!",
+    color: "from-emerald-500 to-teal-600",
     emoji: "🎯"
   },
   {
     icon: Flame,
     title: "Build Your Streak",
-    description: "Study every day to keep your streak going. The longer your streak, the more you'll remember!",
+    description: "Study for 20 minutes daily to earn XP and keep your streak! Small daily wins lead to big results.",
     color: "from-orange-500 to-red-500",
     emoji: "🔥"
   },
   {
     icon: Trophy,
-    title: "Level Up",
-    description: "Earn XP by answering questions, reviewing flashcards, and hitting milestones. Level up to unlock achievements!",
+    title: "Track Your Progress",
+    description: "Watch your predicted grade improve as you study more. Aim for that A+!",
     color: "from-yellow-500 to-amber-500",
     emoji: "🏆"
   }

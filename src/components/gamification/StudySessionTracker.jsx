@@ -96,27 +96,35 @@ export default function StudySessionTracker({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            onClick={() => { setShowCelebration(false); setCurrentCelebration(null); }}
           >
             <motion.div
               initial={{ y: 50 }}
               animate={{ y: 0 }}
-              className="bg-white rounded-3xl p-8 mx-4 max-w-sm text-center shadow-2xl"
+              className="bg-white rounded-3xl p-6 md:p-8 mx-4 max-w-sm text-center shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
               <motion.div
                 animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 0.5 }}
-                className="text-6xl mb-4"
+                className="text-5xl md:text-6xl mb-3"
               >
                 {currentCelebration.icon}
               </motion.div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">
+              <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-1">
                 {currentCelebration.minutes} Minutes!
               </h3>
-              <p className="text-slate-600 mb-4">{currentCelebration.message}</p>
-              <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 rounded-xl px-6 py-3 inline-flex items-center gap-2">
+              <p className="text-slate-600 text-sm md:text-base mb-3">{currentCelebration.message}</p>
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.3, type: "spring" }}
+                className="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 rounded-xl px-6 py-3 inline-flex items-center gap-2"
+              >
                 <Zap className="w-5 h-5" />
                 <span className="font-bold text-lg">+{currentCelebration.xp} XP</span>
-              </div>
+              </motion.div>
+              <p className="text-xs text-slate-400 mt-3">Tap anywhere to continue</p>
             </motion.div>
           </motion.div>
         )}
