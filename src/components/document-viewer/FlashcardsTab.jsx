@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X } from "lucide-react";
+import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
+import XPGainToast from "@/components/gamification/XPGainToast";
 
 export default function FlashcardsTab({ lesson, extractedContent }) {
   const [cards, setCards] = useState(null);
@@ -14,6 +15,8 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
   const [sessionStats, setSessionStats] = useState({ reviewed: 0, correct: 0 });
+  const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
+  const [streakCount, setStreakCount] = useState(0);
 
   useEffect(() => {
     loadFlashcards();
@@ -89,6 +92,20 @@ Create flashcards that:
     setIsFlipped(!isFlipped);
   };
 
+  const awardXP = async (amount, reason) => {
+    try {
+      const user = await base44.auth.me();
+      await base44.auth.updateMe({
+        daily_xp: (user.daily_xp || 0) + amount,
+        total_points: (user.total_points || 0) + amount,
+        total_flashcards_mastered: (user.total_flashcards_mastered || 0) + 1
+      });
+      setXpToast({ show: true, xp: amount, reason });
+    } catch (error) {
+      console.error("Error awarding XP:", error);
+    }
+  };
+
   const handleRating = async (knew) => {
     const currentCard = cards[currentIndex];
     
@@ -98,6 +115,28 @@ Create flashcards that:
       : Math.max((currentCard.mastery_level || 0) - 1, 0);
     
     const newStatus = newMastery >= 4 ? 'mastered' : newMastery >= 2 ? 'learning' : 'new';
+    
+    // Update streak and award XP
+    if (knew) {
+      const newStreak = streakCount + 1;
+      setStreakCount(newStreak);
+      
+      // Award XP based on streak
+      let xpAmount = 2; // Base XP per correct card
+      let reason = 'Flashcard correct!';
+      
+      if (newStreak >= 5 && newStreak % 5 === 0) {
+        xpAmount = 10;
+        reason = `${newStreak} card streak! 🔥`;
+      } else if (newMastery === 4) {
+        xpAmount = 5;
+        reason = 'Card mastered! ⭐';
+      }
+      
+      awardXP(xpAmount, reason);
+    } else {
+      setStreakCount(0);
+    }
 
     try {
       await base44.entities.Flashcard.update(currentCard.id, {
@@ -349,10 +388,15 @@ Create flashcards that:
 
       {/* Session stats */}
       {sessionStats.reviewed > 0 && (
-        <div className="flex justify-center gap-4 text-xs">
+        <div className="flex justify-center items-center gap-4 text-xs">
           <span className="text-slate-500">
             Session: <span className="font-semibold text-slate-700">{sessionStats.correct}/{sessionStats.reviewed}</span> correct
           </span>
+          {streakCount >= 3 && (
+            <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+              🔥 {streakCount} streak
+            </span>
+          )}
         </div>
       )}
 
@@ -495,6 +539,14 @@ Create flashcards that:
           <ChevronRight className="w-5 h-5 text-slate-600" />
         </button>
       </div>
+
+      {/* XP Toast */}
+      <XPGainToast 
+        xpGained={xpToast.xp}
+        reason={xpToast.reason}
+        show={xpToast.show}
+        onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
+      />
     </div>
   );
 }
