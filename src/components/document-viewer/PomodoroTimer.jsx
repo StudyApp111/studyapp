@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Coffee, X } from "lucide-react";
+import { Coffee, X, Zap, Trophy } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
   const [showBreakPrompt, setShowBreakPrompt] = useState(false);
@@ -101,21 +102,36 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            <Button
-              onClick={handleStartBreak}
-              className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 h-10 text-sm"
+          <div className="space-y-3">
+            {/* XP Reward highlight */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-3 text-center"
             >
-              <Coffee className="w-4 h-4 mr-1.5" />
-              Take 5 min Break
-            </Button>
-            <Button
-              onClick={handleSkipBreak}
-              variant="outline"
-              className="w-full h-9 text-sm"
-            >
-              Keep Studying
-            </Button>
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Trophy className="w-5 h-5 text-yellow-600" />
+                <span className="font-bold text-yellow-800">20 Minutes! 🎉</span>
+              </div>
+              <p className="text-xs text-yellow-700">You've earned <span className="font-bold">+50 XP</span> for focused studying!</p>
+            </motion.div>
+            
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={handleStartBreak}
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 h-10 text-sm"
+              >
+                <Coffee className="w-4 h-4 mr-1.5" />
+                Take 5 min Break
+              </Button>
+              <Button
+                onClick={handleSkipBreak}
+                variant="outline"
+                className="w-full h-9 text-sm"
+              >
+                Keep Going (+Bonus XP!)
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
