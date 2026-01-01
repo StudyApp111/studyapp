@@ -305,8 +305,7 @@ export default function LessonHistory() {
     <div className="p-4 md:p-10 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-1 md:mb-2">Your Library</h1>
-        <p className="text-sm md:text-lg text-slate-600">All your lessons and graded assignments in one place</p>
+        <h1 className="text-2xl md:text-4xl font-bold text-slate-900">History</h1>
       </div>
 
       {/* Stats Summary */}
