@@ -215,6 +215,17 @@ Create flashcards that:
               Think of the answer, then reveal to check yourself!
             </p>
           </div>
+          
+          {/* XP incentive */}
+          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-3 border border-yellow-200">
+            <div className="flex items-center justify-center gap-2">
+              <Zap className="w-4 h-4 text-yellow-600" />
+              <span className="text-xs font-medium text-yellow-800">
+                Earn <span className="font-bold">+2-10 XP</span> per card mastered!
+              </span>
+            </div>
+          </div>
+          
           <Button
             onClick={handleGenerate}
             className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white w-full"
@@ -386,19 +397,24 @@ Create flashcards that:
 
       <Progress value={progress} className="h-1.5" />
 
-      {/* Session stats */}
-      {sessionStats.reviewed > 0 && (
-        <div className="flex justify-center items-center gap-4 text-xs">
-          <span className="text-slate-500">
-            Session: <span className="font-semibold text-slate-700">{sessionStats.correct}/{sessionStats.reviewed}</span> correct
-          </span>
-          {streakCount >= 3 && (
-            <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-              🔥 {streakCount} streak
-            </span>
-          )}
-        </div>
-      )}
+      {/* Session stats - always show */}
+      <div className="flex justify-center items-center gap-3 text-xs">
+        <span className="text-slate-500 bg-slate-50 px-2 py-1 rounded-lg">
+          Session: <span className="font-semibold text-slate-700">{sessionStats.correct}/{sessionStats.reviewed}</span>
+        </span>
+        {streakCount >= 2 && (
+          <motion.span 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="bg-orange-100 text-orange-700 px-2 py-1 rounded-lg font-bold flex items-center gap-1"
+          >
+            🔥 {streakCount} streak!
+          </motion.span>
+        )}
+        <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg font-medium">
+          +{sessionStats.correct * 2} XP
+        </span>
+      </div>
 
       {/* Flashcard */}
       <div 
