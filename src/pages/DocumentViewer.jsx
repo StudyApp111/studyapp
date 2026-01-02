@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap } from "lucide-react";
+import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
@@ -13,7 +13,7 @@ import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
-import StudyBuddies from "@/components/document-viewer/StudyBuddies";
+import StudyBuddiesTab from "@/components/document-viewer/StudyBuddiesTab";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -271,10 +271,6 @@ export default function DocumentViewer() {
               <div className="flex items-center justify-between gap-2 w-full">
                 <span className="text-xs font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {/* Mobile Study Buddies - compact */}
-                  {lesson?.id && (
-                    <StudyBuddies lessonId={lesson.id} lessonName={lesson.course_name} />
-                  )}
                   <div className="flex items-center gap-1 bg-white/20 rounded-lg px-2 py-0.5">
                     <Clock className="w-3 h-3 opacity-80" />
                     <span className="text-[10px] font-mono font-medium">{formatStudyTime(studyTime)}</span>
@@ -297,13 +293,8 @@ export default function DocumentViewer() {
                 </div>
               </div>
             </div>
-            {/* Streak, XP, Study Buddies, Timer - Desktop */}
+            {/* Streak, XP, Timer - Desktop */}
             <div className="hidden md:flex items-center gap-2">
-              {/* Study Buddies */}
-              {lesson?.id && (
-                <StudyBuddies lessonId={lesson.id} lessonName={lesson.course_name} />
-              )}
-              
               {/* Streak */}
               <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border ${userStreak > 0 ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-200'}`}>
                 <Flame className={`w-4 h-4 ${userStreak > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
@@ -389,11 +380,18 @@ export default function DocumentViewer() {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="flashcards"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap relative"
                     >
                       {showFlashcardsDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                       <BookMarked className="w-4 h-4 flex-shrink-0" />
                       <span className="text-[11px] font-medium">Flashcards</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="collaborate"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap relative"
+                    >
+                      <Users className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[11px] font-medium">Collaborate</span>
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -416,6 +414,10 @@ export default function DocumentViewer() {
 
                 <TabsContent value="flashcards" className="mt-0 p-0 h-full">
                   <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+                </TabsContent>
+
+                <TabsContent value="collaborate" className="mt-0 p-0 h-full">
+                  <StudyBuddiesTab lessonId={lesson?.id} lessonName={lesson?.course_name} />
                 </TabsContent>
               </div>
             </Tabs>
@@ -455,11 +457,18 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-1.5 py-2 h-auto whitespace-nowrap flex-1 relative"
                   >
                     {showFlashcardsDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[10px] font-medium">Cards</span>
+                    <span className="text-[10px] font-medium">Flashcards</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="collaborate"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-1.5 py-2 h-auto whitespace-nowrap flex-1 relative"
+                  >
+                    <Users className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[10px] font-medium">Collab</span>
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -482,6 +491,10 @@ export default function DocumentViewer() {
 
               <TabsContent value="flashcards" className="mt-0 p-0 w-full max-w-full">
                 <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+              </TabsContent>
+
+              <TabsContent value="collaborate" className="mt-0 p-0 w-full max-w-full">
+                <StudyBuddiesTab lessonId={lesson?.id} lessonName={lesson?.course_name} />
               </TabsContent>
             </div>
           </Tabs>
