@@ -395,6 +395,14 @@ export default function Layout({ children, currentPageName }) {
                 {/* Space for center CTA */}
                 <div className="w-14" />
 
+                <button
+                  onClick={() => setAiTutorModalOpen(true)}
+                  className="relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600"
+                >
+                  <MessageSquare className="w-6 h-6" />
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+                </button>
+
                 <Link
                   to={createPageUrl("Collaborate")}
                   className={`relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
@@ -408,14 +416,6 @@ export default function Layout({ children, currentPageName }) {
                     NEW
                   </span>
                 </Link>
-
-                <button
-                  onClick={() => setAiTutorModalOpen(true)}
-                  className="relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600"
-                >
-                  <Sparkles className="w-6 h-6" />
-                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
-                </button>
 
                 {/* New Lesson CTA Button */}
                 <button
