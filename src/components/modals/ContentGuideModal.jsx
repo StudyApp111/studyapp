@@ -52,7 +52,7 @@ export default function ContentGuideModal({ open, onOpenChange, onContinue }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-[calc(100%-2rem)] p-0 gap-0 rounded-2xl overflow-hidden">
+      <DialogContent className="max-w-sm w-[calc(100%-2rem)] max-h-[85vh] p-0 gap-0 rounded-2xl overflow-hidden">
         <AnimatePresence mode="wait">
           {currentStep === 0 ? (
             <motion.div
@@ -60,32 +60,33 @@ export default function ContentGuideModal({ open, onOpenChange, onContinue }) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
+              className="max-h-[85vh] overflow-y-auto"
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-6 py-5 text-white">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Lightbulb className="w-6 h-6" />
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-700 px-4 py-4 text-white sticky top-0 z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Lightbulb className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold">Pro Tip</h2>
-                    <p className="text-white/80 text-sm">Get better results with specific content</p>
+                    <h2 className="text-lg font-bold">Pro Tip</h2>
+                    <p className="text-white/80 text-xs">Get better results with specific content</p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-5 space-y-5">
+              <div className="p-4 space-y-4">
                 {/* Good Examples */}
                 <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                    <h3 className="font-semibold text-slate-900">Great Content Examples</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <h3 className="font-semibold text-slate-900 text-sm">Great Examples</h3>
                   </div>
-                  <div className="space-y-2">
-                    {GOOD_EXAMPLES.map((ex, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2.5 bg-emerald-50 rounded-lg border border-emerald-200">
-                        <span>{ex.icon}</span>
-                        <span className="text-sm text-emerald-800">{ex.text}</span>
+                  <div className="space-y-1.5">
+                    {GOOD_EXAMPLES.slice(0, 3).map((ex, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                        <span className="text-sm">{ex.icon}</span>
+                        <span className="text-xs text-emerald-800">{ex.text}</span>
                       </div>
                     ))}
                   </div>
@@ -93,15 +94,15 @@ export default function ContentGuideModal({ open, onOpenChange, onContinue }) {
 
                 {/* Bad Examples */}
                 <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <AlertTriangle className="w-5 h-5 text-amber-500" />
-                    <h3 className="font-semibold text-slate-900">Too Vague (Won't Work Well)</h3>
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-500" />
+                    <h3 className="font-semibold text-slate-900 text-sm">Too Vague</h3>
                   </div>
-                  <div className="space-y-2">
-                    {BAD_EXAMPLES.map((ex, idx) => (
-                      <div key={idx} className="flex items-center gap-2 p-2.5 bg-amber-50 rounded-lg border border-amber-200">
-                        <span>{ex.icon}</span>
-                        <span className="text-sm text-amber-800 line-through opacity-70">{ex.text}</span>
+                  <div className="space-y-1.5">
+                    {BAD_EXAMPLES.slice(0, 3).map((ex, idx) => (
+                      <div key={idx} className="flex items-center gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                        <span className="text-sm">{ex.icon}</span>
+                        <span className="text-xs text-amber-800 line-through opacity-70">{ex.text}</span>
                       </div>
                     ))}
                   </div>
@@ -109,10 +110,10 @@ export default function ContentGuideModal({ open, onOpenChange, onContinue }) {
 
                 <Button 
                   onClick={handleContinue}
-                  className="w-full h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                  className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
                 >
-                  Got it! Show me more
-                  <ChevronRight className="w-5 h-5 ml-2" />
+                  Got it!
+                  <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
             </motion.div>
@@ -122,31 +123,32 @@ export default function ContentGuideModal({ open, onOpenChange, onContinue }) {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
+              className="max-h-[85vh] overflow-y-auto"
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5 text-white">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Sparkles className="w-6 h-6" />
+              <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-4 text-white sticky top-0 z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold">Best Practice</h2>
-                    <p className="text-white/80 text-sm">Upload your actual study materials</p>
+                    <h2 className="text-lg font-bold">Best Practice</h2>
+                    <p className="text-white/80 text-xs">Upload your actual study materials</p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-5 space-y-5">
+              <div className="p-4 space-y-4">
                 {/* Upload recommendation */}
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
+                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-3 border border-purple-200">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Upload className="w-5 h-5 text-white" />
+                    <div className="w-9 h-9 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Upload className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-slate-900 mb-1">Upload is Best!</h4>
-                      <p className="text-sm text-slate-600">
-                        PDFs, lecture slides, or textbook chapters give us the exact content you need to study.
+                      <h4 className="font-semibold text-slate-900 text-sm mb-0.5">Upload is Best!</h4>
+                      <p className="text-xs text-slate-600">
+                        PDFs or lecture slides give us the exact content you need.
                       </p>
                     </div>
                   </div>
@@ -154,14 +156,14 @@ export default function ContentGuideModal({ open, onOpenChange, onContinue }) {
 
                 {/* Tips */}
                 <div>
-                  <h3 className="font-semibold text-slate-900 mb-3">Quick Tips</h3>
-                  <div className="space-y-2">
-                    {TIPS.map((tip, idx) => (
+                  <h3 className="font-semibold text-slate-900 text-sm mb-2">Quick Tips</h3>
+                  <div className="space-y-1.5">
+                    {TIPS.slice(0, 3).map((tip, idx) => (
                       <div key={idx} className="flex items-start gap-2">
-                        <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-xs font-bold text-slate-900">{idx + 1}</span>
+                        <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-[10px] font-bold text-slate-900">{idx + 1}</span>
                         </div>
-                        <span className="text-sm text-slate-700">{tip}</span>
+                        <span className="text-xs text-slate-700">{tip}</span>
                       </div>
                     ))}
                   </div>
@@ -169,9 +171,9 @@ export default function ContentGuideModal({ open, onOpenChange, onContinue }) {
 
                 <Button 
                   onClick={handleContinue}
-                  className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                  className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
                 >
-                  <Sparkles className="w-5 h-5 mr-2" />
+                  <Sparkles className="w-4 h-4 mr-2" />
                   Start Creating
                 </Button>
               </div>
