@@ -24,7 +24,10 @@ export default function CreateLessonModal({ open, onOpenChange }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
   const [userGrade, setUserGrade] = useState("");
+  const [userSchool, setUserSchool] = useState("");
   const [showTips, setShowTips] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
   useEffect(() => {
     if (open) {
