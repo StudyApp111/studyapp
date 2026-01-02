@@ -364,21 +364,7 @@ export default function Layout({ children, currentPageName }) {
             {children}
           </div>
 
-          {/* Floating AI Tutor Button - Mobile */}
-          {showNavigation && !isOnboardingPage && showMobileBottomNav && (
-            <button
-              onClick={() => setAiTutorModalOpen(true)}
-              className="md:hidden fixed bottom-20 right-4 z-50 group"
-            >
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full blur-lg opacity-40 group-active:opacity-60 transition-opacity" />
-                <div className="relative w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full shadow-xl flex items-center justify-center border border-white/20">
-                  <span className="text-xl">🤖</span>
-                  <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-                </div>
-              </div>
-            </button>
-          )}
+
 
           {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
           {showNavigation && !isOnboardingPage && showMobileBottomNav && (
@@ -410,28 +396,25 @@ export default function Layout({ children, currentPageName }) {
                 <div className="w-14" />
 
                 <Link
-                                        to={createPageUrl("Collaborate")}
-                                        className={`relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                                          location.pathname === createPageUrl("Collaborate")
-                                            ? 'text-yellow-600 bg-yellow-50'
-                                            : 'text-slate-600'
-                                        }`}
-                                      >
-                                        <Users className="w-6 h-6" />
-                                        <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">
-                                          NEW
-                                        </span>
-                                      </Link>
-
-                <button
-                  onClick={() => navigate(createPageUrl("Settings"))}
-                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                    location.pathname === createPageUrl("Settings")
+                  to={createPageUrl("Collaborate")}
+                  className={`relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                    location.pathname === createPageUrl("Collaborate")
                       ? 'text-yellow-600 bg-yellow-50'
                       : 'text-slate-600'
                   }`}
                 >
-                  <Settings className="w-6 h-6" />
+                  <Users className="w-6 h-6" />
+                  <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full">
+                    NEW
+                  </span>
+                </Link>
+
+                <button
+                  onClick={() => setAiTutorModalOpen(true)}
+                  className="relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600"
+                >
+                  <span className="text-xl">🤖</span>
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
                 </button>
 
                 {/* New Lesson CTA Button */}
