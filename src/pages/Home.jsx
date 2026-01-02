@@ -199,9 +199,14 @@ export default function Home() {
 
           <div className="relative">
             <div className="text-center mb-4">
-              <h1 className="text-xl md:text-4xl font-bold text-white mb-1 md:mb-2">
-                Hi {user.full_name?.split(' ')[0] || 'there'}! 👋
-              </h1>
+              <div className="flex items-center justify-center gap-2 mb-1 md:mb-2">
+                <h1 className="text-xl md:text-4xl font-bold text-white">
+                  Hi {user.full_name?.split(' ')[0] || 'there'}! 👋
+                </h1>
+                <span className="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full text-white text-xs md:text-sm font-semibold">
+                  Level {user?.level || 1}
+                </span>
+              </div>
               <p className="text-white/90 text-sm md:text-lg max-w-2xl mx-auto">
                 {learningProfile?.grade && learningProfile?.school ? (
                   <>
@@ -227,12 +232,6 @@ export default function Home() {
                 <Zap className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
                 <span className="text-white font-bold text-sm md:text-base">{dailyXP}</span>
                 <span className="text-white/70 text-xs md:text-sm">/ 50 XP today</span>
-              </div>
-
-              {/* Level */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20">
-                <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
-                <span className="text-white font-bold text-sm md:text-base">Lv {user.level || 1}</span>
               </div>
             </div>
           </div>
