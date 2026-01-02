@@ -17,6 +17,17 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     scrollToBottom();
   }, [messages]);
 
+  // Add welcome message on mount if no messages
+  useEffect(() => {
+    if (messages.length === 0) {
+      const courseName = lesson?.course_name || "your course";
+      setMessages([{
+        role: "assistant",
+        content: `Hey there! 👋 I'm **Polli**, your AI study buddy!\n\nI'm here to help you with **${courseName}**. Ask me anything - whether you need help understanding a concept, want me to quiz you, or just need some study tips!\n\nWhat would you like to work on?`
+      }]);
+    }
+  }, []);
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 

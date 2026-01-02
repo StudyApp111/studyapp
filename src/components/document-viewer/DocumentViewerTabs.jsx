@@ -125,6 +125,7 @@ export default function DocumentViewerTabs({ lesson }) {
 
   const isPDF = lesson?.file_url?.toLowerCase().includes('.pdf');
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(lesson?.file_url || '');
+  const isOfficeDoc = /\.(docx?|pptx?|xlsx?)$/i.test(lesson?.file_url || '');
 
   return (
     <div className="h-full">
@@ -190,7 +191,7 @@ export default function DocumentViewerTabs({ lesson }) {
             <div className={`flex-1 ${viewMode === "transcript" && showAnnotations && annotations.length > 0 ? 'lg:w-2/3' : 'w-full'}`}>
               {viewMode === "pdf" && lesson?.file_url ? (
                 <div className="h-full bg-slate-50">
-                  {isPDF ? (
+                  {isPDF || isOfficeDoc ? (
                     <iframe
                       src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
                       className="w-full h-full border-0"
