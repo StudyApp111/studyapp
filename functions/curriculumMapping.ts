@@ -291,38 +291,62 @@ Generate the curriculum profile with these exact keys: core_competencies, compet
         
         // Handle wrapped responses - unwrap before returning
         if (parsedResponse) {
-            // Check for common wrapper keys
-            const wrapperKeys = ['curriculum_profile', 'course_profile', 'profile', 'data', 'result'];
-            for (const key of wrapperKeys) {
-                const innerObj = parsedResponse[key];
-                if (innerObj && typeof innerObj === 'object') {
-                    // Check for core_competencies or variations like "A. Core Competencies..."
-                    const hasCompetencies = innerObj.core_competencies || 
-                        Object.keys(innerObj).some(k => k.toLowerCase().includes('core competencies'));
-                    if (hasCompetencies) {
-                        console.log(`✅ Unwrapping response from "${key}"`);
-                        parsedResponse = innerObj;
-                        break;
+            // Deep search for the actual curriculum data - may be nested multiple levels
+            const findCurriculumData = (obj, depth = 0) => {
+                if (!obj || typeof obj !== 'object' || depth > 3) return null;
+                
+                // Check if this object has core_competencies directly
+                if (obj.core_competencies && Array.isArray(obj.core_competencies)) {
+                    return obj;
+                }
+                
+                // Check common wrapper keys
+                const wrapperKeys = ['curriculum_profile', 'course_profile', 'profile', 'data', 'result', 
+                                     'curriculum_data', 'response', 'output', 'content'];
+                for (const key of wrapperKeys) {
+                    if (obj[key] && typeof obj[key] === 'object') {
+                        const found = findCurriculumData(obj[key], depth + 1);
+                        if (found) return found;
                     }
                 }
+                
+                // Check any key that might contain curriculum data
+                for (const key of Object.keys(obj)) {
+                    const lowerKey = key.toLowerCase();
+                    if (lowerKey.includes('curriculum') || lowerKey.includes('profile') || lowerKey.includes('competenc')) {
+                        if (typeof obj[key] === 'object') {
+                            const found = findCurriculumData(obj[key], depth + 1);
+                            if (found) return found;
+                        }
+                    }
+                }
+                
+                return null;
+            };
+            
+            const unwrapped = findCurriculumData(parsedResponse);
+            if (unwrapped && unwrapped !== parsedResponse) {
+                console.log('✅ Unwrapped nested curriculum data');
+                parsedResponse = unwrapped;
             }
             
             // Normalize keys if they have prefixes like "A. Core Competencies..."
             if (!parsedResponse.core_competencies) {
                 const keyMapping = {
-                    'core_competencies': ['core competencies', 'learning outcomes'],
-                    'competency_weightings': ['competency weightings', 'emphasis'],
-                    'question_formats': ['question formats', 'assessment'],
-                    'high_yield_focal_points': ['high-yield', 'focal points', 'key topics'],
-                    'common_misconceptions': ['misconceptions', 'difficulties']
+                    'core_competencies': ['core_competencies', 'core competencies', 'learning outcomes', 'corecompetencies'],
+                    'competency_weightings': ['competency_weightings', 'competency weightings', 'emphasis', 'weightings'],
+                    'question_formats': ['question_formats', 'question formats', 'assessment', 'questionformats'],
+                    'high_yield_focal_points': ['high_yield_focal_points', 'high-yield', 'focal points', 'key topics', 'highyieldfocalpoints'],
+                    'common_misconceptions': ['common_misconceptions', 'misconceptions', 'difficulties', 'commonmisconceptions']
                 };
                 
                 const normalized = {};
                 for (const [targetKey, searchTerms] of Object.entries(keyMapping)) {
                     for (const originalKey of Object.keys(parsedResponse)) {
-                        const lowerKey = originalKey.toLowerCase();
-                        if (searchTerms.some(term => lowerKey.includes(term))) {
+                        const lowerKey = originalKey.toLowerCase().replace(/[^a-z]/g, '');
+                        if (searchTerms.some(term => lowerKey.includes(term.replace(/[^a-z]/g, '')))) {
                             normalized[targetKey] = parsedResponse[originalKey];
+                            console.log(`✅ Mapped "${originalKey}" -> "${targetKey}"`);
                             break;
                         }
                     }
