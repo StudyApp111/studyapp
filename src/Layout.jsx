@@ -24,6 +24,7 @@ import CreateLessonModal from "@/components/modals/CreateLessonModal";
 import AITutorModal from "@/components/modals/AITutorModal.jsx";
 import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
+import StudyInviteNotifications from "@/components/collaborate/StudyInviteNotifications";
 
 const navigationItems = [
         {
