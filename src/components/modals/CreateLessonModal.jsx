@@ -528,13 +528,54 @@ Output Format: JSON object matching the specified schema`;
                       </div>
                     )}
 
-                    {/* Smart quality indicator */}
+                    {/* Smart suggestions for short descriptions */}
                     {description.length > 0 && description.length < 50 && (
-                      <div className="flex items-center gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                        <p className="text-[11px] text-amber-800">
-                          <span className="font-medium">Too vague!</span> Add specific topics.
-                        </p>
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[11px] text-amber-800 flex items-center gap-1.5">
+                            <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                            <span className="font-medium">Need inspiration?</span>
+                          </p>
+                          {!loadingSuggestions && suggestions.length === 0 && courseName.trim() && (
+                            <button
+                              type="button"
+                              onClick={generateSuggestions}
+                              className="text-[10px] text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
+                            >
+                              <Sparkles className="w-3 h-3" />
+                              Get AI suggestions
+                            </button>
+                          )}
+                        </div>
+                        
+                        {loadingSuggestions && (
+                          <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Generating ideas...
+                          </div>
+                        )}
+                        
+                        {suggestions.length > 0 && (
+                          <div className="space-y-1.5">
+                            {suggestions.map((suggestion, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  setDescription(suggestion);
+                                  setSuggestions([]);
+                                }}
+                                className="w-full text-left text-[11px] text-slate-700 bg-white hover:bg-purple-50 border border-slate-200 hover:border-purple-300 rounded-lg p-2 transition-colors"
+                              >
+                                {suggestion}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {!loadingSuggestions && suggestions.length === 0 && !courseName.trim() && (
+                          <p className="text-[10px] text-amber-700">Enter a course name above to get suggestions</p>
+                        )}
                       </div>
                     )}
 
