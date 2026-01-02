@@ -13,6 +13,7 @@ import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
+import StudyBuddies from "@/components/document-viewer/StudyBuddies";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -269,15 +270,11 @@ export default function DocumentViewer() {
             <div className="flex-1 min-w-0 max-w-full bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-2.5 md:px-4 py-2 md:py-3 rounded-xl shadow-lg md:hidden">
               <div className="flex items-center justify-between gap-2 w-full">
                 <span className="text-xs font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="flex items-center gap-1 bg-white/20 rounded-lg px-2 py-0.5">
-                    <span className="text-[10px] opacity-80">Grade:</span>
-                    {predictedGrade ? (
-                      <span className="text-sm font-bold">{predictedGrade}</span>
-                    ) : (
-                      <span className="text-[10px] opacity-70">—</span>
-                    )}
-                  </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {/* Mobile Study Buddies - compact */}
+                  {lesson?.id && (
+                    <StudyBuddies lessonId={lesson.id} lessonName={lesson.course_name} />
+                  )}
                   <div className="flex items-center gap-1 bg-white/20 rounded-lg px-2 py-0.5">
                     <Clock className="w-3 h-3 opacity-80" />
                     <span className="text-[10px] font-mono font-medium">{formatStudyTime(studyTime)}</span>
@@ -300,8 +297,13 @@ export default function DocumentViewer() {
                 </div>
               </div>
             </div>
-            {/* Streak and XP indicators - Desktop */}
+            {/* Streak, XP, Study Buddies, Timer - Desktop */}
             <div className="hidden md:flex items-center gap-2">
+              {/* Study Buddies */}
+              {lesson?.id && (
+                <StudyBuddies lessonId={lesson.id} lessonName={lesson.course_name} />
+              )}
+              
               {/* Streak */}
               <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border ${userStreak > 0 ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-200'}`}>
                 <Flame className={`w-4 h-4 ${userStreak > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
