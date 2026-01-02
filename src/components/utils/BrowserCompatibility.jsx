@@ -63,6 +63,9 @@ const getBrowserInfo = () => {
   if (ua.includes('LinkedIn')) {
     return { name: 'LinkedIn Browser', isInApp: true };
   }
+  if (ua.includes('HuaweiBrowser') || ua.includes('HMSCore')) {
+    return { name: 'Huawei Browser', isInApp: true };
+  }
   
   // Standard browsers
   if (ua.includes('Chrome')) {
