@@ -325,22 +325,25 @@ export default function Layout({ children, currentPageName }) {
                     />
                     <span className="font-bold text-slate-900 text-sm">StudyApp</span>
                   </Link>
-                  {/* Profile - right */}
-                  {user && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        navigate(createPageUrl("Settings"));
-                      }}
-                      className="w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm cursor-pointer"
-                    >
-                      <span className="text-white font-semibold text-[10px]">
-                        {user.full_name?.[0]?.toUpperCase() || 'U'}
-                      </span>
-                    </button>
-                  )}
+                  {/* Notifications + Profile - right */}
+                  <div className="flex items-center gap-1">
+                    {user && <StudyInviteNotifications userEmail={user.email} />}
+                    {user && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate(createPageUrl("Settings"));
+                        }}
+                        className="w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm cursor-pointer"
+                      >
+                        <span className="text-white font-semibold text-[10px]">
+                          {user.full_name?.[0]?.toUpperCase() || 'U'}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
             </header>
           )}
