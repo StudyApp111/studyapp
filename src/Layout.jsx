@@ -266,6 +266,10 @@ export default function Layout({ children, currentPageName }) {
             <SidebarFooter className="border-t border-purple-200/60 p-4">
               {user && (
                 <div className="space-y-3">
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <span className="text-xs text-slate-500">Notifications</span>
+                    <StudyInviteNotifications userEmail={user.email} />
+                  </div>
                   <button
                     onClick={() => navigate(createPageUrl("Settings"))}
                     className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-yellow-50 transition-colors"
