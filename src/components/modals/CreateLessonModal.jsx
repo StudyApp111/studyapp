@@ -51,10 +51,44 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         const profile = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
         if (profile.length > 0) {
           setUserGrade(profile[0].grade);
+          setUserSchool(profile[0].school || "");
         }
       }
     } catch (error) {
       console.error("Error loading profile:", error);
+    }
+  };
+
+  const generateSuggestions = async () => {
+    if (!courseName.trim() || loadingSuggestions) return;
+    
+    setLoadingSuggestions(true);
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Generate 4 specific study topic suggestions for a student.
+Course: ${courseName}
+${userSchool ? `School: ${userSchool}` : ''}
+${userGrade ? `Grade: ${userGrade}` : ''}
+
+Return ONLY a JSON array of 4 short, specific topic descriptions (15-30 words each) that would be good for studying this course. Focus on common chapters, units, or exam topics.
+Example format: ["Chapter 3: Photosynthesis - light reactions, Calvin cycle, chloroplast structure", "Unit 2: Cell Division - mitosis phases, chromosome separation"]`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            topics: {
+              type: "array",
+              items: { type: "string" }
+            }
+          }
+        }
+      });
+      
+      const topics = result?.topics || [];
+      setSuggestions(topics.slice(0, 4));
+    } catch (err) {
+      console.error("Error generating suggestions:", err);
+    } finally {
+      setLoadingSuggestions(false);
     }
   };
 
