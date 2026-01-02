@@ -141,14 +141,13 @@ Deno.serve(async (req) => {
             }
         }
 
-        // For DOCX, try mammoth extraction
+        // For DOCX, try mammoth extraction first (much faster than OCR)
         if (fileExt === 'docx') {
-            console.log('📝 DOCX file detected - attempting direct text extraction');
+            console.log('📝 DOCX file detected - attempting direct text extraction with mammoth');
             try {
                 const mammoth = await import('npm:mammoth@1.6.0');
                 const arrayBuffer = await fileBlob.arrayBuffer();
-                const buffer = new Uint8Array(arrayBuffer);
-                const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+                const result = await mammoth.extractRawText({ arrayBuffer });
                 
                 if (result.value && result.value.trim().length > 50) {
                     console.log('✅ DOCX text extracted directly, length:', result.value.length);
@@ -160,7 +159,7 @@ Deno.serve(async (req) => {
                         method: 'direct_docx_extraction'
                     });
                 } else {
-                    console.log('⚠️ DOCX text extraction yielded minimal content, falling back to OCR');
+                    console.log('⚠️ DOCX text extraction yielded minimal content (' + (result.value?.length || 0) + ' chars), falling back to OCR');
                 }
             } catch (docxError) {
                 console.log('⚠️ Direct DOCX extraction failed, falling back to OCR:', docxError.message);
