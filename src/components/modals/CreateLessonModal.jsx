@@ -534,33 +534,33 @@ Output Format: JSON object matching the specified schema`;
 
                     {/* Smart suggestions for short descriptions */}
                     {description.length > 0 && description.length < 50 && (
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-[11px] text-amber-800 flex items-center gap-1.5">
-                            <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
-                            <span className="font-medium">Need inspiration?</span>
+                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200/60 rounded-xl p-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-purple-700 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                            <span className="font-medium">Add more detail or try a suggestion</span>
                           </p>
                           {!loadingSuggestions && suggestions.length === 0 && courseName.trim() && (
                             <button
                               type="button"
                               onClick={generateSuggestions}
-                              className="text-[10px] text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
+                              className="text-[11px] bg-purple-600 hover:bg-purple-700 text-white font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
                             >
                               <Sparkles className="w-3 h-3" />
-                              Get AI suggestions
+                              Suggest
                             </button>
                           )}
                         </div>
                         
                         {loadingSuggestions && (
-                          <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                            Generating ideas...
+                          <div className="flex items-center justify-center gap-2 text-xs text-purple-600 mt-3 py-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Finding topics for {courseName}...
                           </div>
                         )}
                         
                         {suggestions.length > 0 && (
-                          <div className="space-y-1.5">
+                          <div className="grid grid-cols-1 gap-2 mt-3">
                             {suggestions.map((suggestion, idx) => (
                               <button
                                 key={idx}
@@ -569,7 +569,7 @@ Output Format: JSON object matching the specified schema`;
                                   setDescription(suggestion);
                                   setSuggestions([]);
                                 }}
-                                className="w-full text-left text-[11px] text-slate-700 bg-white hover:bg-purple-50 border border-slate-200 hover:border-purple-300 rounded-lg p-2 transition-colors"
+                                className="w-full text-left text-xs text-slate-700 bg-white hover:bg-purple-100 border border-purple-100 hover:border-purple-300 rounded-lg p-2.5 transition-all hover:shadow-sm"
                               >
                                 {suggestion}
                               </button>
@@ -578,7 +578,7 @@ Output Format: JSON object matching the specified schema`;
                         )}
                         
                         {!loadingSuggestions && suggestions.length === 0 && !courseName.trim() && (
-                          <p className="text-[10px] text-amber-700">Enter a course name above to get suggestions</p>
+                          <p className="text-[11px] text-purple-600/70 mt-1">Enter a course name first to get suggestions</p>
                         )}
                       </div>
                     )}
