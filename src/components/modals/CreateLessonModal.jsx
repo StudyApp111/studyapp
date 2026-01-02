@@ -459,7 +459,10 @@ Output Format: JSON object matching the specified schema`;
                   <Input
                     id="courseName"
                     value={courseName}
-                    onChange={(e) => setCourseName(e.target.value)}
+                    onChange={(e) => {
+                      setCourseName(e.target.value);
+                      setSuggestions([]);
+                    }}
                     placeholder="e.g., MATH 101, Biology 12"
                     disabled={isProcessing}
                     className="h-11"
