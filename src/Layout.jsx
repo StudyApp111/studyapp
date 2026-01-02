@@ -451,8 +451,7 @@ export default function Layout({ children, currentPageName }) {
           onOpenChange={setAiTutorModalOpen} 
         />
 
-        {/* Floating Feedback Button */}
-        {showNavigation && !isOnboardingPage && <FeedbackButton />}
+
         </div>
         </SidebarProvider>
         );
