@@ -340,7 +340,7 @@ export default function Layout({ children, currentPageName }) {
                     )}
                     <div className="flex items-center gap-1 bg-yellow-100 px-2 py-0.5 rounded-full">
                       <Award className="w-3 h-3 text-yellow-600" />
-                      <span className="text-[10px] font-bold text-yellow-700">Lv{user?.level || 1}</span>
+                      <span className="text-[10px] font-bold text-yellow-700">Level {user?.level || 1}</span>
                     </div>
                   </div>
                   {/* Right side buttons */}
