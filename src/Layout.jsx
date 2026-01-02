@@ -413,7 +413,7 @@ export default function Layout({ children, currentPageName }) {
                   onClick={() => setAiTutorModalOpen(true)}
                   className="relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600"
                 >
-                  <span className="text-xl">🤖</span>
+                  <Sparkles className="w-6 h-6" />
                   <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
                 </button>
 
@@ -451,6 +451,8 @@ export default function Layout({ children, currentPageName }) {
           onOpenChange={setAiTutorModalOpen} 
         />
 
+        {/* Floating Feedback Button */}
+        {showNavigation && !isOnboardingPage && <FeedbackButton />}
 
         </div>
         </SidebarProvider>
