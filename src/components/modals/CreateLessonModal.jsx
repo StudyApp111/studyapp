@@ -13,7 +13,6 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import EducationalLoader from "@/components/ui/EducationalLoader";
-import ContentGuideModal from "@/components/modals/ContentGuideModal";
 
 export default function CreateLessonModal({ open, onOpenChange }) {
   const navigate = useNavigate();
@@ -25,9 +24,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState("");
   const [userGrade, setUserGrade] = useState("");
-  const [showHints, setShowHints] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
-  const [hasSeenGuide, setHasSeenGuide] = useState(false);
+  const [showTips, setShowTips] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -38,23 +35,11 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       setDescription("");
       setFiles([]);
       setError("");
-      setShowHints(false);
+      setShowTips(false);
       setIsProcessing(false);
       setProcessingStep("");
-      
-      // Check if user has seen the guide
-      const seen = localStorage.getItem('hasSeenContentGuide');
-      if (!seen) {
-        setShowGuide(true);
-      }
-      setHasSeenGuide(!!seen);
     }
   }, [open]);
-
-  const handleGuideComplete = () => {
-    localStorage.setItem('hasSeenContentGuide', 'true');
-    setHasSeenGuide(true);
-  };
 
   const loadUserProfile = async () => {
     try {
@@ -430,21 +415,6 @@ Output Format: JSON object matching the specified schema`;
                   </Alert>
                 )}
 
-                {/* Help Button */}
-                {!hasSeenGuide && (
-                  <button
-                    type="button"
-                    onClick={() => setShowGuide(true)}
-                    className="flex items-center gap-2 w-full p-3 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl text-left hover:from-yellow-100 hover:to-amber-100 transition-colors"
-                  >
-                    <Lightbulb className="w-5 h-5 text-yellow-600" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">Need help?</p>
-                      <p className="text-xs text-slate-600">Learn what content works best</p>
-                    </div>
-                  </button>
-                )}
-
                 {/* Course Name */}
                 <div className="space-y-1.5">
                   <Label htmlFor="courseName" className="text-sm font-medium">Course Name</Label>
@@ -500,12 +470,33 @@ Output Format: JSON object matching the specified schema`;
                       className="min-h-[100px] resize-none"
                     />
 
+                    {/* Expandable tips */}
+                    <button
+                      type="button"
+                      onClick={() => setShowTips(!showTips)}
+                      className="flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-700 font-medium"
+                    >
+                      <Lightbulb className="w-3.5 h-3.5" />
+                      {showTips ? "Hide tips" : "What works best?"}
+                    </button>
+
+                    {showTips && (
+                      <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-xs">
+                        <div className="text-emerald-700">
+                          <span className="font-medium">✓ Good:</span> "Chapter 5 - Photosynthesis", "French Revolution lecture notes"
+                        </div>
+                        <div className="text-red-600">
+                          <span className="font-medium">✗ Too vague:</span> "Math", "Help with quiz"
+                        </div>
+                      </div>
+                    )}
+
                     {/* Smart quality indicator */}
                     {description.length > 0 && description.length < 50 && (
                       <div className="flex items-center gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
                         <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
                         <p className="text-xs text-amber-800">
-                          <span className="font-medium">Too vague!</span> Add specific topics, chapter names, or key terms for better results.
+                          <span className="font-medium">Too vague!</span> Add specific topics or chapter names.
                         </p>
                       </div>
                     )}
@@ -514,7 +505,7 @@ Output Format: JSON object matching the specified schema`;
                       <div className="flex items-center gap-2 p-2.5 bg-yellow-50 border border-yellow-200 rounded-lg">
                         <Lightbulb className="w-4 h-4 text-yellow-600 flex-shrink-0" />
                         <p className="text-xs text-yellow-800">
-                          <span className="font-medium">Getting better!</span> Add more details for even better quiz questions.
+                          <span className="font-medium">Getting better!</span> Add more details for better results.
                         </p>
                       </div>
                     )}
@@ -523,7 +514,7 @@ Output Format: JSON object matching the specified schema`;
                       <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
                         <FileCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                         <p className="text-xs text-emerald-800">
-                          <span className="font-medium">Great detail!</span> This will generate high-quality study materials.
+                          <span className="font-medium">Great detail!</span> Ready to generate quality content.
                         </p>
                       </div>
                     )}
@@ -594,13 +585,6 @@ Output Format: JSON object matching the specified schema`;
           </>
         )}
       </DialogContent>
-
-      {/* Content Guide Modal */}
-      <ContentGuideModal 
-        open={showGuide} 
-        onOpenChange={setShowGuide}
-        onContinue={handleGuideComplete}
-      />
-    </Dialog>
+      </Dialog>
   );
 }
