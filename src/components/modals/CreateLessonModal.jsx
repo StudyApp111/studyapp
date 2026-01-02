@@ -41,6 +41,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       setShowTips(false);
       setIsProcessing(false);
       setProcessingStep("");
+      setSuggestions([]);
     }
   }, [open]);
 
