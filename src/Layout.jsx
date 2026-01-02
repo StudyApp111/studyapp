@@ -38,19 +38,14 @@ const navigationItems = [
           isNew: true,
         },
         {
-          title: "Leaderboard",
-          url: createPageUrl("Leaderboard"),
-          icon: Trophy,
-        },
-        {
           title: "Lesson History",
           url: createPageUrl("LessonHistory"),
           icon: History,
         },
         {
-          title: "Feedback",
-          url: createPageUrl("Feedback"),
-          icon: MessageSquare,
+          title: "Settings",
+          url: createPageUrl("Settings"),
+          icon: Settings,
         },
       ];
 
@@ -313,32 +308,24 @@ export default function Layout({ children, currentPageName }) {
         <main className="flex-1 flex flex-col">
           {/* Mobile Header - Hidden during onboarding */}
           {showNavigation && !isOnboardingPage && (
-            <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-4 py-2.5 md:hidden">
-                <div className="flex items-center relative">
-                  {/* Logo - left */}
-                  <Link to={createPageUrl("Home")} className="absolute left-0 hover:opacity-80 transition-opacity">
+            <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-3 py-2.5 md:hidden">
+                <div className="flex items-center justify-between">
+                  {/* Logo + App Name - left */}
+                  <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <img 
                       src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
                       alt="StudyApp Logo"
                       className="w-7 h-7"
                     />
+                    <span className="font-bold text-slate-900 text-sm">StudyApp</span>
                   </Link>
-                  {/* Centered - Streak and XP */}
-                  <div className="flex-1 flex items-center justify-center gap-2">
-                    {user?.current_streak > 0 && (
-                      <div className="flex items-center gap-1 bg-orange-100 px-2 py-0.5 rounded-full">
-                        <Flame className="w-3 h-3 text-orange-500" />
-                        <span className="text-[10px] font-bold text-orange-700">{user.current_streak}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1 bg-yellow-100 px-2 py-0.5 rounded-full">
-                      <Award className="w-3 h-3 text-yellow-600" />
-                      <span className="text-[10px] font-bold text-yellow-700">Level {user?.level || 1}</span>
+                  {/* Right side - Streak + Profile */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 bg-orange-100 px-2 py-1 rounded-full">
+                      <Flame className="w-3.5 h-3.5 text-orange-500" />
+                      <span className="text-xs font-bold text-orange-700">{user?.current_streak || 0}</span>
                     </div>
-                  </div>
-                  {/* Right side buttons */}
-                  <div className="absolute right-0 flex items-center gap-2">
-                      {user && (
+                    {user && (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -354,8 +341,8 @@ export default function Layout({ children, currentPageName }) {
                       </button>
                     )}
                   </div>
-                  </div>
-                  </header>
+                </div>
+            </header>
           )}
 
           <div className="flex-1 overflow-auto pb-24 md:pb-0">
@@ -402,15 +389,15 @@ export default function Layout({ children, currentPageName }) {
                 </button>
 
                 <Link
-                  to={createPageUrl("Leaderboard")}
-                  className={`relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                    location.pathname === createPageUrl("Leaderboard")
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-slate-600'
-                  }`}
-                >
-                  <Trophy className="w-6 h-6" />
-                </Link>
+                    to={createPageUrl("Settings")}
+                    className={`relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                      location.pathname === createPageUrl("Settings")
+                        ? 'text-yellow-600 bg-yellow-50'
+                        : 'text-slate-600'
+                    }`}
+                  >
+                    <Settings className="w-6 h-6" />
+                  </Link>
 
                 {/* New Lesson CTA Button */}
                 <button
