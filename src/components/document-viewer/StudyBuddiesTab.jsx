@@ -1,46 +1,44 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Copy, Check, UserPlus, Circle, Mail, Link2, MessageCircle, Send, BookOpen, Sparkles } from "lucide-react";
+import { Users, Copy, Check, UserPlus, Circle, Mail, Link2, MessageCircle, Send, BookOpen, Sparkles, Zap, Brain, Coffee, Battery, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ActiveUsersPanel from "@/components/collaborate/ActiveUsersPanel";
+import LiveStudyChat from "@/components/collaborate/LiveStudyChat";
+
+const moodIcons = {
+  focused: { icon: Brain, color: "text-purple-600", bg: "bg-purple-100", label: "Focused" },
+  struggling: { icon: Coffee, color: "text-amber-600", bg: "bg-amber-100", label: "Need help" },
+  excited: { icon: Zap, color: "text-yellow-600", bg: "bg-yellow-100", label: "On fire!" },
+  tired: { icon: Battery, color: "text-slate-500", bg: "bg-slate-100", label: "Low energy" }
+};
 
 export default function StudyBuddiesTab({ lessonId, lessonName }) {
   const [studyRoom, setStudyRoom] = useState(null);
-  const [messages, setMessages] = useState([]);
   const [activeMembers, setActiveMembers] = useState([]);
   const [user, setUser] = useState(null);
   const [copied, setCopied] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteSent, setInviteSent] = useState(false);
   const [sending, setSending] = useState(false);
-  const [newMessage, setNewMessage] = useState("");
-  const [sendingMessage, setSendingMessage] = useState(false);
-  const [view, setView] = useState("main"); // "main" or "chat"
+  const [view, setView] = useState("main"); // "main", "chat", "users"
+  const [messageCount, setMessageCount] = useState(0);
 
-  // Normalize course name for matching (e.g., "MATH 101", "Math101", "math 101" should all match)
   const normalizeCourseName = (name) => {
     if (!name) return "";
-    // Remove all non-alphanumeric, lowercase, and trim
     return name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
   };
 
   const courseKey = normalizeCourseName(lessonName);
-  
-  // Debug logging
-  console.log("Course name:", lessonName, "-> Key:", courseKey);
 
   useEffect(() => {
     if (lessonName) {
       initializeRoom();
       const interval = setInterval(refreshRoom, 15000);
-      return () => {
-        clearInterval(interval);
-        markInactive();
-      };
+      return () => clearInterval(interval);
     }
   }, [lessonName]);
 
@@ -49,8 +47,6 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
 
-      // Find or create a study room for this COURSE (not lesson)
-      // This allows anyone studying the same course to connect
       const rooms = await base44.entities.StudyRoom.filter({ 
         invite_code: `course_${courseKey}` 
       });
@@ -58,7 +54,6 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
       let room;
       if (rooms.length > 0) {
         room = rooms[0];
-        // Add user to room if not already a member
         if (!room.member_emails?.includes(currentUser.email)) {
           const updatedMembers = [...(room.member_emails || []), currentUser.email];
           await base44.entities.StudyRoom.update(room.id, {
@@ -81,32 +76,14 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
       }
 
       setStudyRoom(room);
-      await loadMessages(room.id);
       await refreshRoom();
     } catch (error) {
       console.error("Error initializing study room:", error);
     }
   };
 
-  const loadMessages = async (roomId) => {
-    try {
-      const msgs = await base44.entities.StudyRoomMessage.filter({ 
-        room_id: roomId 
-      });
-      // Sort by created_date ascending (oldest first)
-      const sorted = msgs.sort((a, b) => 
-        new Date(a.created_date) - new Date(b.created_date)
-      );
-      setMessages(sorted.slice(-50)); // Keep last 50 messages
-    } catch (error) {
-      console.error("Error loading messages:", error);
-    }
-  };
-
   const refreshRoom = async () => {
     try {
-      if (!studyRoom?.id) return;
-      
       const rooms = await base44.entities.StudyRoom.filter({ 
         invite_code: `course_${courseKey}` 
       });
@@ -114,21 +91,20 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
       if (rooms.length > 0) {
         setStudyRoom(rooms[0]);
         setActiveMembers(rooms[0].member_emails || []);
-        await loadMessages(rooms[0].id);
+        
+        // Get message count
+        const msgs = await base44.entities.StudyRoomMessage.filter({ 
+          room_id: rooms[0].id 
+        });
+        setMessageCount(msgs.length);
       }
     } catch (error) {
       console.error("Error refreshing room:", error);
     }
   };
 
-  const markInactive = async () => {
-    // We don't remove from member_emails on leave - they stay as group members
-    // This is intentional - once you join a study group, you're a member
-  };
-
   const copyInviteLink = () => {
-    // Share link includes lesson ID so invited user can access the same document
-    const link = `${window.location.origin}/documentviewer?lessonId=${lessonId}&course=${encodeURIComponent(lessonName)}`;
+    const link = `${window.location.origin}/documentviewer?lessonId=${lessonId}&course=${encodeURIComponent(lessonName)}&tab=collaborate`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -139,25 +115,36 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
     
     setSending(true);
     try {
+      // Create invite record
+      await base44.entities.StudyInvite.create({
+        from_email: user.email,
+        from_name: user.full_name || user.email.split('@')[0],
+        to_email: inviteEmail.trim(),
+        room_id: studyRoom?.id,
+        course_name: lessonName,
+        lesson_id: lessonId,
+        message: `Hey! Want to study ${lessonName} together?`,
+        status: "pending",
+        read: false
+      });
+
+      // Also send email
       await base44.integrations.Core.SendEmail({
         to: inviteEmail.trim(),
-        subject: `${user?.full_name || 'A friend'} invited you to study ${lessonName}!`,
+        subject: `${user?.full_name || 'A friend'} invited you to study ${lessonName}! 📚`,
         body: `
           <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
             <h2 style="color: #7c3aed; margin-bottom: 16px;">📚 Study Together on StudyApp</h2>
             <p style="color: #334155; font-size: 16px; line-height: 1.6;">
-              <strong>${user?.full_name || 'Your friend'}</strong> is studying <strong>${lessonName}</strong> and wants you to join their study group!
+              <strong>${user?.full_name || 'Your friend'}</strong> is studying <strong>${lessonName}</strong> and wants you to join!
             </p>
             <p style="color: #64748b; font-size: 14px; margin: 16px 0;">
-              Join the group to chat, share tips, and stay motivated together.
+              Join now to chat, share tips, and study together in real-time.
             </p>
-            <a href="${window.location.origin}/documentviewer?lessonId=${lessonId}&course=${encodeURIComponent(lessonName)}" 
+            <a href="${window.location.origin}/documentviewer?lessonId=${lessonId}&course=${encodeURIComponent(lessonName)}&tab=collaborate" 
                style="display: inline-block; background: linear-gradient(to right, #7c3aed, #6366f1); color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: bold; margin-top: 8px;">
-              Join Study Group
+              Join Study Session 🎯
             </a>
-            <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
-              StudyApp - Study smarter, together 🎯
-            </p>
           </div>
         `
       });
@@ -171,230 +158,111 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
     }
   };
 
-  const sendMessage = async () => {
-    if (!newMessage.trim() || sendingMessage || !studyRoom?.id) return;
-    
-    setSendingMessage(true);
-    try {
-      await base44.entities.StudyRoomMessage.create({
-        room_id: studyRoom.id,
-        content: newMessage.trim(),
-        sender_name: user?.full_name || user?.email?.split('@')[0] || 'Anonymous',
-        sender_email: user?.email,
-        message_type: 'text'
-      });
-      setNewMessage("");
-      await loadMessages(studyRoom.id);
-    } catch (error) {
-      console.error("Error sending message:", error);
-    } finally {
-      setSendingMessage(false);
-    }
-  };
-
   const otherMembers = activeMembers.filter(email => email !== user?.email);
   const memberCount = activeMembers.length;
 
-  const formatTime = (dateStr) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now - date;
-    
-    if (diff < 60000) return 'Just now';
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return date.toLocaleDateString();
-  };
-
   // Chat View
-  if (view === "chat") {
+  if (view === "chat" && studyRoom?.id) {
     return (
-      <div className="flex flex-col h-full max-h-[calc(100vh-200px)] md:max-h-[calc(100vh-180px)]">
-        {/* Chat Header */}
-        <div className="flex items-center justify-between p-3 border-b bg-white">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => setView("main")}
-            className="text-slate-600"
-          >
-            ← Back
-          </Button>
-          <div className="text-center">
-            <h3 className="font-semibold text-slate-900 text-sm">{lessonName}</h3>
-            <p className="text-xs text-slate-500">{memberCount} members</p>
-          </div>
-          <div className="w-16" /> {/* Spacer */}
-        </div>
-
-        {/* Messages */}
-        <ScrollArea className="flex-1 p-4">
-          {messages.length === 0 ? (
-            <div className="text-center py-12">
-              <MessageCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500 text-sm">No messages yet</p>
-              <p className="text-slate-400 text-xs">Be the first to say hi! 👋</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {messages.map((msg) => {
-                const isMe = msg.sender_email === user?.email;
-                return (
-                  <div 
-                    key={msg.id} 
-                    className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`max-w-[80%] ${isMe ? 'order-2' : 'order-1'}`}>
-                      {!isMe && (
-                        <p className="text-xs text-slate-500 mb-1 ml-1">{msg.sender_name}</p>
-                      )}
-                      <div className={`rounded-2xl px-4 py-2 ${
-                        isMe 
-                          ? 'bg-purple-600 text-white rounded-br-md' 
-                          : 'bg-slate-100 text-slate-900 rounded-bl-md'
-                      }`}>
-                        <p className="text-sm">{msg.content}</p>
-                      </div>
-                      <p className={`text-[10px] text-slate-400 mt-1 ${isMe ? 'text-right mr-1' : 'ml-1'}`}>
-                        {formatTime(msg.created_date)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </ScrollArea>
-
-        {/* Message Input */}
-        <div className="p-3 border-t bg-white">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Type a message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-              className="flex-1"
-            />
-            <Button
-              onClick={sendMessage}
-              disabled={!newMessage.trim() || sendingMessage}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <LiveStudyChat 
+        roomId={studyRoom.id}
+        roomName={lessonName}
+        memberCount={memberCount}
+        user={user}
+        onBack={() => setView("main")}
+      />
     );
   }
 
-  // Main View
+  // Main View - Enhanced
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-5">
       {/* Header */}
       <div className="text-center">
-        <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
-          <Users className="w-7 h-7 text-white" />
+        <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-indigo-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl">
+          <Users className="w-8 h-8 text-white" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900">Study Group</h2>
-        <p className="text-slate-500 text-sm mt-1">Connect with others studying <span className="font-medium text-purple-600">{lessonName}</span></p>
+        <h2 className="text-2xl font-bold text-slate-900">Study Together</h2>
+        <p className="text-slate-500 text-sm mt-1">
+          Connect with others studying <span className="font-semibold text-purple-600">{lessonName}</span>
+        </p>
       </div>
 
-      {/* How It Works - Brief explanation */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
-        <div className="flex items-start gap-3">
-          <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm text-blue-900 font-medium">How it works</p>
-            <p className="text-xs text-blue-700 mt-1">
-              Everyone studying this course joins the same group. Chat, share tips, and motivate each other - while keeping your own notes private.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Active Users Panel */}
+      <ActiveUsersPanel 
+        currentUser={user}
+        currentCourse={lessonName}
+        lessonId={lessonId}
+        onInviteSent={() => setInviteSent(true)}
+      />
 
-      {/* Group Members */}
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Circle className="w-2.5 h-2.5 fill-green-500 text-green-500 animate-pulse" />
-              <span className="font-semibold text-green-800 text-sm">
-                {memberCount} {memberCount === 1 ? 'member' : 'members'}
-              </span>
-            </div>
-            {messages.length > 0 && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setView("chat")}
-                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
-              >
-                <MessageCircle className="w-4 h-4" />
-                Chat ({messages.length})
-              </Button>
-            )}
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {/* Current user */}
-            <div className="flex items-center gap-2 bg-white rounded-full px-3 py-1.5 shadow-sm border border-green-200">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-                {user?.full_name?.[0]?.toUpperCase() || 'U'}
+      {/* Group Chat CTA - Main action */}
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <Card 
+          className="border-0 shadow-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 cursor-pointer overflow-hidden"
+          onClick={() => setView("chat")}
+        >
+          <CardContent className="p-5 relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16" />
+            <div className="flex items-center justify-between relative">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-white">
+                  <h3 className="font-bold text-lg">Group Chat</h3>
+                  <p className="text-purple-200 text-sm">
+                    {messageCount > 0 ? `${messageCount} messages` : 'Start chatting!'} • {memberCount} members
+                  </p>
+                </div>
               </div>
-              <span className="text-sm font-medium text-slate-700">You</span>
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <ArrowRight className="w-5 h-5 text-white" />
+              </div>
             </div>
             
-            {/* Other members */}
-            {otherMembers.slice(0, 5).map((email) => (
-              <div key={email} className="flex items-center gap-2 bg-white rounded-full px-3 py-1.5 shadow-sm border border-slate-200">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold">
-                  {email[0].toUpperCase()}
-                </div>
-                <span className="text-sm text-slate-600 truncate max-w-[100px]">{email.split('@')[0]}</span>
+            {/* Member avatars */}
+            <div className="flex items-center gap-2 mt-4">
+              <div className="flex -space-x-2">
+                {[...Array(Math.min(5, memberCount))].map((_, i) => (
+                  <div 
+                    key={i}
+                    className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 border-2 border-purple-600 flex items-center justify-center"
+                  >
+                    <span className="text-[10px] text-white font-bold">
+                      {i < otherMembers.length ? otherMembers[i]?.[0]?.toUpperCase() : ''}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-            {otherMembers.length > 5 && (
-              <div className="flex items-center px-3 py-1.5 text-sm text-slate-500">
-                +{otherMembers.length - 5} more
-              </div>
-            )}
-          </div>
-
-          {memberCount === 1 && (
-            <p className="text-sm text-green-700 mt-3">
-              You're the first one here! Invite classmates to study together.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Chat Button - Prominent CTA */}
-      <Button
-        onClick={() => setView("chat")}
-        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-6 rounded-xl shadow-lg gap-2"
-      >
-        <MessageCircle className="w-5 h-5" />
-        Open Group Chat
-        {messages.length > 0 && (
-          <span className="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs">
-            {messages.length} messages
-          </span>
-        )}
-      </Button>
+              {memberCount > 5 && (
+                <span className="text-purple-200 text-xs">+{memberCount - 5} more</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Invite Options */}
       <div className="grid gap-3">
+        <p className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+          <UserPlus className="w-4 h-4 text-purple-600" />
+          Invite Friends
+        </p>
+        
         {/* Copy Link */}
-        <Card className="border-0 shadow-md">
+        <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
           <CardContent className="p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Link2 className="w-4 h-4 text-purple-600" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center">
+                <Link2 className="w-5 h-5 text-purple-600" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-slate-900 text-sm">Invite via Link</h3>
+                <h3 className="font-semibold text-slate-900 text-sm">Share Link</h3>
+                <p className="text-xs text-slate-500">Anyone with link can join</p>
               </div>
               <Button
                 variant="outline"
@@ -422,11 +290,12 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
         <Card className="border-0 shadow-md">
           <CardContent className="p-4">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <Mail className="w-4 h-4 text-indigo-600" />
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-xl flex items-center justify-center">
+                <Mail className="w-5 h-5 text-indigo-600" />
               </div>
               <div>
                 <h3 className="font-semibold text-slate-900 text-sm">Email Invite</h3>
+                <p className="text-xs text-slate-500">Send a direct invite</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -436,40 +305,45 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && sendInvite()}
-                className="flex-1 h-9 text-sm"
+                className="flex-1 h-10"
               />
               <Button
                 onClick={sendInvite}
                 disabled={!inviteEmail.trim() || sending}
-                size="sm"
-                className="bg-purple-600 hover:bg-purple-700 gap-1.5"
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 gap-1.5"
               >
-                <UserPlus className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
                 {sending ? '...' : 'Send'}
               </Button>
             </div>
             <AnimatePresence>
               {inviteSent && (
-                <motion.p
+                <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="text-xs text-green-600 mt-2 flex items-center gap-1"
+                  className="flex items-center gap-1.5 mt-2 text-green-600"
                 >
-                  <Check className="w-3.5 h-3.5" />
-                  Invite sent!
-                </motion.p>
+                  <Check className="w-4 h-4" />
+                  <span className="text-sm font-medium">Invite sent!</span>
+                </motion.div>
               )}
             </AnimatePresence>
           </CardContent>
         </Card>
       </div>
 
-      {/* Motivation */}
-      <div className="bg-gradient-to-r from-purple-100 to-indigo-100 rounded-xl p-3 text-center">
-        <p className="text-purple-800 text-sm font-medium">
-          🎯 Students in study groups score <strong>23% higher</strong> on average
-        </p>
+      {/* Fun Stats */}
+      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 rounded-xl p-4 border border-amber-200">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <p className="font-semibold text-amber-900">Study buddies boost grades!</p>
+            <p className="text-xs text-amber-700">Students in groups score <strong>23% higher</strong> on average</p>
+          </div>
+        </div>
       </div>
     </div>
   );
