@@ -80,11 +80,11 @@ export default function FeedbackButton() {
         </Button>
       </motion.div>
 
-      {/* Mobile: Small pill button in safe position */}
+      {/* Mobile: Small pill button in bottom right */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="md:hidden fixed bottom-36 left-4 z-50"
+        className="md:hidden fixed bottom-20 right-4 z-50"
       >
         <Button
           onClick={() => setIsOpen(true)}
