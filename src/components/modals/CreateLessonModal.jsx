@@ -461,60 +461,60 @@ Output Format: JSON object matching the specified schema`;
 
                 {/* Description Input */}
                 {inputType === "description" && (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Be specific! Example: 'Chapter 5 of Biology 101 covering photosynthesis, chloroplasts, light reactions, and the Calvin cycle...'"
+                      placeholder="e.g., 'Chapter 5 - Photosynthesis, chloroplasts, light reactions...'"
                       disabled={isProcessing}
-                      className="min-h-[100px] resize-none"
+                      className="min-h-[80px] resize-none text-sm"
                     />
 
                     {/* Expandable tips */}
                     <button
                       type="button"
                       onClick={() => setShowTips(!showTips)}
-                      className="flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-700 font-medium"
+                      className="flex items-center gap-1 text-[11px] text-purple-600 hover:text-purple-700 font-medium"
                     >
-                      <Lightbulb className="w-3.5 h-3.5" />
+                      <Lightbulb className="w-3 h-3" />
                       {showTips ? "Hide tips" : "What works best?"}
                     </button>
 
                     {showTips && (
-                      <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-xs">
+                      <div className="bg-slate-50 rounded-lg p-2 space-y-1 text-[11px]">
                         <div className="text-emerald-700">
-                          <span className="font-medium">✓ Good:</span> "Chapter 5 - Photosynthesis", "French Revolution lecture notes"
+                          <span className="font-medium">✓</span> "Chapter 5 - Photosynthesis", "French Revolution notes"
                         </div>
                         <div className="text-red-600">
-                          <span className="font-medium">✗ Too vague:</span> "Math", "Help with quiz"
+                          <span className="font-medium">✗</span> "Math", "Help with quiz"
                         </div>
                       </div>
                     )}
 
                     {/* Smart quality indicator */}
                     {description.length > 0 && description.length < 50 && (
-                      <div className="flex items-center gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
-                        <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                        <p className="text-xs text-amber-800">
-                          <span className="font-medium">Too vague!</span> Add specific topics or chapter names.
+                      <div className="flex items-center gap-1.5 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                        <p className="text-[11px] text-amber-800">
+                          <span className="font-medium">Too vague!</span> Add specific topics.
                         </p>
                       </div>
                     )}
 
                     {description.length >= 50 && description.length < 100 && (
-                      <div className="flex items-center gap-2 p-2.5 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <Lightbulb className="w-4 h-4 text-yellow-600 flex-shrink-0" />
-                        <p className="text-xs text-yellow-800">
-                          <span className="font-medium">Getting better!</span> Add more details for better results.
+                      <div className="flex items-center gap-1.5 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <Lightbulb className="w-3.5 h-3.5 text-yellow-600 flex-shrink-0" />
+                        <p className="text-[11px] text-yellow-800">
+                          <span className="font-medium">Getting better!</span> Add more details.
                         </p>
                       </div>
                     )}
 
                     {description.length >= 100 && (
-                      <div className="flex items-center gap-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-                        <FileCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                        <p className="text-xs text-emerald-800">
-                          <span className="font-medium">Great detail!</span> Ready to generate quality content.
+                      <div className="flex items-center gap-1.5 p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                        <FileCheck className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                        <p className="text-[11px] text-emerald-800">
+                          <span className="font-medium">Great!</span> Ready to generate.
                         </p>
                       </div>
                     )}
@@ -556,10 +556,10 @@ Output Format: JSON object matching the specified schema`;
                 )}
 
                 {/* XP Reward Preview */}
-                <div className="flex items-center justify-center gap-2 py-2 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border border-yellow-200">
-                  <Zap className="w-4 h-4 text-yellow-600" />
-                  <span className="text-xs font-medium text-yellow-800">Complete this lesson to earn up to <span className="font-bold">+150 XP</span></span>
-                  <Trophy className="w-4 h-4 text-yellow-600" />
+                <div className="flex items-center justify-center gap-1.5 py-1.5 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border border-yellow-200">
+                  <Zap className="w-3.5 h-3.5 text-yellow-600" />
+                  <span className="text-[11px] font-medium text-yellow-800">Earn up to <span className="font-bold">+150 XP</span></span>
+                  <Trophy className="w-3.5 h-3.5 text-yellow-600" />
                 </div>
 
                 {/* Submit Button */}
