@@ -245,9 +245,10 @@ export default function DocumentViewerTabs({ lesson }) {
                     className="flex-1 overflow-auto p-3"
                     onMouseUp={annotationMode ? handleTextSelection : undefined}
                   >
-                    <div className="w-full">
+                    <div className="w-full max-w-full overflow-hidden">
                       <div 
-                        className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap"
+                        className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere"
+                        style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                         dangerouslySetInnerHTML={{ __html: highlightSearchTerm(lesson.extracted_content) }}
                       />
                     </div>
