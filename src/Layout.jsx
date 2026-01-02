@@ -347,8 +347,13 @@ export default function Layout({ children, currentPageName }) {
                   <div className="absolute right-0 flex items-center gap-2">
                       {user && (
                       <button
-                        onClick={() => navigate(createPageUrl("Settings"))}
-                        className="w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate(createPageUrl("Settings"));
+                        }}
+                        className="w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm cursor-pointer"
                       >
                         <span className="text-white font-semibold text-[10px]">
                           {user.full_name?.[0]?.toUpperCase() || 'U'}
@@ -451,8 +456,8 @@ export default function Layout({ children, currentPageName }) {
           onOpenChange={setAiTutorModalOpen} 
         />
 
-        {/* Floating Feedback Button */}
-        {showNavigation && !isOnboardingPage && <FeedbackButton />}
+        {/* Floating Feedback Button - hidden when modals are open */}
+        {showNavigation && !isOnboardingPage && <FeedbackButton hidden={createLessonModalOpen || aiTutorModalOpen} />}
 
         </div>
         </SidebarProvider>

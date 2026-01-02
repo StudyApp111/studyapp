@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function FeedbackButton() {
+export default function FeedbackButton({ hidden = false }) {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -62,6 +62,8 @@ export default function FeedbackButton() {
 
     setIsSending(false);
   };
+
+  if (hidden) return null;
 
   return (
     <>
