@@ -21,13 +21,17 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [view, setView] = useState("main"); // "main" or "chat"
 
-  // Normalize course name for matching (e.g., "MATH 101" and "Math101" should match)
+  // Normalize course name for matching (e.g., "MATH 101", "Math101", "math 101" should all match)
   const normalizeCourseName = (name) => {
     if (!name) return "";
-    return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    // Remove all non-alphanumeric, lowercase, and trim
+    return name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
   };
 
   const courseKey = normalizeCourseName(lessonName);
+  
+  // Debug logging
+  console.log("Course name:", lessonName, "-> Key:", courseKey);
 
   useEffect(() => {
     if (lessonName) {
@@ -123,8 +127,8 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
   };
 
   const copyInviteLink = () => {
-    // Share link goes to a join page with course info
-    const link = `${window.location.origin}/home?joinCourse=${encodeURIComponent(lessonName)}`;
+    // Share link includes lesson ID so invited user can access the same document
+    const link = `${window.location.origin}/documentviewer?lessonId=${lessonId}&course=${encodeURIComponent(lessonName)}`;
     navigator.clipboard.writeText(link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -147,7 +151,7 @@ export default function StudyBuddiesTab({ lessonId, lessonName }) {
             <p style="color: #64748b; font-size: 14px; margin: 16px 0;">
               Join the group to chat, share tips, and stay motivated together.
             </p>
-            <a href="${window.location.origin}/home?joinCourse=${encodeURIComponent(lessonName)}" 
+            <a href="${window.location.origin}/documentviewer?lessonId=${lessonId}&course=${encodeURIComponent(lessonName)}" 
                style="display: inline-block; background: linear-gradient(to right, #7c3aed, #6366f1); color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: bold; margin-top: 8px;">
               Join Study Group
             </a>
