@@ -16,6 +16,7 @@ import { LessonActivityCard, AssignmentActivityCard } from "@/components/home/Ac
 import XPProgressBar from "@/components/gamification/XPProgressBar";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
+import { handleDailyReset } from "@/components/utils/dailyReset";
 
 export default function Home() {
     const navigate = useNavigate();
@@ -30,26 +31,16 @@ export default function Home() {
     useEffect(() => {
       const checkOnboarding = async () => {
         try {
-          const currentUser = await base44.auth.me();
+          // Handle daily reset using centralized utility
+          const resetResult = await handleDailyReset();
+          const currentUser = resetResult.user || await base44.auth.me();
           setUser(currentUser);
 
-          // Reset daily stats if new day
-          const today = new Date().toISOString().split('T')[0];
-          if (currentUser.last_xp_reset_date !== today) {
-            await base44.auth.updateMe({
-              daily_xp: 0,
-              last_xp_reset_date: today,
-              study_sessions_today: 0
-            });
-            setDailyXP(0);
-          } else {
-            setDailyXP(currentUser.daily_xp || 0);
-          }
-
-          // Calculate today's study minutes (rough estimate from time_spent)
-          setStudyMinutesToday(Math.floor((currentUser.time_spent_seconds || 0) / 60) % 60);
-          setQuestionsToday(currentUser.questions_completed || 0);
-          setFlashcardsToday(currentUser.total_flashcards_mastered || 0);
+          // Set daily stats from reset result or user data
+          setDailyXP(resetResult.dailyXP ?? currentUser.daily_xp ?? 0);
+          setStudyMinutesToday(resetResult.studyMinutesToday ?? currentUser.study_minutes_today ?? 0);
+          setQuestionsToday(resetResult.questionsToday ?? currentUser.questions_today ?? 0);
+          setFlashcardsToday(resetResult.flashcardsToday ?? currentUser.flashcards_today ?? 0);
 
           // Show welcome guide for new users
           const hasSeenWelcome = localStorage.getItem('hasSeenWelcomeGuide');

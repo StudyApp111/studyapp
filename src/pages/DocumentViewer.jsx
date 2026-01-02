@@ -14,6 +14,7 @@ import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import StudyBuddiesTab from "@/components/document-viewer/StudyBuddiesTab";
+import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -78,21 +79,12 @@ export default function DocumentViewer() {
 
   const loadUserStats = async () => {
     try {
-      const user = await base44.auth.me();
-      setUserStreak(user.current_streak || 0);
+      // Use centralized daily reset
+      const resetResult = await handleDailyReset();
+      const user = resetResult.user || await base44.auth.me();
       
-      // Reset daily XP if new day
-      const today = new Date().toISOString().split('T')[0];
-      if (user.last_xp_reset_date !== today) {
-        await base44.auth.updateMe({
-          daily_xp: 0,
-          last_xp_reset_date: today,
-          study_sessions_today: 0
-        });
-        setUserDailyXP(0);
-      } else {
-        setUserDailyXP(user.daily_xp || 0);
-      }
+      setUserStreak(resetResult.streak ?? user.current_streak ?? 0);
+      setUserDailyXP(resetResult.dailyXP ?? user.daily_xp ?? 0);
     } catch (error) {
       console.error("Error loading user stats:", error);
     }
@@ -100,17 +92,11 @@ export default function DocumentViewer() {
 
   const awardXP = async (amount, reason) => {
     try {
-      const user = await base44.auth.me();
-      const newDailyXP = (user.daily_xp || 0) + amount;
-      const newTotalXP = (user.total_points || 0) + amount;
-      
-      await base44.auth.updateMe({
-        daily_xp: newDailyXP,
-        total_points: newTotalXP
-      });
-      
-      setUserDailyXP(newDailyXP);
-      setXpToast({ show: true, xp: amount, reason });
+      const result = await awardDailyXP(amount, reason);
+      if (result.success) {
+        setUserDailyXP(result.dailyXP);
+        setXpToast({ show: true, xp: amount, reason });
+      }
     } catch (error) {
       console.error("Error awarding XP:", error);
     }
