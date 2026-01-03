@@ -27,21 +27,24 @@ ${userSchool ? `School: ${userSchool}` : ''}
 ${userGrade ? `Grade: ${userGrade}` : ''}
 
 Instructions:
-- Use search to find an official or commonly cited course outline/syllabus for this course.
-- Identify the actual units, modules, or sections used to structure the course.
-- Each suggestion MUST correspond to a different real unit or section found in those sources.
-- Use the unit’s original wording where possible (minor shortening allowed).
-- Do NOT invent units or rephrase the same unit multiple ways.
+Use search to find an official or commonly cited course outline or syllabus for this course.
+Identify the actual units, modules, or sections used to structure the course.
+Each suggestion MUST correspond to a different real unit or section from those sources.
+Do NOT invent units or rephrase the same unit multiple ways.
 
-Return ONLY a JSON array of 4 unit-style topics (15–30 words each).
+CRITICAL FORMAT RULES:
+Return ONLY a JSON array of 4 strings.
+EACH string MUST begin with the literal prefix:
+"Unit 1:", "Unit 2:", "Unit 3:", "Unit 4:" (in order).
+If a course uses different labels (e.g., Module, Topic, Section), still map them to Unit 1–4.
+If you cannot identify real units, infer the most common unit structure used for this course across universities.
+Each unit description must be 15–30 words.
 
 Example format:
 ["Unit 1: Greek prefixes and roots in medical terminology",
- "Unit 2: Latin suffixes and morphological patterns in life sciences",
- "Unit 3: Etymology of medical vocabulary from classical sources",
- "Unit 4: Scientific term formation and structural analysis"]
-
-IMPORTANT: Return ONLY valid JSON with no markdown formatting, no code blocks, no extra text.`;
+"Unit 2: Latin suffixes and morphological patterns in life sciences",
+"Unit 3: Etymology of medical vocabulary from classical sources",
+"Unit 4: Scientific term formation and structural analysis"]`;
 
         const requestBody = {
             contents: [{
