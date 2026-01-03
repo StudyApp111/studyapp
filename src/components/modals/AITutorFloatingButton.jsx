@@ -79,95 +79,115 @@ Previous context: ${messages.slice(-4).map(m => `${m.role}: ${m.content}`).join(
       >
         <Button
           onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full shadow-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 p-0"
+          className="h-14 w-14 rounded-full shadow-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 p-0 relative"
         >
           <Send className="h-6 w-6 text-white" />
+          {/* Notification dot */}
+          <span className="absolute top-0 right-0 h-3.5 w-3.5 bg-red-500 rounded-full border-2 border-white" />
         </Button>
       </motion.div>
 
 
 
-      {/* Mobile Chat Panel - Full Screen */}
+      {/* Mobile Chat Panel - Bottom Sheet Style */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="md:hidden fixed inset-0 z-50 bg-white flex flex-col"
-          >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between safe-area-inset-top">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-white" />
-                <span className="font-semibold text-white">AI Tutor</span>
-              </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-white/80 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.map((msg, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
-                      msg.role === "user"
-                        ? "bg-purple-600 text-white"
-                        : "bg-slate-100 text-slate-800"
-                    }`}
-                  >
-                    {msg.role === "assistant" ? (
-                      <ReactMarkdown className="text-sm prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                        {msg.content}
-                      </ReactMarkdown>
-                    ) : (
-                      <p className="text-sm">{msg.content}</p>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-slate-100 rounded-2xl px-4 py-3">
-                    <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
-                  </div>
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="md:hidden fixed inset-0 z-50 bg-black/30"
+            />
+            
+            {/* Chat Panel */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[55%] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-white" />
+                  <span className="font-semibold text-white">AI Tutor</span>
                 </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input */}
-            <div className="border-t border-slate-200 p-3 safe-area-inset-bottom">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                  placeholder="Ask me anything..."
-                  className="flex-1 px-4 py-2 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-                <Button
-                  onClick={handleSend}
-                  disabled={!input.trim() || isLoading}
-                  size="icon"
-                  className="rounded-full bg-purple-600 hover:bg-purple-700"
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsOpen(false);
+                  }}
+                  className="p-2 text-white/80 hover:text-white transition-colors"
                 >
-                  <Send className="w-4 h-4" />
-                </Button>
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-            </div>
-          </motion.div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {messages.map((msg, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                        msg.role === "user"
+                          ? "bg-purple-600 text-white"
+                          : "bg-slate-100 text-slate-800"
+                      }`}
+                    >
+                      {msg.role === "assistant" ? (
+                        <ReactMarkdown className="text-sm prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                          {msg.content}
+                        </ReactMarkdown>
+                      ) : (
+                        <p className="text-sm">{msg.content}</p>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-slate-100 rounded-2xl px-4 py-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input */}
+              <div className="border-t border-slate-200 p-3 pb-6">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                    placeholder="Ask me anything..."
+                    className="flex-1 px-4 py-2 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <Button
+                    onClick={handleSend}
+                    disabled={!input.trim() || isLoading}
+                    size="icon"
+                    className="rounded-full bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
