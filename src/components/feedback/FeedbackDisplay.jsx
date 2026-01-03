@@ -97,7 +97,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
           transition={{ delay: 0.2 }}
           className="inline-block"
         >
-          <div className={`px-10 py-6 rounded-2xl bg-gradient-to-r ${getGradeColor(exam.predicted_grade)} shadow-xl mb-3`}>
+          <div className={`px-10 md:px-20 py-6 rounded-2xl bg-gradient-to-r ${getGradeColor(exam.predicted_grade)} shadow-xl mb-3`}>
             <div className="text-5xl font-bold text-white mb-1">
               {exam.predicted_grade} {getGradeEmoji(exam.predicted_grade)}
             </div>
@@ -111,19 +111,6 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
           <p className="text-sm text-slate-700 mx-auto mt-4 leading-relaxed px-2">
             {exam.ai_feedback.overall_performance_summary_text}
           </p>
-        )}
-
-        {exam.ai_feedback?.prediction_calculation_rationale && (
-          <div className="mt-4">
-            <details className="bg-white rounded-lg p-3 shadow text-left">
-              <summary className="cursor-pointer font-semibold text-purple-700 hover:text-purple-900 text-sm">
-                How was this grade calculated?
-              </summary>
-              <p className="mt-2 text-xs text-slate-600">
-                {exam.ai_feedback.prediction_calculation_rationale}
-              </p>
-            </details>
-          </div>
         )}
 
         <div className="grid grid-cols-2 gap-2 text-slate-600 text-xs mt-4">
@@ -243,66 +230,6 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
         </motion.div>
       </div>
 
-      {/* Learning Insights */}
-      {exam.ai_feedback?.learning_patterns && exam.ai_feedback.learning_patterns.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <Card className="shadow-lg border-0 overflow-hidden">
-            <CardHeader 
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white cursor-pointer hover:brightness-110 transition-all py-3 px-4"
-              onClick={() => toggleSection('insights')}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Brain className="w-4 h-4" />
-                    Learning Insights
-                  </CardTitle>
-                  <p className="text-purple-100 text-xs mt-0.5">How you learn</p>
-                </div>
-                {sectionsExpanded.insights ? (
-                  <ChevronUp className="w-4 h-4 text-white flex-shrink-0" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-white flex-shrink-0" />
-                )}
-              </div>
-            </CardHeader>
-            <AnimatePresence>
-              {sectionsExpanded.insights && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CardContent className="p-3">
-                    <div className="space-y-3">
-                      {exam.ai_feedback.learning_patterns.map((pattern, idx) => (
-                        <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">{getPatternIcon(pattern.pattern_type)}</span>
-                            <span className="font-semibold text-slate-900 text-xs">{pattern.pattern_type}</span>
-                          </div>
-                          <p className="text-xs text-slate-700 mb-2">{pattern.what_it_means}</p>
-                          <div className="bg-purple-50 px-2 py-1.5 rounded-lg border border-purple-200">
-                            <p className="text-xs text-slate-700">{pattern.how_to_improve}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Card>
-        </motion.div>
-      )}
-
-
-
       {/* Question Breakdown */}
       {exam.questions && exam.feedback && (
         <motion.div
@@ -390,11 +317,14 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                 </MathText>
                                 {question.options && question.options.length > 0 && (
                                   <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
-                                    {question.options.map((opt, i) => (
-                                      <MathText key={i} className="text-xs text-slate-600 block py-0.5" inline>
-                                        <span className="font-semibold w-5 inline-block">{String.fromCharCode(65 + i)}.</span> {opt}
-                                      </MathText>
-                                    ))}
+                                    {question.options.map((opt, i) => {
+                                      const optionText = typeof opt === 'string' ? opt : (opt?.text || JSON.stringify(opt));
+                                      return (
+                                        <MathText key={i} className="text-xs text-slate-600 block py-0.5" inline>
+                                          <span className="font-semibold w-5 inline-block">{String.fromCharCode(65 + i)}.</span> {optionText}
+                                        </MathText>
+                                      );
+                                    })}
                                   </div>
                                 )}
                                 <div className="mt-2 grid grid-cols-2 gap-2">
@@ -454,6 +384,64 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                 })}
               </div>
             </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Learning Insights */}
+      {exam.ai_feedback?.learning_patterns && exam.ai_feedback.learning_patterns.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card className="shadow-lg border-0 overflow-hidden">
+            <CardHeader 
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white cursor-pointer hover:brightness-110 transition-all py-3 px-4"
+              onClick={() => toggleSection('insights')}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Brain className="w-4 h-4" />
+                    Learning Insights
+                  </CardTitle>
+                  <p className="text-purple-100 text-xs mt-0.5">How you learn</p>
+                </div>
+                {sectionsExpanded.insights ? (
+                  <ChevronUp className="w-4 h-4 text-white flex-shrink-0" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-white flex-shrink-0" />
+                )}
+              </div>
+            </CardHeader>
+            <AnimatePresence>
+              {sectionsExpanded.insights && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <CardContent className="p-3">
+                    <div className="space-y-3">
+                      {exam.ai_feedback.learning_patterns.map((pattern, idx) => (
+                        <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">{getPatternIcon(pattern.pattern_type)}</span>
+                            <span className="font-semibold text-slate-900 text-xs">{pattern.pattern_type}</span>
+                          </div>
+                          <p className="text-xs text-slate-700 mb-2">{pattern.what_it_means}</p>
+                          <div className="bg-purple-50 px-2 py-1.5 rounded-lg border border-purple-200">
+                            <p className="text-xs text-slate-700">{pattern.how_to_improve}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Card>
         </motion.div>
       )}
