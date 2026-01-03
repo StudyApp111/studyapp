@@ -412,6 +412,14 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       questions: updatedQuestions
     }));
 
+    // Debounce auto-save on answer change
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      saveExamProgress();
+    }, 2000);
+
     if (gradingTimeoutRef.current) {
       clearTimeout(gradingTimeoutRef.current);
     }
