@@ -191,12 +191,24 @@ export default function DocumentViewer() {
       }
 
       // Load exams and worksheets (no longer dependent on quiz)
-      const [examsData, worksheetsData] = await Promise.all([
-        base44.entities.Exam.filter({ lesson_id: lessonId }),
-        base44.entities.Worksheet.filter({ lesson_id: lessonId })
-      ]);
+      let examsData = [];
+      let worksheetsData = [];
       
-      setExams([...examsData, ...worksheetsData]);
+      try {
+        [examsData, worksheetsData] = await Promise.all([
+          base44.entities.Exam.filter({ lesson_id: lessonId }),
+          base44.entities.Worksheet.filter({ lesson_id: lessonId })
+        ]);
+      } catch (loadError) {
+        console.error("Error loading exams/worksheets:", loadError);
+        // Continue with empty arrays if loading fails
+      }
+      
+      // Filter out any null/undefined items
+      const validExams = (examsData || []).filter(e => e && e.id);
+      const validWorksheets = (worksheetsData || []).filter(w => w && w.id);
+      
+      setExams([...validExams, ...validWorksheets]);
       
       // Get the latest predicted grade from completed exams/worksheets
       const examWithGrade = [...examsData, ...worksheetsData]
