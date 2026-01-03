@@ -412,19 +412,19 @@ export default function UserAnalytics() {
                                     <div className="grid grid-cols-2 gap-2 text-xs">
                                       <div>
                                         <span className="text-slate-500">Browser:</span>
-                                        <span className="ml-1 font-medium">{user.browser || 'Unknown'}</span>
+                                        <span className="ml-1 font-medium">{user.browser || 'N/A'}</span>
                                       </div>
                                       <div>
                                         <span className="text-slate-500">OS:</span>
-                                        <span className="ml-1 font-medium">{user.operating_system || 'Unknown'}</span>
+                                        <span className="ml-1 font-medium">{user.operating_system || 'N/A'}</span>
                                       </div>
                                       <div>
                                         <span className="text-slate-500">Timezone:</span>
-                                        <span className="ml-1 font-medium">{user.timezone || 'Unknown'}</span>
+                                        <span className="ml-1 font-medium">{user.timezone || 'N/A'}</span>
                                       </div>
                                       <div>
                                         <span className="text-slate-500">Total Logins:</span>
-                                        <span className="ml-1 font-medium">{user.total_logins || 0}</span>
+                                        <span className="ml-1 font-medium">{user.total_logins || user.session_count || 0}</span>
                                       </div>
                                       <div>
                                         <span className="text-slate-500">Questions Done:</span>
@@ -442,8 +442,24 @@ export default function UserAnalytics() {
                                         <span className="text-slate-500">Onboarded:</span>
                                         <span className="ml-1 font-medium">{user.onboarding_completed ? 'Yes' : 'No'}</span>
                                       </div>
+                                      <div>
+                                        <span className="text-slate-500">Joined:</span>
+                                        <span className="ml-1 font-medium">{user.created_date ? format(parseISO(user.created_date), 'MMM d, yyyy') : 'N/A'}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-slate-500">Current Streak:</span>
+                                        <span className="ml-1 font-medium">{user.current_streak || 0} days</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-slate-500">Total Points:</span>
+                                        <span className="ml-1 font-medium">{user.total_points || 0}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-slate-500">Avg Score:</span>
+                                        <span className="ml-1 font-medium">{user.average_score || 0}%</span>
+                                      </div>
                                     </div>
-                                    {profile && (
+                                    {profile ? (
                                       <div className="pt-2 border-t">
                                         <h5 className="font-semibold text-xs text-slate-600 mb-1">Learning Profile</h5>
                                         <div className="grid grid-cols-2 gap-2 text-xs">
@@ -452,6 +468,10 @@ export default function UserAnalytics() {
                                           <div><span className="text-slate-500">City:</span> {profile.city || 'N/A'}</div>
                                           <div><span className="text-slate-500">Country:</span> {profile.country || 'N/A'}</div>
                                         </div>
+                                      </div>
+                                    ) : (
+                                      <div className="pt-2 border-t">
+                                        <p className="text-xs text-slate-500 italic">No learning profile found</p>
                                       </div>
                                     )}
                                   </div>
