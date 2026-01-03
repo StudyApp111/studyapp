@@ -294,16 +294,18 @@ export default function DocumentViewer() {
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <span className="text-white font-semibold text-sm truncate max-w-[280px]">
-                {lesson?.course_name}
-              </span>
+              <div className="bg-white/10 backdrop-blur-sm px-4 py-1 rounded-full border border-white/20">
+                <span className="text-white font-semibold text-sm truncate block max-w-[280px]">
+                  {lesson?.course_name}
+                </span>
+              </div>
             </div>
             
             {/* Right: Grade + XP + Timer */}
             <div className="flex items-center gap-3 flex-shrink-0">
               {/* Predicted Grade */}
               <div className="flex items-center gap-2">
-                <span className="text-white/70 text-xs font-medium">StudyApp Predicted:</span>
+                <span className="text-white/70 text-xs font-medium">StudyApp Predicted Grade:</span>
                 <span className="text-white text-xl font-bold tracking-tight">{predictedGrade || '—'}</span>
               </div>
               

@@ -88,7 +88,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
         </div>
         
         <h1 className="text-xl md:text-2xl font-bold text-slate-900 mb-4 px-2">
-          If Your {courseName || 'Course'} Exam Was Today, You'd Score:
+          If Your {courseName || 'Course'} Exam Was Today, You Would Score:
         </h1>
         
         <motion.div
