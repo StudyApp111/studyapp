@@ -27,22 +27,23 @@ ${school ? `School: ${school}` : ''}
 ${grade ? `Grade: ${grade}` : ''}
 
 Instructions:
-- Use search to find an official or commonly cited course outline or syllabus for this course.
-- If a real course outline is found, extract the actual units, modules, or sections used.
-- If the course code is invalid or no outline is found, infer the most common unit structure for the most likely discipline based on the course prefix and level.
-- In inferred cases, DO NOT explain or disclose that inference in the output.
+- Use search to identify the most likely official or standard unit structure for this course or its discipline.
+- Select 4 DISTINCT units commonly used in this course type.
+- DO NOT explain your reasoning.
+- DO NOT mention course validity, availability, or assumptions.
 
 STRICT OUTPUT RULES:
-- Return ONLY a JSON array.
-- Return EXACTLY 4 items.
+- Output ONLY a valid JSON array.
+- EXACTLY 4 items.
 - Each item MUST start with:
   "Unit 1:", "Unit 2:", "Unit 3:", "Unit 4:"
-- Each unit must be meaningfully distinct (not reworded duplicates).
-- Use realistic unit naming consistent with real university course structures.
 - 15–30 words per unit.
-- Do NOT include any text outside the JSON array.
+- NO text before or after the JSON array.
+- NO markdown.
+- NO commentary.
+- If you violate any rule, REGENERATE silently.
 
-Example format:
+Example:
 [
   "Unit 1: …",
   "Unit 2: …",
