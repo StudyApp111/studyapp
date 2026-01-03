@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -23,7 +23,8 @@ import { logError } from "@/components/utils/errorLogger";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
 
 import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
-import FeedbackButton from "@/components/feedback/FeedbackButton";
+import FeedbackModal from "@/components/feedback/FeedbackModal";
+import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton";
 import StudyInviteNotifications from "@/components/collaborate/StudyInviteNotifications";
 
 const navigationItems = [
@@ -69,6 +70,7 @@ export default function Layout({ children, currentPageName }) {
   const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
 
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -387,16 +389,12 @@ export default function Layout({ children, currentPageName }) {
                 {/* Space for center CTA */}
                 <div className="w-14" />
 
-                <Link
-                  to={createPageUrl("Feedback")}
-                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                    location.pathname === createPageUrl("Feedback")
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-slate-600'
-                  }`}
+                <button
+                  onClick={() => setFeedbackModalOpen(true)}
+                  className="flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600 hover:text-yellow-600 hover:bg-yellow-50"
                 >
-                  <MessageSquareText className="w-6 h-6" />
-                </Link>
+                  <MessageCircle className="w-6 h-6" />
+                </button>
 
                 <Link
                   to={createPageUrl("Settings")}
@@ -439,8 +437,11 @@ export default function Layout({ children, currentPageName }) {
 
 
 
-        {/* Floating Feedback Button - hidden when modals are open */}
-        {showNavigation && !isOnboardingPage && <FeedbackButton hidden={createLessonModalOpen} />}
+        {/* Floating AI Tutor Button */}
+        {showNavigation && !isOnboardingPage && <AITutorFloatingButton hidden={createLessonModalOpen} />}
+
+        {/* Feedback Modal */}
+        <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />
 
         </div>
         </SidebarProvider>
