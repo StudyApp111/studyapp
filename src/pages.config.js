@@ -1,7 +1,6 @@
 import Analytics from './pages/Analytics';
 import AssignmentHistory from './pages/AssignmentHistory';
 import ChangePassword from './pages/ChangePassword';
-import Collaborate from './pages/Collaborate';
 import DiagnosticQuiz from './pages/DiagnosticQuiz';
 import DocumentViewer from './pages/DocumentViewer';
 import EmailManager from './pages/EmailManager';
@@ -25,7 +24,6 @@ export const PAGES = {
     "Analytics": Analytics,
     "AssignmentHistory": AssignmentHistory,
     "ChangePassword": ChangePassword,
-    "Collaborate": Collaborate,
     "DiagnosticQuiz": DiagnosticQuiz,
     "DocumentViewer": DocumentViewer,
     "EmailManager": EmailManager,
