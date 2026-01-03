@@ -65,38 +65,13 @@ export default function CreateLessonModal({ open, onOpenChange }) {
     
     setLoadingSuggestions(true);
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate 4 specific study topic suggestions for a student.
-
-Use the course name and available context to guide a brief search so that topics are accurate to the subject matter.
-
-Course: ${courseName}
-${userSchool ? `School: ${userSchool}` : ''}
-${userGrade ? `Grade: ${userGrade}` : ''}
-
-Instructions:
-- Search for curriculum standards, syllabi, or common exam topics for this course.
-- If official documents are available online (school, department, state/province standards), use them to inform topic selection.
-- Otherwise, infer likely high-yield topics based on the course name and typical curriculum for this level.
-
-Return ONLY a JSON array of 4 short, specific topic descriptions (15–30 words each) that would be good for studying this course.
-Focus on common chapters, units, or exam topics that students are typically tested on.
-
-Example output format:
-["Chapter 3: Photosynthesis - light reactions, Calvin cycle, chloroplast structure",
- "Unit 2: Cell Division - mitosis phases, chromosome separation"]`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            topics: {
-              type: "array",
-              items: { type: "string" }
-            }
-          }
-        }
+      const result = await base44.functions.invoke('generateSuggestions', {
+        courseName: courseName.trim(),
+        school: userSchool || '',
+        grade: userGrade || ''
       });
       
-      const topics = result?.topics || [];
+      const topics = result?.data?.topics || [];
       setSuggestions(topics.slice(0, 4));
     } catch (err) {
       console.error("Error generating suggestions:", err);
