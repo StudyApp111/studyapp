@@ -4,7 +4,8 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   BookOpen, Calculator, Beaker, Globe, BookText, Languages, 
-  Code, Palette, Music, Briefcase, FileCheck, Sparkles, ChevronRight, Clock
+  Code, Palette, Music, Briefcase, FileCheck, Sparkles, ChevronRight, Clock,
+  FileText, PenLine
 } from "lucide-react";
 
 // Unique gradient themes for different subjects
@@ -75,6 +76,10 @@ export function LessonActivityCard({ lesson, exams = [], index = 0 }) {
   const latestCompleted = exams.filter(e => e.completed).sort((a, b) => b.exam_number - a.exam_number)[0];
   const progress = Math.round((completedCount / 6) * 100);
   const studyTime = formatStudyTime(lesson.total_study_time_seconds);
+  
+  // Determine content type
+  const hasDocument = lesson.file_url || (lesson.file_urls && lesson.file_urls.length > 0);
+  const hasDescription = lesson.input_type === "description" || (!hasDocument && lesson.description);
 
   const handleClick = () => {
     navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
@@ -102,7 +107,21 @@ export function LessonActivityCard({ lesson, exams = [], index = 0 }) {
               <h3 className="font-semibold text-slate-900 truncate text-sm group-hover:text-slate-700 transition-colors">
                 {lesson.course_name}
               </h3>
-              <span className="text-xs text-slate-400">{label}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-slate-400">{label}</span>
+                <span className="text-slate-300">•</span>
+                {hasDocument ? (
+                  <span className="inline-flex items-center gap-0.5 text-xs text-blue-600">
+                    <FileText className="w-3 h-3" />
+                    <span>Doc</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-0.5 text-xs text-purple-600">
+                    <PenLine className="w-3 h-3" />
+                    <span>Written</span>
+                  </span>
+                )}
+              </div>
             </div>
             <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 group-hover:translate-x-0.5 transition-all mt-1" />
           </div>
