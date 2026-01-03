@@ -197,56 +197,69 @@ Example format: ["Chapter 3: Photosynthesis - light reactions, Calvin cycle, chl
 
       const curriculumPrompt = `Educational Curriculum Analysis Request
 
-Objective: You are an expert curriculum and pedagogical analyst. Your mission is to meticulously analyze the provided inputs to construct the most accurate and comprehensive curriculum profile possible. This profile is foundational for generating personalized learning materials.
+Role:
+You are an expert curriculum analyst. Generate a concise, exam-relevant curriculum profile to support personalized worksheet generation.
 
 Input Context:
-Student Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${courseName}
-School Context: ${learningProfile.school || "N/A"}
-Location Context: ${learningProfile.city || "N/A"}
-Content Source: ${extractedContent}
+- Student Grade Level: ${learningProfile.grade || "N/A"}
+- Course / Unit Name: ${courseName}
+- School: ${learningProfile.school || "N/A"}
+- Location: ${learningProfile.city || "N/A"}
+- Student-Provided Content:
+${extractedContent}
 
-Task: Generate a detailed curriculum profile that includes:
+Analysis Priority (STRICT ORDER):
+1. Use the student-provided content as the PRIMARY source of truth.
+2. Use official school or course information ONLY to validate or fill clear gaps.
+3. Use regional or professional standards ONLY if essential and obvious.
 
-Information Sourcing & Synthesis Strategy (Prioritized):
+DO NOT perform broad academic research or exhaustive searches.
 
-1. Primary Analysis – Student-Provided Content:
-Thoroughly analyze ${extractedContent} to identify core topics, concepts, learning objectives, specific terminology, areas of emphasis (e.g., recurring themes, depth of coverage), any stated needs or questions — and also identify relevant major authors, theorists, books or seminal works referenced or implied.
-2. Secondary Analysis – Direct Institutional Information (Validation & Supplementation):
-Search for official curriculum documents, course outlines or syllabi directly from ${learningProfile.school} for ${courseName}. Use this information to validate, supplement and provide the official framework for the course, corroborating findings from the student-provided content. Also locate recommended textbooks, key readings, or resource lists associated with the syllabus.
-3. Tertiary Analysis – Broader Context & Standards:
-For K-12 courses, if necessary, consult official regional curriculum standards for ${learningProfile.grade} and ${courseName} using ${learningProfile.city} to ensure alignment with broader educational requirements. For post-secondary/professional courses, use ${learningProfile.city} to identify related professional accreditation standards or common resources; locate canonical works, major figures, landmark studies or seminal concepts to further contextualize the information.
+────────────────────────────
 
-Required Curriculum Profile Output:
+Task:
+Produce a compact curriculum profile focused ONLY on material that is likely to appear on assessments.
 
-Based on the most authoritative source(s) identified, provide the following in the structured JSON format below. The content should strongly reflect insights from ${extractedContent}, using other official sources for validation and completion.
-A. Core Competencies / Learning Outcomes:
-Identify and list 6-10 major, clearly defined core competencies or overarching learning outcomes. For each, provide a concise 1-2 sentence description. If the official source provides a significantly different number of outcomes, reflect that. Synthesize granular outcomes into broader competency statements where appropriate.
-B. Competency Weightings / Emphasis:
-Infer or calculate estimated percentage weightings for each core competency, ensuring a sum of 100%. Prioritize evidence of emphasis from ${extractedContent}, then official documents. If percentages cannot be reliably determined, indicate relative importance (High, Medium, Low).
-C. Typical Assessment Question Formats & Patterns:
-List common assessment formats (e.g., Multiple Choice, Short Answer, Essay). For the 3-4 most significant formats, estimate their frequency distribution and provide one illustrative example for each, reflecting typical style and difficulty. Also include one example resource or reading or figure that might appear in such an assessment (e.g., a theorist, textbook chapter, mathematical concept, scientific principle).
-D. High-Yield Focal Points (Key Topics/Skills):
-Identify and briefly describe 3-5 critical concepts, topics or skills that are frequently tested, fundamental for future success, or known to be challenging. Where relevant, mention major authors, key books, or historical/political figures or scientific/mathematical concepts linked to those focal points.
-E. Common Student Misconceptions & Difficulties:
-Describe at least 3-4 specific and common student misconceptions or difficulties related to the core competencies or high-yield focal points.
+Required Output (JSON):
 
-CRITICAL FORMATTING:
+A. Core Competencies / Learning Outcomes
+- List 6–8 core competencies.
+- Each: 1 concise sentence describing what the student must be able to do.
+- Prefer synthesis over granularity.
 
-- weight_percentage MUST be a STRING with % symbol (e.g., "20%", "15%")
-- frequency MUST be a STRING (e.g., "30%", "Common", "Rare")
-- Do NOT use numeric values, always use strings
+B. Competency Emphasis
+- Assign a weight_percentage to each competency.
+- MUST sum to "100%".
+- Use strings only (e.g., "20%").
+- Base emphasis primarily on student content.
 
-Requirements:
+C. Assessment Formats & Patterns
+- List the most common assessment formats (e.g., Multiple Choice, Short Answer, Essay).
+- For the top 3–4 formats:
+  - frequency (string, e.g., "Common", "30%")
+  - one short illustrative example (exam-style, not verbose).
 
-- Base your analysis on standard educational practices for ${learningProfile.grade || "this grade level"}
-- Align with typical ${courseName} curriculum standards
-- Ensure competency weightings sum to 100%
-- Make question format examples realistic and grade-appropriate
-- Focus on exam-relevant material
+D. High-Yield Focal Points
+- Identify 3–5 topics or skills most likely to be tested.
+- Focus on difficulty, recurrence, or conceptual importance.
+- Mention key figures, formulas, concepts, or texts ONLY if clearly relevant.
 
-Expand your search scope so that your response may include specific books, authors/therorists, concepts or figures relevant to the course domain.
-Output Format: JSON object matching the specified schema`;
+E. Common Student Difficulties
+- List 3–4 common misconceptions or failure points students encounter.
+- Tie them directly to the competencies above.
+
+────────────────────────────
+
+Formatting Rules (STRICT):
+- weight_percentage MUST be a string with "%"
+- frequency MUST be a string
+- Do NOT use numeric values anywhere
+- Output ONLY valid JSON matching the expected schema
+
+Constraints:
+- Be concise, not exhaustive.
+- Prioritize exam relevance over completeness.
+- Do not introduce content not supported by the inputs.`;
 
       const curriculumResponseJsonSchema = {
         type: "object",
