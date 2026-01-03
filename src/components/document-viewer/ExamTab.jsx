@@ -982,9 +982,26 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
     return null;
   }
 
+  // Guard against missing questions array
+  if (!exam.questions || exam.questions.length === 0) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+        <span className="ml-2 text-slate-600">Loading questions...</span>
+      </div>
+    );
+  }
+
   const progress = ((currentQuestion + 1) / exam.questions.length) * 100;
   const isLastQuestion = currentQuestion === exam.questions.length - 1;
   const currentQ = exam.questions[currentQuestion];
+  
+  // Guard against invalid current question
+  if (!currentQ) {
+    setCurrentQuestion(0);
+    return null;
+  }
+  
   const canProceed = currentQ.user_answer?.trim() !== "";
 
   return (
