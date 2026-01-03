@@ -443,8 +443,8 @@ Create flashcards that:
                     <Badge className={`${getDifficultyColor(currentCard.difficulty)} text-[10px]`}>
                       {currentCard.difficulty}
                     </Badge>
-                    {/* Ask AI Button - Mobile Only */}
-                    <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
+                    {/* Ask AI Button */}
+                    <div onClick={(e) => e.stopPropagation()}>
                       <AskAIButton type="flashcard" data={currentCard} lesson={lesson} size="sm" />
                     </div>
                   </div>

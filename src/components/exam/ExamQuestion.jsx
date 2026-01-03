@@ -249,10 +249,12 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
               </Badge>
             )}
           </div>
-          {/* Ask AI Button - Mobile Only */}
-          <div className="md:hidden">
-            <AskAIButton type="question" data={question} lesson={lesson} />
-          </div>
+          {/* Ask AI Button */}
+          <AskAIButton 
+            type="question" 
+            data={{ ...question, user_answer: selectedAnswer }} 
+            lesson={lesson} 
+          />
         </div>
         <MathText className="text-sm font-medium text-slate-900 leading-relaxed">
           {question.question_text}
