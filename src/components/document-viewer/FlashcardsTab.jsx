@@ -68,15 +68,23 @@ Create flashcards that:
         }
       });
 
-      const generatedCards = response.flashcards || [];
+      const generatedCards = response?.flashcards || [];
+      
+      // Guard against empty or invalid flashcards array
+      if (!Array.isArray(generatedCards) || generatedCards.length === 0) {
+        console.error("No flashcards generated");
+        setIsGenerating(false);
+        return;
+      }
+      
       const savedCards = await Promise.all(
         generatedCards.map(card => 
           base44.entities.Flashcard.create({
             lesson_id: lesson.id,
-            question: card.question,
-            answer: card.answer,
-            topics: card.topics,
-            difficulty: card.difficulty,
+            question: card.question || "Question",
+            answer: card.answer || "Answer",
+            topics: card.topics || [],
+            difficulty: card.difficulty || "medium",
             status: "new",
             mastery_level: 0
           })
