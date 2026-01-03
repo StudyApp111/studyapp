@@ -229,8 +229,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Daily Challenges - Mobile only, compact */}
-      <div className="md:hidden mb-5">
+      {/* Daily Challenges - Both Mobile and Desktop */}
+      <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
         <DailyChallenge 
           studyMinutes={studyMinutesToday}
           questionsAnswered={questionsToday}

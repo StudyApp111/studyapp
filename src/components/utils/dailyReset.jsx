@@ -62,8 +62,9 @@ export const handleDailyReset = async () => {
       daily_xp: 0,
       study_minutes_today: 0,
       questions_today: 0,
-      flashcardsToday: 0,
-      daily_challenges_completed: []
+      flashcards_today: 0,
+      daily_challenges_completed: [],
+      study_sessions_today: 0
     };
     
     // Only update streak if it changed
@@ -125,6 +126,9 @@ export const recordDailyActivity = async (activityType, amount = 1) => {
         break;
       case 'flashcards':
         updateData.flashcards_today = (user.flashcards_today || 0) + amount;
+        break;
+      case 'session':
+        updateData.study_sessions_today = (user.study_sessions_today || 0) + amount;
         break;
     }
     
