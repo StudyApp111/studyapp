@@ -969,6 +969,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
                 answer={currentQ.user_answer}
                 onAnswer={handleAnswer}
                 showFeedback={true}
+                lesson={lesson}
               />
             </AnimatePresence>
           </div>
