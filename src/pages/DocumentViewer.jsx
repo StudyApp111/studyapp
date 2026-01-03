@@ -15,6 +15,8 @@ import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import StudyBuddiesTab from "@/components/document-viewer/StudyBuddiesTab";
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
+
+// Track study minutes every minute
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
@@ -119,17 +121,27 @@ export default function DocumentViewer() {
   }, [isTimerRunning, studyTime !== null]);
 
   // Save progress every 30 seconds (both user total and lesson-specific time)
+  // Also track study_minutes_today every minute for daily challenges
   useEffect(() => {
     if (saveProgressRef.current) {
       clearInterval(saveProgressRef.current);
     }
 
+    let minuteCounter = 0;
+    
     saveProgressRef.current = setInterval(async () => {
       try {
         const user = await base44.auth.me();
         await base44.auth.updateMe({
           time_spent_seconds: (user.time_spent_seconds || 0) + 30
         });
+        
+        // Track study minutes for daily challenges (every 60 seconds)
+        minuteCounter += 30;
+        if (minuteCounter >= 60) {
+          await recordDailyActivity('study_minutes', 1);
+          minuteCounter = 0;
+        }
         
         // Also update lesson-specific study time
         if (lesson?.id) {
