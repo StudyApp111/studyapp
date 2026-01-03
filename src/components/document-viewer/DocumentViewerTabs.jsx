@@ -353,13 +353,28 @@ export default function DocumentViewerTabs({ lesson }) {
           {/* Content Area */}
           <div className="flex-1 overflow-hidden">
             {viewMode === "pdf" && lesson?.file_url ? (
-              <div className="h-full bg-slate-50">
+              <div className="h-full bg-slate-50 relative">
                 {isPDF || isOfficeDoc ? (
-                  <iframe
-                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
-                    className="w-full h-full border-0"
-                    title="Course Document"
-                  />
+                  <>
+                    {/* Loading state */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10" id="pdf-loader">
+                      <div className="text-center">
+                        <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-600">Loading document...</p>
+                        <p className="text-xs text-slate-400 mt-1">This may take a moment</p>
+                      </div>
+                    </div>
+                    <iframe
+                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
+                      className="w-full h-full border-0 relative z-20"
+                      title="Course Document"
+                      onLoad={(e) => {
+                        // Hide loader when iframe loads
+                        const loader = document.getElementById('pdf-loader');
+                        if (loader) loader.style.display = 'none';
+                      }}
+                    />
+                  </>
                 ) : isImage ? (
                   <div className="w-full h-full flex items-center justify-center p-8">
                     <img 
