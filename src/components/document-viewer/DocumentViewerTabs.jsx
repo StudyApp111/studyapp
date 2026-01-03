@@ -136,15 +136,27 @@ export default function DocumentViewerTabs({ lesson }) {
         <div className="border-b border-purple-200 px-2 py-2 space-y-2">
           <div className="flex flex-col gap-2">
             {lesson?.extracted_content && (
-              <div className="flex items-center gap-1 flex-wrap">
-                <Button
-                  variant={viewMode === "transcript" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode(viewMode === "pdf" ? "transcript" : "pdf")}
-                  className={`text-xs h-8 ${viewMode === "transcript" ? "bg-purple-600 hover:bg-purple-700" : ""}`}
-                >
-                  {viewMode === "transcript" ? "PDF" : "Text"}
-                </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+                  <Button
+                    variant={viewMode === "pdf" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("pdf")}
+                    className={`text-xs h-7 px-3 ${viewMode === "pdf" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+                  >
+                    <FileText className="w-3 h-3 mr-1" />
+                    PDF
+                  </Button>
+                  <Button
+                    variant={viewMode === "transcript" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("transcript")}
+                    className={`text-xs h-7 px-3 ${viewMode === "transcript" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+                  >
+                    <Search className="w-3 h-3 mr-1" />
+                    Searchable Text
+                  </Button>
+                </div>
                 {viewMode === "transcript" && (
                   <Button
                     variant={annotationMode ? "default" : "outline"}
@@ -253,100 +265,106 @@ export default function DocumentViewerTabs({ lesson }) {
                       />
                     </div>
 
-                    {/* Floating Annotation Button */}
+                    {/* Floating Annotation Modal */}
                     {annotationMode && showAnnotationPopover && selectedText && (
                       <div 
-                        className="fixed z-50"
-                        style={{ 
-                          left: `${selectionPosition.x}px`, 
-                          top: `${selectionPosition.y}px`,
-                          transform: 'translate(-50%, -100%)'
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+                        onClick={(e) => {
+                          if (e.target === e.currentTarget) {
+                            setShowAnnotationPopover(false);
+                            setSelectedText("");
+                            setNoteText("");
+                            window.getSelection().removeAllRanges();
+                          }
                         }}
                       >
-                        <Popover open={showAnnotationPopover} onOpenChange={setShowAnnotationPopover}>
-                          <PopoverTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              className="bg-purple-600 hover:bg-purple-700 shadow-xl animate-in fade-in zoom-in duration-200 text-xs h-8"
-                            >
-                              <Highlighter className="w-3 h-3 mr-1" />
-                              Annotate
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent 
-                            className="w-[calc(100vw-2rem)] max-w-sm" 
-                            align="center" 
-                            onOpenAutoFocus={(e) => e.preventDefault()}
-                            onInteractOutside={(e) => {
-                              e.preventDefault();
-                            }}
-                          >
-                            <div className="space-y-3">
-                              <div>
-                                <p className="text-xs font-semibold text-slate-600 mb-2">Selected Text:</p>
-                                <p className="text-sm text-slate-700 bg-yellow-50 p-2 rounded border border-yellow-200 max-h-20 overflow-y-auto">
-                                  {selectedText.substring(0, 150)}{selectedText.length > 150 ? '...' : ''}
-                                </p>
-                              </div>
-                              
-                              <div>
-                                <label className="text-xs font-semibold text-slate-600 mb-2 block">Highlight Color:</label>
-                                <div className="flex gap-2">
-                                  {['yellow', 'green', 'blue', 'pink', 'purple'].map(color => (
-                                    <button
-                                      key={color}
-                                      type="button"
-                                      onClick={() => setHighlightColor(color)}
-                                      className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
-                                        highlightColor === color ? 'border-slate-900 scale-110 ring-2 ring-purple-300' : 'border-slate-200'
-                                      }`}
-                                      style={{ 
-                                        backgroundColor: color === 'yellow' ? '#fef08a' : 
-                                                        color === 'green' ? '#bbf7d0' : 
-                                                        color === 'blue' ? '#bfdbfe' : 
-                                                        color === 'pink' ? '#fbcfe8' : '#e9d5ff' 
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <label className="text-xs font-semibold text-slate-600 mb-1 block">Note (optional):</label>
-                                <Textarea
-                                  value={noteText}
-                                  onChange={(e) => setNoteText(e.target.value)}
-                                  placeholder="Add your thoughts..."
-                                  className="min-h-[60px] text-sm"
-                                />
-                              </div>
-                              
+                        <div 
+                          className="bg-white rounded-xl shadow-2xl w-[calc(100vw-2rem)] max-w-sm p-4 animate-in fade-in zoom-in duration-200"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+                                <Highlighter className="w-4 h-4 text-purple-600" />
+                                Add Annotation
+                              </h3>
+                            </div>
+                            
+                            <div>
+                              <p className="text-xs font-semibold text-slate-600 mb-2">Selected Text:</p>
+                              <p className="text-sm text-slate-700 bg-yellow-50 p-2 rounded border border-yellow-200 max-h-20 overflow-y-auto">
+                                "{selectedText.substring(0, 150)}{selectedText.length > 150 ? '...' : ''}"
+                              </p>
+                            </div>
+                            
+                            <div>
+                              <label className="text-xs font-semibold text-slate-600 mb-2 block">Highlight Color:</label>
                               <div className="flex gap-2">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => {
-                                    setShowAnnotationPopover(false);
-                                    setSelectedText("");
-                                    setNoteText("");
-                                    window.getSelection().removeAllRanges();
-                                  }}
-                                  className="flex-1"
-                                >
-                                  Cancel
-                                </Button>
-                                <Button 
-                                  onClick={handleAddAnnotation} 
-                                  size="sm" 
-                                  className="flex-1 bg-purple-600 hover:bg-purple-700"
-                                >
-                                  <StickyNote className="w-4 h-4 mr-2" />
-                                  Save
-                                </Button>
+                                {['yellow', 'green', 'blue', 'pink', 'purple'].map(color => (
+                                  <button
+                                    key={color}
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setHighlightColor(color);
+                                    }}
+                                    className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
+                                      highlightColor === color ? 'border-slate-900 scale-110 ring-2 ring-purple-300' : 'border-slate-200'
+                                    }`}
+                                    style={{ 
+                                      backgroundColor: color === 'yellow' ? '#fef08a' : 
+                                                      color === 'green' ? '#bbf7d0' : 
+                                                      color === 'blue' ? '#bfdbfe' : 
+                                                      color === 'pink' ? '#fbcfe8' : '#e9d5ff' 
+                                    }}
+                                  />
+                                ))}
                               </div>
                             </div>
-                          </PopoverContent>
-                        </Popover>
+                            
+                            <div>
+                              <label className="text-xs font-semibold text-slate-600 mb-1 block">Note (optional):</label>
+                              <Textarea
+                                value={noteText}
+                                onChange={(e) => setNoteText(e.target.value)}
+                                placeholder="Add your thoughts..."
+                                className="min-h-[60px] text-sm"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            
+                            <div className="flex gap-2 pt-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setShowAnnotationPopover(false);
+                                  setSelectedText("");
+                                  setNoteText("");
+                                  window.getSelection().removeAllRanges();
+                                }}
+                                className="flex-1"
+                              >
+                                Cancel
+                              </Button>
+                              <Button 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleAddAnnotation();
+                                }}
+                                size="sm" 
+                                className="flex-1 bg-purple-600 hover:bg-purple-700"
+                              >
+                                <StickyNote className="w-4 h-4 mr-2" />
+                                Save
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
