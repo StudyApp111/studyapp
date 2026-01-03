@@ -17,6 +17,7 @@ import ProfileInformation from './pages/ProfileInformation';
 import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
 import Worksheet from './pages/Worksheet';
+import UserAnalytics from './pages/UserAnalytics';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "Settings": Settings,
     "SmartGrader": SmartGrader,
     "Worksheet": Worksheet,
+    "UserAnalytics": UserAnalytics,
 }
 
 export const pagesConfig = {
