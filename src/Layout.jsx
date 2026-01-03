@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -388,15 +388,26 @@ export default function Layout({ children, currentPageName }) {
                 <div className="w-14" />
 
                 <Link
-                    to={createPageUrl("Settings")}
-                    className={`relative flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                      location.pathname === createPageUrl("Settings")
-                        ? 'text-yellow-600 bg-yellow-50'
-                        : 'text-slate-600'
-                    }`}
-                  >
-                    <Settings className="w-6 h-6" />
-                  </Link>
+                  to={createPageUrl("Feedback")}
+                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                    location.pathname === createPageUrl("Feedback")
+                      ? 'text-yellow-600 bg-yellow-50'
+                      : 'text-slate-600'
+                  }`}
+                >
+                  <MessageSquareText className="w-6 h-6" />
+                </Link>
+
+                <Link
+                  to={createPageUrl("Settings")}
+                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                    location.pathname === createPageUrl("Settings")
+                      ? 'text-yellow-600 bg-yellow-50'
+                      : 'text-slate-600'
+                  }`}
+                >
+                  <Settings className="w-6 h-6" />
+                </Link>
 
                 {/* New Lesson CTA Button */}
                 <button
