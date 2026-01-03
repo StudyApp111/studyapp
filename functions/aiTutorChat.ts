@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { messages, lessonContext, documentContent } = await req.json();
+    const { messages, lessonContext, documentContent, specificContext } = await req.json();
 
     const apiKey = Deno.env.get('API_KEY');
     if (!apiKey) {
@@ -20,15 +20,48 @@ Deno.serve(async (req) => {
     const docContent = documentContent || lessonContext?.extracted_content || '';
     const hasDocument = docContent && docContent.length > 50;
 
+    // Build specific context section
+    let specificContextSection = '';
+    if (specificContext) {
+      if (specificContext.type === 'question' && specificContext.question) {
+        specificContextSection = `
+SPECIFIC CONTEXT - EXAM QUESTION:
+The student needs help with this exam question:
+Question: "${specificContext.question.text}"
+${specificContext.question.options ? `Options: ${specificContext.question.options.join(', ')}` : ''}
+Correct Answer: "${specificContext.question.correct_answer}"
+${specificContext.question.explanation ? `Explanation: ${specificContext.question.explanation}` : ''}
+
+Help the student understand WHY the correct answer is correct. Explain the underlying concept.`;
+      } else if (specificContext.type === 'flashcard' && specificContext.flashcard) {
+        specificContextSection = `
+SPECIFIC CONTEXT - FLASHCARD:
+The student wants to understand this flashcard better:
+Question: "${specificContext.flashcard.question}"
+Answer: "${specificContext.flashcard.answer}"
+${specificContext.flashcard.topics ? `Topics: ${specificContext.flashcard.topics.join(', ')}` : ''}
+
+Explain this concept in more depth with examples and connections to related ideas.`;
+      } else if (specificContext.type === 'document' && specificContext.selectedText) {
+        specificContextSection = `
+SPECIFIC CONTEXT - SELECTED TEXT:
+The student selected this text from their notes and wants it explained:
+"${specificContext.selectedText}"
+
+Break this down clearly and explain any technical terms or concepts.`;
+      }
+    }
+
     // Build system prompt with lesson context
     const systemPrompt = `You are Polli, an expert AI study tutor in StudyApp. Keep responses SHORT and concise (2-4 sentences unless explaining something complex).
 
 ${lessonContext?.course_name ? `Course: ${lessonContext.course_name}` : ''}
+${specificContextSection}
 
 ${hasDocument ? `
 DOCUMENT CONTENT (use this to answer questions):
 ---
-${docContent.substring(0, 15000)}
+${docContent.substring(0, 12000)}
 ---
 
 You have access to the student's uploaded document above. When they ask about it:
@@ -38,17 +71,18 @@ You have access to the student's uploaded document above. When they ask about it
 ` : 'No document uploaded - provide general help.'}
 
 CAPABILITIES:
+- Explain exam questions and why answers are correct
+- Help understand flashcard concepts deeply
+- Break down complex text selections
 - Summarize documents
-- Extract key points and concepts
-- Answer questions about the content
 - Quiz students on the material
-- Explain concepts simply
 
 RULES:
 - Be concise - students have limited attention
 - Use bullet points for lists
-- If asked about content not in the document, say so
-- Be encouraging and supportive`;
+- If explaining a question, focus on the WHY not just the WHAT
+- Be encouraging and supportive
+- Give practical examples when helpful`;
 
     // Prepare messages for Gemini
     const geminiMessages = [
