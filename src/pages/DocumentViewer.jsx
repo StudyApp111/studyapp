@@ -77,7 +77,7 @@ export default function DocumentViewer() {
   useEffect(() => {
     loadLesson();
     loadUserStats();
-  }, []);
+  }, [window.location.search]);
 
   const loadUserStats = async () => {
     try {
