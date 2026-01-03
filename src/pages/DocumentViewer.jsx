@@ -266,7 +266,7 @@ export default function DocumentViewer() {
             </div>
             
             {/* Desktop Header */}
-            <div className="hidden md:flex flex-1 items-center gap-4 min-w-0">
+            <div className="hidden md:flex flex-1 items-center gap-3 min-w-0">
               {/* Logo */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 <img 
@@ -277,22 +277,19 @@ export default function DocumentViewer() {
                 <span className="font-bold text-slate-900 text-sm">StudyApp</span>
               </div>
               
-              {/* Divider */}
-              <div className="h-6 w-px bg-slate-200 flex-shrink-0" />
-              
-              {/* Course Name */}
-              <span className="text-base font-semibold text-slate-800 truncate flex-1 min-w-0">{lesson?.course_name}</span>
+              {/* Course Name + Grade Card */}
+              <div className="flex-1 min-w-0 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 text-white px-4 py-2 rounded-xl shadow-md">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-sm font-semibold truncate">{lesson?.course_name}</span>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs opacity-80">Predicted:</span>
+                    <span className="text-lg font-bold">{predictedGrade || '—'}</span>
+                  </div>
+                </div>
+              </div>
               
               {/* Right side stats */}
-              <div className="flex items-center gap-3 flex-shrink-0">
-                {/* Predicted Grade */}
-                {predictedGrade && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 text-white">
-                    <Trophy className="w-4 h-4" />
-                    <span className="text-sm font-bold">{predictedGrade}</span>
-                  </div>
-                )}
-                
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Daily XP */}
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-50 border border-yellow-200">
                   <Zap className="w-4 h-4 text-yellow-500" />
