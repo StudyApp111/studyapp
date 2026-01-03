@@ -18,19 +18,21 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     scrollToBottom();
   }, [messages]);
 
-  // Add welcome message on mount if no messages
+  // Add welcome message on mount or when lesson changes
   useEffect(() => {
-    if (messages.length === 0) {
-      const courseName = lesson?.course_name || "your course";
-      const hasDoc = lesson?.extracted_content || lesson?.file_url;
+    if (lesson) {
+      const courseName = lesson.course_name || "your course";
+      const hasDoc = lesson.extracted_content || lesson.file_url;
+      const contentPreview = hasDoc 
+        ? `I've loaded your **${courseName}** materials and I'm ready to help!` 
+        : `I'm ready to help you with **${courseName}**!`;
+      
       setMessages([{
         role: "assistant",
-        content: hasDoc 
-          ? `👋 I'm **Polli**, your AI study buddy for **${courseName}**!\n\nI've read your uploaded document. Try:\n• "Summarize this"\n• "What are the key concepts?"\n• "Quiz me on this"\n• Ask any question about the content!`
-          : `👋 I'm **Polli**, your AI study buddy for **${courseName}**!\n\nAsk me anything - I can explain concepts, quiz you, or give study tips!`
+        content: `👋 Hey! I'm **Polli**, your AI tutor.\n\n${contentPreview}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something you don't understand`
       }]);
     }
-  }, []);
+  }, [lesson?.id]);
 
   const handleSend = async (customMessage) => {
     const messageToSend = customMessage || input.trim();
