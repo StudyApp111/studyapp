@@ -157,24 +157,22 @@ export default function Settings() {
                 label="History"
                 onClick={() => navigate(createPageUrl("LessonHistory"))}
               />
-              {user?.role === 'admin' && (
-                <SettingsItem
-                  icon={BarChart3}
-                  label="Analytics"
-                  onClick={() => navigate(createPageUrl("Analytics"))}
-                />
-              )}
             </SettingsSection>
 
             <Separator className="my-6" />
 
-            {user?.email === 'kartikeya2159@gmail.com' && (
+            {user?.role === 'admin' && (
               <>
                 <SettingsSection title="Admin">
                   <SettingsItem
                     icon={Mail}
                     label="Email Manager"
                     onClick={() => navigate(createPageUrl("EmailManager"))}
+                  />
+                  <SettingsItem
+                    icon={BarChart3}
+                    label="User Analytics"
+                    onClick={() => navigate(createPageUrl("UserAnalytics"))}
                   />
                 </SettingsSection>
                 <Separator className="my-6" />

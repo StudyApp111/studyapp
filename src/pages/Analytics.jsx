@@ -29,7 +29,8 @@ export default function Analytics() {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
 
-      if (currentUser.email !== 'kartikeya2159@gmail.com') {
+      // Robust admin check - must have admin role
+      if (!currentUser || currentUser.role !== 'admin') {
         navigate(createPageUrl("Home"));
         return;
       }
@@ -41,6 +42,7 @@ export default function Analytics() {
       }
     } catch (err) {
       console.error("Error loading config:", err);
+      navigate(createPageUrl("Home"));
     } finally {
       setIsLoading(false);
     }
@@ -93,7 +95,7 @@ export default function Analytics() {
     );
   }
 
-  if (!user || user.email !== 'kartikeya2159@gmail.com') {
+  if (!user || user.role !== 'admin') {
     return null;
   }
 
