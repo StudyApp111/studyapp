@@ -253,84 +253,92 @@ export default function DocumentViewer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full max-w-full">
-      <div className="border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10 w-full max-w-full overflow-hidden">
-        <div className="w-full max-w-full px-2 md:px-3 py-2 md:py-3 overflow-hidden">
-          <div className="flex items-center gap-1.5 md:gap-2 w-full max-w-full overflow-hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(createPageUrl("Home"))}
-              className="hidden md:flex text-slate-700 hover:text-slate-900 hover:bg-purple-100 flex-shrink-0 h-10 w-10"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            {/* Mobile Header - Two rows */}
-            <div className="flex-1 min-w-0 max-w-full bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-2.5 md:px-4 py-2 md:py-3 rounded-xl shadow-lg md:hidden">
-              <div className="flex items-center justify-between gap-2 w-full">
-                <span className="text-xs font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  <div className="flex items-center gap-1 bg-white/20 rounded-lg px-2 py-0.5">
-                    <Clock className="w-3 h-3 opacity-80" />
-                    <span className="text-[10px] font-mono font-medium">{formatStudyTime(studyTime)}</span>
-                  </div>
+      {/* Mobile Header */}
+      <div className="md:hidden border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10 w-full">
+        <div className="px-2 py-2">
+          <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-2.5 py-2 rounded-xl shadow-lg">
+            <div className="flex items-center justify-between gap-2 w-full">
+              <span className="text-xs font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex items-center gap-1 bg-white/20 rounded-lg px-2 py-0.5">
+                  <Clock className="w-3 h-3 opacity-80" />
+                  <span className="text-[10px] font-mono font-medium">{formatStudyTime(studyTime)}</span>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Desktop Header - Unified Purple Banner */}
+      <div className="hidden md:block sticky top-0 z-10 w-full">
+        <div className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 px-4 py-2.5 shadow-lg">
+          <div className="flex items-center justify-between gap-4">
+            {/* Left: Back + Logo + App Name */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <button
+                onClick={() => navigate(createPageUrl("Home"))}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 bg-white/15 backdrop-blur rounded-xl p-1.5 shadow-inner">
+                  <img 
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+                    alt="StudyApp"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <span className="font-bold text-white text-sm tracking-tight">StudyApp</span>
+              </div>
+            </div>
             
-            {/* Desktop Header */}
-            <div className="hidden md:flex flex-1 items-center gap-3 min-w-0">
-              {/* Logo */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
-                  alt="StudyApp"
-                  className="w-8 h-8"
-                />
-                <span className="font-bold text-slate-900 text-sm">StudyApp</span>
+            {/* Center: Course Name */}
+            <div className="flex-1 min-w-0 flex justify-center">
+              <div className="bg-white/10 backdrop-blur-sm px-5 py-1.5 rounded-full border border-white/20">
+                <span className="text-white font-semibold text-sm truncate block max-w-[280px]">
+                  {lesson?.course_name}
+                </span>
+              </div>
+            </div>
+            
+            {/* Right: Grade + XP + Timer */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Predicted Grade */}
+              <div className="flex items-center gap-2">
+                <span className="text-white/70 text-xs font-medium">Predicted:</span>
+                <span className="text-white text-xl font-bold tracking-tight">{predictedGrade || '—'}</span>
               </div>
               
-              {/* Course Name + Grade + XP + Timer Card */}
-              <div className="flex-1 min-w-0 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 text-white px-4 py-2.5 rounded-xl shadow-md">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm font-semibold truncate">{lesson?.course_name}</span>
-                  <div className="flex items-center gap-4 flex-shrink-0">
-                    {/* Predicted Grade */}
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs opacity-80">Predicted:</span>
-                      <span className="text-lg font-bold">{predictedGrade || '—'}</span>
+              {/* Subtle Divider */}
+              <div className="h-6 w-px bg-white/20" />
+              
+              {/* Daily XP */}
+              <div className="flex items-center gap-1.5 bg-gradient-to-r from-yellow-400/20 to-amber-400/20 border border-yellow-400/30 rounded-full px-3 py-1.5">
+                <Zap className="w-4 h-4 text-yellow-300" />
+                <span className="text-white text-xs font-bold">{userDailyXP}/50 XP</span>
+              </div>
+              
+              {/* Timer */}
+              <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1.5">
+                <Clock className="w-4 h-4 text-white/80" />
+                <span className="text-white text-xs font-mono font-semibold min-w-[45px]">
+                  {formatStudyTime(studyTime)}
+                </span>
+                <button
+                  onClick={() => setIsTimerRunning(!isTimerRunning)}
+                  className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors"
+                >
+                  {isTimerRunning ? (
+                    <div className="flex gap-0.5">
+                      <div className="w-[3px] h-3 bg-white rounded-full" />
+                      <div className="w-[3px] h-3 bg-white rounded-full" />
                     </div>
-                    
-                    {/* Divider */}
-                    <div className="h-5 w-px bg-white/30" />
-                    
-                    {/* Daily XP */}
-                    <div className="flex items-center gap-1.5 bg-white/15 rounded-lg px-2.5 py-1">
-                      <Zap className="w-3.5 h-3.5 text-yellow-300" />
-                      <span className="text-xs font-bold">{userDailyXP}/50 XP</span>
-                    </div>
-                    
-                    {/* Timer */}
-                    <div className="flex items-center gap-2 bg-white/15 rounded-lg px-2.5 py-1">
-                      <Clock className="w-3.5 h-3.5 text-white/80" />
-                      <span className="text-xs font-mono font-semibold min-w-[45px]">
-                        {formatStudyTime(studyTime)}
-                      </span>
-                      <button
-                        onClick={() => setIsTimerRunning(!isTimerRunning)}
-                        className="h-4 w-4 flex items-center justify-center hover:bg-white/20 rounded transition-colors"
-                      >
-                        {isTimerRunning ? (
-                          <div className="flex gap-0.5">
-                            <div className="w-0.5 h-2 bg-white rounded-full" />
-                            <div className="w-0.5 h-2 bg-white rounded-full" />
-                          </div>
-                        ) : (
-                          <div className="w-0 h-0 border-l-[4px] border-l-white border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                  ) : (
+                    <div className="w-0 h-0 border-l-[6px] border-l-white border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-0.5" />
+                  )}
+                </button>
               </div>
             </div>
           </div>
