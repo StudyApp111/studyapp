@@ -26,14 +26,26 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
     };
 
     if (type === "question") {
+      const hasUserAnswer = data.user_answer && data.user_answer.trim() !== "";
+      const userAnswerIsCorrect = hasUserAnswer && data.user_answer?.trim().toLowerCase() === data.correct_answer?.trim().toLowerCase();
+      
       contextData.question = {
         text: data.question_text,
         options: data.options,
-        correct_answer: data.correct_answer,
+        correct_answer: hasUserAnswer ? data.correct_answer : null, // Only include if user answered
+        user_answer: data.user_answer || null,
         explanation: data.explanation,
         type: data.question_type
       };
-      contextData.initialPrompt = `Help me understand this question:\n\n"${data.question_text}"\n\nExplain the concept behind it and why the correct answer is "${data.correct_answer}".`;
+      
+      // Different prompts based on whether user has answered
+      if (!hasUserAnswer) {
+        contextData.initialPrompt = `Help me understand this question without giving away the answer:\n\n"${data.question_text}"\n\nExplain the underlying concept and give me hints to figure it out myself.`;
+      } else if (userAnswerIsCorrect) {
+        contextData.initialPrompt = `I got this question right! My answer: "${data.user_answer}"\n\nQuestion: "${data.question_text}"\n\nCan you explain why this is correct and help me understand the concept deeper?`;
+      } else {
+        contextData.initialPrompt = `I answered "${data.user_answer}" but the correct answer is "${data.correct_answer}".\n\nQuestion: "${data.question_text}"\n\nHelp me understand why my answer was wrong and why the correct answer is right.`;
+      }
     } 
     else if (type === "flashcard") {
       contextData.flashcard = {

@@ -24,15 +24,36 @@ Deno.serve(async (req) => {
     let specificContextSection = '';
     if (specificContext) {
       if (specificContext.type === 'question' && specificContext.question) {
-        specificContextSection = `
-SPECIFIC CONTEXT - EXAM QUESTION:
-The student needs help with this exam question:
-Question: "${specificContext.question.text}"
-${specificContext.question.options ? `Options: ${specificContext.question.options.join(', ')}` : ''}
-Correct Answer: "${specificContext.question.correct_answer}"
-${specificContext.question.explanation ? `Explanation: ${specificContext.question.explanation}` : ''}
+        const q = specificContext.question;
+        const hasUserAnswer = q.user_answer && q.user_answer.trim() !== "";
+        
+        if (!hasUserAnswer) {
+          // User hasn't answered yet - DO NOT reveal the correct answer
+          specificContextSection = `
+SPECIFIC CONTEXT - EXAM QUESTION (NOT YET ANSWERED):
+The student is working on this question and needs help understanding it:
+Question: "${q.text}"
+${q.options ? `Options: ${q.options.join(', ')}` : ''}
 
-Help the student understand WHY the correct answer is correct. Explain the underlying concept.`;
+IMPORTANT: The student has NOT answered yet. Do NOT reveal the correct answer!
+- Explain the underlying concept
+- Give hints and guidance to help them figure it out
+- Help them eliminate wrong options through reasoning
+- Do NOT say which answer is correct`;
+        } else {
+          // User has answered - can discuss the answer
+          specificContextSection = `
+SPECIFIC CONTEXT - EXAM QUESTION (ANSWERED):
+The student answered this question:
+Question: "${q.text}"
+${q.options ? `Options: ${q.options.join(', ')}` : ''}
+Student's Answer: "${q.user_answer}"
+Correct Answer: "${q.correct_answer}"
+${q.explanation ? `Explanation: ${q.explanation}` : ''}
+
+Help the student understand WHY the correct answer is correct. If they got it wrong, explain their misconception.`;
+        }
+      }
       } else if (specificContext.type === 'flashcard' && specificContext.flashcard) {
         specificContextSection = `
 SPECIFIC CONTEXT - FLASHCARD:

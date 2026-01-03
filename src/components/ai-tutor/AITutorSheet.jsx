@@ -110,11 +110,6 @@ export default function AITutorSheet() {
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
             className="fixed bottom-0 left-0 right-0 z-50 h-[70%] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
           >
-            {/* Handle */}
-            <div className="flex justify-center pt-2 pb-1">
-              <div className="w-10 h-1 bg-slate-300 rounded-full" />
-            </div>
-
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -206,7 +201,7 @@ export default function AITutorSheet() {
                   Simpler please
                 </button>
                 <button
-                  onClick={() => handleSend("Why is this important?")}
+                  onClick={() => handleSend("Why is this important to know?")}
                   className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
                 >
                   Why important?
