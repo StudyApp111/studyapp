@@ -23,8 +23,8 @@ Deno.serve(async (req) => {
         const prompt = `Generate 4 study topic suggestions for a student.
 
 Course: ${courseName}
-${userSchool ? `School: ${userSchool}` : ''}
-${userGrade ? `Grade: ${userGrade}` : ''}
+${school ? `School: ${school}` : ''}
+${grade ? `Grade: ${grade}` : ''}
 
 Instructions:
 Use search to find an official or commonly cited course outline or syllabus for this course.
