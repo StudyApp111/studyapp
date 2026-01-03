@@ -91,10 +91,13 @@ export default function Layout({ children, currentPageName }) {
         setUser(currentUser);
         
         // Track user session
-        await trackUserSession();
-        
-        // Start tracking session duration
-        const cleanup = trackSessionDuration();
+                      await trackUserSession();
+
+                      // Start tracking session duration
+                      const cleanup = trackSessionDuration();
+
+                      // Initialize event tracking
+                      const eventCleanup = initEventTracking();
         
         // Redirect to onboarding if not completed and not already on onboarding page
         if (!currentUser.onboarding_completed && location.pathname !== createPageUrl("Onboarding")) {
