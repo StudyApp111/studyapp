@@ -67,7 +67,7 @@ export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
   const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
-  const [aiTutorModalOpen, setAiTutorModalOpen] = React.useState(false);
+
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
   React.useEffect(() => {
