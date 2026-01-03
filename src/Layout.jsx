@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, MessageSquare, Users } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -21,7 +21,7 @@ import { base44 } from "@/api/base44Client";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
-import AITutorModal from "@/components/modals/AITutorModal.jsx";
+
 import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import StudyInviteNotifications from "@/components/collaborate/StudyInviteNotifications";
@@ -426,14 +426,10 @@ export default function Layout({ children, currentPageName }) {
           onOpenChange={setCreateLessonModalOpen} 
         />
 
-        {/* AI Tutor Modal */}
-        <AITutorModal 
-          open={aiTutorModalOpen} 
-          onOpenChange={setAiTutorModalOpen} 
-        />
+
 
         {/* Floating Feedback Button - hidden when modals are open */}
-        {showNavigation && !isOnboardingPage && <FeedbackButton hidden={createLessonModalOpen || aiTutorModalOpen} />}
+        {showNavigation && !isOnboardingPage && <FeedbackButton hidden={createLessonModalOpen} />}
 
         </div>
         </SidebarProvider>
