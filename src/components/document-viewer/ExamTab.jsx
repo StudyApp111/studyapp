@@ -465,6 +465,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
   const handlePrevious = () => {
     if (currentQuestion > 0) {
       recordQuestionTime(currentQuestion);
+      saveExamProgress();
       currentQuestionStartTimeRef.current = Date.now();
       setCurrentQuestion(prev => prev - 1);
     }
