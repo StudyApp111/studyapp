@@ -6,16 +6,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 
 export default function AITutorFloatingButton({ hidden = false }) {
+  // Hide on DocumentViewer page (has its own AI tutor)
+  const isDocumentViewer = window.location.search.includes('lessonId');
+  
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState("");
   const messagesEndRef = useRef(null);
-  
-  // Hide on DocumentViewer page (has its own AI tutor)
-  const isDocumentViewer = window.location.search.includes('lessonId');
-  if (isDocumentViewer) return null;
 
   useEffect(() => {
     const loadUser = async () => {
@@ -86,7 +85,7 @@ Remember: Keep it brief!`,
     setIsLoading(false);
   };
 
-  if (hidden) return null;
+  if (hidden || isDocumentViewer) return null;
 
   return (
     <>
