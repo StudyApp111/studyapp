@@ -93,6 +93,26 @@ export default function UserAnalytics() {
     enabled: currentUser?.role === 'admin'
   });
 
+  // Device breakdown - use events since user.device_type may not be set
+  const deviceBreakdown = React.useMemo(() => {
+    // First try to get from events (more accurate)
+    const deviceFromEvents = {};
+    events.forEach(e => {
+      if (e.device_type && e.user_email) {
+        deviceFromEvents[e.user_email] = e.device_type;
+      }
+    });
+    
+    // Count devices per user (use event data if available, else user data)
+    const breakdown = {};
+    users.forEach(u => {
+      const device = deviceFromEvents[u.email] || u.device_type || 'unknown';
+      breakdown[device] = (breakdown[device] || 0) + 1;
+    });
+    
+    return breakdown;
+  }, [users, events]);
+
   // Redirect if not admin
   useEffect(() => {
     if (!userLoading && currentUser && currentUser.role !== 'admin') {
@@ -143,26 +163,6 @@ export default function UserAnalytics() {
       acc[e.event_name] = (acc[e.event_name] || 0) + 1;
       return acc;
     }, {});
-
-  // Device breakdown - use events since user.device_type may not be set
-  const deviceBreakdown = React.useMemo(() => {
-    // First try to get from events (more accurate)
-    const deviceFromEvents = {};
-    events.forEach(e => {
-      if (e.device_type && e.user_email) {
-        deviceFromEvents[e.user_email] = e.device_type;
-      }
-    });
-    
-    // Count devices per user (use event data if available, else user data)
-    const breakdown = {};
-    users.forEach(u => {
-      const device = deviceFromEvents[u.email] || u.device_type || 'unknown';
-      breakdown[device] = (breakdown[device] || 0) + 1;
-    });
-    
-    return breakdown;
-  }, [users, events]);
 
   // School breakdown from learning profiles
   const schoolBreakdown = learningProfiles.reduce((acc, p) => {
