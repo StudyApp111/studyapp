@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   BookOpen, Award, Calendar, Clock, FileCheck, 
   ArrowRight, Trophy, Layers, ChevronRight, Sparkles,
-  GraduationCap, Target, Zap
+  GraduationCap, Target, Zap, FileText, PenLine
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -114,6 +114,9 @@ export default function LessonHistory() {
     
     const progress = (completedExams / totalExams) * 100;
     const studyTime = lesson.total_study_time_seconds || 0;
+    
+    // Determine content type
+    const hasDocument = lesson.file_url || (lesson.file_urls && lesson.file_urls.length > 0);
 
     const getGradeColor = (grade) => {
       if (!grade) return 'text-slate-400';
@@ -147,10 +150,24 @@ export default function LessonHistory() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="font-bold text-slate-900 text-sm md:text-base truncate">{lesson.course_name}</h3>
-                  <p className="text-xs text-slate-500 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {formatDate(lesson.created_date)}
-                  </p>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {formatDate(lesson.created_date)}
+                    </span>
+                    <span className="text-slate-300">•</span>
+                    {hasDocument ? (
+                      <span className="inline-flex items-center gap-0.5 text-blue-600">
+                        <FileText className="w-3 h-3" />
+                        Doc
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-0.5 text-purple-600">
+                        <PenLine className="w-3 h-3" />
+                        Written
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
