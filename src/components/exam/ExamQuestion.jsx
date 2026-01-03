@@ -8,8 +8,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, Lightbulb, Sparkles, Star } from "lucide-react";
 import MathText from "@/components/math/MathText";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
+import AskAIButton from "@/components/ai-tutor/AskAIButton";
 
-export default function ExamQuestion({ question, answer, onAnswer, showFeedback = false }) {
+export default function ExamQuestion({ question, answer, onAnswer, showFeedback = false, lesson = null }) {
   const [hasAnswered, setHasAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(answer || "");
   const [isCorrect, setIsCorrect] = useState(null);
@@ -237,15 +238,21 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       </AnimatePresence>
       {/* Question */}
       <div>
-        <div className="flex gap-1 mb-2 flex-wrap">
-          <Badge className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0">
-            {question.question_type}
-          </Badge>
-          {question.difficulty_index && (
-            <Badge className="bg-slate-100 text-slate-600 text-[9px] px-1.5 py-0">
-              {question.difficulty_index}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex gap-1 flex-wrap">
+            <Badge className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0">
+              {question.question_type}
             </Badge>
-          )}
+            {question.difficulty_index && (
+              <Badge className="bg-slate-100 text-slate-600 text-[9px] px-1.5 py-0">
+                {question.difficulty_index}
+              </Badge>
+            )}
+          </div>
+          {/* Ask AI Button - Mobile Only */}
+          <div className="md:hidden">
+            <AskAIButton type="question" data={question} lesson={lesson} />
+          </div>
         </div>
         <MathText className="text-sm font-medium text-slate-900 leading-relaxed">
           {question.question_text}
