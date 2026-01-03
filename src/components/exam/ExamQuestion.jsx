@@ -83,7 +83,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} className="space-y-2">
       {question.options?.map((option, index) => {
         const optionLetter = String.fromCharCode(65 + index);
-        const optionText = typeof option === 'string' ? option : option?.text || JSON.stringify(option);
+        const optionText = typeof option === 'string' ? option : (option?.text || option?.label || option?.value || String(option));
         const displayText = stripLetterPrefix(optionText);
         const isThisCorrect = optionText?.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase();
         const isThisSelected = selectedAnswer === optionText;
