@@ -11,7 +11,15 @@ import { useAITutor } from "./AITutorContext";
  * @param {string} size - "sm" | "md" (default: "sm")
  */
 export default function AskAIButton({ type, data, lesson, size = "sm" }) {
-  const { openWithContext } = useAITutor();
+  const { openWithContext, sendToPanel } = useAITutor();
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -60,7 +68,14 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
       contextData.initialPrompt = `Explain this section from my notes:\n\n"${data.selectedText}"\n\nBreak it down in simple terms.`;
     }
 
-    openWithContext(contextData);
+    // On mobile: open the modal sheet
+    // On desktop: send to the AI tutor panel (no modal)
+    if (isMobile) {
+      openWithContext(contextData);
+    } else {
+      // Dispatch event for the desktop AI panel to pick up
+      window.dispatchEvent(new CustomEvent('askAIFromContext', { detail: contextData }));
+    }
   };
 
   const sizeClasses = size === "sm" 

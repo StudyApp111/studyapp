@@ -34,6 +34,20 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     }
   }, [lesson?.id]);
 
+  // Listen for "Ask AI" button clicks from exam/flashcard components
+  useEffect(() => {
+    const handleAskAI = (event) => {
+      const contextData = event.detail;
+      if (contextData?.initialPrompt) {
+        setShowQuickActions(false);
+        handleSend(contextData.initialPrompt);
+      }
+    };
+
+    window.addEventListener('askAIFromContext', handleAskAI);
+    return () => window.removeEventListener('askAIFromContext', handleAskAI);
+  }, [messages]);
+
   const handleSend = async (customMessage) => {
     const messageToSend = customMessage || input.trim();
     if (!messageToSend || isLoading) return;

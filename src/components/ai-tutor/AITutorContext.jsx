@@ -13,6 +13,12 @@ export function AITutorProvider({ children }) {
     setIsOpen(true);
   };
 
+  // For desktop: send context to existing AI tutor panel without opening modal
+  const sendToPanel = (newContext) => {
+    setContext(newContext);
+    // Don't open modal, just set context - the panel will pick it up
+  };
+
   const close = () => {
     setIsOpen(false);
   };
@@ -30,7 +36,8 @@ export function AITutorProvider({ children }) {
       setContext,
       messages,
       setMessages,
-      openWithContext, 
+      openWithContext,
+      sendToPanel,
       close,
       clearContext
     }}>
