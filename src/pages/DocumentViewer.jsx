@@ -266,54 +266,59 @@ export default function DocumentViewer() {
             </div>
             
             {/* Desktop Header */}
-            <div className="hidden md:flex flex-1 min-w-0 max-w-full bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-4 py-3 rounded-xl shadow-lg">
-              <div className="flex items-center justify-between gap-2 w-full">
-                <span className="text-base font-bold truncate flex-1 min-w-0">{lesson?.course_name}</span>
-                <div className="flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">
-                  <span className="text-base font-normal">Predicted Grade:</span>
-                  {predictedGrade ? (
-                    <span className="text-xl font-bold">{predictedGrade}</span>
-                  ) : (
-                    <span className="text-xs opacity-70">-</span>
-                  )}
+            <div className="hidden md:flex flex-1 items-center gap-4 min-w-0">
+              {/* Logo */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <img 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+                  alt="StudyApp"
+                  className="w-8 h-8"
+                />
+                <span className="font-bold text-slate-900 text-sm">StudyApp</span>
+              </div>
+              
+              {/* Divider */}
+              <div className="h-6 w-px bg-slate-200 flex-shrink-0" />
+              
+              {/* Course Name */}
+              <span className="text-base font-semibold text-slate-800 truncate flex-1 min-w-0">{lesson?.course_name}</span>
+              
+              {/* Right side stats */}
+              <div className="flex items-center gap-3 flex-shrink-0">
+                {/* Predicted Grade */}
+                {predictedGrade && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 text-white">
+                    <Trophy className="w-4 h-4" />
+                    <span className="text-sm font-bold">{predictedGrade}</span>
+                  </div>
+                )}
+                
+                {/* Daily XP */}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-50 border border-yellow-200">
+                  <Zap className="w-4 h-4 text-yellow-500" />
+                  <span className="text-sm font-bold text-yellow-700">{userDailyXP}/50</span>
                 </div>
-              </div>
-            </div>
-            {/* Streak, XP, Timer - Desktop */}
-            <div className="hidden md:flex items-center gap-2">
-              {/* Streak */}
-              <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border ${userStreak > 0 ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-200'}`}>
-                <Flame className={`w-4 h-4 ${userStreak > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
-                <span className={`text-sm font-bold ${userStreak > 0 ? 'text-orange-700' : 'text-slate-500'}`}>{userStreak}</span>
-              </div>
-              
-              {/* Daily XP */}
-              <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-50 border border-yellow-200">
-                <Zap className="w-4 h-4 text-yellow-500" />
-                <span className="text-sm font-bold text-yellow-700">{userDailyXP}/50</span>
-              </div>
-              
-              {/* Timer */}
-              <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2 shadow-sm border border-purple-200">
-                <Clock className="w-4 h-4 text-purple-600" />
-                <span className="text-sm font-mono font-semibold text-slate-900 min-w-[50px]">
-                  {formatStudyTime(studyTime)}
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsTimerRunning(!isTimerRunning)}
-                  className="h-6 w-6 p-0 hover:bg-purple-50"
-                >
-                  {isTimerRunning ? (
-                    <div className="flex gap-0.5">
-                      <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
-                      <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
-                    </div>
-                  ) : (
-                    <div className="w-0 h-0 border-l-[6px] border-l-purple-600 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent ml-0.5" />
-                  )}
-                </Button>
+                
+                {/* Timer */}
+                <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border border-slate-200">
+                  <Clock className="w-4 h-4 text-purple-600" />
+                  <span className="text-sm font-mono font-semibold text-slate-900 min-w-[50px]">
+                    {formatStudyTime(studyTime)}
+                  </span>
+                  <button
+                    onClick={() => setIsTimerRunning(!isTimerRunning)}
+                    className="h-5 w-5 flex items-center justify-center hover:bg-slate-100 rounded transition-colors"
+                  >
+                    {isTimerRunning ? (
+                      <div className="flex gap-0.5">
+                        <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
+                        <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
+                      </div>
+                    ) : (
+                      <div className="w-0 h-0 border-l-[5px] border-l-purple-600 border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -322,65 +327,66 @@ export default function DocumentViewer() {
 
       <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)]">
         {/* Desktop: Flex container for AI tutor + tabs */}
-        <div className="hidden md:flex gap-2 h-full w-full max-w-full">{/* AI Tutor Panel - Left 1/3 */}
-          <AITutorPanel 
-            messages={messages}
-            setMessages={setMessages}
-            input={aiInput}
-            setInput={setAiInput}
-            isLoading={aiLoading}
-            setIsLoading={setAiLoading}
-            lesson={lesson}
-          />
+        <div className="hidden md:flex gap-3 h-full w-full max-w-full">
+          {/* AI Tutor Panel - Left side */}
+          <div className="w-[320px] flex-shrink-0">
+            <AITutorPanel 
+              messages={messages}
+              setMessages={setMessages}
+              input={aiInput}
+              setInput={setAiInput}
+              isLoading={aiLoading}
+              setIsLoading={setAiLoading}
+              lesson={lesson}
+            />
+          </div>
           
-          {/* Tabs - Right 2/3 */}
-          <div className="flex-[2]">
+          {/* Tabs - Right side (fills remaining space) */}
+          <div className="flex-1 min-w-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
               <div className="flex-shrink-0">
-                <div className="w-full overflow-x-auto scrollbar-hide">
-                  <TabsList className="inline-flex bg-white border border-purple-200 p-1 gap-1 h-auto w-max">
-                    {hasDocument && (
-                      <TabsTrigger 
-                        value="doc"
-                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap"
-                      >
-                        <FileText className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-[11px] font-medium">Doc</span>
-                      </TabsTrigger>
-                    )}
+                <TabsList className="flex w-full bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
+                  {hasDocument && (
                     <TabsTrigger 
-                      value="exam"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative"
+                      value="doc"
+                      className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
                     >
-                      {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                       <FileText className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-[11px] font-medium">Exam</span>
+                      <span className="text-xs font-medium">Document</span>
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="grade"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative"
-                    >
-                      {showGradeDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                      <Trophy className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-[11px] font-medium">Grade</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="flashcards"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap relative"
-                    >
-                      {showFlashcardsDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                      <BookMarked className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-[11px] font-medium">Flashcards</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="collaborate"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-3 py-2 h-auto whitespace-nowrap relative"
-                    >
-                      <Users className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-[11px] font-medium">Collaborate</span>
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
+                  )}
+                  <TabsTrigger 
+                    value="exam"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                  >
+                    {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
+                    <FileText className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Exam</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="grade"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                  >
+                    {showGradeDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
+                    <Trophy className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Grade</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="flashcards"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                  >
+                    {showFlashcardsDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
+                    <BookMarked className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Flashcards</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="collaborate"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                  >
+                    <Users className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Collaborate</span>
+                  </TabsTrigger>
+                </TabsList>
               </div>
 
               <div className="w-full flex-1 overflow-auto">
@@ -487,20 +493,12 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      {isTimerRunning && (
-        <PomodoroTimer 
-          elapsedSeconds={studyTime} 
-          onBreakComplete={() => {}} 
-        />
-      )}
-
-      {/* Study Session Milestone Tracker - Only show on desktop */}
-      <div className="hidden md:block fixed bottom-8 right-8 z-40">
+      {/* Pomodoro Timer - Mobile only */}
+      <div className="md:hidden">
         {isTimerRunning && (
-          <StudySessionTracker
-            elapsedSeconds={studyTime}
-            onMilestoneReached={handleMilestoneReached}
-            minimized={false}
+          <PomodoroTimer 
+            elapsedSeconds={studyTime} 
+            onBreakComplete={() => {}} 
           />
         )}
       </div>
