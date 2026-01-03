@@ -208,34 +208,55 @@ export default function Layout({ children, currentPageName }) {
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {navigationItems.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton 
-                          asChild 
-                          className={`hover:bg-yellow-50 hover:text-yellow-700 transition-all duration-200 rounded-xl mb-1 ${
-                            location.pathname === item.url ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 shadow-lg shadow-yellow-500/30 font-semibold' : ''
-                          }`}
-                        >
-                          <Link to={item.url} className="flex items-center justify-between gap-3 px-4 py-3 w-full">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <item.icon className="w-5 h-5 flex-shrink-0" />
-                              <span className="font-medium whitespace-nowrap">{item.title}</span>
-                            </div>
-                            {item.isNew && (
-                              <span className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
-                                NEW
-                              </span>
-                            )}
-                            {item.isComingSoon && (
-                              <span className="bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
-                                SOON
-                              </span>
-                            )}
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
+                                            {navigationItems.map((item) => (
+                                              <SidebarMenuItem key={item.title}>
+                                                <SidebarMenuButton 
+                                                  asChild 
+                                                  className={`hover:bg-yellow-50 hover:text-yellow-700 transition-all duration-200 rounded-xl mb-1 ${
+                                                    location.pathname === item.url ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 shadow-lg shadow-yellow-500/30 font-semibold' : ''
+                                                  }`}
+                                                >
+                                                  <Link to={item.url} className="flex items-center justify-between gap-3 px-4 py-3 w-full">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                                                      <span className="font-medium whitespace-nowrap">{item.title}</span>
+                                                    </div>
+                                                    {item.isNew && (
+                                                      <span className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
+                                                        NEW
+                                                      </span>
+                                                    )}
+                                                    {item.isComingSoon && (
+                                                      <span className="bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
+                                                        SOON
+                                                      </span>
+                                                    )}
+                                                  </Link>
+                                                </SidebarMenuButton>
+                                              </SidebarMenuItem>
+                                            ))}
+                                            {/* Admin-only navigation */}
+                                            {user?.role === 'admin' && adminNavigationItems.map((item) => (
+                                              <SidebarMenuItem key={item.title}>
+                                                <SidebarMenuButton 
+                                                  asChild 
+                                                  className={`hover:bg-yellow-50 hover:text-yellow-700 transition-all duration-200 rounded-xl mb-1 ${
+                                                    location.pathname === item.url ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 shadow-lg shadow-yellow-500/30 font-semibold' : ''
+                                                  }`}
+                                                >
+                                                  <Link to={item.url} className="flex items-center justify-between gap-3 px-4 py-3 w-full">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                                                      <span className="font-medium whitespace-nowrap">{item.title}</span>
+                                                    </div>
+                                                    <span className="bg-slate-700 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
+                                                      ADMIN
+                                                    </span>
+                                                  </Link>
+                                                </SidebarMenuButton>
+                                              </SidebarMenuItem>
+                                            ))}
+                                          </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
 
