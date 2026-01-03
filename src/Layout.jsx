@@ -23,8 +23,8 @@ import { logError } from "@/components/utils/errorLogger";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
 
 import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
-import FeedbackModal from "@/components/feedback/FeedbackModal";
-import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton";
+import FeedbackModal from "@/components/feedback/FeedbackModal.jsx";
+import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton.jsx";
 import StudyInviteNotifications from "@/components/collaborate/StudyInviteNotifications";
 
 const navigationItems = [
