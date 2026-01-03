@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
-import { trackPageView, initEventTracking } from "@/components/utils/eventTracker";
 import { logError } from "@/components/utils/errorLogger";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
 
@@ -54,8 +53,6 @@ const navigationItems = [
         },
       ];
 
-const adminNavigationItems = [];
-
 const formatTime = (seconds) => {
   if (!seconds || seconds === 0) return '0m';
   
@@ -77,13 +74,6 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
 
-  // Track page views on route change
-  React.useEffect(() => {
-    if (currentPageName) {
-      trackPageView(currentPageName);
-    }
-  }, [currentPageName]);
-
   React.useEffect(() => {
     const checkUser = async () => {
       try {
@@ -91,23 +81,17 @@ export default function Layout({ children, currentPageName }) {
         setUser(currentUser);
         
         // Track user session
-                      await trackUserSession();
-
-                      // Start tracking session duration
-                      const cleanup = trackSessionDuration();
-
-                      // Initialize event tracking
-                      const eventCleanup = initEventTracking();
+        await trackUserSession();
+        
+        // Start tracking session duration
+        const cleanup = trackSessionDuration();
         
         // Redirect to onboarding if not completed and not already on onboarding page
         if (!currentUser.onboarding_completed && location.pathname !== createPageUrl("Onboarding")) {
           navigate(createPageUrl("Onboarding"));
         }
         
-        return () => {
-                cleanup?.();
-                eventCleanup?.();
-              };
+        return cleanup;
       } catch (error) {
         console.error("Error fetching user:", error);
       }
@@ -215,35 +199,34 @@ export default function Layout({ children, currentPageName }) {
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                                            {navigationItems.map((item) => (
-                                              <SidebarMenuItem key={item.title}>
-                                                <SidebarMenuButton 
-                                                  asChild 
-                                                  className={`hover:bg-yellow-50 hover:text-yellow-700 transition-all duration-200 rounded-xl mb-1 ${
-                                                    location.pathname === item.url ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 shadow-lg shadow-yellow-500/30 font-semibold' : ''
-                                                  }`}
-                                                >
-                                                  <Link to={item.url} className="flex items-center justify-between gap-3 px-4 py-3 w-full">
-                                                    <div className="flex items-center gap-3 min-w-0">
-                                                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                                                      <span className="font-medium whitespace-nowrap">{item.title}</span>
-                                                    </div>
-                                                    {item.isNew && (
-                                                      <span className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
-                                                        NEW
-                                                      </span>
-                                                    )}
-                                                    {item.isComingSoon && (
-                                                      <span className="bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
-                                                        SOON
-                                                      </span>
-                                                    )}
-                                                  </Link>
-                                                </SidebarMenuButton>
-                                              </SidebarMenuItem>
-                                            ))}
-
-                                          </SidebarMenu>
+                    {navigationItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton 
+                          asChild 
+                          className={`hover:bg-yellow-50 hover:text-yellow-700 transition-all duration-200 rounded-xl mb-1 ${
+                            location.pathname === item.url ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 shadow-lg shadow-yellow-500/30 font-semibold' : ''
+                          }`}
+                        >
+                          <Link to={item.url} className="flex items-center justify-between gap-3 px-4 py-3 w-full">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <item.icon className="w-5 h-5 flex-shrink-0" />
+                              <span className="font-medium whitespace-nowrap">{item.title}</span>
+                            </div>
+                            {item.isNew && (
+                              <span className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
+                                NEW
+                              </span>
+                            )}
+                            {item.isComingSoon && (
+                              <span className="bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
+                                SOON
+                              </span>
+                            )}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
 
