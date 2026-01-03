@@ -104,7 +104,10 @@ export default function Layout({ children, currentPageName }) {
           navigate(createPageUrl("Onboarding"));
         }
         
-        return cleanup;
+        return () => {
+                cleanup?.();
+                eventCleanup?.();
+              };
       } catch (error) {
         console.error("Error fetching user:", error);
       }
