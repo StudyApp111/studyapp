@@ -179,16 +179,16 @@ export default function DocumentViewer() {
   const loadLesson = async () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const lessonId = urlParams.get('lessonId');
+      const lessonId = urlParams.get('id') || urlParams.get('lessonId');
 
       if (!lessonId) {
-        navigate(createPageUrl("CreateLesson"));
+        navigate(createPageUrl("Home"));
         return;
       }
 
       const lessons = await base44.entities.Lesson.filter({ id: lessonId });
       if (lessons.length === 0) {
-        navigate(createPageUrl("CreateLesson"));
+        navigate(createPageUrl("Home"));
         return;
       }
 
@@ -234,7 +234,7 @@ export default function DocumentViewer() {
       setLoading(false);
     } catch (error) {
       console.error("Error loading lesson:", error);
-      navigate(createPageUrl("CreateLesson"));
+      navigate(createPageUrl("Home"));
     }
   };
 
