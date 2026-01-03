@@ -3,10 +3,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
-        const { trigger_type, user_email, context } = await req.json();
+        
+        // Validate authenticated user
+        const authenticatedUser = await base44.auth.me();
+        if (!authenticatedUser) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        
+        const { trigger_type, context } = await req.json();
+        
+        // Use authenticated user's email - don't allow triggering for other users
+        const user_email = authenticatedUser.email;
 
-        if (!trigger_type || !user_email) {
-            return Response.json({ error: 'trigger_type and user_email required' }, { status: 400 });
+        if (!trigger_type) {
+            return Response.json({ error: 'trigger_type required' }, { status: 400 });
         }
 
         // Get enabled automatic emails for this trigger
