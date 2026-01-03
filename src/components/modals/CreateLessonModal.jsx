@@ -383,21 +383,12 @@ Constraints:
         )
       };
 
-      await base44.entities.CurriculumMap.create({
-        course_name: courseName.trim(),
-        school: learningProfile.school || "",
-        grade: learningProfile.grade || "",
-        city: learningProfile.city || "",
-        source: "create_lesson",
-        curriculum_data: curriculumMap
-      });
-
+      // Create lesson immediately after OCR - navigate user to DocumentViewer ASAP
       setProcessingStep("Creating lesson...");
 
       const lessonData = {
         course_name: courseName,
         input_type: inputType,
-        curriculum_map: curriculumMap,
         status: "created"
       };
 
@@ -412,8 +403,23 @@ Constraints:
 
       const lesson = await base44.entities.Lesson.create(lessonData);
 
+      // Navigate immediately - curriculum mapping and exam generation happen in background
       onOpenChange(false);
-      navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`);
+      navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}&generating=true`);
+
+      // Background: Save curriculum map and update lesson (non-blocking)
+      base44.entities.CurriculumMap.create({
+        course_name: courseName.trim(),
+        school: learningProfile.school || "",
+        grade: learningProfile.grade || "",
+        city: learningProfile.city || "",
+        source: "create_lesson",
+        curriculum_data: curriculumMap
+      }).catch(err => console.error("CurriculumMap save error:", err));
+
+      base44.entities.Lesson.update(lesson.id, {
+        curriculum_map: curriculumMap
+      }).catch(err => console.error("Lesson curriculum update error:", err));
     } catch (err) {
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
