@@ -41,6 +41,9 @@ export default function DocumentViewerTabs({ lesson }) {
   };
 
   const handleTextSelection = () => {
+    // Don't process if modal is already open
+    if (showAnnotationPopover) return;
+    
     const selection = window.getSelection();
     const text = selection.toString().trim();
     if (text) {
@@ -52,8 +55,8 @@ export default function DocumentViewerTabs({ lesson }) {
       });
       setSelectedText(text);
       setShowAnnotationPopover(true);
-    } else {
-      setShowAnnotationPopover(false);
+      // Clear selection immediately so it doesn't interfere
+      window.getSelection().removeAllRanges();
     }
   };
 
