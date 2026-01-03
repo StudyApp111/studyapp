@@ -18,8 +18,8 @@ const formatTime = (seconds) => {
 export default function FeedbackDisplay({ exam, lesson, allExams = [], courseName }) {
   const [showRoadmapModal, setShowRoadmapModal] = useState(false);
   const [sectionsExpanded, setSectionsExpanded] = useState({
-    strengths: true,
-    weaknesses: true,
+    strengths: false,
+    weaknesses: false,
     insights: false,
     breakdown: true
   });
@@ -263,75 +263,63 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                       }`}
                     >
                       <div 
-                        className={`p-3 cursor-pointer hover:bg-slate-50 transition-colors ${
+                        className={`p-2.5 cursor-pointer hover:bg-slate-50 transition-colors ${
                           isExpanded ? 'border-b border-slate-100' : ''
                         }`}
                         onClick={() => toggleQuestion(idx)}
                       >
                         <div className="flex items-center gap-2">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm ${
+                          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
                             feedback.is_correct 
                               ? 'bg-emerald-500 text-white' 
                               : 'bg-amber-500 text-white'
                           }`}>
                             {feedback.is_correct ? (
-                              <CheckCircle className="w-4 h-4" />
+                              <CheckCircle className="w-3.5 h-3.5" />
                             ) : (
-                              <XCircle className="w-4 h-4" />
+                              <XCircle className="w-3.5 h-3.5" />
                             )}
                           </div>
                           
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-slate-900 text-xs">
-                                Q{question.question_number}
-                              </h4>
-                              {question.question_type && (
-                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-slate-50 text-slate-600 border-slate-200">
-                                  {question.question_type}
-                                </Badge>
-                              )}
-                              {question.difficulty_index && (
-                                <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${
-                                  question.difficulty_index.toLowerCase() === 'hard' ? 'bg-red-50 text-red-600 border-red-200' :
-                                  question.difficulty_index.toLowerCase() === 'medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                  'bg-green-50 text-green-600 border-green-200'
-                                }`}>
-                                  {question.difficulty_index}
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex gap-1 flex-wrap">
-                              <Badge className={`text-[9px] px-1.5 py-0 ${feedback.is_correct ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                                {feedback.points_earned}/10
+                          <div className="flex-1 min-w-0 flex flex-wrap items-center gap-1.5">
+                            <span className="font-semibold text-slate-900 text-xs">
+                              Q{question.question_number}
+                            </span>
+                            {question.question_type && (
+                              <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-slate-50 text-slate-600 border-slate-200">
+                                {question.question_type}
                               </Badge>
-                              {questionTime > 0 && (
-                                <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-purple-50 text-purple-700">
-                                  <Clock className="w-2.5 h-2.5 mr-0.5" />
-                                  {formatTime(questionTime)}
-                                </Badge>
-                              )}
-                            </div>
+                            )}
+                            {question.difficulty_index && (
+                              <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${
+                                question.difficulty_index.toLowerCase() === 'hard' ? 'bg-red-50 text-red-600 border-red-200' :
+                                question.difficulty_index.toLowerCase() === 'medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                'bg-green-50 text-green-600 border-green-200'
+                              }`}>
+                                {question.difficulty_index}
+                              </Badge>
+                            )}
+                            <Badge className={`text-[9px] px-1.5 py-0 ${feedback.is_correct ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                              {feedback.points_earned}/10
+                            </Badge>
+                            {questionTime > 0 && (
+                              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-purple-50 text-purple-700">
+                                <Clock className="w-2.5 h-2.5 mr-0.5" />
+                                {formatTime(questionTime)}
+                              </Badge>
+                            )}
+                            {question.assessed_competencies && question.assessed_competencies.length > 0 && (
+                              <Badge variant="outline" className="text-[8px] px-1.5 py-0 bg-purple-50/50 text-purple-600 border-purple-200">
+                                {question.assessed_competencies[0]}
+                                {question.assessed_competencies.length > 1 && ` +${question.assessed_competencies.length - 1}`}
+                              </Badge>
+                            )}
                           </div>
 
                           <div className="text-slate-400 flex-shrink-0">
                             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                           </div>
                         </div>
-                        
-                        {/* Competencies preview in collapsed state */}
-                        {!isExpanded && question.assessed_competencies && question.assessed_competencies.length > 0 && (
-                          <div className="mt-2 ml-10 flex gap-1 flex-wrap">
-                            {question.assessed_competencies.slice(0, 2).map((comp, i) => (
-                              <Badge key={i} variant="outline" className="text-[8px] px-1.5 py-0 bg-purple-50/50 text-purple-600 border-purple-200">
-                                {comp}
-                              </Badge>
-                            ))}
-                            {question.assessed_competencies.length > 2 && (
-                              <span className="text-[8px] text-slate-400">+{question.assessed_competencies.length - 2} more</span>
-                            )}
-                          </div>
-                        )}
                       </div>
 
                       <AnimatePresence>
