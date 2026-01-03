@@ -74,18 +74,12 @@ export default function Layout({ children, currentPageName }) {
 
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
-  const [recentLessonsExpanded, setRecentLessonsExpanded] = React.useState(true);
-
   // Fetch recent lessons for sidebar
   const { data: recentLessons = [] } = useQuery({
     queryKey: ['recentLessons'],
-    queryFn: () => base44.entities.Lesson.list('-created_date', 5),
+    queryFn: () => base44.entities.Lesson.list('-created_date', 2),
     initialData: [],
   });
-
-  // Get current lesson ID from URL if on DocumentViewer
-  const urlParams = new URLSearchParams(location.search);
-  const currentLessonId = urlParams.get('id');
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -204,63 +198,55 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Navigation Icons */}
             <nav className="flex-1 flex flex-col items-center gap-1 px-2 py-2">
-              {navigationItems.map((item) => {
+              {navigationItems.map((item, index) => {
                 const isActive = location.pathname === item.url;
+                const isLessonHistory = item.title === "Lesson History";
+
                 return (
-                  <Link
-                    key={item.title}
-                    to={item.url}
-                    className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
-                      isActive 
-                        ? 'bg-purple-100 text-purple-700 shadow-sm' 
-                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                    }`}
-                    title={item.title}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    {item.isNew && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full" />
+                  <React.Fragment key={item.title}>
+                    <Link
+                      to={item.url}
+                      className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                        isActive 
+                          ? 'bg-purple-100 text-purple-700 shadow-sm' 
+                          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                      }`}
+                      title={item.title}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      {item.isNew && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full" />
+                      )}
+                    </Link>
+
+                    {/* Recent Lessons - appears right after Lesson History */}
+                    {isLessonHistory && recentLessons.length > 0 && (
+                      <div className="w-full space-y-1 mt-1">
+                        {recentLessons.slice(0, 2).map((lesson) => {
+                          const lessonUrl = `${createPageUrl("DocumentViewer")}?id=${lesson.id}`;
+                          const isLessonActive = location.search.includes(lesson.id);
+                          const firstLetter = lesson.course_name?.[0]?.toUpperCase() || 'L';
+
+                          return (
+                            <Link
+                              key={lesson.id}
+                              to={lessonUrl}
+                              className={`w-full aspect-square rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                                isLessonActive 
+                                  ? 'bg-yellow-100 text-yellow-700 ring-2 ring-yellow-400 shadow-sm' 
+                                  : 'bg-slate-100 text-slate-600 hover:bg-purple-50 hover:text-purple-600'
+                              }`}
+                              title={lesson.course_name}
+                            >
+                              <span className="font-bold text-sm">{firstLetter}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     )}
-                  </Link>
+                  </React.Fragment>
                 );
               })}
-
-              {/* Recent Lessons Section */}
-              {recentLessons.length > 0 && (
-                <>
-                  <button
-                    onClick={() => setRecentLessonsExpanded(!recentLessonsExpanded)}
-                    className="w-full aspect-square rounded-xl flex items-center justify-center transition-all text-slate-400 hover:bg-slate-100 hover:text-slate-600 mt-2"
-                    title={recentLessonsExpanded ? "Collapse recent" : "Expand recent"}
-                  >
-                    {recentLessonsExpanded ? (
-                      <ChevronDown className="w-4 h-4" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4" />
-                    )}
-                  </button>
-
-                  {recentLessonsExpanded && recentLessons.slice(0, 4).map((lesson) => {
-                    const isActive = currentLessonId === lesson.id;
-                    const firstLetter = lesson.course_name?.[0]?.toUpperCase() || 'L';
-
-                    return (
-                      <Link
-                        key={lesson.id}
-                        to={`${createPageUrl("DocumentViewer")}?id=${lesson.id}`}
-                        className={`w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
-                          isActive 
-                            ? 'bg-yellow-100 text-yellow-700 ring-2 ring-yellow-400 shadow-sm' 
-                            : 'bg-slate-100 text-slate-600 hover:bg-purple-50 hover:text-purple-600'
-                        }`}
-                        title={lesson.course_name}
-                      >
-                        <span className="font-bold text-sm">{firstLetter}</span>
-                      </Link>
-                    );
-                  })}
-                </>
-              )}
             </nav>
 
             {/* Bottom: Notifications + Profile */}
