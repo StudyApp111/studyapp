@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
+import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 
 export default function FlashcardsTab({ lesson, extractedContent }) {
   const [cards, setCards] = useState(null);
@@ -103,13 +104,20 @@ Create flashcards that:
 
   const awardXP = async (amount, reason) => {
     try {
-      const user = await base44.auth.me();
-      await base44.auth.updateMe({
-        daily_xp: (user.daily_xp || 0) + amount,
-        total_points: (user.total_points || 0) + amount,
-        total_flashcards_mastered: (user.total_flashcards_mastered || 0) + 1
-      });
-      setXpToast({ show: true, xp: amount, reason });
+      // Use centralized XP tracking
+      const result = await awardDailyXP(amount, reason);
+      if (result.success) {
+        // Also record flashcard activity
+        await recordDailyActivity('flashcards', 1);
+        
+        // Update flashcards mastered count
+        const user = await base44.auth.me();
+        await base44.auth.updateMe({
+          total_flashcards_mastered: (user.total_flashcards_mastered || 0) + 1
+        });
+        
+        setXpToast({ show: true, xp: amount, reason });
+      }
     } catch (error) {
       console.error("Error awarding XP:", error);
     }
