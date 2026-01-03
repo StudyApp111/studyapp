@@ -274,7 +274,7 @@ export default function DocumentViewer() {
       <div className="hidden md:block sticky top-0 z-10 w-full">
         <div className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 px-4 py-2.5 shadow-lg">
           <div className="flex items-center justify-between gap-4">
-            {/* Left: Back + Logo + App Name */}
+            {/* Left: Back + App Name */}
             <div className="flex items-center gap-3 flex-shrink-0">
               <button
                 onClick={() => navigate(createPageUrl("Home"))}
@@ -282,14 +282,7 @@ export default function DocumentViewer() {
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <div className="flex items-center gap-2.5">
-                <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
-                  alt="StudyApp"
-                  className="w-8 h-8 object-contain"
-                />
-                <span className="font-bold text-white text-sm tracking-tight">StudyApp</span>
-              </div>
+              <span className="font-bold text-white text-base tracking-tight">StudyApp</span>
             </div>
             
             {/* Center: Course Name */}

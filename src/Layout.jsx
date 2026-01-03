@@ -171,9 +171,9 @@ export default function Layout({ children, currentPageName }) {
             <div className="p-3 flex justify-center">
               <Link to={createPageUrl("Home")} className="hover:opacity-80 transition-opacity">
                 <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/3dea4a750_StudyAppAI1024x1024pxPostcardUS.png"
                   alt="StudyApp"
-                  className="w-10 h-10"
+                  className="w-10 h-10 object-contain"
                 />
               </Link>
             </div>
