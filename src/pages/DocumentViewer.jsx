@@ -286,31 +286,24 @@ export default function DocumentViewer() {
       <div className="hidden md:block sticky top-0 z-10 w-full">
         <div className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 px-4 py-2.5 shadow-lg">
           <div className="flex items-center justify-between gap-4">
-            {/* Left: Back + App Name */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Left: Back + Course Name */}
+            <div className="flex items-center gap-3 flex-shrink-0 min-w-0">
               <button
                 onClick={() => navigate(createPageUrl("Home"))}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white"
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white flex-shrink-0"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <span className="font-bold text-white text-base tracking-tight">StudyApp</span>
-            </div>
-            
-            {/* Center: Course Name */}
-            <div className="flex-1 min-w-0 flex justify-center">
-              <div className="bg-white/10 backdrop-blur-sm px-5 py-1.5 rounded-full border border-white/20">
-                <span className="text-white font-semibold text-sm truncate block max-w-[280px]">
-                  {lesson?.course_name}
-                </span>
-              </div>
+              <span className="text-white font-semibold text-sm truncate max-w-[280px]">
+                {lesson?.course_name}
+              </span>
             </div>
             
             {/* Right: Grade + XP + Timer */}
             <div className="flex items-center gap-3 flex-shrink-0">
               {/* Predicted Grade */}
               <div className="flex items-center gap-2">
-                <span className="text-white/70 text-xs font-medium">Predicted:</span>
+                <span className="text-white/70 text-xs font-medium">StudyApp Predicted:</span>
                 <span className="text-white text-xl font-bold tracking-tight">{predictedGrade || '—'}</span>
               </div>
               
