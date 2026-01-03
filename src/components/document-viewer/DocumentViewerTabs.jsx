@@ -121,8 +121,8 @@ export default function DocumentViewerTabs({ lesson }) {
 
   const handleAskAI = () => {
     // Dispatch event to AI tutor with selected text
-    window.dispatchEvent(new CustomEvent('askAITutor', { 
-      detail: { prompt: `Explain this: "${selectedText}"` }
+    window.dispatchEvent(new CustomEvent('askAIFromContext', { 
+      detail: { initialPrompt: `Explain this: "${selectedText}"` }
     }));
     closeToolbar();
     toast.success("Sent to AI Tutor!");
@@ -162,18 +162,44 @@ export default function DocumentViewerTabs({ lesson }) {
     const content = lesson?.extracted_content || "";
     if (!content) return null;
     
-    // Sort annotations by position
-    const sortedAnnotations = [...annotations]
-      .filter(a => a.position?.start !== undefined)
-      .sort((a, b) => a.position.start - b.position.start);
+    // Apply search highlighting
+    if (searchQuery && searchQuery.length > 0) {
+      try {
+        const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedQuery})`, 'gi');
+        const parts = content.split(regex);
+        
+        return (
+          <>
+            {parts.map((part, idx) => 
+              regex.test(part) ? (
+                <mark key={idx} className="bg-yellow-300 px-0.5 rounded">{part}</mark>
+              ) : (
+                <span key={idx}>{part}</span>
+              )
+            )}
+          </>
+        );
+      } catch (e) {
+        // Invalid regex, just show content
+      }
+    }
+    
+    // Sort annotations by position - find by text match if position not reliable
+    const annotationsWithPositions = annotations.map(a => {
+      // Try to find the text in the content
+      const textToFind = a.highlight_text;
+      const idx = content.indexOf(textToFind);
+      return {
+        ...a,
+        resolvedStart: idx >= 0 ? idx : (a.position?.start ?? -1),
+        resolvedEnd: idx >= 0 ? idx + textToFind.length : (a.position?.end ?? -1)
+      };
+    }).filter(a => a.resolvedStart >= 0);
+    
+    const sortedAnnotations = annotationsWithPositions.sort((a, b) => a.resolvedStart - b.resolvedStart);
     
     if (sortedAnnotations.length === 0) {
-      // Apply search highlighting if no annotations
-      if (searchQuery) {
-        const regex = new RegExp(`(${searchQuery})`, 'gi');
-        const html = content.replace(regex, '<mark class="bg-yellow-300 px-0.5 rounded">$1</mark>');
-        return <div dangerouslySetInnerHTML={{ __html: html }} />;
-      }
       return <>{content}</>;
     }
     
@@ -181,7 +207,11 @@ export default function DocumentViewerTabs({ lesson }) {
     let lastIndex = 0;
     
     sortedAnnotations.forEach((annotation, idx) => {
-      const { start, end } = annotation.position;
+      const start = annotation.resolvedStart;
+      const end = annotation.resolvedEnd;
+      
+      // Skip if overlapping with previous
+      if (start < lastIndex) return;
       
       // Add text before this highlight
       if (start > lastIndex) {
@@ -410,8 +440,8 @@ export default function DocumentViewerTabs({ lesson }) {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            window.dispatchEvent(new CustomEvent('askAITutor', { 
-                              detail: { prompt: `Explain this: "${activeAnnotation.highlight_text}"` }
+                            window.dispatchEvent(new CustomEvent('askAIFromContext', { 
+                              detail: { initialPrompt: `Explain this: "${activeAnnotation.highlight_text}"` }
                             }));
                             toast.success("Sent to AI Tutor!");
                           }}
