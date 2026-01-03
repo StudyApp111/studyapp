@@ -26,6 +26,8 @@ import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility"
 import FeedbackModal from "@/components/feedback/FeedbackModal.jsx";
 import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton.jsx";
 import StudyInviteNotifications from "@/components/collaborate/StudyInviteNotifications";
+import { AITutorProvider } from "@/components/ai-tutor/AITutorContext";
+import AITutorSheet from "@/components/ai-tutor/AITutorSheet";
 
 const navigationItems = [
         {
@@ -142,6 +144,7 @@ export default function Layout({ children, currentPageName }) {
 
 
   return (
+    <AITutorProvider>
     <SidebarProvider>
       <BrowserCompatibilityBanner />
       <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 relative">
@@ -443,7 +446,11 @@ export default function Layout({ children, currentPageName }) {
         {/* Feedback Modal */}
         <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />
 
+        {/* AI Tutor Sheet - Mobile contextual helper */}
+        <AITutorSheet />
+
         </div>
         </SidebarProvider>
+        </AITutorProvider>
         );
         }
