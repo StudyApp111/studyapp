@@ -15,7 +15,7 @@ const formatTime = (seconds) => {
   return `${mins}m ${secs}s`;
 };
 
-export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
+export default function FeedbackDisplay({ exam, lesson, allExams = [], courseName }) {
   const [showRoadmapModal, setShowRoadmapModal] = useState(false);
   const [sectionsExpanded, setSectionsExpanded] = useState({
     strengths: true,
@@ -87,8 +87,8 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [] }) {
           <span className="text-xs font-medium text-slate-700">Exam {exam.exam_number} Complete</span>
         </div>
         
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">
-          Your Predicted Grade
+        <h1 className="text-xl md:text-2xl font-bold text-slate-900 mb-4 px-2">
+          If Your {courseName || 'Course'} Exam Was Today, You'd Score:
         </h1>
         
         <motion.div

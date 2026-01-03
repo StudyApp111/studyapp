@@ -49,7 +49,8 @@ export default function PredictedGradeTab({ lesson, exams }) {
       <FeedbackDisplay 
         exam={latestExamWithGrade} 
         lesson={lesson} 
-        allExams={exams} 
+        allExams={exams}
+        courseName={lesson?.course_name}
       />
     </div>
   );
