@@ -131,7 +131,7 @@ export default function LessonHistory() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
-        onClick={() => navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}`)}
+        onClick={() => navigate(createPageUrl("DocumentViewer") + `?id=${lesson.id}`)}
         className="cursor-pointer group"
       >
         <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden bg-white hover:scale-[1.01]">
