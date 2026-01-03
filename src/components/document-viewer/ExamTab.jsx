@@ -11,6 +11,7 @@ import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { logError } from "@/components/utils/errorLogger";
 import XPGainToast from "@/components/gamification/XPGainToast";
+import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -397,13 +398,20 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
 
   const awardXP = async (amount, reason) => {
     try {
-      const user = await base44.auth.me();
-      await base44.auth.updateMe({
-        daily_xp: (user.daily_xp || 0) + amount,
-        total_points: (user.total_points || 0) + amount,
-        questions_completed: (user.questions_completed || 0) + 1
-      });
-      setXpToast({ show: true, xp: amount, reason });
+      // Use centralized XP tracking
+      const result = await awardDailyXP(amount, reason);
+      if (result.success) {
+        // Also record question activity
+        await recordDailyActivity('questions', 1);
+        
+        // Update questions_completed count
+        const user = await base44.auth.me();
+        await base44.auth.updateMe({
+          questions_completed: (user.questions_completed || 0) + 1
+        });
+        
+        setXpToast({ show: true, xp: amount, reason });
+      }
     } catch (error) {
       console.error("Error awarding XP:", error);
     }
@@ -768,16 +776,18 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
 
-      // Award XP for exam completion
+      // Award XP for exam completion using centralized tracking
       let examXP = 25; // Base XP for completing exam
       if (correctCount >= 8) examXP += 25; // Bonus for high score
       if (correctCount === questionsWithGrading.length) examXP += 50; // Perfect score bonus
 
       try {
+        // Use centralized XP tracking
+        const xpResult = await awardDailyXP(examXP, 'Exam completed!');
+        
+        // Update exam-specific stats
         const currentUserXP = await base44.auth.me();
         await base44.auth.updateMe({
-          daily_xp: (currentUserXP.daily_xp || 0) + examXP,
-          total_points: (currentUserXP.total_points || 0) + examXP,
           total_exams_completed: (currentUserXP.total_exams_completed || 0) + 1
         });
 
@@ -785,7 +795,9 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         if (correctCount === questionsWithGrading.length) xpReason = 'Perfect exam! 🌟';
         else if (correctCount >= 8) xpReason = 'Great score! 🎯';
 
-        setXpToast({ show: true, xp: examXP, reason: xpReason });
+        if (xpResult.success) {
+          setXpToast({ show: true, xp: examXP, reason: xpReason });
+        }
       } catch (xpError) {
         console.error("Error awarding exam XP:", xpError);
       }
