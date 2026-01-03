@@ -29,7 +29,18 @@ export default function AITutorFloatingButton({ hidden = false }) {
     if (isOpen && messages.length === 0) {
       setMessages([{
         role: "assistant",
-        content: `Hey${userName ? ` ${userName}` : ""}! 👋 I'm your AI study buddy. Ask me anything about your studies - I can explain concepts, help solve problems, or quiz you on topics!`
+        content: `Hey${userName ? ` ${userName}` : ""}! 👋 I'm your StudyApp AI tutor.
+
+**Quick start:**
+• Upload notes on Home → get quizzes & flashcards
+• Use Smart Grader → get your work graded instantly
+
+**I can help with:**
+• Explain any concept
+• Solve problems step-by-step
+• Quiz you on topics
+
+What do you need help with?`
       }]);
     }
   }, [isOpen, userName]);
@@ -48,11 +59,15 @@ export default function AITutorFloatingButton({ hidden = false }) {
 
     try {
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a friendly, encouraging AI study tutor. Help the student with their question. Be concise but thorough. Use examples when helpful. If it's a math problem, show steps.
+        prompt: `You are StudyApp's AI tutor - friendly and helpful. Keep responses SHORT (2-4 sentences max unless solving a problem). Be direct and concise.
+
+Context: StudyApp lets students upload notes to get AI quizzes/flashcards, and grade assignments with Smart Grader.
 
 Student's question: ${userMessage}
 
-Previous context: ${messages.slice(-4).map(m => `${m.role}: ${m.content}`).join('\n')}`,
+Previous context: ${messages.slice(-4).map(m => `${m.role}: ${m.content}`).join('\n')}
+
+Remember: Keep it brief!`,
       });
 
       setMessages(prev => [...prev, { role: "assistant", content: response }]);
@@ -139,18 +154,18 @@ Previous context: ${messages.slice(-4).map(m => `${m.role}: ${m.content}`).join(
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                      className={`max-w-[85%] rounded-2xl px-3 py-2 ${
                         msg.role === "user"
                           ? "bg-purple-600 text-white"
                           : "bg-slate-100 text-slate-800"
                       }`}
                     >
                       {msg.role === "assistant" ? (
-                        <ReactMarkdown className="text-sm prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                        <ReactMarkdown className="text-xs prose prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-xs">
                           {msg.content}
                         </ReactMarkdown>
                       ) : (
-                        <p className="text-sm">{msg.content}</p>
+                        <p className="text-xs">{msg.content}</p>
                       )}
                     </div>
                   </motion.div>
@@ -174,7 +189,7 @@ Previous context: ${messages.slice(-4).map(m => `${m.role}: ${m.content}`).join(
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSend()}
                     placeholder="Ask me anything..."
-                    className="flex-1 px-4 py-2 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="flex-1 px-3 py-2 border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   <Button
                     onClick={handleSend}
