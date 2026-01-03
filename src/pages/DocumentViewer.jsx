@@ -277,44 +277,47 @@ export default function DocumentViewer() {
                 <span className="font-bold text-slate-900 text-sm">StudyApp</span>
               </div>
               
-              {/* Course Name + Grade Card */}
-              <div className="flex-1 min-w-0 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 text-white px-4 py-2 rounded-xl shadow-md">
+              {/* Course Name + Grade + XP + Timer Card */}
+              <div className="flex-1 min-w-0 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 text-white px-4 py-2.5 rounded-xl shadow-md">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm font-semibold truncate">{lesson?.course_name}</span>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs opacity-80">Predicted:</span>
-                    <span className="text-lg font-bold">{predictedGrade || '—'}</span>
+                  <div className="flex items-center gap-4 flex-shrink-0">
+                    {/* Predicted Grade */}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs opacity-80">Predicted:</span>
+                      <span className="text-lg font-bold">{predictedGrade || '—'}</span>
+                    </div>
+                    
+                    {/* Divider */}
+                    <div className="h-5 w-px bg-white/30" />
+                    
+                    {/* Daily XP */}
+                    <div className="flex items-center gap-1.5 bg-white/15 rounded-lg px-2.5 py-1">
+                      <Zap className="w-3.5 h-3.5 text-yellow-300" />
+                      <span className="text-xs font-bold">{userDailyXP}/50 XP</span>
+                    </div>
+                    
+                    {/* Timer */}
+                    <div className="flex items-center gap-2 bg-white/15 rounded-lg px-2.5 py-1">
+                      <Clock className="w-3.5 h-3.5 text-white/80" />
+                      <span className="text-xs font-mono font-semibold min-w-[45px]">
+                        {formatStudyTime(studyTime)}
+                      </span>
+                      <button
+                        onClick={() => setIsTimerRunning(!isTimerRunning)}
+                        className="h-4 w-4 flex items-center justify-center hover:bg-white/20 rounded transition-colors"
+                      >
+                        {isTimerRunning ? (
+                          <div className="flex gap-0.5">
+                            <div className="w-0.5 h-2 bg-white rounded-full" />
+                            <div className="w-0.5 h-2 bg-white rounded-full" />
+                          </div>
+                        ) : (
+                          <div className="w-0 h-0 border-l-[4px] border-l-white border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5" />
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              {/* Right side stats */}
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Daily XP */}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-50 border border-yellow-200">
-                  <Zap className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-bold text-yellow-700">{userDailyXP}/50</span>
-                </div>
-                
-                {/* Timer */}
-                <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-1.5 border border-slate-200">
-                  <Clock className="w-4 h-4 text-purple-600" />
-                  <span className="text-sm font-mono font-semibold text-slate-900 min-w-[50px]">
-                    {formatStudyTime(studyTime)}
-                  </span>
-                  <button
-                    onClick={() => setIsTimerRunning(!isTimerRunning)}
-                    className="h-5 w-5 flex items-center justify-center hover:bg-slate-100 rounded transition-colors"
-                  >
-                    {isTimerRunning ? (
-                      <div className="flex gap-0.5">
-                        <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
-                        <div className="w-0.5 h-2.5 bg-purple-600 rounded-full" />
-                      </div>
-                    ) : (
-                      <div className="w-0 h-0 border-l-[5px] border-l-purple-600 border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent ml-0.5" />
-                    )}
-                  </button>
                 </div>
               </div>
             </div>
