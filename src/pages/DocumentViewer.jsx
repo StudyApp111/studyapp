@@ -283,13 +283,11 @@ export default function DocumentViewer() {
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 bg-white/15 backdrop-blur rounded-xl p-1.5 shadow-inner">
-                  <img 
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
-                    alt="StudyApp"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+                <img 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+                  alt="StudyApp"
+                  className="w-8 h-8 object-contain"
+                />
                 <span className="font-bold text-white text-sm tracking-tight">StudyApp</span>
               </div>
             </div>

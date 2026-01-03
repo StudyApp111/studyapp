@@ -164,155 +164,77 @@ export default function Layout({ children, currentPageName }) {
           }
         `}</style>
         
-        {/* Desktop Sidebar - Hidden during onboarding */}
+        {/* Desktop Sidebar - Slim Icon-Only */}
         {showSidebar && (
-          <Sidebar className="border-r border-purple-200/60 bg-white/90 backdrop-blur-xl transition-all duration-300">
-            <SidebarHeader className="border-b border-purple-200/60 p-6">
-              <Link to={createPageUrl("Home")} className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+          <div className="hidden md:flex flex-col w-16 bg-gradient-to-b from-purple-700 via-purple-600 to-indigo-600 border-r border-purple-500/30">
+            {/* Logo */}
+            <div className="p-3 flex justify-center">
+              <Link to={createPageUrl("Home")} className="hover:opacity-80 transition-opacity">
                 <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
-                  alt="StudyApp Logo"
-                  className="w-10 h-10 rounded-xl shadow-lg"
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+                  alt="StudyApp"
+                  className="w-10 h-10"
                 />
-                <div>
-                  <h2 className="font-bold text-slate-900 text-lg">StudyApp</h2>
-                  <p className="text-xs text-slate-500">AI-Powered Learning</p>
-                </div>
               </Link>
-            </SidebarHeader>
+            </div>
             
-            <SidebarContent className="p-3">
-              {/* Start Now Button - Above Navigation */}
-              <div className="mb-4 px-2">
-                <Button
-                  onClick={() => setCreateLessonModalOpen(true)}
-                  className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold shadow-lg shadow-yellow-500/30"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Upload Now
-                </Button>
-              </div>
-
-              <SidebarGroup>
-                <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-3">
-                  Navigation
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {navigationItems.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton 
-                          asChild 
-                          className={`hover:bg-yellow-50 hover:text-yellow-700 transition-all duration-200 rounded-xl mb-1 ${
-                            location.pathname === item.url ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 shadow-lg shadow-yellow-500/30 font-semibold' : ''
-                          }`}
-                        >
-                          <Link to={item.url} className="flex items-center justify-between gap-3 px-4 py-3 w-full">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <item.icon className="w-5 h-5 flex-shrink-0" />
-                              <span className="font-medium whitespace-nowrap">{item.title}</span>
-                            </div>
-                            {item.isNew && (
-                              <span className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
-                                NEW
-                              </span>
-                            )}
-                            {item.isComingSoon && (
-                              <span className="bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm flex-shrink-0">
-                                SOON
-                              </span>
-                            )}
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-
+            {/* Upload Button */}
+            <div className="px-2 py-3">
+              <button
+                onClick={() => setCreateLessonModalOpen(true)}
+                className="w-full aspect-square rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 flex items-center justify-center shadow-lg shadow-yellow-500/30 transition-all hover:scale-105"
+                title="Upload Now"
+              >
+                <Plus className="w-5 h-5 text-slate-900" />
+              </button>
+            </div>
+            
+            {/* Navigation Icons */}
+            <nav className="flex-1 flex flex-col items-center gap-1 px-2 py-2">
+              {navigationItems.map((item) => {
+                const isActive = location.pathname === item.url;
+                return (
+                  <Link
+                    key={item.title}
+                    to={item.url}
+                    className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                      isActive 
+                        ? 'bg-white/20 text-white shadow-lg' 
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`}
+                    title={item.title}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.isNew && (
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full" />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+            
+            {/* Bottom: Notifications + Profile */}
+            <div className="p-2 space-y-2">
               {user && (
                 <>
-                  <SidebarGroup className="mt-4">
-                    <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-3">
-                      Your Progress
-                    </SidebarGroupLabel>
-                    <SidebarGroupContent>
-                      <div className="px-4 py-3 space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="w-4 h-4 text-purple-600" />
-                            <span className="text-slate-600">Questions</span>
-                          </div>
-                          <span className="font-bold text-purple-600">{user.questions_completed || 0}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-purple-700" />
-                            <span className="text-slate-600">Time Spent</span>
-                          </div>
-                          <span className="font-bold text-purple-700">{formatTime(user.time_spent_seconds || 0)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-purple-800" />
-                            <span className="text-slate-600">Avg Score</span>
-                          </div>
-                          <span className="font-bold text-purple-800">{user.average_score || 0}%</span>
-                        </div>
-                      </div>
-                    </SidebarGroupContent>
-                  </SidebarGroup>
-
-
-                </>
-              )}
-            </SidebarContent>
-
-            <SidebarFooter className="border-t border-purple-200/60 p-4">
-              {user && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-xs text-slate-500">Notifications</span>
+                  <div className="flex justify-center">
                     <StudyInviteNotifications userEmail={user.email} />
                   </div>
                   <button
                     onClick={() => navigate(createPageUrl("Settings"))}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-yellow-50 transition-colors"
+                    className="w-full aspect-square rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                    title={user.full_name || 'Profile'}
                   >
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm">
+                    <div className="w-8 h-8 bg-gradient-to-br from-white/90 to-white/70 rounded-full flex items-center justify-center">
+                      <span className="text-purple-700 font-bold text-sm">
                         {user.full_name?.[0]?.toUpperCase() || 'U'}
                       </span>
                     </div>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="font-medium text-slate-900 text-sm truncate">{user.full_name || 'User'}</p>
-                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                    </div>
-                    <Settings className="w-4 h-4 text-slate-400" />
                   </button>
-                </div>
+                </>
               )}
-            </SidebarFooter>
-          </Sidebar>
-        )}
-            
-        {/* Desktop Sidebar Toggle Button - Always visible */}
-        {showNavigation && !isOnboardingPage && (
-            <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="hidden md:flex fixed top-1/2 -translate-y-1/2 z-50 bg-white border-2 border-purple-300 rounded-r-xl shadow-xl hover:bg-purple-50 hover:shadow-2xl transition-all p-2.5"
-            style={{ left: sidebarCollapsed ? '0' : '244px', transition: 'all 0.3s ease' }}
-            >
-            {sidebarCollapsed ? (
-              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            )}
-          </button>
+            </div>
+          </div>
         )}
 
         <main className="flex-1 flex flex-col">
