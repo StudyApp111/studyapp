@@ -183,54 +183,6 @@ export default function UserAnalytics() {
   }
 
   // Helper functions
-  const totalUsers = users.length;
-  const activeUsersLast7Days = users.filter(u => {
-    if (!u.last_active_date) return false;
-    return differenceInDays(new Date(), parseISO(u.last_active_date)) <= 7;
-  }).length;
-  
-  const newUsersThisWeek = users.filter(u => {
-    if (!u.created_date) return false;
-    return differenceInDays(new Date(), parseISO(u.created_date)) <= 7;
-  }).length;
-
-  const avgSessionDuration = users.reduce((acc, u) => acc + (u.average_session_duration || 0), 0) / (totalUsers || 1);
-  
-  const retentionRate = totalUsers > 0 ? ((activeUsersLast7Days / totalUsers) * 100).toFixed(1) : 0;
-
-  // Event analytics
-  const eventsByType = events.reduce((acc, e) => {
-    acc[e.event_type] = (acc[e.event_type] || 0) + 1;
-    return acc;
-  }, {});
-
-  const topButtonClicks = events
-    .filter(e => e.event_type === 'button_click')
-    .reduce((acc, e) => {
-      acc[e.event_name] = (acc[e.event_name] || 0) + 1;
-      return acc;
-    }, {});
-
-  const topPages = events
-    .filter(e => e.event_type === 'page_view')
-    .reduce((acc, e) => {
-      acc[e.event_name] = (acc[e.event_name] || 0) + 1;
-      return acc;
-    }, {});
-
-  // School breakdown from learning profiles
-  const schoolBreakdown = learningProfiles.reduce((acc, p) => {
-    const school = p.school || 'Not specified';
-    acc[school] = (acc[school] || 0) + 1;
-    return acc;
-  }, {});
-
-  // Filter users
-  const filteredUsers = users.filter(u => 
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const toggleUserExpand = (userId) => {
     setExpandedUsers(prev => ({
       ...prev,
