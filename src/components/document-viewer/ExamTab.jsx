@@ -139,11 +139,11 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     }
   };
 
-  // Auto-save every 10 seconds
+  // Auto-save every 1 second
   useEffect(() => {
     if (!exam || exam.completed) return;
     
-    const intervalId = setInterval(saveExamProgress, 10000);
+    const intervalId = setInterval(saveExamProgress, 1000);
     return () => clearInterval(intervalId);
   }, [exam?.id, exam?.completed, elapsedSeconds]);
 
