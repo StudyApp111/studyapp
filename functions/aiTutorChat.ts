@@ -9,31 +9,46 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { messages, lessonContext } = await req.json();
+    const { messages, lessonContext, documentContent } = await req.json();
 
     const apiKey = Deno.env.get('API_KEY');
     if (!apiKey) {
       throw new Error('API_KEY not configured');
     }
 
+    // Get document content - prefer explicit documentContent, then lessonContext
+    const docContent = documentContent || lessonContext?.extracted_content || '';
+    const hasDocument = docContent && docContent.length > 50;
+
     // Build system prompt with lesson context
-    const systemPrompt = `You are an expert AI tutor helping a student with their coursework. You have access to their course materials and notes.
+    const systemPrompt = `You are Polli, an expert AI study tutor in StudyApp. Keep responses SHORT and concise (2-4 sentences unless explaining something complex).
 
-${lessonContext ? `
-COURSE CONTEXT:
-Course: ${lessonContext.course_name}
-Materials: ${lessonContext.extracted_content || 'No materials available'}
+${lessonContext?.course_name ? `Course: ${lessonContext.course_name}` : ''}
 
-Use this context to provide relevant, accurate answers to the student's questions.
-` : ''}
+${hasDocument ? `
+DOCUMENT CONTENT (use this to answer questions):
+---
+${docContent.substring(0, 15000)}
+---
 
-Your role:
-- Answer questions clearly and concisely
-- Explain concepts step-by-step when needed
-- Encourage critical thinking
-- Provide examples to illustrate concepts
-- Be patient and supportive
-- If you don't know something, admit it honestly`;
+You have access to the student's uploaded document above. When they ask about it:
+- Reference specific content from the document
+- Quote relevant sections when helpful
+- Provide accurate answers based on the actual content
+` : 'No document uploaded - provide general help.'}
+
+CAPABILITIES:
+- Summarize documents
+- Extract key points and concepts
+- Answer questions about the content
+- Quiz students on the material
+- Explain concepts simply
+
+RULES:
+- Be concise - students have limited attention
+- Use bullet points for lists
+- If asked about content not in the document, say so
+- Be encouraging and supportive`;
 
     // Prepare messages for Gemini
     const geminiMessages = [
@@ -69,7 +84,7 @@ Your role:
         },
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 1024,
         }
       })
     });
