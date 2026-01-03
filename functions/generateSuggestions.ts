@@ -119,7 +119,9 @@ Example format:
             return Response.json({ topics: [] });
         }
 
-        return Response.json({ topics: parsedResponse.topics || [] });
+        // Handle both array response and object with topics key
+        const topics = Array.isArray(parsedResponse) ? parsedResponse : (parsedResponse.topics || []);
+        return Response.json({ topics });
 
     } catch (error) {
         console.error('Error in generateSuggestions:', error.message);
