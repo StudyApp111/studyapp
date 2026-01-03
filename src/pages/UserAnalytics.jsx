@@ -37,10 +37,24 @@ export default function UserAnalytics() {
     queryFn: () => base44.auth.me()
   });
 
-  // Fetch all users
+  // Fetch all users (paginated to get all)
   const { data: users = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('-created_date', 500),
+    queryFn: async () => {
+      const allUsers = [];
+      let skip = 0;
+      const limit = 500;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const batch = await base44.entities.User.list('-created_date', limit, skip);
+        allUsers.push(...batch);
+        skip += limit;
+        hasMore = batch.length === limit;
+      }
+      
+      return allUsers;
+    },
     enabled: currentUser?.role === 'admin'
   });
 
@@ -58,10 +72,24 @@ export default function UserAnalytics() {
     enabled: currentUser?.role === 'admin'
   });
 
-  // Fetch learning profiles for school data
+  // Fetch learning profiles for school data (paginated)
   const { data: learningProfiles = [] } = useQuery({
     queryKey: ['learningProfiles'],
-    queryFn: () => base44.entities.LearningProfile.list('-created_date', 500),
+    queryFn: async () => {
+      const allProfiles = [];
+      let skip = 0;
+      const limit = 500;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const batch = await base44.entities.LearningProfile.list('-created_date', limit, skip);
+        allProfiles.push(...batch);
+        skip += limit;
+        hasMore = batch.length === limit;
+      }
+      
+      return allProfiles;
+    },
     enabled: currentUser?.role === 'admin'
   });
 
@@ -116,12 +144,25 @@ export default function UserAnalytics() {
       return acc;
     }, {});
 
-  // Device breakdown
-  const deviceBreakdown = users.reduce((acc, u) => {
-    const device = u.device_type || 'unknown';
-    acc[device] = (acc[device] || 0) + 1;
-    return acc;
-  }, {});
+  // Device breakdown - use events since user.device_type may not be set
+  const deviceBreakdown = React.useMemo(() => {
+    // First try to get from events (more accurate)
+    const deviceFromEvents = {};
+    events.forEach(e => {
+      if (e.device_type && e.user_email) {
+        deviceFromEvents[e.user_email] = e.device_type;
+      }
+    });
+    
+    // Count devices per user (use event data if available, else user data)
+    const breakdown = {};
+    users.forEach(u => {
+      const device = deviceFromEvents[u.email] || u.device_type || 'unknown';
+      breakdown[device] = (breakdown[device] || 0) + 1;
+    });
+    
+    return breakdown;
+  }, [users, events]);
 
   // School breakdown from learning profiles
   const schoolBreakdown = learningProfiles.reduce((acc, p) => {
@@ -320,12 +361,20 @@ export default function UserAnalytics() {
                               </div>
                             </td>
                             <td className="p-3">
-                              <div className="flex items-center gap-1">
-                                {user.device_type === 'mobile' && <Smartphone className="w-4 h-4 text-slate-400" />}
-                                {user.device_type === 'tablet' && <Tablet className="w-4 h-4 text-slate-400" />}
-                                {user.device_type === 'desktop' && <Monitor className="w-4 h-4 text-slate-400" />}
-                                <span className="text-xs text-slate-600 capitalize">{user.device_type || 'Unknown'}</span>
-                              </div>
+                              {(() => {
+                                // Get device from recent events for this user
+                                const userEvent = events.find(e => e.user_email === user.email && e.device_type);
+                                const deviceType = userEvent?.device_type || user.device_type;
+                                return (
+                                  <div className="flex items-center gap-1">
+                                    {deviceType === 'mobile' && <Smartphone className="w-4 h-4 text-slate-400" />}
+                                    {deviceType === 'tablet' && <Tablet className="w-4 h-4 text-slate-400" />}
+                                    {deviceType === 'desktop' && <Monitor className="w-4 h-4 text-slate-400" />}
+                                    {!deviceType && <Monitor className="w-4 h-4 text-slate-300" />}
+                                    <span className="text-xs text-slate-600 capitalize">{deviceType || 'Unknown'}</span>
+                                  </div>
+                                );
+                              })()}
                             </td>
                             <td className="p-3">
                               <span className="text-sm font-medium">{user.session_count || 0}</span>
