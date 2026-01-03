@@ -12,6 +12,10 @@ export default function AITutorFloatingButton({ hidden = false }) {
   const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState("");
   const messagesEndRef = useRef(null);
+  
+  // Hide on DocumentViewer page (has its own AI tutor)
+  const isDocumentViewer = window.location.search.includes('lessonId');
+  if (isDocumentViewer) return null;
 
   useEffect(() => {
     const loadUser = async () => {
