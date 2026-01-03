@@ -446,6 +446,9 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       awardXP(3, 'Question answered!');
     }
 
+    // Save progress when navigating
+    saveExamProgress();
+
     if (currentQuestion < exam.questions.length - 1) {
       if (gradingTimeoutRef.current) {
         clearTimeout(gradingTimeoutRef.current);
