@@ -20,24 +20,26 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        const prompt = `Generate 4 specific study topic suggestions for a student.
-
-Use the course name and available context to guide a brief search so that topics are accurate to the subject matter.
+        const prompt = `Generate 4 study topic suggestions for a student.
 
 Course: ${courseName}
-${school ? `School: ${school}` : ''}
-${grade ? `Grade: ${grade}` : ''}
+${userSchool ? `School: ${userSchool}` : ''}
+${userGrade ? `Grade: ${userGrade}` : ''}
 
 Instructions:
-- Search for curriculum standards, syllabi, or common exam topics for this course.
-- If official documents are available online (school, department, state/province standards), use them to inform topic selection.
-- Otherwise, infer likely high-yield topics based on the course name and typical curriculum for this level.
+- Use search to find an official or commonly cited course outline/syllabus for this course.
+- Identify the actual units, modules, or sections used to structure the course.
+- Each suggestion MUST correspond to a different real unit or section found in those sources.
+- Use the unit’s original wording where possible (minor shortening allowed).
+- Do NOT invent units or rephrase the same unit multiple ways.
 
-Return ONLY a JSON object with a "topics" array containing 4 short, specific topic descriptions (15–30 words each) that would be good for studying this course.
-Focus on common chapters, units, or exam topics that students are typically tested on.
+Return ONLY a JSON array of 4 unit-style topics (15–30 words each).
 
-Example output format:
-{"topics": ["Chapter 3: Photosynthesis - light reactions, Calvin cycle, chloroplast structure", "Unit 2: Cell Division - mitosis phases, chromosome separation"]}
+Example format:
+["Unit 1: Greek prefixes and roots in medical terminology",
+ "Unit 2: Latin suffixes and morphological patterns in life sciences",
+ "Unit 3: Etymology of medical vocabulary from classical sources",
+ "Unit 4: Scientific term formation and structural analysis"]
 
 IMPORTANT: Return ONLY valid JSON with no markdown formatting, no code blocks, no extra text.`;
 
