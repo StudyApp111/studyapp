@@ -296,7 +296,13 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         2000
       );
 
-      const questionsWithPlaceholder = examData.worksheet_questions.map(q => ({
+      // Guard against missing or invalid worksheet_questions
+      const worksheetQuestions = examData?.worksheet_questions || [];
+      if (!Array.isArray(worksheetQuestions) || worksheetQuestions.length === 0) {
+        throw new Error("Failed to generate exam questions. Please try again.");
+      }
+      
+      const questionsWithPlaceholder = worksheetQuestions.map(q => ({
         ...q,
         user_answer: ""
       }));
