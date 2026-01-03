@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import XPGainToast from "@/components/gamification/XPGainToast";
+import AskAIButton from "@/components/ai-tutor/AskAIButton";
 
 export default function FlashcardsTab({ lesson, extractedContent }) {
   const [cards, setCards] = useState(null);
@@ -438,9 +439,15 @@ Create flashcards that:
                     <Sparkles className="w-4 h-4 text-white" />
                     <span className="font-semibold text-sm text-white">Question</span>
                   </div>
-                  <Badge className={`${getDifficultyColor(currentCard.difficulty)} text-[10px]`}>
-                    {currentCard.difficulty}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={`${getDifficultyColor(currentCard.difficulty)} text-[10px]`}>
+                      {currentCard.difficulty}
+                    </Badge>
+                    {/* Ask AI Button - Mobile Only */}
+                    <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
+                      <AskAIButton type="flashcard" data={currentCard} lesson={lesson} size="sm" />
+                    </div>
+                  </div>
                 </div>
                 <div className="p-6 flex flex-col items-center justify-center min-h-[220px] bg-white">
                   <p className="text-slate-900 text-base font-medium leading-relaxed text-center mb-6">
