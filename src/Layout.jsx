@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText, MessageCircle } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText, MessageCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -73,6 +74,18 @@ export default function Layout({ children, currentPageName }) {
 
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
+  const [recentLessonsExpanded, setRecentLessonsExpanded] = React.useState(true);
+
+  // Fetch recent lessons for sidebar
+  const { data: recentLessons = [] } = useQuery({
+    queryKey: ['recentLessons'],
+    queryFn: () => base44.entities.Lesson.list('-created_date', 5),
+    initialData: [],
+  });
+
+  // Get current lesson ID from URL if on DocumentViewer
+  const urlParams = new URLSearchParams(location.search);
+  const currentLessonId = urlParams.get('id');
 
   React.useEffect(() => {
     const checkUser = async () => {
@@ -164,31 +177,31 @@ export default function Layout({ children, currentPageName }) {
           }
         `}</style>
         
-        {/* Desktop Sidebar - Slim Icon-Only */}
+        {/* Desktop Sidebar - White theme */}
         {showSidebar && (
-          <div className="hidden md:flex flex-col w-16 bg-gradient-to-b from-purple-700 via-purple-600 to-indigo-600 border-r border-purple-500/30">
+          <div className="hidden md:flex flex-col w-16 bg-white border-r border-slate-200 shadow-sm">
             {/* Logo */}
             <div className="p-3 flex justify-center">
               <Link to={createPageUrl("Home")} className="hover:opacity-80 transition-opacity">
                 <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/3dea4a750_StudyAppAI1024x1024pxPostcardUS.png"
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/127ee5758_StudyAppAI1024x1024px.png"
                   alt="StudyApp"
-                  className="w-10 h-10 object-contain"
+                  className="w-10 h-10 object-contain rounded-lg border-2 border-purple-200 shadow-sm"
                 />
               </Link>
             </div>
-            
+
             {/* Upload Button */}
             <div className="px-2 py-3">
               <button
                 onClick={() => setCreateLessonModalOpen(true)}
-                className="w-full aspect-square rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 flex items-center justify-center shadow-lg shadow-yellow-500/30 transition-all hover:scale-105"
+                className="w-full aspect-square rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30 transition-all hover:scale-105"
                 title="Upload Now"
               >
-                <Plus className="w-5 h-5 text-slate-900" />
+                <Plus className="w-5 h-5 text-white" />
               </button>
             </div>
-            
+
             {/* Navigation Icons */}
             <nav className="flex-1 flex flex-col items-center gap-1 px-2 py-2">
               {navigationItems.map((item) => {
@@ -199,20 +212,57 @@ export default function Layout({ children, currentPageName }) {
                     to={item.url}
                     className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
                       isActive 
-                        ? 'bg-white/20 text-white shadow-lg' 
-                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                        ? 'bg-purple-100 text-purple-700 shadow-sm' 
+                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
                     }`}
                     title={item.title}
                   >
                     <item.icon className="w-5 h-5" />
                     {item.isNew && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full" />
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full" />
                     )}
                   </Link>
                 );
               })}
+
+              {/* Recent Lessons Section */}
+              {recentLessons.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setRecentLessonsExpanded(!recentLessonsExpanded)}
+                    className="w-full aspect-square rounded-xl flex items-center justify-center transition-all text-slate-400 hover:bg-slate-100 hover:text-slate-600 mt-2"
+                    title={recentLessonsExpanded ? "Collapse recent" : "Expand recent"}
+                  >
+                    {recentLessonsExpanded ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )}
+                  </button>
+
+                  {recentLessonsExpanded && recentLessons.slice(0, 4).map((lesson) => {
+                    const isActive = currentLessonId === lesson.id;
+                    const firstLetter = lesson.course_name?.[0]?.toUpperCase() || 'L';
+
+                    return (
+                      <Link
+                        key={lesson.id}
+                        to={`${createPageUrl("DocumentViewer")}?id=${lesson.id}`}
+                        className={`w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                          isActive 
+                            ? 'bg-yellow-100 text-yellow-700 ring-2 ring-yellow-400 shadow-sm' 
+                            : 'bg-slate-100 text-slate-600 hover:bg-purple-50 hover:text-purple-600'
+                        }`}
+                        title={lesson.course_name}
+                      >
+                        <span className="font-bold text-sm">{firstLetter}</span>
+                      </Link>
+                    );
+                  })}
+                </>
+              )}
             </nav>
-            
+
             {/* Bottom: Notifications + Profile */}
             <div className="p-2 space-y-2">
               {user && (
@@ -222,11 +272,11 @@ export default function Layout({ children, currentPageName }) {
                   </div>
                   <button
                     onClick={() => navigate(createPageUrl("Settings"))}
-                    className="w-full aspect-square rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
+                    className="w-full aspect-square rounded-xl bg-slate-100 hover:bg-purple-100 flex items-center justify-center transition-all"
                     title={user.full_name || 'Profile'}
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-white/90 to-white/70 rounded-full flex items-center justify-center">
-                      <span className="text-purple-700 font-bold text-sm">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">
                         {user.full_name?.[0]?.toUpperCase() || 'U'}
                       </span>
                     </div>
