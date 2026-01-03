@@ -48,6 +48,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const questionTimesRef = useRef({});
   const currentQuestionStartTimeRef = useRef(null);
   const examIdRef = useRef(null);
+  const autoSaveTimeoutRef = useRef(null);
+  const lastSavedQuestionsRef = useRef(null);
 
   // Auto-generate Exam 1 when tab loads
   useEffect(() => {
