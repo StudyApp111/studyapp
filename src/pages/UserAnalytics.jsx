@@ -182,6 +182,7 @@ export default function UserAnalytics() {
     );
   }
 
+  // Helper functions
   const toggleUserExpand = (userId) => {
     setExpandedUsers(prev => ({
       ...prev,
