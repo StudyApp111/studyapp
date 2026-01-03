@@ -84,6 +84,13 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
 
+  // Track page views on route change
+  React.useEffect(() => {
+    if (currentPageName) {
+      trackPageView(currentPageName);
+    }
+  }, [currentPageName]);
+
   React.useEffect(() => {
     const checkUser = async () => {
       try {
