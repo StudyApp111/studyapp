@@ -79,7 +79,10 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         timerRef.current = null;
       }
       
-      startTimeRef.current = Date.now();
+      // Restore elapsed time from saved exam data
+      const savedElapsed = exam.time_taken_seconds || 0;
+      setElapsedSeconds(savedElapsed);
+      startTimeRef.current = Date.now() - (savedElapsed * 1000);
       currentQuestionStartTimeRef.current = Date.now();
       
       if (exam.question_time_laps && exam.question_time_laps.length > 0) {
@@ -111,6 +114,61 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       };
     }
   }, [exam?.id, exam?.completed]);
+
+  // Auto-save progress every 10 seconds and on answer changes
+  const saveExamProgress = async () => {
+    if (!exam || exam.completed) return;
+    
+    const questionsJson = JSON.stringify(exam.questions);
+    if (lastSavedQuestionsRef.current === questionsJson) return; // No changes
+    
+    try {
+      const questionTimeLaps = Object.keys(questionTimesRef.current).map(key => ({
+        question_index: parseInt(key),
+        total_seconds: questionTimesRef.current[key]
+      }));
+      
+      await base44.entities.Exam.update(exam.id, {
+        questions: exam.questions,
+        time_taken_seconds: elapsedSeconds,
+        question_time_laps: questionTimeLaps
+      });
+      lastSavedQuestionsRef.current = questionsJson;
+    } catch (error) {
+      console.error("Auto-save error:", error);
+    }
+  };
+
+  // Auto-save every 10 seconds
+  useEffect(() => {
+    if (!exam || exam.completed) return;
+    
+    const intervalId = setInterval(saveExamProgress, 10000);
+    return () => clearInterval(intervalId);
+  }, [exam?.id, exam?.completed, elapsedSeconds]);
+
+  // Save on page unload/visibility change
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (exam && !exam.completed) {
+        saveExamProgress();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && exam && !exam.completed) {
+        saveExamProgress();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [exam?.id, exam?.completed, elapsedSeconds]);
 
   const recordQuestionTime = (questionIndex) => {
     if (currentQuestionStartTimeRef.current) {
