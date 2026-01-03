@@ -53,6 +53,15 @@ const navigationItems = [
         },
       ];
 
+const adminNavigationItems = [
+        {
+          title: "User Analytics",
+          url: createPageUrl("UserAnalytics"),
+          icon: TrendingUp,
+          adminOnly: true,
+        },
+      ];
+
 const formatTime = (seconds) => {
   if (!seconds || seconds === 0) return '0m';
   
