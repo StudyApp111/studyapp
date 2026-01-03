@@ -4,28 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search } from "lucide-react";
+import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+
+const HIGHLIGHT_COLORS = {
+  yellow: { bg: '#fef08a', border: '#fde047', name: 'Yellow' },
+  green: { bg: '#bbf7d0', border: '#86efac', name: 'Green' },
+  blue: { bg: '#bfdbfe', border: '#93c5fd', name: 'Blue' },
+  pink: { bg: '#fbcfe8', border: '#f9a8d4', name: 'Pink' },
+  purple: { bg: '#e9d5ff', border: '#d8b4fe', name: 'Purple' }
+};
 
 export default function DocumentViewerTabs({ lesson }) {
   const [viewMode, setViewMode] = useState("pdf");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedText, setSelectedText] = useState("");
   const [annotations, setAnnotations] = useState([]);
-  const [showAnnotations, setShowAnnotations] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const [selectionRange, setSelectionRange] = useState(null);
+  const [showToolbar, setShowToolbar] = useState(false);
+  const [toolbarPosition, setToolbarPosition] = useState({ x: 0, y: 0 });
+  const [showNoteInput, setShowNoteInput] = useState(false);
   const [noteText, setNoteText] = useState("");
-  const [highlightColor, setHighlightColor] = useState("yellow");
-  const [selectionPosition, setSelectionPosition] = useState({ x: 0, y: 0 });
-  const [showAnnotationPopover, setShowAnnotationPopover] = useState(false);
-  const [annotationMode, setAnnotationMode] = useState(false);
+  const [pendingHighlightColor, setPendingHighlightColor] = useState(null);
+  const [activeAnnotation, setActiveAnnotation] = useState(null);
+  const contentRef = useRef(null);
+  const toolbarRef = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (lesson?.id) {
       loadAnnotations();
     }
@@ -41,64 +47,107 @@ export default function DocumentViewerTabs({ lesson }) {
   };
 
   const handleTextSelection = () => {
-    // Don't process if modal is already open
-    if (showAnnotationPopover) return;
+    if (showNoteInput) return;
     
     const selection = window.getSelection();
     const text = selection.toString().trim();
-    if (text) {
+    
+    if (text && text.length > 0) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      setSelectionPosition({ 
+      
+      // Get selection indices relative to full content
+      const content = lesson?.extracted_content || "";
+      const start = content.indexOf(text);
+      const end = start + text.length;
+      
+      setToolbarPosition({ 
         x: rect.left + rect.width / 2, 
         y: rect.top - 10 
       });
       setSelectedText(text);
-      setShowAnnotationPopover(true);
-      // Clear selection immediately so it doesn't interfere
-      window.getSelection().removeAllRanges();
+      setSelectionRange({ start, end });
+      setShowToolbar(true);
     }
   };
 
-  const handleAddAnnotation = async () => {
-    if (!selectedText) return;
+  const handleHighlight = async (color) => {
+    if (!selectedText || !selectionRange) return;
+    
+    try {
+      await base44.entities.Annotation.create({
+        lesson_id: lesson.id,
+        highlight_text: selectedText,
+        note: "",
+        color: color,
+        position: selectionRange
+      });
+      
+      await loadAnnotations();
+      closeToolbar();
+      toast.success("Highlighted!");
+    } catch (error) {
+      console.error("Error adding highlight:", error);
+      toast.error("Failed to save highlight");
+    }
+  };
+
+  const handleAddNote = () => {
+    setPendingHighlightColor('yellow');
+    setShowNoteInput(true);
+    window.getSelection().removeAllRanges();
+  };
+
+  const handleSaveNote = async () => {
+    if (!selectedText || !selectionRange) return;
     
     try {
       await base44.entities.Annotation.create({
         lesson_id: lesson.id,
         highlight_text: selectedText,
         note: noteText,
-        color: highlightColor,
-        position: { start: 0, end: 0 }
+        color: pendingHighlightColor || 'yellow',
+        position: selectionRange
       });
       
       await loadAnnotations();
-      setSelectedText("");
-      setNoteText("");
-      setShowAnnotationPopover(false);
-      window.getSelection().removeAllRanges();
-      toast.success("Annotation saved");
+      closeToolbar();
+      toast.success("Note saved!");
     } catch (error) {
-      console.error("Error adding annotation:", error);
-      toast.error("Failed to save annotation");
+      console.error("Error adding note:", error);
+      toast.error("Failed to save note");
     }
+  };
+
+  const handleAskAI = () => {
+    // Dispatch event to AI tutor with selected text
+    window.dispatchEvent(new CustomEvent('askAITutor', { 
+      detail: { prompt: `Explain this: "${selectedText}"` }
+    }));
+    closeToolbar();
+    toast.success("Sent to AI Tutor!");
+  };
+
+  const closeToolbar = () => {
+    setShowToolbar(false);
+    setShowNoteInput(false);
+    setSelectedText("");
+    setSelectionRange(null);
+    setNoteText("");
+    setPendingHighlightColor(null);
+    window.getSelection().removeAllRanges();
   };
 
   const handleDeleteAnnotation = async (annotationId) => {
     try {
       await base44.entities.Annotation.delete(annotationId);
       await loadAnnotations();
+      setActiveAnnotation(null);
       toast.success("Annotation deleted");
     } catch (error) {
       console.error("Error deleting annotation:", error);
       toast.error("Failed to delete annotation");
     }
-  };
-
-  const highlightSearchTerm = (text) => {
-    if (!searchQuery || !text) return text;
-    const regex = new RegExp(`(${searchQuery})`, 'gi');
-    return text.replace(regex, '<mark class="bg-yellow-300 px-1">$1</mark>');
   };
 
   const handleCopyTranscript = () => {
@@ -108,9 +157,89 @@ export default function DocumentViewerTabs({ lesson }) {
     }
   };
 
+  // Render content with highlights
+  const renderHighlightedContent = () => {
+    const content = lesson?.extracted_content || "";
+    if (!content) return null;
+    
+    // Sort annotations by position
+    const sortedAnnotations = [...annotations]
+      .filter(a => a.position?.start !== undefined)
+      .sort((a, b) => a.position.start - b.position.start);
+    
+    if (sortedAnnotations.length === 0) {
+      // Apply search highlighting if no annotations
+      if (searchQuery) {
+        const regex = new RegExp(`(${searchQuery})`, 'gi');
+        const html = content.replace(regex, '<mark class="bg-yellow-300 px-0.5 rounded">$1</mark>');
+        return <div dangerouslySetInnerHTML={{ __html: html }} />;
+      }
+      return <>{content}</>;
+    }
+    
+    const elements = [];
+    let lastIndex = 0;
+    
+    sortedAnnotations.forEach((annotation, idx) => {
+      const { start, end } = annotation.position;
+      
+      // Add text before this highlight
+      if (start > lastIndex) {
+        const beforeText = content.substring(lastIndex, start);
+        elements.push(
+          <span key={`text-${idx}`}>{beforeText}</span>
+        );
+      }
+      
+      // Add highlighted text
+      const highlightedText = content.substring(start, end);
+      const colorConfig = HIGHLIGHT_COLORS[annotation.color] || HIGHLIGHT_COLORS.yellow;
+      
+      elements.push(
+        <span
+          key={`highlight-${annotation.id}`}
+          className={`cursor-pointer rounded px-0.5 transition-all hover:ring-2 hover:ring-purple-400 ${
+            activeAnnotation?.id === annotation.id ? 'ring-2 ring-purple-500' : ''
+          }`}
+          style={{ backgroundColor: colorConfig.bg }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveAnnotation(activeAnnotation?.id === annotation.id ? null : annotation);
+          }}
+        >
+          {highlightedText}
+          {annotation.note && (
+            <StickyNote className="inline w-3 h-3 ml-0.5 text-slate-500" />
+          )}
+        </span>
+      );
+      
+      lastIndex = end;
+    });
+    
+    // Add remaining text
+    if (lastIndex < content.length) {
+      elements.push(
+        <span key="text-end">{content.substring(lastIndex)}</span>
+      );
+    }
+    
+    return <>{elements}</>;
+  };
 
-
-
+  // Click outside to close toolbar
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (toolbarRef.current && !toolbarRef.current.contains(e.target)) {
+        if (showToolbar && !showNoteInput) {
+          closeToolbar();
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showToolbar, showNoteInput]);
 
   if (!lesson?.file_url && !lesson?.extracted_content) {
     return (
@@ -132,14 +261,12 @@ export default function DocumentViewerTabs({ lesson }) {
 
   return (
     <div className="h-full">
-      {/* Main Document Area - Full width */}
       <Card className="h-full bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
         <div className="h-full flex flex-col">
-        {/* Header with Controls */}
-        <div className="border-b border-purple-200 px-2 py-2 space-y-2">
-          <div className="flex flex-col gap-2">
-            {lesson?.extracted_content && (
-              <div className="flex items-center gap-2 flex-wrap">
+          {/* Header with Controls */}
+          <div className="border-b border-purple-200 px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
+              {lesson?.extracted_content && (
                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
                   <Button
                     variant={viewMode === "pdf" ? "default" : "ghost"}
@@ -156,283 +283,253 @@ export default function DocumentViewerTabs({ lesson }) {
                     onClick={() => setViewMode("transcript")}
                     className={`text-xs h-7 px-3 ${viewMode === "transcript" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
                   >
-                    <Search className="w-3 h-3 mr-1" />
-                    Searchable Text
+                    <Highlighter className="w-3 h-3 mr-1" />
+                    Annotate
                   </Button>
                 </div>
-                {viewMode === "transcript" && (
+              )}
+              
+              {viewMode === "transcript" && (
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search..."
+                      className="pl-7 h-7 text-xs w-32 md:w-48"
+                    />
+                  </div>
                   <Button
-                    variant={annotationMode ? "default" : "outline"}
+                    variant="outline"
                     size="sm"
-                    onClick={() => {
-                      setAnnotationMode(!annotationMode);
-                      setShowAnnotations(!annotationMode);
-                    }}
-                    className={`text-xs h-8 ${annotationMode ? "bg-yellow-500 hover:bg-yellow-600 text-slate-900" : ""}`}
+                    onClick={handleCopyTranscript}
+                    className="h-7 text-xs"
                   >
-                    <Highlighter className="w-3 h-3 mr-1" />
-                    {annotationMode ? "Exit" : "Annotate"}
+                    <Copy className="w-3 h-3" />
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
+            
+            {viewMode === "transcript" && (
+              <p className="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1">
+                <Highlighter className="w-3 h-3" />
+                Select text to highlight, add notes, or ask AI
+              </p>
             )}
           </div>
 
-          {/* Search Bar - Only in transcript mode */}
-          {viewMode === "transcript" && lesson?.extracted_content && !annotationMode && (
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search..."
-                className="pl-7 h-8 text-xs"
-              />
-            </div>
-          )}
-          
-          {annotationMode && (
-            <div className="flex items-center gap-1 text-xs text-slate-700 bg-yellow-50 p-2 rounded border border-yellow-300">
-              <Highlighter className="w-3 h-3 text-yellow-600 flex-shrink-0" />
-              <span className="font-medium">Select text to annotate</span>
-            </div>
-          )}
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-auto">
-          <div className="h-full flex">
-            {/* Main Content */}
-            <div className={`flex-1 ${viewMode === "transcript" && showAnnotations && annotations.length > 0 ? 'lg:w-2/3' : 'w-full'}`}>
-              {viewMode === "pdf" && lesson?.file_url ? (
-                <div className="h-full bg-slate-50">
-                  {isPDF || isOfficeDoc ? (
-                    <iframe
-                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
-                      className="w-full h-full border-0"
-                      title="Course Document"
+          {/* Content Area */}
+          <div className="flex-1 overflow-hidden">
+            {viewMode === "pdf" && lesson?.file_url ? (
+              <div className="h-full bg-slate-50">
+                {isPDF || isOfficeDoc ? (
+                  <iframe
+                    src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
+                    className="w-full h-full border-0"
+                    title="Course Document"
+                  />
+                ) : isImage ? (
+                  <div className="w-full h-full flex items-center justify-center p-8">
+                    <img 
+                      src={lesson.file_url} 
+                      alt="Course Material" 
+                      className="max-w-full max-h-full object-contain shadow-lg"
                     />
-                  ) : isImage ? (
-                    <div className="w-full h-full flex items-center justify-center p-8">
-                      <img 
-                        src={lesson.file_url} 
-                        alt="Course Material" 
-                        className="max-w-full max-h-full object-contain shadow-lg"
-                      />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                      <p className="text-slate-600 mb-3">Preview not available</p>
+                      <Button variant="outline" asChild className="border-purple-200">
+                        <a href={lesson.file_url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Open File
+                        </a>
+                      </Button>
                     </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                        <p className="text-slate-600 mb-3">Preview not available</p>
+                  </div>
+                )}
+              </div>
+            ) : viewMode === "transcript" && lesson?.extracted_content ? (
+              <div className="h-full flex">
+                {/* Main Content */}
+                <div 
+                  ref={contentRef}
+                  className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
+                  onMouseUp={handleTextSelection}
+                >
+                  <div 
+                    className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-none prose prose-sm"
+                    style={{ wordBreak: 'break-word' }}
+                  >
+                    {renderHighlightedContent()}
+                  </div>
+                </div>
+                
+                {/* Active Annotation Panel */}
+                {activeAnnotation && (
+                  <div className="hidden md:block w-1/3 border-l border-purple-200 bg-white p-4 overflow-auto">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-sm text-slate-900">Annotation</h3>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setActiveAnnotation(null)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      <div 
+                        className="p-2 rounded-lg text-xs"
+                        style={{ 
+                          backgroundColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.bg,
+                          borderColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.border,
+                          borderWidth: 1
+                        }}
+                      >
+                        "{activeAnnotation.highlight_text.substring(0, 200)}{activeAnnotation.highlight_text.length > 200 ? '...' : ''}"
+                      </div>
+                      
+                      {activeAnnotation.note ? (
+                        <div className="bg-slate-50 p-2 rounded-lg">
+                          <p className="text-xs font-medium text-slate-600 mb-1">Note:</p>
+                          <p className="text-sm text-slate-700">{activeAnnotation.note}</p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic">No note added</p>
+                      )}
+                      
+                      <div className="flex gap-2 pt-2">
                         <Button
                           variant="outline"
-                          asChild
-                          className="border-purple-200"
+                          size="sm"
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent('askAITutor', { 
+                              detail: { prompt: `Explain this: "${activeAnnotation.highlight_text}"` }
+                            }));
+                            toast.success("Sent to AI Tutor!");
+                          }}
+                          className="flex-1 text-xs h-8"
                         >
-                          <a href={lesson.file_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            Open File
-                          </a>
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Ask AI
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteAnnotation(activeAnnotation.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8"
+                        >
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
-                  )}
-                </div>
-              ) : viewMode === "transcript" && lesson?.extracted_content ? (
-                <div className="h-full flex flex-col bg-slate-50">
-                  <div className="border-b border-purple-200 px-3 py-2 flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-slate-900 font-semibold text-xs">
-                      <FileText className="w-3 h-3 text-purple-600" />
-                      Transcript
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyTranscript}
-                      className="border-purple-200 h-7 text-xs"
-                    >
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy
-                    </Button>
                   </div>
-                  <div 
-                    className="flex-1 overflow-auto p-3"
-                    onMouseUp={annotationMode ? handleTextSelection : undefined}
-                  >
-                    <div className="w-full max-w-full overflow-hidden">
-                      <div 
-                        className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap break-words overflow-wrap-anywhere"
-                        style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
-                        dangerouslySetInnerHTML={{ __html: highlightSearchTerm(lesson.extracted_content) }}
-                      />
-                    </div>
-
-                    {/* Floating Annotation Modal */}
-                    {annotationMode && showAnnotationPopover && selectedText && (
-                      <div 
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-                        onClick={(e) => {
-                          if (e.target === e.currentTarget) {
-                            setShowAnnotationPopover(false);
-                            setSelectedText("");
-                            setNoteText("");
-                            window.getSelection().removeAllRanges();
-                          }
-                        }}
-                      >
-                        <div 
-                          className="bg-white rounded-xl shadow-2xl w-[calc(100vw-2rem)] max-w-sm p-4 animate-in fade-in zoom-in duration-200"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                                <Highlighter className="w-4 h-4 text-purple-600" />
-                                Add Annotation
-                              </h3>
-                            </div>
-                            
-                            <div>
-                              <p className="text-xs font-semibold text-slate-600 mb-2">Selected Text:</p>
-                              <p className="text-sm text-slate-700 bg-yellow-50 p-2 rounded border border-yellow-200 max-h-20 overflow-y-auto">
-                                "{selectedText.substring(0, 150)}{selectedText.length > 150 ? '...' : ''}"
-                              </p>
-                            </div>
-                            
-                            <div>
-                              <label className="text-xs font-semibold text-slate-600 mb-2 block">Highlight Color:</label>
-                              <div className="flex gap-2">
-                                {['yellow', 'green', 'blue', 'pink', 'purple'].map(color => (
-                                  <button
-                                    key={color}
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setHighlightColor(color);
-                                    }}
-                                    className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
-                                      highlightColor === color ? 'border-slate-900 scale-110 ring-2 ring-purple-300' : 'border-slate-200'
-                                    }`}
-                                    style={{ 
-                                      backgroundColor: color === 'yellow' ? '#fef08a' : 
-                                                      color === 'green' ? '#bbf7d0' : 
-                                                      color === 'blue' ? '#bfdbfe' : 
-                                                      color === 'pink' ? '#fbcfe8' : '#e9d5ff' 
-                                    }}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <label className="text-xs font-semibold text-slate-600 mb-1 block">Note (optional):</label>
-                              <Textarea
-                                value={noteText}
-                                onChange={(e) => setNoteText(e.target.value)}
-                                placeholder="Add your thoughts..."
-                                className="min-h-[60px] text-sm"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </div>
-                            
-                            <div className="flex gap-2 pt-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setShowAnnotationPopover(false);
-                                  setSelectedText("");
-                                  setNoteText("");
-                                  window.getSelection().removeAllRanges();
-                                }}
-                                className="flex-1"
-                              >
-                                Cancel
-                              </Button>
-                              <Button 
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleAddAnnotation();
-                                }}
-                                size="sm" 
-                                className="flex-1 bg-purple-600 hover:bg-purple-700"
-                              >
-                                <StickyNote className="w-4 h-4 mr-2" />
-                                Save
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Annotations Sidebar - Hidden on mobile */}
-            {viewMode === "transcript" && showAnnotations && annotations.length > 0 && (
-              <div className="hidden md:block md:w-1/3 border-l border-purple-200 bg-white">
-                <div className="h-full flex flex-col">
-                  <div className="border-b border-purple-200 px-3 py-2">
-                    <h3 className="font-semibold text-xs text-slate-900 flex items-center gap-1">
-                      <StickyNote className="w-3 h-3 text-purple-600" />
-                      Notes ({annotations.length})
-                    </h3>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                    {annotations.map((annotation) => (
-                      <Card key={annotation.id} className="p-2 border-slate-200">
-                        <div className="space-y-1">
-                          <div 
-                            className="p-1.5 rounded border"
-                            style={{
-                              backgroundColor: annotation.color === 'yellow' ? '#fef9c3' : 
-                                            annotation.color === 'green' ? '#dcfce7' : 
-                                            annotation.color === 'blue' ? '#dbeafe' : 
-                                            annotation.color === 'pink' ? '#fce7f3' : '#f3e8ff',
-                              borderColor: annotation.color === 'yellow' ? '#fde047' : 
-                                          annotation.color === 'green' ? '#86efac' : 
-                                          annotation.color === 'blue' ? '#93c5fd' : 
-                                          annotation.color === 'pink' ? '#f9a8d4' : '#d8b4fe'
-                            }}
-                          >
-                            <p className="text-[10px] font-medium text-slate-700">
-                              "{annotation.highlight_text.substring(0, 60)}{annotation.highlight_text.length > 60 ? '...' : ''}"
-                            </p>
-                          </div>
-                          {annotation.note && (
-                            <p className="text-[10px] text-slate-600 italic">{annotation.note}</p>
-                          )}
-                          <div className="flex justify-between items-center pt-0.5">
-                            <Badge variant="outline" className="text-[9px] capitalize h-5">
-                              {annotation.color}
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteAnnotation(annotation.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 h-6 px-1.5 text-[10px]"
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
+                )}
               </div>
-            )}
+            ) : null}
           </div>
         </div>
-      </div>
       </Card>
+
+      {/* Floating Selection Toolbar */}
+      {showToolbar && selectedText && (
+        <div 
+          ref={toolbarRef}
+          className="fixed z-50 animate-in fade-in zoom-in duration-150"
+          style={{ 
+            left: `${toolbarPosition.x}px`, 
+            top: `${toolbarPosition.y}px`,
+            transform: 'translate(-50%, -100%)'
+          }}
+        >
+          {!showNoteInput ? (
+            <div className="bg-slate-900 rounded-lg shadow-2xl p-1.5 flex items-center gap-1">
+              {/* Color buttons */}
+              {Object.entries(HIGHLIGHT_COLORS).map(([color, config]) => (
+                <button
+                  key={color}
+                  onClick={() => handleHighlight(color)}
+                  className="w-6 h-6 rounded-full border-2 border-white/20 hover:scale-110 transition-transform"
+                  style={{ backgroundColor: config.bg }}
+                  title={`Highlight ${config.name}`}
+                />
+              ))}
+              
+              <div className="w-px h-5 bg-slate-700 mx-1" />
+              
+              {/* Add Note */}
+              <button
+                onClick={handleAddNote}
+                className="p-1.5 rounded hover:bg-slate-800 text-white transition-colors"
+                title="Add Note"
+              >
+                <StickyNote className="w-4 h-4" />
+              </button>
+              
+              {/* Ask AI */}
+              <button
+                onClick={handleAskAI}
+                className="p-1.5 rounded hover:bg-slate-800 text-purple-400 transition-colors"
+                title="Ask AI"
+              >
+                <Sparkles className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-2xl p-3 w-72 border border-slate-200">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-700">Add a note</span>
+                  <button onClick={closeToolbar} className="text-slate-400 hover:text-slate-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <p className="text-[10px] text-slate-500 bg-slate-50 p-1.5 rounded truncate">
+                  "{selectedText.substring(0, 50)}{selectedText.length > 50 ? '...' : ''}"
+                </p>
+                
+                <div className="flex gap-1">
+                  {Object.entries(HIGHLIGHT_COLORS).map(([color, config]) => (
+                    <button
+                      key={color}
+                      onClick={() => setPendingHighlightColor(color)}
+                      className={`w-6 h-6 rounded-full border-2 transition-all ${
+                        pendingHighlightColor === color ? 'border-slate-900 scale-110' : 'border-slate-200'
+                      }`}
+                      style={{ backgroundColor: config.bg }}
+                    />
+                  ))}
+                </div>
+                
+                <Textarea
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  placeholder="Your note..."
+                  className="min-h-[60px] text-sm resize-none"
+                  autoFocus
+                />
+                
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={closeToolbar} className="flex-1 h-8 text-xs">
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSaveNote} className="flex-1 h-8 text-xs bg-purple-600 hover:bg-purple-700">
+                    Save
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
