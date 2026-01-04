@@ -207,7 +207,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto p-0 gap-0 rounded-2xl">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto overflow-x-hidden p-0 gap-0 rounded-2xl">
         {isProcessing ? (
           <EducationalLoader />
         ) : (
