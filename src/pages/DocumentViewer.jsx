@@ -409,7 +409,7 @@ export default function DocumentViewer() {
 
               <div className="w-full flex-1 overflow-auto">
                 {hasDocument && (
-                  <TabsContent value="doc" className="mt-0 p-0 h-full">
+                  <TabsContent value="doc" forceMount className={`mt-0 p-0 h-full ${activeTab !== 'doc' ? 'hidden' : ''}`}>
                     <DocumentViewerTabs lesson={lesson} />
                   </TabsContent>
                 )}
