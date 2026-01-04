@@ -66,23 +66,87 @@ const getBrowserInfo = () => {
   if (ua.includes('HuaweiBrowser') || ua.includes('HMSCore')) {
     return { name: 'Huawei Browser', isInApp: true };
   }
+  // Instabridge and other wrapper browsers
+  if (ua.includes('Instabridge')) {
+    return { name: 'Instabridge Browser', isInApp: true };
+  }
+  // Generic WebView detection
+  if (ua.includes('wv') || ua.includes('WebView')) {
+    return { name: 'In-App Browser', isInApp: true };
+  }
   
-  // Standard browsers
-  if (ua.includes('Chrome')) {
+  // Standard browsers - check version for outdated browsers
+  if (ua.includes('Chrome') && !ua.includes('Edg')) {
     const match = ua.match(/Chrome\/(\d+)/);
-    return { name: 'Chrome', version: match ? parseInt(match[1]) : 0, minVersion: 93, isInApp: false };
+    const version = match ? parseInt(match[1]) : 0;
+    return { 
+      name: 'Chrome', 
+      version, 
+      minVersion: 90, 
+      isInApp: false,
+      isOutdated: version > 0 && version < 90
+    };
   }
   if (ua.includes('Safari') && !ua.includes('Chrome')) {
     const match = ua.match(/Version\/(\d+)/);
-    return { name: 'Safari', version: match ? parseInt(match[1]) : 0, minVersion: 15, isInApp: false };
+    const version = match ? parseInt(match[1]) : 0;
+    return { 
+      name: 'Safari', 
+      version, 
+      minVersion: 14, 
+      isInApp: false,
+      isOutdated: version > 0 && version < 14
+    };
   }
   if (ua.includes('Firefox')) {
     const match = ua.match(/Firefox\/(\d+)/);
-    return { name: 'Firefox', version: match ? parseInt(match[1]) : 0, minVersion: 91, isInApp: false };
+    const version = match ? parseInt(match[1]) : 0;
+    return { 
+      name: 'Firefox', 
+      version, 
+      minVersion: 88, 
+      isInApp: false,
+      isOutdated: version > 0 && version < 88
+    };
   }
   if (ua.includes('Edg')) {
     const match = ua.match(/Edg\/(\d+)/);
-    return { name: 'Edge', version: match ? parseInt(match[1]) : 0, minVersion: 93, isInApp: false };
+    const version = match ? parseInt(match[1]) : 0;
+    return { 
+      name: 'Edge', 
+      version, 
+      minVersion: 90, 
+      isInApp: false,
+      isOutdated: version > 0 && version < 90
+    };
+  }
+  // Samsung Internet
+  if (ua.includes('SamsungBrowser')) {
+    const match = ua.match(/SamsungBrowser\/(\d+)/);
+    const version = match ? parseInt(match[1]) : 0;
+    return { 
+      name: 'Samsung Internet', 
+      version, 
+      minVersion: 14, 
+      isInApp: false,
+      isOutdated: version > 0 && version < 14
+    };
+  }
+  // UC Browser
+  if (ua.includes('UCBrowser')) {
+    return { name: 'UC Browser', isInApp: false, isOutdated: true };
+  }
+  // Opera
+  if (ua.includes('OPR') || ua.includes('Opera')) {
+    const match = ua.match(/(?:OPR|Opera)\/(\d+)/);
+    const version = match ? parseInt(match[1]) : 0;
+    return { 
+      name: 'Opera', 
+      version, 
+      minVersion: 76, 
+      isInApp: false,
+      isOutdated: version > 0 && version < 76
+    };
   }
   
   return { name: 'Unknown', isInApp: false };
