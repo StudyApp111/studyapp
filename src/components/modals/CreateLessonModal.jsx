@@ -147,24 +147,6 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           if (extractedContent.length < 50) {
             throw new Error("Extracted content is too short. Please ensure your files contain readable text.");
           }
-
-          // Compress if content is too long (use InvokeLLM directly for speed)
-          if (extractedContent.length > 8000) {
-            setProcessingStep("Compressing documents...");
-            
-            const compressPrompt = `You are a document compression engine. Compress this content to under 1500 characters while preserving key terms, definitions, formulas, themes, and examples. Output only the compressed text, no commentary.
-
-Content to compress:
-${extractedContent.substring(0, 50000)}`;
-
-            const compressed = await base44.integrations.Core.InvokeLLM({
-              prompt: compressPrompt
-            });
-
-            if (compressed && typeof compressed === 'string' && compressed.length > 50) {
-              extractedContent = compressed;
-            }
-          }
           
         } catch (fileError) {
           console.error("Error processing files:", fileError);
