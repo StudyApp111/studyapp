@@ -197,6 +197,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         
         if (loadedExam.completed) {
           setExam(loadedExam);
+          generationStartedRef.current = false;
           return;
         }
         
@@ -216,14 +217,17 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
             setCurrentQuestion(loadedExam.questions.length - 1);
           }
         }
+        generationStartedRef.current = false;
       } else {
         setIsGenerating(true);
         await generateExam(null, examNumber);
         setIsGenerating(false);
+        generationStartedRef.current = false;
       }
     } catch (error) {
       console.error("Error loading exam:", error);
       setIsGenerating(false);
+      generationStartedRef.current = false;
     }
   };
 
