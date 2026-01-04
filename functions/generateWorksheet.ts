@@ -168,8 +168,23 @@ Deno.serve(async (req) => {
                     return Response.json(retryParsed);
                 } catch (retryError) {
                     console.error('❌ Retry parse also failed:', retryError.message);
+                    console.error('❌ Raw text snippet:', generatedText.substring(0, 500));
+                    
+                    // Try to extract partial valid JSON for worksheet_questions
+                    try {
+                        const questionsMatch = generatedText.match(/"worksheet_questions"\s*:\s*\[[\s\S]*?\}\s*\]/);
+                        if (questionsMatch) {
+                            const partialJson = `{${questionsMatch[0]}}`;
+                            const partialParsed = JSON.parse(partialJson);
+                            console.log('✅ Recovered partial JSON with', partialParsed.worksheet_questions?.length, 'questions');
+                            return Response.json(partialParsed);
+                        }
+                    } catch (partialError) {
+                        console.error('❌ Partial recovery also failed');
+                    }
+                    
                     return Response.json({ 
-                        error: 'Failed to process response' 
+                        error: 'Failed to process response - output may have been truncated' 
                     }, { status: 500 });
                 }
             }
