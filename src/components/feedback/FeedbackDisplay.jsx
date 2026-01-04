@@ -303,7 +303,13 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                 {question.difficulty_index}
                               </Badge>
                             )}
-                            <Badge className={`text-[9px] px-1.5 py-0 ${feedback.is_correct ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                            <Badge className={`text-[9px] px-1.5 py-0 ${
+                              feedback.points_earned >= 8 
+                                ? 'bg-emerald-50 text-emerald-700' 
+                                : feedback.points_earned >= 5
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : 'bg-red-50 text-red-700'
+                            }`}>
                               {feedback.points_earned}/10
                             </Badge>
                             {questionTime > 0 && (
