@@ -420,8 +420,7 @@ export default function DocumentViewerTabs({ lesson }) {
             {viewMode === "pdf" && lesson?.file_url ? (
               <div className="h-full bg-slate-50 relative">
                 {isPDF || isOfficeDoc ? (
-                        <PDFViewer fileUrl={lesson.file_url} />
-                      )
+                  <PDFViewer fileUrl={lesson.file_url} />
                 ) : isImage ? (
                   <div className="w-full h-full flex items-center justify-center p-8">
                     <img 
