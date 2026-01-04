@@ -343,7 +343,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                             <div className="p-3 bg-slate-50/30 space-y-2">
                               <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
                                 <MathText className="text-slate-800 font-medium text-xs mb-2">
-                                  {question.question_text}
+                                  {typeof question.question_text === 'string' ? question.question_text : (question.question_text?.text || JSON.stringify(question.question_text))}
                                 </MathText>
                                 {question.options && question.options.length > 0 && (
                                   <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
