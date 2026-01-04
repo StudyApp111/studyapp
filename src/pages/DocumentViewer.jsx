@@ -54,8 +54,13 @@ export default function DocumentViewer() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
+    const isGenerating = urlParams.get('generating') === 'true';
+    
     if (tabParam) {
       setActiveTab(tabParam);
+    } else if (isGenerating) {
+      // If coming from fresh upload, show document tab first while exam generates
+      setActiveTab('doc');
     }
   }, []);
 
