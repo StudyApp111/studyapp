@@ -54,7 +54,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
   // Auto-generate Exam 1 when tab loads (or URL has generating=true)
   useEffect(() => {
-    if (lesson && !selectedExamNumber) {
+    if (lesson && !selectedExamNumber && !isGenerating) {
       const allExamsForLesson = exams || [];
       const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
       
@@ -67,7 +67,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         setSelectedExamNumber(1);
       }
     }
-  }, [lesson?.id, exams]);
+  }, [lesson?.id]);
 
   useEffect(() => {
     if (lesson && selectedExamNumber) {
