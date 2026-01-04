@@ -486,7 +486,7 @@ export default function DocumentViewer() {
 
             <div className="flex-1 overflow-y-auto w-full max-w-full">
               {hasDocument && (
-                <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full h-full">
+                <TabsContent value="doc" forceMount className={`mt-0 p-0 w-full max-w-full h-full ${activeTab !== 'doc' ? 'hidden' : ''}`}>
                   <DocumentViewerTabs lesson={lesson} />
                 </TabsContent>
               )}
