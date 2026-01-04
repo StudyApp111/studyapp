@@ -147,6 +147,62 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           if (extractedContent.length < 50) {
             throw new Error("Extracted content is too short. Please ensure your files contain readable text.");
           }
+
+          // Compress if content is large (using InvokeLLM directly for speed)
+          if (extractedContent.length > 1500) {
+            setProcessingStep("Compressing documents for optimal processing...");
+            
+            const compressionPrompt = `Context You are a document compression and structuring engine.
+Your sole function is to extract and reorganize information that is explicitly present in the provided content and compress it to <1500 characters. You must not interpret, infer, explain, prioritize, or add any knowledge.
+Input Content to process: ${extractedContent}
+Task Produce a compact, structured digest that can replace the content in downstream prompts.
+You MUST NOT:
+* search the web
+* infer missing topics
+* add canonical knowledge
+* normalize or "clean up" concepts
+* decide what should be important
+* rewrite content pedagogically
+* introduce examples not present in the text
+If a category has no information in the content, write: None found.
+Output (MUST be simple text, exactly these headings, in this order)
+KEY TERMS / DEFINITIONS
+* Extract terms that are explicitly defined or clearly described in the content.
+* Use the definition exactly as written or lightly paraphrased without interpretation.
+* Format: Term: definition
+THEOREMS / FORMULAS / METHODS
+* Extract any theorem, formula, algorithm, method, procedure, or step-by-step process explicitly present.
+* Include equations or formal statements if present.
+* Format: Name or Label: statement / steps
+READING THEMES / ARGUMENTS
+* Extract themes, arguments, positions, or claims explicitly stated in the content.
+* Do not synthesize or generalize beyond the text.
+* Format: • short label — 1 sentence
+EXAMPLES TO REUSE IN QUESTIONS
+* Extract worked examples, case studies, sample problems, scenarios, or illustrations explicitly included.
+* Preserve original intent and scope; keep them concise but specific.
+* Format: Example: brief description (include any numbers/names if present)
+EMPHASIZED VS OPTIONAL Emphasized (explicit signals only)
+* Extract items emphasized by repetition, headings, bolding, or explicit cues like "important", "focus", "key". Optional / De-emphasized (explicit signals only)
+* Extract items explicitly labeled optional/supplementary/review/background/not required.
+* If none: None found.
+Strict Rules
+* Use only information present in the content.
+* Do not merge or rename concepts unless the document does.
+* Do not add commentary or explanation.
+* Do not add any extra headings, fields, bullets, or metadata.
+* This is a compression, not an analysis.
+* Total output should be no more than 1500 characters.`;
+
+            const compressionResult = await base44.integrations.Core.InvokeLLM({
+              prompt: compressionPrompt,
+              add_context_from_internet: false
+            });
+
+            if (compressionResult && typeof compressionResult === 'string') {
+              extractedContent = compressionResult;
+            }
+          }
           
         } catch (fileError) {
           console.error("Error processing files:", fileError);
