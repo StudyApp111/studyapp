@@ -147,19 +147,6 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           if (extractedContent.length < 50) {
             throw new Error("Extracted content is too short. Please ensure your files contain readable text.");
           }
-
-          // Compress if needed
-          if (extractedContent.length > 8000) {
-            setProcessingStep("Compressing documents for optimal processing...");
-            
-            const compressionResult = await base44.functions.invoke('compressDocument', {
-              content: extractedContent
-            });
-
-            if (compressionResult?.data?.compressed_content) {
-              extractedContent = compressionResult.data.compressed_content;
-            }
-          }
           
         } catch (fileError) {
           console.error("Error processing files:", fileError);
