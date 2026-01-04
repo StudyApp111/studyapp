@@ -268,44 +268,40 @@ ${contentDescription}
 
 Generate exactly 10 adaptive, exam-authentic questions following the same format as worksheets.`;
 
-      const { data: examData } = await retryOperation(
-        () => base44.functions.invoke('generateWorksheet', {
-          prompt: aiPrompt,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              worksheet_title: { type: "string" },
-              analysis_summary_for_worksheet_design: {
+      const { data: examData } = await base44.functions.invoke('generateWorksheet', {
+        prompt: aiPrompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            worksheet_title: { type: "string" },
+            analysis_summary_for_worksheet_design: {
+              type: "object",
+              properties: {
+                targeted_weak_competencies: { type: "array", items: { type: "string" } },
+                key_gaps_or_misconceptions_addressed: { type: "array", items: { type: "string" } },
+                focused_differentiating_competencies: { type: "array", items: { type: "string" } }
+              }
+            },
+            worksheet_questions: {
+              type: "array",
+              items: {
                 type: "object",
                 properties: {
-                  targeted_weak_competencies: { type: "array", items: { type: "string" } },
-                  key_gaps_or_misconceptions_addressed: { type: "array", items: { type: "string" } },
-                  focused_differentiating_competencies: { type: "array", items: { type: "string" } }
-                }
-              },
-              worksheet_questions: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    question_number: { type: "integer" },
-                    question_type: { type: "string" },
-                    difficulty_index: { type: "string" },
-                    question_text: { type: "string" },
-                    options: { type: "array", items: { type: "string" } },
-                    correct_answer: { type: "string" },
-                    explanation: { type: "string" },
-                    assessed_competencies: { type: "array", items: { type: "string" } },
-                    targeted_misconception: { type: "string" }
-                  }
+                  question_number: { type: "integer" },
+                  question_type: { type: "string" },
+                  difficulty_index: { type: "string" },
+                  question_text: { type: "string" },
+                  options: { type: "array", items: { type: "string" } },
+                  correct_answer: { type: "string" },
+                  explanation: { type: "string" },
+                  assessed_competencies: { type: "array", items: { type: "string" } },
+                  targeted_misconception: { type: "string" }
                 }
               }
             }
           }
-        }),
-        3,
-        2000
-      );
+        }
+      });
 
       // Guard against missing or invalid worksheet_questions
       const worksheetQuestions = examData?.worksheet_questions || [];
