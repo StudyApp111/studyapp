@@ -72,7 +72,10 @@ Strict Rules
 * This is a compression, not an analysis.
 * Total output should be no more than 1500 characters.`;
 
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + apiKey, {
+        console.log('⏳ Calling Gemini API for compression...');
+        const startTime = Date.now();
+        
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + apiKey, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -85,10 +88,12 @@ Strict Rules
                 }],
                 generationConfig: {
                     temperature: 0.1,
-                    maxOutputTokens: 10024
+                    maxOutputTokens: 2048
                 }
             })
         });
+        
+        console.log(`✅ Gemini API responded in ${Date.now() - startTime}ms`);
 
         if (!response.ok) {
             const errorText = await response.text();
