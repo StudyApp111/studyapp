@@ -257,9 +257,11 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                       className={`rounded-lg border overflow-hidden transition-all ${
-                        feedback.is_correct 
+                        feedback.points_earned >= 8 
                           ? 'border-emerald-200 bg-white' 
-                          : 'border-amber-200 bg-white'
+                          : feedback.points_earned >= 5
+                            ? 'border-amber-200 bg-white'
+                            : 'border-red-200 bg-white'
                       }`}
                     >
                       <div 
@@ -270,11 +272,13 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                       >
                         <div className="flex items-center gap-2">
                           <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
-                            feedback.is_correct 
+                            feedback.points_earned >= 8 
                               ? 'bg-emerald-500 text-white' 
-                              : 'bg-amber-500 text-white'
+                              : feedback.points_earned >= 5
+                                ? 'bg-amber-500 text-white'
+                                : 'bg-red-500 text-white'
                           }`}>
-                            {feedback.is_correct ? (
+                            {feedback.points_earned >= 8 ? (
                               <CheckCircle className="w-3.5 h-3.5" />
                             ) : (
                               <XCircle className="w-3.5 h-3.5" />
