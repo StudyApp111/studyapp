@@ -220,9 +220,15 @@ export default function BrowserCompatibilityBanner() {
               You're using <strong>{browserInfo.name}</strong> which may not work properly with StudyApp. 
               For the best experience, please open this page in Chrome, Safari, or your regular browser.
             </>
+          ) : browserInfo?.isOutdated ? (
+            <>
+              Your browser (<strong>{browserInfo.name} {browserInfo.version}</strong>) is outdated. 
+              StudyApp requires {browserInfo.name} {browserInfo.minVersion}+ for all features to work properly.
+              Please update your browser.
+            </>
           ) : (
             <>
-              Your browser version is outdated and may not support all features. 
+              Your browser may not support all features. 
               Please update to the latest version for the best experience.
             </>
           )}
