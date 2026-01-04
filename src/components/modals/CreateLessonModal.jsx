@@ -408,10 +408,10 @@ export default function CreateLessonModal({ open, onOpenChange }) {
                     {files.length > 0 && (
                       <div className="space-y-1.5 max-h-24 overflow-y-auto">
                         {files.map((f, idx) => (
-                          <div key={idx} className="flex items-center gap-2 text-sm bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg">
+                          <div key={idx} className="flex items-center gap-2 text-sm bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg min-w-0">
                             <FileCheck className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate flex-1">{f.name}</span>
-                            <span className="text-xs text-emerald-500">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
+                            <span className="flex-1 min-w-0 break-all text-xs">{f.name}</span>
+                            <span className="text-xs text-emerald-500 flex-shrink-0">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
                           </div>
                         ))}
                       </div>
