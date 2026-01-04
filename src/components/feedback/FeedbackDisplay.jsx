@@ -411,7 +411,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                   <p className="text-[9px] font-bold text-purple-700 uppercase">Explanation</p>
                                 </div>
                                 <MathText className="text-xs text-slate-700 mb-2">
-                                  {question.explanation}
+                                  {typeof question.explanation === 'string' ? question.explanation : (question.explanation?.text || '')}
                                 </MathText>
                                 <div className="flex flex-wrap gap-1">
                                   {question.assessed_competencies?.map((comp, i) => (
