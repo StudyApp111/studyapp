@@ -20,7 +20,12 @@ import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/component
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("exam");
+  const [activeTab, setActiveTab] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isGenerating = urlParams.get('generating') === 'true';
+    // If fresh upload with document, default to doc tab
+    return isGenerating ? 'doc' : 'exam';
+  });
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exams, setExams] = useState([]);
