@@ -70,7 +70,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   }, [lesson?.id]);
 
   useEffect(() => {
-    if (lesson && selectedExamNumber) {
+    if (lesson && selectedExamNumber && !isGenerating && !exam) {
       loadOrGenerateExam(selectedExamNumber);
     }
   }, [lesson?.id, selectedExamNumber]);
