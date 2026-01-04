@@ -19,16 +19,7 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await operation();
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-    }
-  }
-};
+
 
 export default function ExamTab({ lesson, exams, onExamComplete }) {
   const [exam, setExam] = useState(null);
@@ -661,8 +652,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
 
       Output Format: Valid JSON matching the required schema.`;
 
-      const { data: feedbackData } = await retryOperation(() => 
-        base44.functions.invoke('feedbackGrade', {
+      const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
           prompt: feedbackPrompt,
           response_json_schema: {
             type: "object",
@@ -699,8 +689,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
               }
             }
           }
-        })
-      );
+        });
 
       const questionFeedback = questionsWithGrading.map((q, idx) => {
         let feedback = "";
@@ -742,8 +731,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         else if (scoreNum >= 50) letterGrade = "D";
       }
 
-      await retryOperation(() => 
-        base44.entities.Exam.update(exam.id, {
+      await base44.entities.Exam.update(exam.id, {
           questions: questionsWithGrading,
           feedback: questionFeedback,
           total_score: isNaN(scoreNum) ? 0 : scoreNum,
@@ -753,8 +741,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           question_time_laps: questionTimeLaps,
           status: "completed",
           completed: true
-        })
-      );
+        });
 
       // Create all 6 exams after completing exam 1
       if (exam.exam_number === 1 && feedbackData.suggested_future_sessions_plan) {
@@ -844,15 +831,13 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       const newTotalPoints = (user.total_points || 0) + pointsEarned;
       const newLevel = Math.floor(newTotalPoints / 100) + 1;
 
-      await retryOperation(() => 
-        base44.auth.updateMe({
+      await base44.auth.updateMe({
           questions_completed: (user.questions_completed || 0) + questionsWithGrading.length,
           time_spent_seconds: (user.time_spent_seconds || 0) + elapsedSeconds,
           total_points: newTotalPoints,
           level: newLevel,
           badges: earnedBadges
-        })
-      );
+        });
 
       if (earnedNow.length > 0 || correctCount >= 8) {
         setShowConfetti(true);
