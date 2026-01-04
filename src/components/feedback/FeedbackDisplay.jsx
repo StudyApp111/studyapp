@@ -361,13 +361,13 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                   <div className="bg-blue-50 p-2 rounded-lg">
                                     <p className="text-[9px] font-bold text-blue-700 uppercase mb-0.5">Your Answer</p>
                                     <MathText className="text-xs text-slate-700 font-medium">
-                                      {question.user_answer || "No answer"}
+                                      {typeof question.user_answer === 'string' ? (question.user_answer || "No answer") : (question.user_answer?.text || "No answer")}
                                     </MathText>
                                   </div>
                                   <div className="bg-emerald-50 p-2 rounded-lg">
                                     <p className="text-[9px] font-bold text-emerald-700 uppercase mb-0.5">Correct</p>
                                     <MathText className="text-xs text-slate-700 font-medium">
-                                      {question.correct_answer}
+                                      {typeof question.correct_answer === 'string' ? question.correct_answer : (question.correct_answer?.text || '')}
                                     </MathText>
                                   </div>
                                 </div>
