@@ -51,6 +51,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const examIdRef = useRef(null);
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
+  const generationStartedRef = useRef(false);
 
   // Auto-generate Exam 1 when tab loads (or URL has generating=true)
   useEffect(() => {
