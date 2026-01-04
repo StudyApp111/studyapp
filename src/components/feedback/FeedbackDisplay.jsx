@@ -374,16 +374,32 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                               </div>
 
                               <div className={`p-2 rounded-lg ${
-                                feedback.is_correct ? 'bg-emerald-50' : 'bg-amber-50'
+                                feedback.points_earned >= 8 
+                                  ? 'bg-emerald-50' 
+                                  : feedback.points_earned >= 5
+                                    ? 'bg-amber-50'
+                                    : 'bg-red-50'
                               }`}>
                                 <div className="flex items-start gap-2">
-                                  {feedback.is_correct ? <Sparkles className="w-3.5 h-3.5 text-emerald-600 mt-0.5" /> : <Zap className="w-3.5 h-3.5 text-amber-600 mt-0.5" />}
+                                  {feedback.points_earned >= 8 ? (
+                                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 mt-0.5" />
+                                  ) : feedback.points_earned >= 5 ? (
+                                    <Zap className="w-3.5 h-3.5 text-amber-600 mt-0.5" />
+                                  ) : (
+                                    <XCircle className="w-3.5 h-3.5 text-red-600 mt-0.5" />
+                                  )}
                                   <div>
-                                    <p className={`text-[10px] font-bold mb-0.5 ${feedback.is_correct ? 'text-emerald-800' : 'text-amber-800'}`}>
-                                      {feedback.is_correct ? 'Excellent!' : 'Learning Opportunity'}
+                                    <p className={`text-[10px] font-bold mb-0.5 ${
+                                      feedback.points_earned >= 8 
+                                        ? 'text-emerald-800' 
+                                        : feedback.points_earned >= 5
+                                          ? 'text-amber-800'
+                                          : 'text-red-800'
+                                    }`}>
+                                      {feedback.points_earned >= 8 ? 'Excellent!' : feedback.points_earned >= 5 ? 'Partial Credit' : 'Needs Review'}
                                     </p>
                                     <MathText className="text-xs text-slate-700">
-                                      {feedback.feedback}
+                                      {typeof feedback.feedback === 'string' ? feedback.feedback : (feedback.feedback?.text || '')}
                                     </MathText>
                                   </div>
                                 </div>
