@@ -230,9 +230,11 @@ export default function Worksheet() {
       if (worksheetNum === 1) {
         // Worksheet 1 now uses lesson content directly without diagnostic quiz
         aiPrompt = `Context
-You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name}, optimized to forecast exam performance and build an accurate learning baseline for this student.
+You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
 
-The worksheet must be tightly grounded in the provided lesson content and curriculum map. Do NOT assume prior diagnostic data.
+This worksheet must stand alone.
+Do NOT rely on prior diagnostics.
+Ground content in the student’s materials and light web search when needed.
 
 ────────────────────────────────
 
@@ -242,123 +244,92 @@ Student Grade Level: ${learningProfile.grade || "N/A"}
 Course / Unit Name: ${lessonData.course_name}
 School: ${learningProfile.school || "N/A"}
 
-Curriculum Map (authoritative scope, competencies, weightings, formats):
-${JSON.stringify(lessonData.curriculum_map, null, 2)}
-
 Lesson Content (notes, uploaded material, or student description):
 ${contentDescription}
 
-────────────────────────────────
+Internal Reasoning (Do NOT Output)
 
-[Internal Analysis — Do NOT Output]
+1. Scope Lock
+- If lesson content specifies a concrete topic or skill (e.g., “factoring”, “photosynthesis”, “Du Bois double-consciousness”):
+  → ALL questions MUST stay strictly within that topic.
+- Do NOT add prerequisites, review topics, or adjacent units unless required to execute the task.
+- Only broaden scope if the user explicitly requests review or exam prep.
 
-1. Topic Scope Detection
-- Determine whether contentDescription specifies:
-  a) A narrow skill or topic (e.g., "factoring", "cell respiration", "thesis statements")
-  b) A broader review or exam-prep request
-- If narrow → lock scope strictly to that topic.
-- If broad → use curriculum_map to distribute coverage by weightings.
+2. Topic Validation (Light Search)
+- Use search ONLY to confirm terminology, typical exam phrasing, or standard question styles for this course.
+- Do NOT introduce new topics beyond the locked scope.
 
-2. Competency Targeting
-- Map the lesson content to curriculum_map.core_competencies.
-- Identify:
-  - High-weight competencies
-  - Likely misconception-prone areas based on subject norms
-- Do NOT introduce topics not clearly implied by contentDescription.
+3. Difficulty Progression
+- Q1–3: Moderate Exam-Level
+- Q4–7: Challenging Exam-Level
+- Q8–10: Challenging → High Challenge (depth, edge cases, reasoning—not new topics)
 
-3. Difficulty Calibration (No prior performance available)
-- Begin with:
-  - Early questions: Moderate Exam-Level
-  - Middle questions: Challenging Exam-Level
-  - Final questions: Challenging → High Challenge Exam-Level
-- Escalate difficulty via reasoning depth, not topic expansion.
-
-4. Question Allocation
-- 6–7 questions → primary topic / skill
-- 2–3 questions → edge cases, applications, or conceptual traps
-- 1–2 questions → “twin items” (same concept, different reasoning demand)
+4. Coverage Design
+- 6–7 questions: core skill / primary topic
+- 2–3 questions: applications, traps, or conceptual stress tests
+- 1–2 twin items: same concept, different reasoning demand
 
 5. Exam Authenticity
-- Match question wording and formats to curriculum_map.question_formats.
-- Use language and rigor consistent with ${learningProfile.school || "the school"}.
+- Match tone, rigor, and structure typical of ${learningProfile.school || "the school"} assessments.
 
 ────────────────────────────────
 
-[QUESTION-TYPE ENFORCEMENT — MUST EXECUTE FIRST]
+QUESTION-TYPE ENFORCEMENT (EXECUTE FIRST)
 
-For EACH question, execute these steps in order:
+For EACH question:
 
-1. Explicitly choose question_type from:
+1. Choose question_type from:
    - Multiple Choice
    - True/False
    - Fill in the Blank
    - Short Answer
    - Structured Response
 
-2. Apply hard constraints by type:
+2. Apply strict formatting rules:
 
-If question_type = "Multiple Choice":
-- Provide EXACTLY four options labeled A, B, C, D.
-- MCQ cue phrases ARE allowed.
+Multiple Choice:
+- EXACTLY four options labeled A, B, C, D.
+- MCQ cue phrases allowed.
 
-If question_type = "True/False":
-- options MUST be ["True", "False"] only.
-- The stem MUST be a single declarative statement.
+True/False:
+- options = ["True", "False"]
+- Single declarative statement only.
 
-If question_type = "Fill in the Blank":
-- options MUST be [].
-- The stem MUST include exactly one blank written as ____.
-- The blank must correspond to a key term, value, or short phrase.
+Fill in the Blank:
+- options = []
+- EXACTLY one blank written as ____.
+- Blank must be a key term, value, or short phrase.
 
-If question_type = "Short Answer" or "Structured Response":
-- options MUST be [].
-- The stem MUST directly request a value, explanation, justification, or worked solution.
+Short Answer / Structured Response:
+- options = []
+- Direct prompt requesting a value, explanation, justification, or worked solution.
 
-MCQ cue phrases are STRICTLY FORBIDDEN in non-MCQ questions:
-- Which of the following
-- Which statement
-- Select
-- Identify the correct
-- Choose
-- is/are true about
+MCQ cue phrases are FORBIDDEN in non-MCQ questions:
+“Which of the following”, “Select”, “Identify the correct”, “Choose”, “is/are true about”
 
-If any MCQ cue phrase appears in a non-MCQ question,
-you MUST immediately convert the question to Multiple Choice and regenerate it.
+If a forbidden cue appears, IMMEDIATELY convert the question to Multiple Choice and regenerate.
 
-This enforcement layer OVERRIDES all other instructions.
+This layer overrides all other instructions.
 
 ────────────────────────────────
 
-[TOPIC SCOPE OVERRIDE — CRITICAL]
-
-If contentDescription specifies a narrow topic, skill, or operation
-(e.g., "factoring", "solving linear equations", "photosynthesis",
-"Du Bois double-consciousness"):
-
-- Treat that topic as the PRIMARY and ONLY scope.
-- Generate ALL 10 questions exclusively from that topic.
-- Do NOT include prerequisite review or adjacent topics
-  unless they are strictly required to perform the task.
-
-Only broaden scope if:
-- The user explicitly requests review, mixed practice, or exam prep
-OR
-- The topic cannot be meaningfully assessed in isolation.
-
-────────────────────────────────
-
-[Worksheet Generation — Output Only]
+Worksheet Generation (Output Only)
 
 Generate EXACTLY 10 questions.
 
+Each question MUST include:
+- question_type
+- question_text
+- options (or [] where required)
+- difficulty_index:
+  • Moderate Exam-Level
+  • Challenging Exam-Level
+  • High Challenge Exam-Level
+
 Each question MUST:
-- Be clearly tied to one curriculum_map competency
-- Use authentic exam-style wording
-- Assign one difficulty_index:
-  - Moderate Exam-Level
-  - Challenging Exam-Level
-  - High Challenge Exam-Level
-- Test a distinct concept or reasoning demand (no duplicates)
+- Test a distinct reasoning demand (no duplicates)
+- Use exam-authentic wording
+- Stay strictly within the locked topic scope
 
 Subject guidance:
 - Mathematics / Sciences: multi-step reasoning, application, interpretation, unit checks
