@@ -167,8 +167,8 @@ export default function BrowserCompatibilityBanner() {
     const info = getBrowserInfo();
     setBrowserInfo(info);
 
-    // Show banner for compatibility issues OR in-app browsers (which cause cross-origin script errors)
-    if (issues.length > 0 || info.isInApp) {
+    // Show banner for compatibility issues, in-app browsers, or outdated browsers
+    if (issues.length > 0 || info.isInApp || info.isOutdated) {
       setShowBanner(true);
     }
   }, []);
