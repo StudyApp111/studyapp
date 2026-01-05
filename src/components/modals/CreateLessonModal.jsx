@@ -190,7 +190,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       } else if (inputType === "file") {
         lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
         lessonData.file_urls = fileUrls;
-        lessonData.extracted_content = fullExtractedContent || extractedContent;
+        lessonData.extracted_content = extractedContent;
       }
 
       const lesson = await base44.entities.Lesson.create(lessonData);

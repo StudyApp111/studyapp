@@ -238,8 +238,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         if (lesson.input_type === "description" && lesson.description) {
           contentDescription = lesson.description;
         } else if (lesson.extracted_content) {
-          // Use extracted_content but limit to reasonable size
-          contentDescription = lesson.extracted_content.substring(0, 8000);
+          // Use compressed extracted_content (already compressed in CreateLessonModal)
+          contentDescription = lesson.extracted_content;
         } else {
           contentDescription = lesson.description || "N/A";
         }
