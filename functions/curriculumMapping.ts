@@ -11,7 +11,10 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { prompt } = await req.json();
+        const { prompt, lessonId, courseName, content, school, grade } = await req.json();
+        
+        // Support both old (prompt-only) and new (lessonId-based) API
+        let mappingPrompt = prompt;
 
         if (!prompt) {
             return Response.json({ error: 'Prompt is required' }, { status: 400 });
