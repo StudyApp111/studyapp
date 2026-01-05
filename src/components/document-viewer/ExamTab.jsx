@@ -260,136 +260,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         lessonData: { course_name: lesson.course_name },
         learningProfile,
         contentDescription,
-        curriculumMap: lesson.curriculum_map, 
-        ? `Context
-You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
-
-This worksheet must stand alone.
-Do NOT rely on prior diagnostics.
-Ground content in the student’s materials and light web search when needed.
-
-────────────────────────────────
-
-[Input Context]
-
-Student Grade Level: ${learningProfile.grade || "N/A"}
-Course / Unit Name: ${lessonData.course_name}
-School: ${learningProfile.school || "N/A"}
-
-Lesson Content (notes, uploaded material, or student description):
-${contentDescription}
-
-Internal Reasoning (Do NOT Output)
-
-1. Scope Lock
-- If lesson content specifies a concrete topic or skill (e.g., “factoring”, “photosynthesis”, “Du Bois double-consciousness”):
-  → ALL questions MUST stay strictly within that topic.
-- Do NOT add prerequisites, review topics, or adjacent units unless required to execute the task.
-- Only broaden scope if the user explicitly requests review or exam prep.
-
-2. Topic Validation (Light Search)
-- Use search ONLY to confirm terminology, typical exam phrasing, or standard question styles for this course.
-- Do NOT introduce new topics beyond the locked scope.
-
-3. Difficulty Progression
-- Q1–3: Moderate Exam-Level
-- Q4–7: Challenging Exam-Level
-- Q8–10: Challenging → High Challenge (depth, edge cases, reasoning—not new topics)
-
-4. Coverage Design
-- 6–7 questions: core skill / primary topic
-- 2–3 questions: applications, traps, or conceptual stress tests
-- 1–2 twin items: same concept, different reasoning demand
-
-5. Exam Authenticity
-- Match tone, rigor, and structure typical of ${learningProfile.school || "the school"} assessments.
-
-────────────────────────────────
-
-QUESTION-TYPE ENFORCEMENT (EXECUTE FIRST)
-
-For EACH question:
-
-1. Choose question_type from:
-   - Multiple Choice
-   - True/False
-   - Fill in the Blank
-   - Short Answer
-   - Structured Response
-
-2. Apply strict formatting rules:
-
-Multiple Choice:
-- EXACTLY four options labeled A, B, C, D.
-- MCQ cue phrases allowed.
-
-True/False:
-- options = ["True", "False"]
-- Single declarative statement only.
-
-Fill in the Blank:
-- options = []
-- EXACTLY one blank written as ____.
-- Blank must be a key term, value, or short phrase.
-
-Short Answer / Structured Response:
-- options = []
-- Direct prompt requesting a value, explanation, justification, or worked solution.
-
-MCQ cue phrases are FORBIDDEN in non-MCQ questions:
-“Which of the following”, “Select”, “Identify the correct”, “Choose”, “is/are true about”
-
-If a forbidden cue appears, IMMEDIATELY convert the question to Multiple Choice and regenerate.
-
-This layer overrides all other instructions.
-
-────────────────────────────────
-
-Worksheet Generation (Output Only)
-
-Generate EXACTLY 10 questions.
-
-Each question MUST include:
-- question_type
-- question_text
-- options (or [] where required)
-- difficulty_index:
-  • Moderate Exam-Level
-  • Challenging Exam-Level
-  • High Challenge Exam-Level
-
-Each question MUST:
-- Test a distinct reasoning demand (no duplicates)
-- Use exam-authentic wording
-- Stay strictly within the locked topic scope
-
-Subject guidance:
-- Mathematics / Sciences: multi-step reasoning, application, interpretation, unit checks
-- Humanities / Social Sciences: argument alignment, evidence interpretation, conceptual precision
-- Computer Science / Engineering: tracing, correctness, edge cases, applied logic
-- Business / Economics: method selection, case reasoning, quantitative interpretation
-
-────────────────────────────────
-
-[Answer Key Requirements]
-
-For EACH question include:
-- correct_answer
-- explanation (2–3 sentences; instructional and corrective)
-- assessed_competencies
-- targeted_misconception (or null if none)
-
-Explanations should teach the *reason* behind the answer and how to avoid common mistakes.
-
-────────────────────────────────
-
-Output Format:
-Provide your response as a single, valid JSON object with the structure specified.`:
-
-      console.log(`📊 Exam ${examNumber} - Total prompt length:`, aiPrompt.length);
-
-      const { data: examData } = await base44.functions.invoke('generateWorksheet', {
-        prompt: aiPrompt,
+        curriculumMap: lesson.curriculum_map,
         response_json_schema: {
           type: "object",
           properties: {
@@ -659,7 +530,7 @@ Provide your response as a single, valid JSON object with the structure specifie
         };
       });
 
-      // Minimize content for feedback prompt - we already have curriculum map
+      // Call feedbackGrade function with data
       const examPerformanceData = questionsWithGrading.map((q) => ({
         question_number: q.question_number,
         question_type: q.question_type,
@@ -681,117 +552,36 @@ Provide your response as a single, valid JSON object with the structure specifie
         } : null
       }));
 
-      const curriculumStr = JSON.stringify(lesson.curriculum_map || {}, null, 2);
-      const performanceStr = JSON.stringify(examPerformanceData, null, 2);
-      
-      console.log(`📊 Feedback - Curriculum length:`, curriculumStr.length);
-      console.log(`📊 Feedback - Performance data length:`, performanceStr.length);
-
-      const feedbackPrompt = `You are an expert educator for ${lesson.course_name} (grade: ${learningProfile.grade || "N/A"}). Analyze the student's exam performance and predict their final exam grade.
-
-Student Grade: ${learningProfile.grade || "N/A"}
-Course: ${lesson.course_name}
-Exam: ${exam.exam_number} of 6
-
-Curriculum:
-${curriculumStr}
-
-Performance:
-${performanceStr}
-
-Each worksheet item may include:
-question_number, question_type, difficulty_index, question_text,
-options, student_answer, correct_answer, explanation,
-assessed_competencies[], targeted_misconception, is_correct,
-ai_grading { score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[] }.
-Ignore missing fields; do not invent values.
-
-────────────────────────────────
-INTERNAL SCORING LOGIC (DO NOT OUTPUT)
-
-Edge Handling (must be deterministic)
-- If correct_count = 0/10 → predicted_exam_score_percentage = "Not Calculable" (insufficient baseline); still produce strengths/weaknesses + plan.
-- If correct_count = 10/10 → still compute; cap realism at 95–100 unless evidence suggests weaker explanations/partial-credit patterns.
-
-1) Item Mastery Score (bounded, teacher-realistic)
-For each item, compute mastery ∈ [0.05, 0.98] using:
-- correctness (primary)
-- partial credit if ai_grading exists (strong secondary)
-- difficulty_index (harder correct = higher mastery; harder wrong = lower mastery)
-- misconception penalty if targeted_misconception present and wrong
-- explanation quality signal: if ai_grading verdict ≠ "Correct" OR keypoints_missed non-empty → reduce mastery slightly
-Do NOT over-reward lucky correctness: if correct but ai_grading shows weak rationale/low score, keep mastery moderate.
-
-2) Competency Mastery
-For each curriculum competency:
-- mastery = mean(item mastery for items tagged with that competency)
-- if competency unassessed → set 0.50 and mark as low-evidence internally
-
-3) Weighted Aggregate (curriculum-aligned)
-- Parse curriculum competency weightings (normalize to sum=1)
-- Preliminary = Σ(competency_mastery × weight) × 100
-
-4) Exam-Format Realism Modifier (bounded)
-Apply a single bounded modifier in [-8, +4] based on:
-- Format mismatch risk: weak performance on high-frequency exam formats (from curriculum_map.question_formats)
-- Coverage risk: any competency weight ≥25% with <2 assessed items → reliability penalty
-- Consistency: large gap between correctness and ai_grading partial credit/explanations → reduce optimism
-Purpose: keep predictions teacher-realistic given only 10 items.
-
-5) Final Prediction
-- If not edge case: predicted = round(clamp(Preliminary + Modifier, 0, 100)) + "%"
-- Ensure the prediction reflects school-style grading realism (avoid systematic inflation).
-
-────────────────────────────────
-PLANNING (DO NOT OUTPUT INTERNAL SIGNALS)
-Derive 5 sessions that directly target:
-- the bottom 2–3 weighted competencies
-- recurring misconceptions (or most damaging misconceptions)
-- high-frequency exam formats where the student underperformed
-Each session must specify a concrete practice focus (what to drill + what to change).
-
-────────────────────────────────
-OUTPUT RULES (STRICT)
-Return ONE JSON object with EXACTLY these fields (and no others):
-
-- feedback_session_title: "Worksheet ${worksheet.worksheet_number} Performance & Grade Prediction"
-- predicted_exam_score_percentage: string with "%" OR "Not Calculable"
-- overall_performance_summary_text: 1–2 sentences (empathetic, teacher-like, clear next focus)
-- identified_strengths_list: 2–3 items grounded in observed evidence (competency or format)
-- key_areas_for_improvement_list: 2–3 items grounded in observed evidence (competency/misconception/format)
-- suggested_future_sessions_plan: 5 objects:
-    session_number: ${worksheet.worksheet_number + 1} ... ${worksheet.worksheet_number + 5}
-    session_name: short, specific
-    session_focus_description: 1–2 sentences describing what to practice, what to fix, and what “good” looks like
-
-No extra fields. No prose outside JSON. All percentages must be strings.`;
-
       const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
-          prompt: feedbackPrompt,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              feedback_session_title: { type: "string" },
-              predicted_exam_score_percentage: { type: "string" },
-              overall_performance_summary_text: { type: "string" },
-              identified_strengths_list: { type: "array", items: { type: "string" } },
-              key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
-              suggested_future_sessions_plan: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    session_number: { type: "integer" },
-                    session_name: { type: "string" },
-                    session_focus_description: { type: "string" }
-                  }
-                },
-                minItems: 3,
-                maxItems: 5
-              }
+        examNumber: exam.exam_number,
+        examPerformanceData,
+        curriculumMap: lesson.curriculum_map,
+        learningProfile,
+        courseName: lesson.course_name,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            feedback_session_title: { type: "string" },
+            predicted_exam_score_percentage: { type: "string" },
+            overall_performance_summary_text: { type: "string" },
+            identified_strengths_list: { type: "array", items: { type: "string" } },
+            key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
+            suggested_future_sessions_plan: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  session_number: { type: "integer" },
+                  session_name: { type: "string" },
+                  session_focus_description: { type: "string" }
+                }
+              },
+              minItems: 3,
+              maxItems: 5
             }
           }
-        });
+        }
+      });
 
       const questionFeedback = questionsWithGrading.map((q, idx) => {
         let feedback = "";
@@ -1118,6 +908,7 @@ No extra fields. No prose outside JSON. All percentages must be strings.`;
   return (
     <>
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
+      <XPGainToast show={xpToast.show} xpGained={xpToast.xp} reason={xpToast.reason} onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })} />
       
       {newBadges.length > 0 && (
         <motion.div
