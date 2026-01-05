@@ -94,8 +94,10 @@ export default function Layout({ children, currentPageName }) {
         const cleanup = trackSessionDuration();
         
         // Redirect to onboarding if not completed and not already on onboarding page
+        // PRESERVE URL params when redirecting
         if (!currentUser.onboarding_completed && location.pathname !== createPageUrl("Onboarding")) {
-          navigate(createPageUrl("Onboarding"));
+          const currentSearch = location.search;
+          navigate(createPageUrl("Onboarding") + currentSearch);
         }
         
         return cleanup;

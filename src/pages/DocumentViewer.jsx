@@ -181,6 +181,8 @@ export default function DocumentViewer() {
       const urlParams = new URLSearchParams(window.location.search);
       const lessonId = urlParams.get('id') || urlParams.get('lessonId');
 
+      console.log("DocumentViewer: Full URL:", window.location.href);
+      console.log("DocumentViewer: Search params:", window.location.search);
       console.log("DocumentViewer: Loading lesson with ID:", lessonId);
 
       if (!lessonId) {

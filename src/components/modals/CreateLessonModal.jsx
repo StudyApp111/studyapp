@@ -405,7 +405,7 @@ Constraints:
 
       // Navigate immediately - curriculum mapping and exam generation happen in background
       onOpenChange(false);
-      navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}&generating=true`);
+      navigate(createPageUrl("DocumentViewer") + `?id=${lesson.id}&generating=true`);
 
       // Background: Save curriculum map and update lesson (non-blocking)
       base44.entities.CurriculumMap.create({
