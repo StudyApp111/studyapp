@@ -84,6 +84,17 @@ Deno.serve(async (req) => {
         const data = await response.json();
         console.log('✅ Gemini API response received');
         
+        // Check for truncation
+        const finishReason = data.candidates?.[0]?.finishReason;
+        console.log('📋 Finish reason:', finishReason);
+        
+        if (finishReason === 'MAX_TOKENS') {
+            console.error('❌ Output truncated due to MAX_TOKENS limit');
+            return Response.json({ 
+                error: 'Response was truncated - output exceeded token limit. Please try again.' 
+            }, { status: 500 });
+        }
+        
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
