@@ -255,23 +255,36 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       
       console.log(`📊 Exam ${examNumber} - Content length:`, contentDescription.length);
 
-      const aiPrompt = `Context
-You are an expert assessment designer. Generate a 10-question predictive exam for ${lesson.course_name}, optimized to forecast exam performance and build an accurate learning baseline for this student.
+      const curriculumMapStr = JSON.stringify(lesson.curriculum_map || {}, null, 2);
+      console.log(`📊 Exam ${examNumber} - Curriculum map length:`, curriculumMapStr.length);
+      
+      const aiPrompt = examNumber === 1 
+        ? `You are an expert assessment designer. Generate a 10-question diagnostic exam for ${lesson.course_name}.
 
-The exam must be tightly grounded in the provided lesson content and curriculum map.
-
-Input Context
 Student Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${lesson.course_name}
+Course: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
 
-Curriculum Map (authoritative scope, competencies, weightings, formats):
-${JSON.stringify(lesson.curriculum_map, null, 2)}
+Curriculum Map:
+${curriculumMapStr}
 
-Lesson Content (notes, uploaded material, or student description):
+Lesson Content:
 ${contentDescription}
 
-Generate exactly 10 adaptive, exam-authentic questions following the same format as worksheets.`;
+Generate exactly 10 adaptive questions covering all core competencies.`
+        : `You are an expert assessment designer. Generate a 10-question targeted exam for ${lesson.course_name}.
+
+This is Exam ${examNumber} of 6, focusing on: ${contentDescription}
+
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course: ${lesson.course_name}
+
+Curriculum Map:
+${curriculumMapStr}
+
+Generate exactly 10 questions specifically targeting the focus areas above.`;
+
+      console.log(`📊 Exam ${examNumber} - Total prompt length:`, aiPrompt.length);
 
       const { data: examData } = await base44.functions.invoke('generateWorksheet', {
         prompt: aiPrompt,
