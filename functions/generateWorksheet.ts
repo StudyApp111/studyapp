@@ -176,7 +176,7 @@ Generate exactly 10 questions specifically targeting the focus areas above.`;
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: enhancedPrompt
+                    text: prompt
                 }]
             }],
             generationConfig: {
