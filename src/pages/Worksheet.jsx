@@ -55,6 +55,9 @@ export default function Worksheet() {
   
   // Worksheet ID ref to track which worksheet the timer is running for
   const worksheetIdRef = useRef(null);
+  
+  // Prevent duplicate generation (similar to ExamTab)
+  const generationStartedRef = useRef(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -65,7 +68,11 @@ export default function Worksheet() {
       return;
     }
 
-    loadOrGenerateWorksheet(lessonId);
+    // Guard against duplicate calls
+    if (!generationStartedRef.current) {
+      generationStartedRef.current = true;
+      loadOrGenerateWorksheet(lessonId);
+    }
   }, [navigate]);
 
   // Main timer effect - Only runs when worksheet changes AND is not completed
