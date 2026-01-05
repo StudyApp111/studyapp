@@ -66,13 +66,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       generationStartedRef.current = true;
       loadOrGenerateExam(selectedExamNumber);
     }
-    
-    return () => {
-      // Reset flag when component unmounts or dependencies change
-      if (generationStartedRef.current) {
-        generationStartedRef.current = false;
-      }
-    };
   }, [lesson?.id, selectedExamNumber]);
 
   useEffect(() => {
@@ -184,9 +177,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   };
 
   const loadOrGenerateExam = async (examNumber) => {
-    // Prevent duplicate calls
-    if (isGenerating) return;
-    
     try {
       const existingExams = await base44.entities.Exam.filter({ 
         lesson_id: lesson.id,
