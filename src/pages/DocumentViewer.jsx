@@ -77,7 +77,7 @@ export default function DocumentViewer() {
   useEffect(() => {
     loadLesson();
     loadUserStats();
-  }, [window.location.search]);
+  }, []); // Only load once on mount - window.location.search as dependency causes infinite loops
 
   const loadUserStats = async () => {
     try {
@@ -178,9 +178,6 @@ export default function DocumentViewer() {
 
   const loadLesson = async () => {
     try {
-      // CRITICAL: Add small delay to ensure URL params are available after navigation
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
       const urlParams = new URLSearchParams(window.location.search);
       const lessonId = urlParams.get('id') || urlParams.get('lessonId');
 
