@@ -257,9 +257,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
       const { data: examData } = await base44.functions.invoke('generateWorksheet', {
         examNumber,
-        lessonData: {
-          course_name: lesson.course_name
-        },
+        lessonData: { course_name: lesson.course_name },
         learningProfile,
         contentDescription,
         curriculumMap: lesson.curriculum_map, 
