@@ -177,6 +177,18 @@ Be specific to the actual content provided. Identify 4-6 core competencies relev
             };
         }
 
+        // If lessonId provided, save curriculum map to lesson
+        if (lessonId && parsedResponse) {
+            try {
+                await base44.entities.Lesson.update(lessonId, {
+                    curriculum_map: parsedResponse
+                });
+                console.log('Curriculum map saved to lesson:', lessonId);
+            } catch (saveError) {
+                console.error('Failed to save curriculum map to lesson:', saveError.message);
+            }
+        }
+
         console.log('=== curriculumMapping Complete ===');
         return Response.json(parsedResponse);
 
