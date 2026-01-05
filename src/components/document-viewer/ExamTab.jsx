@@ -697,91 +697,72 @@ ${curriculumStr}
 Performance:
 ${performanceStr}
 
-      [Assumptions & Fields]
-      Each exam item may include:
-      question_number, question_type, difficulty_index, question_text,
-      options, student_answer, correct_answer, explanation,
-      assessed_competencies[] (names), targeted_misconception (string),
-      is_correct (boolean),
-      ai_grading { score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[] }.
-      Ignore missing fields; do not invent values.
+Each worksheet item may include:
+question_number, question_type, difficulty_index, question_text,
+options, student_answer, correct_answer, explanation,
+assessed_competencies[], targeted_misconception, is_correct,
+ai_grading { score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[] }.
+Ignore missing fields; do not invent values.
 
-      [Part 1 — Performance Analysis & Prediction]
-      Edge Handling
-      - If total correct = 0/10: skip calculations and output "Not Calculable" for predicted_exam_score_percentage with a foundation-rebuild rationale.
-      - If total correct = 10/10: still compute; expect a top score (~95–100).
+────────────────────────────────
+INTERNAL SCORING LOGIC (DO NOT OUTPUT)
 
-      1) Per-Item Mastery (blend binary, partial credit, difficulty)
-      - Base = 0.90 if is_correct else 0.20.
-      - If ai_grading exists:
-      partial = clamp(ai_grading.score_out_of_10 / 10, 0, 1);
-      base = 0.75*partial + 0.25*base.
-      - Difficulty multiplier:
-      Correct: High Challenge ×1.05 (cap 0.98), Challenging ×1.02 (cap 0.96), Moderate ×1.01 (cap 0.92)
-      Incorrect: High Challenge ×0.90 (floor 0.10), Challenging ×0.80 (floor 0.08), Moderate ×0.70 (floor 0.05)
-      - Misconception penalty (if targeted_misconception && !is_correct): −0.05/−0.07/−0.09
-      - Explanation alignment (if ai_grading && verdict!="Correct" && explanation): −0.03.
-      - Keypoints bonus (if ai_grading && keypoints_hit length ≥2): +0.02.
-      - Clamp final item score ∈ [0.05, 0.98].
+Edge Handling (must be deterministic)
+- If correct_count = 0/10 → predicted_exam_score_percentage = "Not Calculable" (insufficient baseline); still produce strengths/weaknesses + plan.
+- If correct_count = 10/10 → still compute; cap realism at 95–100 unless evidence suggests weaker explanations/partial-credit patterns.
 
-      2) Competency Mastery
-      - For each competency in lesson.curriculum_map.core_competencies:
-      MasteryScore = mean of scores from items whose assessed_competencies include that competency name.
-      If none: set 0.50 (neutral) and note "not assessed in this exam" for rationale.
+1) Item Mastery Score (bounded, teacher-realistic)
+For each item, compute mastery ∈ [0.05, 0.98] using:
+- correctness (primary)
+- partial credit if ai_grading exists (strong secondary)
+- difficulty_index (harder correct = higher mastery; harder wrong = lower mastery)
+- misconception penalty if targeted_misconception present and wrong
+- explanation quality signal: if ai_grading verdict ≠ "Correct" OR keypoints_missed non-empty → reduce mastery slightly
+Do NOT over-reward lucky correctness: if correct but ai_grading shows weak rationale/low score, keep mastery moderate.
 
-      3) Weighted Aggregate (curriculum-aligned)
-      - Parse lesson.curriculum_map.competency_weightings ("30%") → 0.30; normalize to sum = 1.
-      - PreliminaryAggregate = Σ(MasteryScore * weight) * 100.
+2) Competency Mastery
+For each curriculum competency:
+- mastery = mean(item mastery for items tagged with that competency)
+- if competency unassessed → set 0.50 and mark as low-evidence internally
 
-      4) Question-Type Adjustment (exam fidelity)
-      - For each question_type:
-      AvgTypeScore = mean score for that type.
-      ExamTypeFrequency = from curriculum_map.question_formats.
-      - If AvgTypeScore < 0.40 and ExamTypeFrequency ≥ 30% → −3 to −6 total.
-      - If AvgTypeScore ≥ 0.80 and ExamTypeFrequency ≥ 30% → +0 to +2 total.
-      - Cap total style modifier to [−8, +4].
+3) Weighted Aggregate (curriculum-aligned)
+- Parse curriculum competency weightings (normalize to sum=1)
+- Preliminary = Σ(competency_mastery × weight) × 100
 
-      5) Coverage Reliability Adjustment
-      - For any competency weight ≥25% and <2 assessed items → −2 each (max −4).
-      - If ≥80% of weighted competencies assessed → +1 to +2.
-      - Combine with previous modifiers; cap overall to [−8, +4].
+4) Exam-Format Realism Modifier (bounded)
+Apply a single bounded modifier in [-8, +4] based on:
+- Format mismatch risk: weak performance on high-frequency exam formats (from curriculum_map.question_formats)
+- Coverage risk: any competency weight ≥25% with <2 assessed items → reliability penalty
+- Consistency: large gap between correctness and ai_grading partial credit/explanations → reduce optimism
+Purpose: keep predictions teacher-realistic given only 10 items.
 
-      6) Final Prediction
-      - PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then "%".
-      - Exception: if 0/10 → "Not Calculable".
+5) Final Prediction
+- If not edge case: predicted = round(clamp(Preliminary + Modifier, 0, 100)) + "%"
+- Ensure the prediction reflects school-style grading realism (avoid systematic inflation).
 
-      [Part 2 — Structured Multi-Signal Planning Pipeline (Internal Only)]
-      Before generating suggested_future_sessions_plan and learning_patterns, internally compute planning signals:
-      1. priority_competencies = bottom 2–3 competencies by weighted mastery.
-      2. misconception_targets = misconceptions recurring across exam or tied to weighted competencies.
-      3. exam_format_deficits = question types where AvgTypeScore < 40% AND exam weight ≥ 20%.
-      4. trend_direction = {improving, plateauing, declining} based on difficulty × mastery trajectory.
+────────────────────────────────
+PLANNING (DO NOT OUTPUT INTERNAL SIGNALS)
+Derive 5 sessions that directly target:
+- the bottom 2–3 weighted competencies
+- recurring misconceptions (or most damaging misconceptions)
+- high-frequency exam formats where the student underperformed
+Each session must specify a concrete practice focus (what to drill + what to change).
 
-      These signals MUST shape both:
-      - suggested_future_sessions_plan  
-      - learning_patterns  
+────────────────────────────────
+OUTPUT RULES (STRICT)
+Return ONE JSON object with EXACTLY these fields (and no others):
 
-      Do not output these internal signals directly; only use them to generate the required JSON fields.
+- feedback_session_title: "Worksheet ${worksheet.worksheet_number} Performance & Grade Prediction"
+- predicted_exam_score_percentage: string with "%" OR "Not Calculable"
+- overall_performance_summary_text: 1–2 sentences (empathetic, teacher-like, clear next focus)
+- identified_strengths_list: 2–3 items grounded in observed evidence (competency or format)
+- key_areas_for_improvement_list: 2–3 items grounded in observed evidence (competency/misconception/format)
+- suggested_future_sessions_plan: 5 objects:
+    session_number: ${worksheet.worksheet_number + 1} ... ${worksheet.worksheet_number + 5}
+    session_name: short, specific
+    session_focus_description: 1–2 sentences describing what to practice, what to fix, and what “good” looks like
 
-      [Global Output Rules]
-      Output ONLY a single JSON object matching the response_json_schema:
-      - feedback_session_title: "Exam ${exam.exam_number} Performance & Grade Prediction"
-      - predicted_exam_score_percentage: "% string" or "Not Calculable"
-      - prediction_calculation_rationale: 1–3 sentences referencing item difficulty, competency weighting, question-type frequency, and coverage limits.
-      - overall_performance_summary_text: 1–2 empathetic sentences with a clear next-focus cue.
-      - identified_strengths_list: 2–3 specific competency or exam-format strengths.
-      - key_areas_for_improvement_list: 2–3 high-impact weaknesses tied to misconceptions.
-      - suggested_future_sessions_plan:  
-      5 objects with session_number (2..6), session_name, session_focus_description.  
-      Each session MUST be directly grounded in at least ONE of the internal planning signals.
-      - learning_patterns:  
-      3–5 objects with:
-      • pattern_type: behavior label  
-      • what_it_means: 1 sentence explaining the pattern  
-      • how_to_improve: 1 sentence linking to tactics the next sessions/exams will reinforce.   
-      - No extra fields. No explanations outside the JSON. All percentages must be strings with "%".
-
-      Output Format: Valid JSON matching the required schema.`;
+No extra fields. No prose outside JSON. All percentages must be strings.`;
 
       const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
           prompt: feedbackPrompt,
@@ -790,7 +771,6 @@ ${performanceStr}
             properties: {
               feedback_session_title: { type: "string" },
               predicted_exam_score_percentage: { type: "string" },
-              prediction_calculation_rationale: { type: "string" },
               overall_performance_summary_text: { type: "string" },
               identified_strengths_list: { type: "array", items: { type: "string" } },
               key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
@@ -802,17 +782,6 @@ ${performanceStr}
                     session_number: { type: "integer" },
                     session_name: { type: "string" },
                     session_focus_description: { type: "string" }
-                  }
-                }
-              },
-              learning_patterns: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    pattern_type: { type: "string" },
-                    what_it_means: { type: "string" },
-                    how_to_improve: { type: "string" }
                   }
                 },
                 minItems: 3,
