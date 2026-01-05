@@ -436,9 +436,7 @@ For each question also include:
 Output Format: Valid JSON object matching the schema.`;
       }
 
-
-
-Previous Worksheet Performance:
+      const { data: worksheetData } = await retryOperation(
 ${JSON.stringify(previousWorksheetPerformance, null, 2)}
 
 Cumulative Performance:
