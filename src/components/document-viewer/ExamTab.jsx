@@ -230,16 +230,30 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       });
       const learningProfile = profile[0] || {};
 
+      // For exam 1, use full content. For subsequent exams, use focused approach
       let contentDescription = "";
-      if (lesson.input_type === "description" && lesson.description) {
-        contentDescription = lesson.description;
-      } else if (lesson.compressed_content) {
-        contentDescription = lesson.compressed_content;
-      } else if (lesson.extracted_content) {
-        contentDescription = lesson.extracted_content;
+      
+      if (examNumber === 1) {
+        // First exam needs full context
+        if (lesson.input_type === "description" && lesson.description) {
+          contentDescription = lesson.description;
+        } else if (lesson.extracted_content) {
+          // Use extracted_content but limit to reasonable size
+          contentDescription = lesson.extracted_content.substring(0, 8000);
+        } else {
+          contentDescription = lesson.description || "N/A";
+        }
       } else {
-        contentDescription = lesson.description || "N/A";
+        // Subsequent exams: use minimal context since we have curriculum map + focus description
+        const existingExam1 = exams.find(e => e.exam_number === 1);
+        const focusDescription = existingExam1?.ai_feedback?.suggested_future_sessions_plan?.find(
+          s => s.session_number === examNumber
+        )?.session_focus_description || "Continue building on previous exam";
+        
+        contentDescription = `Focus for this exam: ${focusDescription}`;
       }
+      
+      console.log(`📊 Exam ${examNumber} - Content length:`, contentDescription.length);
 
       const aiPrompt = `Context
 You are an expert assessment designer. Generate a 10-question predictive exam for ${lesson.course_name}, optimized to forecast exam performance and build an accurate learning baseline for this student.
