@@ -5,7 +5,6 @@ import Collaborate from './pages/Collaborate';
 import DiagnosticQuiz from './pages/DiagnosticQuiz';
 import DocumentViewer from './pages/DocumentViewer';
 import EmailManager from './pages/EmailManager';
-import Feedback from './pages/Feedback';
 import GradeResults from './pages/GradeResults';
 import Home from './pages/Home';
 import Leaderboard from './pages/Leaderboard';
@@ -27,7 +26,6 @@ export const PAGES = {
     "DiagnosticQuiz": DiagnosticQuiz,
     "DocumentViewer": DocumentViewer,
     "EmailManager": EmailManager,
-    "Feedback": Feedback,
     "GradeResults": GradeResults,
     "Home": Home,
     "Leaderboard": Leaderboard,
