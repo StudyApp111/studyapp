@@ -55,12 +55,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   // Auto-generate Exam 1 when tab loads (or URL has generating=true)
   useEffect(() => {
     if (lesson && !selectedExamNumber) {
-      // CRITICAL: Don't generate exams until curriculum_map is available
-      if (!lesson.curriculum_map || !lesson.curriculum_map.core_competencies) {
-        console.log("Waiting for curriculum_map to be available...");
-        return;
-      }
-      
       const allExamsForLesson = exams || [];
       const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
       
@@ -73,7 +67,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         setSelectedExamNumber(1);
       }
     }
-  }, [lesson?.id, lesson?.curriculum_map, exams]);
+  }, [lesson?.id, exams]);
 
   useEffect(() => {
     if (lesson && selectedExamNumber) {
@@ -233,11 +227,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
   const generateExam = async (existingExamId = null, examNumber = 1) => {
     try {
-      // Guard: Ensure curriculum_map exists before generating
-      if (!lesson.curriculum_map || !lesson.curriculum_map.core_competencies) {
-        throw new Error("Curriculum map not ready. Please wait a moment and try again.");
-      }
-      
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
         id: user.learning_profile_id 
@@ -265,8 +254,8 @@ Student Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
 
-Curriculum Map (authoritative scope, competencies, weightings, formats):
-${JSON.stringify(lesson.curriculum_map, null, 2)}
+Curriculum Map (if available):
+${lesson.curriculum_map ? JSON.stringify(lesson.curriculum_map, null, 2) : "Not yet available - generate questions from content only"}
 
 Lesson Content (notes, uploaded material, or student description):
 ${contentDescription}
@@ -570,6 +559,11 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           keypoints_missed: q.ai_keypoints_missed
         } : null
       }));
+
+      // Guard: Ensure curriculum_map exists before predicting grade
+      if (!lesson.curriculum_map || !lesson.curriculum_map.core_competencies) {
+        throw new Error("Curriculum analysis not ready. Please wait and try submitting again.");
+      }
 
       const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map and the student's 10-question exam performance to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
 
@@ -884,23 +878,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
 
   // Show exam selection if no exam in progress
   if (!exam && !isGenerating && !selectedExamNumber) {
-    // Show loading if curriculum_map isn't ready yet
-    if (!lesson?.curriculum_map || !lesson.curriculum_map.core_competencies) {
-      return (
-        <div className="pb-4">
-          <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-6 m-2">
-            <div className="flex flex-col items-center justify-center py-8 space-y-4">
-              <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
-              <div className="text-center space-y-2">
-                <h3 className="text-lg font-bold text-slate-900">Preparing Your Exam</h3>
-                <p className="text-sm text-slate-600">Analyzing curriculum and generating questions...</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      );
-    }
-    
     const allExamsForLesson = exams || [];
     // Deduplicate by exam_number, keeping the most recent or completed one
     const examsByNumber = {};

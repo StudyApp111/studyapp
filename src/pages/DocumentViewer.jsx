@@ -193,36 +193,7 @@ export default function DocumentViewer() {
       }
 
       const lessonData = lessons[0];
-      
-      // If curriculum_map is missing, poll for it (it's being generated in background)
-      if (!lessonData.curriculum_map || !lessonData.curriculum_map.core_competencies) {
-        const maxRetries = 20; // 20 seconds max wait
-        let retries = 0;
-        
-        const pollInterval = setInterval(async () => {
-          try {
-            const updatedLessons = await base44.entities.Lesson.filter({ id: lessonId });
-            if (updatedLessons.length > 0 && updatedLessons[0].curriculum_map?.core_competencies) {
-              clearInterval(pollInterval);
-              setLesson(updatedLessons[0]);
-              setLoading(false);
-            } else if (retries++ >= maxRetries) {
-              clearInterval(pollInterval);
-              setLesson(lessonData); // Use what we have
-              setLoading(false);
-            }
-          } catch (pollError) {
-            console.error("Error polling for curriculum_map:", pollError);
-            clearInterval(pollInterval);
-            setLesson(lessonData);
-            setLoading(false);
-          }
-        }, 1000);
-        
-        setLesson(lessonData); // Show lesson immediately, but keep polling
-      } else {
-        setLesson(lessonData);
-      }
+      setLesson(lessonData);
       
       // Initialize study time from saved lesson data
       setStudyTime(lessonData.total_study_time_seconds || 0);
