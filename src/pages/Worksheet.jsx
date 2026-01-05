@@ -437,7 +437,6 @@ Output Format: Valid JSON object matching the schema.`;
       }
 
       const { data: worksheetData } = await retryOperation(
-${JSON.stringify(previousWorksheetPerformance, null, 2)}
 
 Cumulative Performance:
 ${JSON.stringify(cumulativePerformance, null, 2)}
