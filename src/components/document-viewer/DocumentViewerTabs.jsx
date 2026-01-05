@@ -116,15 +116,15 @@ export default function DocumentViewerTabs({ lesson }) {
     
     const selection = window.getSelection();
     const text = selection.toString().trim();
-    
+
     if (text && text.length > 0) {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      
-      // Get selection indices relative to full content
-      const content = lesson?.extracted_content || "";
-      const start = content.indexOf(text);
-      const end = start + text.length;
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    // Get selection indices relative to full content
+    const content = lesson?.full_extracted_content || lesson?.extracted_content || "";
+    const start = content.indexOf(text);
+    const end = start + text.length;
       
       setToolbarPosition({ 
         x: rect.left + rect.width / 2, 
@@ -216,15 +216,16 @@ export default function DocumentViewerTabs({ lesson }) {
   };
 
   const handleCopyTranscript = () => {
-    if (lesson?.extracted_content) {
-      navigator.clipboard.writeText(lesson.extracted_content);
+    const content = lesson?.full_extracted_content || lesson?.extracted_content;
+    if (content) {
+      navigator.clipboard.writeText(content);
       toast.success("Transcript copied to clipboard");
     }
   };
 
   // Render content with highlights
   const renderHighlightedContent = () => {
-    const content = lesson?.extracted_content || "";
+    const content = lesson?.full_extracted_content || lesson?.extracted_content || "";
     if (!content) return null;
     
     // Apply search highlighting
