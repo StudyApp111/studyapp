@@ -14,14 +14,15 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized', code: 'AUTH_001' }, { status: 401 });
         }
 
-        const { prompt, response_json_schema } = await req.json();
+        const { examNumber, examPerformanceData, curriculumMap, learningProfile, courseName, response_json_schema } = await req.json();
         console.log('✅ Request body parsed');
-        console.log('📝 Prompt length:', prompt?.length);
+        console.log('📝 Exam number:', examNumber);
+        console.log('📝 Performance data items:', examPerformanceData?.length);
         console.log('📋 Schema provided:', !!response_json_schema);
 
-        if (!prompt) {
-            console.error('❌ Missing prompt in request');
-            return Response.json({ error: 'Prompt is required', code: 'PARAM_001' }, { status: 400 });
+        if (!examPerformanceData || !curriculumMap) {
+            console.error('❌ Missing required data');
+            return Response.json({ error: 'Performance data and curriculum map are required', code: 'PARAM_001' }, { status: 400 });
         }
 
         const apiKey = Deno.env.get("API_KEY");
