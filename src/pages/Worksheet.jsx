@@ -388,18 +388,17 @@ Provide your response as a single, valid JSON object with the structure specifie
         };
 
         const suggestedFutureSessions = latestWorksheet.ai_feedback?.suggested_future_sessions_plan || [];
-        const learningPatterns = latestWorksheet.ai_feedback?.learning_patterns || [];
-
-        let currentWorksheetDescription = `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
-        if (existingWorksheetId) {
-          const placeholderData = await base44.entities.Worksheet.filter({ id: existingWorksheetId });
-          if (placeholderData.length > 0 && placeholderData[0].focus_description) {
-            currentWorksheetDescription = placeholderData[0].focus_description;
-          }
-        }
+        
+        // Get the specific session focus for this worksheet number
+        const targetSession = suggestedFutureSessions.find(s => s.session_number === worksheetNum);
+        const sessionFocus = targetSession ? {
+          session_number: targetSession.session_number,
+          session_name: targetSession.session_name,
+          session_focus_description: targetSession.session_focus_description
+        } : { session_number: worksheetNum, session_name: `Worksheet ${worksheetNum}`, session_focus_description: `Continue building toward 90%+ mastery` };
 
         aiPrompt = `Context
-You are a master assessment designer creating the next 10-question adaptive worksheet for ${lessonData.course_name}. This worksheet must evolve from ALL prior data: previous worksheet performance, cumulative performance trends, curriculum weightings, high-yield competencies, and the suggested_future_sessions_plan + learning_patterns generated during the last prediction cycle.
+You are an expert assessment designer creating a 10-question adaptive worksheet for ${lessonData.course_name}. This worksheet must evolve from ALL prior data: previous worksheet performance, cumulative performance trends, curriculum weightings, high-yield competencies, and the suggested_future_sessions_plan + learning_patterns generated during the last prediction cycle.
 
 Input Educational Context
 Student's Grade Level: ${learningProfile.grade || "N/A"}
