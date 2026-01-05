@@ -234,7 +234,7 @@ You are an expert assessment designer. Generate a 10-question predictive workshe
 
 This worksheet must stand alone.
 Do NOT rely on prior diagnostics.
-Ground content in the student’s materials and light web search when needed.
+Ground content in the student's materials and light web search when needed.
 
 ────────────────────────────────
 
@@ -250,7 +250,7 @@ ${contentDescription}
 Internal Reasoning (Do NOT Output)
 
 1. Scope Lock
-- If lesson content specifies a concrete topic or skill (e.g., “factoring”, “photosynthesis”, “Du Bois double-consciousness”):
+- If lesson content specifies a concrete topic or skill (e.g., "factoring", "photosynthesis", "Du Bois double-consciousness"):
   → ALL questions MUST stay strictly within that topic.
 - Do NOT add prerequisites, review topics, or adjacent units unless required to execute the task.
 - Only broaden scope if the user explicitly requests review or exam prep.
@@ -305,7 +305,7 @@ Short Answer / Structured Response:
 - Direct prompt requesting a value, explanation, justification, or worked solution.
 
 MCQ cue phrases are FORBIDDEN in non-MCQ questions:
-“Which of the following”, “Select”, “Identify the correct”, “Choose”, “is/are true about”
+"Which of the following", "Select", "Identify the correct", "Choose", "is/are true about"
 
 If a forbidden cue appears, IMMEDIATELY convert the question to Multiple Choice and regenerate.
 
@@ -365,174 +365,50 @@ Provide your response as a single, valid JSON object with the structure specifie
 
         const latestWorksheet = prevWorksheets.sort((a, b) => b.worksheet_number - a.worksheet_number)[0];
         
-        const previousWorksheetPerformance = latestWorksheet.questions.map(q => ({
-          question_number: q.question_number,
-          question_type: q.question_type,
-          difficulty_index: q.difficulty_index,
-          question_text: q.question_text,
-          options: q.options || [],
-          correct_answer: q.correct_answer,
-          explanation: q.explanation,
-          assessed_competencies: q.assessed_competencies,
-          targeted_misconception: q.targeted_misconception,
-          student_answer: q.user_answer || "No answer provided",
-          is_correct: q.is_correct || false
-        }));
-
-        const cumulativePerformance = {
-          worksheet_number: latestWorksheet.worksheet_number,
-          predicted_grade: latestWorksheet.predicted_grade,
-          total_score: latestWorksheet.total_score,
-          strengths: latestWorksheet.ai_feedback?.identified_strengths_list || [],
-          weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
-        };
-
+        // Get the specific session focus for this worksheet number
         const suggestedFutureSessions = latestWorksheet.ai_feedback?.suggested_future_sessions_plan || [];
-        const learningPatterns = latestWorksheet.ai_feedback?.learning_patterns || [];
-
-        let currentWorksheetDescription = `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
-        if (existingWorksheetId) {
-          const placeholderData = await base44.entities.Worksheet.filter({ id: existingWorksheetId });
-          if (placeholderData.length > 0 && placeholderData[0].focus_description) {
-            currentWorksheetDescription = placeholderData[0].focus_description;
-          }
-        }
+        const targetSession = suggestedFutureSessions.find(s => s.session_number === worksheetNum);
+        const sessionFocus = targetSession ? {
+          session_number: targetSession.session_number,
+          session_name: targetSession.session_name,
+          session_focus_description: targetSession.session_focus_description
+        } : { session_number: worksheetNum, session_name: `Worksheet ${worksheetNum}`, session_focus_description: `Continue building toward 90%+ mastery` };
 
         aiPrompt = `Context
-You are a master assessment designer creating the next 10-question adaptive worksheet for ${lessonData.course_name}. This worksheet must evolve from ALL prior data: previous worksheet performance, cumulative performance trends, curriculum weightings, high-yield competencies, and the suggested_future_sessions_plan + learning_patterns generated during the last prediction cycle.
+You are an expert assessment designer creating a 10-question adaptive worksheet for ${lessonData.course_name}.
 
 Input Educational Context
 Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${lessonData.course_name}
-Current Iteration: ${currentWorksheetDescription}
-
-Detailed Curriculum Profile:
-${JSON.stringify(lessonData.curriculum_map, null, 2)}
-
 Content Source:
 ${contentDescription}
 
-Previous Worksheet Performance:
-${JSON.stringify(previousWorksheetPerformance, null, 2)}
-
-Cumulative Performance:
-${JSON.stringify(cumulativePerformance, null, 2)}
-
-Suggested Future Sessions (from predictor):
-${JSON.stringify(suggestedFutureSessions || [], null, 2)}
-
-Learning Patterns (from predictor):
-${JSON.stringify(learningPatterns || [], null, 2)}
+Session Focus for This Worksheet:
+${JSON.stringify(sessionFocus, null, 2)}
 
 ------------------------------------------------------------
-INTERNAL PROCESSING (Do Not Output)
+TASK – Worksheet Generation
 ------------------------------------------------------------
 
-Using the inputs above, internally compute the following adaptation signals:
-
-1. priority_competencies
-   - Extract the lowest-performing competencies across previous worksheets.
-   - Weight deficiencies using curriculum_map.competency_weightings.
-   - Select the bottom 2–3 competencies as primary targets.
-
-2. misconception_targets
-   - Identify any misconceptions that appeared more than once (worksheet-based).
-   - Map these to specific curriculum concepts and integrate them into new items.
-
-3. exam_format_deficits
-   - For each question_type in curriculum_map.question_formats:
-       If (AvgScore(previousWorksheetPerformance for that type) < 40%)
-       AND (Exam weight for that type ≥ 20%)
-       → include at least 2 questions of this type.
-
-4. performance_trend_direction
-   - Compare difficulty-adjusted performance across worksheets:
-       Improving, Plateauing, or Declining.
-   - If improving → increase difficulty.
-   - If plateauing → mix procedural + conceptual twins.
-   - If declining → scaffold early questions before raising difficulty.
-
-5. learning_behavior_signals
-   - Derived from learningPatterns array:
-       Examples: “Formula-first solving”, “Low-confidence but correct”, “Pattern-matching under time”.
-   - Integrate these behaviors into question design:
-       • If overconfidence-like patterns → include justification steps.
-       • If low-confidence patterns → include early confidence-building items.
-       • If method-bias patterns → force alternate reasoning forms.
-
-------------------------------------------------------------
-TASK 1 – Internal Design (Do Not Output)
-------------------------------------------------------------
-
-Use the adaptation signals above to determine:
-
-• Difficulty progression  
-  - If student is strong (≥80% last worksheet): bias toward Challenging → High Challenge.
-  - If mixed (50–79%): Moderate → Challenging → High Challenge.
-  - If struggling (<50%): scaffold Moderate → Moderate → Challenging.
-
-• Allocation of 10 questions  
-  - 5–6 targeting priority_competencies and misconception_targets.
-  - 2–3 targeting exam_format_deficits.
-  - 1–2 “twin calibration items” (conceptual vs procedural or recognition vs application).
-  
-• Style and authenticity  
-  - Mirror curriculum_map.question_formats distributions.
-  - Ground all content in curriculum_map and ${contentDescription}.
-  - Use phrasing consistent with ${learningProfile.school || "the school"} exam norms.
-
-------------------------------------------------------------
-TASK 2 – Worksheet Generation (Output-Only)
-------------------------------------------------------------
-
-Generate exactly 10 adaptive, exam-authentic questions.
+Generate exactly 10 exam-authentic questions that align with the session focus above.
 
 Each question must include:
 • question_number  
-• question_type (“Multiple Choice”, “Short Answer”, “Structured Response”)  
+• question_type ("Multiple Choice", "Short Answer", "Structured Response", "True/False", "Fill in the Blank")  
 • question_text (plain text)  
-• options (A–D) if question_type = “Multiple Choice”; otherwise []  
-• difficulty_index (“Moderate Exam-Level”, “Challenging Exam-Level”, or “High Challenge Exam-Level”)  
+• options (A–D) if question_type = "Multiple Choice"; ["True", "False"] if True/False; otherwise []  
+• difficulty_index ("Moderate Exam-Level", "Challenging Exam-Level", or "High Challenge Exam-Level")  
 
 Strict MCQ Rules:
-- If the stem contains cues like “Which of the following”, “Select”, “Which statement”, “is/are true about”, “Identify the correct”, “Choose the option”—  
+- If the stem contains cues like "Which of the following", "Select", "Which statement", "is/are true about", "Identify the correct", "Choose the option"—  
   You MUST produce a Multiple Choice question with exactly four options A–D.
-- If question_type ≠ “Multiple Choice”, the stem MUST avoid MCQ cue phrases and options MUST be empty.
+- If question_type ≠ "Multiple Choice", the stem MUST avoid MCQ cue phrases and options MUST be empty.
 
-Subject-Specific Design Guidelines:
-{
-  "Mathematics": "Multi-step problems, proofs, applied word problems, function/graph interpretation, formula-to-context mapping.",
-  "Natural Sciences": "Data tables, experimental design, calculations, model explanation, scenario-based application.",
-  "Social Sciences": "Source/case analysis, cause-effect reasoning, chart interpretation, structured short responses.",
-  "Humanities": "Excerpt analysis, argument evaluation, thematic comparison, inference-based distractors.",
-  "Languages": "Reading comprehension, vocab-in-context, grammar, translation, interpretive responses.",
-  "Business Economics Accounting Finance": "Case scenarios, journal entries, ratio analysis, cost-benefit interpretation.",
-  "Computer Science Technology Engineering": "Algorithm tracing, pseudocode completion, debugging, conceptual systems questions.",
-  "Fine Arts and Creative Subjects": "Visual/aural analysis, style recognition, historical/contextual linkage.",
-  "Interdisciplinary/Professional": "Ethical/policy dilemmas, applied reasoning, real-world judgment tasks."
-}
-
-General Construction Rules:
-- Write grade-appropriate stems.
-- Ensure questions explicitly target adaptation signals.
-- Each question must test a distinct concept or reasoning demand.
-- Align terminology and context with the supplied notes (if any).
-- If notes are sparse, rely on curriculum_map for concept selection.
-
-------------------------------------------------------------
-TASK 3 – Provide Complete Answer Key Details (Output-Only)
-------------------------------------------------------------
-
-For each question include:
+For each question also include:
 • correct_answer  
 • explanation (2–3 sentences; give conceptual correction, not just the answer)  
 • assessed_competencies[]  
 • targeted_misconception (string or null)
-
-Explanations MUST:
-- Address common reasoning errors observed in past worksheets.
-- Provide actionable micro-feedback (“Check unit consistency before substitution”, etc.).
-- Reinforce learning_patterns from the prediction stage where relevant.
 
 Output Format: Valid JSON object matching the schema.`;
       }
@@ -578,8 +454,6 @@ Output Format: Valid JSON object matching the schema.`;
         3,
         2000
       );
-
-
 
       if (!worksheetData || !worksheetData.worksheet_questions || worksheetData.worksheet_questions.length === 0) {
         throw new Error("Invalid worksheet data received from AI");
@@ -871,7 +745,7 @@ Output Format: Valid JSON object matching the schema.`;
 
       console.log('[SUBMIT] Worksheet performance data prepared:', worksheetPerformanceData.length, 'questions');
 
-      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student’s 10-question worksheet performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
+      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student's 10-question worksheet performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
 
 Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -900,14 +774,14 @@ Ignore missing fields; do not invent values.
   • Underconfidence flag: is_correct_d=true AND confidence=Low.
   • Guess-correct risk: is_correct_d=true AND (reasoning_method=Guess OR confidence=Low).
   • Method bias counts by competency/topic when mappable (Pattern, Formula, Algorithmic, Heuristic, Recall).
-- Derive an “Early Insight Profile”:
+- Derive an "Early Insight Profile":
   • dominant_methods: top 1–2 reasoning_method labels by frequency.
   • confidence_alignment: accuracy when High vs Medium vs Low confidence (if computable).
   • primary_risk: one of {Overconfidence, Underconfidence, Guess-correct, Method-mismatch} if observed ≥2 times or clearly indicated.
 
 [Part 1 — Performance Analysis & Prediction]
 Edge Handling
-- If total correct = 0/10: skip calculations and output “Not Calculable” for predicted_exam_score_percentage with a foundation-rebuild rationale.
+- If total correct = 0/10: skip calculations and output "Not Calculable" for predicted_exam_score_percentage with a foundation-rebuild rationale.
 - If total correct = 10/10: still compute; expect a top score (~95–100).
 
 1) Per-Item Mastery (blend binary, partial credit, difficulty)
@@ -926,7 +800,7 @@ Edge Handling
 2) Competency Mastery
 - For each competency in lesson.curriculum_map.core_competencies:
   MasteryScore = mean of scores from items whose assessed_competencies include that competency name.
-  If none: set 0.50 (neutral) and note “not assessed in this worksheet” for rationale.
+  If none: set 0.50 (neutral) and note "not assessed in this worksheet" for rationale.
 
 3) Weighted Aggregate (curriculum-aligned)
 - Parse lesson.curriculum_map.competency_weightings ("30%") → 0.30; normalize to sum = 1.
@@ -946,7 +820,7 @@ Edge Handling
 - Combine with previous modifiers; cap overall to [−8, +4].
 
 6) Final Prediction
-- PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then “%”.
+- PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then "%".
 - Exception: if 0/10 → "Not Calculable".
 
 [Part 2 — Structured Multi-Signal Planning Pipeline (Internal Only)]
@@ -978,7 +852,7 @@ Output ONLY a single JSON object matching the response_json_schema:
     • pattern_type: behavior label  
     • what_it_means: 1 sentence explaining the pattern  
     • how_to_improve: 1 sentence linking to tactics the next sessions/worksheets will reinforce.   
-- No extra fields. No explanations outside the JSON. All percentages must be strings with “%”.
+- No extra fields. No explanations outside the JSON. All percentages must be strings with "%".
 
 Output Format: Valid JSON matching the required schema.`;
 
@@ -993,7 +867,6 @@ Output Format: Valid JSON matching the required schema.`;
           properties: {
             feedback_session_title: { type: "string" },
             predicted_exam_score_percentage: { type: "string" },
-            prediction_calculation_rationale: { type: "string" },
             overall_performance_summary_text: { type: "string" },
             identified_strengths_list: { type: "array", items: { type: "string" } },
             key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
@@ -1008,23 +881,9 @@ Output Format: Valid JSON matching the required schema.`;
                 },
                 required: ["session_number", "session_name", "session_focus_description"]
               }
-            },
-            learning_patterns: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  pattern_type: { type: "string" },
-                  what_it_means: { type: "string" },
-                  how_to_improve: { type: "string" }
-                },
-                required: ["pattern_type", "what_it_means", "how_to_improve"]
-              },
-              minItems: 3,
-              maxItems: 5
             }
           },
-          required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan", "learning_patterns"]
+          required: ["feedback_session_title", "predicted_exam_score_percentage", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan"]
         }
         })
         );
