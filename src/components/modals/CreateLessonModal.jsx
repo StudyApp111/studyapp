@@ -198,6 +198,18 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       // Navigate immediately to DocumentViewer
       onOpenChange(false);
       navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}&generating=true`);
+
+      // Run curriculum mapping in background (don't await - fire and forget)
+      const contentForMapping = fullExtractedContent || extractedContent || description.trim();
+      if (contentForMapping) {
+        base44.functions.invoke('curriculumMapping', {
+          lessonId: lesson.id,
+          courseName: courseName,
+          content: contentForMapping,
+          school: userSchool || '',
+          grade: userGrade || ''
+        }).catch(err => console.error("Background curriculum mapping failed:", err));
+      }
     } catch (err) {
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
