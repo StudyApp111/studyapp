@@ -851,7 +851,12 @@ Output Format: Valid JSON object matching the schema.`;
 
       console.log('[SUBMIT] Worksheet performance data prepared:', worksheetPerformanceData.length, 'questions');
 
-      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student’s 10-question worksheet performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
+      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"}
+(grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}).
+
+Goal: Predict what this student would likely score on their real course exam/assessment, graded by their teacher/school norms (not overly harsh, not overly generous).
+Use ONLY the curriculum map + the student’s 10-question worksheet performance. Keep reasoning internal.
+Output ONLY valid JSON that matches response_json_schema (and only the fields listed below).
 
 Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -873,93 +878,65 @@ is_correct (boolean),
 ai_grading { score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[] }.
 Ignore missing fields; do not invent values.
 
-[Part 0 — Diagnostic Meta Synthesis (Internal Only)]
-- Pair each diagnostic question with its user_answer and question_metadata (reasoning_method, confidence_level) to compute:
-  • is_correct_d = (user_answer === correct_answer) when available.
-  • Overconfidence flag: is_correct_d=false AND confidence=High.
-  • Underconfidence flag: is_correct_d=true AND confidence=Low.
-  • Guess-correct risk: is_correct_d=true AND (reasoning_method=Guess OR confidence=Low).
-  • Method bias counts by competency/topic when mappable (Pattern, Formula, Algorithmic, Heuristic, Recall).
-- Derive an “Early Insight Profile”:
-  • dominant_methods: top 1–2 reasoning_method labels by frequency.
-  • confidence_alignment: accuracy when High vs Medium vs Low confidence (if computable).
-  • primary_risk: one of {Overconfidence, Underconfidence, Guess-correct, Method-mismatch} if observed ≥2 times or clearly indicated.
+────────────────────────────────
+INTERNAL SCORING LOGIC (DO NOT OUTPUT)
 
-[Part 1 — Performance Analysis & Prediction]
-Edge Handling
-- If total correct = 0/10: skip calculations and output “Not Calculable” for predicted_exam_score_percentage with a foundation-rebuild rationale.
-- If total correct = 10/10: still compute; expect a top score (~95–100).
+Edge Handling (must be deterministic)
+- If correct_count = 0/10 → predicted_exam_score_percentage = "Not Calculable" (insufficient baseline); still produce strengths/weaknesses + plan.
+- If correct_count = 10/10 → still compute; cap realism at 95–100 unless evidence suggests weaker explanations/partial-credit patterns.
 
-1) Per-Item Mastery (blend binary, partial credit, difficulty)
-- Base = 0.90 if is_correct else 0.20.
-- If ai_grading exists:
-  partial = clamp(ai_grading.score_out_of_10 / 10, 0, 1);
-  base = 0.75*partial + 0.25*base.
-- Difficulty multiplier:
-  Correct: High Challenge ×1.05 (cap 0.98), Challenging ×1.02 (cap 0.96), Moderate ×1.01 (cap 0.92)
-  Incorrect: High Challenge ×0.90 (floor 0.10), Challenging ×0.80 (floor 0.08), Moderate ×0.70 (floor 0.05)
-- Misconception penalty (if targeted_misconception && !is_correct): −0.05/−0.07/−0.09
-- Explanation alignment (if ai_grading && verdict!="Correct" && explanation): −0.03.
-- Keypoints bonus (if ai_grading && keypoints_hit length ≥2): +0.02.
-- Clamp final item score ∈ [0.05, 0.98].
+1) Item Mastery Score (bounded, teacher-realistic)
+For each item, compute mastery ∈ [0.05, 0.98] using:
+- correctness (primary)
+- partial credit if ai_grading exists (strong secondary)
+- difficulty_index (harder correct = higher mastery; harder wrong = lower mastery)
+- misconception penalty if targeted_misconception present and wrong
+- explanation quality signal: if ai_grading verdict ≠ "Correct" OR keypoints_missed non-empty → reduce mastery slightly
+Do NOT over-reward lucky correctness: if correct but ai_grading shows weak rationale/low score, keep mastery moderate.
 
 2) Competency Mastery
-- For each competency in lesson.curriculum_map.core_competencies:
-  MasteryScore = mean of scores from items whose assessed_competencies include that competency name.
-  If none: set 0.50 (neutral) and note “not assessed in this worksheet” for rationale.
+For each curriculum competency:
+- mastery = mean(item mastery for items tagged with that competency)
+- if competency unassessed → set 0.50 and mark as low-evidence internally
 
 3) Weighted Aggregate (curriculum-aligned)
-- Parse lesson.curriculum_map.competency_weightings ("30%") → 0.30; normalize to sum = 1.
-- PreliminaryAggregate = Σ(MasteryScore * weight) * 100.
+- Parse curriculum competency weightings (normalize to sum=1)
+- Preliminary = Σ(competency_mastery × weight) × 100
 
-4) Question-Type Adjustment (exam fidelity)
-- For each question_type:
-  AvgTypeScore = mean score for that type.
-  ExamTypeFrequency = from curriculum_map.question_formats.
-- If AvgTypeScore < 0.40 and ExamTypeFrequency ≥ 30% → −3 to −6 total.
-- If AvgTypeScore ≥ 0.80 and ExamTypeFrequency ≥ 30% → +0 to +2 total.
-- Cap total style modifier to [−8, +4].
+4) Exam-Format Realism Modifier (bounded)
+Apply a single bounded modifier in [-8, +4] based on:
+- Format mismatch risk: weak performance on high-frequency exam formats (from curriculum_map.question_formats)
+- Coverage risk: any competency weight ≥25% with <2 assessed items → reliability penalty
+- Consistency: large gap between correctness and ai_grading partial credit/explanations → reduce optimism
+Purpose: keep predictions teacher-realistic given only 10 items.
 
-5) Coverage Reliability Adjustment
-- For any competency weight ≥25% and <2 assessed items → −2 each (max −4).
-- If ≥80% of weighted competencies assessed → +1 to +2.
-- Combine with previous modifiers; cap overall to [−8, +4].
+5) Final Prediction
+- If not edge case: predicted = round(clamp(Preliminary + Modifier, 0, 100)) + "%"
+- Ensure the prediction reflects school-style grading realism (avoid systematic inflation).
 
-6) Final Prediction
-- PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then “%”.
-- Exception: if 0/10 → "Not Calculable".
+────────────────────────────────
+PLANNING (DO NOT OUTPUT INTERNAL SIGNALS)
+Derive 5 sessions that directly target:
+- the bottom 2–3 weighted competencies
+- recurring misconceptions (or most damaging misconceptions)
+- high-frequency exam formats where the student underperformed
+Each session must specify a concrete practice focus (what to drill + what to change).
 
-[Part 2 — Structured Multi-Signal Planning Pipeline (Internal Only)]
-Before generating suggested_future_sessions_plan and learning_patterns, internally compute planning signals:
-1. priority_competencies = bottom 2–3 competencies by weighted mastery.
-2. misconception_targets = misconceptions recurring across worksheet or tied to weighted competencies.
-3. exam_format_deficits = question types where AvgTypeScore < 40% AND exam weight ≥ 20%.
-4. trend_direction = {improving, plateauing, declining} based on difficulty × mastery trajectory.
+────────────────────────────────
+OUTPUT RULES (STRICT)
+Return ONE JSON object with EXACTLY these fields (and no others):
 
-These signals MUST shape both:
-- suggested_future_sessions_plan  
-- learning_patterns  
-
-Do not output these internal signals directly; only use them to generate the required JSON fields.
-
-[Global Output Rules]
-Output ONLY a single JSON object matching the response_json_schema:
 - feedback_session_title: "Worksheet ${worksheet.worksheet_number} Performance & Grade Prediction"
-- predicted_exam_score_percentage: "% string" or "Not Calculable"
-- prediction_calculation_rationale: 1–3 sentences referencing item difficulty, competency weighting, question-type frequency, and coverage limits.
-- overall_performance_summary_text: 1–2 empathetic sentences with a clear next-focus cue.
-- identified_strengths_list: 2–3 specific competency or exam-format strengths.
-- key_areas_for_improvement_list: 2–3 high-impact weaknesses tied to misconceptions.
-- suggested_future_sessions_plan:  
-  5 objects with session_number (2..6), session_name, session_focus_description.  
-  Each session MUST be directly grounded in at least ONE of the internal planning signals.
-- learning_patterns:  
-  3–5 objects with:
-    • pattern_type: behavior label  
-    • what_it_means: 1 sentence explaining the pattern  
-    • how_to_improve: 1 sentence linking to tactics the next sessions/worksheets will reinforce.   
-- No extra fields. No explanations outside the JSON. All percentages must be strings with “%”.
+- predicted_exam_score_percentage: string with "%" OR "Not Calculable"
+- overall_performance_summary_text: 1–2 sentences (empathetic, teacher-like, clear next focus)
+- identified_strengths_list: 2–3 items grounded in observed evidence (competency or format)
+- key_areas_for_improvement_list: 2–3 items grounded in observed evidence (competency/misconception/format)
+- suggested_future_sessions_plan: 5 objects:
+    session_number: ${worksheet.worksheet_number + 1} ... ${worksheet.worksheet_number + 5}
+    session_name: short, specific
+    session_focus_description: 1–2 sentences describing what to practice, what to fix, and what “good” looks like
 
+No extra fields. No prose outside JSON. All percentages must be strings.
 Output Format: Valid JSON matching the required schema.`;
 
     console.log('[SUBMIT] Prompt length:', feedbackPrompt.length, 'characters');
