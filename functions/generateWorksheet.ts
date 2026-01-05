@@ -305,7 +305,7 @@ Return a single valid JSON object matching the expected schema.
 
         console.log('⏳ Calling Gemini API for worksheet generation...');
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {
