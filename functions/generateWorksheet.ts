@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { examNumber, lessonData, learningProfile, contentDescription, curriculumMap, response_json_schema } = await req.json();
+        const { examNumber, lessonData, learningProfile, contentDescription, curriculumMap, suggestedFutureSessions, response_json_schema } = await req.json();
         console.log('✅ Request body parsed');
         console.log('📝 Exam number:', examNumber);
         console.log('📝 Content length:', contentDescription?.length);
@@ -171,12 +171,12 @@ Input Context
 
 Student Grade Level: ${learningProfile.grade || "N/A"}
 Course / Unit Name: ${lessonData.course_name}
-Current Iteration: ${currentWorksheetDescription}
+Exam Number: ${examNumber} of 6
 
 Lesson Content (notes, uploaded material, or student description):
 ${contentDescription}
 
-Suggested Focus Areas (from prior session):
+Suggested Focus Areas (from Exam 1 feedback):
 ${JSON.stringify(suggestedFutureSessions || [], null, 2)}
 
 ────────────────────────────────

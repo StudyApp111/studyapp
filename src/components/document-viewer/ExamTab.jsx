@@ -244,16 +244,17 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           contentDescription = lesson.description || "N/A";
         }
       } else {
-        // Subsequent exams: use minimal context since we have curriculum map + focus description
-        const existingExam1 = exams.find(e => e.exam_number === 1);
-        const focusDescription = existingExam1?.ai_feedback?.suggested_future_sessions_plan?.find(
-          s => s.session_number === examNumber
-        )?.session_focus_description || "Continue building on previous exam";
-        
-        contentDescription = `Focus for this exam: ${focusDescription}`;
+        // Subsequent exams: use compressed content
+        contentDescription = lesson.extracted_content || lesson.description || "N/A";
       }
       
       console.log(`📊 Exam ${examNumber} - Content length:`, contentDescription.length);
+
+      // Get suggested future sessions from exam 1 for subsequent exams
+      const existingExam1 = exams.find(e => e.exam_number === 1);
+      const suggestedFutureSessions = examNumber > 1 
+        ? (existingExam1?.ai_feedback?.suggested_future_sessions_plan || [])
+        : [];
 
       const { data: examData } = await base44.functions.invoke('generateWorksheet', {
         examNumber,
@@ -261,6 +262,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         learningProfile,
         contentDescription,
         curriculumMap: lesson.curriculum_map,
+        suggestedFutureSessions,
         response_json_schema: {
           type: "object",
           properties: {
