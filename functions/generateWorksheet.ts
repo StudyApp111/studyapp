@@ -33,8 +33,145 @@ Deno.serve(async (req) => {
         }
         console.log('✅ API key found');
 
-        // Use prompt as-is, schema already defines output structure
-        const enhancedPrompt = prompt;
+        // Build the exam generation prompt
+        const prompt = examNumber === 1 
+        ? `Context
+You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
+
+This worksheet must stand alone.
+Do NOT rely on prior diagnostics.
+Ground content in the student's materials and light web search when needed.
+
+────────────────────────────────
+
+[Input Context]
+
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course / Unit Name: ${lessonData.course_name}
+School: ${learningProfile.school || "N/A"}
+
+Lesson Content (notes, uploaded material, or student description):
+${contentDescription}
+
+Internal Reasoning (Do NOT Output)
+
+1. Scope Lock
+- If lesson content specifies a concrete topic or skill (e.g., "factoring", "photosynthesis", "Du Bois double-consciousness"):
+  → ALL questions MUST stay strictly within that topic.
+- Do NOT add prerequisites, review topics, or adjacent units unless required to execute the task.
+- Only broaden scope if the user explicitly requests review or exam prep.
+
+2. Topic Validation (Light Search)
+- Use search ONLY to confirm terminology, typical exam phrasing, or standard question styles for this course.
+- Do NOT introduce new topics beyond the locked scope.
+
+3. Difficulty Progression
+- Q1–3: Moderate Exam-Level
+- Q4–7: Challenging Exam-Level
+- Q8–10: Challenging → High Challenge (depth, edge cases, reasoning—not new topics)
+
+4. Coverage Design
+- 6–7 questions: core skill / primary topic
+- 2–3 questions: applications, traps, or conceptual stress tests
+- 1–2 twin items: same concept, different reasoning demand
+
+5. Exam Authenticity
+- Match tone, rigor, and structure typical of ${learningProfile.school || "the school"} assessments.
+
+────────────────────────────────
+
+QUESTION-TYPE ENFORCEMENT (EXECUTE FIRST)
+
+For EACH question:
+
+1. Choose question_type from:
+   - Multiple Choice
+   - True/False
+   - Fill in the Blank
+   - Short Answer
+   - Structured Response
+
+2. Apply strict formatting rules:
+
+Multiple Choice:
+- EXACTLY four options labeled A, B, C, D.
+- MCQ cue phrases allowed.
+
+True/False:
+- options = ["True", "False"]
+- Single declarative statement only.
+
+Fill in the Blank:
+- options = []
+- EXACTLY one blank written as ____.
+- Blank must be a key term, value, or short phrase.
+
+Short Answer / Structured Response:
+- options = []
+- Direct prompt requesting a value, explanation, justification, or worked solution.
+
+MCQ cue phrases are FORBIDDEN in non-MCQ questions:
+"Which of the following", "Select", "Identify the correct", "Choose", "is/are true about"
+
+If a forbidden cue appears, IMMEDIATELY convert the question to Multiple Choice and regenerate.
+
+This layer overrides all other instructions.
+
+────────────────────────────────
+
+Worksheet Generation (Output Only)
+
+Generate EXACTLY 10 questions.
+
+Each question MUST include:
+- question_type
+- question_text
+- options (or [] where required)
+- difficulty_index:
+  • Moderate Exam-Level
+  • Challenging Exam-Level
+  • High Challenge Exam-Level
+
+Each question MUST:
+- Test a distinct reasoning demand (no duplicates)
+- Use exam-authentic wording
+- Stay strictly within the locked topic scope
+
+Subject guidance:
+- Mathematics / Sciences: multi-step reasoning, application, interpretation, unit checks
+- Humanities / Social Sciences: argument alignment, evidence interpretation, conceptual precision
+- Computer Science / Engineering: tracing, correctness, edge cases, applied logic
+- Business / Economics: method selection, case reasoning, quantitative interpretation
+
+────────────────────────────────
+
+[Answer Key Requirements]
+
+For EACH question include:
+- correct_answer
+- explanation (2–3 sentences; instructional and corrective)
+- assessed_competencies
+- targeted_misconception (or null if none)
+
+Explanations should teach the *reason* behind the answer and how to avoid common mistakes.
+
+────────────────────────────────
+
+Output Format:
+Provide your response as a single, valid JSON object with the structure specified.`
+        : `You are an expert assessment designer. Generate a 10-question targeted exam for ${lessonData.course_name}.
+
+This is Exam ${examNumber} of 6, focusing on: ${contentDescription}
+
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course: ${lessonData.course_name}
+
+Curriculum Map:
+${JSON.stringify(curriculumMap || {}, null, 2)}
+
+Generate exactly 10 questions specifically targeting the focus areas above.`;
+
+        console.log('📝 Generated prompt length:', prompt.length);
 
         const requestBody = {
             contents: [{
