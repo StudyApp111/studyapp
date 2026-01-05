@@ -579,18 +579,23 @@ Generate exactly 10 questions specifically targeting the focus areas above.`;
         } : null
       }));
 
-      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map and the student's 10-question exam performance to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
+      const curriculumStr = JSON.stringify(lesson.curriculum_map || {}, null, 2);
+      const performanceStr = JSON.stringify(examPerformanceData, null, 2);
+      
+      console.log(`📊 Feedback - Curriculum length:`, curriculumStr.length);
+      console.log(`📊 Feedback - Performance data length:`, performanceStr.length);
 
-      Input Data:
-      Student's Grade Level: ${learningProfile.grade || "N/A"}
-      Course/Unit Name: ${lesson.course_name}
-      Exam Number: ${exam.exam_number} of 6
+      const feedbackPrompt = `You are an expert educator for ${lesson.course_name} (grade: ${learningProfile.grade || "N/A"}). Analyze the student's exam performance and predict their final exam grade.
 
-      Curriculum Profile:
-      ${JSON.stringify(lesson.curriculum_map, null, 2)}
+Student Grade: ${learningProfile.grade || "N/A"}
+Course: ${lesson.course_name}
+Exam: ${exam.exam_number} of 6
 
-      Exam Performance:
-      ${JSON.stringify(examPerformanceData, null, 2)}
+Curriculum:
+${curriculumStr}
+
+Performance:
+${performanceStr}
 
       [Assumptions & Fields]
       Each exam item may include:
