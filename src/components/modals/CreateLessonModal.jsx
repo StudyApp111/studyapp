@@ -187,10 +187,12 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       if (inputType === "description") {
         lessonData.description = description.trim();
         lessonData.extracted_content = description.trim();
+        lessonData.full_extracted_content = description.trim();
       } else if (inputType === "file") {
         lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
         lessonData.file_urls = fileUrls;
         lessonData.extracted_content = extractedContent;
+        lessonData.full_extracted_content = fullExtractedContent;
       }
 
       const lesson = await base44.entities.Lesson.create(lessonData);
