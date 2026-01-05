@@ -20,12 +20,7 @@ import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/component
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const isGenerating = urlParams.get('generating') === 'true';
-    // If fresh upload with document, default to doc tab
-    return isGenerating ? 'doc' : 'exam';
-  });
+  const [activeTab, setActiveTab] = useState("exam");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exams, setExams] = useState([]);
@@ -59,13 +54,8 @@ export default function DocumentViewer() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
-    const isGenerating = urlParams.get('generating') === 'true';
-    
     if (tabParam) {
       setActiveTab(tabParam);
-    } else if (isGenerating) {
-      // If coming from fresh upload, show document tab first while exam generates
-      setActiveTab('doc');
     }
   }, []);
 
@@ -419,7 +409,7 @@ export default function DocumentViewer() {
 
               <div className="w-full flex-1 overflow-auto">
                 {hasDocument && (
-                  <TabsContent value="doc" forceMount className={`mt-0 p-0 h-full ${activeTab !== 'doc' ? 'hidden' : ''}`}>
+                  <TabsContent value="doc" className="mt-0 p-0 h-full">
                     <DocumentViewerTabs lesson={lesson} />
                   </TabsContent>
                 )}
@@ -496,7 +486,7 @@ export default function DocumentViewer() {
 
             <div className="flex-1 overflow-y-auto w-full max-w-full">
               {hasDocument && (
-                <TabsContent value="doc" forceMount className={`mt-0 p-0 w-full max-w-full h-full ${activeTab !== 'doc' ? 'hidden' : ''}`}>
+                <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full h-full">
                   <DocumentViewerTabs lesson={lesson} />
                 </TabsContent>
               )}

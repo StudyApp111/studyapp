@@ -19,7 +19,16 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-
+const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+    }
+  }
+};
 
 export default function ExamTab({ lesson, exams, onExamComplete }) {
   const [exam, setExam] = useState(null);
@@ -42,11 +51,10 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const examIdRef = useRef(null);
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
-  const generationStartedRef = useRef(false);
 
   // Auto-generate Exam 1 when tab loads (or URL has generating=true)
   useEffect(() => {
-    if (lesson && !selectedExamNumber && !isGenerating) {
+    if (lesson && !selectedExamNumber) {
       const allExamsForLesson = exams || [];
       const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
       
@@ -59,11 +67,10 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         setSelectedExamNumber(1);
       }
     }
-  }, [lesson?.id]);
+  }, [lesson?.id, exams]);
 
   useEffect(() => {
-    if (lesson && selectedExamNumber && !isGenerating && !exam && !generationStartedRef.current) {
-      generationStartedRef.current = true;
+    if (lesson && selectedExamNumber) {
       loadOrGenerateExam(selectedExamNumber);
     }
   }, [lesson?.id, selectedExamNumber]);
@@ -188,7 +195,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         
         if (loadedExam.completed) {
           setExam(loadedExam);
-          generationStartedRef.current = false;
           return;
         }
         
@@ -199,24 +205,23 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         } else {
           // Load existing in-progress exam and restore question position
           setExam(loadedExam);
+          // Find the first unanswered question to resume from
           const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer || q.user_answer.trim() === "");
           if (firstUnanswered >= 0) {
             setCurrentQuestion(firstUnanswered);
           } else {
+            // All answered, go to last question
             setCurrentQuestion(loadedExam.questions.length - 1);
           }
         }
-        generationStartedRef.current = false;
       } else {
         setIsGenerating(true);
         await generateExam(null, examNumber);
         setIsGenerating(false);
-        generationStartedRef.current = false;
       }
     } catch (error) {
       console.error("Error loading exam:", error);
       setIsGenerating(false);
-      generationStartedRef.current = false;
     }
   };
 
@@ -228,71 +233,73 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       });
       const learningProfile = profile[0] || {};
 
-      // For exam 1, use full content. For subsequent exams, use focused approach
       let contentDescription = "";
-      
-      if (examNumber === 1) {
-        // First exam needs full context
-        if (lesson.input_type === "description" && lesson.description) {
-          contentDescription = lesson.description;
-        } else if (lesson.extracted_content) {
-          // Use compressed extracted_content (already compressed in CreateLessonModal)
-          contentDescription = lesson.extracted_content;
-        } else {
-          contentDescription = lesson.description || "N/A";
-        }
+      if (lesson.input_type === "description" && lesson.description) {
+        contentDescription = lesson.description;
+      } else if (lesson.compressed_content) {
+        contentDescription = lesson.compressed_content;
+      } else if (lesson.extracted_content) {
+        contentDescription = lesson.extracted_content;
       } else {
-        // Subsequent exams: use compressed content
-        contentDescription = lesson.extracted_content || lesson.description || "N/A";
+        contentDescription = lesson.description || "N/A";
       }
-      
-      console.log(`📊 Exam ${examNumber} - Content length:`, contentDescription.length);
 
-      // Get suggested future sessions from exam 1 for subsequent exams
-      const existingExam1 = exams.find(e => e.exam_number === 1);
-      const suggestedFutureSessions = examNumber > 1 
-        ? (existingExam1?.ai_feedback?.suggested_future_sessions_plan || [])
-        : [];
+      const aiPrompt = `Context
+You are an expert assessment designer. Generate a 10-question predictive exam for ${lesson.course_name}, optimized to forecast exam performance and build an accurate learning baseline for this student.
 
-      const { data: examData } = await base44.functions.invoke('generateWorksheet', {
-        examNumber,
-        lessonData: { course_name: lesson.course_name },
-        learningProfile,
-        contentDescription,
-        curriculumMap: lesson.curriculum_map,
-        suggestedFutureSessions,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            worksheet_title: { type: "string" },
-            analysis_summary_for_worksheet_design: {
-              type: "object",
-              properties: {
-                targeted_weak_competencies: { type: "array", items: { type: "string" } },
-                key_gaps_or_misconceptions_addressed: { type: "array", items: { type: "string" } },
-                focused_differentiating_competencies: { type: "array", items: { type: "string" } }
-              }
-            },
-            worksheet_questions: {
-              type: "array",
-              items: {
+The exam must be tightly grounded in the provided lesson content and curriculum map.
+
+Input Context
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course/Unit Name: ${lesson.course_name}
+School: ${learningProfile.school || "N/A"}
+
+Curriculum Map (authoritative scope, competencies, weightings, formats):
+${JSON.stringify(lesson.curriculum_map, null, 2)}
+
+Lesson Content (notes, uploaded material, or student description):
+${contentDescription}
+
+Generate exactly 10 adaptive, exam-authentic questions following the same format as worksheets.`;
+
+      const { data: examData } = await retryOperation(
+        () => base44.functions.invoke('generateWorksheet', {
+          prompt: aiPrompt,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              worksheet_title: { type: "string" },
+              analysis_summary_for_worksheet_design: {
                 type: "object",
                 properties: {
-                  question_number: { type: "integer" },
-                  question_type: { type: "string" },
-                  difficulty_index: { type: "string" },
-                  question_text: { type: "string" },
-                  options: { type: "array", items: { type: "string" } },
-                  correct_answer: { type: "string" },
-                  explanation: { type: "string" },
-                  assessed_competencies: { type: "array", items: { type: "string" } },
-                  targeted_misconception: { type: "string" }
+                  targeted_weak_competencies: { type: "array", items: { type: "string" } },
+                  key_gaps_or_misconceptions_addressed: { type: "array", items: { type: "string" } },
+                  focused_differentiating_competencies: { type: "array", items: { type: "string" } }
+                }
+              },
+              worksheet_questions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    question_number: { type: "integer" },
+                    question_type: { type: "string" },
+                    difficulty_index: { type: "string" },
+                    question_text: { type: "string" },
+                    options: { type: "array", items: { type: "string" } },
+                    correct_answer: { type: "string" },
+                    explanation: { type: "string" },
+                    assessed_competencies: { type: "array", items: { type: "string" } },
+                    targeted_misconception: { type: "string" }
+                  }
                 }
               }
             }
           }
-        }
-      });
+        }),
+        3,
+        2000
+      );
 
       // Guard against missing or invalid worksheet_questions
       const worksheetQuestions = examData?.worksheet_questions || [];
@@ -530,7 +537,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         };
       });
 
-      // Call feedbackGrade function with data
+      let contentDescription = lesson.compressed_content || lesson.extracted_content || lesson.description || "N/A";
+
       const examPerformanceData = questionsWithGrading.map((q) => ({
         question_number: q.question_number,
         question_type: q.question_type,
@@ -552,36 +560,145 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         } : null
       }));
 
-      const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
-        examNumber: exam.exam_number,
-        examPerformanceData,
-        curriculumMap: lesson.curriculum_map,
-        learningProfile,
-        courseName: lesson.course_name,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            feedback_session_title: { type: "string" },
-            predicted_exam_score_percentage: { type: "string" },
-            overall_performance_summary_text: { type: "string" },
-            identified_strengths_list: { type: "array", items: { type: "string" } },
-            key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
-            suggested_future_sessions_plan: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  session_number: { type: "integer" },
-                  session_name: { type: "string" },
-                  session_focus_description: { type: "string" }
+      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map and the student's 10-question exam performance to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
+
+      Input Data:
+      Student's Grade Level: ${learningProfile.grade || "N/A"}
+      Course/Unit Name: ${lesson.course_name}
+      Exam Number: ${exam.exam_number} of 6
+
+      Curriculum Profile:
+      ${JSON.stringify(lesson.curriculum_map, null, 2)}
+
+      Exam Performance:
+      ${JSON.stringify(examPerformanceData, null, 2)}
+
+      [Assumptions & Fields]
+      Each exam item may include:
+      question_number, question_type, difficulty_index, question_text,
+      options, student_answer, correct_answer, explanation,
+      assessed_competencies[] (names), targeted_misconception (string),
+      is_correct (boolean),
+      ai_grading { score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[] }.
+      Ignore missing fields; do not invent values.
+
+      [Part 1 — Performance Analysis & Prediction]
+      Edge Handling
+      - If total correct = 0/10: skip calculations and output "Not Calculable" for predicted_exam_score_percentage with a foundation-rebuild rationale.
+      - If total correct = 10/10: still compute; expect a top score (~95–100).
+
+      1) Per-Item Mastery (blend binary, partial credit, difficulty)
+      - Base = 0.90 if is_correct else 0.20.
+      - If ai_grading exists:
+      partial = clamp(ai_grading.score_out_of_10 / 10, 0, 1);
+      base = 0.75*partial + 0.25*base.
+      - Difficulty multiplier:
+      Correct: High Challenge ×1.05 (cap 0.98), Challenging ×1.02 (cap 0.96), Moderate ×1.01 (cap 0.92)
+      Incorrect: High Challenge ×0.90 (floor 0.10), Challenging ×0.80 (floor 0.08), Moderate ×0.70 (floor 0.05)
+      - Misconception penalty (if targeted_misconception && !is_correct): −0.05/−0.07/−0.09
+      - Explanation alignment (if ai_grading && verdict!="Correct" && explanation): −0.03.
+      - Keypoints bonus (if ai_grading && keypoints_hit length ≥2): +0.02.
+      - Clamp final item score ∈ [0.05, 0.98].
+
+      2) Competency Mastery
+      - For each competency in lesson.curriculum_map.core_competencies:
+      MasteryScore = mean of scores from items whose assessed_competencies include that competency name.
+      If none: set 0.50 (neutral) and note "not assessed in this exam" for rationale.
+
+      3) Weighted Aggregate (curriculum-aligned)
+      - Parse lesson.curriculum_map.competency_weightings ("30%") → 0.30; normalize to sum = 1.
+      - PreliminaryAggregate = Σ(MasteryScore * weight) * 100.
+
+      4) Question-Type Adjustment (exam fidelity)
+      - For each question_type:
+      AvgTypeScore = mean score for that type.
+      ExamTypeFrequency = from curriculum_map.question_formats.
+      - If AvgTypeScore < 0.40 and ExamTypeFrequency ≥ 30% → −3 to −6 total.
+      - If AvgTypeScore ≥ 0.80 and ExamTypeFrequency ≥ 30% → +0 to +2 total.
+      - Cap total style modifier to [−8, +4].
+
+      5) Coverage Reliability Adjustment
+      - For any competency weight ≥25% and <2 assessed items → −2 each (max −4).
+      - If ≥80% of weighted competencies assessed → +1 to +2.
+      - Combine with previous modifiers; cap overall to [−8, +4].
+
+      6) Final Prediction
+      - PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then "%".
+      - Exception: if 0/10 → "Not Calculable".
+
+      [Part 2 — Structured Multi-Signal Planning Pipeline (Internal Only)]
+      Before generating suggested_future_sessions_plan and learning_patterns, internally compute planning signals:
+      1. priority_competencies = bottom 2–3 competencies by weighted mastery.
+      2. misconception_targets = misconceptions recurring across exam or tied to weighted competencies.
+      3. exam_format_deficits = question types where AvgTypeScore < 40% AND exam weight ≥ 20%.
+      4. trend_direction = {improving, plateauing, declining} based on difficulty × mastery trajectory.
+
+      These signals MUST shape both:
+      - suggested_future_sessions_plan  
+      - learning_patterns  
+
+      Do not output these internal signals directly; only use them to generate the required JSON fields.
+
+      [Global Output Rules]
+      Output ONLY a single JSON object matching the response_json_schema:
+      - feedback_session_title: "Exam ${exam.exam_number} Performance & Grade Prediction"
+      - predicted_exam_score_percentage: "% string" or "Not Calculable"
+      - prediction_calculation_rationale: 1–3 sentences referencing item difficulty, competency weighting, question-type frequency, and coverage limits.
+      - overall_performance_summary_text: 1–2 empathetic sentences with a clear next-focus cue.
+      - identified_strengths_list: 2–3 specific competency or exam-format strengths.
+      - key_areas_for_improvement_list: 2–3 high-impact weaknesses tied to misconceptions.
+      - suggested_future_sessions_plan:  
+      5 objects with session_number (2..6), session_name, session_focus_description.  
+      Each session MUST be directly grounded in at least ONE of the internal planning signals.
+      - learning_patterns:  
+      3–5 objects with:
+      • pattern_type: behavior label  
+      • what_it_means: 1 sentence explaining the pattern  
+      • how_to_improve: 1 sentence linking to tactics the next sessions/exams will reinforce.   
+      - No extra fields. No explanations outside the JSON. All percentages must be strings with "%".
+
+      Output Format: Valid JSON matching the required schema.`;
+
+      const { data: feedbackData } = await retryOperation(() => 
+        base44.functions.invoke('feedbackGrade', {
+          prompt: feedbackPrompt,
+          response_json_schema: {
+            type: "object",
+            properties: {
+              feedback_session_title: { type: "string" },
+              predicted_exam_score_percentage: { type: "string" },
+              prediction_calculation_rationale: { type: "string" },
+              overall_performance_summary_text: { type: "string" },
+              identified_strengths_list: { type: "array", items: { type: "string" } },
+              key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
+              suggested_future_sessions_plan: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    session_number: { type: "integer" },
+                    session_name: { type: "string" },
+                    session_focus_description: { type: "string" }
+                  }
                 }
               },
-              minItems: 3,
-              maxItems: 5
+              learning_patterns: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    pattern_type: { type: "string" },
+                    what_it_means: { type: "string" },
+                    how_to_improve: { type: "string" }
+                  }
+                },
+                minItems: 3,
+                maxItems: 5
+              }
             }
           }
-        }
-      });
+        })
+      );
 
       const questionFeedback = questionsWithGrading.map((q, idx) => {
         let feedback = "";
@@ -623,7 +740,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         else if (scoreNum >= 50) letterGrade = "D";
       }
 
-      await base44.entities.Exam.update(exam.id, {
+      await retryOperation(() => 
+        base44.entities.Exam.update(exam.id, {
           questions: questionsWithGrading,
           feedback: questionFeedback,
           total_score: isNaN(scoreNum) ? 0 : scoreNum,
@@ -633,7 +751,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           question_time_laps: questionTimeLaps,
           status: "completed",
           completed: true
-        });
+        })
+      );
 
       // Create all 6 exams after completing exam 1
       if (exam.exam_number === 1 && feedbackData.suggested_future_sessions_plan) {
@@ -723,13 +842,15 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       const newTotalPoints = (user.total_points || 0) + pointsEarned;
       const newLevel = Math.floor(newTotalPoints / 100) + 1;
 
-      await base44.auth.updateMe({
+      await retryOperation(() => 
+        base44.auth.updateMe({
           questions_completed: (user.questions_completed || 0) + questionsWithGrading.length,
           time_spent_seconds: (user.time_spent_seconds || 0) + elapsedSeconds,
           total_points: newTotalPoints,
           level: newLevel,
           badges: earnedBadges
-        });
+        })
+      );
 
       if (earnedNow.length > 0 || correctCount >= 8) {
         setShowConfetti(true);
@@ -908,7 +1029,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   return (
     <>
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
-      <XPGainToast show={xpToast.show} xpGained={xpToast.xp} reason={xpToast.reason} onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })} />
       
       {newBadges.length > 0 && (
         <motion.div

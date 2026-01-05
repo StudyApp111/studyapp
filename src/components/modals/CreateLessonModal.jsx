@@ -148,8 +148,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
             throw new Error("Extracted content is too short. Please ensure your files contain readable text.");
           }
 
-          // Compress if content is large
-          if (extractedContent.length > 1500) {
+          // Compress if needed
+          if (extractedContent.length > 8000) {
             setProcessingStep("Compressing documents for optimal processing...");
             
             const compressionResult = await base44.functions.invoke('compressDocument', {
@@ -175,6 +175,214 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         fullExtractedContent = extractedContent;
       }
 
+      const user = await base44.auth.me();
+      const profile = await base44.entities.LearningProfile.filter({
+        id: user.learning_profile_id
+      });
+
+      const learningProfile = profile[0] || {};
+
+      const curriculumPrompt = `Educational Curriculum Analysis Request
+
+Role:
+You are an expert curriculum analyst. Generate a concise, exam-relevant curriculum profile to support personalized worksheet generation.
+
+Input Context:
+- Student Grade Level: ${learningProfile.grade || "N/A"}
+- Course / Unit Name: ${courseName}
+- School: ${learningProfile.school || "N/A"}
+- Location: ${learningProfile.city || "N/A"}
+- Student-Provided Content:
+${extractedContent}
+
+Analysis Priority (STRICT ORDER):
+1. Use the student-provided content as the PRIMARY source of truth.
+2. Use official school or course information ONLY to validate or fill clear gaps.
+3. Use regional or professional standards ONLY if essential and obvious.
+
+DO NOT perform broad academic research or exhaustive searches.
+
+────────────────────────────
+
+Task:
+Produce a compact curriculum profile focused ONLY on material that is likely to appear on assessments.
+
+Required Output (JSON):
+
+A. Core Competencies / Learning Outcomes
+- List 6–8 core competencies.
+- Each: 1 concise sentence describing what the student must be able to do.
+- Prefer synthesis over granularity.
+
+B. Competency Emphasis
+- Assign a weight_percentage to each competency.
+- MUST sum to "100%".
+- Use strings only (e.g., "20%").
+- Base emphasis primarily on student content.
+
+C. Assessment Formats & Patterns
+- List the most common assessment formats (e.g., Multiple Choice, Short Answer, Essay).
+- For the top 3–4 formats:
+  - frequency (string, e.g., "Common", "30%")
+  - one short illustrative example (exam-style, not verbose).
+
+D. High-Yield Focal Points
+- Identify 3–5 topics or skills most likely to be tested.
+- Focus on difficulty, recurrence, or conceptual importance.
+- Mention key figures, formulas, concepts, or texts ONLY if clearly relevant.
+
+E. Common Student Difficulties
+- List 3–4 common misconceptions or failure points students encounter.
+- Tie them directly to the competencies above.
+
+────────────────────────────
+
+Formatting Rules (STRICT):
+- weight_percentage MUST be a string with "%"
+- frequency MUST be a string
+- Do NOT use numeric values anywhere
+- Output ONLY valid JSON matching the expected schema
+
+Constraints:
+- Be concise, not exhaustive.
+- Prioritize exam relevance over completeness.
+- Do not introduce content not supported by the inputs.`;
+
+      const curriculumResponseJsonSchema = {
+        type: "object",
+        properties: {
+          core_competencies: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                description: { type: "string" }
+              },
+              required: ["name", "description"]
+            }
+          },
+          competency_weightings: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                competency_name: { type: "string" },
+                weight_percentage: { 
+                  type: "string",
+                  description: "Must be a string with % symbol, e.g., '20%' or '15%'"
+                }
+              },
+              required: ["competency_name", "weight_percentage"]
+            }
+          },
+          question_formats: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                type: { type: "string" },
+                frequency: { 
+                  type: "string",
+                  description: "Must be a string, e.g., '30%', 'Common', or 'Rare'"
+                },
+                examples: {
+                  type: "array",
+                  items: { type: "string" }
+                }
+              },
+              required: ["type", "frequency", "examples"]
+            }
+          },
+          high_yield_focal_points: {
+            type: "array",
+            items: { type: "string" }
+          },
+          common_misconceptions: {
+            type: "array",
+            items: { type: "string" }
+          }
+        },
+        required: [
+          "core_competencies",
+          "competency_weightings",
+          "question_formats",
+          "high_yield_focal_points",
+          "common_misconceptions"
+        ]
+      };
+
+      setProcessingStep("Analyzing curriculum...");
+
+      const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
+        prompt: curriculumPrompt,
+        response_json_schema: curriculumResponseJsonSchema
+      });
+
+      // Handle wrapped responses (e.g., { course_profile: {...} } or { curriculum_profile: {...} })
+      let mapData = generatedMap;
+      
+      // First, try to unwrap from common wrapper keys
+      if (!mapData?.core_competencies) {
+        const wrapperKeys = ['course_profile', 'curriculum_profile', 'profile', 'data', 'result'];
+        for (const key of wrapperKeys) {
+          const innerObj = mapData?.[key];
+          if (innerObj && typeof innerObj === 'object') {
+            mapData = innerObj;
+            console.log(`Unwrapped curriculum data from "${key}"`);
+            break;
+          }
+        }
+      }
+      
+      // Normalize keys if they have prefixes like "A. Core Competencies..."
+      if (!mapData?.core_competencies && mapData && typeof mapData === 'object') {
+        const keyMapping = {
+          'core_competencies': ['core competencies', 'learning outcomes', 'a.'],
+          'competency_weightings': ['competency weightings', 'emphasis', 'b.'],
+          'question_formats': ['question formats', 'assessment', 'c.'],
+          'high_yield_focal_points': ['high-yield', 'focal points', 'key topics', 'd.'],
+          'common_misconceptions': ['misconceptions', 'difficulties', 'e.']
+        };
+        
+        for (const [targetKey, searchTerms] of Object.entries(keyMapping)) {
+          if (mapData[targetKey]) continue; // Already has correct key
+          for (const originalKey of Object.keys(mapData)) {
+            const lowerKey = originalKey.toLowerCase();
+            if (searchTerms.some(term => lowerKey.includes(term))) {
+              mapData[targetKey] = mapData[originalKey];
+              console.log(`Mapped "${originalKey}" to "${targetKey}"`);
+              break;
+            }
+          }
+        }
+      }
+
+      // Ensure arrays exist
+      const safeArray = (arr) => Array.isArray(arr) ? arr : [];
+
+      const curriculumMap = {
+        core_competencies: safeArray(mapData?.core_competencies).map(c => ({
+          name: String(c?.name || ""),
+          description: String(c?.description || "")
+        })),
+        competency_weightings: safeArray(mapData?.competency_weightings).map(w => ({
+          competency_name: String(w?.competency_name || ""),
+          weight_percentage: String(w?.weight_percentage || "0%")
+        })),
+        question_formats: safeArray(mapData?.question_formats).map(q => ({
+          type: String(q?.type || ""),
+          frequency: String(q?.frequency || ""),
+          examples: safeArray(q?.examples).map(e => String(e || ""))
+        })),
+        high_yield_focal_points: safeArray(mapData?.high_yield_focal_points).map(p => 
+          typeof p === 'object' ? String(p?.name || p?.topic || p?.description || JSON.stringify(p)) : String(p || "")
+        ),
+        common_misconceptions: safeArray(mapData?.common_misconceptions).map(m => 
+          typeof m === 'object' ? String(m?.misconception || m?.description || m?.name || JSON.stringify(m)) : String(m || "")
+        )
+      };
+
       // Create lesson immediately after OCR - navigate user to DocumentViewer ASAP
       setProcessingStep("Creating lesson...");
 
@@ -187,31 +395,31 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       if (inputType === "description") {
         lessonData.description = description.trim();
         lessonData.extracted_content = description.trim();
-        lessonData.full_extracted_content = description.trim();
       } else if (inputType === "file") {
         lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
         lessonData.file_urls = fileUrls;
-        lessonData.extracted_content = extractedContent;
-        lessonData.full_extracted_content = fullExtractedContent;
+        lessonData.extracted_content = fullExtractedContent || extractedContent;
       }
 
       const lesson = await base44.entities.Lesson.create(lessonData);
 
-      // Navigate immediately to DocumentViewer
+      // Navigate immediately - curriculum mapping and exam generation happen in background
       onOpenChange(false);
       navigate(createPageUrl("DocumentViewer") + `?lessonId=${lesson.id}&generating=true`);
 
-      // Run curriculum mapping in background (don't await - fire and forget)
-      const contentForMapping = fullExtractedContent || extractedContent || description.trim();
-      if (contentForMapping) {
-        base44.functions.invoke('curriculumMapping', {
-          lessonId: lesson.id,
-          courseName: courseName,
-          content: contentForMapping,
-          school: userSchool || '',
-          grade: userGrade || ''
-        }).catch(err => console.error("Background curriculum mapping failed:", err));
-      }
+      // Background: Save curriculum map and update lesson (non-blocking)
+      base44.entities.CurriculumMap.create({
+        course_name: courseName.trim(),
+        school: learningProfile.school || "",
+        grade: learningProfile.grade || "",
+        city: learningProfile.city || "",
+        source: "create_lesson",
+        curriculum_data: curriculumMap
+      }).catch(err => console.error("CurriculumMap save error:", err));
+
+      base44.entities.Lesson.update(lesson.id, {
+        curriculum_map: curriculumMap
+      }).catch(err => console.error("Lesson curriculum update error:", err));
     } catch (err) {
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
@@ -221,7 +429,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto overflow-x-hidden p-0 gap-0 rounded-2xl">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto p-0 gap-0 rounded-2xl">
         {isProcessing ? (
           <EducationalLoader />
         ) : (
@@ -422,10 +630,10 @@ export default function CreateLessonModal({ open, onOpenChange }) {
                     {files.length > 0 && (
                       <div className="space-y-1.5 max-h-24 overflow-y-auto">
                         {files.map((f, idx) => (
-                          <div key={idx} className="flex items-center gap-2 text-sm bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg min-w-0">
+                          <div key={idx} className="flex items-center gap-2 text-sm bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg">
                             <FileCheck className="w-4 h-4 flex-shrink-0" />
-                            <span className="flex-1 min-w-0 break-all text-xs">{f.name}</span>
-                            <span className="text-xs text-emerald-500 flex-shrink-0">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
+                            <span className="truncate flex-1">{f.name}</span>
+                            <span className="text-xs text-emerald-500">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
                           </div>
                         ))}
                       </div>

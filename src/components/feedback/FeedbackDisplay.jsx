@@ -257,11 +257,9 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                       className={`rounded-lg border overflow-hidden transition-all ${
-                        feedback.points_earned >= 8 
+                        feedback.is_correct 
                           ? 'border-emerald-200 bg-white' 
-                          : feedback.points_earned >= 5
-                            ? 'border-amber-200 bg-white'
-                            : 'border-red-200 bg-white'
+                          : 'border-amber-200 bg-white'
                       }`}
                     >
                       <div 
@@ -272,13 +270,11 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                       >
                         <div className="flex items-center gap-2">
                           <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
-                            feedback.points_earned >= 8 
+                            feedback.is_correct 
                               ? 'bg-emerald-500 text-white' 
-                              : feedback.points_earned >= 5
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-red-500 text-white'
+                              : 'bg-amber-500 text-white'
                           }`}>
-                            {feedback.points_earned >= 8 ? (
+                            {feedback.is_correct ? (
                               <CheckCircle className="w-3.5 h-3.5" />
                             ) : (
                               <XCircle className="w-3.5 h-3.5" />
@@ -303,13 +299,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                 {question.difficulty_index}
                               </Badge>
                             )}
-                            <Badge className={`text-[9px] px-1.5 py-0 ${
-                              feedback.points_earned >= 8 
-                                ? 'bg-emerald-50 text-emerald-700' 
-                                : feedback.points_earned >= 5
-                                  ? 'bg-amber-50 text-amber-700'
-                                  : 'bg-red-50 text-red-700'
-                            }`}>
+                            <Badge className={`text-[9px] px-1.5 py-0 ${feedback.is_correct ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
                               {feedback.points_earned}/10
                             </Badge>
                             {questionTime > 0 && (
@@ -343,7 +333,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                             <div className="p-3 bg-slate-50/30 space-y-2">
                               <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
                                 <MathText className="text-slate-800 font-medium text-xs mb-2">
-                                  {typeof question.question_text === 'string' ? question.question_text : (question.question_text?.text || JSON.stringify(question.question_text))}
+                                  {question.question_text}
                                 </MathText>
                                 {question.options && question.options.length > 0 && (
                                   <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
@@ -361,45 +351,29 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                   <div className="bg-blue-50 p-2 rounded-lg">
                                     <p className="text-[9px] font-bold text-blue-700 uppercase mb-0.5">Your Answer</p>
                                     <MathText className="text-xs text-slate-700 font-medium">
-                                      {typeof question.user_answer === 'string' ? (question.user_answer || "No answer") : (question.user_answer?.text || "No answer")}
+                                      {question.user_answer || "No answer"}
                                     </MathText>
                                   </div>
                                   <div className="bg-emerald-50 p-2 rounded-lg">
                                     <p className="text-[9px] font-bold text-emerald-700 uppercase mb-0.5">Correct</p>
                                     <MathText className="text-xs text-slate-700 font-medium">
-                                      {typeof question.correct_answer === 'string' ? question.correct_answer : (question.correct_answer?.text || '')}
+                                      {question.correct_answer}
                                     </MathText>
                                   </div>
                                 </div>
                               </div>
 
                               <div className={`p-2 rounded-lg ${
-                                feedback.points_earned >= 8 
-                                  ? 'bg-emerald-50' 
-                                  : feedback.points_earned >= 5
-                                    ? 'bg-amber-50'
-                                    : 'bg-red-50'
+                                feedback.is_correct ? 'bg-emerald-50' : 'bg-amber-50'
                               }`}>
                                 <div className="flex items-start gap-2">
-                                  {feedback.points_earned >= 8 ? (
-                                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 mt-0.5" />
-                                  ) : feedback.points_earned >= 5 ? (
-                                    <Zap className="w-3.5 h-3.5 text-amber-600 mt-0.5" />
-                                  ) : (
-                                    <XCircle className="w-3.5 h-3.5 text-red-600 mt-0.5" />
-                                  )}
+                                  {feedback.is_correct ? <Sparkles className="w-3.5 h-3.5 text-emerald-600 mt-0.5" /> : <Zap className="w-3.5 h-3.5 text-amber-600 mt-0.5" />}
                                   <div>
-                                    <p className={`text-[10px] font-bold mb-0.5 ${
-                                      feedback.points_earned >= 8 
-                                        ? 'text-emerald-800' 
-                                        : feedback.points_earned >= 5
-                                          ? 'text-amber-800'
-                                          : 'text-red-800'
-                                    }`}>
-                                      {feedback.points_earned >= 8 ? 'Excellent!' : feedback.points_earned >= 5 ? 'Partial Credit' : 'Needs Review'}
+                                    <p className={`text-[10px] font-bold mb-0.5 ${feedback.is_correct ? 'text-emerald-800' : 'text-amber-800'}`}>
+                                      {feedback.is_correct ? 'Excellent!' : 'Learning Opportunity'}
                                     </p>
                                     <MathText className="text-xs text-slate-700">
-                                      {typeof feedback.feedback === 'string' ? feedback.feedback : (feedback.feedback?.text || '')}
+                                      {feedback.feedback}
                                     </MathText>
                                   </div>
                                 </div>
@@ -411,7 +385,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                   <p className="text-[9px] font-bold text-purple-700 uppercase">Explanation</p>
                                 </div>
                                 <MathText className="text-xs text-slate-700 mb-2">
-                                  {typeof question.explanation === 'string' ? question.explanation : (question.explanation?.text || '')}
+                                  {question.explanation}
                                 </MathText>
                                 <div className="flex flex-wrap gap-1">
                                   {question.assessed_competencies?.map((comp, i) => (

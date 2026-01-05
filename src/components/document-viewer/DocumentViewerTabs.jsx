@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, memo } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,71 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
-
-// Memoized PDF Viewer to prevent re-renders when switching tabs
-const PDFViewer = memo(function PDFViewer({ fileUrl }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
-  const iframeRef = useRef(null);
-
-  useEffect(() => {
-    setIsLoading(true);
-    setLoadError(false);
-    
-    // Timeout fallback - hide loader after 10s even if onLoad doesn't fire
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 10000);
-
-    return () => clearTimeout(timeout);
-  }, [fileUrl]);
-
-  const handleLoad = () => {
-    setIsLoading(false);
-  };
-
-  const handleError = () => {
-    setIsLoading(false);
-    setLoadError(true);
-  };
-
-  return (
-    <>
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-slate-600">Loading document...</p>
-            <p className="text-xs text-slate-400 mt-1">This may take a moment</p>
-          </div>
-        </div>
-      )}
-      {loadError ? (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-            <p className="text-slate-600 mb-3">Unable to preview document</p>
-            <Button variant="outline" asChild className="border-purple-200">
-              <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open File
-              </a>
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <iframe
-          ref={iframeRef}
-          src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
-          className={`w-full h-full border-0 relative z-20 ${isLoading ? 'invisible' : 'visible'}`}
-          title="Course Document"
-          onLoad={handleLoad}
-          onError={handleError}
-        />
-      )}
-    </>
-  );
-});
 
 const HIGHLIGHT_COLORS = {
   yellow: { bg: '#fef08a', border: '#fde047', name: 'Yellow' },
@@ -116,15 +51,15 @@ export default function DocumentViewerTabs({ lesson }) {
     
     const selection = window.getSelection();
     const text = selection.toString().trim();
-
+    
     if (text && text.length > 0) {
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-
-    // Get selection indices relative to full content
-    const content = lesson?.full_extracted_content || lesson?.extracted_content || "";
-    const start = content.indexOf(text);
-    const end = start + text.length;
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      // Get selection indices relative to full content
+      const content = lesson?.extracted_content || "";
+      const start = content.indexOf(text);
+      const end = start + text.length;
       
       setToolbarPosition({ 
         x: rect.left + rect.width / 2, 
@@ -216,16 +151,15 @@ export default function DocumentViewerTabs({ lesson }) {
   };
 
   const handleCopyTranscript = () => {
-    const content = lesson?.full_extracted_content || lesson?.extracted_content;
-    if (content) {
-      navigator.clipboard.writeText(content);
+    if (lesson?.extracted_content) {
+      navigator.clipboard.writeText(lesson.extracted_content);
       toast.success("Transcript copied to clipboard");
     }
   };
 
   // Render content with highlights
   const renderHighlightedContent = () => {
-    const content = lesson?.full_extracted_content || lesson?.extracted_content || "";
+    const content = lesson?.extracted_content || "";
     if (!content) return null;
     
     // Apply search highlighting
@@ -421,7 +355,26 @@ export default function DocumentViewerTabs({ lesson }) {
             {viewMode === "pdf" && lesson?.file_url ? (
               <div className="h-full bg-slate-50 relative">
                 {isPDF || isOfficeDoc ? (
-                  <PDFViewer fileUrl={lesson.file_url} />
+                  <>
+                    {/* Loading state */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10" id="pdf-loader">
+                      <div className="text-center">
+                        <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" />
+                        <p className="text-sm text-slate-600">Loading document...</p>
+                        <p className="text-xs text-slate-400 mt-1">This may take a moment</p>
+                      </div>
+                    </div>
+                    <iframe
+                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
+                      className="w-full h-full border-0 relative z-20"
+                      title="Course Document"
+                      onLoad={(e) => {
+                        // Hide loader when iframe loads
+                        const loader = document.getElementById('pdf-loader');
+                        if (loader) loader.style.display = 'none';
+                      }}
+                    />
+                  </>
                 ) : isImage ? (
                   <div className="w-full h-full flex items-center justify-center p-8">
                     <img 

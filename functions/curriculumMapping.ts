@@ -11,46 +11,10 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { prompt, lessonId, courseName, content, school, grade } = await req.json();
-        
-        // Support both old (prompt-only) and new (lessonId-based) API
-        let mappingPrompt = prompt;
-        
-        // If lessonId provided, build prompt from lesson data
-        if (!mappingPrompt && lessonId && content) {
-            mappingPrompt = `You are an expert curriculum analyst.
+        const { prompt } = await req.json();
 
-Your task is to analyze the provided lesson content and create a comprehensive curriculum profile that identifies the core competencies, their weightings, common question formats, high-yield topics, and common misconceptions.
-
-INPUT CONTEXT:
-- Course Name: ${courseName || "Unknown Course"}
-- School: ${school || "N/A"}
-- Grade Level: ${grade || "N/A"}
-
-LESSON CONTENT:
-${content.substring(0, 15000)}
-
-OUTPUT REQUIREMENTS:
-Return a JSON object with these fields:
-{
-  "core_competencies": [
-    { "name": "Competency Name", "description": "Brief description" }
-  ],
-  "competency_weightings": [
-    { "competency_name": "Competency Name", "weight_percentage": "30%" }
-  ],
-  "question_formats": [
-    { "type": "Multiple Choice", "frequency": "High", "examples": ["Example question type"] }
-  ],
-  "high_yield_focal_points": ["Topic 1", "Topic 2"],
-  "common_misconceptions": ["Misconception 1", "Misconception 2"]
-}
-
-Be specific to the actual content provided. Identify 4-6 core competencies relevant to this material.`;
-        }
-
-        if (!mappingPrompt) {
-            return Response.json({ error: 'Prompt or lessonId+content is required' }, { status: 400 });
+        if (!prompt) {
+            return Response.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
         const apiKey = Deno.env.get("API_KEY");
@@ -175,18 +139,6 @@ Be specific to the actual content provided. Identify 4-6 core competencies relev
                 high_yield_focal_points: ["Main idea identification", "Supporting details", "Author's purpose"],
                 common_misconceptions: ["Confusing inference with stated facts"]
             };
-        }
-
-        // If lessonId provided, save curriculum map to lesson
-        if (lessonId && parsedResponse) {
-            try {
-                await base44.entities.Lesson.update(lessonId, {
-                    curriculum_map: parsedResponse
-                });
-                console.log('Curriculum map saved to lesson:', lessonId);
-            } catch (saveError) {
-                console.error('Failed to save curriculum map to lesson:', saveError.message);
-            }
         }
 
         console.log('=== curriculumMapping Complete ===');
