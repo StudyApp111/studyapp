@@ -84,7 +84,7 @@ export const trackUserSession = async () => {
     
     // Set first visit if not set
     if (!user.first_visit_date) {
-      updateData.first_visit_date = now;
+      updateData.first_visit_date = nowISO;
     }
     
     await base44.auth.updateMe(updateData);
