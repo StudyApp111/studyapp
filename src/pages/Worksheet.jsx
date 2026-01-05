@@ -602,6 +602,7 @@ Output Format: Valid JSON object matching the schema.`;
       setWorksheet(updatedWorksheet);
     } catch (error) {
       console.error("Error generating worksheet:", error);
+      generationStartedRef.current = false; // Allow retry on error
       
       // Log error to database
       try {
