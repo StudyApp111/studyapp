@@ -255,10 +255,14 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       
       console.log(`📊 Exam ${examNumber} - Content length:`, contentDescription.length);
 
-      const curriculumMapStr = JSON.stringify(lesson.curriculum_map || {}, null, 2);
-      console.log(`📊 Exam ${examNumber} - Curriculum map length:`, curriculumMapStr.length);
-      
-      const aiPrompt = examNumber === 1 
+      const { data: examData } = await base44.functions.invoke('generateWorksheet', {
+        examNumber,
+        lessonData: {
+          course_name: lesson.course_name
+        },
+        learningProfile,
+        contentDescription,
+        curriculumMap: lesson.curriculum_map, 
         ? `Context
 You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
 
