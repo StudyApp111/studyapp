@@ -403,9 +403,40 @@ You are an expert assessment designer creating a 10-question adaptive worksheet 
 Input Educational Context
 Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${lessonData.course_name}
-Current Iteration: ${currentWorksheetDescription}
+Content Source:
+${contentDescription}
 
-Detailed Curriculum Profile:
+Session Focus for This Worksheet:
+${JSON.stringify(sessionFocus, null, 2)}
+
+------------------------------------------------------------
+TASK – Worksheet Generation
+------------------------------------------------------------
+
+Generate exactly 10 exam-authentic questions that align with the session focus above.
+
+Each question must include:
+• question_number  
+• question_type ("Multiple Choice", "Short Answer", "Structured Response", "True/False", "Fill in the Blank")  
+• question_text (plain text)  
+• options (A–D) if question_type = "Multiple Choice"; ["True", "False"] if True/False; otherwise []  
+• difficulty_index ("Moderate Exam-Level", "Challenging Exam-Level", or "High Challenge Exam-Level")  
+
+Strict MCQ Rules:
+- If the stem contains cues like "Which of the following", "Select", "Which statement", "is/are true about", "Identify the correct", "Choose the option"—  
+  You MUST produce a Multiple Choice question with exactly four options A–D.
+- If question_type ≠ "Multiple Choice", the stem MUST avoid MCQ cue phrases and options MUST be empty.
+
+For each question also include:
+• correct_answer  
+• explanation (2–3 sentences; give conceptual correction, not just the answer)  
+• assessed_competencies[]  
+• targeted_misconception (string or null)
+
+Output Format: Valid JSON object matching the schema.`;
+      }
+
+      // PLACEHOLDER_END - Remove everything between here
 ${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
 Content Source:
