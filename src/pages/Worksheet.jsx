@@ -234,7 +234,7 @@ You are an expert assessment designer. Generate a 10-question predictive workshe
 
 This worksheet must stand alone.
 Do NOT rely on prior diagnostics.
-Ground content in the student's materials and light web search when needed.
+Ground content in the student’s materials and light web search when needed.
 
 ────────────────────────────────
 
@@ -250,7 +250,7 @@ ${contentDescription}
 Internal Reasoning (Do NOT Output)
 
 1. Scope Lock
-- If lesson content specifies a concrete topic or skill (e.g., "factoring", "photosynthesis", "Du Bois double-consciousness"):
+- If lesson content specifies a concrete topic or skill (e.g., “factoring”, “photosynthesis”, “Du Bois double-consciousness”):
   → ALL questions MUST stay strictly within that topic.
 - Do NOT add prerequisites, review topics, or adjacent units unless required to execute the task.
 - Only broaden scope if the user explicitly requests review or exam prep.
@@ -305,7 +305,7 @@ Short Answer / Structured Response:
 - Direct prompt requesting a value, explanation, justification, or worked solution.
 
 MCQ cue phrases are FORBIDDEN in non-MCQ questions:
-"Which of the following", "Select", "Identify the correct", "Choose", "is/are true about"
+“Which of the following”, “Select”, “Identify the correct”, “Choose”, “is/are true about”
 
 If a forbidden cue appears, IMMEDIATELY convert the question to Multiple Choice and regenerate.
 
@@ -365,50 +365,154 @@ Provide your response as a single, valid JSON object with the structure specifie
 
         const latestWorksheet = prevWorksheets.sort((a, b) => b.worksheet_number - a.worksheet_number)[0];
         
-        // Get the specific session focus for this worksheet number
+        const previousWorksheetPerformance = latestWorksheet.questions.map(q => ({
+          question_number: q.question_number,
+          question_type: q.question_type,
+          difficulty_index: q.difficulty_index,
+          question_text: q.question_text,
+          options: q.options || [],
+          correct_answer: q.correct_answer,
+          explanation: q.explanation,
+          assessed_competencies: q.assessed_competencies,
+          targeted_misconception: q.targeted_misconception,
+          student_answer: q.user_answer || "No answer provided",
+          is_correct: q.is_correct || false
+        }));
+
+        const cumulativePerformance = {
+          worksheet_number: latestWorksheet.worksheet_number,
+          predicted_grade: latestWorksheet.predicted_grade,
+          total_score: latestWorksheet.total_score,
+          strengths: latestWorksheet.ai_feedback?.identified_strengths_list || [],
+          weaknesses: latestWorksheet.ai_feedback?.key_areas_for_improvement_list || []
+        };
+
         const suggestedFutureSessions = latestWorksheet.ai_feedback?.suggested_future_sessions_plan || [];
-        const targetSession = suggestedFutureSessions.find(s => s.session_number === worksheetNum);
-        const sessionFocus = targetSession ? {
-          session_number: targetSession.session_number,
-          session_name: targetSession.session_name,
-          session_focus_description: targetSession.session_focus_description
-        } : { session_number: worksheetNum, session_name: `Worksheet ${worksheetNum}`, session_focus_description: `Continue building toward 90%+ mastery` };
+        const learningPatterns = latestWorksheet.ai_feedback?.learning_patterns || [];
+
+        let currentWorksheetDescription = `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
+        if (existingWorksheetId) {
+          const placeholderData = await base44.entities.Worksheet.filter({ id: existingWorksheetId });
+          if (placeholderData.length > 0 && placeholderData[0].focus_description) {
+            currentWorksheetDescription = placeholderData[0].focus_description;
+          }
+        }
 
         aiPrompt = `Context
-You are an expert assessment designer creating a 10-question adaptive worksheet for ${lessonData.course_name}.
+You are an expert assessment designer generating the next 10-question adaptive worksheet for ${lessonData.course_name}.
+This worksheet should build on prior guidance and focus on the most important skills for this student right now.
 
-Input Educational Context
-Student's Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${lessonData.course_name}
-Content Source:
+────────────────────────────────
+
+Input Context
+
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course / Unit Name: ${lessonData.course_name}
+Current Iteration: ${currentWorksheetDescription}
+
+Lesson Content (notes, uploaded material, or student description):
 ${contentDescription}
 
-Session Focus for This Worksheet:
-${JSON.stringify(sessionFocus, null, 2)}
+Suggested Focus Areas (from prior session):
+${JSON.stringify(suggestedFutureSessions || [], null, 2)}
 
-------------------------------------------------------------
-TASK – Worksheet Generation
-------------------------------------------------------------
+────────────────────────────────
 
-Generate exactly 10 exam-authentic questions that align with the session focus above.
+Internal Design Rules (Do NOT Output)
 
-Each question must include:
-• question_number  
-• question_type ("Multiple Choice", "Short Answer", "Structured Response", "True/False", "Fill in the Blank")  
-• question_text (plain text)  
-• options (A–D) if question_type = "Multiple Choice"; ["True", "False"] if True/False; otherwise []  
-• difficulty_index ("Moderate Exam-Level", "Challenging Exam-Level", or "High Challenge Exam-Level")  
+1. Scope Control
+- If lesson content specifies a narrow topic or skill, generate ALL questions from that topic only.
+- Do NOT introduce adjacent or prerequisite topics unless strictly required.
+- Only broaden scope if the user explicitly requests review or exam prep.
 
-Strict MCQ Rules:
-- If the stem contains cues like "Which of the following", "Select", "Which statement", "is/are true about", "Identify the correct", "Choose the option"—  
-  You MUST produce a Multiple Choice question with exactly four options A–D.
-- If question_type ≠ "Multiple Choice", the stem MUST avoid MCQ cue phrases and options MUST be empty.
+2. Question Allocation
+- 6–7 questions on the primary focus areas.
+- 2–3 questions on application, edge cases, or exam-style traps.
+- 1–2 “twin” questions testing the same concept with different reasoning demands.
 
-For each question also include:
-• correct_answer  
-• explanation (2–3 sentences; give conceptual correction, not just the answer)  
-• assessed_competencies[]  
-• targeted_misconception (string or null)
+3. Difficulty Progression
+- Start with Moderate Exam-Level.
+- Progress to Challenging, then High Challenge by reasoning depth (not topic expansion).
+
+────────────────────────────────
+
+QUESTION-TYPE ENFORCEMENT (MUST EXECUTE FIRST)
+
+For EACH question:
+
+Choose question_type from:
+- Multiple Choice
+- True/False
+- Fill in the Blank
+- Short Answer
+- Structured Response
+
+Apply strict rules:
+
+Multiple Choice:
+- EXACTLY four options labeled A, B, C, D.
+- MCQ cue phrases ARE allowed.
+
+True/False:
+- options MUST be ["True", "False"] only.
+- Stem must be a single declarative statement.
+
+Fill in the Blank:
+- options MUST be [].
+- Include exactly ONE blank written as ____.
+
+Short Answer / Structured Response:
+- options MUST be [].
+- Stem must directly request a value, explanation, or worked solution.
+
+MCQ cue phrases are FORBIDDEN in non-MCQ questions:
+Which of the following, Select, Choose, Identify the correct, is/are true about
+
+If an MCQ cue appears in a non-MCQ question,
+you MUST convert it to Multiple Choice and regenerate.
+
+This rule overrides all other instructions.
+
+────────────────────────────────
+
+Worksheet Generation (Output Only)
+
+Generate EXACTLY 10 questions.
+
+Each question MUST include:
+- question_number
+- question_type
+- question_text (plain text)
+- options (A–D for MCQ, otherwise [])
+- difficulty_index:
+  - Moderate Exam-Level
+  - Challenging Exam-Level
+  - High Challenge Exam-Level
+
+Subject Guidance:
+- Math / Science: multi-step reasoning, application, interpretation, unit checks
+- Humanities / Social Sciences: argument alignment, evidence use, conceptual precision
+- CS / Engineering: tracing, correctness, edge cases, applied logic
+- Business / Economics: method selection, case reasoning, quantitative interpretation
+
+Each question must test a distinct concept or reasoning demand.
+
+────────────────────────────────
+
+Answer Key (Output Only)
+
+For EACH question include:
+- correct_answer
+- explanation (2–3 sentences; instructional and corrective)
+- assessed_competencies (short inferred labels)
+- targeted_misconception (or null)
+
+Explanations should teach why the answer is correct and how to avoid common mistakes.
+
+────────────────────────────────
+
+Output Format
+Return a single valid JSON object matching the expected schema.
 
 Output Format: Valid JSON object matching the schema.`;
       }
@@ -454,6 +558,8 @@ Output Format: Valid JSON object matching the schema.`;
         3,
         2000
       );
+
+
 
       if (!worksheetData || !worksheetData.worksheet_questions || worksheetData.worksheet_questions.length === 0) {
         throw new Error("Invalid worksheet data received from AI");
@@ -745,7 +851,7 @@ Output Format: Valid JSON object matching the schema.`;
 
       console.log('[SUBMIT] Worksheet performance data prepared:', worksheetPerformanceData.length, 'questions');
 
-      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student's 10-question worksheet performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
+      const feedbackPrompt = `You are an expert educator and assessment analyst for ${lesson.course_name} at ${learningProfile.school || "the school"} (grade: ${learningProfile.grade || "N/A"}, region: ${learningProfile.city || "N/A"}). Use the curriculum map, the student’s 10-question worksheet performance, and the diagnostic quiz meta-data (reasoning_method, confidence_level) to produce an accurate predicted exam grade, a concise rationale, a brief performance summary, strengths/weaknesses, a structured multi-signal learning plan, and behavior-based learning patterns. Keep all reasoning internal; output ONLY valid JSON that matches the provided response_json_schema.
 
 Input Data:
 Student's Grade Level: ${learningProfile.grade || "N/A"}
@@ -774,14 +880,14 @@ Ignore missing fields; do not invent values.
   • Underconfidence flag: is_correct_d=true AND confidence=Low.
   • Guess-correct risk: is_correct_d=true AND (reasoning_method=Guess OR confidence=Low).
   • Method bias counts by competency/topic when mappable (Pattern, Formula, Algorithmic, Heuristic, Recall).
-- Derive an "Early Insight Profile":
+- Derive an “Early Insight Profile”:
   • dominant_methods: top 1–2 reasoning_method labels by frequency.
   • confidence_alignment: accuracy when High vs Medium vs Low confidence (if computable).
   • primary_risk: one of {Overconfidence, Underconfidence, Guess-correct, Method-mismatch} if observed ≥2 times or clearly indicated.
 
 [Part 1 — Performance Analysis & Prediction]
 Edge Handling
-- If total correct = 0/10: skip calculations and output "Not Calculable" for predicted_exam_score_percentage with a foundation-rebuild rationale.
+- If total correct = 0/10: skip calculations and output “Not Calculable” for predicted_exam_score_percentage with a foundation-rebuild rationale.
 - If total correct = 10/10: still compute; expect a top score (~95–100).
 
 1) Per-Item Mastery (blend binary, partial credit, difficulty)
@@ -800,7 +906,7 @@ Edge Handling
 2) Competency Mastery
 - For each competency in lesson.curriculum_map.core_competencies:
   MasteryScore = mean of scores from items whose assessed_competencies include that competency name.
-  If none: set 0.50 (neutral) and note "not assessed in this worksheet" for rationale.
+  If none: set 0.50 (neutral) and note “not assessed in this worksheet” for rationale.
 
 3) Weighted Aggregate (curriculum-aligned)
 - Parse lesson.curriculum_map.competency_weightings ("30%") → 0.30; normalize to sum = 1.
@@ -820,7 +926,7 @@ Edge Handling
 - Combine with previous modifiers; cap overall to [−8, +4].
 
 6) Final Prediction
-- PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then "%".
+- PredictedExamScorePercentage = round(PreliminaryAggregate + Modifier), clamped to [0, 100], then “%”.
 - Exception: if 0/10 → "Not Calculable".
 
 [Part 2 — Structured Multi-Signal Planning Pipeline (Internal Only)]
@@ -852,7 +958,7 @@ Output ONLY a single JSON object matching the response_json_schema:
     • pattern_type: behavior label  
     • what_it_means: 1 sentence explaining the pattern  
     • how_to_improve: 1 sentence linking to tactics the next sessions/worksheets will reinforce.   
-- No extra fields. No explanations outside the JSON. All percentages must be strings with "%".
+- No extra fields. No explanations outside the JSON. All percentages must be strings with “%”.
 
 Output Format: Valid JSON matching the required schema.`;
 
@@ -867,6 +973,7 @@ Output Format: Valid JSON matching the required schema.`;
           properties: {
             feedback_session_title: { type: "string" },
             predicted_exam_score_percentage: { type: "string" },
+            prediction_calculation_rationale: { type: "string" },
             overall_performance_summary_text: { type: "string" },
             identified_strengths_list: { type: "array", items: { type: "string" } },
             key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
@@ -881,9 +988,23 @@ Output Format: Valid JSON matching the required schema.`;
                 },
                 required: ["session_number", "session_name", "session_focus_description"]
               }
+            },
+            learning_patterns: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  pattern_type: { type: "string" },
+                  what_it_means: { type: "string" },
+                  how_to_improve: { type: "string" }
+                },
+                required: ["pattern_type", "what_it_means", "how_to_improve"]
+              },
+              minItems: 3,
+              maxItems: 5
             }
           },
-          required: ["feedback_session_title", "predicted_exam_score_percentage", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan"]
+          required: ["feedback_session_title", "predicted_exam_score_percentage", "prediction_calculation_rationale", "overall_performance_summary_text", "identified_strengths_list", "key_areas_for_improvement_list", "suggested_future_sessions_plan", "learning_patterns"]
         }
         })
         );
