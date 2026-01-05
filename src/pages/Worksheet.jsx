@@ -436,11 +436,7 @@ For each question also include:
 Output Format: Valid JSON object matching the schema.`;
       }
 
-      // PLACEHOLDER_END - Remove everything between here
-${JSON.stringify(lessonData.curriculum_map, null, 2)}
 
-Content Source:
-${contentDescription}
 
 Previous Worksheet Performance:
 ${JSON.stringify(previousWorksheetPerformance, null, 2)}
