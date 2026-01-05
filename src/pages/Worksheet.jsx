@@ -437,8 +437,6 @@ Output Format: Valid JSON object matching the schema.`;
       }
 
       const { data: worksheetData } = await retryOperation(
-
-Cumulative Performance:
 ${JSON.stringify(cumulativePerformance, null, 2)}
 
 Suggested Future Sessions (from predictor):
