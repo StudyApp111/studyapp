@@ -114,10 +114,10 @@ Deno.serve(async (req) => {
                 const requiredFields = [
                     'feedback_session_title',
                     'predicted_exam_score_percentage',
-                    'prediction_calculation_rationale',
                     'overall_performance_summary_text',
                     'identified_strengths_list',
-                    'key_areas_for_improvement_list'
+                    'key_areas_for_improvement_list',
+                    'suggested_future_sessions_plan'
                 ];
                 
                 const missingFields = requiredFields.filter(field => !parsedResponse[field]);
