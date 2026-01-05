@@ -388,55 +388,34 @@ Provide your response as a single, valid JSON object with the structure specifie
         };
 
         const suggestedFutureSessions = latestWorksheet.ai_feedback?.suggested_future_sessions_plan || [];
-        
-        // Get the specific session focus for this worksheet number
-        const targetSession = suggestedFutureSessions.find(s => s.session_number === worksheetNum);
-        const sessionFocus = targetSession ? {
-          session_number: targetSession.session_number,
-          session_name: targetSession.session_name,
-          session_focus_description: targetSession.session_focus_description
-        } : { session_number: worksheetNum, session_name: `Worksheet ${worksheetNum}`, session_focus_description: `Continue building toward 90%+ mastery` };
+        const learningPatterns = latestWorksheet.ai_feedback?.learning_patterns || [];
+
+        let currentWorksheetDescription = `Worksheet ${worksheetNum}: Continue building toward 90%+ mastery`;
+        if (existingWorksheetId) {
+          const placeholderData = await base44.entities.Worksheet.filter({ id: existingWorksheetId });
+          if (placeholderData.length > 0 && placeholderData[0].focus_description) {
+            currentWorksheetDescription = placeholderData[0].focus_description;
+          }
+        }
 
         aiPrompt = `Context
-You are an expert assessment designer creating a 10-question adaptive worksheet for ${lessonData.course_name}. This worksheet must evolve from ALL prior data: previous worksheet performance, cumulative performance trends, curriculum weightings, high-yield competencies, and the suggested_future_sessions_plan + learning_patterns generated during the last prediction cycle.
+You are a master assessment designer creating the next 10-question adaptive worksheet for ${lessonData.course_name}. This worksheet must evolve from ALL prior data: previous worksheet performance, cumulative performance trends, curriculum weightings, high-yield competencies, and the suggested_future_sessions_plan + learning_patterns generated during the last prediction cycle.
 
 Input Educational Context
 Student's Grade Level: ${learningProfile.grade || "N/A"}
 Course/Unit Name: ${lessonData.course_name}
+Current Iteration: ${currentWorksheetDescription}
+
+Detailed Curriculum Profile:
+${JSON.stringify(lessonData.curriculum_map, null, 2)}
+
 Content Source:
 ${contentDescription}
 
-Session Focus for This Worksheet:
-${JSON.stringify(sessionFocus, null, 2)}
+Previous Worksheet Performance:
+${JSON.stringify(previousWorksheetPerformance, null, 2)}
 
-------------------------------------------------------------
-TASK – Worksheet Generation
-------------------------------------------------------------
-
-Generate exactly 10 exam-authentic questions that align with the session focus above.
-
-Each question must include:
-• question_number  
-• question_type ("Multiple Choice", "Short Answer", "Structured Response", "True/False", "Fill in the Blank")  
-• question_text (plain text)  
-• options (A–D) if question_type = "Multiple Choice"; ["True", "False"] if True/False; otherwise []  
-• difficulty_index ("Moderate Exam-Level", "Challenging Exam-Level", or "High Challenge Exam-Level")  
-
-Strict MCQ Rules:
-- If the stem contains cues like "Which of the following", "Select", "Which statement", "is/are true about", "Identify the correct", "Choose the option"—  
-  You MUST produce a Multiple Choice question with exactly four options A–D.
-- If question_type ≠ "Multiple Choice", the stem MUST avoid MCQ cue phrases and options MUST be empty.
-
-For each question also include:
-• correct_answer  
-• explanation (2–3 sentences; give conceptual correction, not just the answer)  
-• assessed_competencies[]  
-• targeted_misconception (string or null)
-
-Output Format: Valid JSON object matching the schema.`;
-      }
-
-      const { data: worksheetData } = await retryOperation(
+Cumulative Performance:
 ${JSON.stringify(cumulativePerformance, null, 2)}
 
 Suggested Future Sessions (from predictor):
