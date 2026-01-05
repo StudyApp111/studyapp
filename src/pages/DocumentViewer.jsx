@@ -181,18 +181,25 @@ export default function DocumentViewer() {
       const urlParams = new URLSearchParams(window.location.search);
       const lessonId = urlParams.get('id') || urlParams.get('lessonId');
 
+      console.log("DocumentViewer: Loading lesson with ID:", lessonId);
+
       if (!lessonId) {
+        console.error("DocumentViewer: No lessonId in URL");
         navigate(createPageUrl("Home"));
         return;
       }
 
       const lessons = await base44.entities.Lesson.filter({ id: lessonId });
+      console.log("DocumentViewer: Fetched lessons:", lessons);
+      
       if (lessons.length === 0) {
+        console.error("DocumentViewer: No lesson found with ID:", lessonId);
         navigate(createPageUrl("Home"));
         return;
       }
 
       const lessonData = lessons[0];
+      console.log("DocumentViewer: Lesson loaded successfully:", lessonData.course_name);
       setLesson(lessonData);
       
       // Initialize study time from saved lesson data
@@ -211,8 +218,9 @@ export default function DocumentViewer() {
           base44.entities.Exam.filter({ lesson_id: lessonId }),
           base44.entities.Worksheet.filter({ lesson_id: lessonId })
         ]);
+        console.log("DocumentViewer: Loaded exams:", examsData.length, "worksheets:", worksheetsData.length);
       } catch (loadError) {
-        console.error("Error loading exams/worksheets:", loadError);
+        console.error("DocumentViewer: Error loading exams/worksheets (non-critical):", loadError);
         // Continue with empty arrays if loading fails
       }
       
@@ -231,10 +239,14 @@ export default function DocumentViewer() {
         setPredictedGrade(examWithGrade.predicted_grade);
       }
 
+      console.log("DocumentViewer: Lesson loaded completely, setting loading=false");
       setLoading(false);
     } catch (error) {
-      console.error("Error loading lesson:", error);
-      navigate(createPageUrl("Home"));
+      console.error("DocumentViewer: CRITICAL ERROR loading lesson:", error);
+      console.error("DocumentViewer: Error details:", error.message, error.stack);
+      // Don't navigate away - show the error
+      alert(`Failed to load lesson: ${error.message}. Check console for details.`);
+      setLoading(false);
     }
   };
 
