@@ -207,6 +207,7 @@ export default function DocumentViewer() {
       // Initialize study time from saved lesson data
       setStudyTime(lessonData.total_study_time_seconds || 0);
       
+      // Use uncompressed content for document viewer - compressed is for prompts only
       if (lessonData.extracted_content) {
         setExtractedContent(lessonData.extracted_content);
       }

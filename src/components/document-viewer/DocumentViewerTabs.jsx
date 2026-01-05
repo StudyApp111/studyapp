@@ -56,7 +56,8 @@ export default function DocumentViewerTabs({ lesson }) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
-      // Get selection indices relative to full content
+      // Get selection indices relative to full uncompressed content
+      // Use extracted_content (uncompressed OCR) not compressed_content
       const content = lesson?.extracted_content || "";
       const start = content.indexOf(text);
       const end = start + text.length;
@@ -158,6 +159,8 @@ export default function DocumentViewerTabs({ lesson }) {
   };
 
   // Render content with highlights
+  // IMPORTANT: Use uncompressed extracted_content for display
+  // compressed_content is only for LLM prompts
   const renderHighlightedContent = () => {
     const content = lesson?.extracted_content || "";
     if (!content) return null;

@@ -226,9 +226,10 @@ export default function Layout({ children, currentPageName }) {
                       <div className="w-full space-y-1 mt-1">
                         {recentLessons.slice(0, 2).map((lesson) => {
                           const lessonUrl = createPageUrl("DocumentViewer") + `?id=${lesson.id}`;
+                          const currentPath = location.pathname;
                           const urlParams = new URLSearchParams(location.search);
                           const currentId = urlParams.get('id') || urlParams.get('lessonId');
-                          const isLessonActive = currentId === lesson.id;
+                          const isLessonActive = currentPath === createPageUrl("DocumentViewer") && currentId === lesson.id;
                           const firstLetter = lesson.course_name?.[0]?.toUpperCase() || 'L';
 
                           return (
