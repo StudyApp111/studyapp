@@ -557,8 +557,7 @@ Generate exactly 10 questions specifically targeting the focus areas above.`;
         };
       });
 
-      let contentDescription = lesson.compressed_content || lesson.extracted_content || lesson.description || "N/A";
-
+      // Minimize content for feedback prompt - we already have curriculum map
       const examPerformanceData = questionsWithGrading.map((q) => ({
         question_number: q.question_number,
         question_type: q.question_type,
