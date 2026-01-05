@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,6 @@ import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/component
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [activeTab, setActiveTab] = useState("exam");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,12 +52,12 @@ export default function DocumentViewer() {
   const showFlashcardsDot = true;
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
+    const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
     if (tabParam) {
       setActiveTab(tabParam);
     }
-  }, [location.search]);
+  }, []);
 
   useEffect(() => {
     const handleSwitchToGrade = () => setActiveTab('grade');
@@ -78,7 +77,7 @@ export default function DocumentViewer() {
   useEffect(() => {
     loadLesson();
     loadUserStats();
-  }, [location.search]);
+  }, [window.location.search]);
 
   const loadUserStats = async () => {
     try {
@@ -179,11 +178,11 @@ export default function DocumentViewer() {
 
   const loadLesson = async () => {
     try {
-      const urlParams = new URLSearchParams(location.search);
+      const urlParams = new URLSearchParams(window.location.search);
       const lessonId = urlParams.get('id') || urlParams.get('lessonId');
 
       console.log("DocumentViewer: Full URL:", window.location.href);
-      console.log("DocumentViewer: Search params:", location.search);
+      console.log("DocumentViewer: Search params:", window.location.search);
       console.log("DocumentViewer: Loading lesson with ID:", lessonId);
 
       if (!lessonId) {
