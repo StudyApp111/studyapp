@@ -71,7 +71,7 @@ export default function Home() {
       };
 
       checkOnboarding();
-    }, [navigate]);
+    }, []); // Only run once on mount
 
     const [learningProfile, setLearningProfile] = useState(null);
 

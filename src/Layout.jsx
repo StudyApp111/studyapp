@@ -109,8 +109,11 @@ export default function Layout({ children, currentPageName }) {
       }
     };
     
-    checkUser();
-  }, [location.pathname, navigate]);
+    // Only run on initial mount, not on every navigation
+    if (!user) {
+      checkUser();
+    }
+  }, []);
 
   // Global UI error tracking
   React.useEffect(() => {

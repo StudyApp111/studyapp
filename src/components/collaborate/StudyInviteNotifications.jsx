@@ -19,7 +19,7 @@ export default function StudyInviteNotifications({ userEmail }) {
   useEffect(() => {
     if (userEmail) {
       loadInvites();
-      const interval = setInterval(loadInvites, 30000);
+      const interval = setInterval(loadInvites, 60000); // Reduced from 30s to 60s
       return () => clearInterval(interval);
     }
   }, [userEmail]);
