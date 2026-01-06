@@ -186,21 +186,30 @@ export default function DocumentViewer() {
       console.log("DocumentViewer: Loading lesson with ID:", lessonId);
 
       if (!lessonId) {
-        console.error("DocumentViewer: No lessonId in URL");
-        navigate(createPageUrl("Home"));
+        console.error("DocumentViewer: No lessonId in URL - redirecting to Home");
+        setLoading(false);
+        setTimeout(() => navigate(createPageUrl("Home")), 100);
         return;
       }
 
       const lessons = await base44.entities.Lesson.filter({ id: lessonId });
       console.log("DocumentViewer: Fetched lessons:", lessons);
       
-      if (lessons.length === 0) {
+      if (!lessons || lessons.length === 0) {
         console.error("DocumentViewer: No lesson found with ID:", lessonId);
-        navigate(createPageUrl("Home"));
+        setLoading(false);
+        setTimeout(() => navigate(createPageUrl("Home")), 100);
         return;
       }
 
       const lessonData = lessons[0];
+      if (!lessonData || !lessonData.id) {
+        console.error("DocumentViewer: Invalid lesson data");
+        setLoading(false);
+        setTimeout(() => navigate(createPageUrl("Home")), 100);
+        return;
+      }
+      
       console.log("DocumentViewer: Lesson loaded successfully:", lessonData.course_name);
       setLesson(lessonData);
       
@@ -247,9 +256,10 @@ export default function DocumentViewer() {
     } catch (error) {
       console.error("DocumentViewer: CRITICAL ERROR loading lesson:", error);
       console.error("DocumentViewer: Error details:", error.message, error.stack);
-      // Don't navigate away - show the error
-      alert(`Failed to load lesson: ${error.message}. Check console for details.`);
       setLoading(false);
+      // Show error and redirect to home
+      alert(`Failed to load lesson: ${error.message}. Redirecting to home...`);
+      setTimeout(() => navigate(createPageUrl("Home")), 1000);
     }
   };
 

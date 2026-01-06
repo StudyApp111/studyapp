@@ -403,9 +403,17 @@ Constraints:
 
       const lesson = await base44.entities.Lesson.create(lessonData);
 
+      console.log("CreateLessonModal: Lesson created with ID:", lesson.id);
+      
       // Navigate immediately - curriculum mapping and exam generation happen in background
       onOpenChange(false);
-      navigate(createPageUrl("DocumentViewer") + `?id=${lesson.id}&generating=true`);
+      
+      // Use setTimeout to ensure modal closes before navigation
+      setTimeout(() => {
+        const targetUrl = createPageUrl("DocumentViewer") + `?id=${lesson.id}&generating=true`;
+        console.log("CreateLessonModal: Navigating to:", targetUrl);
+        navigate(targetUrl);
+      }, 100);
 
       // Background: Save curriculum map and update lesson (non-blocking)
       base44.entities.CurriculumMap.create({

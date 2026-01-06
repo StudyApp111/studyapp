@@ -184,13 +184,18 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   };
 
   const loadOrGenerateExam = async (examNumber) => {
+    if (!lesson || !lesson.id) {
+      console.error("ExamTab: Cannot load exam - lesson not ready");
+      return;
+    }
+    
     try {
       const existingExams = await base44.entities.Exam.filter({ 
         lesson_id: lesson.id,
         exam_number: examNumber
       });
 
-      if (existingExams.length > 0) {
+      if (existingExams && existingExams.length > 0) {
         const loadedExam = existingExams[0];
         
         if (loadedExam.completed) {
