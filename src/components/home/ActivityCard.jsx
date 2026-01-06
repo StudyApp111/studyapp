@@ -82,7 +82,10 @@ export function LessonActivityCard({ lesson, exams = [], index = 0 }) {
   const hasDescription = lesson.input_type === "description" || (!hasDocument && lesson.description);
 
   const handleClick = () => {
-    navigate(createPageUrl("DocumentViewer") + `?id=${lesson.id}`);
+    navigate({
+      pathname: createPageUrl("DocumentViewer"),
+      search: `?id=${lesson.id}`
+    });
   };
 
   return (
