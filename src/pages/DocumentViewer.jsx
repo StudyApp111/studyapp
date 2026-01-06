@@ -192,20 +192,31 @@ export default function DocumentViewer() {
 
   const loadLesson = async () => {
     try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const lessonId = urlParams.get('id') || urlParams.get('lessonId');
-
+      // Priority: ref > sessionStorage > URL params
+      let lessonId = lessonIdRef.current;
+      
       if (!lessonId) {
+        lessonId = sessionStorage.getItem('currentLessonId');
+      }
+      
+      if (!lessonId) {
+        const urlParams = new URLSearchParams(window.location.search);
+        lessonId = urlParams.get('id') || urlParams.get('lessonId');
+      }
+
+      console.log("Loading lesson with ID:", lessonId);
+
+      if (!lessonId || lessonId === 'null' || lessonId === 'undefined') {
+        setError("No lesson ID found");
         setLoading(false);
-        navigate(createPageUrl("Home"), { replace: true });
         return;
       }
 
       const lessons = await base44.entities.Lesson.filter({ id: lessonId });
       
       if (!lessons || lessons.length === 0) {
+        setError("Lesson not found");
         setLoading(false);
-        navigate(createPageUrl("Home"), { replace: true });
         return;
       }
 
@@ -253,8 +264,8 @@ export default function DocumentViewer() {
       setLoading(false);
     } catch (error) {
       console.error("Error loading lesson:", error);
+      setError(error.message);
       setLoading(false);
-      navigate(createPageUrl("Home"), { replace: true });
     }
   };
 
