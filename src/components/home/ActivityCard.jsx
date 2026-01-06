@@ -82,10 +82,8 @@ export function LessonActivityCard({ lesson, exams = [], index = 0 }) {
   const hasDescription = lesson.input_type === "description" || (!hasDocument && lesson.description);
 
   const handleClick = () => {
-    navigate({
-      pathname: createPageUrl("DocumentViewer"),
-      search: `?id=${lesson.id}`
-    });
+    const url = `${createPageUrl("DocumentViewer")}?id=${lesson.id}`;
+    navigate(url);
   };
 
   return (
@@ -184,7 +182,8 @@ export function AssignmentActivityCard({ assignment, index = 0 }) {
   const score = hasResult?.total_score ? Math.round(hasResult.total_score) : null;
 
   const handleClick = () => {
-    navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`);
+    const url = `${createPageUrl("GradeResults")}?assignmentId=${assignment.id}`;
+    navigate(url);
   };
 
   return (

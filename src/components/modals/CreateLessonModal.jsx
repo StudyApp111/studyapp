@@ -409,17 +409,15 @@ Constraints:
 
       console.log("CreateLessonModal: Lesson created successfully with ID:", lesson.id);
       
-      // Close modal
+      // Close modal first
       onOpenChange(false);
       
-      // Navigate using React Router's object format for reliable query params
-      setTimeout(() => {
-        console.log("CreateLessonModal: Navigating to DocumentViewer with lesson ID:", lesson.id);
-        navigate({
-          pathname: createPageUrl("DocumentViewer"),
-          search: `?id=${lesson.id}&generating=true`
-        });
-      }, 150);
+      // Navigate immediately with proper URL construction
+      const documentViewerUrl = `${createPageUrl("DocumentViewer")}?id=${lesson.id}&generating=true`;
+      console.log("CreateLessonModal: Navigating to:", documentViewerUrl);
+      
+      // Use direct URL string for most reliable navigation
+      navigate(documentViewerUrl);
 
       // Background: Save curriculum map and update lesson (non-blocking)
       base44.entities.CurriculumMap.create({

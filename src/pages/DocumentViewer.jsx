@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/component
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("exam");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -178,23 +179,19 @@ export default function DocumentViewer() {
 
   const loadLesson = async () => {
     try {
-      // Wait a moment for React Router to fully mount with URL params
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
-      const urlParams = new URLSearchParams(window.location.search);
-      const lessonId = urlParams.get('id') || urlParams.get('lessonId');
+      // Use useSearchParams hook for most reliable param reading
+      const lessonId = searchParams.get('id') || searchParams.get('lessonId');
 
       console.log("DocumentViewer: Full URL:", window.location.href);
-      console.log("DocumentViewer: Search params:", window.location.search);
-      console.log("DocumentViewer: URL params object:", Object.fromEntries(urlParams.entries()));
-      console.log("DocumentViewer: Extracted lesson ID:", lessonId);
+      console.log("DocumentViewer: Search params from hook:", lessonId);
+      console.log("DocumentViewer: All search params:", Object.fromEntries(searchParams.entries()));
 
       if (!lessonId || lessonId === 'null' || lessonId === 'undefined') {
-        console.error("DocumentViewer: Invalid or missing lessonId in URL");
-        console.error("DocumentViewer: This usually means navigation didn't preserve query params");
+        console.error("DocumentViewer: Invalid or missing lessonId");
+        console.error("DocumentViewer: URL:", window.location.href);
         setLoading(false);
-        alert("Unable to load lesson. Missing lesson ID in URL. Redirecting to home...");
-        setTimeout(() => navigate(createPageUrl("Home")), 1000);
+        // Don't show alert in iframe to prevent crashes
+        navigate(createPageUrl("Home"), { replace: true });
         return;
       }
 
@@ -204,7 +201,7 @@ export default function DocumentViewer() {
       if (!lessons || lessons.length === 0) {
         console.error("DocumentViewer: No lesson found with ID:", lessonId);
         setLoading(false);
-        setTimeout(() => navigate(createPageUrl("Home")), 100);
+        navigate(createPageUrl("Home"), { replace: true });
         return;
       }
 
@@ -212,7 +209,7 @@ export default function DocumentViewer() {
       if (!lessonData || !lessonData.id) {
         console.error("DocumentViewer: Invalid lesson data");
         setLoading(false);
-        setTimeout(() => navigate(createPageUrl("Home")), 100);
+        navigate(createPageUrl("Home"), { replace: true });
         return;
       }
       
@@ -263,9 +260,8 @@ export default function DocumentViewer() {
       console.error("DocumentViewer: CRITICAL ERROR loading lesson:", error);
       console.error("DocumentViewer: Error details:", error.message, error.stack);
       setLoading(false);
-      // Show error and redirect to home
-      alert(`Failed to load lesson: ${error.message}. Redirecting to home...`);
-      setTimeout(() => navigate(createPageUrl("Home")), 1000);
+      // Redirect without alert to prevent crashes in iframe
+      navigate(createPageUrl("Home"), { replace: true });
     }
   };
 
