@@ -263,13 +263,13 @@ ${contentDescription}
 Generate exactly 10 adaptive, exam-authentic questions following the same format as worksheets.`;
 
       const { data: examData } = await retryOperation(
-        () => base44.functions.invoke('generateWorksheet', {
+        () => base44.functions.invoke('generateExam', {
           prompt: aiPrompt,
           response_json_schema: {
             type: "object",
             properties: {
-              worksheet_title: { type: "string" },
-              analysis_summary_for_worksheet_design: {
+              exam_title: { type: "string" },
+              analysis_summary_for_exam_design: {
                 type: "object",
                 properties: {
                   targeted_weak_competencies: { type: "array", items: { type: "string" } },
@@ -277,7 +277,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
                   focused_differentiating_competencies: { type: "array", items: { type: "string" } }
                 }
               },
-              worksheet_questions: {
+              exam_questions: {
                 type: "array",
                 items: {
                   type: "object",
@@ -301,13 +301,13 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
         2000
       );
 
-      // Guard against missing or invalid worksheet_questions
-      const worksheetQuestions = examData?.worksheet_questions || [];
-      if (!Array.isArray(worksheetQuestions) || worksheetQuestions.length === 0) {
+      // Guard against missing or invalid exam_questions
+      const examQuestions = examData?.exam_questions || [];
+      if (!Array.isArray(examQuestions) || examQuestions.length === 0) {
         throw new Error("Failed to generate exam questions. Please try again.");
       }
       
-      const questionsWithPlaceholder = worksheetQuestions.map(q => ({
+      const questionsWithPlaceholder = examQuestions.map(q => ({
         ...q,
         user_answer: ""
       }));
@@ -317,7 +317,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       if (existingExamId) {
         createdExam = await base44.entities.Exam.update(existingExamId, {
           questions: questionsWithPlaceholder,
-          analysis_summary: examData.analysis_summary_for_worksheet_design,
+          analysis_summary: examData.analysis_summary_for_exam_design,
           status: "in_progress"
         });
       } else {
@@ -325,7 +325,7 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           lesson_id: lesson.id,
           exam_number: examNumber,
           questions: questionsWithPlaceholder,
-          analysis_summary: examData.analysis_summary_for_worksheet_design,
+          analysis_summary: examData.analysis_summary_for_exam_design,
           status: "in_progress",
           completed: false,
           time_taken_seconds: 0,
