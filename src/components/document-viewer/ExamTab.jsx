@@ -249,23 +249,32 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         contentDescription = lesson.description || "N/A";
       }
 
-      const aiPrompt = `Context
-You are an expert assessment designer. Generate a 10-question predictive exam for ${lesson.course_name}, optimized to forecast exam performance and build an accurate learning baseline for this student.
+      // Compress curriculum context - only send key competencies, not full JSON
+      const curriculumContext = lesson.curriculum_map 
+        ? `Key Competencies: ${lesson.curriculum_map.core_competencies?.map(c => c.name).join(', ') || 'None'}
+Common Misconceptions: ${lesson.curriculum_map.common_misconceptions?.slice(0, 3).join('; ') || 'None'}`
+        : "No curriculum map available";
 
-The exam must be tightly grounded in the provided lesson content and curriculum map.
+      const aiPrompt = `Expert exam designer: create 10 questions for ${lesson.course_name}.
 
-Input Context
-Student Grade Level: ${learningProfile.grade || "N/A"}
-Course/Unit Name: ${lesson.course_name}
-School: ${learningProfile.school || "N/A"}
+Grade: ${learningProfile.grade || "N/A"}
+${curriculumContext}
 
-Curriculum Map (if available):
-${lesson.curriculum_map ? JSON.stringify(lesson.curriculum_map, null, 2) : "Not yet available - generate questions from content only"}
+Content Summary:
+${contentDescription.substring(0, 1500)}${contentDescription.length > 1500 ? '...' : ''}
 
-Lesson Content (notes, uploaded material, or student description):
-${contentDescription}
+Generate 10 questions (varied types: MCQ, Short Answer, T/F). Each question:
+- question_number (1-10)
+- question_type
+- difficulty_index (Moderate/Challenging/High Challenge)
+- question_text (clear, concise)
+- options (for MCQ: exactly 4)
+- correct_answer
+- explanation (brief)
+- assessed_competencies (list)
+- targeted_misconception
 
-Generate exactly 10 adaptive, exam-authentic questions following the same format as worksheets.`;
+Keep ALL text fields concise. Avoid verbose explanations.`;
 
       const { data: examData } = await retryOperation(
         () => base44.functions.invoke('generateExam', {
@@ -273,15 +282,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           response_json_schema: {
             type: "object",
             properties: {
-              exam_title: { type: "string" },
-              analysis_summary_for_exam_design: {
-                type: "object",
-                properties: {
-                  targeted_weak_competencies: { type: "array", items: { type: "string" } },
-                  key_gaps_or_misconceptions_addressed: { type: "array", items: { type: "string" } },
-                  focused_differentiating_competencies: { type: "array", items: { type: "string" } }
-                }
-              },
               exam_questions: {
                 type: "array",
                 items: {
@@ -322,7 +322,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
       if (existingExamId) {
         createdExam = await base44.entities.Exam.update(existingExamId, {
           questions: questionsWithPlaceholder,
-          analysis_summary: examData.analysis_summary_for_exam_design,
           status: "in_progress"
         });
       } else {
@@ -330,7 +329,6 @@ Generate exactly 10 adaptive, exam-authentic questions following the same format
           lesson_id: lesson.id,
           exam_number: examNumber,
           questions: questionsWithPlaceholder,
-          analysis_summary: examData.analysis_summary_for_exam_design,
           status: "in_progress",
           completed: false,
           time_taken_seconds: 0,
