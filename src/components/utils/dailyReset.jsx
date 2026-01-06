@@ -25,6 +25,12 @@ export const isYesterday = (dateStr) => {
  */
 export const handleDailyReset = async () => {
   try {
+    // Check authentication first
+    const isAuth = await base44.auth.isAuthenticated();
+    if (!isAuth) {
+      return { user: null, resetOccurred: false, error: 'Not authenticated' };
+    }
+    
     const user = await base44.auth.me();
     if (!user) return { user: null, resetOccurred: false };
     
@@ -94,6 +100,10 @@ export const handleDailyReset = async () => {
  */
 export const recordDailyActivity = async (activityType, amount = 1) => {
   try {
+    // Check authentication first
+    const isAuth = await base44.auth.isAuthenticated();
+    if (!isAuth) return;
+    
     const user = await base44.auth.me();
     if (!user) return;
     
@@ -144,6 +154,10 @@ export const recordDailyActivity = async (activityType, amount = 1) => {
  */
 export const awardDailyXP = async (amount, reason = '') => {
   try {
+    // Check authentication first
+    const isAuth = await base44.auth.isAuthenticated();
+    if (!isAuth) return { success: false };
+    
     const user = await base44.auth.me();
     if (!user) return { success: false };
     
