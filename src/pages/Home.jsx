@@ -79,12 +79,18 @@ export default function Home() {
     queryKey: ['lessons'],
     queryFn: () => base44.entities.Lesson.list('-created_date', 100),
     initialData: [],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: gradedAssignments = [], isLoading: assignmentsLoading } = useQuery({
     queryKey: ['gradedAssignments'],
     queryFn: () => base44.entities.GradedAssignment.list('-created_date', 100),
     initialData: [],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const isLoading = lessonsLoading || assignmentsLoading;
@@ -102,6 +108,9 @@ export default function Home() {
     queryKey: ['exams'],
     queryFn: () => base44.entities.Exam.list('-created_date'),
     initialData: [],
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Group exams by lesson

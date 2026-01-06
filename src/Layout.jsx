@@ -74,12 +74,7 @@ export default function Layout({ children, currentPageName }) {
 
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
-  // Fetch recent lessons for sidebar
-  const { data: recentLessons = [] } = useQuery({
-    queryKey: ['recentLessons'],
-    queryFn: () => base44.entities.Lesson.list('-created_date', 2),
-    initialData: [],
-  });
+
 
   React.useEffect(() => {
     const checkUser = async () => {
