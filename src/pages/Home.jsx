@@ -31,6 +31,13 @@ export default function Home() {
     useEffect(() => {
       const checkOnboarding = async () => {
         try {
+          // Check if authenticated first
+          const isAuth = await base44.auth.isAuthenticated();
+          if (!isAuth) {
+            base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+            return;
+          }
+
           // Handle daily reset using centralized utility
           const resetResult = await handleDailyReset();
           const currentUser = resetResult.user || await base44.auth.me();

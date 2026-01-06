@@ -84,6 +84,14 @@ export default function Layout({ children, currentPageName }) {
   React.useEffect(() => {
     const checkUser = async () => {
       try {
+        // Check if user is authenticated first
+        const isAuth = await base44.auth.isAuthenticated();
+        if (!isAuth) {
+          // Redirect to login if not authenticated
+          base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+          return;
+        }
+        
         const currentUser = await base44.auth.me();
         setUser(currentUser);
         
@@ -101,6 +109,8 @@ export default function Layout({ children, currentPageName }) {
         return cleanup;
       } catch (error) {
         console.error("Error fetching user:", error);
+        // If authentication fails, redirect to login
+        base44.auth.redirectToLogin(window.location.pathname + window.location.search);
       }
     };
     
