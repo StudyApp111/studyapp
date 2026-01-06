@@ -76,10 +76,26 @@ export default function DocumentViewer() {
 
 
 
+  // Prevent multiple loads - store lesson ID immediately on mount
+  const hasLoadedRef = useRef(false);
+  const lessonIdRef = useRef(null);
+
   useEffect(() => {
+    // Only load once, ever
+    if (hasLoadedRef.current) return;
+    
+    hasLoadedRef.current = true;
+    
+    // Capture lesson ID IMMEDIATELY before platform can strip it
+    const capturedId = searchParams.get('id') || searchParams.get('lessonId');
+    if (capturedId) {
+      lessonIdRef.current = capturedId;
+      sessionStorage.setItem('lastCreatedLessonId', capturedId);
+    }
+    
     loadLesson();
     loadUserStats();
-  }, []); // Only load once on mount - window.location.search as dependency causes infinite loops
+  }, []); // Only on mount
 
   const loadUserStats = async () => {
     try {
@@ -188,28 +204,29 @@ export default function DocumentViewer() {
       log("🚀 DocumentViewer loadLesson START");
       log(`📍 Full URL: ${window.location.href}`);
       
-      // Use useSearchParams hook for most reliable param reading
-      const lessonId = searchParams.get('id') || searchParams.get('lessonId');
+      // Priority order: ref (captured on mount) > searchParams > sessionStorage
+      let finalLessonId = lessonIdRef.current;
       
-      log(`🔍 lessonId from searchParams: ${lessonId}`);
-      log(`🔍 All searchParams: ${JSON.stringify(Object.fromEntries(searchParams.entries()))}`);
+      if (!finalLessonId) {
+        finalLessonId = searchParams.get('id') || searchParams.get('lessonId');
+        log(`🔍 lessonId from searchParams: ${finalLessonId}`);
+      } else {
+        log(`🔍 lessonId from ref (captured on mount): ${finalLessonId}`);
+      }
       
-      // Fallback to sessionStorage
-      const fallbackId = sessionStorage.getItem('lastCreatedLessonId');
-      log(`💾 Fallback ID from sessionStorage: ${fallbackId}`);
+      if (!finalLessonId) {
+        const fallbackId = sessionStorage.getItem('lastCreatedLessonId');
+        log(`💾 Fallback ID from sessionStorage: ${fallbackId}`);
+        finalLessonId = fallbackId;
+      }
       
-      const finalLessonId = lessonId || fallbackId;
       log(`✅ Final lesson ID to use: ${finalLessonId}`);
 
       if (!finalLessonId || finalLessonId === 'null' || finalLessonId === 'undefined') {
-        log("❌ CRITICAL: No valid lesson ID found");
+        log("❌ CRITICAL: No valid lesson ID found - this should never happen");
         log(`❌ URL: ${window.location.href}`);
-        log(`❌ searchParams: ${searchParams.toString()}`);
         setLoading(false);
-        setTimeout(() => {
-          log("⚠️ Redirecting to Home due to missing ID");
-          navigate(createPageUrl("Home"), { replace: true });
-        }, 2000);
+        // No redirect - just show error state
         return;
       }
 
@@ -221,10 +238,7 @@ export default function DocumentViewer() {
       if (!lessons || lessons.length === 0) {
         log(`❌ No lesson found with ID: ${finalLessonId}`);
         setLoading(false);
-        setTimeout(() => {
-          log("⚠️ Redirecting to Home - no lesson found");
-          navigate(createPageUrl("Home"), { replace: true });
-        }, 2000);
+        // Don't redirect - show error state
         return;
       }
 
@@ -234,10 +248,7 @@ export default function DocumentViewer() {
       if (!lessonData || !lessonData.id) {
         log("❌ Invalid lesson data structure");
         setLoading(false);
-        setTimeout(() => {
-          log("⚠️ Redirecting to Home - invalid data");
-          navigate(createPageUrl("Home"), { replace: true });
-        }, 2000);
+        // Don't redirect - show error state
         return;
       }
       
@@ -292,10 +303,7 @@ export default function DocumentViewer() {
       console.error("DocumentViewer: CRITICAL ERROR loading lesson:", error);
       console.error("DocumentViewer: Error details:", error.message, error.stack);
       setLoading(false);
-      setTimeout(() => {
-        log("⚠️ Redirecting to Home due to error");
-        navigate(createPageUrl("Home"), { replace: true });
-      }, 2000);
+      // Don't redirect - show error state
     }
   };
 
@@ -319,19 +327,46 @@ export default function DocumentViewer() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
-        <div className="text-center">
+        <div className="text-center max-w-4xl w-full">
           <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
           <p className="text-sm text-slate-600">Loading lesson...</p>
           
-          {/* Debug overlay */}
-          {debugLogs.length > 0 && (
-            <div className="mt-6 max-w-2xl mx-auto bg-slate-900 text-green-400 p-4 rounded-lg text-left overflow-auto max-h-96 text-xs font-mono">
-              <div className="font-bold text-white mb-2">🔍 Debug Logs:</div>
-              {debugLogs.map((log, i) => (
+          {/* Debug overlay - always visible during loading */}
+          <div className="mt-6 mx-auto bg-slate-900 text-green-400 p-4 rounded-lg text-left overflow-auto max-h-[70vh] text-xs font-mono w-full">
+            <div className="font-bold text-white mb-2">🔍 Debug Logs:</div>
+            {debugLogs.length > 0 ? (
+              debugLogs.map((log, i) => (
                 <div key={i} className="mb-1">{log}</div>
-              ))}
-            </div>
-          )}
+              ))
+            ) : (
+              <div className="text-yellow-400">Waiting for logs...</div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error state if lesson failed to load
+  if (!lesson) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
+        <div className="text-center max-w-4xl w-full">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Unable to Load Lesson</h2>
+          <p className="text-slate-600 mb-6">The lesson could not be found or there was an error loading it.</p>
+          
+          {/* Debug overlay for errors */}
+          <div className="mx-auto bg-slate-900 text-green-400 p-4 rounded-lg text-left overflow-auto max-h-[60vh] text-xs font-mono w-full mb-4">
+            <div className="font-bold text-white mb-2">🔍 Debug Logs:</div>
+            {debugLogs.map((log, i) => (
+              <div key={i} className="mb-1">{log}</div>
+            ))}
+          </div>
+          
+          <Button onClick={() => navigate(createPageUrl("Home"))}>
+            Go Back Home
+          </Button>
         </div>
       </div>
     );
