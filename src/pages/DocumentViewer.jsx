@@ -24,6 +24,7 @@ export default function DocumentViewer() {
   const [activeTab, setActiveTab] = useState("exam");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [debugLogs, setDebugLogs] = useState([]);
   const [exams, setExams] = useState([]);
   const [extractedContent, setExtractedContent] = useState("");
   const [studyTime, setStudyTime] = useState(null);
@@ -178,42 +179,70 @@ export default function DocumentViewer() {
   };
 
   const loadLesson = async () => {
+    const log = (msg) => {
+      console.log(msg);
+      setDebugLogs(prev => [...prev, `${new Date().toISOString().split('T')[1].split('.')[0]} - ${msg}`]);
+    };
+    
     try {
+      log("🚀 DocumentViewer loadLesson START");
+      log(`📍 Full URL: ${window.location.href}`);
+      
       // Use useSearchParams hook for most reliable param reading
       const lessonId = searchParams.get('id') || searchParams.get('lessonId');
+      
+      log(`🔍 lessonId from searchParams: ${lessonId}`);
+      log(`🔍 All searchParams: ${JSON.stringify(Object.fromEntries(searchParams.entries()))}`);
+      
+      // Fallback to sessionStorage
+      const fallbackId = sessionStorage.getItem('lastCreatedLessonId');
+      log(`💾 Fallback ID from sessionStorage: ${fallbackId}`);
+      
+      const finalLessonId = lessonId || fallbackId;
+      log(`✅ Final lesson ID to use: ${finalLessonId}`);
 
-      console.log("DocumentViewer: Full URL:", window.location.href);
-      console.log("DocumentViewer: Search params from hook:", lessonId);
-      console.log("DocumentViewer: All search params:", Object.fromEntries(searchParams.entries()));
-
-      if (!lessonId || lessonId === 'null' || lessonId === 'undefined') {
-        console.error("DocumentViewer: Invalid or missing lessonId");
-        console.error("DocumentViewer: URL:", window.location.href);
+      if (!finalLessonId || finalLessonId === 'null' || finalLessonId === 'undefined') {
+        log("❌ CRITICAL: No valid lesson ID found");
+        log(`❌ URL: ${window.location.href}`);
+        log(`❌ searchParams: ${searchParams.toString()}`);
         setLoading(false);
-        // Don't show alert in iframe to prevent crashes
-        navigate(createPageUrl("Home"), { replace: true });
+        setTimeout(() => {
+          log("⚠️ Redirecting to Home due to missing ID");
+          navigate(createPageUrl("Home"), { replace: true });
+        }, 2000);
         return;
       }
 
-      const lessons = await base44.entities.Lesson.filter({ id: lessonId });
-      console.log("DocumentViewer: Fetched lessons:", lessons);
+      log(`🔎 Querying database for lesson ID: ${finalLessonId}`);
+      const lessons = await base44.entities.Lesson.filter({ id: finalLessonId });
+      log(`📦 Query result: ${lessons ? lessons.length : 0} lessons found`);
+      log(`📦 Lessons data: ${JSON.stringify(lessons)}`);
       
       if (!lessons || lessons.length === 0) {
-        console.error("DocumentViewer: No lesson found with ID:", lessonId);
+        log(`❌ No lesson found with ID: ${finalLessonId}`);
         setLoading(false);
-        navigate(createPageUrl("Home"), { replace: true });
+        setTimeout(() => {
+          log("⚠️ Redirecting to Home - no lesson found");
+          navigate(createPageUrl("Home"), { replace: true });
+        }, 2000);
         return;
       }
 
       const lessonData = lessons[0];
+      log(`📄 Lesson data received: ${JSON.stringify(lessonData)}`);
+      
       if (!lessonData || !lessonData.id) {
-        console.error("DocumentViewer: Invalid lesson data");
+        log("❌ Invalid lesson data structure");
         setLoading(false);
-        navigate(createPageUrl("Home"), { replace: true });
+        setTimeout(() => {
+          log("⚠️ Redirecting to Home - invalid data");
+          navigate(createPageUrl("Home"), { replace: true });
+        }, 2000);
         return;
       }
       
-      console.log("DocumentViewer: Lesson loaded successfully:", lessonData.course_name);
+      log(`✅ Lesson loaded: ${lessonData.course_name}`);
+      log(`✅ Setting lesson state...`);
       setLesson(lessonData);
       
       // Initialize study time from saved lesson data
@@ -254,14 +283,19 @@ export default function DocumentViewer() {
         setPredictedGrade(examWithGrade.predicted_grade);
       }
 
-      console.log("DocumentViewer: Lesson loaded completely, setting loading=false");
+      log("✅ Lesson loaded completely, setting loading=false");
       setLoading(false);
+      log("🎉 DocumentViewer loadLesson COMPLETE");
     } catch (error) {
+      log(`❌ CRITICAL ERROR: ${error.message}`);
+      log(`❌ Stack: ${error.stack}`);
       console.error("DocumentViewer: CRITICAL ERROR loading lesson:", error);
       console.error("DocumentViewer: Error details:", error.message, error.stack);
       setLoading(false);
-      // Redirect without alert to prevent crashes in iframe
-      navigate(createPageUrl("Home"), { replace: true });
+      setTimeout(() => {
+        log("⚠️ Redirecting to Home due to error");
+        navigate(createPageUrl("Home"), { replace: true });
+      }, 2000);
     }
   };
 
@@ -284,8 +318,21 @@ export default function DocumentViewer() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
+          <p className="text-sm text-slate-600">Loading lesson...</p>
+          
+          {/* Debug overlay */}
+          {debugLogs.length > 0 && (
+            <div className="mt-6 max-w-2xl mx-auto bg-slate-900 text-green-400 p-4 rounded-lg text-left overflow-auto max-h-96 text-xs font-mono">
+              <div className="font-bold text-white mb-2">🔍 Debug Logs:</div>
+              {debugLogs.map((log, i) => (
+                <div key={i} className="mb-1">{log}</div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
