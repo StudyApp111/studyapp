@@ -403,17 +403,23 @@ Constraints:
 
       const lesson = await base44.entities.Lesson.create(lessonData);
 
-      console.log("CreateLessonModal: Lesson created with ID:", lesson.id);
+      if (!lesson || !lesson.id) {
+        throw new Error("Failed to create lesson - no ID returned");
+      }
+
+      console.log("CreateLessonModal: Lesson created successfully with ID:", lesson.id);
       
-      // Navigate immediately - curriculum mapping and exam generation happen in background
+      // Close modal
       onOpenChange(false);
       
-      // Use setTimeout to ensure modal closes before navigation
+      // Navigate using React Router's object format for reliable query params
       setTimeout(() => {
-        const targetUrl = createPageUrl("DocumentViewer") + `?id=${lesson.id}&generating=true`;
-        console.log("CreateLessonModal: Navigating to:", targetUrl);
-        navigate(targetUrl);
-      }, 100);
+        console.log("CreateLessonModal: Navigating to DocumentViewer with lesson ID:", lesson.id);
+        navigate({
+          pathname: createPageUrl("DocumentViewer"),
+          search: `?id=${lesson.id}&generating=true`
+        });
+      }, 150);
 
       // Background: Save curriculum map and update lesson (non-blocking)
       base44.entities.CurriculumMap.create({

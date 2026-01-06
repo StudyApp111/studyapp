@@ -178,17 +178,23 @@ export default function DocumentViewer() {
 
   const loadLesson = async () => {
     try {
+      // Wait a moment for React Router to fully mount with URL params
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
       const urlParams = new URLSearchParams(window.location.search);
       const lessonId = urlParams.get('id') || urlParams.get('lessonId');
 
       console.log("DocumentViewer: Full URL:", window.location.href);
       console.log("DocumentViewer: Search params:", window.location.search);
-      console.log("DocumentViewer: Loading lesson with ID:", lessonId);
+      console.log("DocumentViewer: URL params object:", Object.fromEntries(urlParams.entries()));
+      console.log("DocumentViewer: Extracted lesson ID:", lessonId);
 
-      if (!lessonId) {
-        console.error("DocumentViewer: No lessonId in URL - redirecting to Home");
+      if (!lessonId || lessonId === 'null' || lessonId === 'undefined') {
+        console.error("DocumentViewer: Invalid or missing lessonId in URL");
+        console.error("DocumentViewer: This usually means navigation didn't preserve query params");
         setLoading(false);
-        setTimeout(() => navigate(createPageUrl("Home")), 100);
+        alert("Unable to load lesson. Missing lesson ID in URL. Redirecting to home...");
+        setTimeout(() => navigate(createPageUrl("Home")), 1000);
         return;
       }
 
