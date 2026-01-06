@@ -23,6 +23,8 @@ export default function DocumentViewer() {
   const [activeTab, setActiveTab] = useState("exam");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const lessonIdRef = useRef(null);
   const [exams, setExams] = useState([]);
   const [extractedContent, setExtractedContent] = useState("");
   const [studyTime, setStudyTime] = useState(null);
@@ -73,6 +75,18 @@ export default function DocumentViewer() {
   }, []);
 
 
+
+  // Capture lesson ID IMMEDIATELY on first render before platform can strip it
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const capturedId = urlParams.get('id') || urlParams.get('lessonId');
+    
+    if (capturedId && capturedId !== 'null' && capturedId !== 'undefined') {
+      lessonIdRef.current = capturedId;
+      sessionStorage.setItem('currentLessonId', capturedId);
+      console.log("✅ Captured lesson ID on mount:", capturedId);
+    }
+  }, []);
 
   useEffect(() => {
     loadLesson();
@@ -265,6 +279,21 @@ export default function DocumentViewer() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
         <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+      </div>
+    );
+  }
+
+  if (error || !lesson) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Unable to Load Lesson</h2>
+          <p className="text-slate-600 mb-4">{error || "Lesson not found"}</p>
+          <Button onClick={() => navigate(createPageUrl("Home"))}>
+            Go Back Home
+          </Button>
+        </div>
       </div>
     );
   }

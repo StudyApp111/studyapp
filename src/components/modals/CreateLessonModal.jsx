@@ -407,6 +407,9 @@ Constraints:
         throw new Error("Failed to create lesson");
       }
       
+      // Store in sessionStorage before navigation
+      sessionStorage.setItem('currentLessonId', lesson.id);
+      
       onOpenChange(false);
       
       navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&generating=true`);
