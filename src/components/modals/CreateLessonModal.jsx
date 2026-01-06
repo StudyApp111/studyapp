@@ -403,31 +403,13 @@ Constraints:
 
       const lesson = await base44.entities.Lesson.create(lessonData);
 
-      console.log("✅ LESSON CREATED:", JSON.stringify(lesson, null, 2));
-
       if (!lesson || !lesson.id) {
-        console.error("❌ LESSON CREATION FAILED - NO ID");
-        throw new Error("Failed to create lesson - no ID returned");
+        throw new Error("Failed to create lesson");
       }
-
-      console.log("✅ Lesson ID confirmed:", lesson.id);
-      console.log("✅ Lesson course_name:", lesson.course_name);
       
-      // Store lesson ID in sessionStorage as backup
-      sessionStorage.setItem('lastCreatedLessonId', lesson.id);
-      console.log("✅ Lesson ID saved to sessionStorage");
-      
-      // Close modal first
       onOpenChange(false);
       
-      // Navigate immediately with proper URL construction
-      const documentViewerUrl = `${createPageUrl("DocumentViewer")}?id=${lesson.id}&generating=true`;
-      console.log("🔗 Full navigation URL:", documentViewerUrl);
-      console.log("🔗 createPageUrl result:", createPageUrl("DocumentViewer"));
-      
-      // Use direct URL string for most reliable navigation
-      navigate(documentViewerUrl);
-      console.log("✅ Navigate called");
+      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&generating=true`);
 
       // Background: Save curriculum map and update lesson (non-blocking)
       base44.entities.CurriculumMap.create({
