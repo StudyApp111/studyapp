@@ -386,7 +386,7 @@ export default function DocumentViewerTabs({ lesson }) {
             )}
             
             {/* Transcript View - Keep mounted, toggle visibility */}
-            <div className={`absolute inset-0 h-full flex ${viewMode === "transcript" ? "block" : "hidden"}`}>
+            <div className={`absolute inset-0 h-full ${viewMode === "transcript" ? "flex" : "hidden"}`}>
               <div 
                 ref={contentRef}
                 className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
@@ -401,69 +401,69 @@ export default function DocumentViewerTabs({ lesson }) {
               </div>
               
               {activeAnnotation && (
-                  <div className="hidden md:block w-1/3 border-l border-purple-200 bg-white p-4 overflow-auto">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-sm text-slate-900">Annotation</h3>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setActiveAnnotation(null)}
-                          className="h-6 w-6 p-0"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      
-                      <div 
-                        className="p-2 rounded-lg text-xs"
-                        style={{ 
-                          backgroundColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.bg,
-                          borderColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.border,
-                          borderWidth: 1
-                        }}
+                <div className="hidden md:block w-1/3 border-l border-purple-200 bg-white p-4 overflow-auto">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-sm text-slate-900">Annotation</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setActiveAnnotation(null)}
+                        className="h-6 w-6 p-0"
                       >
-                        "{activeAnnotation.highlight_text.substring(0, 200)}{activeAnnotation.highlight_text.length > 200 ? '...' : ''}"
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    
+                    <div 
+                      className="p-2 rounded-lg text-xs"
+                      style={{ 
+                        backgroundColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.bg,
+                        borderColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.border,
+                        borderWidth: 1
+                      }}
+                    >
+                      "{activeAnnotation.highlight_text.substring(0, 200)}{activeAnnotation.highlight_text.length > 200 ? '...' : ''}"
+                    </div>
+                    
+                    {activeAnnotation.note ? (
+                      <div className="bg-slate-50 p-2 rounded-lg">
+                        <p className="text-xs font-medium text-slate-600 mb-1">Note:</p>
+                        <p className="text-sm text-slate-700">{activeAnnotation.note}</p>
                       </div>
-                      
-                      {activeAnnotation.note ? (
-                        <div className="bg-slate-50 p-2 rounded-lg">
-                          <p className="text-xs font-medium text-slate-600 mb-1">Note:</p>
-                          <p className="text-sm text-slate-700">{activeAnnotation.note}</p>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-slate-400 italic">No note added</p>
-                      )}
-                      
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            window.dispatchEvent(new CustomEvent('askAIFromContext', { 
-                              detail: { initialPrompt: `Explain this: "${activeAnnotation.highlight_text}"` }
-                            }));
-                            toast.success("Sent to AI Tutor!");
-                          }}
-                          className="flex-1 text-xs h-8"
-                        >
-                          <Sparkles className="w-3 h-3 mr-1" />
-                          Ask AI
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteAnnotation(activeAnnotation.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No note added</p>
+                    )}
+                    
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent('askAIFromContext', { 
+                            detail: { initialPrompt: `Explain this: "${activeAnnotation.highlight_text}"` }
+                          }));
+                          toast.success("Sent to AI Tutor!");
+                        }}
+                        className="flex-1 text-xs h-8"
+                      >
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        Ask AI
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteAnnotation(activeAnnotation.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
+          </div>
           </div>
         </div>
       </Card>
