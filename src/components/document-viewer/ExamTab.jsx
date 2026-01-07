@@ -81,7 +81,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   }, [lesson?.id, exams]);
 
   useEffect(() => {
-    if (lesson?.id && selectedExamNumber) {
+    if (lesson?.id && selectedExamNumber && !isGenerating) {
       loadOrGenerateExam(selectedExamNumber);
     }
   }, [lesson?.id, selectedExamNumber]);
@@ -203,7 +203,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     // Prevent duplicate generation attempts using ref
     const generationKey = `${lesson.id}-${examNumber}`;
     if (generationTriggeredRef.current.has(generationKey)) {
-      console.log("⏭️ Generation already triggered for", generationKey);
+      console.log("⏭️ Generation already in progress for", generationKey);
       return;
     }
 
@@ -221,52 +221,48 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           return;
         }
 
-        // Check if generation is in progress or needed
-        if (loadedExam.status === 'generating' || (!loadedExam.questions || loadedExam.questions.length === 0)) {
+        // Check if generation is needed
+        if (!loadedExam.questions || loadedExam.questions.length === 0) {
+          // Mark as triggered BEFORE starting async operation
+          generationTriggeredRef.current.add(generationKey);
           setIsGenerating(true);
 
-          // Mark as triggered to prevent duplicates
-          generationTriggeredRef.current.add(generationKey);
-
-          // If no questions, start generation
-          if (!loadedExam.questions || loadedExam.questions.length === 0) {
+          try {
             await generateExam(loadedExam.id, examNumber);
+            // Reload the exam after generation
+            const updatedExams = await base44.entities.Exam.filter({ id: loadedExam.id });
+            if (updatedExams[0]) {
+              setExam(updatedExams[0]);
+            }
+          } finally {
             setIsGenerating(false);
-          } else {
-            // Poll for completion every 3 seconds (reduced from 2s)
-            const pollInterval = setInterval(async () => {
-              const updated = await base44.entities.Exam.filter({ id: loadedExam.id });
-              if (updated[0]?.questions?.length > 0) {
-                clearInterval(pollInterval);
-                setExam(updated[0]);
-                setIsGenerating(false);
-              }
-            }, 3000);
-
-            // Stop polling after 60 seconds
-            setTimeout(() => {
-              clearInterval(pollInterval);
-              setIsGenerating(false);
-            }, 60000);
+            generationTriggeredRef.current.delete(generationKey);
           }
           return;
         } else {
           // Load existing in-progress exam and restore question position
           setExam(loadedExam);
-          // Find the first unanswered question to resume from
           const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer || q.user_answer.trim() === "");
           if (firstUnanswered >= 0) {
             setCurrentQuestion(firstUnanswered);
           } else {
-            // All answered, go to last question
             setCurrentQuestion(loadedExam.questions.length - 1);
           }
         }
       } else {
-        setIsGenerating(true);
+        // Mark as triggered BEFORE starting async operation
         generationTriggeredRef.current.add(generationKey);
-        await generateExam(null, examNumber);
-        setIsGenerating(false);
+        setIsGenerating(true);
+
+        try {
+          const createdExam = await generateExam(null, examNumber);
+          if (createdExam) {
+            setExam(createdExam);
+          }
+        } finally {
+          setIsGenerating(false);
+          generationTriggeredRef.current.delete(generationKey);
+        }
       }
     } catch (error) {
       console.error("Error loading exam:", error);
@@ -503,8 +499,8 @@ No extra text.`;
       }
 
       console.log("✅ Exam saved successfully:", createdExam.id);
-      setExam(createdExam);
-    } catch (error) {
+      return createdExam;
+      } catch (error) {
       console.error("❌ Error in generateExam:", error);
       console.error("❌ Error stack:", error.stack);
       await logError('exam_generation', error, { 
@@ -513,8 +509,9 @@ No extra text.`;
         examNumber,
         contentLength: lesson?.extracted_content?.length || 0
       });
-    }
-  };
+      return null;
+      }
+      };
 
   const isSubjectiveQuestion = (questionType) => {
     const type = questionType.toLowerCase();
