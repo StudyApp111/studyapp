@@ -411,8 +411,8 @@ Constraints:
       sessionStorage.setItem('currentLessonId', lesson.id);
       
       onOpenChange(false);
-      
-      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&generating=true`);
+
+      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
 
       // Background: Save curriculum map and update lesson (non-blocking)
       base44.entities.CurriculumMap.create({

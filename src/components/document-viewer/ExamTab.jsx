@@ -52,19 +52,15 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
 
-  // Auto-generate Exam 1 when tab loads (or URL has generating=true)
+  // Don't auto-generate - let users start exams manually
   useEffect(() => {
+    // Only auto-select if there's an in-progress exam
     if (lesson && !selectedExamNumber) {
       const allExamsForLesson = exams || [];
-      const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
+      const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
       
-      // Check if this is a fresh lesson upload (generating=true in URL)
-      const urlParams = new URLSearchParams(window.location.search);
-      const isGeneratingNew = urlParams.get('generating') === 'true';
-      
-      // If no Exam 1 exists or it's not completed, auto-start it
-      if (!exam1 || !exam1.completed || isGeneratingNew) {
-        setSelectedExamNumber(1);
+      if (inProgressExam) {
+        setSelectedExamNumber(inProgressExam.exam_number);
       }
     }
   }, [lesson?.id, exams]);

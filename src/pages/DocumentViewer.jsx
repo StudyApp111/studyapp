@@ -58,8 +58,11 @@ export default function DocumentViewer() {
     const tabParam = urlParams.get('tab');
     if (tabParam) {
       setActiveTab(tabParam);
+    } else if (hasDocument) {
+      // Default to doc tab if document exists
+      setActiveTab('doc');
     }
-  }, []);
+  }, [hasDocument]);
 
   useEffect(() => {
     const handleSwitchToGrade = () => setActiveTab('grade');
