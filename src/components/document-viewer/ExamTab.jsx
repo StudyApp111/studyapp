@@ -76,7 +76,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   }, [lesson?.id, exams]);
 
   useEffect(() => {
-    if (lesson && selectedExamNumber) {
+    if (lesson?.id && selectedExamNumber) {
       loadOrGenerateExam(selectedExamNumber);
     }
   }, [lesson?.id, selectedExamNumber]);
@@ -209,19 +209,41 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           return;
         }
         
-        // Check if generation is needed (only if not already triggered)
+        // Check if generation is needed
         if (!loadedExam.questions || loadedExam.questions.length === 0) {
           const examKey = `${lesson.id}-${examNumber}`;
-          if (!generationTriggeredRef.current.has(examKey)) {
-            console.log("🔄 Exam has no questions, starting generation...");
-            generationTriggeredRef.current.add(examKey);
+          
+          // Prevent duplicate generation
+          if (generationTriggeredRef.current.has(examKey)) {
+            console.log("⏳ Generation already triggered, polling for completion...");
             setIsGenerating(true);
-            await generateExam(loadedExam.id, examNumber);
-            setIsGenerating(false);
-          } else {
-            console.log("⏳ Generation already in progress, waiting...");
-            setIsGenerating(true);
+            
+            // Poll for completion every 2 seconds
+            const pollInterval = setInterval(async () => {
+              const updated = await base44.entities.Exam.filter({ id: loadedExam.id });
+              if (updated[0]?.questions?.length > 0) {
+                clearInterval(pollInterval);
+                setExam(updated[0]);
+                setIsGenerating(false);
+              }
+            }, 2000);
+            
+            // Stop polling after 60 seconds
+            setTimeout(() => clearInterval(pollInterval), 60000);
+            return;
           }
+          
+          console.log("🔄 Starting exam generation...");
+          generationTriggeredRef.current.add(examKey);
+          setIsGenerating(true);
+          await generateExam(loadedExam.id, examNumber);
+          
+          // Reload exam after generation
+          const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+          if (refreshed[0]) {
+            setExam(refreshed[0]);
+          }
+          setIsGenerating(false);
         } else {
           // Load existing in-progress exam and restore question position
           setExam(loadedExam);
