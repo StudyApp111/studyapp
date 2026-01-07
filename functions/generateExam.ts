@@ -105,6 +105,35 @@ Deno.serve(async (req) => {
             console.log('✅ JSON parsed successfully');
             console.log('📊 Questions generated:', parsedResponse.exam_questions?.length || 0);
             
+            // Validate question formats
+            if (parsedResponse.exam_questions) {
+                parsedResponse.exam_questions = parsedResponse.exam_questions.map((q, idx) => {
+                    const type = q.question_type?.toLowerCase() || '';
+                    
+                    if (type.includes('multiple choice') || type.includes('mcq')) {
+                        if (!q.options || q.options.length !== 4) {
+                            console.warn(`⚠️ Q${idx + 1}: MCQ should have exactly 4 options, got ${q.options?.length || 0}`);
+                        }
+                    } else if (type.includes('true') && type.includes('false')) {
+                        if (!q.options || q.options.length !== 2 || !q.options.includes('True') || !q.options.includes('False')) {
+                            console.warn(`⚠️ Q${idx + 1}: T/F should have ["True", "False"], got`, q.options);
+                        }
+                    } else if (type.includes('fill') || type.includes('blank')) {
+                        if (q.options && q.options.length > 0) {
+                            console.warn(`⚠️ Q${idx + 1}: Fill in the Blank should have empty options, got ${q.options.length}`);
+                            q.options = [];
+                        }
+                    } else if (type.includes('short answer')) {
+                        if (q.options && q.options.length > 0) {
+                            console.warn(`⚠️ Q${idx + 1}: Short Answer should have empty options, got ${q.options.length}`);
+                            q.options = [];
+                        }
+                    }
+                    
+                    return q;
+                });
+            }
+            
             return Response.json(parsedResponse);
         } catch (parseError) {
             console.error('❌ JSON parse failed:', parseError.message);
