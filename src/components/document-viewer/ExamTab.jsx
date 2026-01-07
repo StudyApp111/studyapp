@@ -269,7 +269,7 @@ Ground content in the student’s materials and light web search when needed.
 Input Context
 
 Student Grade Level: ${learningProfile.grade || "N/A"}
-Course / Unit Name: ${lessonData.course_name}
+Course / Unit Name: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
 
 Content Summary:
