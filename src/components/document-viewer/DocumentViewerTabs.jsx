@@ -338,9 +338,10 @@ export default function DocumentViewerTabs({ lesson }) {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-hidden">
-            {viewMode === "pdf" && hasFile ? (
-              <div className="h-full bg-slate-50 relative">
+          <div className="flex-1 overflow-hidden relative">
+            {/* PDF View - Keep mounted, toggle visibility */}
+            {hasFile && (
+              <div className={`absolute inset-0 h-full bg-slate-50 ${viewMode === "pdf" ? "block" : "hidden"}`}>
                 {isPDF || isOfficeDoc ? (
                   <>
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10" id="pdf-loader">
@@ -382,24 +383,24 @@ export default function DocumentViewerTabs({ lesson }) {
                   </div>
                 )}
               </div>
-            ) : viewMode === "transcript" ? (
-              <div className="h-full flex">
-                {/* Main Content */}
+            )}
+            
+            {/* Transcript View - Keep mounted, toggle visibility */}
+            <div className={`absolute inset-0 h-full flex ${viewMode === "transcript" ? "block" : "hidden"}`}>
+              <div 
+                ref={contentRef}
+                className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
+                onMouseUp={handleTextSelection}
+              >
                 <div 
-                  ref={contentRef}
-                  className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
-                  onMouseUp={handleTextSelection}
+                  className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-none prose prose-sm"
+                  style={{ wordBreak: 'break-word' }}
                 >
-                  <div 
-                    className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-none prose prose-sm"
-                    style={{ wordBreak: 'break-word' }}
-                  >
-                    {renderHighlightedContent()}
-                  </div>
+                  {renderHighlightedContent()}
                 </div>
-                
-                {/* Active Annotation Panel */}
-                {activeAnnotation && (
+              </div>
+              
+              {activeAnnotation && (
                   <div className="hidden md:block w-1/3 border-l border-purple-200 bg-white p-4 overflow-auto">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -462,7 +463,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   </div>
                 )}
               </div>
-            ) : null}
+            </div>
           </div>
         </div>
       </Card>
