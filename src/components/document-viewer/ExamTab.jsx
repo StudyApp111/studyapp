@@ -52,7 +52,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
 
-  // Auto-select Exam 1 if it exists, or any in-progress exam
+  // Auto-select and auto-generate Exam 1
   useEffect(() => {
     if (lesson && !selectedExamNumber) {
       const allExamsForLesson = exams || [];
@@ -60,6 +60,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       // First priority: in-progress exam
       const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
       if (inProgressExam) {
+        console.log("📋 Auto-selecting in-progress exam:", inProgressExam.exam_number);
         setSelectedExamNumber(inProgressExam.exam_number);
         return;
       }
@@ -67,7 +68,16 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       // Second priority: Exam 1 if it exists
       const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
       if (exam1) {
+        console.log("📋 Auto-selecting Exam 1:", exam1.id);
         setSelectedExamNumber(1);
+        
+        // Auto-start generation if not yet generated and has no questions
+        if (!exam1.questions || exam1.questions.length === 0) {
+          console.log("🚀 Auto-starting Exam 1 generation...");
+          setTimeout(() => {
+            handleStartExam(exam1);
+          }, 500);
+        }
       }
     }
   }, [lesson?.id, exams]);
@@ -258,6 +268,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 Common Misconceptions: ${lesson.curriculum_map.common_misconceptions?.slice(0, 3).join('; ') || 'None'}`
         : "No curriculum map available";
 
+      console.log("🔨 Building AI prompt...");
+      
       const aiPrompt = `
 
 Context

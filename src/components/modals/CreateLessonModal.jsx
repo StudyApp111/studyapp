@@ -428,25 +428,16 @@ Constraints:
         curriculum_map: curriculumMap
       }).catch(err => console.error("Lesson curriculum update error:", err));
 
-      // Background: Auto-generate Exam 1 immediately (non-blocking)
-      (async () => {
-        try {
-          const exam1 = await base44.entities.Exam.create({
-            lesson_id: lesson.id,
-            exam_number: 1,
-            status: 'not_started'
-          });
-
-          // Trigger exam generation in background
-          await base44.functions.invoke('generateExam', {
-            exam_id: exam1.id,
-            lesson_id: lesson.id,
-            content: extractedContent // Use compressed content
-          });
-        } catch (err) {
-          console.error("Auto-generate Exam 1 error:", err);
-        }
-      })();
+      // Background: Create Exam 1 entity only - ExamTab will handle generation
+      base44.entities.Exam.create({
+        lesson_id: lesson.id,
+        exam_number: 1,
+        status: 'not_started'
+      }).then(exam1 => {
+        console.log("✅ Exam 1 entity created:", exam1.id);
+      }).catch(err => {
+        console.error("❌ Failed to create Exam 1 entity:", err);
+      });
     } catch (err) {
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
