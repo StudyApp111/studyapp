@@ -17,7 +17,9 @@ const HIGHLIGHT_COLORS = {
 };
 
 export default function DocumentViewerTabs({ lesson }) {
-  const [viewMode, setViewMode] = useState("pdf");
+  // Default to transcript if we have extracted content
+  const initialMode = lesson?.extracted_content ? "transcript" : "pdf";
+  const [viewMode, setViewMode] = useState(initialMode);
   const [searchQuery, setSearchQuery] = useState("");
   const [annotations, setAnnotations] = useState([]);
   const [selectedText, setSelectedText] = useState("");
@@ -36,6 +38,13 @@ export default function DocumentViewerTabs({ lesson }) {
       loadAnnotations();
     }
   }, [lesson?.id]);
+  
+  // Auto-switch to transcript when extracted content loads
+  useEffect(() => {
+    if (lesson?.extracted_content && !lesson?.file_url) {
+      setViewMode("transcript");
+    }
+  }, [lesson?.extracted_content, lesson?.file_url]);
 
   const loadAnnotations = async () => {
     try {
@@ -358,23 +367,7 @@ export default function DocumentViewerTabs({ lesson }) {
 
           {/* Content Area */}
           <div className="flex-1 overflow-hidden">
-            {/* Auto-show transcript if no file_url */}
-            {!lesson?.file_url && lesson?.extracted_content ? (
-              <div className="h-full flex">
-                <div 
-                  ref={contentRef}
-                  className="flex-1 overflow-auto p-4 bg-slate-50"
-                  onMouseUp={handleTextSelection}
-                >
-                  <div 
-                    className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-none prose prose-sm"
-                    style={{ wordBreak: 'break-word' }}
-                  >
-                    {renderHighlightedContent()}
-                  </div>
-                </div>
-              </div>
-            ) : viewMode === "pdf" && lesson?.file_url ? (
+            {viewMode === "pdf" && lesson?.file_url ? (
               <div className="h-full bg-slate-50 relative">
                 {isPDF || isOfficeDoc ? (
                   <>
