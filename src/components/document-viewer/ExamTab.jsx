@@ -297,7 +297,7 @@ Course / Unit Name: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
 
 Content Summary:
-${contentDescription.substring(0, 1500)}${contentDescription.length > 1500 ? '...' : ''}
+${contentDescription}
 
 ────────────────────────────────
 
