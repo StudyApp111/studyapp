@@ -258,7 +258,7 @@ Common Misconceptions: ${lesson.curriculum_map.common_misconceptions?.slice(0, 3
       const aiPrompt = `
 
 Context
-You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
+You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lesson.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
 
 This worksheet must stand alone.
 Do NOT rely on prior diagnostics.
