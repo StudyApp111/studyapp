@@ -398,9 +398,7 @@ For EACH question include:
 - correct_answer
 - explanation (2–3 sentences; instructional, not restated)
 - assessed_competencies (infer from content)
-- targeted_misconception (or null)
-
-Explain why the answer works and how students typically go wrong.
+- targeted_misconception
 
 ────────────────────────────────
 
