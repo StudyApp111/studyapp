@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
             generationConfig: {
                 temperature: 0.2,
                 topP: 0.95,
-                maxOutputTokens: 20000
+                maxOutputTokens: 60000
             },
             safetySettings: [
                 { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
