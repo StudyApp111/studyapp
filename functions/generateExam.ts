@@ -41,9 +41,9 @@ Deno.serve(async (req) => {
                 }]
             }],
             generationConfig: {
-                temperature: 0.2,
-                topP: 0.95,
-                maxOutputTokens: 16384
+                temperature: 0.1,
+                topP: 0.8,
+                maxOutputTokens: 8192
             },
             safetySettings: [
                 { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_LOW_AND_ABOVE" },
@@ -92,7 +92,12 @@ Deno.serve(async (req) => {
             }, { status: 500 });
         }
         
-        console.log('✅ Generated text extracted, length:', generatedText.length);
+        console.log('✅ Generated text extracted, length:', generatedText.length, 'characters');
+        
+        // Guard against oversized responses
+        if (generatedText.length > 50000) {
+            console.error('⚠️ WARNING: Response is extremely large (', generatedText.length, 'chars) - likely contains verbose explanations instead of following JSON schema');
+        }
 
         if (response_json_schema) {
             try {
