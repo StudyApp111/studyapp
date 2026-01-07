@@ -341,7 +341,7 @@ export default function DocumentViewerTabs({ lesson }) {
           <div className="flex-1 overflow-hidden relative">
             {/* PDF View - Keep mounted, toggle visibility */}
             {hasFile && (
-              <div className={`absolute inset-0 h-full bg-slate-50 ${viewMode === "pdf" ? "block" : "hidden"}`}>
+              <div className={`absolute inset-0 bg-slate-50 ${viewMode === "pdf" ? "block" : "hidden"}`}>
                 {isPDF || isOfficeDoc ? (
                   <>
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10" id="pdf-loader">
@@ -386,7 +386,7 @@ export default function DocumentViewerTabs({ lesson }) {
             )}
             
             {/* Transcript View - Keep mounted, toggle visibility */}
-            <div className={`absolute inset-0 h-full ${viewMode === "transcript" ? "flex" : "hidden"}`}>
+            <div className={`absolute inset-0 ${viewMode === "transcript" ? "flex" : "hidden"}`}>
               <div 
                 ref={contentRef}
                 className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
