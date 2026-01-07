@@ -211,24 +211,21 @@ export default function Layout({ children, currentPageName }) {
                 const isLessonHistory = item.title === "Lesson History";
 
                 return (
-                  <React.Fragment key={item.title}>
-                    <Link
-                      to={item.url}
-                      className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
-                        isActive 
-                          ? 'bg-purple-100 text-purple-700 shadow-sm' 
-                          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
-                      }`}
-                      title={item.title}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      {item.isNew && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full" />
-                      )}
-                    </Link>
-
-
-                  </React.Fragment>
+                  <Link
+                    key={item.title}
+                    to={item.url}
+                    className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                      isActive 
+                        ? 'bg-purple-100 text-purple-700 shadow-sm' 
+                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                    }`}
+                    title={item.title}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.isNew && (
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full" />
+                    )}
+                  </Link>
                 );
               })}
             </nav>

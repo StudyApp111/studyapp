@@ -3,7 +3,6 @@ import AssignmentHistory from './pages/AssignmentHistory';
 import ChangePassword from './pages/ChangePassword';
 import Collaborate from './pages/Collaborate';
 import DiagnosticQuiz from './pages/DiagnosticQuiz';
-import DocumentViewer from './pages/DocumentViewer';
 import EmailManager from './pages/EmailManager';
 import Feedback from './pages/Feedback';
 import GradeResults from './pages/GradeResults';
@@ -16,6 +15,7 @@ import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
 import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
+import DocumentViewer from './pages/DocumentViewer';
 import __Layout from './Layout.jsx';
 
 
@@ -25,7 +25,6 @@ export const PAGES = {
     "ChangePassword": ChangePassword,
     "Collaborate": Collaborate,
     "DiagnosticQuiz": DiagnosticQuiz,
-    "DocumentViewer": DocumentViewer,
     "EmailManager": EmailManager,
     "Feedback": Feedback,
     "GradeResults": GradeResults,
@@ -38,6 +37,7 @@ export const PAGES = {
     "ProfileInformation": ProfileInformation,
     "Settings": Settings,
     "SmartGrader": SmartGrader,
+    "DocumentViewer": DocumentViewer,
 }
 
 export const pagesConfig = {
