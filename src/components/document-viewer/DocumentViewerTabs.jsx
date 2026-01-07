@@ -341,7 +341,14 @@ export default function DocumentViewerTabs({ lesson }) {
           <div className="flex-1 overflow-hidden relative">
             {/* PDF View - Keep mounted, toggle visibility */}
             {hasFile && (
-              <div className={`absolute inset-0 bg-slate-50 ${viewMode === "pdf" ? "block" : "hidden"}`}>
+              <div 
+                className="absolute inset-0 bg-slate-50 transition-opacity duration-200"
+                style={{ 
+                  opacity: viewMode === "pdf" ? 1 : 0,
+                  pointerEvents: viewMode === "pdf" ? "auto" : "none",
+                  zIndex: viewMode === "pdf" ? 10 : 0
+                }}
+              >
                 {isPDF || isOfficeDoc ? (
                   <>
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10" id="pdf-loader">
@@ -386,7 +393,15 @@ export default function DocumentViewerTabs({ lesson }) {
             )}
             
             {/* Transcript View - Keep mounted, toggle visibility */}
-            <div className={`absolute inset-0 ${viewMode === "transcript" ? "flex" : "hidden"}`}>
+            <div 
+              className="absolute inset-0 transition-opacity duration-200"
+              style={{ 
+                opacity: viewMode === "transcript" ? 1 : 0,
+                pointerEvents: viewMode === "transcript" ? "auto" : "none",
+                zIndex: viewMode === "transcript" ? 10 : 0,
+                display: viewMode === "transcript" ? "flex" : "none"
+              }}
+            >
               <div 
                 ref={contentRef}
                 className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
