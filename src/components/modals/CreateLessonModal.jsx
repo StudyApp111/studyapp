@@ -182,7 +182,47 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       const learningProfile = profile[0] || {};
 
-      const curriculumPrompt = `Educational Curriculum Analysis Request
+      // Create lesson immediately after OCR/compression
+      setProcessingStep("Creating lesson...");
+
+      const lessonData = {
+        course_name: courseName,
+        input_type: inputType,
+        status: "created"
+      };
+
+      if (inputType === "description") {
+        lessonData.description = description.trim();
+        lessonData.extracted_content = description.trim();
+      } else if (inputType === "file") {
+        lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
+        lessonData.file_urls = fileUrls;
+        lessonData.extracted_content = fullExtractedContent || extractedContent;
+      }
+
+      const lesson = await base44.entities.Lesson.create(lessonData);
+
+      if (!lesson || !lesson.id) {
+        throw new Error("Failed to create lesson");
+      }
+
+      console.log("✅ Lesson created:", lesson.id);
+
+      // Store in sessionStorage and navigate IMMEDIATELY
+      sessionStorage.setItem('currentLessonId', lesson.id);
+
+      onOpenChange(false);
+
+      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
+
+      // === BACKGROUND TASKS (non-blocking) ===
+
+      // Background: Curriculum mapping
+      (async () => {
+        try {
+          console.log("🔄 Starting background curriculum mapping...");
+
+          const curriculumPrompt = `Educational Curriculum Analysis Request
 
 Role:
 You are an expert curriculum analyst. Generate a concise (<2000 characters), exam-relevant curriculum profile to support personalized content generation.
@@ -248,7 +288,7 @@ Constraints:
 - Prioritize exam relevance over completeness.
 - Do not introduce content not supported by the inputs.`;
 
-      const curriculumResponseJsonSchema = {
+                const curriculumResponseJsonSchema = {
         type: "object",
         properties: {
           core_competencies: {
@@ -310,14 +350,12 @@ Constraints:
           "high_yield_focal_points",
           "common_misconceptions"
         ]
-      };
+        };
 
-      setProcessingStep("Analyzing curriculum...");
-
-      const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
-        prompt: curriculumPrompt,
-        response_json_schema: curriculumResponseJsonSchema
-      });
+        const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
+          prompt: curriculumPrompt,
+          response_json_schema: curriculumResponseJsonSchema
+        });
 
       // Handle wrapped responses (e.g., { course_profile: {...} } or { curriculum_profile: {...} })
       let mapData = generatedMap;
@@ -381,54 +419,32 @@ Constraints:
         common_misconceptions: safeArray(mapData?.common_misconceptions).map(m => 
           typeof m === 'object' ? String(m?.misconception || m?.description || m?.name || JSON.stringify(m)) : String(m || "")
         )
-      };
+        };
 
-      // Create lesson immediately after OCR - navigate user to DocumentViewer ASAP
-      setProcessingStep("Creating lesson...");
+        console.log("✅ Curriculum map generated");
 
-      const lessonData = {
-        course_name: courseName,
-        input_type: inputType,
-        status: "created"
-      };
-
-      if (inputType === "description") {
-        lessonData.description = description.trim();
-        lessonData.extracted_content = description.trim();
-      } else if (inputType === "file") {
-        lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
-        lessonData.file_urls = fileUrls;
-        lessonData.extracted_content = fullExtractedContent || extractedContent;
-      }
-
-      const lesson = await base44.entities.Lesson.create(lessonData);
-
-      if (!lesson || !lesson.id) {
-        throw new Error("Failed to create lesson");
-      }
-      
-      // Store in sessionStorage before navigation
-      sessionStorage.setItem('currentLessonId', lesson.id);
-
-      onOpenChange(false);
-
-      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
-
-      // Background: Save curriculum map and update lesson (non-blocking)
-      base44.entities.CurriculumMap.create({
+        // Save curriculum map
+        await base44.entities.CurriculumMap.create({
         course_name: courseName.trim(),
         school: learningProfile.school || "",
         grade: learningProfile.grade || "",
         city: learningProfile.city || "",
         source: "create_lesson",
         curriculum_data: curriculumMap
-      }).catch(err => console.error("CurriculumMap save error:", err));
+        });
 
-      base44.entities.Lesson.update(lesson.id, {
+        await base44.entities.Lesson.update(lesson.id, {
         curriculum_map: curriculumMap
-      }).catch(err => console.error("Lesson curriculum update error:", err));
+        });
 
-      // Background: Auto-generate Exam 1 immediately (non-blocking)
+        console.log("✅ Curriculum map saved");
+        } catch (err) {
+        console.error("❌ Background curriculum mapping error:", err);
+        // Don't block - user is already in DocumentViewer
+        }
+        })();
+
+      // Background: Auto-generate Exam 1
       (async () => {
         try {
           console.log("🚀 Starting background Exam 1 generation...");
@@ -438,12 +454,11 @@ Constraints:
             lesson_id: lesson.id,
             exam_number: 1,
             status: 'not_started',
-            questions: [] // Explicitly set empty questions array
+            questions: []
           });
           console.log("✅ Exam 1 entity created:", exam1.id);
 
-          // Build generation prompt
-          const user = await base44.auth.me();
+          // Full exam generation prompt (same as ExamTab)
           const aiPrompt = `
 
       Context
@@ -466,9 +481,109 @@ Constraints:
 
       ────────────────────────────────
 
-      [REST OF PROMPT - SAME AS EXAMTAB]
+      Internal Reasoning (Do NOT Output)
 
-      Generate EXACTLY 10 questions using authentic exam standards.
+      1. Scope Lock
+      - If lesson content specifies a concrete topic or skill (e.g., "factoring", "photosynthesis", "Du Bois double-consciousness"):
+      → ALL questions MUST stay strictly within that topic.
+      - Do NOT add prerequisites, review topics, or adjacent units unless required to execute the task.
+      - Only broaden scope if the user explicitly requests review or exam prep.
+
+      2. Topic Validation (Light Search)
+      - Use search ONLY to confirm terminology, typical exam phrasing, or standard question styles for this course.
+      - Do NOT introduce new topics beyond the locked scope.
+
+      3. Difficulty Progression
+      - Q1–3: Moderate Exam-Level
+      - Q4–7: Challenging Exam-Level
+      - Q8–10: Challenging → High Challenge (depth, edge cases, reasoning—not new topics)
+
+      4. Coverage Design
+      - 6–7 questions: core skill / primary topic
+      - 2–3 questions: applications, traps, or conceptual stress tests
+      - 1–2 twin items: same concept, different reasoning demand
+
+      5. Exam Authenticity
+      - Match tone, rigor, and structure typical of ${learningProfile.school || "the school"} assessments.
+
+      ────────────────────────────────
+
+      QUESTION-TYPE ENFORCEMENT (EXECUTE FIRST)
+
+      For EACH question:
+
+      1. Choose question_type from:
+      - Multiple Choice
+      - True/False
+      - Fill in the Blank
+      - Short Answer
+      - Structured Response
+
+      2. Apply strict formatting rules:
+
+      Multiple Choice:
+      - EXACTLY four options labeled A, B, C, D.
+      - MCQ cue phrases allowed.
+
+      True/False:
+      - options = ["True", "False"]
+      - Single declarative statement only.
+
+      Fill in the Blank:
+      - options = []
+      - EXACTLY one blank written as ____.
+      - Blank must be a key term, value, or short phrase.
+
+      Short Answer / Structured Response:
+      - options = []
+      - Direct prompt requesting a value, explanation, justification, or worked solution.
+
+      MCQ cue phrases are FORBIDDEN in non-MCQ questions:
+      "Which of the following", "Select", "Identify the correct", "Choose", "is/are true about"
+
+      If a forbidden cue appears, IMMEDIATELY convert the question to Multiple Choice and regenerate.
+
+      This layer overrides all other instructions.
+
+      ────────────────────────────────
+
+      Exam Generation (Output Only)
+
+      Generate EXACTLY 10 questions.
+
+      Each question MUST include:
+      - question_type
+      - question_text
+      - options (or [] where required)
+      - difficulty_index:
+      • Moderate Exam-Level
+      • Challenging Exam-Level
+      • High Challenge Exam-Level
+
+      Each question MUST:
+      - Test a distinct reasoning demand (no duplicates)
+      - Use exam-authentic wording
+      - Stay strictly within the locked topic scope
+
+      Subject guidance:
+      - Math / Science: execution, reasoning steps, interpretation, unit checks
+      - Humanities / Social Sciences: claim precision, evidence use, conceptual clarity
+      - CS / Engineering: tracing, correctness, edge cases
+      - Business / Econ: method selection, applied reasoning, interpretation
+
+      ────────────────────────────────
+
+      Answer Key Requirements
+
+      For EACH question include:
+      - correct_answer
+      - explanation (2–3 sentences; instructional, not restated)
+      - assessed_competencies (infer from content)
+      - targeted_misconception (or null)
+
+      Explain why the answer works and how students typically go wrong.
+
+      ────────────────────────────────
 
       Output Format
       Return ONE valid JSON object matching the required schema.
@@ -476,7 +591,6 @@ Constraints:
 
           console.log("📤 Calling generateExam in background...");
 
-          // Generate exam questions
           const { data: examData } = await base44.functions.invoke('generateExam', {
             prompt: aiPrompt,
             response_json_schema: {
@@ -515,7 +629,7 @@ Constraints:
               status: "in_progress"
             });
 
-            console.log("✅ Exam 1 generated in background:", examQuestions.length, "questions");
+            console.log("✅ Exam 1 generated:", examQuestions.length, "questions");
           } else {
             console.error("❌ No questions generated");
           }
