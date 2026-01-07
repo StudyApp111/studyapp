@@ -74,9 +74,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         // Auto-start generation if not yet generated and has no questions
         if (!exam1.questions || exam1.questions.length === 0) {
           console.log("🚀 Auto-starting Exam 1 generation...");
-          setTimeout(() => {
-            handleStartExam(exam1);
-          }, 500);
+          console.log("📋 Exam 1 details:", { id: exam1.id, exam_number: exam1.exam_number, has_questions: !!exam1.questions });
+          // Auto-generate will be triggered by loadOrGenerateExam
         }
       }
     }
@@ -244,6 +243,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   };
 
   const generateExam = async (existingExamId = null, examNumber = 1) => {
+    console.log("🎯 generateExam called:", { existingExamId, examNumber, lessonId: lesson?.id });
+    
     try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
@@ -254,22 +255,20 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       let contentDescription = "";
       if (lesson.input_type === "description" && lesson.description) {
         contentDescription = lesson.description;
+        console.log("📝 Using description as content");
       } else if (lesson.compressed_content) {
         contentDescription = lesson.compressed_content;
+        console.log("📦 Using compressed_content");
       } else if (lesson.extracted_content) {
         contentDescription = lesson.extracted_content;
+        console.log("📄 Using extracted_content");
       } else {
         contentDescription = lesson.description || "N/A";
+        console.log("⚠️ Fallback to description or N/A");
       }
 
-      // Compress curriculum context - only send key competencies, not full JSON
-      const curriculumContext = lesson.curriculum_map 
-        ? `Key Competencies: ${lesson.curriculum_map.core_competencies?.map(c => c.name).join(', ') || 'None'}
-Common Misconceptions: ${lesson.curriculum_map.common_misconceptions?.slice(0, 3).join('; ') || 'None'}`
-        : "No curriculum map available";
+      console.log("📏 Content length:", contentDescription.length, "characters");
 
-      console.log("🔨 Building AI prompt...");
-      
       const aiPrompt = `
 
 Context
@@ -400,6 +399,10 @@ Output Format
 Return ONE valid JSON object matching the required schema.
 No extra text.`;
 
+      console.log("📏 Final prompt length:", aiPrompt.length, "characters");
+      console.log("🚀 Calling generateExam API...");
+      const apiStartTime = Date.now();
+
       const { data: examData } = await retryOperation(
         () => base44.functions.invoke('generateExam', {
           prompt: aiPrompt,
@@ -430,17 +433,26 @@ No extra text.`;
         2000
       );
 
+      const apiDuration = ((Date.now() - apiStartTime) / 1000).toFixed(2);
+      console.log(`✅ API returned in ${apiDuration}s`);
+      console.log("📊 Response structure:", examData ? Object.keys(examData) : 'null');
+      console.log("📊 exam_questions array length:", examData?.exam_questions?.length || 0);
+
       // Guard against missing or invalid exam_questions
       const examQuestions = examData?.exam_questions || [];
       if (!Array.isArray(examQuestions) || examQuestions.length === 0) {
+        console.error("❌ Invalid exam_questions:", examData);
         throw new Error("Failed to generate exam questions. Please try again.");
       }
+      
+      console.log("✅ Valid exam questions received:", examQuestions.length);
       
       const questionsWithPlaceholder = examQuestions.map(q => ({
         ...q,
         user_answer: ""
       }));
 
+      console.log("💾 Saving exam to database...");
       let createdExam;
       
       if (existingExamId) {
@@ -460,10 +472,17 @@ No extra text.`;
         });
       }
 
+      console.log("✅ Exam saved successfully:", createdExam.id);
       setExam(createdExam);
     } catch (error) {
-      console.error("Error generating exam:", error);
-      await logError('exam_generation', error, { lesson_id: lesson?.id });
+      console.error("❌ Error in generateExam:", error);
+      console.error("❌ Error stack:", error.stack);
+      await logError('exam_generation', error, { 
+        lesson_id: lesson?.id, 
+        existingExamId, 
+        examNumber,
+        contentLength: lesson?.extracted_content?.length || 0
+      });
     }
   };
 
