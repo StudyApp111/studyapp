@@ -86,107 +86,36 @@ Deno.serve(async (req) => {
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
-            console.error('❌ No content generated');
+            console.error('❌ No content generated from Gemini');
+            console.error('📊 Full response:', JSON.stringify(data, null, 2));
             return Response.json({ 
                 error: 'No content generated' 
             }, { status: 500 });
         }
         
-        console.log('✅ Generated text extracted, length:', generatedText.length, 'characters');
+        console.log('✅ Generated text extracted');
+        console.log('📏 Response length:', generatedText.length, 'characters');
         
-        // Guard against oversized responses
         if (generatedText.length > 50000) {
-            console.error('⚠️ WARNING: Response is extremely large (', generatedText.length, 'chars) - likely contains verbose explanations instead of following JSON schema');
+            console.error('⚠️ WARNING: Response is extremely large - likely not following JSON schema');
         }
 
-        if (response_json_schema) {
-            try {
-                let cleanedText = generatedText.trim();
-                if (cleanedText.startsWith('```json')) {
-                    cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-                } else if (cleanedText.startsWith('```')) {
-                    cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-                }
-                
-                const parsedResponse = JSON.parse(cleanedText);
-                console.log('✅ JSON parsed successfully');
-                console.log('📊 Exam questions:', parsedResponse.exam_questions?.length || 0);
-                
-                if (parsedResponse.exam_questions) {
-                    parsedResponse.exam_questions = parsedResponse.exam_questions.map(q => {
-                        const isMultipleChoice = q.question_type?.toLowerCase().includes('multiple choice') || 
-                                               q.question_type?.toLowerCase().includes('mcq');
-                        
-                        if (isMultipleChoice) {
-                            if (!q.options || q.options.length < 2) {
-                                q.question_type = "Short Answer";
-                                q.options = null;
-                            } else if (q.options.length < 4) {
-                                while (q.options.length < 4) {
-                                    q.options.push(`Option ${String.fromCharCode(65 + q.options.length)}`);
-                                }
-                            }
-                        }
-                        return q;
-                    });
-                }
-                
-                return Response.json(parsedResponse);
-            } catch (parseError) {
-                try {
-                    let fixedText = generatedText
-                        .replace(/\\n/g, ' ')
-                        .replace(/\n/g, ' ')
-                        .replace(/\r/g, ' ')
-                        .replace(/\t/g, ' ')
-                        .trim();
-                    
-                    if (fixedText.startsWith('```')) {
-                        fixedText = fixedText.replace(/^```json?\s*/, '').replace(/\s*```$/, '');
-                    }
-                    
-                    const retryParsed = JSON.parse(fixedText);
-                    
-                    if (retryParsed.exam_questions) {
-                        retryParsed.exam_questions = retryParsed.exam_questions.map(q => {
-                            const isMultipleChoice = q.question_type?.toLowerCase().includes('multiple choice') || 
-                                                   q.question_type?.toLowerCase().includes('mcq');
-                            
-                            if (isMultipleChoice && (!q.options || q.options.length < 2)) {
-                                q.question_type = "Short Answer";
-                                q.options = null;
-                            }
-                            return q;
-                        });
-                    }
-                    
-                    return Response.json(retryParsed);
-                } catch (retryError) {
-                    console.error('❌ Retry parse also failed:', retryError.message);
-                    console.error('❌ Raw text snippet:', generatedText.substring(0, 500));
-                    
-                    // Try to extract partial valid JSON for exam_questions
-                    try {
-                        const questionsMatch = generatedText.match(/"exam_questions"\s*:\s*\[[\s\S]*?\}\s*\]/);
-                        if (questionsMatch) {
-                            const partialJson = `{${questionsMatch[0]}}`;
-                            const partialParsed = JSON.parse(partialJson);
-                            console.log('✅ Recovered partial JSON with', partialParsed.exam_questions?.length, 'questions');
-                            return Response.json(partialParsed);
-                        }
-                    } catch (partialError) {
-                        console.error('❌ Partial recovery also failed');
-                    }
-                    
-                    return Response.json({ 
-                        error: 'Failed to process response - output may have been truncated' 
-                    }, { status: 500 });
-                }
-            }
+        try {
+            const parsedResponse = JSON.parse(generatedText);
+            console.log('✅ JSON parsed successfully');
+            console.log('📊 Questions generated:', parsedResponse.exam_questions?.length || 0);
+            
+            return Response.json(parsedResponse);
+        } catch (parseError) {
+            console.error('❌ JSON parse failed:', parseError.message);
+            console.error('📄 Raw response (first 1000 chars):', generatedText.substring(0, 1000));
+            console.error('📄 Raw response (last 500 chars):', generatedText.substring(Math.max(0, generatedText.length - 500)));
+            
+            return Response.json({ 
+                error: 'Failed to parse AI response as JSON',
+                details: parseError.message
+            }, { status: 500 });
         }
-
-        console.log('=== generateExam Function Complete ===');
-        return Response.json({ text: generatedText });
 
     } catch (error) {
         console.error('❌ CRITICAL ERROR in generateExam:', error);
