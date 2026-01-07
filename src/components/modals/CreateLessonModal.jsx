@@ -355,6 +355,10 @@ Output Format
 Return ONE valid JSON object matching the required schema.
 No extra text.`;
 
+          console.log("📤 Sending to generateExam API");
+          console.log("📏 Prompt length:", aiPrompt.length, "characters");
+          const startTime = Date.now();
+
           const { data: examData } = await base44.functions.invoke('generateExam', {
             prompt: aiPrompt,
             response_json_schema: {
@@ -381,7 +385,14 @@ No extra text.`;
             }
           });
 
+          const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+          console.log("✅ API returned in", duration, "seconds");
+          console.log("📊 Response structure:", examData ? Object.keys(examData) : 'null');
+          console.log("📊 Response size:", JSON.stringify(examData).length, "characters");
+
           const examQuestions = examData?.exam_questions || [];
+          console.log("📝 Questions generated:", examQuestions.length);
+          
           if (examQuestions.length > 0) {
             await base44.entities.Exam.update(exam1.id, {
               questions: examQuestions.map(q => ({ ...q, user_answer: "" })),
