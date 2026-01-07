@@ -234,29 +234,24 @@ export default function DocumentViewer() {
         setExtractedContent(lessonData.extracted_content);
       }
 
-      // Load exams and worksheets (no longer dependent on quiz)
+      // Load exams only
       let examsData = [];
-      let worksheetsData = [];
-      
+
       try {
-        [examsData, worksheetsData] = await Promise.all([
-          base44.entities.Exam.filter({ lesson_id: lessonId }),
-          base44.entities.Worksheet.filter({ lesson_id: lessonId })
-        ]);
-        console.log("DocumentViewer: Loaded exams:", examsData.length, "worksheets:", worksheetsData.length);
+        examsData = await base44.entities.Exam.filter({ lesson_id: lessonId });
+        console.log("DocumentViewer: Loaded exams:", examsData.length);
       } catch (loadError) {
-        console.error("DocumentViewer: Error loading exams/worksheets (non-critical):", loadError);
-        // Continue with empty arrays if loading fails
+        console.error("DocumentViewer: Error loading exams (non-critical):", loadError);
+        // Continue with empty array if loading fails
       }
-      
+
       // Filter out any null/undefined items
       const validExams = (examsData || []).filter(e => e && e.id);
-      const validWorksheets = (worksheetsData || []).filter(w => w && w.id);
+
+      setExams(validExams);
       
-      setExams([...validExams, ...validWorksheets]);
-      
-      // Get the latest predicted grade from completed exams/worksheets
-      const examWithGrade = [...examsData, ...worksheetsData]
+      // Get the latest predicted grade from completed exams
+      const examWithGrade = examsData
         .filter(e => e.completed && e.predicted_grade)
         .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
       

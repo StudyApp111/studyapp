@@ -26,7 +26,7 @@ import CreateLessonModal from "@/components/modals/CreateLessonModal";
 import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
 import FeedbackModal from "@/components/feedback/FeedbackModal.jsx";
 import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton.jsx";
-import StudyInviteNotifications from "@/components/collaborate/StudyInviteNotifications";
+
 import { AITutorProvider } from "@/components/ai-tutor/AITutorContext";
 import AITutorSheet from "@/components/ai-tutor/AITutorSheet";
 
@@ -233,11 +233,7 @@ export default function Layout({ children, currentPageName }) {
             {/* Bottom: Notifications + Profile */}
             <div className="p-2 space-y-2">
               {user && (
-                <>
-                  <div className="flex justify-center">
-                    <StudyInviteNotifications userEmail={user.email} />
-                  </div>
-                  <button
+                <button
                     onClick={() => navigate(createPageUrl("Settings"))}
                     className="w-full aspect-square rounded-xl bg-slate-100 hover:bg-purple-100 flex items-center justify-center transition-all"
                     title={user.full_name || 'Profile'}
@@ -273,9 +269,8 @@ export default function Layout({ children, currentPageName }) {
                     />
                     <span className="font-bold text-slate-900 text-sm">StudyApp</span>
                   </Link>
-                  {/* Notifications + Profile - right */}
+                  {/* Profile - right */}
                   <div className="flex items-center gap-1">
-                    {user && <StudyInviteNotifications userEmail={user.email} />}
                     {user && (
                       <button
                         type="button"
