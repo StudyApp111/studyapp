@@ -210,15 +210,11 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       console.log("✅ Lesson created:", lesson.id);
 
-      // Store in sessionStorage and navigate IMMEDIATELY
-      sessionStorage.setItem('currentLessonId', lesson.id);
-
-      // Close modal and navigate after a short delay to ensure clean state transition
+      // Close modal first
       onOpenChange(false);
       
-      setTimeout(() => {
-        navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`, { replace: true });
-      }, 100);
+      // Navigate immediately with replace to force new page load
+      window.location.href = `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`;
 
       // === BACKGROUND TASKS (non-blocking) ===
 
