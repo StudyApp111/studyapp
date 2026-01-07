@@ -40,11 +40,15 @@ Deno.serve(async (req) => {
                     text: enhancedPrompt
                 }]
             }],
+            systemInstruction: {
+                parts: [{
+                    text: "You are an expert assessment designer. Use minimal internal reasoning to provide fast, accurate responses."
+                }]
+            },
             generationConfig: {
                 temperature: 0.2,
                 topP: 0.95,
-                maxOutputTokens: 60000,
-                thinkingLevel: "MINIMAL"
+                maxOutputTokens: 60000
             },
             tools: [{
                 googleSearchRetrieval: {}
