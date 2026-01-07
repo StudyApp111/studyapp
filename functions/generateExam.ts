@@ -46,10 +46,10 @@ Deno.serve(async (req) => {
                 maxOutputTokens: 20000
             },
             safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_LOW_AND_ABOVE" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_LOW_AND_ABOVE" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_LOW_AND_ABOVE" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_LOW_AND_ABOVE" }
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
             ]
         };
 
@@ -83,13 +83,24 @@ Deno.serve(async (req) => {
         const data = await response.json();
         console.log('✅ Gemini API response received');
         
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        // Check for safety blocks first
+        const candidate = data.candidates?.[0];
+        if (candidate?.finishReason === 'SAFETY') {
+            console.error('❌ Content blocked by safety filter');
+            console.error('📊 Safety message:', candidate.finishMessage);
+            return Response.json({ 
+                error: 'Content generation blocked by safety filters. Please try rephrasing your content or contact support.' 
+            }, { status: 500 });
+        }
+        
+        const generatedText = candidate?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
             console.error('❌ No content generated from Gemini');
+            console.error('📊 Finish reason:', candidate?.finishReason);
             console.error('📊 Full response:', JSON.stringify(data, null, 2));
             return Response.json({ 
-                error: 'No content generated' 
+                error: 'No content generated. Please try again.' 
             }, { status: 500 });
         }
         
