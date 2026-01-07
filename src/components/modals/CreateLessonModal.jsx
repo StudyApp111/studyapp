@@ -109,6 +109,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       let extractedContent = "";
       let fullExtractedContent = "";
       let fileUrls = [];
+      let compressedForPrompts = "";
 
       if (inputType === "file") {
         if (files.length === 0) {
@@ -155,7 +156,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
             content: extractedContent
           });
 
-          let compressedForPrompts = extractedContent;
+          compressedForPrompts = extractedContent;
           if (compressionResult?.data?.compressed_content) {
             compressedForPrompts = compressionResult.data.compressed_content;
             console.log("✅ Compressed:", extractedContent.length, "→", compressedForPrompts.length, "chars");
@@ -173,9 +174,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         }
         extractedContent = description.trim();
         fullExtractedContent = extractedContent;
-
-        // For descriptions, compressed = full content (no compression needed for short text)
-        const compressedForPrompts = extractedContent;
+        compressedForPrompts = extractedContent;
       }
 
       // Create lesson immediately after OCR/compression
