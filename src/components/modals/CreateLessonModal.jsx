@@ -148,17 +148,17 @@ export default function CreateLessonModal({ open, onOpenChange }) {
             throw new Error("Extracted content is too short. Please ensure your files contain readable text.");
           }
 
-          // Compress if needed
-          if (extractedContent.length > 2000) {
-            setProcessingStep("Compressing documents for optimal processing...");
-            
-            const compressionResult = await base44.functions.invoke('compressDocument', {
-              content: extractedContent
-            });
+          // Always compress for prompts (required for exam generation)
+          setProcessingStep("Compressing documents for optimal processing...");
 
-            if (compressionResult?.data?.compressed_content) {
-              extractedContent = compressionResult.data.compressed_content;
-            }
+          const compressionResult = await base44.functions.invoke('compressDocument', {
+            content: extractedContent
+          });
+
+          let compressedForPrompts = extractedContent;
+          if (compressionResult?.data?.compressed_content) {
+            compressedForPrompts = compressionResult.data.compressed_content;
+            console.log("✅ Compressed:", extractedContent.length, "→", compressedForPrompts.length, "chars");
           }
           
         } catch (fileError) {
@@ -173,6 +173,9 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         }
         extractedContent = description.trim();
         fullExtractedContent = extractedContent;
+
+        // For descriptions, compressed = full content (no compression needed for short text)
+        const compressedForPrompts = extractedContent;
       }
 
       // Create lesson immediately after OCR/compression
@@ -196,10 +199,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
         lessonData.file_urls = fileUrls;
         lessonData.extracted_content = fullExtractedContent;
-        // Save compressed content if compression was performed
-        if (fullExtractedContent !== extractedContent) {
-          lessonData.compressed_content = extractedContent;
-        }
+        // Always save compressed content for prompt generation
+        lessonData.compressed_content = compressedForPrompts;
       }
 
       const lesson = await base44.entities.Lesson.create(lessonData);
