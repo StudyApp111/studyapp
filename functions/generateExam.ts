@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
                 temperature: 0.2,
                 topP: 0.95,
                 maxOutputTokens: 60000,
-                thinking_level: "MINIMAL"
+                thinkingLevel: "MINIMAL"
             },
             tools: [{
                 googleSearch: {}
