@@ -185,7 +185,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       const curriculumPrompt = `Educational Curriculum Analysis Request
 
 Role:
-You are an expert curriculum analyst. Generate a concise, exam-relevant curriculum profile to support personalized worksheet generation.
+You are an expert curriculum analyst. Generate a concise (<2000 characters), exam-relevant curriculum profile to support personalized content generation.
 
 Input Context:
 - Student Grade Level: ${learningProfile.grade || "N/A"}
@@ -207,31 +207,31 @@ DO NOT perform broad academic research or exhaustive searches.
 Task:
 Produce a compact curriculum profile focused ONLY on material that is likely to appear on assessments.
 
-Required Output (JSON):
+Strict Required Output (JSON):
 
-A. Core Competencies / Learning Outcomes
+A. core_competencies
 - List 6–8 core competencies.
 - Each: 1 concise sentence describing what the student must be able to do.
 - Prefer synthesis over granularity.
 
-B. Competency Emphasis
+B. competency_weightings
 - Assign a weight_percentage to each competency.
 - MUST sum to "100%".
 - Use strings only (e.g., "20%").
 - Base emphasis primarily on student content.
 
-C. Assessment Formats & Patterns
+C. question_formats
 - List the most common assessment formats (e.g., Multiple Choice, Short Answer, Essay).
 - For the top 3–4 formats:
   - frequency (string, e.g., "Common", "30%")
   - one short illustrative example (exam-style, not verbose).
 
-D. High-Yield Focal Points
+D. high_yield_focal_points
 - Identify 3–5 topics or skills most likely to be tested.
 - Focus on difficulty, recurrence, or conceptual importance.
 - Mention key figures, formulas, concepts, or texts ONLY if clearly relevant.
 
-E. Common Student Difficulties
+E. common_misconceptions
 - List 3–4 common misconceptions or failure points students encounter.
 - Tie them directly to the competencies above.
 
