@@ -51,8 +51,9 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const examIdRef = useRef(null);
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
+  const generationTriggeredRef = useRef(new Set()); // Track which exams we've triggered generation for
 
-  // Auto-select and auto-generate Exam 1
+  // Auto-select Exam 1 (generation happens in background from CreateLessonModal)
   useEffect(() => {
     if (lesson && !selectedExamNumber) {
       const allExamsForLesson = exams || [];
@@ -68,15 +69,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       // Second priority: Exam 1 if it exists
       const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
       if (exam1) {
-        console.log("📋 Auto-selecting Exam 1:", exam1.id);
+        console.log("📋 Auto-selecting Exam 1:", exam1.id, "| has questions:", exam1.questions?.length || 0);
         setSelectedExamNumber(1);
-        
-        // Auto-start generation if not yet generated and has no questions
-        if (!exam1.questions || exam1.questions.length === 0) {
-          console.log("🚀 Auto-starting Exam 1 generation...");
-          console.log("📋 Exam 1 details:", { id: exam1.id, exam_number: exam1.exam_number, has_questions: !!exam1.questions });
-          // Auto-generate will be triggered by loadOrGenerateExam
-        }
       }
     }
   }, [lesson?.id, exams]);
@@ -215,10 +209,19 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           return;
         }
         
+        // Check if generation is needed (only if not already triggered)
         if (!loadedExam.questions || loadedExam.questions.length === 0) {
-          setIsGenerating(true);
-          await generateExam(loadedExam.id, examNumber);
-          setIsGenerating(false);
+          const examKey = `${lesson.id}-${examNumber}`;
+          if (!generationTriggeredRef.current.has(examKey)) {
+            console.log("🔄 Exam has no questions, starting generation...");
+            generationTriggeredRef.current.add(examKey);
+            setIsGenerating(true);
+            await generateExam(loadedExam.id, examNumber);
+            setIsGenerating(false);
+          } else {
+            console.log("⏳ Generation already in progress, waiting...");
+            setIsGenerating(true);
+          }
         } else {
           // Load existing in-progress exam and restore question position
           setExam(loadedExam);

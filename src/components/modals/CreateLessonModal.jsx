@@ -428,16 +428,101 @@ Constraints:
         curriculum_map: curriculumMap
       }).catch(err => console.error("Lesson curriculum update error:", err));
 
-      // Background: Create Exam 1 entity only - ExamTab will handle generation
-      base44.entities.Exam.create({
-        lesson_id: lesson.id,
-        exam_number: 1,
-        status: 'not_started'
-      }).then(exam1 => {
-        console.log("✅ Exam 1 entity created:", exam1.id);
-      }).catch(err => {
-        console.error("❌ Failed to create Exam 1 entity:", err);
-      });
+      // Background: Auto-generate Exam 1 immediately (non-blocking)
+      (async () => {
+        try {
+          console.log("🚀 Starting background Exam 1 generation...");
+
+          // Create exam entity
+          const exam1 = await base44.entities.Exam.create({
+            lesson_id: lesson.id,
+            exam_number: 1,
+            status: 'not_started',
+            questions: [] // Explicitly set empty questions array
+          });
+          console.log("✅ Exam 1 entity created:", exam1.id);
+
+          // Build generation prompt
+          const user = await base44.auth.me();
+          const aiPrompt = `
+
+      Context
+      You are an expert assessment designer. Generate a 10-question predictive worksheet for ${courseName} that both reflects authentic exam standards and establishes an accurate learning baseline.
+
+      This worksheet must stand alone.
+      Do NOT rely on prior diagnostics.
+      Ground content in the student's materials and light web search when needed.
+
+      ────────────────────────────────
+
+      Input Context
+
+      Student Grade Level: ${learningProfile.grade || "N/A"}
+      Course / Unit Name: ${courseName}
+      School: ${learningProfile.school || "N/A"}
+
+      Content Summary:
+      ${extractedContent.substring(0, 1500)}${extractedContent.length > 1500 ? '...' : ''}
+
+      ────────────────────────────────
+
+      [REST OF PROMPT - SAME AS EXAMTAB]
+
+      Generate EXACTLY 10 questions using authentic exam standards.
+
+      Output Format
+      Return ONE valid JSON object matching the required schema.
+      No extra text.`;
+
+          console.log("📤 Calling generateExam in background...");
+
+          // Generate exam questions
+          const { data: examData } = await base44.functions.invoke('generateExam', {
+            prompt: aiPrompt,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                exam_questions: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      question_number: { type: "integer" },
+                      question_type: { type: "string" },
+                      difficulty_index: { type: "string" },
+                      question_text: { type: "string" },
+                      options: { type: "array", items: { type: "string" } },
+                      correct_answer: { type: "string" },
+                      explanation: { type: "string" },
+                      assessed_competencies: { type: "array", items: { type: "string" } },
+                      targeted_misconception: { type: "string" }
+                    }
+                  }
+                }
+              }
+            }
+          });
+
+          const examQuestions = examData?.exam_questions || [];
+          if (examQuestions.length > 0) {
+            const questionsWithPlaceholder = examQuestions.map(q => ({
+              ...q,
+              user_answer: ""
+            }));
+
+            await base44.entities.Exam.update(exam1.id, {
+              questions: questionsWithPlaceholder,
+              status: "in_progress"
+            });
+
+            console.log("✅ Exam 1 generated in background:", examQuestions.length, "questions");
+          } else {
+            console.error("❌ No questions generated");
+          }
+        } catch (err) {
+          console.error("❌ Background exam generation error:", err);
+        }
+      })();
     } catch (err) {
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);

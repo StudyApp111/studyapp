@@ -62,7 +62,7 @@ export default function DocumentViewer() {
       // Default to doc tab if document exists
       setActiveTab('doc');
     }
-  }, [hasDocument]);
+  }, []); // Run only once on mount
 
   useEffect(() => {
     const handleSwitchToGrade = () => setActiveTab('grade');
