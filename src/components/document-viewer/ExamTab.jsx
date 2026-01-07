@@ -57,7 +57,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   useEffect(() => {
     if (lesson && !selectedExamNumber) {
       const allExamsForLesson = exams || [];
-      
+
       // First priority: in-progress exam
       const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
       if (inProgressExam) {
@@ -65,13 +65,18 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         setSelectedExamNumber(inProgressExam.exam_number);
         return;
       }
-      
+
       // Second priority: Exam 1 if it exists
       const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
       if (exam1) {
         console.log("📋 Auto-selecting Exam 1:", exam1.id, "| has questions:", exam1.questions?.length || 0);
         setSelectedExamNumber(1);
+        return;
       }
+
+      // No exam exists - auto-select Exam 1 to trigger creation
+      console.log("📋 Auto-selecting Exam 1 (will create)");
+      setSelectedExamNumber(1);
     }
   }, [lesson?.id, exams]);
 
@@ -194,7 +199,14 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       console.error("ExamTab: Cannot load exam - lesson not ready");
       return;
     }
-    
+
+    // Prevent duplicate generation attempts using ref
+    const generationKey = `${lesson.id}-${examNumber}`;
+    if (generationTriggeredRef.current.has(generationKey)) {
+      console.log("⏭️ Generation already triggered for", generationKey);
+      return;
+    }
+
     try {
       const existingExams = await base44.entities.Exam.filter({ 
         lesson_id: lesson.id,
@@ -203,31 +215,40 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
       if (existingExams && existingExams.length > 0) {
         const loadedExam = existingExams[0];
-        
+
         if (loadedExam.completed) {
           setExam(loadedExam);
           return;
         }
-        
+
         // Check if generation is in progress or needed
         if (loadedExam.status === 'generating' || (!loadedExam.questions || loadedExam.questions.length === 0)) {
           setIsGenerating(true);
-          
-          // Poll for completion every 2 seconds
-          const pollInterval = setInterval(async () => {
-            const updated = await base44.entities.Exam.filter({ id: loadedExam.id });
-            if (updated[0]?.questions?.length > 0) {
-              clearInterval(pollInterval);
-              setExam(updated[0]);
-              setIsGenerating(false);
-            }
-          }, 2000);
-          
-          // Stop polling after 60 seconds
-          setTimeout(() => {
-            clearInterval(pollInterval);
+
+          // Mark as triggered to prevent duplicates
+          generationTriggeredRef.current.add(generationKey);
+
+          // If no questions, start generation
+          if (!loadedExam.questions || loadedExam.questions.length === 0) {
+            await generateExam(loadedExam.id, examNumber);
             setIsGenerating(false);
-          }, 60000);
+          } else {
+            // Poll for completion every 3 seconds (reduced from 2s)
+            const pollInterval = setInterval(async () => {
+              const updated = await base44.entities.Exam.filter({ id: loadedExam.id });
+              if (updated[0]?.questions?.length > 0) {
+                clearInterval(pollInterval);
+                setExam(updated[0]);
+                setIsGenerating(false);
+              }
+            }, 3000);
+
+            // Stop polling after 60 seconds
+            setTimeout(() => {
+              clearInterval(pollInterval);
+              setIsGenerating(false);
+            }, 60000);
+          }
           return;
         } else {
           // Load existing in-progress exam and restore question position
@@ -243,11 +264,13 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         }
       } else {
         setIsGenerating(true);
+        generationTriggeredRef.current.add(generationKey);
         await generateExam(null, examNumber);
         setIsGenerating(false);
       }
     } catch (error) {
       console.error("Error loading exam:", error);
+      generationTriggeredRef.current.delete(generationKey);
       setIsGenerating(false);
     }
   };

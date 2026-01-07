@@ -226,8 +226,8 @@ export default function DocumentViewer() {
       const lessonData = lessons[0];
       setLesson(lessonData);
       
-      // Initialize study time from saved lesson data
-      setStudyTime(lessonData.total_study_time_seconds || 0);
+      // Initialize study time from saved lesson data ONLY if not already set
+      setStudyTime(prev => prev !== null ? prev : (lessonData.total_study_time_seconds || 0));
       
       // Use uncompressed content for document viewer - compressed is for prompts only
       if (lessonData.extracted_content) {
