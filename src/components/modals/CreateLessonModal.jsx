@@ -213,9 +213,12 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       // Store in sessionStorage and navigate IMMEDIATELY
       sessionStorage.setItem('currentLessonId', lesson.id);
 
+      // Close modal and navigate after a short delay to ensure clean state transition
       onOpenChange(false);
-
-      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
+      
+      setTimeout(() => {
+        navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`, { replace: true });
+      }, 100);
 
       // === BACKGROUND TASKS (non-blocking) ===
 
