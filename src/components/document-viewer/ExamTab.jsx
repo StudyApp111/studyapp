@@ -249,16 +249,10 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         contentDescription = lesson.description || "N/A";
       }
 
-      // Compress curriculum context - only send key competencies, not full JSON
-      const curriculumContext = lesson.curriculum_map 
-        ? `Key Competencies: ${lesson.curriculum_map.core_competencies?.map(c => c.name).join(', ') || 'None'}
-Common Misconceptions: ${lesson.curriculum_map.common_misconceptions?.slice(0, 3).join('; ') || 'None'}`
-        : "No curriculum map available";
-
       const aiPrompt = `
 
 Content Summary:
-${contentDescription.substring(0, 1500)}${contentDescription.length > 1500 ? '...' : ''}
+${contentDescription}
 
 Context
 You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lessonData.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
