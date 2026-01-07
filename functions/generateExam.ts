@@ -32,17 +32,7 @@ Deno.serve(async (req) => {
         }
         console.log('✅ API key found');
 
-        const enhancedPrompt = prompt + `\n\nCRITICAL FORMATTING RULES:
-1. All text fields (question_text, explanation, etc.) MUST have properly escaped quotes and special characters
-2. For ANY Multiple Choice question:
-   - ALWAYS provide exactly 4 options in the "options" array
-   - Each option must be a clear, distinct answer choice
-   - One option must match the "correct_answer" exactly
-   - Example: "options": ["Option A", "Option B", "Option C", "Option D"]
-3. NEVER leave the "options" array empty or null for Multiple Choice questions
-4. If you cannot create valid multiple choice options, use a different question_type instead
-5. Use single quotes within text or escape double quotes as \\"
-6. Do not use unescaped newlines within string values`;
+        const enhancedPrompt = prompt;
 
         const requestBody = {
             contents: [{
