@@ -215,9 +215,29 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       onOpenChange(false);
 
-      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
+      // Navigate to exam tab if description, doc tab if file upload
+      const targetTab = inputType === "description" ? "exam" : "doc";
+      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=${targetTab}`);
 
       // === BACKGROUND TASKS (non-blocking) ===
+
+      // Background: Create Exam 1 placeholder if description (ExamTab will generate)
+      if (inputType === "description") {
+      (async () => {
+      try {
+      await base44.entities.Exam.create({
+        lesson_id: lesson.id,
+        exam_number: 1,
+        status: 'generating',
+        questions: [],
+        completed: false
+      });
+      console.log("✅ Exam 1 placeholder created");
+      } catch (err) {
+      console.error("❌ Failed to create exam placeholder:", err);
+      }
+      })();
+      }
 
       // Background: Curriculum mapping
       (async () => {
