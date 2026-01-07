@@ -339,14 +339,15 @@ export default function DocumentViewerTabs({ lesson }) {
 
           {/* Content Area */}
           <div className="flex-1 overflow-hidden relative">
-            {/* PDF View - Keep mounted, toggle visibility */}
+            {/* PDF View - Always mounted, controlled via opacity */}
             {hasFile && (
               <div 
-                className="absolute inset-0 bg-slate-50 transition-opacity duration-200"
+                className="absolute inset-0 bg-slate-50"
                 style={{ 
                   opacity: viewMode === "pdf" ? 1 : 0,
                   pointerEvents: viewMode === "pdf" ? "auto" : "none",
-                  zIndex: viewMode === "pdf" ? 10 : 0
+                  zIndex: viewMode === "pdf" ? 10 : 0,
+                  visibility: viewMode === "pdf" ? "visible" : "hidden"
                 }}
               >
                 {isPDF || isOfficeDoc ? (
@@ -392,14 +393,14 @@ export default function DocumentViewerTabs({ lesson }) {
               </div>
             )}
             
-            {/* Transcript View - Keep mounted, toggle visibility */}
+            {/* Transcript View - Always mounted, controlled via opacity */}
             <div 
-              className="absolute inset-0 transition-opacity duration-200"
+              className="absolute inset-0 flex"
               style={{ 
                 opacity: viewMode === "transcript" ? 1 : 0,
                 pointerEvents: viewMode === "transcript" ? "auto" : "none",
                 zIndex: viewMode === "transcript" ? 10 : 0,
-                display: viewMode === "transcript" ? "flex" : "none"
+                visibility: viewMode === "transcript" ? "visible" : "hidden"
               }}
             >
               <div 
