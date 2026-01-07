@@ -274,7 +274,10 @@ export default function DocumentViewerTabs({ lesson }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showToolbar, showNoteInput]);
 
-  if (!lesson?.file_url && !lesson?.extracted_content) {
+  // Always show component if we have extracted content OR file
+  const hasContent = lesson?.extracted_content || lesson?.file_url;
+  
+  if (!hasContent) {
     return (
       <Card className="bg-white/90 border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] shadow-xl">
         <div className="flex items-center justify-center h-full p-6">
@@ -299,7 +302,7 @@ export default function DocumentViewerTabs({ lesson }) {
           {/* Header with Controls */}
           <div className="border-b border-purple-200 px-3 py-2">
             <div className="flex items-center justify-between gap-2">
-              {lesson?.extracted_content && (
+              {lesson?.extracted_content && lesson?.file_url && (
                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
                   <Button
                     variant={viewMode === "pdf" ? "default" : "ghost"}
@@ -355,7 +358,23 @@ export default function DocumentViewerTabs({ lesson }) {
 
           {/* Content Area */}
           <div className="flex-1 overflow-hidden">
-            {viewMode === "pdf" && lesson?.file_url ? (
+            {/* Auto-show transcript if no file_url */}
+            {!lesson?.file_url && lesson?.extracted_content ? (
+              <div className="h-full flex">
+                <div 
+                  ref={contentRef}
+                  className="flex-1 overflow-auto p-4 bg-slate-50"
+                  onMouseUp={handleTextSelection}
+                >
+                  <div 
+                    className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-none prose prose-sm"
+                    style={{ wordBreak: 'break-word' }}
+                  >
+                    {renderHighlightedContent()}
+                  </div>
+                </div>
+              </div>
+            ) : viewMode === "pdf" && lesson?.file_url ? (
               <div className="h-full bg-slate-50 relative">
                 {isPDF || isOfficeDoc ? (
                   <>
