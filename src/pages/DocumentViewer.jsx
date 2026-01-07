@@ -13,7 +13,7 @@ import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
-import StudyBuddiesTab from "@/components/document-viewer/StudyBuddiesTab";
+
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
 
 // Track study minutes every minute
@@ -441,13 +441,7 @@ export default function DocumentViewer() {
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Flashcards</span>
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="collaborate"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
-                  >
-                    <Users className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Collaborate</span>
-                  </TabsTrigger>
+
                 </TabsList>
               </div>
 
@@ -470,9 +464,7 @@ export default function DocumentViewer() {
                   <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
                 </TabsContent>
 
-                <TabsContent value="collaborate" className="mt-0 p-0 h-full">
-                  <StudyBuddiesTab lessonId={lesson?.id} lessonName={lesson?.course_name} />
-                </TabsContent>
+
               </div>
             </Tabs>
           </div>
@@ -517,13 +509,7 @@ export default function DocumentViewer() {
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Flashcards</span>
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="collaborate"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-1.5 py-2 h-auto whitespace-nowrap flex-1 relative"
-                  >
-                    <Users className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[10px] font-medium">Collab</span>
-                  </TabsTrigger>
+
                 </TabsList>
               </div>
             </div>
@@ -547,9 +533,7 @@ export default function DocumentViewer() {
                 <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
               </TabsContent>
 
-              <TabsContent value="collaborate" className="mt-0 p-0 w-full max-w-full">
-                <StudyBuddiesTab lessonId={lesson?.id} lessonName={lesson?.course_name} />
-              </TabsContent>
+
             </div>
           </Tabs>
         </div>
