@@ -175,14 +175,12 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         fullExtractedContent = extractedContent;
       }
 
-      const user = await base44.auth.me();
-      const profile = await base44.entities.LearningProfile.filter({
-        id: user.learning_profile_id
-      });
-
-      const learningProfile = profile[0] || {};
-
       // Create lesson immediately after OCR/compression
+      const learningProfile = {
+        grade: userGrade,
+        school: userSchool,
+        city: ""
+      };
       setProcessingStep("Creating lesson...");
 
       const lessonData = {
