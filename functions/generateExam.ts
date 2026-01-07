@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
                 maxOutputTokens: 60000
             },
             tools: [{
-                googleSearchRetrieval: {}
+                googleSearch: {}
             }],
             safetySettings: [
                 { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
