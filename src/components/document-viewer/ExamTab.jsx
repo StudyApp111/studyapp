@@ -42,6 +42,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const [selectedExamNumber, setSelectedExamNumber] = useState(null);
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [correctStreak, setCorrectStreak] = useState(0);
+  const loadingExamRef = useRef(null); // Track which exam we're currently loading
   
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef(null);
@@ -53,38 +54,38 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const lastSavedQuestionsRef = useRef(null);
   const generationTriggeredRef = useRef(new Set()); // Track which exams we've triggered generation for
 
-  // Auto-select Exam 1 (generation happens in background from CreateLessonModal)
+  // Single useEffect to handle exam selection and loading
   useEffect(() => {
-    if (lesson && !selectedExamNumber) {
-      const allExamsForLesson = exams || [];
+    if (!lesson?.id) return;
 
+    const allExamsForLesson = exams || [];
+
+    // Determine which exam to load
+    let examNumberToLoad = selectedExamNumber;
+
+    if (!examNumberToLoad) {
       // First priority: in-progress exam
       const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
       if (inProgressExam) {
         console.log("📋 Auto-selecting in-progress exam:", inProgressExam.exam_number);
-        setSelectedExamNumber(inProgressExam.exam_number);
-        return;
+        examNumberToLoad = inProgressExam.exam_number;
+      } else {
+        // Check if Exam 1 exists or default to 1
+        const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
+        console.log("📋 Auto-selecting Exam 1", exam1 ? `(exists with ${exam1.questions?.length || 0} questions)` : "(will create)");
+        examNumberToLoad = 1;
       }
 
-      // Second priority: Exam 1 if it exists
-      const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
-      if (exam1) {
-        console.log("📋 Auto-selecting Exam 1:", exam1.id, "| has questions:", exam1.questions?.length || 0);
-        setSelectedExamNumber(1);
-        return;
-      }
-
-      // No exam exists - auto-select Exam 1 to trigger creation
-      console.log("📋 Auto-selecting Exam 1 (will create)");
-      setSelectedExamNumber(1);
+      setSelectedExamNumber(examNumberToLoad);
     }
-  }, [lesson?.id, exams]);
 
-  useEffect(() => {
-    if (lesson?.id && selectedExamNumber && !isGenerating) {
-      loadOrGenerateExam(selectedExamNumber);
+    // Only load if we haven't already loaded this exact exam for this lesson
+    const loadKey = `${lesson.id}-${examNumberToLoad}`;
+    if (loadingExamRef.current !== loadKey) {
+      loadingExamRef.current = loadKey;
+      loadOrGenerateExam(examNumberToLoad);
     }
-  }, [lesson?.id, selectedExamNumber]);
+  }, [lesson?.id, exams, selectedExamNumber]);
 
   useEffect(() => {
     if (exam && !exam.completed && exam.id !== examIdRef.current) {
@@ -200,12 +201,16 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       return;
     }
 
-    // Prevent duplicate generation attempts using ref
     const generationKey = `${lesson.id}-${examNumber}`;
+
+    // Block if already in progress
     if (generationTriggeredRef.current.has(generationKey)) {
-      console.log("⏭️ Generation already in progress for", generationKey);
+      console.log("⏭️ Already loading/generating exam", examNumber);
       return;
     }
+
+    // Mark as in progress immediately
+    generationTriggeredRef.current.add(generationKey);
 
     try {
       const existingExams = await base44.entities.Exam.filter({ 
@@ -223,51 +228,42 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
         // Check if generation is needed
         if (!loadedExam.questions || loadedExam.questions.length === 0) {
-          // Mark as triggered BEFORE starting async operation
-          generationTriggeredRef.current.add(generationKey);
           setIsGenerating(true);
+          console.log("🔄 Generating questions for existing exam:", loadedExam.id);
 
-          try {
-            await generateExam(loadedExam.id, examNumber);
-            // Reload the exam after generation
-            const updatedExams = await base44.entities.Exam.filter({ id: loadedExam.id });
-            if (updatedExams[0]) {
-              setExam(updatedExams[0]);
-            }
-          } finally {
-            setIsGenerating(false);
-            generationTriggeredRef.current.delete(generationKey);
+          await generateExam(loadedExam.id, examNumber);
+
+          // Reload the exam after generation
+          const updatedExams = await base44.entities.Exam.filter({ id: loadedExam.id });
+          if (updatedExams[0]) {
+            setExam(updatedExams[0]);
           }
-          return;
+          setIsGenerating(false);
         } else {
-          // Load existing in-progress exam and restore question position
+          // Load existing in-progress exam
           setExam(loadedExam);
           const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer || q.user_answer.trim() === "");
-          if (firstUnanswered >= 0) {
-            setCurrentQuestion(firstUnanswered);
-          } else {
-            setCurrentQuestion(loadedExam.questions.length - 1);
-          }
+          setCurrentQuestion(firstUnanswered >= 0 ? firstUnanswered : loadedExam.questions.length - 1);
         }
       } else {
-        // Mark as triggered BEFORE starting async operation
-        generationTriggeredRef.current.add(generationKey);
+        // Create new exam
         setIsGenerating(true);
+        console.log("🆕 Creating new exam:", examNumber);
 
-        try {
-          const createdExam = await generateExam(null, examNumber);
-          if (createdExam) {
-            setExam(createdExam);
-          }
-        } finally {
-          setIsGenerating(false);
-          generationTriggeredRef.current.delete(generationKey);
+        const createdExam = await generateExam(null, examNumber);
+        if (createdExam) {
+          setExam(createdExam);
         }
+        setIsGenerating(false);
       }
     } catch (error) {
-      console.error("Error loading exam:", error);
-      generationTriggeredRef.current.delete(generationKey);
+      console.error("❌ Error loading exam:", error);
       setIsGenerating(false);
+    } finally {
+      // Clean up the lock after a delay to prevent rapid re-triggers
+      setTimeout(() => {
+        generationTriggeredRef.current.delete(generationKey);
+      }, 1000);
     }
   };
 
