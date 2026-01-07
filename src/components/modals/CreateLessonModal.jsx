@@ -171,28 +171,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         if (!description.trim()) {
           throw new Error("Please enter a description");
         }
-        
-        // Expand description using AI with web search
-        setProcessingStep("Researching topic...");
-        
-        const expansionResult = await base44.integrations.Core.InvokeLLM({
-          prompt: `You are an educational content expert. The student wants to study: "${description.trim()}" for their ${courseName} course (Grade: ${userGrade || "N/A"}).
-
-Generate a comprehensive study guide (1500-2000 words) covering:
-1. Core concepts and definitions
-2. Key formulas, processes, or frameworks
-3. Important examples and applications
-4. Common exam topics and question types
-
-Use web search to ensure accuracy and current information. Write in clear, educational language.`,
-          add_context_from_internet: true
-        });
-        
-        if (!expansionResult?.content) {
-          throw new Error("Failed to expand topic. Please add more detail to your description.");
-        }
-        
-        extractedContent = expansionResult.content;
+        extractedContent = description.trim();
         fullExtractedContent = extractedContent;
       }
 
