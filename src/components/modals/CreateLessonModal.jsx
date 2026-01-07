@@ -218,9 +218,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
 
       // === BACKGROUND TASKS (non-blocking) ===
-      // Exam generation now handled by ExamTab
 
-      // Background: Curriculum mapping (PRIORITY 2 - only needed after exam completion)
+      // Background: Curriculum mapping
       (async () => {
         try {
           console.log("🔄 Starting background curriculum mapping...");
