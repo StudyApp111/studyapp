@@ -195,6 +195,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       if (inputType === "description") {
         lessonData.description = description.trim();
         lessonData.extracted_content = description.trim();
+        lessonData.compressed_content = compressedForPrompts;
       } else if (inputType === "file") {
         lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
         lessonData.file_urls = fileUrls;
