@@ -43,8 +43,7 @@ Deno.serve(async (req) => {
             generationConfig: {
                 temperature: 0.2,
                 topP: 0.95,
-                maxOutputTokens: 60000,
-                thinkingLevel: "MINIMAL"
+                maxOutputTokens: 60000
             },
             tools: [{
                 googleSearch: {}
@@ -65,7 +64,7 @@ Deno.serve(async (req) => {
         console.log('⏳ Calling Gemini API for exam generation...');
         console.log('📋 Request body:', JSON.stringify(requestBody, null, 2));
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {
