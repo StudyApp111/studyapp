@@ -52,15 +52,22 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
 
-  // Don't auto-generate - let users start exams manually
+  // Auto-select Exam 1 if it exists, or any in-progress exam
   useEffect(() => {
-    // Only auto-select if there's an in-progress exam
     if (lesson && !selectedExamNumber) {
       const allExamsForLesson = exams || [];
-      const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
       
+      // First priority: in-progress exam
+      const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
       if (inProgressExam) {
         setSelectedExamNumber(inProgressExam.exam_number);
+        return;
+      }
+      
+      // Second priority: Exam 1 if it exists
+      const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
+      if (exam1) {
+        setSelectedExamNumber(1);
       }
     }
   }, [lesson?.id, exams]);

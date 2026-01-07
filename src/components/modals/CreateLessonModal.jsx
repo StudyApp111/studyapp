@@ -409,7 +409,7 @@ Constraints:
       
       // Store in sessionStorage before navigation
       sessionStorage.setItem('currentLessonId', lesson.id);
-      
+
       onOpenChange(false);
 
       navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
@@ -427,6 +427,26 @@ Constraints:
       base44.entities.Lesson.update(lesson.id, {
         curriculum_map: curriculumMap
       }).catch(err => console.error("Lesson curriculum update error:", err));
+
+      // Background: Auto-generate Exam 1 immediately (non-blocking)
+      (async () => {
+        try {
+          const exam1 = await base44.entities.Exam.create({
+            lesson_id: lesson.id,
+            exam_number: 1,
+            status: 'not_started'
+          });
+
+          // Trigger exam generation in background
+          await base44.functions.invoke('generateExam', {
+            exam_id: exam1.id,
+            lesson_id: lesson.id,
+            content: extractedContent // Use compressed content
+          });
+        } catch (err) {
+          console.error("Auto-generate Exam 1 error:", err);
+        }
+      })();
     } catch (err) {
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);
