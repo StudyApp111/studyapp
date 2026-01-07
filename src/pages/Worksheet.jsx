@@ -217,13 +217,19 @@ export default function Worksheet() {
       let contentDescription = "";
       if (lessonData.input_type === "description" && lessonData.description) {
         contentDescription = lessonData.description;
-      } else if (lessonData.input_type === "url" && lessonData.extracted_content) {
+        console.log("📝 Using description as content");
+      } else if (lessonData.compressed_content) {
+        contentDescription = lessonData.compressed_content;
+        console.log("📦 Using compressed_content");
+      } else if (lessonData.extracted_content) {
         contentDescription = lessonData.extracted_content;
-      } else if (lessonData.input_type === "file" && lessonData.extracted_content) {
-        contentDescription = lessonData.extracted_content;
+        console.log("📄 Using extracted_content");
       } else {
         contentDescription = lessonData.description || "N/A";
+        console.log("⚠️ Fallback to description or N/A");
       }
+
+      console.log("📏 Content length:", contentDescription.length, "characters");
 
       let aiPrompt = "";
 
@@ -866,16 +872,7 @@ Output Format: Valid JSON object matching the schema.`;
 
       console.log('[SUBMIT] Questions graded. Total:', questionsWithGrading.length);
 
-      let contentDescription = "";
-      if (lesson.input_type === "description" && lesson.description) {
-        contentDescription = lesson.description;
-      } else if (lesson.input_type === "url" && lesson.extracted_content) {
-        contentDescription = lesson.extracted_content;
-      } else if (lesson.input_type === "file" && lesson.extracted_content) {
-        contentDescription = lesson.extracted_content;
-      } else {
-        contentDescription = lesson.description || "N/A";
-      }
+      let contentDescription = lesson.compressed_content || lesson.extracted_content || lesson.description || "N/A";
 
       const worksheetPerformanceData = questionsWithGrading.map((q, idx) => ({
         question_number: q.question_number,
