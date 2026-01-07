@@ -209,41 +209,26 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           return;
         }
         
-        // Check if generation is needed
-        if (!loadedExam.questions || loadedExam.questions.length === 0) {
-          const examKey = `${lesson.id}-${examNumber}`;
-          
-          // Prevent duplicate generation
-          if (generationTriggeredRef.current.has(examKey)) {
-            console.log("⏳ Generation already triggered, polling for completion...");
-            setIsGenerating(true);
-            
-            // Poll for completion every 2 seconds
-            const pollInterval = setInterval(async () => {
-              const updated = await base44.entities.Exam.filter({ id: loadedExam.id });
-              if (updated[0]?.questions?.length > 0) {
-                clearInterval(pollInterval);
-                setExam(updated[0]);
-                setIsGenerating(false);
-              }
-            }, 2000);
-            
-            // Stop polling after 60 seconds
-            setTimeout(() => clearInterval(pollInterval), 60000);
-            return;
-          }
-          
-          console.log("🔄 Starting exam generation...");
-          generationTriggeredRef.current.add(examKey);
+        // Check if generation is in progress or needed
+        if (loadedExam.status === 'generating' || (!loadedExam.questions || loadedExam.questions.length === 0)) {
           setIsGenerating(true);
-          await generateExam(loadedExam.id, examNumber);
           
-          // Reload exam after generation
-          const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
-          if (refreshed[0]) {
-            setExam(refreshed[0]);
-          }
-          setIsGenerating(false);
+          // Poll for completion every 2 seconds
+          const pollInterval = setInterval(async () => {
+            const updated = await base44.entities.Exam.filter({ id: loadedExam.id });
+            if (updated[0]?.questions?.length > 0) {
+              clearInterval(pollInterval);
+              setExam(updated[0]);
+              setIsGenerating(false);
+            }
+          }, 2000);
+          
+          // Stop polling after 60 seconds
+          setTimeout(() => {
+            clearInterval(pollInterval);
+            setIsGenerating(false);
+          }, 60000);
+          return;
         } else {
           // Load existing in-progress exam and restore question position
           setExam(loadedExam);
