@@ -230,21 +230,20 @@ export default function Layout({ children, currentPageName }) {
               })}
             </nav>
 
-            {/* Bottom: Notifications + Profile */}
+            {/* Bottom: Profile */}
             <div className="p-2 space-y-2">
               {user && (
                 <button
-                    onClick={() => navigate(createPageUrl("Settings"))}
-                    className="w-full aspect-square rounded-xl bg-slate-100 hover:bg-purple-100 flex items-center justify-center transition-all"
-                    title={user.full_name || 'Profile'}
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-sm">
-                        {user.full_name?.[0]?.toUpperCase() || 'U'}
-                      </span>
-                    </div>
-                  </button>
-                </>
+                  onClick={() => navigate(createPageUrl("Settings"))}
+                  className="w-full aspect-square rounded-xl bg-slate-100 hover:bg-purple-100 flex items-center justify-center transition-all"
+                  title={user.full_name || 'Profile'}
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {user.full_name?.[0]?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                </button>
               )}
             </div>
           </div>
