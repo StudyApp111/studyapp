@@ -464,7 +464,6 @@ export default function DocumentViewerTabs({ lesson }) {
               )}
             </div>
           </div>
-          </div>
         </div>
       </Card>
 
