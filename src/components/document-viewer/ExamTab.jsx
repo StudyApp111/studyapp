@@ -337,7 +337,6 @@ For EACH question:
    - True/False
    - Fill in the Blank
    - Short Answer
-   - Structured Response
 
 2. Apply strict formatting rules:
 
@@ -354,7 +353,7 @@ Fill in the Blank:
 - EXACTLY one blank written as ____.
 - Blank must be a key term, value, or short phrase.
 
-Short Answer / Structured Response:
+Short Answer:
 - options = []
 - Direct prompt requesting a value, explanation, justification, or worked solution.
 
