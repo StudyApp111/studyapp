@@ -215,13 +215,11 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       onOpenChange(false);
 
-      // Navigate to exam tab if description, doc tab if file upload
-      const targetTab = inputType === "description" ? "exam" : "doc";
-      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=${targetTab}`);
+      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
 
       // === BACKGROUND TASKS (non-blocking) ===
 
-      // Background: Curriculum mapping (needed before exam generation)
+      // Background: Curriculum mapping
       (async () => {
         try {
           console.log("🔄 Starting background curriculum mapping...");
