@@ -17,9 +17,7 @@ const HIGHLIGHT_COLORS = {
 };
 
 export default function DocumentViewerTabs({ lesson }) {
-  // Default to transcript if we have extracted content
-  const initialMode = lesson?.extracted_content ? "transcript" : "pdf";
-  const [viewMode, setViewMode] = useState(initialMode);
+  const [viewMode, setViewMode] = useState("transcript");
   const [searchQuery, setSearchQuery] = useState("");
   const [annotations, setAnnotations] = useState([]);
   const [selectedText, setSelectedText] = useState("");
@@ -38,13 +36,6 @@ export default function DocumentViewerTabs({ lesson }) {
       loadAnnotations();
     }
   }, [lesson?.id]);
-  
-  // Auto-switch to transcript when extracted content loads
-  useEffect(() => {
-    if (lesson?.extracted_content && !lesson?.file_url) {
-      setViewMode("transcript");
-    }
-  }, [lesson?.extracted_content, lesson?.file_url]);
 
   const loadAnnotations = async () => {
     try {
@@ -65,10 +56,7 @@ export default function DocumentViewerTabs({ lesson }) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
-      // Get selection indices relative to full uncompressed content
-      // Use extracted_content (uncompressed OCR) not compressed_content
-      const content = lesson?.extracted_content || "";
-      const start = content.indexOf(text);
+      const start = extractedContent.indexOf(text);
       const end = start + text.length;
       
       setToolbarPosition({ 
@@ -161,25 +149,28 @@ export default function DocumentViewerTabs({ lesson }) {
   };
 
   const handleCopyTranscript = () => {
-    if (lesson?.extracted_content) {
-      navigator.clipboard.writeText(lesson.extracted_content);
+    if (extractedContent) {
+      navigator.clipboard.writeText(extractedContent);
       toast.success("Transcript copied to clipboard");
     }
   };
 
-  // Render content with highlights
-  // IMPORTANT: Use uncompressed extracted_content for display
-  // compressed_content is only for LLM prompts
   const renderHighlightedContent = () => {
-    const content = lesson?.extracted_content || "";
-    if (!content) return null;
+    if (!extractedContent) {
+      return (
+        <div className="text-center py-12 text-slate-500">
+          <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p className="text-sm">No transcript available</p>
+          <p className="text-xs mt-1">Content is being processed...</p>
+        </div>
+      );
+    }
     
-    // Apply search highlighting
     if (searchQuery && searchQuery.length > 0) {
       try {
         const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`(${escapedQuery})`, 'gi');
-        const parts = content.split(regex);
+        const parts = extractedContent.split(regex);
         
         return (
           <>
@@ -197,11 +188,9 @@ export default function DocumentViewerTabs({ lesson }) {
       }
     }
     
-    // Sort annotations by position - find by text match if position not reliable
     const annotationsWithPositions = annotations.map(a => {
-      // Try to find the text in the content
       const textToFind = a.highlight_text;
-      const idx = content.indexOf(textToFind);
+      const idx = extractedContent.indexOf(textToFind);
       return {
         ...a,
         resolvedStart: idx >= 0 ? idx : (a.position?.start ?? -1),
@@ -212,7 +201,7 @@ export default function DocumentViewerTabs({ lesson }) {
     const sortedAnnotations = annotationsWithPositions.sort((a, b) => a.resolvedStart - b.resolvedStart);
     
     if (sortedAnnotations.length === 0) {
-      return <>{content}</>;
+      return <>{extractedContent}</>;
     }
     
     const elements = [];
@@ -225,16 +214,14 @@ export default function DocumentViewerTabs({ lesson }) {
       // Skip if overlapping with previous
       if (start < lastIndex) return;
       
-      // Add text before this highlight
       if (start > lastIndex) {
-        const beforeText = content.substring(lastIndex, start);
+        const beforeText = extractedContent.substring(lastIndex, start);
         elements.push(
           <span key={`text-${idx}`}>{beforeText}</span>
         );
       }
       
-      // Add highlighted text
-      const highlightedText = content.substring(start, end);
+      const highlightedText = extractedContent.substring(start, end);
       const colorConfig = HIGHLIGHT_COLORS[annotation.color] || HIGHLIGHT_COLORS.yellow;
       
       elements.push(
@@ -259,10 +246,9 @@ export default function DocumentViewerTabs({ lesson }) {
       lastIndex = end;
     });
     
-    // Add remaining text
-    if (lastIndex < content.length) {
+    if (lastIndex < extractedContent.length) {
       elements.push(
-        <span key="text-end">{content.substring(lastIndex)}</span>
+        <span key="text-end">{extractedContent.substring(lastIndex)}</span>
       );
     }
     
@@ -283,22 +269,8 @@ export default function DocumentViewerTabs({ lesson }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showToolbar, showNoteInput]);
 
-  // Always show component if we have extracted content OR file
-  const hasContent = lesson?.extracted_content || lesson?.file_url;
-  
-  if (!hasContent) {
-    return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl h-[calc(100vh-180px)] shadow-xl">
-        <div className="flex items-center justify-center h-full p-6">
-          <div className="text-center text-slate-500">
-            <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="text-sm">No document uploaded</p>
-            <p className="text-xs text-slate-400 mt-2">This lesson was created from a description</p>
-          </div>
-        </div>
-      </Card>
-    );
-  }
+  const extractedContent = lesson?.extracted_content || "";
+  const hasFile = !!lesson?.file_url;
 
   const isPDF = lesson?.file_url?.toLowerCase().includes('.pdf');
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(lesson?.file_url || '');
@@ -311,7 +283,7 @@ export default function DocumentViewerTabs({ lesson }) {
           {/* Header with Controls */}
           <div className="border-b border-purple-200 px-3 py-2">
             <div className="flex items-center justify-between gap-2">
-              {lesson?.extracted_content && lesson?.file_url && (
+              {hasFile && (
                 <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
                   <Button
                     variant={viewMode === "pdf" ? "default" : "ghost"}
@@ -367,24 +339,21 @@ export default function DocumentViewerTabs({ lesson }) {
 
           {/* Content Area */}
           <div className="flex-1 overflow-hidden">
-            {viewMode === "pdf" && lesson?.file_url ? (
+            {viewMode === "pdf" && hasFile ? (
               <div className="h-full bg-slate-50 relative">
                 {isPDF || isOfficeDoc ? (
                   <>
-                    {/* Loading state */}
                     <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10" id="pdf-loader">
                       <div className="text-center">
                         <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" />
                         <p className="text-sm text-slate-600">Loading document...</p>
-                        <p className="text-xs text-slate-400 mt-1">This may take a moment</p>
                       </div>
                     </div>
                     <iframe
                       src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
                       className="w-full h-full border-0 relative z-20"
                       title="Course Document"
-                      onLoad={(e) => {
-                        // Hide loader when iframe loads
+                      onLoad={() => {
                         const loader = document.getElementById('pdf-loader');
                         if (loader) loader.style.display = 'none';
                       }}
@@ -413,7 +382,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   </div>
                 )}
               </div>
-            ) : viewMode === "transcript" && lesson?.extracted_content ? (
+            ) : viewMode === "transcript" ? (
               <div className="h-full flex">
                 {/* Main Content */}
                 <div 
