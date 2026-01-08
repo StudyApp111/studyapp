@@ -43,9 +43,6 @@ Deno.serve(async (req) => {
                 topP: 0.95,
                 maxOutputTokens: 60000
             },
-            tools: [{
-                googleSearch: {}
-            }],
             safetySettings: [
                 { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
                 { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
