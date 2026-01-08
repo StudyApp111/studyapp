@@ -15,6 +15,7 @@ import BadgeDisplay from "@/components/gamification/BadgeDisplay";
 import { AssignmentActivityCard } from "@/components/home/ActivityCard";
 import XPProgressBar from "@/components/gamification/XPProgressBar";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
+import CreateLessonModal from "@/components/lesson/CreateLessonModal";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
 
@@ -23,6 +24,7 @@ export default function Home() {
     const [user, setUser] = useState(null);
     
     const [dailyXP, setDailyXP] = useState(0);
+    const [showCreateLesson, setShowCreateLesson] = useState(false);
     const [studyMinutesToday, setStudyMinutesToday] = useState(0);
     const [questionsToday, setQuestionsToday] = useState(0);
     const [flashcardsToday, setFlashcardsToday] = useState(0);
@@ -259,6 +261,37 @@ export default function Home() {
               </CardContent>
             </Card>
           </motion.div>
+
+          {/* Create Lesson Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+            onClick={() => setShowCreateLesson(true)}
+            className="cursor-pointer group"
+          >
+            <Card className="h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 hover:scale-[1.02]">
+              <CardContent className="p-5 md:p-8">
+                <div className="flex items-start justify-between mb-3 md:mb-4">
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Plus className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                  </div>
+                  <div className="w-9 h-9 md:w-10 md:h-10 bg-white/80 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-slate-900" />
+                  </div>
+                </div>
+                <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">Create Lesson</h3>
+                <p className="text-white/90 text-sm md:text-base mb-3 md:mb-4">
+                  Upload notes or type a description, then study with Doc, Exam, Flashcards & Grade tabs
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">OCR to Transcript</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Exam & Flashcards</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Sleek UI</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
 
@@ -288,6 +321,9 @@ export default function Home() {
   onOpenChange={setShowWelcome}
   userName={user?.full_name?.split(' ')[0]}
 />
+
+{/* Create Lesson Modal */}
+<CreateLessonModal open={showCreateLesson} onOpenChange={setShowCreateLesson} />
 </div>
 );
 }
