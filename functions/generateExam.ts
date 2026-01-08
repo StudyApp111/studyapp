@@ -1,156 +1,120 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+// Uses OpenAI Chat Completions to generate exam questions.
+// Honors an optional response_json_schema by instructing the model to strictly follow it
+// and enforces JSON-only output via response_format.
+// NOTE: Requires OPENAI_API_KEY (preferred). Falls back to OpenAI / OPENAI_KEY if present.
 
 Deno.serve(async (req) => {
-    console.log('=== generateExam Function Start ===');
-    
-    try {
-        const base44 = createClientFromRequest(req);
-        console.log('✅ Base44 client created');
-        
-        const user = await base44.auth.me();
-        console.log('✅ User authenticated:', user?.email);
-
-        if (!user) {
-            console.error('❌ Authentication failed - no user');
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const { prompt, response_json_schema } = await req.json();
-        console.log('✅ Request body parsed');
-        console.log('📝 Prompt length:', prompt?.length);
-        console.log('📋 Schema provided:', !!response_json_schema);
-
-        if (!prompt) {
-            console.error('❌ Missing prompt in request');
-            return Response.json({ error: 'Prompt is required' }, { status: 400 });
-        }
-
-        const apiKey = Deno.env.get("OpenAI");
-        if (!apiKey) {
-            console.error('❌ CRITICAL: OpenAI API key not found in environment');
-            return Response.json({ error: 'Service configuration error' }, { status: 500 });
-        }
-        console.log('✅ OpenAI API key found');
-
-        // Build messages array
-        const messages = [
-            {
-                role: "system",
-                content: "You are an expert assessment designer. Always respond with valid JSON matching the provided schema."
-            },
-            {
-                role: "user",
-                content: prompt
-            }
-        ];
-
-        const requestBody = {
-            model: "gpt-5.1-chat-latest",
-            messages: messages,
-            temperature: 1,
-            max_completion_tokens: 16000
-        };
-
-        // Add JSON schema if provided
-        if (response_json_schema) {
-            requestBody.response_format = {
-                type: "json_schema",
-                json_schema: {
-                    name: "exam_response",
-                    strict: true,
-                    schema: response_json_schema
-                }
-            };
-        }
-
-        console.log('⏳ Calling OpenAI API for exam generation...');
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        console.log('📥 OpenAI API response status:', response.status);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ OpenAI API error:', response.status, errorText);
-            return Response.json({ 
-                error: 'Failed to generate content',
-                details: errorText 
-            }, { status: 500 });
-        }
-
-        const data = await response.json();
-        console.log('✅ OpenAI API response received');
-        
-        const generatedText = data.choices?.[0]?.message?.content;
-        
-        if (!generatedText) {
-            console.error('❌ No content generated from OpenAI');
-            console.error('📊 Full response:', JSON.stringify(data, null, 2));
-            return Response.json({ 
-                error: 'No content generated. Please try again.' 
-            }, { status: 500 });
-        }
-        
-        console.log('✅ Generated text extracted');
-        console.log('📏 Response length:', generatedText.length, 'characters');
-
-        try {
-            const parsedResponse = JSON.parse(generatedText);
-            console.log('✅ JSON parsed successfully');
-            console.log('📊 Questions generated:', parsedResponse.exam_questions?.length || 0);
-            
-            // Validate question formats
-            if (parsedResponse.exam_questions) {
-                parsedResponse.exam_questions = parsedResponse.exam_questions.map((q, idx) => {
-                    const type = q.question_type?.toLowerCase() || '';
-                    
-                    if (type.includes('multiple choice') || type.includes('mcq')) {
-                        if (!q.options || q.options.length !== 4) {
-                            console.warn(`⚠️ Q${idx + 1}: MCQ should have exactly 4 options, got ${q.options?.length || 0}`);
-                        }
-                    } else if (type.includes('true') && type.includes('false')) {
-                        if (!q.options || q.options.length !== 2 || !q.options.includes('True') || !q.options.includes('False')) {
-                            console.warn(`⚠️ Q${idx + 1}: T/F should have ["True", "False"], got`, q.options);
-                        }
-                    } else if (type.includes('fill') || type.includes('blank')) {
-                        if (q.options && q.options.length > 0) {
-                            console.warn(`⚠️ Q${idx + 1}: Fill in the Blank should have empty options, got ${q.options.length}`);
-                            q.options = [];
-                        }
-                    } else if (type.includes('short answer')) {
-                        if (q.options && q.options.length > 0) {
-                            console.warn(`⚠️ Q${idx + 1}: Short Answer should have empty options, got ${q.options.length}`);
-                            q.options = [];
-                        }
-                    }
-                    
-                    return q;
-                });
-            }
-            
-            return Response.json(parsedResponse);
-        } catch (parseError) {
-            console.error('❌ JSON parse failed:', parseError.message);
-            console.error('📄 Raw response (first 1000 chars):', generatedText.substring(0, 1000));
-            
-            return Response.json({ 
-                error: 'Failed to parse AI response as JSON',
-                details: parseError.message
-            }, { status: 500 });
-        }
-
-    } catch (error) {
-        console.error('❌ CRITICAL ERROR in generateExam:', error);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-        return Response.json({ 
-            error: 'Internal server error' 
-        }, { status: 500 });
+  console.log('=== generateExam (GPT-5.1) Start ===');
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const body = await req.json();
+    const prompt = body?.prompt;
+    const responseJsonSchema = body?.response_json_schema; // optional
+
+    if (!prompt || typeof prompt !== 'string') {
+      return Response.json({ error: 'Prompt is required' }, { status: 400 });
+    }
+
+    const apiKey =
+      Deno.env.get('OPENAI_API_KEY') ||
+      Deno.env.get('OpenAI') ||
+      Deno.env.get('OPENAI_KEY');
+
+    if (!apiKey) {
+      console.error('Missing OPENAI_API_KEY (or OpenAI/OPENAI_KEY)');
+      return Response.json({ error: 'Service configuration error' }, { status: 500 });
+    }
+
+    const systemDirectives = [
+      'You are an expert assessment designer.',
+      'Always return ONLY valid JSON. No markdown, no commentary.',
+      'If a JSON schema is provided, the output MUST strictly conform to it (keys, types, and structure).',
+      'If schema is not provided, output a JSON object with an "exam_questions" array where each item contains:',
+      '{ question_number, question_type, difficulty_index, question_text, options, correct_answer, explanation, assessed_competencies, targeted_misconception }',
+    ].join(' ');
+
+    // Build messages; include schema as a final system message (model will be instructed to follow it)
+    const messages = [
+      { role: 'system', content: systemDirectives },
+      { role: 'user', content: prompt },
+    ];
+
+    if (responseJsonSchema && typeof responseJsonSchema === 'object') {
+      messages.push({
+        role: 'system',
+        content: `JSON Schema (strict):\n${JSON.stringify(responseJsonSchema)}`,
+      });
+    }
+
+    // Prepare Chat Completions payload
+    const payload = {
+      model: 'gpt-5.1',
+      messages,
+      temperature: 0.2,
+      top_p: 0.95,
+      // Ask for pure JSON to simplify parsing
+      response_format: { type: 'json_object' },
+    };
+
+    console.log('Calling OpenAI chat.completions with GPT-5.1...');
+
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error('OpenAI error:', resp.status, errText);
+      return Response.json({ error: 'Failed to generate content', details: errText }, { status: 500 });
+    }
+
+    const data = await resp.json();
+    const content = data?.choices?.[0]?.message?.content;
+
+    if (!content) {
+      console.error('No content from OpenAI');
+      return Response.json({ error: 'No content generated. Please try again.' }, { status: 500 });
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (e) {
+      console.error('JSON parse failed:', e?.message);
+      return Response.json({ error: 'Failed to parse AI response as JSON' }, { status: 500 });
+    }
+
+    // Minimal normalization/validation for exam questions
+    if (parsed?.exam_questions && Array.isArray(parsed.exam_questions)) {
+      parsed.exam_questions = parsed.exam_questions.map((q, idx) => {
+        const type = String(q?.question_type || '').toLowerCase();
+        // Default options shape per type
+        if (type.includes('true') && type.includes('false')) {
+          q.options = ['True', 'False'];
+        } else if (type.includes('fill') || type.includes('blank') || type.includes('short answer')) {
+          q.options = [];
+        }
+        // Ensure question_number present
+        if (typeof q.question_number !== 'number') q.question_number = idx + 1;
+        return q;
+      });
+    }
+
+    return Response.json(parsed);
+  } catch (error) {
+    console.error('CRITICAL ERROR in generateExam:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
+  }
 });
