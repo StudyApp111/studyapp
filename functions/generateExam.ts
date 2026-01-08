@@ -59,8 +59,16 @@ Deno.serve(async (req) => {
       messages,
       temperature: 0.2,
       top_p: 0.95,
-      // Ask for pure JSON to simplify parsing
-      response_format: { type: 'json_object' },
+      response_format: responseJsonSchema && typeof responseJsonSchema === 'object'
+        ? {
+            type: 'json_schema',
+            json_schema: {
+              name: 'exam_schema',
+              schema: responseJsonSchema,
+              strict: true,
+            },
+          }
+        : { type: 'json_object' },
     };
 
     console.log('Calling OpenAI chat.completions with GPT-5.1...');
