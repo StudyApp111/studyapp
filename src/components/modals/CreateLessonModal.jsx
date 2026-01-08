@@ -127,29 +127,42 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           const uploadResults = await Promise.all(uploadPromises);
           fileUrls = uploadResults.map(result => result.file_url);
 
-          setProcessingStep("Extracting content from your documents...");
+          setProcessingStep("Preparing your lesson...");
           
-          // PARALLEL: Extract content from all files simultaneously
-          const extractPromises = fileUrls.map(fileUrl =>
+          // Fire-and-forget: start extraction immediately, but DON'T await
+          const extractionJobs = fileUrls.map(fileUrl =>
             base44.functions.invoke('extractDocumentContent', { file_url: fileUrl })
           );
-          const extractResults = await Promise.all(extractPromises);
 
-          // Validate all extractions succeeded
-          const failedExtractions = extractResults.filter(r => !r?.data?.extracted_content);
-          if (failedExtractions.length > 0) {
-            throw new Error("Failed to extract content from one or more documents");
-          }
+          // Navigate now; we'll stitch + save content once finished in background
+          extractedContent = '';
+          fullExtractedContent = '';
 
-          // Combine all content
-          extractedContent = extractResults
-            .map(r => r.data.extracted_content)
-            .join("\n\n--- NEXT DOCUMENT ---\n\n");
-          fullExtractedContent = extractedContent;
-
-          if (extractedContent.length < 50) {
-            throw new Error("Extracted content is too short. Please ensure your files contain readable text.");
-          }
+          // After navigating, stitch and save content and compressed version
+          Promise.allSettled(extractionJobs).then(async (results) => {
+            const ok = results
+              .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
+              .map(r => r.value.data.extracted_content);
+            const combined = ok.join("\n\n--- NEXT DOCUMENT ---\n\n");
+            const contentToSave = combined?.trim?.() || '';
+            try {
+              if (contentToSave.length > 0) {
+                // Save extracted content
+                await base44.entities.Lesson.update(lessonIdRef.current || tempLessonId, {
+                  extracted_content: contentToSave
+                });
+                // Kick off compression and save when done
+                const comp = await base44.functions.invoke('compressDocument', { content: contentToSave });
+                const cc = comp?.data?.compressed_content || contentToSave;
+                await base44.entities.Lesson.update(lessonIdRef.current || tempLessonId, {
+                  compressed_content: cc
+                });
+                window.dispatchEvent(new Event('reloadLesson'));
+              }
+            } catch (bgErr) {
+              console.warn('Post-nav extraction/compression failed:', bgErr);
+            }
+          });
 
           // Start compression in background (do NOT block navigation)
           setProcessingStep("Optimizing content in background...");
@@ -205,6 +218,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       }
 
       const lesson = await base44.entities.Lesson.create(lessonData);
+      const tempLessonId = lesson.id; // for post-navigation background saves
+      sessionStorage.setItem('currentLessonId', lesson.id);
 
       if (!lesson || !lesson.id) {
         throw new Error("Failed to create lesson");
