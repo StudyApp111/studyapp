@@ -222,9 +222,9 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         }).catch((err) => console.warn('Background compression update failed:', err));
       }
 
-      // Close modal and navigate immediately (no full reload)
+      // Close modal and navigate immediately
       onOpenChange(false);
-      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
+      window.location.href = `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`;
 
       // === BACKGROUND TASKS (fully decoupled, fire-and-forget) ===
       (async () => {
