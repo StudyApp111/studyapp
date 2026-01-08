@@ -232,7 +232,12 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       console.error("ExamTab: Cannot load exam - lesson not ready");
       return;
     }
-    
+    // Wait until OCR compression is available (for file uploads) to minimize prompt size and meet UX requirement
+    if (lesson.input_type === 'file' && !lesson.compressed_content) {
+      console.log('⏳ Waiting for compressed_content before generating exam...');
+      return;
+    }
+
     try {
       const existingExams = await base44.entities.Exam.filter({ 
         lesson_id: lesson.id,
