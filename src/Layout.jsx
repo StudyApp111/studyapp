@@ -42,11 +42,7 @@ const navigationItems = [
           icon: FileCheck,
           isNew: true,
         },
-        {
-          title: "Lesson History",
-          url: createPageUrl("LessonHistory"),
-          icon: History,
-        },
+
         {
           title: "Settings",
           url: createPageUrl("Settings"),
