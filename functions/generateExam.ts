@@ -25,56 +25,59 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Prompt is required' }, { status: 400 });
         }
 
-        const apiKey = Deno.env.get("API_KEY");
+        const apiKey = Deno.env.get("OpenAI");
         if (!apiKey) {
-            console.error('❌ CRITICAL: API_KEY not found in environment');
+            console.error('❌ CRITICAL: OpenAI API key not found in environment');
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
-        console.log('✅ API key found');
+        console.log('✅ OpenAI API key found');
+
+        // Build messages array
+        const messages = [
+            {
+                role: "system",
+                content: "You are an expert assessment designer. Always respond with valid JSON matching the provided schema."
+            },
+            {
+                role: "user",
+                content: prompt
+            }
+        ];
 
         const requestBody = {
-            contents: [{
-                parts: [{
-                    text: prompt
-                }]
-            }],
-            generationConfig: {
-                temperature: 0.2,
-                topP: 0.95,
-                maxOutputTokens: 60000
-            },
-            safetySettings: [
-                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_ONLY_HIGH" },
-                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_ONLY_HIGH" },
-                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_ONLY_HIGH" }
-            ]
+            model: "gpt-4.1-mini",
+            messages: messages,
+            temperature: 0.2,
+            max_tokens: 16000
         };
 
+        // Add JSON schema if provided
         if (response_json_schema) {
-            requestBody.generationConfig.responseMimeType = "application/json";
-            requestBody.generationConfig.responseSchema = response_json_schema;
+            requestBody.response_format = {
+                type: "json_schema",
+                json_schema: {
+                    name: "exam_response",
+                    strict: true,
+                    schema: response_json_schema
+                }
+            };
         }
 
-        console.log('⏳ Calling Gemini API for exam generation...');
-        console.log('📋 Request body:', JSON.stringify(requestBody, null, 2));
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody)
-            }
-        );
+        console.log('⏳ Calling OpenAI API for exam generation...');
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify(requestBody)
+        });
 
-        console.log('📥 Gemini API response status:', response.status);
+        console.log('📥 OpenAI API response status:', response.status);
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Gemini API error:', response.status, errorText);
-            console.error('❌ Full error response:', errorText);
+            console.error('❌ OpenAI API error:', response.status, errorText);
             return Response.json({ 
                 error: 'Failed to generate content',
                 details: errorText 
@@ -82,23 +85,12 @@ Deno.serve(async (req) => {
         }
 
         const data = await response.json();
-        console.log('✅ Gemini API response received');
+        console.log('✅ OpenAI API response received');
         
-        // Check for safety blocks first
-        const candidate = data.candidates?.[0];
-        if (candidate?.finishReason === 'SAFETY') {
-            console.error('❌ Content blocked by safety filter');
-            console.error('📊 Safety message:', candidate.finishMessage);
-            return Response.json({ 
-                error: 'Content generation blocked by safety filters. Please try rephrasing your content or contact support.' 
-            }, { status: 500 });
-        }
-        
-        const generatedText = candidate?.content?.parts?.[0]?.text;
+        const generatedText = data.choices?.[0]?.message?.content;
         
         if (!generatedText) {
-            console.error('❌ No content generated from Gemini');
-            console.error('📊 Finish reason:', candidate?.finishReason);
+            console.error('❌ No content generated from OpenAI');
             console.error('📊 Full response:', JSON.stringify(data, null, 2));
             return Response.json({ 
                 error: 'No content generated. Please try again.' 
@@ -107,10 +99,6 @@ Deno.serve(async (req) => {
         
         console.log('✅ Generated text extracted');
         console.log('📏 Response length:', generatedText.length, 'characters');
-        
-        if (generatedText.length > 50000) {
-            console.error('⚠️ WARNING: Response is extremely large - likely not following JSON schema');
-        }
 
         try {
             const parsedResponse = JSON.parse(generatedText);
@@ -150,7 +138,6 @@ Deno.serve(async (req) => {
         } catch (parseError) {
             console.error('❌ JSON parse failed:', parseError.message);
             console.error('📄 Raw response (first 1000 chars):', generatedText.substring(0, 1000));
-            console.error('📄 Raw response (last 500 chars):', generatedText.substring(Math.max(0, generatedText.length - 500)));
             
             return Response.json({ 
                 error: 'Failed to parse AI response as JSON',
