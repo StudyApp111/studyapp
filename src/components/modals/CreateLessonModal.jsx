@@ -154,7 +154,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
                 // Kick off compression and save when done
                 const comp = await base44.functions.invoke('compressDocument', { content: contentToSave });
                 const cc = comp?.data?.compressed_content || contentToSave;
-                await base44.entities.Lesson.update(lessonIdRef.current || tempLessonId, {
+                await base44.entities.Lesson.update((tempLessonId || sessionStorage.getItem('currentLessonId')), {
                   compressed_content: cc
                 });
                 window.dispatchEvent(new Event('reloadLesson'));
