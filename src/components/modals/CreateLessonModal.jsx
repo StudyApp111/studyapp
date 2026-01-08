@@ -148,7 +148,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
             try {
               if (contentToSave.length > 0) {
                 // Save extracted content
-                await base44.entities.Lesson.update(lessonIdRef.current || tempLessonId, {
+                await base44.entities.Lesson.update((tempLessonId || sessionStorage.getItem('currentLessonId')), {
                   extracted_content: contentToSave
                 });
                 // Kick off compression and save when done
