@@ -11,6 +11,7 @@ import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
+import ParsingLoader from "@/components/document-viewer/ParsingLoader";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
 
@@ -277,21 +278,15 @@ export default function DocumentViewer() {
     await loadLesson();
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
-        <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
-      </div>
-    );
-  }
 
-  if (error || !lesson) {
+
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Unable to Load Lesson</h2>
-          <p className="text-slate-600 mb-4">{error || "Lesson not found"}</p>
+          <p className="text-slate-600 mb-4">{error}</p>
           <Button onClick={() => navigate(createPageUrl("Home"))}>
             Go Back Home
           </Button>
@@ -441,7 +436,11 @@ export default function DocumentViewer() {
               <div className="w-full flex-1 overflow-auto">
                 {hasDocument && (
                   <TabsContent value="doc" className="mt-0 p-0 h-full">
-                    <DocumentViewerTabs lesson={lesson} />
+                    {lesson?.input_type === 'file' && !lesson?.extracted_content ? (
+                      <ParsingLoader />
+                    ) : (
+                      <DocumentViewerTabs lesson={lesson} />
+                    )}
                   </TabsContent>
                 )}
 
@@ -510,7 +509,11 @@ export default function DocumentViewer() {
             <div className="flex-1 overflow-y-auto w-full max-w-full">
               {hasDocument && (
                 <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full h-full">
-                  <DocumentViewerTabs lesson={lesson} />
+                  {lesson?.input_type === 'file' && !lesson?.extracted_content ? (
+                    <ParsingLoader />
+                  ) : (
+                    <DocumentViewerTabs lesson={lesson} />
+                  )}
                 </TabsContent>
               )}
 
