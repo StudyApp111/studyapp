@@ -5,6 +5,32 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 // and enforces JSON-only output via response_format.
 // NOTE: Requires OPENAI_API_KEY (preferred). Falls back to OpenAI / OPENAI_KEY if present.
 
+// Ensure schema compatibility with OpenAI JSON Schema mode
+function sanitizeSchema(schema) {
+  const clone = JSON.parse(JSON.stringify(schema || {}));
+  function walk(node) {
+    if (!node || typeof node !== 'object') return;
+    // Default root/object constraints
+    if (node.type === 'object' || node.properties) {
+      if (!node.type) node.type = 'object';
+      if (typeof node.additionalProperties === 'undefined') node.additionalProperties = false;
+      if (node.properties && typeof node.properties === 'object') {
+        if (!Array.isArray(node.required)) node.required = Object.keys(node.properties);
+        for (const key of Object.keys(node.properties)) {
+          walk(node.properties[key]);
+        }
+      }
+    }
+    if (node.type === 'array' && node.items) {
+      walk(node.items);
+    }
+  }
+  walk(clone);
+  if (!clone.type) clone.type = 'object';
+  if (typeof clone.additionalProperties === 'undefined') clone.additionalProperties = false;
+  return clone;
+}
+
 Deno.serve(async (req) => {
   console.log('=== generateExam (GPT-5.1) Start ===');
   try {
