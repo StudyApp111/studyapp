@@ -71,78 +71,39 @@ export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
   const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
 
   React.useEffect(() => {
-    const checkUser = async () => {
+    let cleanup;
+    (async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
-          base44.auth.redirectToLogin(window.location.pathname + window.location.search);
-          return;
-        }
-        
         const currentUser = await base44.auth.me();
         setUser(currentUser);
         
-        await trackUserSession();
-        const cleanup = trackSessionDuration();
-        
         if (!currentUser.onboarding_completed && location.pathname !== createPageUrl("Onboarding")) {
           navigate(createPageUrl("Onboarding"), { replace: true });
+          return;
         }
         
-        return cleanup;
+        trackUserSession();
+        cleanup = trackSessionDuration();
       } catch (error) {
-        console.error("Error fetching user:", error);
         base44.auth.redirectToLogin(window.location.pathname + window.location.search);
       }
-    };
+    })();
     
-    if (!user) {
-      checkUser();
-    }
-  }, []);
-
-  // Global UI error tracking
-  React.useEffect(() => {
-    const onWindowError = (event) => {
-      try {
-        logError('ui_error', event?.error || event?.message || 'Unknown window error', {
-          source: 'window.error',
-        });
-      } catch {}
-    };
-    const onUnhandledRejection = (event) => {
-      try {
-        logError('ui_error', event?.reason || 'Unhandled promise rejection', {
-          source: 'unhandledrejection',
-        });
-      } catch {}
-    };
-
-    window.addEventListener('error', onWindowError);
-    window.addEventListener('unhandledrejection', onUnhandledRejection);
-    return () => {
-      window.removeEventListener('error', onWindowError);
-      window.removeEventListener('unhandledrejection', onUnhandledRejection);
-    };
+    return () => cleanup?.();
   }, []);
 
 
 
 
 
-  // Don't render layout navigation if onboarding not completed
+
+
   const isOnboardingPage = location.pathname === createPageUrl("Onboarding");
   const showNavigation = user?.onboarding_completed || isOnboardingPage;
-  
-  // Special handling for DocumentViewer page - always show sidebar
-  const isDocumentViewerPage = currentPageName === "DocumentViewer";
-  const showSidebar = showNavigation && !isOnboardingPage && (!sidebarCollapsed || isDocumentViewerPage);
-  
-  // Hide mobile bottom nav on pages with their own custom navigation
+  const showSidebar = showNavigation && !isOnboardingPage;
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
   const showMobileBottomNav = !pagesWithCustomNav.includes(currentPageName);
 
