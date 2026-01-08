@@ -1,6 +1,5 @@
 import AssignmentHistory from './pages/AssignmentHistory';
 import ChangePassword from './pages/ChangePassword';
-import DocumentViewer from './pages/DocumentViewer';
 import EmailManager from './pages/EmailManager';
 import Feedback from './pages/Feedback';
 import Home from './pages/Home';
@@ -16,7 +15,6 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "AssignmentHistory": AssignmentHistory,
     "ChangePassword": ChangePassword,
-    "DocumentViewer": DocumentViewer,
     "EmailManager": EmailManager,
     "Feedback": Feedback,
     "Home": Home,
