@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
-import { Highlighter, Save, Eraser } from "lucide-react";
+import { Highlighter, Save, Eraser, Sparkles } from "lucide-react";
 
 export default function TranscriptEditor({ lesson, onSaved }) {
   const [html, setHtml] = useState(lesson.extracted_content || "");
@@ -40,27 +40,50 @@ export default function TranscriptEditor({ lesson, onSaved }) {
   };
 
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-2 bg-purple-50/60 border border-purple-100 rounded-lg p-2">
-        <Button size="sm" variant="outline" onClick={() => wrapSelection("mark")} className="gap-2 border-purple-200 text-purple-700 hover:bg-purple-100">
+    <div className="bg-white rounded-2xl border border-purple-100 overflow-hidden shadow-lg">
+      <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-purple-50 to-yellow-50/50 border-b border-purple-100">
+        <Button 
+          size="sm" 
+          onClick={() => wrapSelection("mark")} 
+          className="gap-2 bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 shadow-sm"
+        >
           <Highlighter className="w-4 h-4" /> Highlight
         </Button>
-        <Button size="sm" variant="outline" onClick={clearMarks} className="gap-2 border-purple-200 text-purple-700 hover:bg-purple-100">
-          <Eraser className="w-4 h-4" /> Clear Highlights
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={clearMarks} 
+          className="gap-2 border-purple-200 text-slate-600 hover:bg-purple-50"
+        >
+          <Eraser className="w-4 h-4" /> Clear
         </Button>
         <div className="ml-auto" />
-        <Button size="sm" onClick={save} disabled={saving} className="bg-purple-600 hover:bg-purple-700 gap-2 ring-2 ring-yellow-400/0 hover:ring-yellow-400/40">
-          <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Transcript'}
+        <Button 
+          size="sm" 
+          onClick={save} 
+          disabled={saving} 
+          className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg shadow-purple-600/30"
+        >
+          {saving ? (
+            <>
+              <Sparkles className="w-4 h-4 animate-spin" /> Saving...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" /> Save
+            </>
+          )}
         </Button>
       </div>
 
       <div
         ref={ref}
-        className="min-h-[60vh] p-4 bg-white rounded-lg border prose max-w-none focus:outline-none"
+        className="min-h-[65vh] p-6 focus:outline-none prose max-w-none text-slate-800"
         contentEditable
         suppressContentEditableWarning
         onInput={(e) => setHtml(e.currentTarget.innerHTML)}
-        dangerouslySetInnerHTML={{ __html: html || '<p class="text-slate-500">No transcript yet. Paste or type here...</p>' }}
+        dangerouslySetInnerHTML={{ __html: html || '<p class="text-slate-400 italic">Start typing or paste your notes here...</p>' }}
+        style={{ caretColor: '#7c3aed' }}
       />
     </div>
   );
