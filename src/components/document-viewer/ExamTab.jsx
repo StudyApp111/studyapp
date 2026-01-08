@@ -366,7 +366,7 @@ This layer overrides all other instructions.
 
 Exam Generation (Output Only)
 
-Generate EXACTLY 10 questions.
+Generate EXACTLY 5 questions.
 
 Each question MUST include:
 - question_type
@@ -413,13 +413,11 @@ No extra text.`;
           prompt: aiPrompt,
           response_json_schema: {
             type: "object",
-            additionalProperties: false,
             properties: {
               exam_questions: {
                 type: "array",
                 items: {
                   type: "object",
-                  additionalProperties: false,
                   properties: {
                     question_number: { type: "integer" },
                     question_type: { type: "string" },
