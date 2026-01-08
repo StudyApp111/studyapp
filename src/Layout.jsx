@@ -71,18 +71,14 @@ export default function Layout({ children, currentPageName }) {
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
   const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
-
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
-
 
   React.useEffect(() => {
     const checkUser = async () => {
       try {
-        // Check if user is authenticated first
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth) {
-          // Redirect to login if not authenticated
           base44.auth.redirectToLogin(window.location.pathname + window.location.search);
           return;
         }
@@ -90,13 +86,9 @@ export default function Layout({ children, currentPageName }) {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
         
-        // Track user session
         await trackUserSession();
-        
-        // Start tracking session duration
         const cleanup = trackSessionDuration();
         
-        // Redirect to onboarding if not completed and not already on onboarding page
         if (!currentUser.onboarding_completed && location.pathname !== createPageUrl("Onboarding")) {
           navigate(createPageUrl("Onboarding"), { replace: true });
         }
@@ -104,12 +96,10 @@ export default function Layout({ children, currentPageName }) {
         return cleanup;
       } catch (error) {
         console.error("Error fetching user:", error);
-        // If authentication fails, redirect to login
         base44.auth.redirectToLogin(window.location.pathname + window.location.search);
       }
     };
     
-    // Only run on initial mount, not on every navigation
     if (!user) {
       checkUser();
     }
