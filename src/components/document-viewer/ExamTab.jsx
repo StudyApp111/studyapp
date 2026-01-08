@@ -85,7 +85,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
             if (lesson?.id && selectedExamNumber) {
               loadOrGenerateExam(selectedExamNumber);
             }
-          }, [lesson?.id, selectedExamNumber]);
+          }, [lesson?.id, lesson?.compressed_content, selectedExamNumber]);
 
   // Wait briefly for background compression to finish to reduce prompt size
   useEffect(() => {
