@@ -150,8 +150,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
             throw new Error("Extracted content is too short. Please ensure your files contain readable text.");
           }
 
-          // Compress in parallel with lesson creation (non-blocking)
-          setProcessingStep("Optimizing content...");
+          // Start compression in background (do NOT block navigation)
+          setProcessingStep("Optimizing content in background...");
           const compressionPromise = base44.functions.invoke('compressDocument', {
             content: extractedContent
           }).catch(err => {
@@ -159,9 +159,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
             return { data: { compressed_content: extractedContent } };
           });
 
-          const compressionResult = await compressionPromise;
-          compressedForPrompts = compressionResult?.data?.compressed_content || extractedContent;
-          console.log("✅ Compressed:", extractedContent.length, "→", compressedForPrompts.length, "chars");
+          // Use full content immediately for lesson creation; update later when compression finishes
+          compressedForPrompts = extractedContent;
           
         } catch (fileError) {
           console.error("Error processing files:", fileError);
@@ -211,6 +210,16 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       }
 
       console.log("✅ Lesson created:", lesson.id);
+
+      // When compression finishes, update the lesson's compressed_content in background
+      if (inputType === "file") {
+        compressionPromise.then((res) => {
+          const cc = res?.data?.compressed_content;
+          if (cc && cc.length) {
+            base44.entities.Lesson.update(lesson.id, { compressed_content: cc });
+          }
+        }).catch((err) => console.warn('Background compression update failed:', err));
+      }
 
       // Close modal and navigate immediately
       onOpenChange(false);

@@ -179,7 +179,9 @@ Deno.serve(async (req) => {
 
         // Use pixtral-12b for vision/document understanding - lightweight and optimized for OCR
         const requestBody = {
-            model: 'pixtral-12b-2409',
+            model: 'pixtral-12b-2409', // fastest Mistral vision model for OCR
+            temperature: 0,
+            max_tokens: 8192,
             messages: [
                 {
                     role: 'user',
@@ -194,7 +196,7 @@ Deno.serve(async (req) => {
             ]
         };
 
-        console.log('⏳ Calling Mistral API...');
+        console.log('⏳ Calling Mistral API (pixtral-12b-2409, temp=0)...');
         console.log('📤 Request body structure:', {
             model: requestBody.model,
             file_type: isImage ? 'IMAGE' : 'DOCUMENT',
