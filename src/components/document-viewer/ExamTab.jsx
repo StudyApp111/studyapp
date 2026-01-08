@@ -413,11 +413,13 @@ No extra text.`;
           prompt: aiPrompt,
           response_json_schema: {
             type: "object",
+            additionalProperties: false,
             properties: {
               exam_questions: {
                 type: "array",
                 items: {
                   type: "object",
+                  additionalProperties: false,
                   properties: {
                     question_number: { type: "integer" },
                     question_type: { type: "string" },
