@@ -157,13 +157,6 @@ export default function Settings() {
                 label="History"
                 onClick={() => navigate(createPageUrl("LessonHistory"))}
               />
-              {user?.role === 'admin' && (
-                <SettingsItem
-                  icon={BarChart3}
-                  label="Analytics"
-                  onClick={() => navigate(createPageUrl("Analytics"))}
-                />
-              )}
             </SettingsSection>
 
             <Separator className="my-6" />
