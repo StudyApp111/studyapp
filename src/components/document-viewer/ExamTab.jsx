@@ -280,7 +280,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       const aiPrompt = `
 
 Context
-You are an expert assessment designer. Generate a 10-question predictive worksheet for ${lesson.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
+You are an expert assessment designer. Generate a 5-question predictive worksheet for ${lesson.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
 
 This worksheet must stand alone.
 Do NOT rely on prior diagnostics.
@@ -312,14 +312,14 @@ Internal Reasoning (Do NOT Output)
 - Do NOT introduce new topics beyond the locked scope.
 
 3. Difficulty Progression
-- Q1–3: Moderate Exam-Level
-- Q4–7: Challenging Exam-Level
-- Q8–10: Challenging → High Challenge (depth, edge cases, reasoning—not new topics)
+- Q1–2: Moderate Exam-Level
+- Q3: Challenging Exam-Level
+- Q4-5: Challenging → High Challenge (depth, edge cases, reasoning—not new topics)
 
 4. Coverage Design
-- 6–7 questions: core skill / primary topic
-- 2–3 questions: applications, traps, or conceptual stress tests
-- 1–2 twin items: same concept, different reasoning demand
+- 2 questions: core skill / primary topic
+- 2 questions: applications, traps, or conceptual stress tests
+- 1 twin items: same concept, different reasoning demand
 
 5. Exam Authenticity
 - Match tone, rigor, and structure typical of ${learningProfile.school || "the school"} assessments.
