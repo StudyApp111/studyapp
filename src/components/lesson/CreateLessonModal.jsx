@@ -94,9 +94,12 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !loading && onOpenChange(v)}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Create Lesson</DialogTitle>
+      <DialogContent className="max-w-lg bg-white/95 backdrop-blur-xl rounded-2xl border border-purple-100 shadow-2xl">
+        <DialogHeader className="p-0">
+          <div className="bg-gradient-to-r from-purple-600 to-yellow-500 text-white px-5 py-4">
+            <DialogTitle className="text-lg font-bold">Create Lesson</DialogTitle>
+            <p className="text-xs/5 opacity-90">Upload notes or type a description</p>
+          </div>
         </DialogHeader>
 
         {error && (
@@ -107,18 +110,22 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         )}
 
         <div className="space-y-4">
-          <Input
-            placeholder="Course name (e.g., Calculus I)"
-            value={courseName}
-            onChange={(e) => setCourseName(e.target.value)}
-          />
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-700">Course name</label>
+            <Input
+              placeholder="e.g., Calculus I"
+              value={courseName}
+              onChange={(e) => setCourseName(e.target.value)}
+              className="focus-visible:ring-purple-600"
+            />
+          </div>
 
           <Tabs value={mode} onValueChange={setMode}>
-            <TabsList className="grid grid-cols-2">
-              <TabsTrigger value="upload" className="gap-2">
+            <TabsList className="grid grid-cols-2 bg-purple-50 rounded-lg p-1">
+              <TabsTrigger value="upload" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-purple-700 rounded-md">
                 <Upload className="w-4 h-4" /> Upload Document
               </TabsTrigger>
-              <TabsTrigger value="description" className="gap-2">
+              <TabsTrigger value="description" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-purple-700 rounded-md">
                 <FileText className="w-4 h-4" /> Type Description
               </TabsTrigger>
             </TabsList>
@@ -126,11 +133,20 @@ export default function CreateLessonModal({ open, onOpenChange }) {
             <TabsContent value="upload" className="pt-3">
               <div className="space-y-2">
                 <input
+                  id="lesson-file"
                   type="file"
                   accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
                   onChange={onFileChange}
+                  className="hidden"
                 />
-                <p className="text-xs text-slate-500">Max file size: 15MB. OCR supported for PDF/PNG/JPG.</p>
+                <label htmlFor="lesson-file" className="block border-2 border-dashed border-purple-200 rounded-xl p-5 text-center cursor-pointer hover:border-purple-300 transition-colors bg-purple-50/40">
+                  <div className="flex flex-col items-center gap-2 text-slate-600">
+                    <Upload className="w-6 h-6 text-purple-600" />
+                    <div className="text-sm"><span className="font-medium text-slate-800">Click to upload</span> or drag and drop</div>
+                    <div className="text-xs text-slate-500">PDF, PNG, JPG, DOC up to 15MB • OCR enabled</div>
+                    {file && <div className="text-xs mt-1 text-purple-700">Selected: {file.name}</div>}
+                  </div>
+                </label>
               </div>
             </TabsContent>
 
@@ -139,14 +155,15 @@ export default function CreateLessonModal({ open, onOpenChange }) {
                 placeholder="Paste or write your lesson description here..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="min-h-[140px]"
+                className="min-h-[140px] focus-visible:ring-purple-600"
               />
+              <p className="text-xs text-slate-500 mt-2">Tip: Clear, well-structured descriptions generate better exams and flashcards.</p>
             </TabsContent>
           </Tabs>
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
-            <Button onClick={handleCreate} className="bg-purple-600 hover:bg-purple-700" disabled={loading}>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="border-slate-200">Cancel</Button>
+            <Button onClick={handleCreate} className="bg-purple-600 hover:bg-purple-700 ring-2 ring-yellow-400/0 hover:ring-yellow-400/40" disabled={loading}>
               {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...</> : 'Create Lesson'}
             </Button>
           </div>
