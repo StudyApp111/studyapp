@@ -51,28 +51,55 @@ export default function LessonHistory() {
     fetchUser();
   }, []);
 
+  // OPTIMIZED: Paginate and limit data fetching
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons-history'],
-    queryFn: () => base44.entities.Lesson.list('-created_date'),
+    queryFn: () => base44.entities.Lesson.list('-created_date', 50),
     initialData: [],
-  });
-
-  const { data: allExams = [] } = useQuery({
-    queryKey: ['exams-history'],
-    queryFn: () => base44.entities.Exam.list('-created_date'),
-    initialData: [],
-  });
-
-  const { data: allFlashcards = [] } = useQuery({
-    queryKey: ['flashcards-history'],
-    queryFn: () => base44.entities.Flashcard.list('-created_date'),
-    initialData: [],
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: gradedAssignments = [], isLoading: assignmentsLoading } = useQuery({
     queryKey: ['graded-assignments-history'],
-    queryFn: () => base44.entities.GradedAssignment.list('-created_date'),
+    queryFn: () => base44.entities.GradedAssignment.list('-created_date', 50),
     initialData: [],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // OPTIMIZED: Only fetch exams/flashcards for visible lessons
+  const visibleLessonIds = React.useMemo(() => 
+    lessons.slice(0, 20).map(l => l.id), 
+    [lessons]
+  );
+
+  const { data: allExams = [] } = useQuery({
+    queryKey: ['exams-history', visibleLessonIds],
+    queryFn: async () => {
+      if (visibleLessonIds.length === 0) return [];
+      const examPromises = visibleLessonIds.map(id =>
+        base44.entities.Exam.filter({ lesson_id: id }).catch(() => [])
+      );
+      const results = await Promise.all(examPromises);
+      return results.flat();
+    },
+    enabled: visibleLessonIds.length > 0,
+    initialData: [],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: allFlashcards = [] } = useQuery({
+    queryKey: ['flashcards-history', visibleLessonIds],
+    queryFn: async () => {
+      if (visibleLessonIds.length === 0) return [];
+      const flashcardPromises = visibleLessonIds.map(id =>
+        base44.entities.Flashcard.filter({ lesson_id: id }).catch(() => [])
+      );
+      const results = await Promise.all(flashcardPromises);
+      return results.flat();
+    },
+    enabled: visibleLessonIds.length > 0,
+    initialData: [],
+    staleTime: 5 * 60 * 1000,
   });
 
   const isLoading = lessonsLoading || assignmentsLoading;
