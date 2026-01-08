@@ -3,7 +3,6 @@ import ChangePassword from './pages/ChangePassword';
 import EmailManager from './pages/EmailManager';
 import Feedback from './pages/Feedback';
 import Home from './pages/Home';
-import LessonHistory from './pages/LessonHistory';
 import Onboarding from './pages/Onboarding';
 import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
@@ -18,7 +17,6 @@ export const PAGES = {
     "EmailManager": EmailManager,
     "Feedback": Feedback,
     "Home": Home,
-    "LessonHistory": LessonHistory,
     "Onboarding": Onboarding,
     "PricingPlans": PricingPlans,
     "ProfileInformation": ProfileInformation,

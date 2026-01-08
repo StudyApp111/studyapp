@@ -288,16 +288,7 @@ export default function Layout({ children, currentPageName }) {
                   <Home className="w-6 h-6" />
                 </Link>
 
-                <Link
-                  to={createPageUrl("LessonHistory")}
-                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
-                    location.pathname === createPageUrl("LessonHistory")
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-slate-600'
-                  }`}
-                >
-                  <History className="w-6 h-6" />
-                </Link>
+
 
                 {/* Space for center CTA */}
                 <div className="w-14" />
