@@ -39,54 +39,78 @@ export default function Lesson() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-8">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">{lesson.course_name}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm text-slate-500">StudyApp Predicted Grade:</span>
-            <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">—</Badge>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-yellow-50/30">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
+        {/* Header Card */}
+        <div className="bg-white rounded-3xl shadow-xl border border-purple-100/50 overflow-hidden mb-6">
+          <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-yellow-500 p-6 md:p-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{lesson.course_name}</h1>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-white/80">Predicted Grade:</span>
+                  <Badge className="bg-yellow-400 text-yellow-900 border-0 font-semibold">—</Badge>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-3">
+                <Clock className="w-5 h-5 text-white" />
+                <div>
+                  <div className="text-xs text-white/80 font-medium">Study Timer</div>
+                  <StudySessionTracker minimized />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="border-b border-purple-100">
+            <Tabs defaultValue="doc" className="w-full">
+              <TabsList className="w-full justify-start bg-transparent border-0 px-6 gap-2">
+                <TabsTrigger
+                  value="doc"
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-6"
+                >
+                  📄 Document
+                </TabsTrigger>
+                <TabsTrigger
+                  value="exam"
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-6"
+                >
+                  ✍️ Exam
+                </TabsTrigger>
+                <TabsTrigger
+                  value="flashcards"
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-6"
+                >
+                  🎴 Flashcards
+                </TabsTrigger>
+                <TabsTrigger
+                  value="grade"
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl px-6"
+                >
+                  ⭐ Grade
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="doc" className="p-6">
+                <DocTab lesson={lesson} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["lesson", id] })} />
+              </TabsContent>
+
+              <TabsContent value="exam" className="p-6">
+                <ExamRunner lesson={lesson} />
+              </TabsContent>
+
+              <TabsContent value="flashcards" className="p-6">
+                <FlashcardsTab lesson={lesson} />
+              </TabsContent>
+
+              <TabsContent value="grade" className="p-6">
+                <GradeTab />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
-        <div className="w-full md:w-auto">
-          <Card className="p-2">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium">Study Timer</span>
-            </div>
-            <div className="mt-1">
-              <StudySessionTracker minimized />
-            </div>
-          </Card>
-        </div>
       </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="doc">
-        <TabsList className="grid grid-cols-4 w-full md:w-auto">
-          <TabsTrigger value="doc">Doc</TabsTrigger>
-          <TabsTrigger value="exam">Exam</TabsTrigger>
-          <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
-          <TabsTrigger value="grade">Grade</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="doc" className="pt-4">
-          <DocTab lesson={lesson} onUpdated={() => queryClient.invalidateQueries({ queryKey: ["lesson", id] })} />
-        </TabsContent>
-
-        <TabsContent value="exam" className="pt-4">
-          <ExamRunner lesson={lesson} />
-        </TabsContent>
-
-        <TabsContent value="flashcards" className="pt-4">
-          <FlashcardsTab lesson={lesson} />
-        </TabsContent>
-
-        <TabsContent value="grade" className="pt-4">
-          <GradeTab />
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
