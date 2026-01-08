@@ -51,19 +51,17 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         const lower = file.name.toLowerCase();
         const isOcrCapable = /(pdf|png|jpg|jpeg)$/.test(lower.split('.').pop() || "");
         if (isOcrCapable) {
-          const resp = await base44.integrations.Core.ExtractDataFromUploadedFile({
-            file_url: fileUrl,
-            json_schema: {
+          const resp = await base44.integrations.Core.InvokeLLM({
+            prompt: "Extract all text from this document. Return only the extracted text, preserving formatting and structure as much as possible.",
+            file_urls: [fileUrl],
+            response_json_schema: {
               type: "object",
-              properties: { transcript: { type: "string" } }
+              properties: {
+                extracted_text: { type: "string", description: "The full text content extracted from the document" }
+              }
             }
           });
-          const out = resp?.output;
-          if (Array.isArray(out)) {
-            transcript = out[0]?.transcript || "";
-          } else if (out && typeof out === 'object') {
-            transcript = out.transcript || "";
-          }
+          transcript = resp?.extracted_text || "";
         }
       }
 
@@ -80,8 +78,13 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         extracted_content: transcript || undefined,
       });
 
+      setCourseName("");
+      setDescription("");
+      setFile(null);
       onOpenChange(false);
-      window.location.href = createPageUrl("Lesson") + `?id=${lesson.id}`;
+      setTimeout(() => {
+        window.location.href = createPageUrl("Lesson") + `?id=${lesson.id}`;
+      }, 100);
     } catch (e) {
       setError(e?.message || "Failed to create lesson.");
     } finally {

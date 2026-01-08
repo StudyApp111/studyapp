@@ -1,58 +1,68 @@
 import React from "react";
-import { FileText, FileImage } from "lucide-react";
+import { Eye, FileText, Download, FileIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import TranscriptEditor from "./TranscriptEditor";
 
 export default function DocTab({ lesson, onUpdated }) {
   const url = lesson.file_url;
   const ext = (url || "").split(".").pop()?.toLowerCase();
-  const isPDF = ext === "pdf";
-  const isImage = ["png", "jpg", "jpeg"].includes(ext || "");
-  const [view, setView] = React.useState(url && (isPDF || isImage) ? "document" : "transcript");
+  const fileName = url ? url.split("/").pop() : "document";
+  const [view, setView] = React.useState("document");
 
   return (
     <div className="space-y-4">
-      {url && (
-        <div className="flex gap-2">
-          <button
-            onClick={() => setView("document")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-              view === "document"
-                ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
-                : "bg-purple-50 text-purple-700 hover:bg-purple-100"
-            }`}
-          >
-            <FileImage className="w-4 h-4" />
-            View Document
-          </button>
-          <button
-            onClick={() => setView("transcript")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
-              view === "transcript"
-                ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
-                : "bg-purple-50 text-purple-700 hover:bg-purple-100"
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            Edit Transcript
-          </button>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setView("document")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+            view === "document"
+              ? "bg-gray-200 text-gray-900"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          <Eye className="w-4 h-4" />
+          Document View
+        </button>
+        <button
+          onClick={() => setView("transcript")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+            view === "transcript"
+              ? "bg-gray-200 text-gray-900"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          Transcript
+        </button>
+        <div className="ml-auto">
+          <Button variant="outline" size="sm" className="gap-2">
+            <Download className="w-4 h-4" />
+            Export
+          </Button>
         </div>
-      )}
+      </div>
 
       {view === "document" && url ? (
-        <div className="bg-white rounded-2xl border border-purple-100 overflow-hidden shadow-lg">
-          {isPDF ? (
-            <div className="w-full h-[75vh]">
-              <iframe title="PDF" src={`${url}#toolbar=1`} className="w-full h-full" />
-            </div>
-          ) : isImage ? (
-            <div className="w-full flex items-center justify-center p-8 bg-gradient-to-br from-purple-50 to-yellow-50/30">
-              <img src={url} alt="Document" className="max-h-[70vh] rounded-xl shadow-2xl" />
-            </div>
-          ) : (
-            <div className="text-sm text-slate-700 p-6 bg-yellow-50 text-center">
-              Preview not available. Please view the transcript.
-            </div>
-          )}
+        <div className="bg-white rounded-xl border border-gray-200 p-12 flex flex-col items-center justify-center min-h-[60vh] text-center">
+          <div className="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mb-6">
+            <FileIcon className="w-10 h-10 text-purple-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">{fileName}</h3>
+          <p className="text-sm text-gray-500 mb-8 max-w-md">
+            This document type cannot be previewed directly. The text has been extracted and is available in the Transcript view.
+          </p>
+          <div className="flex gap-3">
+            <Button variant="outline" asChild>
+              <a href={url} download className="gap-2">
+                <Download className="w-4 h-4" />
+                Download Original
+              </a>
+            </Button>
+            <Button onClick={() => setView("transcript")} className="gap-2 bg-purple-600 hover:bg-purple-700">
+              <Eye className="w-4 h-4" />
+              View Transcript
+            </Button>
+          </div>
         </div>
       ) : (
         <TranscriptEditor lesson={lesson} onSaved={onUpdated} />

@@ -40,12 +40,13 @@ export default function TranscriptEditor({ lesson, onSaved }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-purple-100 overflow-hidden shadow-lg">
-      <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-purple-50 to-yellow-50/50 border-b border-purple-100">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="flex items-center gap-2 p-3 bg-gray-50 border-b border-gray-200">
         <Button 
           size="sm" 
+          variant="outline"
           onClick={() => wrapSelection("mark")} 
-          className="gap-2 bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 shadow-sm"
+          className="gap-2"
         >
           <Highlighter className="w-4 h-4" /> Highlight
         </Button>
@@ -53,7 +54,7 @@ export default function TranscriptEditor({ lesson, onSaved }) {
           size="sm" 
           variant="outline" 
           onClick={clearMarks} 
-          className="gap-2 border-purple-200 text-slate-600 hover:bg-purple-50"
+          className="gap-2"
         >
           <Eraser className="w-4 h-4" /> Clear
         </Button>
@@ -62,7 +63,7 @@ export default function TranscriptEditor({ lesson, onSaved }) {
           size="sm" 
           onClick={save} 
           disabled={saving} 
-          className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg shadow-purple-600/30"
+          className="gap-2 bg-purple-600 hover:bg-purple-700"
         >
           {saving ? (
             <>
@@ -78,11 +79,11 @@ export default function TranscriptEditor({ lesson, onSaved }) {
 
       <div
         ref={ref}
-        className="min-h-[65vh] p-6 focus:outline-none prose max-w-none text-slate-800"
+        className="min-h-[60vh] p-6 focus:outline-none prose max-w-none text-gray-800"
         contentEditable
         suppressContentEditableWarning
         onInput={(e) => setHtml(e.currentTarget.innerHTML)}
-        dangerouslySetInnerHTML={{ __html: html || '<p class="text-slate-400 italic">Start typing or paste your notes here...</p>' }}
+        dangerouslySetInnerHTML={{ __html: html || '<p class="text-gray-400 italic">Start typing or paste your notes here...</p>' }}
         style={{ caretColor: '#7c3aed' }}
       />
     </div>
