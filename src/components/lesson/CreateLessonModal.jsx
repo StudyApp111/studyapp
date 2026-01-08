@@ -48,21 +48,6 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       if (mode === "upload" && file) {
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
         fileUrl = file_url;
-        const lower = file.name.toLowerCase();
-        const isOcrCapable = /(pdf|png|jpg|jpeg)$/.test(lower.split('.').pop() || "");
-        if (isOcrCapable) {
-          const resp = await base44.integrations.Core.InvokeLLM({
-            prompt: "Extract all text from this document. Return only the extracted text, preserving formatting and structure as much as possible.",
-            file_urls: [fileUrl],
-            response_json_schema: {
-              type: "object",
-              properties: {
-                extracted_text: { type: "string", description: "The full text content extracted from the document" }
-              }
-            }
-          });
-          transcript = resp?.extracted_text || "";
-        }
       }
 
       if (mode === "description") {
@@ -82,9 +67,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       setDescription("");
       setFile(null);
       onOpenChange(false);
-      setTimeout(() => {
-        window.location.href = createPageUrl("Lesson") + `?id=${lesson.id}`;
-      }, 100);
+      window.location.href = createPageUrl("Lesson") + `?id=${lesson.id}`;
     } catch (e) {
       setError(e?.message || "Failed to create lesson.");
     } finally {

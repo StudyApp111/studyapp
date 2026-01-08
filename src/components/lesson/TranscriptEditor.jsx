@@ -6,11 +6,41 @@ import { Highlighter, Save, Eraser, Sparkles } from "lucide-react";
 export default function TranscriptEditor({ lesson, onSaved }) {
   const [html, setHtml] = useState(lesson.extracted_content || "");
   const [saving, setSaving] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
     setHtml(lesson.extracted_content || "");
-  }, [lesson.extracted_content]);
+    
+    // Auto-extract if file exists but no content
+    if (lesson.file_url && !lesson.extracted_content && !extracting) {
+      extractContent();
+    }
+  }, [lesson.extracted_content, lesson.file_url]);
+
+  const extractContent = async () => {
+    setExtracting(true);
+    try {
+      const resp = await base44.integrations.Core.InvokeLLM({
+        prompt: "Extract all text from this document. Return only the extracted text, preserving formatting and structure as much as possible.",
+        file_urls: [lesson.file_url],
+        response_json_schema: {
+          type: "object",
+          properties: {
+            extracted_text: { type: "string" }
+          }
+        }
+      });
+      const text = resp?.extracted_text || "";
+      setHtml(text);
+      await base44.entities.Lesson.update(lesson.id, { extracted_content: text });
+      onSaved?.();
+    } catch (e) {
+      console.error("Extraction failed:", e);
+    } finally {
+      setExtracting(false);
+    }
+  };
 
   const wrapSelection = (tag = "mark") => {
     const sel = window.getSelection();
@@ -80,10 +110,10 @@ export default function TranscriptEditor({ lesson, onSaved }) {
       <div
         ref={ref}
         className="min-h-[60vh] p-6 focus:outline-none prose max-w-none text-gray-800"
-        contentEditable
+        contentEditable={!extracting}
         suppressContentEditableWarning
         onInput={(e) => setHtml(e.currentTarget.innerHTML)}
-        dangerouslySetInnerHTML={{ __html: html || '<p class="text-gray-400 italic">Start typing or paste your notes here...</p>' }}
+        dangerouslySetInnerHTML={{ __html: extracting ? '<p class="text-gray-400 italic">Extracting text from document...</p>' : (html || '<p class="text-gray-400 italic">Start typing or paste your notes here...</p>') }}
         style={{ caretColor: '#7c3aed' }}
       />
     </div>
