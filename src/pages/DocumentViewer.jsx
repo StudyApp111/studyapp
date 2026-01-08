@@ -231,18 +231,9 @@ export default function DocumentViewer() {
         setExtractedContent(lessonData.extracted_content);
       }
 
-      // OPTIMIZED: Load exams only when needed
-      let examsData = [];
-      if (activeTab === 'exam' || activeTab === 'grade') {
-        try {
-          examsData = await base44.entities.Exam.filter({ lesson_id: lessonId });
-          console.log("DocumentViewer: Loaded exams:", examsData.length);
-        } catch (loadError) {
-          console.error("DocumentViewer: Error loading exams:", loadError);
-        }
-      }
-
-      setExams(examsData.filter(e => e?.id) || []);
+      // Load exams (needed for red dot logic)
+      const examsData = await base44.entities.Exam.filter({ lesson_id: lessonId }).catch(() => []);
+      setExams(examsData.filter(e => e?.id));
       
       // Get the latest predicted grade from completed exams
       const examWithGrade = examsData

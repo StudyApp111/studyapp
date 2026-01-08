@@ -40,15 +40,7 @@ export default function LessonHistory() {
   const [activeTab, setActiveTab] = useState("all");
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await base44.auth.me();
-        setUser(currentUser);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-    fetchUser();
+    base44.auth.me().then(setUser).catch(console.error);
   }, []);
 
   // OPTIMIZED: Paginate and limit data fetching

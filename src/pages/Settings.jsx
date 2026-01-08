@@ -42,18 +42,13 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const currentUser = await base44.auth.me();
+    base44.auth.me()
+      .then(currentUser => {
         setUser(currentUser);
         setNotificationsEnabled(currentUser.notifications_enabled !== false);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-      setIsLoading(false);
-    };
-    
-    fetchUser();
+      })
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
   }, []);
 
   const handleNotificationsToggle = async (enabled) => {

@@ -73,12 +73,9 @@ export default function Onboarding() {
       const user = await base44.auth.me();
       
       if (user.learning_profile_id) {
-        const profiles = await base44.entities.LearningProfile.filter({ 
-          id: user.learning_profile_id 
-        });
-        
-        if (profiles.length > 0) {
-          const profile = profiles[0];
+        const profiles = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
+        const profile = profiles[0];
+        if (profile) {
           setAnswers({
             school: profile.school || "",
             grade: profile.grade || "",
@@ -86,11 +83,8 @@ export default function Onboarding() {
           });
         }
       }
-    } catch (error) {
-      console.error("Error loading profile:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    } catch {}
+    setIsLoading(false);
   };
 
   const progress = ((currentStep + 1) / questions.length) * 100;
