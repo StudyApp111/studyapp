@@ -110,7 +110,6 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       let fullExtractedContent = "";
       let fileUrls = [];
       let compressedForPrompts = "";
-      let compressionPromise = null;
 
       if (inputType === "file") {
         if (files.length === 0) {
@@ -164,16 +163,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
             }
           });
 
-          // Start compression in background (do NOT block navigation)
-          setProcessingStep("Optimizing content in background...");
-          compressionPromise = base44.functions.invoke('compressDocument', {
-            content: extractedContent
-          }).catch(err => {
-            console.warn("Compression failed, using full content:", err);
-            return { data: { compressed_content: extractedContent } };
-          });
-
-          // Use full content immediately for lesson creation; update later when compression finishes
+          // Use full content placeholder for prompt fields; background job will update real compressed_content later
           compressedForPrompts = extractedContent;
           
         } catch (fileError) {
