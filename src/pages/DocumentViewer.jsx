@@ -435,14 +435,12 @@ export default function DocumentViewer() {
 
               <div className="w-full flex-1 overflow-auto">
                 <TabsContent value="doc" className="mt-0 p-0 h-full">
-                  {!lesson ? (
-                    <ParsingLoader />
-                  ) : lesson.input_type === 'file' && !lesson.extracted_content ? (
-                    <ParsingLoader />
-                  ) : (
-                    <DocumentViewerTabs lesson={lesson} />
-                  )}
-                </TabsContent>
+                        {!lesson ? (
+                          <ParsingLoader />
+                        ) : (
+                          <DocumentViewerTabs lesson={lesson} />
+                        )}
+                      </TabsContent>
 
                 <TabsContent value="exam" className="mt-0 p-0 h-full">
                   <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
@@ -509,8 +507,6 @@ export default function DocumentViewer() {
             <div className="flex-1 overflow-y-auto w-full max-w-full">
               <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full h-full">
                 {!lesson ? (
-                  <ParsingLoader />
-                ) : lesson.input_type === 'file' && !lesson.extracted_content ? (
                   <ParsingLoader />
                 ) : (
                   <DocumentViewerTabs lesson={lesson} />
