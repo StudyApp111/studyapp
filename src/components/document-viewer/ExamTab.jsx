@@ -41,6 +41,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const [gradingInProgress, setGradingInProgress] = useState({});
   const [selectedExamNumber, setSelectedExamNumber] = useState(null);
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
+  const [waitingForCompression, setWaitingForCompression] = useState(false);
   const [correctStreak, setCorrectStreak] = useState(0);
   
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -76,10 +77,43 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   }, [lesson?.id, exams]);
 
   useEffect(() => {
+    if (waitingForCompression) return;
     if (lesson?.id && selectedExamNumber) {
       loadOrGenerateExam(selectedExamNumber);
     }
-  }, [lesson?.id, selectedExamNumber]);
+  }, [lesson?.id, selectedExamNumber, waitingForCompression]);
+
+  // Wait briefly for background compression to finish to reduce prompt size
+  useEffect(() => {
+    if (!lesson?.id) return;
+    const cc = lesson?.compressed_content;
+    if (cc && cc.length > 2500 && (lesson?.extracted_content?.length || 0) > 0) {
+      setWaitingForCompression(true);
+      let attempts = 0;
+      const interval = setInterval(async () => {
+        attempts++;
+        try {
+          const refreshed = await base44.entities.Lesson.filter({ id: lesson.id });
+          const updated = refreshed?.[0];
+          if (updated?.compressed_content && updated.compressed_content.length <= 2500) {
+            clearInterval(interval);
+            setWaitingForCompression(false);
+            // Ask the viewer to reload so child components get the optimized content
+            window.dispatchEvent(new Event('reloadLesson'));
+          } else if (attempts >= 10) {
+            clearInterval(interval);
+            setWaitingForCompression(false);
+          }
+        } catch {
+          if (attempts >= 10) {
+            clearInterval(interval);
+            setWaitingForCompression(false);
+          }
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [lesson?.id]);
 
   useEffect(() => {
     if (exam && !exam.completed && exam.id !== examIdRef.current) {
@@ -1141,6 +1175,13 @@ No extra text.`;
         </Card>
       </div>
     );
+  }
+
+  if (waitingForCompression) {
+    return <EducationalLoader 
+      title="Optimizing Content" 
+      description="Compressing your document for faster exam generation..."
+    />;
   }
 
   if (isGenerating) {

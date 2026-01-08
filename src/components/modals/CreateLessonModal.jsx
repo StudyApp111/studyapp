@@ -218,13 +218,15 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           const cc = res?.data?.compressed_content;
           if (cc && cc.length) {
             base44.entities.Lesson.update(lesson.id, { compressed_content: cc });
+            // Trigger a lightweight refresh so viewers pick up the compressed content
+            window.dispatchEvent(new Event('reloadLesson'));
           }
         }).catch((err) => console.warn('Background compression update failed:', err));
       }
 
-      // Close modal and navigate immediately
+      // Close modal and navigate immediately (client-side to avoid white flash)
       onOpenChange(false);
-      window.location.href = `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`;
+      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
 
       // === BACKGROUND TASKS (fully decoupled, fire-and-forget) ===
       (async () => {

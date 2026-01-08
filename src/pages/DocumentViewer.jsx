@@ -20,7 +20,7 @@ import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/component
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("exam");
+  const [activeTab, setActiveTab] = useState("doc");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,12 +56,8 @@ export default function DocumentViewer() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
-    if (tabParam) {
-      setActiveTab(tabParam);
-    } else if (hasDocument) {
-      // Default to doc tab if document exists
-      setActiveTab('doc');
-    }
+    // Default to 'doc' for immediate content; URL param overrides
+    setActiveTab(tabParam || 'doc');
   }, []); // Run only once on mount
 
   useEffect(() => {
