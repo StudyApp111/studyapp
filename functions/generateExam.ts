@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
         ];
 
         const requestBody = {
-            model: "gpt-4.1-mini",
+            model: "gpt-5.2-chat-latest",
             messages: messages,
             temperature: 0.2,
             max_tokens: 16000
