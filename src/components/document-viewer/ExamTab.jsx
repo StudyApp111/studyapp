@@ -264,7 +264,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           
           // Poll efficiently with exponential backoff
           let pollCount = 0;
-          const maxPolls = 30;
+          const maxPolls = 60; // allow up to ~2-3 minutes total
           const pollExam = async () => {
             if (pollCount++ >= maxPolls) {
               setIsGenerating(false);
