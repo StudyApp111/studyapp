@@ -110,6 +110,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       let fullExtractedContent = "";
       let fileUrls = [];
       let compressedForPrompts = "";
+      let compressionPromise = null;
 
       if (inputType === "file") {
         if (files.length === 0) {
@@ -152,7 +153,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
           // Start compression in background (do NOT block navigation)
           setProcessingStep("Optimizing content in background...");
-          const compressionPromise = base44.functions.invoke('compressDocument', {
+          compressionPromise = base44.functions.invoke('compressDocument', {
             content: extractedContent
           }).catch(err => {
             console.warn("Compression failed, using full content:", err);
@@ -212,7 +213,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       console.log("✅ Lesson created:", lesson.id);
 
       // When compression finishes, update the lesson's compressed_content in background
-      if (inputType === "file") {
+      if (compressionPromise) {
         compressionPromise.then((res) => {
           const cc = res?.data?.compressed_content;
           if (cc && cc.length) {
@@ -661,7 +662,7 @@ Constraints:
                         {files.map((f, idx) => (
                           <div key={idx} className="flex items-center gap-2 text-sm bg-emerald-50 text-emerald-700 px-3 py-2 rounded-lg">
                             <FileCheck className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate flex-1">{f.name}</span>
+                            <span className="flex-1 whitespace-normal break-words break-all min-w-0">{f.name}</span>
                             <span className="text-xs text-emerald-500">{(f.size / 1024 / 1024).toFixed(1)}MB</span>
                           </div>
                         ))}
