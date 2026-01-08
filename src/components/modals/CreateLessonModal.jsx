@@ -227,23 +227,13 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       console.log("✅ Lesson created:", lesson.id);
 
-      // When compression finishes, update the lesson's compressed_content in background
-      if (compressionPromise) {
-        compressionPromise.then((res) => {
-          const cc = res?.data?.compressed_content;
-          if (cc && cc.length) {
-            base44.entities.Lesson.update(lesson.id, { compressed_content: cc });
-            // Trigger a lightweight refresh so viewers pick up the compressed content
-            window.dispatchEvent(new Event('reloadLesson'));
-          }
-        }).catch((err) => console.warn('Background compression update failed:', err));
-      }
+      // No compression await here; handled fully after navigation
 
       // Close modal and navigate immediately (client-side to avoid white flash)
       onOpenChange(false);
       navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
 
-      // === BACKGROUND TASKS (fully decoupled, fire-and-forget) ===
+      // === BACKGROUND TASKS (curriculum mapping only; extraction/compression handled above) ===
       (async () => {
         try {
           console.log("🔄 Starting background curriculum mapping...");
