@@ -21,7 +21,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
-
+import CreateLessonModal from "@/components/modals/CreateLessonModal";
 
 import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
 import FeedbackModal from "@/components/feedback/FeedbackModal.jsx";
@@ -42,7 +42,11 @@ const navigationItems = [
           icon: FileCheck,
           isNew: true,
         },
-
+        {
+          title: "Lesson History",
+          url: createPageUrl("LessonHistory"),
+          icon: History,
+        },
         {
           title: "Settings",
           url: createPageUrl("Settings"),
@@ -66,7 +70,7 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
-  
+  const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
 
@@ -179,7 +183,16 @@ export default function Layout({ children, currentPageName }) {
               </Link>
             </div>
 
-
+            {/* Upload Button */}
+            <div className="px-2 py-3">
+              <button
+                onClick={() => setCreateLessonModalOpen(true)}
+                className="w-full aspect-square rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30 transition-all hover:scale-105"
+                title="Upload Now"
+              >
+                <Plus className="w-5 h-5 text-white" />
+              </button>
+            </div>
 
             {/* Navigation Icons */}
             <nav className="flex-1 flex flex-col items-center gap-1 px-2 py-2">
@@ -288,7 +301,16 @@ export default function Layout({ children, currentPageName }) {
                   <Home className="w-6 h-6" />
                 </Link>
 
-
+                <Link
+                  to={createPageUrl("LessonHistory")}
+                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                    location.pathname === createPageUrl("LessonHistory")
+                      ? 'text-yellow-600 bg-yellow-50'
+                      : 'text-slate-600'
+                  }`}
+                >
+                  <History className="w-6 h-6" />
+                </Link>
 
                 {/* Space for center CTA */}
                 <div className="w-14" />
@@ -311,7 +333,21 @@ export default function Layout({ children, currentPageName }) {
                   <Settings className="w-6 h-6" />
                 </Link>
 
+                {/* New Lesson CTA Button */}
+                <button
+                  onClick={() => setCreateLessonModalOpen(true)}
+                  className="absolute left-1/2 -translate-x-1/2 -top-4 group"
+                >
+                  <div className="relative">
+                    {/* Subtle glow */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
 
+                    {/* Main button - sleek and minimal */}
+                    <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full shadow-2xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
+                      <Sparkles className="w-6 h-6 text-white drop-shadow" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                </button>
               </div>
             </nav>
           )}
@@ -319,12 +355,16 @@ export default function Layout({ children, currentPageName }) {
 
 
 
-
+        {/* Create Lesson Modal */}
+        <CreateLessonModal 
+          open={createLessonModalOpen} 
+          onOpenChange={setCreateLessonModalOpen} 
+        />
 
 
 
         {/* Floating AI Tutor Button */}
-        {showNavigation && !isOnboardingPage && <AITutorFloatingButton />}
+        {showNavigation && !isOnboardingPage && <AITutorFloatingButton hidden={createLessonModalOpen} />}
 
         {/* Feedback Modal */}
         <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />

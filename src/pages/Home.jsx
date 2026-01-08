@@ -4,27 +4,25 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import BadgeDisplay from "@/components/gamification/BadgeDisplay";
-
-import { AssignmentActivityCard } from "@/components/home/ActivityCard";
+import CreateLessonModal from "@/components/modals/CreateLessonModal";
+import { LessonActivityCard, AssignmentActivityCard } from "@/components/home/ActivityCard";
 import XPProgressBar from "@/components/gamification/XPProgressBar";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
-import CreateLessonModal from "@/components/lesson/CreateLessonModal";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
 
 export default function Home() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
-    
+    const [createLessonModalOpen, setCreateLessonModalOpen] = useState(false);
     const [dailyXP, setDailyXP] = useState(0);
-    const [showCreateLesson, setShowCreateLesson] = useState(false);
     const [studyMinutesToday, setStudyMinutesToday] = useState(0);
     const [questionsToday, setQuestionsToday] = useState(0);
     const [flashcardsToday, setFlashcardsToday] = useState(0);
@@ -77,7 +75,14 @@ export default function Home() {
 
     const [learningProfile, setLearningProfile] = useState(null);
 
-
+  const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
+    queryKey: ['lessons'],
+    queryFn: () => base44.entities.Lesson.list('-created_date', 100),
+    initialData: [],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 
   const { data: gradedAssignments = [], isLoading: assignmentsLoading } = useQuery({
     queryKey: ['gradedAssignments'],
@@ -88,19 +93,42 @@ export default function Home() {
     refetchOnMount: false,
   });
 
-  const isLoading = assignmentsLoading;
+  const isLoading = lessonsLoading || assignmentsLoading;
 
   // Combine and sort lessons and graded assignments by date
-  const recentAssignments = React.useMemo(() => {
-    return gradedAssignments
-      .map(a => ({ ...a, date: new Date(a.created_date) }))
-      .sort((a, b) => b.date - a.date)
-      .slice(0, 6);
-  }, [gradedAssignments]);
+  const recentItems = React.useMemo(() => {
+    const combined = [
+      ...lessons.map(l => ({ ...l, type: 'lesson', date: new Date(l.created_date) })),
+      ...gradedAssignments.map(a => ({ ...a, type: 'assignment', date: new Date(a.created_date) }))
+    ];
+    return combined.sort((a, b) => b.date - a.date).slice(0, 6);
+  }, [lessons, gradedAssignments]);
 
+  const { data: allExams = [] } = useQuery({
+    queryKey: ['exams'],
+    queryFn: () => base44.entities.Exam.list('-created_date'),
+    initialData: [],
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
 
+  // Group exams by lesson
+  const lessonExams = {};
+  allExams.forEach(e => {
+    if (!lessonExams[e.lesson_id]) {
+      lessonExams[e.lesson_id] = [];
+    }
+    lessonExams[e.lesson_id].push(e);
+  });
 
-
+  // Calculate stats
+  const completedExams = allExams.filter(e => e.completed).length;
+  const inProgressExams = allExams.filter(e => e.status === "in_progress").length;
+  const totalExams = allExams.filter(e => e.completed).length;
+  const avgScore = totalExams > 0
+    ? Math.round(allExams.filter(e => e.completed).reduce((sum, e) => sum + (e.total_score || 0), 0) / totalExams)
+    : 0;
 
   if (!user) {
     return (
@@ -217,7 +245,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Daily Challenges */}
+      {/* Daily Challenges - Both Mobile and Desktop */}
       <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
         <DailyChallenge 
           studyMinutes={studyMinutesToday}
@@ -229,7 +257,36 @@ export default function Home() {
       {/* CTA Cards - Full and descriptive */}
       <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-
+          {/* Upload Notes Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setCreateLessonModalOpen(true)}
+            className="cursor-pointer group"
+          >
+            <Card className="h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 hover:scale-[1.02]">
+              <CardContent className="p-5 md:p-8">
+                <div className="flex items-start justify-between mb-3 md:mb-4">
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Upload className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                  </div>
+                  <div className="w-9 h-9 md:w-10 md:h-10 bg-yellow-400 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-slate-900" />
+                  </div>
+                </div>
+                <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">Upload Notes</h3>
+                <p className="text-white/80 text-sm md:text-base mb-3 md:mb-4">
+                  Drop your lecture notes or textbook chapters and get AI-powered quizzes, flashcards & grade predictions
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">AI Quiz</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Grade Prediction</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Flashcards</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Grade Assignment Card */}
           <motion.div
@@ -261,59 +318,48 @@ export default function Home() {
               </CardContent>
             </Card>
           </motion.div>
-
-          {/* Create Lesson Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.15 }}
-            onClick={() => setShowCreateLesson(true)}
-            className="cursor-pointer group"
-          >
-            <Card className="h-full border-0 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 hover:scale-[1.02]">
-              <CardContent className="p-5 md:p-8">
-                <div className="flex items-start justify-between mb-3 md:mb-4">
-                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Plus className="w-6 h-6 md:w-7 md:h-7 text-white" />
-                  </div>
-                  <div className="w-9 h-9 md:w-10 md:h-10 bg-white/80 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform">
-                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-slate-900" />
-                  </div>
-                </div>
-                <h3 className="text-lg md:text-2xl font-bold text-white mb-1 md:mb-2">Create Lesson</h3>
-                <p className="text-white/90 text-sm md:text-base mb-3 md:mb-4">
-                  Upload notes or type a description, then study with Doc, Exam, Flashcards & Grade tabs
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">OCR to Transcript</span>
-                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Exam & Flashcards</span>
-                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs text-white/90">Sleek UI</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
         </div>
       </div>
 
-      {/* Recent Assignments */}
-      {!isLoading && recentAssignments.length > 0 && (
+      {/* Recent Activity - Now visible without scrolling on mobile */}
+      {!isLoading && recentItems.length > 0 && (
         <div className="mb-8 max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-3 md:mb-6">
-            <h2 className="text-base md:text-2xl font-bold text-slate-900">Recent Assignments</h2>
+            <h2 className="text-base md:text-2xl font-bold text-slate-900">Continue Learning</h2>
+            <button 
+              onClick={() => navigate(createPageUrl("LessonHistory"))}
+              className="text-xs md:text-sm text-purple-600 font-medium hover:text-purple-700"
+            >
+              View all
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-            {recentAssignments.slice(0, 3).map((assignment, idx) => (
-              <AssignmentActivityCard 
-                key={`assignment-${assignment.id}`} 
-                assignment={assignment}
-                index={idx}
-              />
+            {recentItems.slice(0, 3).map((item, idx) => (
+              item.type === 'lesson' ? (
+                <LessonActivityCard 
+                  key={`lesson-${item.id}`} 
+                  lesson={item} 
+                  exams={lessonExams[item.id] || []}
+                  index={idx}
+                />
+              ) : (
+                <AssignmentActivityCard 
+                  key={`assignment-${item.id}`} 
+                  assignment={item}
+                  index={idx}
+                />
+              )
             ))}
           </div>
         </div>
       )}
 
+{/* Create Lesson Modal */}
+<CreateLessonModal 
+  open={createLessonModalOpen} 
+  onOpenChange={setCreateLessonModalOpen} 
+/>
 
 {/* First Session Welcome */}
 <FirstSessionWelcome 
@@ -321,9 +367,6 @@ export default function Home() {
   onOpenChange={setShowWelcome}
   userName={user?.full_name?.split(' ')[0]}
 />
-
-{/* Create Lesson Modal */}
-<CreateLessonModal open={showCreateLesson} onOpenChange={setShowCreateLesson} />
 </div>
 );
 }
