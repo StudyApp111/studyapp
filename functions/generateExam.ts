@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
             type: 'json_schema',
             json_schema: {
               name: 'exam_schema',
-              schema: responseJsonSchema,
+              schema: sanitizeSchema(responseJsonSchema),
               strict: true,
             },
           }
