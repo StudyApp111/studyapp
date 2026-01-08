@@ -190,7 +190,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   };
 
   const loadOrGenerateExam = async (examNumber) => {
-    if (!lesson || !lesson.id) {
+    if (!lesson?.id) {
       console.error("ExamTab: Cannot load exam - lesson not ready");
       return;
     }
@@ -201,7 +201,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         exam_number: examNumber
       });
 
-      if (existingExams && existingExams.length > 0) {
+      if (existingExams?.length > 0) {
         const loadedExam = existingExams[0];
         
         if (loadedExam.completed) {
@@ -209,37 +209,34 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           return;
         }
         
-        // Check if generation is in progress or needed
-        if (loadedExam.status === 'generating' || (!loadedExam.questions || loadedExam.questions.length === 0)) {
+        // Check if questions are ready
+        if (loadedExam.questions?.length > 0) {
+          setExam(loadedExam);
+          // Restore position to first unanswered
+          const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer?.trim());
+          setCurrentQuestion(firstUnanswered >= 0 ? firstUnanswered : loadedExam.questions.length - 1);
+        } else {
+          // Questions not ready, show generating state
           setIsGenerating(true);
           
-          // Poll for completion every 2 seconds
-          const pollInterval = setInterval(async () => {
+          // Poll efficiently with exponential backoff
+          let pollCount = 0;
+          const maxPolls = 30;
+          const pollExam = async () => {
+            if (pollCount++ >= maxPolls) {
+              setIsGenerating(false);
+              return;
+            }
+            
             const updated = await base44.entities.Exam.filter({ id: loadedExam.id });
             if (updated[0]?.questions?.length > 0) {
-              clearInterval(pollInterval);
               setExam(updated[0]);
               setIsGenerating(false);
+            } else {
+              setTimeout(pollExam, Math.min(2000 * Math.pow(1.2, pollCount), 5000));
             }
-          }, 2000);
-          
-          // Stop polling after 60 seconds
-          setTimeout(() => {
-            clearInterval(pollInterval);
-            setIsGenerating(false);
-          }, 60000);
-          return;
-        } else {
-          // Load existing in-progress exam and restore question position
-          setExam(loadedExam);
-          // Find the first unanswered question to resume from
-          const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer || q.user_answer.trim() === "");
-          if (firstUnanswered >= 0) {
-            setCurrentQuestion(firstUnanswered);
-          } else {
-            // All answered, go to last question
-            setCurrentQuestion(loadedExam.questions.length - 1);
-          }
+          };
+          pollExam();
         }
       } else {
         setIsGenerating(true);
@@ -248,6 +245,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       }
     } catch (error) {
       console.error("Error loading exam:", error);
+      await logError('exam_loading', error, { lesson_id: lesson?.id, examNumber });
       setIsGenerating(false);
     }
   };

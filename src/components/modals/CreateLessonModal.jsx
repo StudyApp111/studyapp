@@ -119,48 +119,49 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         try {
           setProcessingStep(`Uploading ${files.length} file(s)...`);
           
-          // Upload all files
-          for (const file of files) {
-            const { file_url } = await base44.integrations.Core.UploadFile({ file });
-            fileUrls.push(file_url);
-          }
+          // PARALLEL: Upload all files simultaneously
+          const uploadPromises = files.map(file => 
+            base44.integrations.Core.UploadFile({ file })
+          );
+          const uploadResults = await Promise.all(uploadPromises);
+          fileUrls = uploadResults.map(result => result.file_url);
 
           setProcessingStep("Extracting content from your documents...");
           
-          // Extract content from all files
-          const allExtractedContent = [];
-          for (const fileUrl of fileUrls) {
-            const extractResult = await base44.functions.invoke('extractDocumentContent', {
-              file_url: fileUrl
-            });
+          // PARALLEL: Extract content from all files simultaneously
+          const extractPromises = fileUrls.map(fileUrl =>
+            base44.functions.invoke('extractDocumentContent', { file_url: fileUrl })
+          );
+          const extractResults = await Promise.all(extractPromises);
 
-            if (!extractResult?.data?.extracted_content) {
-              throw new Error("Failed to extract content from one or more documents");
-            }
-
-            allExtractedContent.push(extractResult.data.extracted_content);
+          // Validate all extractions succeeded
+          const failedExtractions = extractResults.filter(r => !r?.data?.extracted_content);
+          if (failedExtractions.length > 0) {
+            throw new Error("Failed to extract content from one or more documents");
           }
 
           // Combine all content
-          extractedContent = allExtractedContent.join("\n\n--- NEXT DOCUMENT ---\n\n");
+          extractedContent = extractResults
+            .map(r => r.data.extracted_content)
+            .join("\n\n--- NEXT DOCUMENT ---\n\n");
           fullExtractedContent = extractedContent;
 
           if (extractedContent.length < 50) {
             throw new Error("Extracted content is too short. Please ensure your files contain readable text.");
           }
 
-          // Always compress for prompts (required for exam generation)
-          setProcessingStep("Compressing documents for optimal processing...");
-
-          const compressionResult = await base44.functions.invoke('compressDocument', {
+          // Compress in parallel with lesson creation (non-blocking)
+          setProcessingStep("Optimizing content...");
+          const compressionPromise = base44.functions.invoke('compressDocument', {
             content: extractedContent
+          }).catch(err => {
+            console.warn("Compression failed, using full content:", err);
+            return { data: { compressed_content: extractedContent } };
           });
 
-          compressedForPrompts = extractedContent;
-          if (compressionResult?.data?.compressed_content) {
-            compressedForPrompts = compressionResult.data.compressed_content;
-            console.log("✅ Compressed:", extractedContent.length, "→", compressedForPrompts.length, "chars");
-          }
+          const compressionResult = await compressionPromise;
+          compressedForPrompts = compressionResult?.data?.compressed_content || extractedContent;
+          console.log("✅ Compressed:", extractedContent.length, "→", compressedForPrompts.length, "chars");
           
         } catch (fileError) {
           console.error("Error processing files:", fileError);
@@ -211,19 +212,14 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       console.log("✅ Lesson created:", lesson.id);
 
-      // Close modal first
+      // Close modal and navigate immediately
       onOpenChange(false);
-      
-      // Navigate immediately with replace to force new page load
       window.location.href = `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`;
 
-      // === BACKGROUND TASKS (non-blocking) ===
-
-      // Background: Curriculum mapping
+      // === BACKGROUND TASKS (fully decoupled, fire-and-forget) ===
       (async () => {
         try {
           console.log("🔄 Starting background curriculum mapping...");
-
           const curriculumPrompt = `Educational Curriculum Analysis Request
 
 Role:
