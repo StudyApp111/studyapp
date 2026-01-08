@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -215,7 +215,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Daily Challenges - Both Mobile and Desktop */}
+      {/* Daily Challenges */}
       <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
         <DailyChallenge 
           studyMinutes={studyMinutesToday}
