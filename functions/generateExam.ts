@@ -32,12 +32,10 @@ Deno.serve(async (req) => {
         }
         console.log('✅ API key found');
 
-        const enhancedPrompt = prompt;
-
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: enhancedPrompt
+                    text: prompt
                 }]
             }],
             generationConfig: {
