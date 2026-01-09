@@ -51,17 +51,21 @@ Deno.serve(async (req) => {
         temperature: 0.2,
         topP: 0.95,
         topK: 40,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 16000,
         responseMimeType: "application/json"
       },
       thinkingConfig: {
-        thinkingBudget: "low"
-      }
+        thinkingLevel: "LOW"
+      },
+      tools: [
+        { googleSearch: {} }
+      ]
     };
 
-    console.log('Calling Gemini 2.0 Flash Thinking with minimal thinking budget...');
+    console.log('Calling Gemini 3 Flash Preview with minimal thinking and Google Search...');
 
-    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=' + apiKey, {
+    // Using beta endpoint for preview models
+    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
