@@ -322,105 +322,61 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
       const aiPrompt = `
 
-You are an expert assessment designer.
+[Context]
+You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}. This worksheet establishes an accurate learning baseline and must stay tightly grounded in the student’s materials.
 
-Generate a 5-question, exam-authentic worksheet for ${lesson.course_name}.
-This worksheet must stand alone and establish an accurate learning baseline.
-Do NOT rely on any prior diagnostics.
+Do NOT rely on prior diagnostics.
 
-────────────────────────────────
-
-INPUT CONTEXT
+────────────────────────────
+Input Context
 
 Student Grade Level: ${learningProfile.grade || "N/A"}
 Course / Unit Name: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
 
-Content Summary (authoritative scope):
+Content Summary (OCR notes or user description):
 ${contentDescription}
 
-────────────────────────────────
+────────────────────────────
+Internal Rules (Do NOT Output)
 
-INTERNAL RULES (DO NOT OUTPUT)
+• Topic Lock:
+If content specifies a concrete skill/topic (e.g., “factoring”, “photosynthesis”), ALL questions must stay strictly within it.
+Only broaden scope if the user explicitly requests review or exam prep.
 
-SCOPE LOCK (CRITICAL):
-- If contentDescription specifies a concrete topic or skill
-  (e.g., “factoring”, “solving linear equations”, “photosynthesis”, “Du Bois double-consciousness”),
-  ALL 5 questions MUST stay strictly within that topic.
-- Do NOT include prerequisites, review material, or adjacent topics.
-- Only broaden scope if the user explicitly requests “review”, “mixed practice”, or “exam prep”.
+• Light Search (Minimal):
+Use Google Search ONLY to confirm terminology or common exam phrasing for this course.
+Do NOT introduce new topics.
 
-EXAM AUTHENTICITY:
-- Match wording, rigor, and expectations typical of
-  ${learningProfile.school || "the school"} for this course.
+• Difficulty Progression:
+Q1–2: Moderate
+Q3–4: Challenging
+Q5: Challenging → High Challenge (depth, not new content)
 
-DIFFICULTY PROGRESSION:
-- Q1–2: Moderate Exam-Level
-- Q3: Challenging Exam-Level
-- Q4–5: Challenging → High Challenge (depth, traps, reasoning — NOT new topics)
+────────────────────────────
+QUESTION-TYPE RULES (STRICT)
 
-COVERAGE DESIGN:
-- 2 core skill questions
-- 2 application / conceptual stress tests
-- 1 twin item (same concept, different reasoning demand)
+Choose question_type for EACH question:
+Multiple Choice | True/False | Fill in the Blank | Short Answer
 
-────────────────────────────────
+• Multiple Choice → EXACTLY 4 options (A–D)
+• True/False → options = ["True","False"]
+• Fill in the Blank → ONE blank written as ____ , options = []
+• Short Answer → options = []
 
-QUESTION-TYPE ENFORCEMENT (EXECUTE FIRST)
+MCQ cue phrases are FORBIDDEN in non-MCQ questions.
+If violated, auto-convert to Multiple Choice.
 
-For EACH question, explicitly choose question_type from:
-- Multiple Choice
-- True/False
-- Fill in the Blank
-- Short Answer
-
-Hard constraints:
-
-Multiple Choice:
-- EXACTLY four options labeled A, B, C, D.
-- MCQ cue phrases ARE allowed.
-
-True/False:
-- options = ["True", "False"]
-- Single clear declarative statement.
-
-Fill in the Blank:
-- options = []
-- EXACTLY one blank written as ____.
-
-Short Answer:
-- options = []
-- Direct prompt requesting a value, explanation, or worked step.
-
-MCQ cue phrases are FORBIDDEN in non-MCQ questions:
-“Which of the following”, “Select”, “Identify the correct”, “Choose”, “is/are true about”
-
-If any forbidden cue appears in a non-MCQ question,
-IMMEDIATELY convert it to Multiple Choice and regenerate.
-
-────────────────────────────────
-
-OUTPUT (JSON ONLY)
+────────────────────────────
+Output Requirements
 
 Generate EXACTLY 5 questions.
+Each must include:
+question_type, question_text, options, difficulty_index
 
-Each question MUST include:
-- question_type
-- question_text
-- options (or [])
-- difficulty_index:
-  • Moderate Exam-Level
-  • Challenging Exam-Level
-  • High Challenge Exam-Level
-
-ANSWER KEY (for EACH question):
-- correct_answer
-- explanation (1-2 sentences; instructional, not restated)
-- assessed_competencies (infer ONLY from content)
-- targeted_misconception (or null)
-
-Return ONE valid JSON object.
-No extra text.
+Then include an answer key with:
+correct_answer, explanation (2–3 sentences),
+assessed_competencies, targeted_misconception
 
 Output Format
 Return ONE valid JSON object matching the required schema.
