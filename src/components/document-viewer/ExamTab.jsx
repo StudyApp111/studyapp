@@ -238,6 +238,12 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       return;
     }
 
+    // Prevent double generation triggers
+    if (generationTriggeredRef.current.has(examNumber)) {
+      console.log(`⚠️ Generation already in progress for Exam ${examNumber}, skipping duplicate call.`);
+      return;
+    }
+
     try {
       const existingExams = await base44.entities.Exam.filter({ 
         lesson_id: lesson.id,
@@ -282,14 +288,20 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           pollExam();
         }
       } else {
+        generationTriggeredRef.current.add(examNumber);
         setIsGenerating(true);
-        await generateExam(null, examNumber);
-        setIsGenerating(false);
+        try {
+          await generateExam(null, examNumber);
+        } finally {
+          setIsGenerating(false);
+          generationTriggeredRef.current.delete(examNumber);
+        }
       }
     } catch (error) {
       console.error("Error loading exam:", error);
       await logError('exam_loading', error, { lesson_id: lesson?.id, examNumber });
       setIsGenerating(false);
+      generationTriggeredRef.current.delete(examNumber);
     }
   };
 
