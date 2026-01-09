@@ -17,7 +17,8 @@ const HIGHLIGHT_COLORS = {
 };
 
 export default function DocumentViewerTabs({ lesson }) {
-  const [viewMode, setViewMode] = useState("transcript");
+  const hasFile = !!lesson?.file_url;
+  const [viewMode, setViewMode] = useState(hasFile ? "pdf" : "transcript");
   const [searchQuery, setSearchQuery] = useState("");
   const [annotations, setAnnotations] = useState([]);
   const [selectedText, setSelectedText] = useState("");
@@ -28,14 +29,37 @@ export default function DocumentViewerTabs({ lesson }) {
   const [noteText, setNoteText] = useState("");
   const [pendingHighlightColor, setPendingHighlightColor] = useState(null);
   const [activeAnnotation, setActiveAnnotation] = useState(null);
+  const [pdfLoaded, setPdfLoaded] = useState(false);
+  const [pdfError, setPdfError] = useState(false);
+  const iframeRef = useRef(null);
   const contentRef = useRef(null);
   const toolbarRef = useRef(null);
+  const loadTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (lesson?.id) {
       loadAnnotations();
     }
   }, [lesson?.id]);
+
+  // PDF loading with timeout and retry
+  useEffect(() => {
+    if (hasFile && viewMode === "pdf") {
+      setPdfLoaded(false);
+      setPdfError(false);
+      
+      // Timeout after 10s
+      loadTimeoutRef.current = setTimeout(() => {
+        if (!pdfLoaded) {
+          setPdfError(true);
+        }
+      }, 10000);
+      
+      return () => {
+        if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
+      };
+    }
+  }, [lesson?.file_url, viewMode, hasFile]);
 
   const loadAnnotations = async () => {
     try {
@@ -270,11 +294,22 @@ export default function DocumentViewerTabs({ lesson }) {
   }, [showToolbar, showNoteInput]);
 
   const extractedContent = lesson?.extracted_content || "";
-  const hasFile = !!lesson?.file_url;
-
   const isPDF = lesson?.file_url?.toLowerCase().includes('.pdf');
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(lesson?.file_url || '');
   const isOfficeDoc = /\.(docx?|pptx?|xlsx?)$/i.test(lesson?.file_url || '');
+
+  const handlePdfLoad = () => {
+    setPdfLoaded(true);
+    if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
+  };
+
+  const handlePdfRetry = () => {
+    setPdfError(false);
+    setPdfLoaded(false);
+    if (iframeRef.current) {
+      iframeRef.current.src = iframeRef.current.src;
+    }
+  };
 
   return (
     <div className="h-full">
@@ -352,20 +387,42 @@ export default function DocumentViewerTabs({ lesson }) {
               >
                 {isPDF || isOfficeDoc ? (
                   <>
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-10" id="pdf-loader">
-                      <div className="text-center">
-                        <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" />
-                        <p className="text-sm text-slate-600">Loading document...</p>
+                    {!pdfLoaded && !pdfError && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-30">
+                        <div className="text-center">
+                          <div className="w-10 h-10 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" />
+                          <p className="text-sm font-medium text-slate-700">Loading PDF...</p>
+                          <p className="text-xs text-slate-500 mt-1">This may take a few seconds</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
+                    {pdfError && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-30">
+                        <div className="text-center max-w-sm p-6">
+                          <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                          <p className="text-sm font-medium text-slate-700 mb-2">Failed to load PDF</p>
+                          <p className="text-xs text-slate-500 mb-4">The viewer took too long to respond</p>
+                          <div className="flex gap-2 justify-center">
+                            <Button size="sm" onClick={handlePdfRetry} variant="outline">
+                              Try Again
+                            </Button>
+                            <Button size="sm" asChild>
+                              <a href={lesson.file_url} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                Open Direct
+                              </a>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <iframe
+                      ref={iframeRef}
                       src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
-                      className="w-full h-full border-0 relative z-20"
+                      className="w-full h-full border-0"
                       title="Course Document"
-                      onLoad={() => {
-                        const loader = document.getElementById('pdf-loader');
-                        if (loader) loader.style.display = 'none';
-                      }}
+                      onLoad={handlePdfLoad}
+                      style={{ visibility: pdfLoaded ? 'visible' : 'hidden' }}
                     />
                   </>
                 ) : isImage ? (
