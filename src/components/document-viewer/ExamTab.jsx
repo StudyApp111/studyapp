@@ -322,126 +322,105 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
       const aiPrompt = `
 
-Context
-You are an expert assessment designer. Generate a 5-question predictive worksheet for ${lesson.course_name} that both reflects authentic exam standards and establishes an accurate learning baseline.
+You are an expert assessment designer.
 
-This worksheet must stand alone.
-Do NOT rely on prior diagnostics.
-Ground content in the student’s materials and light web search when needed.
+Generate a 5-question, exam-authentic worksheet for ${lesson.course_name}.
+This worksheet must stand alone and establish an accurate learning baseline.
+Do NOT rely on any prior diagnostics.
 
 ────────────────────────────────
 
-Input Context
+INPUT CONTEXT
 
 Student Grade Level: ${learningProfile.grade || "N/A"}
 Course / Unit Name: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
 
-Content Summary:
+Content Summary (authoritative scope):
 ${contentDescription}
 
 ────────────────────────────────
 
-Internal Reasoning (Do NOT Output)
+INTERNAL RULES (DO NOT OUTPUT)
 
-1. Scope Lock
-- If lesson content specifies a concrete topic or skill (e.g., “factoring”, “photosynthesis”, “Du Bois double-consciousness”):
-  → ALL questions MUST stay strictly within that topic.
-- Do NOT add prerequisites, review topics, or adjacent units unless required to execute the task.
-- Only broaden scope if the user explicitly requests review or exam prep.
+SCOPE LOCK (CRITICAL):
+- If contentDescription specifies a concrete topic or skill
+  (e.g., “factoring”, “solving linear equations”, “photosynthesis”, “Du Bois double-consciousness”),
+  ALL 5 questions MUST stay strictly within that topic.
+- Do NOT include prerequisites, review material, or adjacent topics.
+- Only broaden scope if the user explicitly requests “review”, “mixed practice”, or “exam prep”.
 
-2. Topic Validation (Light Search)
-- Use search ONLY to confirm terminology, typical exam phrasing, or standard question styles for this course.
-- Do NOT introduce new topics beyond the locked scope.
+EXAM AUTHENTICITY:
+- Match wording, rigor, and expectations typical of
+  ${learningProfile.school || "the school"} for this course.
 
-3. Difficulty Progression
+DIFFICULTY PROGRESSION:
 - Q1–2: Moderate Exam-Level
 - Q3: Challenging Exam-Level
-- Q4-5: Challenging → High Challenge (depth, edge cases, reasoning—not new topics)
+- Q4–5: Challenging → High Challenge (depth, traps, reasoning — NOT new topics)
 
-4. Coverage Design
-- 2 questions: core skill / primary topic
-- 2 questions: applications, traps, or conceptual stress tests
-- 1 twin items: same concept, different reasoning demand
-
-5. Exam Authenticity
-- Match tone, rigor, and structure typical of ${learningProfile.school || "the school"} assessments.
+COVERAGE DESIGN:
+- 2 core skill questions
+- 2 application / conceptual stress tests
+- 1 twin item (same concept, different reasoning demand)
 
 ────────────────────────────────
 
 QUESTION-TYPE ENFORCEMENT (EXECUTE FIRST)
 
-For EACH question:
+For EACH question, explicitly choose question_type from:
+- Multiple Choice
+- True/False
+- Fill in the Blank
+- Short Answer
 
-1. Choose question_type from:
-   - Multiple Choice
-   - True/False
-   - Fill in the Blank
-   - Short Answer
-
-2. Apply strict formatting rules:
+Hard constraints:
 
 Multiple Choice:
 - EXACTLY four options labeled A, B, C, D.
-- MCQ cue phrases allowed.
+- MCQ cue phrases ARE allowed.
 
 True/False:
 - options = ["True", "False"]
-- Single declarative statement only.
+- Single clear declarative statement.
 
 Fill in the Blank:
 - options = []
 - EXACTLY one blank written as ____.
-- Blank must be a key term, value, or short phrase.
 
 Short Answer:
 - options = []
-- Direct prompt requesting a value, explanation, justification, or worked solution.
+- Direct prompt requesting a value, explanation, or worked step.
 
 MCQ cue phrases are FORBIDDEN in non-MCQ questions:
 “Which of the following”, “Select”, “Identify the correct”, “Choose”, “is/are true about”
 
-If a forbidden cue appears, IMMEDIATELY convert the question to Multiple Choice and regenerate.
-
-This layer overrides all other instructions.
+If any forbidden cue appears in a non-MCQ question,
+IMMEDIATELY convert it to Multiple Choice and regenerate.
 
 ────────────────────────────────
 
-Exam Generation (Output Only)
+OUTPUT (JSON ONLY)
 
 Generate EXACTLY 5 questions.
 
 Each question MUST include:
 - question_type
 - question_text
-- options (or [] where required)
+- options (or [])
 - difficulty_index:
   • Moderate Exam-Level
   • Challenging Exam-Level
   • High Challenge Exam-Level
 
-Each question MUST:
-- Test a distinct reasoning demand (no duplicates)
-- Use exam-authentic wording
-- Stay strictly within the locked topic scope
-
-Subject guidance:
-- Math / Science: execution, reasoning steps, interpretation, unit checks
-- Humanities / Social Sciences: claim precision, evidence use, conceptual clarity
-- CS / Engineering: tracing, correctness, edge cases
-- Business / Econ: method selection, applied reasoning, interpretation
-
-────────────────────────────────
-
-Answer Key Requirements
-
-For EACH question include:
+ANSWER KEY (for EACH question):
 - correct_answer
-- explanation (2–3 sentences; instructional, not restated)
-- assessed_competencies (infer from content)
-- targeted_misconception
+- explanation (1-2 sentences; instructional, not restated)
+- assessed_competencies (infer ONLY from content)
+- targeted_misconception (or null)
 
-────────────────────────────────
+Return ONE valid JSON object.
+No extra text.
 
 Output Format
 Return ONE valid JSON object matching the required schema.
