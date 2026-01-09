@@ -43,19 +43,25 @@ export default function LessonHistory() {
     base44.auth.me().then(setUser).catch(console.error);
   }, []);
 
-  // OPTIMIZED: Paginate and limit data fetching
-  const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
+  const { data: lessons = [], isLoading: lessonsLoading, error: lessonsError } = useQuery({
     queryKey: ['lessons-history'],
-    queryFn: () => base44.entities.Lesson.list('-created_date', 50),
-    initialData: [],
-    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const result = await base44.entities.Lesson.list('-created_date', 50);
+      console.log('LessonHistory: Fetched lessons:', result?.length || 0);
+      return result || [];
+    },
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const { data: gradedAssignments = [], isLoading: assignmentsLoading } = useQuery({
     queryKey: ['graded-assignments-history'],
-    queryFn: () => base44.entities.GradedAssignment.list('-created_date', 50),
-    initialData: [],
-    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const result = await base44.entities.GradedAssignment.list('-created_date', 50);
+      return result || [];
+    },
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   // OPTIMIZED: Only fetch exams/flashcards for visible lessons
@@ -71,12 +77,10 @@ export default function LessonHistory() {
       const examPromises = visibleLessonIds.map(id =>
         base44.entities.Exam.filter({ lesson_id: id }).catch(() => [])
       );
-      const results = await Promise.all(examPromises);
-      return results.flat();
+      return (await Promise.all(examPromises)).flat();
     },
     enabled: visibleLessonIds.length > 0,
-    initialData: [],
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   const { data: allFlashcards = [] } = useQuery({
@@ -86,12 +90,10 @@ export default function LessonHistory() {
       const flashcardPromises = visibleLessonIds.map(id =>
         base44.entities.Flashcard.filter({ lesson_id: id }).catch(() => [])
       );
-      const results = await Promise.all(flashcardPromises);
-      return results.flat();
+      return (await Promise.all(flashcardPromises)).flat();
     },
     enabled: visibleLessonIds.length > 0,
-    initialData: [],
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 
   const isLoading = lessonsLoading || assignmentsLoading;
@@ -149,47 +151,44 @@ export default function LessonHistory() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
+        transition={{ delay: Math.min(index * 0.03, 0.3) }}
         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
         className="cursor-pointer group"
       >
-        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden bg-white hover:scale-[1.01]">
-          <CardContent className="p-4 md:p-5">
-            {/* Header */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+        <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden bg-white hover:scale-[1.02] active:scale-[0.98]">
+          <CardContent className="p-3 md:p-5">
+            <div className="flex items-start justify-between mb-2 md:mb-3">
+              <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+                <div className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0 ${
                   completedExams === totalExams 
                     ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' 
                     : completedExams > 0 
                     ? 'bg-gradient-to-br from-purple-500 to-purple-600'
                     : 'bg-gradient-to-br from-slate-400 to-slate-500'
                 }`}>
-                  <BookOpen className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                  <BookOpen className="w-4 h-4 md:w-6 md:h-6 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-slate-900 text-sm md:text-base truncate">{lesson.course_name}</h3>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(lesson.created_date)}
-                    </span>
+                  <h3 className="font-bold text-slate-900 text-xs md:text-base leading-tight mb-0.5">{lesson.course_name}</h3>
+                  <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-500">
+                    <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                    <span>{formatDate(lesson.created_date)}</span>
                     <span className="text-slate-300">•</span>
                     {hasDocument ? (
                       <span className="inline-flex items-center gap-0.5 text-blue-600">
-                        <FileText className="w-3 h-3" />
+                        <FileText className="w-2.5 h-2.5 md:w-3 md:h-3" />
                         Doc
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-0.5 text-purple-600">
-                        <PenLine className="w-3 h-3" />
-                        Written
+                        <PenLine className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                        Text
                       </span>
                     )}
                   </div>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
+              <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
             </div>
 
             {/* Stats Row */}
@@ -338,33 +337,37 @@ export default function LessonHistory() {
     : allItems.filter(i => i.itemType === 'assignment');
 
   return (
-    <div className="p-4 md:p-10 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-4xl font-bold text-slate-900">History</h1>
+    <div className="p-3 md:p-10 max-w-7xl mx-auto">
+      <div className="mb-4 md:mb-8">
+        <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-1">History</h1>
+        {lessonsError && (
+          <p className="text-xs text-red-600">Error loading lessons. Please refresh.</p>
+        )}
+        {!isLoading && lessons.length === 0 && !lessonsError && (
+          <p className="text-xs text-slate-500">No lessons found. Upload your first lesson to get started!</p>
+        )}
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-3 gap-2 md:gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
         <Card className="border-0 shadow-md bg-gradient-to-br from-purple-500 to-purple-600">
-          <CardContent className="p-3 md:p-4 text-center">
-            <GraduationCap className="w-5 h-5 md:w-6 md:h-6 text-white/80 mx-auto mb-1" />
-            <p className="text-lg md:text-2xl font-bold text-white">{lessons.length}</p>
-            <p className="text-xs text-white/80">Lessons</p>
+          <CardContent className="p-2.5 md:p-4 text-center">
+            <GraduationCap className="w-4 h-4 md:w-6 md:h-6 text-white/80 mx-auto mb-0.5 md:mb-1" />
+            <p className="text-base md:text-2xl font-bold text-white">{lessons.length}</p>
+            <p className="text-[10px] md:text-xs text-white/80">Lessons</p>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-500 to-teal-600">
-          <CardContent className="p-3 md:p-4 text-center">
-            <FileCheck className="w-5 h-5 md:w-6 md:h-6 text-white/80 mx-auto mb-1" />
-            <p className="text-lg md:text-2xl font-bold text-white">{gradedAssignments.length}</p>
-            <p className="text-xs text-white/80">Assignments</p>
+          <CardContent className="p-2.5 md:p-4 text-center">
+            <FileCheck className="w-4 h-4 md:w-6 md:h-6 text-white/80 mx-auto mb-0.5 md:mb-1" />
+            <p className="text-base md:text-2xl font-bold text-white">{gradedAssignments.length}</p>
+            <p className="text-[10px] md:text-xs text-white/80">Assignments</p>
           </CardContent>
         </Card>
         <Card className="border-0 shadow-md bg-gradient-to-br from-amber-500 to-orange-500">
-          <CardContent className="p-3 md:p-4 text-center">
-            <Zap className="w-5 h-5 md:w-6 md:h-6 text-white/80 mx-auto mb-1" />
-            <p className="text-lg md:text-2xl font-bold text-white">{allExams.filter(e => e.completed).length}</p>
-            <p className="text-xs text-white/80">Exams Done</p>
+          <CardContent className="p-2.5 md:p-4 text-center">
+            <Zap className="w-4 h-4 md:w-6 md:h-6 text-white/80 mx-auto mb-0.5 md:mb-1" />
+            <p className="text-base md:text-2xl font-bold text-white">{allExams.filter(e => e.completed).length}</p>
+            <p className="text-[10px] md:text-xs text-white/80">Exams Done</p>
           </CardContent>
         </Card>
       </div>
