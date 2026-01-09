@@ -52,10 +52,10 @@ Deno.serve(async (req) => {
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 16000,
-        responseMimeType: "application/json"
-      },
-      thinkingConfig: {
-        thinkingLevel: "LOW"
+        responseMimeType: "application/json",
+        thinkingConfig: {
+          thinkingLevel: "LOW"
+        }
       },
       tools: [
         { googleSearch: {} }
