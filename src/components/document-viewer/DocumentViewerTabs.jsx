@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, MessageCircle } from "lucide-react";
+import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, MessageCircle, NotebookPen } from "lucide-react";
+import NotesTab from "@/components/document-viewer/NotesTab";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 
@@ -318,8 +319,8 @@ export default function DocumentViewerTabs({ lesson }) {
           {/* Header with Controls */}
           <div className="border-b border-purple-200 px-3 py-2">
             <div className="flex items-center justify-between gap-2">
-              {hasFile && (
-                <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+              <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+                {hasFile && (
                   <Button
                     variant={viewMode === "pdf" ? "default" : "ghost"}
                     size="sm"
@@ -329,17 +330,26 @@ export default function DocumentViewerTabs({ lesson }) {
                     <FileText className="w-3 h-3 mr-1" />
                     PDF
                   </Button>
-                  <Button
-                    variant={viewMode === "transcript" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("transcript")}
-                    className={`text-xs h-7 px-3 ${viewMode === "transcript" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
-                  >
-                    <Highlighter className="w-3 h-3 mr-1" />
-                    Annotate
-                  </Button>
-                </div>
-              )}
+                )}
+                <Button
+                  variant={viewMode === "transcript" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("transcript")}
+                  className={`text-xs h-7 px-3 ${viewMode === "transcript" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+                >
+                  <Highlighter className="w-3 h-3 mr-1" />
+                  Annotate
+                </Button>
+                <Button
+                  variant={viewMode === "notes" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("notes")}
+                  className={`text-xs h-7 px-3 ${viewMode === "notes" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+                >
+                  <NotebookPen className="w-3 h-3 mr-1" />
+                  Notes
+                </Button>
+              </div>
               
               {viewMode === "transcript" && (
                 <div className="flex items-center gap-2">
@@ -450,6 +460,19 @@ export default function DocumentViewerTabs({ lesson }) {
               </div>
             )}
             
+            {/* Notes View - Always mounted, controlled via opacity */}
+            <div 
+              className="absolute inset-0 bg-white"
+              style={{ 
+                opacity: viewMode === "notes" ? 1 : 0,
+                pointerEvents: viewMode === "notes" ? "auto" : "none",
+                zIndex: viewMode === "notes" ? 10 : 0,
+                visibility: viewMode === "notes" ? "visible" : "hidden"
+              }}
+            >
+              <NotesTab lesson={lesson} />
+            </div>
+
             {/* Transcript View - Always mounted, controlled via opacity */}
             <div 
               className="absolute inset-0 flex"
