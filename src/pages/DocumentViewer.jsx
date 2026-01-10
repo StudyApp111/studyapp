@@ -449,7 +449,7 @@ export default function DocumentViewer() {
                   <NotesTab lesson={lesson} />
                 </TabsContent>
 
-                <TabsContent value="exam" forceMount className="mt-0 p-0 h-full">
+                <TabsContent value="exam" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
                 </TabsContent>
 
@@ -531,7 +531,7 @@ export default function DocumentViewer() {
                 <NotesTab lesson={lesson} />
               </TabsContent>
 
-              <TabsContent value="exam" forceMount className="mt-0 p-0 w-full max-w-full">
+              <TabsContent value="exam" forceMount className="mt-0 p-0 w-full max-w-full data-[state=inactive]:hidden">
                 <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
               </TabsContent>
 
