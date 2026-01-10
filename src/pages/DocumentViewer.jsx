@@ -4,9 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users } from "lucide-react";
+import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
+import NotesTab from "@/components/document-viewer/NotesTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
@@ -397,6 +398,13 @@ export default function DocumentViewer() {
                     </TabsTrigger>
                   )}
                   <TabsTrigger 
+                    value="notes"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
+                  >
+                    <NotebookPen className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Notes</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
                     value="exam"
                     className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
@@ -433,6 +441,10 @@ export default function DocumentViewer() {
                         )}
                       </TabsContent>
 
+                <TabsContent value="notes" className="mt-0 p-0 h-full">
+                  <NotesTab lesson={lesson} />
+                </TabsContent>
+
                 <TabsContent value="exam" forceMount className="mt-0 p-0 h-full">
                   <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
                 </TabsContent>
@@ -466,6 +478,13 @@ export default function DocumentViewer() {
                       <span className="text-[10px] font-medium">Doc</span>
                     </TabsTrigger>
                   )}
+                  <TabsTrigger 
+                    value="notes"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
+                  >
+                    <NotebookPen className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[10px] font-medium">Notes</span>
+                  </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
@@ -502,6 +521,10 @@ export default function DocumentViewer() {
                 ) : (
                   <DocumentViewerTabs lesson={lesson} />
                 )}
+              </TabsContent>
+
+              <TabsContent value="notes" className="mt-0 p-0 w-full max-w-full h-full">
+                <NotesTab lesson={lesson} />
               </TabsContent>
 
               <TabsContent value="exam" forceMount className="mt-0 p-0 w-full max-w-full">
