@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, GraduationCap, FileText, Download } from "lucide-react";
+import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, GraduationCap, FileText, Download, NotebookPen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import NoteSettingsModal from "@/components/modals/NoteSettingsModal";
 import { toast } from "sonner";
@@ -121,8 +121,8 @@ export default function NotesTab({ lesson }) {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm gap-3">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${activeConfig.bg} ${activeConfig.color}`}>
-                <ActiveIcon className="w-5 h-5" />
+              <div className="p-2 rounded-lg bg-purple-100 text-purple-600 border border-purple-200">
+                <NotebookPen className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="font-bold text-slate-900 text-lg leading-none">{note.note_type}</h3>
@@ -149,7 +149,7 @@ export default function NotesTab({ lesson }) {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSettingsOpen(true)} 
-                className="text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                className="text-purple-700 border-purple-200 hover:bg-purple-50 hover:text-purple-900 hover:border-purple-300 transition-all"
               >
                 <Settings2 className="w-4 h-4 mr-1.5" />
                 Customize
@@ -157,7 +157,7 @@ export default function NotesTab({ lesson }) {
               <Button 
                 size="sm" 
                 onClick={() => generateNotes(settings)} 
-                className="bg-slate-900 hover:bg-slate-800 text-white shadow-md"
+                className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-200 transition-all"
               >
                 <RefreshCw className="w-4 h-4 mr-1.5" />
                 Regenerate
