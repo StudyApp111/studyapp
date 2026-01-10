@@ -390,8 +390,8 @@ export default function DocumentViewer() {
           {/* Tabs - Right side (fills remaining space) */}
           <div className="flex-1 min-w-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
-              <div className="flex-shrink-0">
-                <TabsList className="flex w-full bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
+              <div className="flex-shrink-0 overflow-x-auto scrollbar-hide">
+                <TabsList className="flex w-full min-w-max bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
