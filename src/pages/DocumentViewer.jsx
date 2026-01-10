@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/component
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("doc");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,11 +57,11 @@ export default function DocumentViewer() {
   const showFlashcardsDot = true;
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab');
     // Default to 'doc' for immediate content; URL param overrides
-    setActiveTab(tabParam || 'doc');
-  }, []); // Run only once on mount
+    if (tabParam) setActiveTab(tabParam);
+  }, [location.search]);
 
   useEffect(() => {
     const handleSwitchToGrade = () => setActiveTab('grade');
@@ -77,22 +78,25 @@ export default function DocumentViewer() {
 
 
 
-  // Capture lesson ID IMMEDIATELY on first render before platform can strip it
+  // Capture lesson ID and load lesson whenever URL changes
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = new URLSearchParams(location.search);
     const capturedId = urlParams.get('id') || urlParams.get('lessonId');
     
     if (capturedId && capturedId !== 'null' && capturedId !== 'undefined') {
-      lessonIdRef.current = capturedId;
-      sessionStorage.setItem('currentLessonId', capturedId);
-      console.log("✅ Captured lesson ID on mount:", capturedId);
+      // If we have a new ID in the URL, update our ref and storage
+      if (capturedId !== lessonIdRef.current) {
+        console.log("✅ Detected new lesson ID:", capturedId);
+        lessonIdRef.current = capturedId;
+        sessionStorage.setItem('currentLessonId', capturedId);
+        setLesson(null); // Clear previous lesson
+        setLoading(true);
+      }
     }
-  }, []);
-
-  useEffect(() => {
+    
     loadLesson();
     loadUserStats();
-  }, []);
+  }, [location.search]);
 
   const loadUserStats = async () => {
     try {
@@ -193,16 +197,16 @@ export default function DocumentViewer() {
 
   const loadLesson = async () => {
     try {
-      // Priority: ref > sessionStorage > URL params
-      let lessonId = lessonIdRef.current;
-      
-      if (!lessonId) {
-        lessonId = sessionStorage.getItem('currentLessonId');
-      }
-      
-      if (!lessonId) {
-        const urlParams = new URLSearchParams(window.location.search);
-        lessonId = urlParams.get('id') || urlParams.get('lessonId');
+      // Always check URL first for the most up-to-date ID
+      const urlParams = new URLSearchParams(window.location.search);
+      let lessonId = urlParams.get('id') || urlParams.get('lessonId');
+
+      // If not in URL, fall back to ref or session
+      if (!lessonId || lessonId === 'null' || lessonId === 'undefined') {
+        lessonId = lessonIdRef.current || sessionStorage.getItem('currentLessonId');
+      } else {
+        // URL has valid ID, sync ref
+        lessonIdRef.current = lessonId;
       }
 
       console.log("Loading lesson with ID:", lessonId);
