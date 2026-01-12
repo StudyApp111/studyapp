@@ -83,7 +83,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
   // Only load/generate when lesson or selected exam changes, NOT when exams list updates
   useEffect(() => {
-    if (lesson?.id && selectedExamNumber) {
+    if (lesson?.id && selectedExamNumber && !exam) {
       loadOrGenerateExam(selectedExamNumber);
     }
   }, [lesson?.id, selectedExamNumber]);
