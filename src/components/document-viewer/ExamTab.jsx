@@ -245,10 +245,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     }
 
     try {
-      const existingExams = await base44.entities.Exam.filter({ 
-        lesson_id: lesson.id,
-        exam_number: examNumber
-      });
+      // Use exams prop to avoid redundant API calls that cause rate limiting
+      const existingExams = (exams || []).filter(e => e.exam_number === examNumber);
 
       if (existingExams?.length > 0) {
         const loadedExam = existingExams[0];
