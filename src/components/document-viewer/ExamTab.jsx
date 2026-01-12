@@ -59,7 +59,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     // CRITICAL: Wait until exams are loaded from database (undefined = still loading)
     if (!lesson?.id || exams === undefined || selectedExamNumber) return;
 
-    const allExamsForLesson = exams;
+    const allExamsForLesson = exams || [];
 
     // First priority: in-progress exam
     const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
@@ -249,7 +249,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
     try {
       // Use exams prop (already loaded from database by parent)
-      const existingExams = exams.filter(e => e.exam_number === examNumber);
+      const existingExams = (exams || []).filter(e => e.exam_number === examNumber);
       console.log(`📋 Looking for Exam ${examNumber} in loaded exams:`, existingExams.length > 0 ? 'FOUND' : 'NOT FOUND');
 
       if (existingExams?.length > 0) {
@@ -1100,7 +1100,7 @@ No extra fields. % as strings.`;
       );
     }
     
-    const allExamsForLesson = exams;
+    const allExamsForLesson = exams || [];
     // Deduplicate by exam_number, keeping the most recent or completed one
     const examsByNumber = {};
     allExamsForLesson.forEach(e => {
