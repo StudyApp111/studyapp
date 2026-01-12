@@ -54,39 +54,40 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const lastSavedQuestionsRef = useRef(null);
   const generationTriggeredRef = useRef(new Set()); // Track which exams we've triggered generation for
 
-  // Auto-select Exam 1 (or in-progress) to trigger generation in background
-          useEffect(() => {
-            if (lesson && !selectedExamNumber) {
-              const allExamsForLesson = exams || [];
-
-              // First priority: in-progress exam
-              const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
-              if (inProgressExam) {
-                console.log("📋 Auto-selecting in-progress exam:", inProgressExam.exam_number);
-                setSelectedExamNumber(inProgressExam.exam_number);
-                return;
-              }
-
-              // Second priority: Exam 1 if it exists
-              const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
-              if (exam1) {
-                console.log("📋 Auto-selecting Exam 1:", exam1.id, "| has questions:", exam1.questions?.length || 0);
-                setSelectedExamNumber(1);
-                return;
-              }
-
-              // Fallback: trigger Exam 1 generation even if exams list is empty (fresh lesson)
-              console.log("📋 No exams found yet; defaulting to Exam 1 to generate in background");
-              setSelectedExamNumber(1);
-            }
-          }, [lesson?.id, exams, selectedExamNumber]);
-
-  // Only load/generate when lesson or selected exam changes, NOT when exams list updates
+  // Auto-select Exam 1 (or in-progress) - only after exams are loaded from parent
   useEffect(() => {
-    if (lesson?.id && selectedExamNumber && !exam) {
+    // Wait for lesson AND exams to be provided (exams undefined = still loading)
+    if (!lesson?.id || exams === undefined || selectedExamNumber) return;
+
+    const allExamsForLesson = exams || [];
+
+    // First priority: in-progress exam
+    const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
+    if (inProgressExam) {
+      console.log("📋 Auto-selecting in-progress exam:", inProgressExam.exam_number);
+      setSelectedExamNumber(inProgressExam.exam_number);
+      return;
+    }
+
+    // Second priority: Exam 1 if it exists
+    const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
+    if (exam1) {
+      console.log("📋 Auto-selecting Exam 1:", exam1.id, "| has questions:", exam1.questions?.length || 0);
+      setSelectedExamNumber(1);
+      return;
+    }
+
+    // Fallback: trigger Exam 1 generation if no exams exist yet
+    console.log("📋 No exams found; defaulting to Exam 1");
+    setSelectedExamNumber(1);
+  }, [lesson?.id, exams, selectedExamNumber]);
+
+  // Load exam when selection changes - but ONLY if not already loaded
+  useEffect(() => {
+    if (lesson?.id && selectedExamNumber && exams !== undefined && !exam) {
       loadOrGenerateExam(selectedExamNumber);
     }
-  }, [lesson?.id, selectedExamNumber]);
+  }, [lesson?.id, selectedExamNumber, exams]);
 
   // Wait briefly for background compression to finish to reduce prompt size
   useEffect(() => {
