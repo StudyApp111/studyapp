@@ -1075,10 +1075,11 @@ No extra fields. % as strings.`;
         setNewBadges(earnedNow);
       }
 
-      // Notify completion
+      // Notify completion and switch to grade tab
       if (onExamComplete) onExamComplete();
+      setIsSubmitting(false);
       setTimeout(() => {
-        window.dispatchEvent(new Event('switchToGradeTab'));
+        window.dispatchEvent(new CustomEvent('switchToGradeTab', { detail: { examId: exam.id } }));
       }, 1000);
     } catch (error) {
       console.error("Error submitting exam:", error);
@@ -1132,8 +1133,8 @@ No extra fields. % as strings.`;
                 key={e.id}
                 onClick={() => {
                   if (isCompleted) {
-                    // Navigate to grade tab to view feedback
-                    window.dispatchEvent(new Event('switchToGradeTab'));
+                    // Navigate to grade tab with specific exam
+                    window.dispatchEvent(new CustomEvent('switchToGradeTab', { detail: { examId: e.id } }));
                   } else if (canStart) {
                     setSelectedExamNumber(e.exam_number);
                   }
@@ -1141,14 +1142,14 @@ No extra fields. % as strings.`;
                 disabled={!canStart && !isCompleted}
                 className={`p-3 md:p-5 rounded-xl border-2 transition-all text-left ${
                   isCompleted
-                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300 hover:shadow-lg'
+                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer'
                     : canStart
                     ? 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02]'
                     : 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1 md:mb-2">
-                  <div className="flex items-center gap-2 md:gap-3">
+                  <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                     {isCompleted ? (
                       <div className="w-9 h-9 md:w-12 md:h-12 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
                         <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-white" />
@@ -1162,29 +1163,39 @@ No extra fields. % as strings.`;
                         <Lock className="w-4 h-4 md:w-6 md:h-6 text-white" />
                       </div>
                     )}
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <h5 className="font-bold text-slate-900 text-sm md:text-lg">
                         Exam {e.exam_number}
                       </h5>
-                      <p className="text-xs md:text-sm text-slate-600 line-clamp-1">
+                      <p className="text-xs md:text-sm text-slate-600 line-clamp-2">
                         {e.focus_description || (e.exam_number === 1 ? 'Diagnostic Assessment' : 'Practice Exam')}
                       </p>
                     </div>
                   </div>
                   {isCompleted && e.predicted_grade && (
-                    <Badge className="bg-emerald-600 text-white font-bold text-sm md:text-lg px-2 py-1 md:px-4 md:py-2">
-                      {e.predicted_grade}
-                    </Badge>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <Badge className="bg-emerald-600 text-white font-bold text-base md:text-xl px-3 py-1.5 md:px-4 md:py-2">
+                        {e.predicted_grade}
+                      </Badge>
+                      {e.total_score !== undefined && (
+                        <span className="text-xs text-emerald-700 font-medium">{e.total_score}%</span>
+                      )}
+                    </div>
                   )}
                 </div>
                 {isCompleted && (
-                  <p className="text-xs md:text-sm text-emerald-700 font-medium ml-11 md:ml-12">
-                    Click to view feedback →
+                  <p className="text-xs md:text-sm text-emerald-700 font-medium ml-11 md:ml-12 flex items-center gap-1">
+                    View detailed feedback →
                   </p>
                 )}
-                {canStart && !isCompleted && (
+                {canStart && !isCompleted && e.status === 'in_progress' && e.questions?.length > 0 && (
                   <p className="text-xs md:text-sm text-purple-700 font-medium ml-11 md:ml-12">
-                    Click to start exam →
+                    Continue exam →
+                  </p>
+                )}
+                {canStart && !isCompleted && e.status !== 'in_progress' && (
+                  <p className="text-xs md:text-sm text-purple-700 font-medium ml-11 md:ml-12">
+                    Start exam →
                   </p>
                 )}
               </button>
