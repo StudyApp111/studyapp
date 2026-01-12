@@ -398,17 +398,43 @@ No extra text.`;
       } else {
         // Exams 2-6: Adaptive based on prior performance
         let suggestedFutureSessions = null;
+        let priorPredictedScore = null;
+        let difficultyCalibration = "Moderate → Challenging";
+        
         try {
-          const exam1List = await base44.entities.Exam.filter({ 
+          // Fetch all completed exams to get the most recent performance
+          const completedExams = await base44.entities.Exam.filter({ 
             lesson_id: lesson.id,
-            exam_number: 1,
             completed: true
           });
-          if (exam1List?.[0]?.ai_feedback?.suggested_future_sessions_plan) {
-            suggestedFutureSessions = exam1List[0].ai_feedback.suggested_future_sessions_plan;
+          
+          if (completedExams && completedExams.length > 0) {
+            // Get most recent completed exam
+            const sortedExams = completedExams.sort((a, b) => b.exam_number - a.exam_number);
+            const mostRecentExam = sortedExams[0];
+            
+            // Extract predicted score percentage
+            if (mostRecentExam.total_score !== undefined) {
+              priorPredictedScore = mostRecentExam.total_score;
+              
+              // Set difficulty calibration based on performance
+              if (priorPredictedScore >= 85) {
+                difficultyCalibration = "Challenging → High Challenge (student excelling, increase rigor)";
+              } else if (priorPredictedScore >= 70) {
+                difficultyCalibration = "Moderate → Challenging (steady progress)";
+              } else {
+                difficultyCalibration = "Scaffold with Moderate, then gradually increase (needs support)";
+              }
+            }
+            
+            // Get Exam 1 feedback for future sessions plan
+            const exam1 = completedExams.find(e => e.exam_number === 1);
+            if (exam1?.ai_feedback?.suggested_future_sessions_plan) {
+              suggestedFutureSessions = exam1.ai_feedback.suggested_future_sessions_plan;
+            }
           }
         } catch (e) {
-          console.warn("Could not fetch Exam 1 feedback for subsequent exam generation:", e);
+          console.warn("Could not fetch prior exam data for adaptive difficulty:", e);
         }
 
         aiPrompt = `
@@ -432,6 +458,10 @@ ${contentDescription}
 Targeted Improvement Signals (from previous prediction):
 ${JSON.stringify(suggestedFutureSessions, null, 2)}
 
+Prior Exam Performance:
+- Most Recent Predicted Score: ${priorPredictedScore !== null ? `${priorPredictedScore}%` : 'N/A'}
+- Adaptive Difficulty Strategy: ${difficultyCalibration}
+
 ────────────────────────────
 Internal Rules (Do NOT Output)
 
@@ -444,10 +474,26 @@ Do NOT introduce unrelated topics.
 Use Google Search ONLY to validate terminology or common exam phrasing.
 Do NOT expand topic scope.
 
-• Difficulty Calibration:
-- If prior predicted grade ≥ 85% → bias Challenging → High Challenge
-- If 70–84% → Moderate → Challenging
-- If <70% → scaffold early, then raise difficulty
+• CRITICAL - Adaptive Difficulty Calibration:
+${priorPredictedScore !== null && priorPredictedScore >= 85 ? `
+STUDENT EXCELLING (${priorPredictedScore}%):
+- Q1-2: Challenging (no warm-up needed)
+- Q3-4: High Challenge (push boundaries)
+- Q5: High Challenge with multi-step reasoning
+- Minimize "Moderate" - only if essential for concept scaffolding
+` : priorPredictedScore !== null && priorPredictedScore >= 70 ? `
+STEADY PROGRESS (${priorPredictedScore}%):
+- Q1-2: Moderate
+- Q3-4: Challenging
+- Q5: High Challenge
+- Balance between consolidation and growth
+` : `
+NEEDS SUPPORT (${priorPredictedScore !== null ? priorPredictedScore + '%' : 'baseline'}):
+- Q1-2: Moderate (build confidence)
+- Q3: Moderate-to-Challenging transition
+- Q4-5: Challenging (gradual stretch)
+- Provide clear explanations and partial credit opportunities
+`}
 
 • Coverage Design:
 - 3 questions directly targeting session_focus_description
