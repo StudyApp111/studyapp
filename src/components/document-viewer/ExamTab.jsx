@@ -330,24 +330,11 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
       console.log("📏 Content length:", contentDescription.length, "characters");
 
-      // Fetch AI feedback from Exam 1 if this is Exam 2+
-      let suggestedFutureSessions = null;
-      if (examNumber > 1) {
-        try {
-          const exam1List = await base44.entities.Exam.filter({ 
-            lesson_id: lesson.id,
-            exam_number: 1,
-            completed: true
-          });
-          if (exam1List?.[0]?.ai_feedback?.suggested_future_sessions_plan) {
-            suggestedFutureSessions = exam1List[0].ai_feedback.suggested_future_sessions_plan;
-          }
-        } catch (e) {
-          console.warn("Could not fetch Exam 1 feedback for subsequent exam generation:", e);
-        }
-      }
+      let aiPrompt;
 
-      const aiPrompt = examNumber === 1 ? `
+      if (examNumber === 1) {
+        // Exam 1: Diagnostic baseline
+        aiPrompt = `
 
 [Context]
 You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}. This worksheet establishes an accurate learning baseline and must stay tightly grounded in the student’s materials.
@@ -407,7 +394,24 @@ assessed_competencies, targeted_misconception
 
 Output Format
 Return ONE valid JSON object matching the required schema.
-No extra text.` : `
+No extra text.`;
+      } else {
+        // Exams 2-6: Adaptive based on prior performance
+        let suggestedFutureSessions = null;
+        try {
+          const exam1List = await base44.entities.Exam.filter({ 
+            lesson_id: lesson.id,
+            exam_number: 1,
+            completed: true
+          });
+          if (exam1List?.[0]?.ai_feedback?.suggested_future_sessions_plan) {
+            suggestedFutureSessions = exam1List[0].ai_feedback.suggested_future_sessions_plan;
+          }
+        } catch (e) {
+          console.warn("Could not fetch Exam 1 feedback for subsequent exam generation:", e);
+        }
+
+        aiPrompt = `
 [Context]
 You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}, calibrated using the student's prior exam performance and targeted improvement plan.
 
@@ -477,6 +481,7 @@ assessed_competencies, targeted_misconception
 
 Return ONE valid JSON object. No extra text.
 `;
+      }
 
       console.log("📏 Final prompt length:", aiPrompt.length, "characters");
       console.log("🚀 Calling generateExam API...");
