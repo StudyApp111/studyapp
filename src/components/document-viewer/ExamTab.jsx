@@ -81,11 +81,12 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
             }
           }, [lesson?.id, exams, selectedExamNumber]);
 
+  // Only load/generate when lesson or selected exam changes, NOT when exams list updates
   useEffect(() => {
-            if (lesson?.id && selectedExamNumber && exams) {
-              loadOrGenerateExam(selectedExamNumber);
-            }
-          }, [lesson?.id, selectedExamNumber, exams?.length]);
+    if (lesson?.id && selectedExamNumber) {
+      loadOrGenerateExam(selectedExamNumber);
+    }
+  }, [lesson?.id, selectedExamNumber]);
 
   // Wait briefly for background compression to finish to reduce prompt size
   useEffect(() => {
@@ -605,8 +606,8 @@ Return ONE valid JSON object. No extra text.
       console.log("✅ Exam saved successfully:", createdExam.id);
       setExam(createdExam);
       
-      // Reload lesson to refresh exams list in parent
-      window.dispatchEvent(new Event('reloadLesson'));
+      // Notify parent to refresh (will be picked up by periodic refetch)
+      if (onExamComplete) onExamComplete();
     } catch (error) {
       console.error("❌ Error in generateExam:", error);
       console.error("❌ Error stack:", error.stack);
@@ -1071,8 +1072,7 @@ No extra fields. % as strings.`;
         setNewBadges(earnedNow);
       }
 
-      // Reload lesson data to refresh exams list
-      window.dispatchEvent(new Event('reloadLesson'));
+      // Notify completion
       if (onExamComplete) onExamComplete();
       setTimeout(() => {
         window.dispatchEvent(new Event('switchToGradeTab'));
@@ -1221,7 +1221,6 @@ No extra fields. % as strings.`;
     // Go back to selection view after completion
     setExam(null);
     setSelectedExamNumber(null);
-    window.dispatchEvent(new Event('reloadLesson'));
     return null;
   }
 
