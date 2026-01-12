@@ -5,6 +5,20 @@ import { Button } from "@/components/ui/button";
 import FeedbackDisplay from "../feedback/FeedbackDisplay";
 
 export default function PredictedGradeTab({ lesson, exams }) {
+  const [selectedExamId, setSelectedExamId] = React.useState(null);
+
+  // Listen for exam selection from exam tab
+  React.useEffect(() => {
+    const handleSwitchToGrade = (e) => {
+      if (e.detail?.examId) {
+        setSelectedExamId(e.detail.examId);
+      }
+    };
+    
+    window.addEventListener('switchToGradeTab', handleSwitchToGrade);
+    return () => window.removeEventListener('switchToGradeTab', handleSwitchToGrade);
+  }, []);
+
   // Find any completed exam with AI feedback
   const completedExamsWithFeedback = (exams || []).filter(e => 
     e.completed === true && 
@@ -12,9 +26,19 @@ export default function PredictedGradeTab({ lesson, exams }) {
     Object.keys(e.ai_feedback).length > 0
   );
   
-  const latestExamWithGrade = completedExamsWithFeedback.sort((a, b) => 
-    new Date(b.updated_date) - new Date(a.updated_date)
-  )[0];
+  // If a specific exam was selected, show that one
+  let examToDisplay;
+  if (selectedExamId) {
+    examToDisplay = completedExamsWithFeedback.find(e => e.id === selectedExamId);
+  }
+  // Otherwise show the latest
+  if (!examToDisplay) {
+    examToDisplay = completedExamsWithFeedback.sort((a, b) => 
+      new Date(b.updated_date) - new Date(a.updated_date)
+    )[0];
+  }
+
+  const latestExamWithGrade = examToDisplay;
 
   if (!latestExamWithGrade) {
     return (
