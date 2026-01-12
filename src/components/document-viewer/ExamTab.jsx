@@ -43,6 +43,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [waitingForCompression, setWaitingForCompression] = useState(false);
   const [correctStreak, setCorrectStreak] = useState(0);
+  const hasAutoSelectedRef = useRef(false);
   
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef(null);
@@ -56,9 +57,10 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
   // Auto-select Exam 1 (or in-progress) - only after exams are loaded from parent
   useEffect(() => {
-    // CRITICAL: Wait until exams are loaded from database (undefined = still loading)
-    if (!lesson?.id || exams === undefined || selectedExamNumber) return;
+    // CRITICAL: Only auto-select once when exams first load
+    if (!lesson?.id || exams === undefined || selectedExamNumber || hasAutoSelectedRef.current) return;
 
+    hasAutoSelectedRef.current = true;
     const allExamsForLesson = exams || [];
 
     // First priority: in-progress exam
@@ -77,7 +79,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
     // Only generate if truly no exams exist
     setSelectedExamNumber(1);
-  }, [lesson?.id, selectedExamNumber]); // Remove exams from deps to prevent infinite loop
+  }, [lesson?.id, exams, selectedExamNumber]);
 
   // Load exam when selection changes - wait for exams to be loaded from database
   useEffect(() => {
@@ -85,7 +87,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     if (!lesson?.id || !selectedExamNumber || exams === undefined || exam) return;
     
     loadOrGenerateExam(selectedExamNumber);
-  }, [lesson?.id, selectedExamNumber, exam]); // Remove exams, add exam
+  }, [lesson?.id, selectedExamNumber]);
 
   // Wait briefly for background compression to finish to reduce prompt size
   useEffect(() => {
