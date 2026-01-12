@@ -46,7 +46,7 @@ export default function DocumentViewer() {
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
   
   // Check exam completion status for red dot logic
-  const completedExamCount = exams.filter(e => e.completed).length;
+  const completedExamCount = (exams || []).filter(e => e.completed).length;
   
   // Red dot logic (simplified without quiz):
   // - Exam tab: show dot if no exam completed or not all 6 completed
