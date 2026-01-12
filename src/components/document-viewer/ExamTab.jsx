@@ -332,7 +332,24 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
       console.log("📏 Content length:", contentDescription.length, "characters");
 
-      const aiPrompt = `
+      // Fetch AI feedback from Exam 1 if this is Exam 2+
+      let suggestedFutureSessions = null;
+      if (examNumber > 1) {
+        try {
+          const exam1List = await base44.entities.Exam.filter({ 
+            lesson_id: lesson.id,
+            exam_number: 1,
+            completed: true
+          });
+          if (exam1List?.[0]?.ai_feedback?.suggested_future_sessions_plan) {
+            suggestedFutureSessions = exam1List[0].ai_feedback.suggested_future_sessions_plan;
+          }
+        } catch (e) {
+          console.warn("Could not fetch Exam 1 feedback for subsequent exam generation:", e);
+        }
+      }
+
+      const aiPrompt = examNumber === 1 ? `
 
 [Context]
 You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}. This worksheet establishes an accurate learning baseline and must stay tightly grounded in the student’s materials.
@@ -392,7 +409,76 @@ assessed_competencies, targeted_misconception
 
 Output Format
 Return ONE valid JSON object matching the required schema.
-No extra text.`;
+No extra text.` : `
+[Context]
+You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}, calibrated using the student's prior exam performance and targeted improvement plan.
+
+This worksheet MUST adapt based on prior results.
+Do NOT repeat Exam 1 questions or trivial variants.
+
+────────────────────────────
+Input Context
+
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course / Unit Name: ${lesson.course_name}
+School: ${learningProfile.school || "N/A"}
+Exam Number: ${examNumber} of 6
+
+Content Summary (OCR notes or user description):
+${contentDescription}
+
+Targeted Improvement Signals (from previous prediction):
+${JSON.stringify(suggestedFutureSessions, null, 2)}
+
+────────────────────────────
+Internal Rules (Do NOT Output)
+
+• Focus Lock:
+Use ONLY the session_name and session_focus_description relevant to this exam iteration.
+Treat these as PRIMARY scope.
+Do NOT introduce unrelated topics.
+
+• Light Search (Minimal):
+Use Google Search ONLY to validate terminology or common exam phrasing.
+Do NOT expand topic scope.
+
+• Difficulty Calibration:
+- If prior predicted grade ≥ 85% → bias Challenging → High Challenge
+- If 70–84% → Moderate → Challenging
+- If <70% → scaffold early, then raise difficulty
+
+• Coverage Design:
+- 3 questions directly targeting session_focus_description
+- 1 application or edge-case question
+- 1 calibration/twin item (same concept, different reasoning demand)
+
+────────────────────────────
+QUESTION-TYPE RULES (STRICT)
+
+Choose question_type for EACH question:
+Multiple Choice | True/False | Fill in the Blank | Short Answer
+
+• Multiple Choice → EXACTLY 4 options (A–D)
+• True/False → options = ["True","False"]
+• Fill in the Blank → ONE blank written as ____ , options = []
+• Short Answer → options = []
+
+MCQ cue phrases are FORBIDDEN in non-MCQ questions.
+If violated, auto-convert to Multiple Choice.
+
+────────────────────────────
+Output Requirements
+
+Generate EXACTLY 5 questions.
+Each must include:
+question_type, question_text, options, difficulty_index
+
+Then include an answer key with:
+correct_answer, explanation (2–3 sentences),
+assessed_competencies, targeted_misconception
+
+Return ONE valid JSON object. No extra text.
+`;
 
       console.log("📏 Final prompt length:", aiPrompt.length, "characters");
       console.log("🚀 Calling generateExam API...");
