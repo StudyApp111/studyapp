@@ -64,7 +64,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     // First priority: in-progress exam
     const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
     if (inProgressExam) {
-      console.log("📋 Found in-progress exam:", inProgressExam.exam_number);
       setSelectedExamNumber(inProgressExam.exam_number);
       return;
     }
@@ -72,15 +71,13 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     // Second priority: Exam 1 if it exists
     const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
     if (exam1) {
-      console.log("📋 Found existing Exam 1:", exam1.id);
       setSelectedExamNumber(1);
       return;
     }
 
     // Only generate if truly no exams exist
-    console.log("📋 No exams in database; will generate Exam 1");
     setSelectedExamNumber(1);
-  }, [lesson?.id, exams, selectedExamNumber]);
+  }, [lesson?.id, selectedExamNumber]); // Remove exams from deps to prevent infinite loop
 
   // Load exam when selection changes - wait for exams to be loaded from database
   useEffect(() => {
@@ -88,7 +85,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     if (!lesson?.id || !selectedExamNumber || exams === undefined || exam) return;
     
     loadOrGenerateExam(selectedExamNumber);
-  }, [lesson?.id, selectedExamNumber, exams]);
+  }, [lesson?.id, selectedExamNumber, exam]); // Remove exams, add exam
 
   // Wait briefly for background compression to finish to reduce prompt size
   useEffect(() => {
