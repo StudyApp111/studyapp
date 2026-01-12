@@ -28,7 +28,7 @@ export default function DocumentViewer() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const lessonIdRef = useRef(null);
-  const [exams, setExams] = useState([]);
+  const [exams, setExams] = useState(undefined); // undefined = loading, [] = loaded empty, [data] = loaded with data
   const [extractedContent, setExtractedContent] = useState("");
   const [studyTime, setStudyTime] = useState(null);
   const [isTimerRunning, setIsTimerRunning] = useState(true);

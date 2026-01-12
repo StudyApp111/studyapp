@@ -56,15 +56,15 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
   // Auto-select Exam 1 (or in-progress) - only after exams are loaded from parent
   useEffect(() => {
-    // Wait for lesson AND exams to be provided (exams undefined = still loading)
+    // CRITICAL: Wait until exams are loaded from database (undefined = still loading)
     if (!lesson?.id || exams === undefined || selectedExamNumber) return;
 
-    const allExamsForLesson = exams || [];
+    const allExamsForLesson = exams;
 
     // First priority: in-progress exam
     const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
     if (inProgressExam) {
-      console.log("📋 Auto-selecting in-progress exam:", inProgressExam.exam_number);
+      console.log("📋 Found in-progress exam:", inProgressExam.exam_number);
       setSelectedExamNumber(inProgressExam.exam_number);
       return;
     }
@@ -72,21 +72,22 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     // Second priority: Exam 1 if it exists
     const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
     if (exam1) {
-      console.log("📋 Auto-selecting Exam 1:", exam1.id, "| has questions:", exam1.questions?.length || 0);
+      console.log("📋 Found existing Exam 1:", exam1.id);
       setSelectedExamNumber(1);
       return;
     }
 
-    // Fallback: trigger Exam 1 generation if no exams exist yet
-    console.log("📋 No exams found; defaulting to Exam 1");
+    // Only generate if truly no exams exist
+    console.log("📋 No exams in database; will generate Exam 1");
     setSelectedExamNumber(1);
   }, [lesson?.id, exams, selectedExamNumber]);
 
-  // Load exam when selection changes - but ONLY if not already loaded
+  // Load exam when selection changes - wait for exams to be loaded from database
   useEffect(() => {
-    if (lesson?.id && selectedExamNumber && exams !== undefined && !exam) {
-      loadOrGenerateExam(selectedExamNumber);
-    }
+    // CRITICAL: Don't run until exams are loaded (not undefined) to avoid duplicate generation
+    if (!lesson?.id || !selectedExamNumber || exams === undefined || exam) return;
+    
+    loadOrGenerateExam(selectedExamNumber);
   }, [lesson?.id, selectedExamNumber, exams]);
 
   // Wait briefly for background compression to finish to reduce prompt size
@@ -247,8 +248,9 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     }
 
     try {
-      // Use exams prop to avoid redundant API calls that cause rate limiting
-      const existingExams = (exams || []).filter(e => e.exam_number === examNumber);
+      // Use exams prop (already loaded from database by parent)
+      const existingExams = exams.filter(e => e.exam_number === examNumber);
+      console.log(`📋 Looking for Exam ${examNumber} in loaded exams:`, existingExams.length > 0 ? 'FOUND' : 'NOT FOUND');
 
       if (existingExams?.length > 0) {
         const loadedExam = existingExams[0];
@@ -1088,7 +1090,17 @@ No extra fields. % as strings.`;
 
   // Show exam selection if no exam in progress
   if (!exam && !isGenerating && !selectedExamNumber) {
-    const allExamsForLesson = exams || [];
+    // Wait for exams to load from database
+    if (exams === undefined) {
+      return (
+        <div className="flex items-center justify-center p-8">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+          <span className="ml-2 text-slate-600">Loading exams...</span>
+        </div>
+      );
+    }
+    
+    const allExamsForLesson = exams;
     // Deduplicate by exam_number, keeping the most recent or completed one
     const examsByNumber = {};
     allExamsForLesson.forEach(e => {
