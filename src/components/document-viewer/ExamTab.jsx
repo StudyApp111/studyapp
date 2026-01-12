@@ -82,10 +82,10 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           }, [lesson?.id, exams, selectedExamNumber]);
 
   useEffect(() => {
-            if (lesson?.id && selectedExamNumber) {
+            if (lesson?.id && selectedExamNumber && exams) {
               loadOrGenerateExam(selectedExamNumber);
             }
-          }, [lesson?.id, lesson?.compressed_content, selectedExamNumber]);
+          }, [lesson?.id, selectedExamNumber, exams?.length]);
 
   // Wait briefly for background compression to finish to reduce prompt size
   useEffect(() => {
@@ -604,6 +604,9 @@ Return ONE valid JSON object. No extra text.
 
       console.log("✅ Exam saved successfully:", createdExam.id);
       setExam(createdExam);
+      
+      // Reload lesson to refresh exams list in parent
+      window.dispatchEvent(new Event('reloadLesson'));
     } catch (error) {
       console.error("❌ Error in generateExam:", error);
       console.error("❌ Error stack:", error.stack);
