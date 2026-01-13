@@ -372,7 +372,7 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)] overflow-x-hidden">
+      <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)] overflow-x-hidden">
         {/* Desktop: Flex container for AI tutor + tabs */}
         <div className="hidden md:flex gap-3 h-full w-full max-w-full">
           {/* AI Tutor Panel - Left side */}
