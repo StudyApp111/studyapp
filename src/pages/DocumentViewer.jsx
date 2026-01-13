@@ -542,7 +542,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
 
                   </TabsList>
-            </div>
+
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden w-full">
               <TabsContent value="doc" className="mt-0 p-0 w-full h-full overflow-x-hidden">
