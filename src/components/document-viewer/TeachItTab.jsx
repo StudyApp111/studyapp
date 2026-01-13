@@ -320,7 +320,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
       />
 
-      <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-pink-50/30 to-purple-100/40 md:rounded-2xl overflow-hidden w-full">
+      <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-pink-50/30 to-purple-100/40 md:rounded-2xl overflow-hidden overflow-x-hidden w-full">
         {/* Ultra-compact mobile header */}
         <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 px-2 py-1.5 md:px-6 md:py-4 sticky top-0 z-10 shadow-lg w-full">
           <div className="flex items-center justify-between mb-1">

@@ -293,7 +293,7 @@ export default function DocumentViewer() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full max-w-full">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full">
       {/* Mobile Header */}
       <div className="md:hidden border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10 w-full">
         <div className="px-2 py-2">
@@ -372,7 +372,7 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)]">
+      <div className="w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)] overflow-x-hidden">
         {/* Desktop: Flex container for AI tutor + tabs */}
         <div className="hidden md:flex gap-3 h-full w-full max-w-full">
           {/* AI Tutor Panel - Left side */}
@@ -479,19 +479,20 @@ export default function DocumentViewer() {
           </div>
         
         {/* Mobile: Original layout without AI tutor panel */}
-        <div className="md:hidden h-full flex flex-col w-full max-w-full overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full max-w-full overflow-hidden">
-            <div className="flex-shrink-0 pb-2 w-full relative">
+        <div className="md:hidden h-full flex flex-col w-full overflow-x-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full overflow-x-hidden">
+            <div className="flex-shrink-0 pb-2 w-full relative overflow-x-hidden">
               {/* Scroll indicators */}
-              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-purple-50 to-transparent z-10 pointer-events-none flex items-center justify-start pl-1">
+              <div className="absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-purple-50 to-transparent z-10 pointer-events-none flex items-center justify-start pl-1">
                 <ChevronLeft className="w-3 h-3 text-purple-600 animate-pulse" />
               </div>
-              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-purple-50 to-transparent z-10 pointer-events-none flex items-center justify-end pr-1">
+              <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-purple-50 to-transparent z-10 pointer-events-none flex items-center justify-end pr-1">
                 <ChevronLeft className="w-3 h-3 text-purple-600 rotate-180 animate-pulse" />
               </div>
               
-              <div className="overflow-x-auto scrollbar-hide pb-2 -mb-2 px-2">
-                <TabsList className="inline-flex w-auto bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
+              <div className="overflow-x-auto scrollbar-hide pb-2 -mb-2 w-full">
+                <div className="px-2">
+                  <TabsList className="inline-flex w-auto bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
@@ -540,12 +541,13 @@ export default function DocumentViewer() {
                     <span className="text-[10px] font-medium">Teach It</span>
                   </TabsTrigger>
 
-                </TabsList>
+                  </TabsList>
+                </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto w-full">
-              <TabsContent value="doc" className="mt-0 p-0 w-full h-full">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden w-full">
+              <TabsContent value="doc" className="mt-0 p-0 w-full h-full overflow-x-hidden">
                 {!lesson ? (
                   <ParsingLoader />
                 ) : (
@@ -553,23 +555,23 @@ export default function DocumentViewer() {
                 )}
               </TabsContent>
 
-              <TabsContent value="notes" className="mt-0 p-0 w-full h-full">
+              <TabsContent value="notes" className="mt-0 p-0 w-full h-full overflow-x-hidden">
                 <NotesTab lesson={lesson} />
               </TabsContent>
 
-              <TabsContent value="exam" forceMount className="mt-0 p-0 w-full data-[state=inactive]:hidden">
+              <TabsContent value="exam" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
                 <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
               </TabsContent>
 
-              <TabsContent value="grade" className="mt-0 p-0 w-full">
+              <TabsContent value="grade" className="mt-0 p-0 w-full overflow-x-hidden">
                 <PredictedGradeTab lesson={lesson} exams={exams} />
               </TabsContent>
 
-              <TabsContent value="flashcards" className="mt-0 p-0 w-full">
+              <TabsContent value="flashcards" className="mt-0 p-0 w-full overflow-x-hidden">
                 <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
               </TabsContent>
 
-              <TabsContent value="teachit" className="mt-0 p-0 w-full">
+              <TabsContent value="teachit" className="mt-0 p-0 w-full overflow-x-hidden">
                 <TeachItTab lesson={lesson} />
               </TabsContent>
 
