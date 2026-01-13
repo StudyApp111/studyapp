@@ -255,21 +255,39 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length === 0) {
     return (
-      <div className="p-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 p-6 text-center">
-          <Lightbulb className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-slate-900 mb-2">Teach It to Master It</h3>
-          <p className="text-slate-600 mb-6 max-w-md mx-auto">
-            The best way to learn is to teach. Explain concepts in your own words and get instant feedback.
-          </p>
-          <Button
-            onClick={generateCards}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Generate Cards
-          </Button>
-        </Card>
+      <div className="h-full flex items-center justify-center p-4 bg-gradient-to-br from-purple-50 via-pink-50/30 to-purple-100/40">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200 shadow-2xl overflow-hidden max-w-md">
+            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 px-6 py-8 text-center">
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <Lightbulb className="w-20 h-20 text-yellow-300 mx-auto mb-4 drop-shadow-lg" />
+              </motion.div>
+              <h3 className="text-2xl md:text-3xl font-black text-white mb-2">Teach It to Master It</h3>
+              <p className="text-purple-100 text-sm">
+                The best way to learn is to teach
+              </p>
+            </div>
+            <div className="p-6 text-center">
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                Explain concepts in your own words and get instant AI feedback on your understanding.
+              </p>
+              <Button
+                onClick={generateCards}
+                className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 text-white font-bold text-lg rounded-xl shadow-xl"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Generate 5 Cards
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
       </div>
     );
   }
@@ -287,173 +305,214 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
       />
 
-      <div className="p-4 max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Lightbulb className="w-7 h-7 text-yellow-500" />
-              Teach It
-            </h2>
-            <p className="text-sm text-slate-600">
-              Card {currentCardIndex + 1} of {cards.length} • {completedCount} completed
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRegenerate}
-            className="gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            New Cards
-          </Button>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="h-2 bg-slate-200 rounded-full mb-6 overflow-hidden">
-          <motion.div
-            className="h-full bg-gradient-to-r from-blue-600 to-indigo-600"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
-
-        {/* Card */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentCardIndex}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="bg-white border-slate-200 p-6 mb-4">
-              <div className="mb-6">
-                <Badge className="mb-3 bg-blue-100 text-blue-700">Explain This Concept</Badge>
-                <h3 className="text-xl font-semibold text-slate-900 leading-relaxed">
-                  {currentCard.question}
-                </h3>
+      <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-pink-50/30 to-purple-100/40 md:rounded-2xl overflow-hidden">
+        {/* Mobile-optimized sticky header */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 px-3 py-3 md:px-6 md:py-4 sticky top-0 z-10 shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <Lightbulb className="w-5 h-5 md:w-6 md:h-6 text-yellow-300" />
               </div>
+              <div>
+                <h2 className="text-lg md:text-2xl font-bold text-white">Teach It</h2>
+                <p className="text-xs text-purple-100">
+                  {currentCardIndex + 1}/{cards.length} • {completedCount} ✓
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRegenerate}
+              className="gap-1.5 bg-white/10 hover:bg-white/20 text-white border-white/20 h-8 px-3"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span className="hidden md:inline text-xs">New</span>
+            </Button>
+          </div>
 
-              {!showFeedback ? (
-                <>
-                  <Textarea
-                    value={userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
-                    placeholder="Type your explanation here... (3-5 sentences)"
-                    className="min-h-[200px] mb-4 text-base"
-                    disabled={isGrading}
-                  />
-                  <Button
-                    onClick={gradeAnswer}
-                    disabled={!userAnswer.trim() || isGrading}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                  >
-                    {isGrading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Grading...
-                      </>
-                    ) : (
-                      "Submit Answer"
-                    )}
-                  </Button>
-                </>
-              ) : (
-                <div className="space-y-4">
-                  {/* Score */}
-                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                    <span className="font-semibold text-slate-700">Your Score</span>
-                    <Badge className={`text-lg px-4 py-1 ${
-                      currentCard.score >= 90 ? 'bg-emerald-600' :
-                      currentCard.score >= 75 ? 'bg-blue-600' :
-                      currentCard.score >= 60 ? 'bg-yellow-600' :
-                      'bg-red-600'
-                    } text-white`}>
-                      {currentCard.score}/100
-                    </Badge>
-                  </div>
+          {/* Progress Bar */}
+          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+            <motion.div
+              className="h-full bg-gradient-to-r from-yellow-400 via-pink-400 to-yellow-300 shadow-lg"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            />
+          </div>
+        </div>
 
-                  {/* Your Answer */}
-                  <div>
-                    <h4 className="font-semibold text-slate-700 mb-2">Your Answer:</h4>
-                    <div className="p-3 bg-slate-50 rounded-lg text-slate-700">
-                      {currentCard.user_answer}
-                    </div>
-                  </div>
-
-                  {/* Feedback */}
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-blue-900 mb-2">Feedback</h4>
-                    <p className="text-slate-700">{currentCard.feedback}</p>
-                  </div>
-
-                  {/* Strengths */}
-                  {currentCard.strengths?.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                        What You Did Well:
-                      </h4>
-                      <ul className="space-y-1">
-                        {currentCard.strengths.map((strength, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-slate-700">
-                            <span className="text-emerald-600 mt-0.5">•</span>
-                            <span>{strength}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Gaps */}
-                  {currentCard.gaps?.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                        <AlertCircle className="w-5 h-5 text-amber-600" />
-                        Areas to Review:
-                      </h4>
-                      <ul className="space-y-1">
-                        {currentCard.gaps.map((gap, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-slate-700">
-                            <span className="text-amber-600 mt-0.5">•</span>
-                            <span>{gap}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Model Answer */}
-                  <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-                    <h4 className="font-semibold text-indigo-900 mb-2">Model Answer:</h4>
-                    <p className="text-slate-700">{currentCard.model_answer}</p>
-                  </div>
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto px-3 py-4 md:px-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentCardIndex}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.25 }}
+              className="max-w-2xl mx-auto"
+            >
+              <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200/50 shadow-2xl overflow-hidden">
+                {/* Card header with gradient */}
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-4 md:px-6 md:py-5">
+                  <Badge className="mb-2 bg-white/20 text-white border-white/30 backdrop-blur-sm text-xs">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Explain This Concept
+                  </Badge>
+                  <h3 className="text-lg md:text-xl font-bold text-white leading-relaxed">
+                    {currentCard.question}
+                  </h3>
                 </div>
-              )}
-            </Card>
-          </motion.div>
-        </AnimatePresence>
 
-        {/* Navigation */}
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentCardIndex === 0}
-            className="flex-1"
-          >
-            Previous
-          </Button>
-          <Button
-            onClick={handleNext}
-            disabled={currentCardIndex === cards.length - 1}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-          >
-            Next Card
-          </Button>
+                <div className="p-4 md:p-6">
+                  {!showFeedback ? (
+                    <>
+                      <Textarea
+                        value={userAnswer}
+                        onChange={(e) => setUserAnswer(e.target.value)}
+                        placeholder="Type your explanation here... (3-5 sentences)"
+                        className="min-h-[180px] md:min-h-[200px] mb-4 text-sm md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none"
+                        disabled={isGrading}
+                      />
+                      <Button
+                        onClick={gradeAnswer}
+                        disabled={!userAnswer.trim() || isGrading}
+                        className="w-full h-12 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg text-base md:text-lg"
+                      >
+                        {isGrading ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Grading Your Answer...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-5 h-5 mr-2" />
+                            Submit Answer
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  ) : (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="space-y-4"
+                    >
+                      {/* Score Badge */}
+                      <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", delay: 0.3 }}
+                        className="flex items-center justify-center"
+                      >
+                        <div className={`px-8 py-4 rounded-2xl ${
+                          currentCard.score >= 90 ? 'bg-gradient-to-r from-emerald-500 to-green-600' :
+                          currentCard.score >= 75 ? 'bg-gradient-to-r from-purple-500 to-indigo-600' :
+                          currentCard.score >= 60 ? 'bg-gradient-to-r from-yellow-500 to-orange-600' :
+                          'bg-gradient-to-r from-red-500 to-pink-600'
+                        } shadow-2xl`}>
+                          <p className="text-white/80 text-xs font-medium mb-1 text-center">Your Score</p>
+                          <p className="text-white text-4xl font-black text-center">{currentCard.score}<span className="text-2xl">/100</span></p>
+                        </div>
+                      </motion.div>
+
+                      {/* Your Answer */}
+                      <div className="bg-purple-50/50 border-2 border-purple-200/50 rounded-xl p-4">
+                        <h4 className="font-bold text-purple-900 mb-2 flex items-center gap-2 text-sm">
+                          <NotebookPen className="w-4 h-4" />
+                          Your Answer
+                        </h4>
+                        <p className="text-slate-700 text-sm leading-relaxed">{currentCard.user_answer}</p>
+                      </div>
+
+                      {/* Feedback */}
+                      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-300/50 rounded-xl p-4">
+                        <h4 className="font-bold text-purple-900 mb-2 text-sm">💡 AI Feedback</h4>
+                        <p className="text-slate-700 text-sm leading-relaxed">{currentCard.feedback}</p>
+                      </div>
+
+                      {/* Strengths */}
+                      {currentCard.strengths?.length > 0 && (
+                        <div className="bg-emerald-50/50 border-2 border-emerald-200/50 rounded-xl p-4">
+                          <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2 text-sm">
+                            <CheckCircle2 className="w-4 h-4" />
+                            What You Did Well
+                          </h4>
+                          <ul className="space-y-2">
+                            {currentCard.strengths.map((strength, idx) => (
+                              <motion.li 
+                                key={idx}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.5 + idx * 0.1 }}
+                                className="flex items-start gap-2 text-slate-700 text-sm"
+                              >
+                                <span className="text-emerald-600 font-bold">✓</span>
+                                <span>{strength}</span>
+                              </motion.li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Gaps */}
+                      {currentCard.gaps?.length > 0 && (
+                        <div className="bg-amber-50/50 border-2 border-amber-200/50 rounded-xl p-4">
+                          <h4 className="font-bold text-amber-900 mb-2 flex items-center gap-2 text-sm">
+                            <AlertCircle className="w-4 h-4" />
+                            Areas to Review
+                          </h4>
+                          <ul className="space-y-2">
+                            {currentCard.gaps.map((gap, idx) => (
+                              <motion.li 
+                                key={idx}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.6 + idx * 0.1 }}
+                                className="flex items-start gap-2 text-slate-700 text-sm"
+                              >
+                                <span className="text-amber-600 font-bold">→</span>
+                                <span>{gap}</span>
+                              </motion.li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Model Answer */}
+                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200/50 rounded-xl p-4">
+                        <h4 className="font-bold text-indigo-900 mb-2 text-sm">🎯 Model Answer</h4>
+                        <p className="text-slate-700 text-sm leading-relaxed">{currentCard.model_answer}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </Card>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Fixed navigation footer */}
+        <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-t border-purple-200 px-3 py-3 md:px-6 md:py-4 sticky bottom-0">
+          <div className="flex gap-2 md:gap-3 max-w-2xl mx-auto">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentCardIndex === 0}
+              className="flex-1 h-12 rounded-xl border-2 border-purple-300 hover:bg-purple-50 disabled:opacity-30 font-semibold"
+            >
+              Previous
+            </Button>
+            <Button
+              onClick={handleNext}
+              disabled={currentCardIndex === cards.length - 1}
+              className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg disabled:opacity-30 font-semibold"
+            >
+              Next Card
+            </Button>
+          </div>
         </div>
       </div>
     </>
