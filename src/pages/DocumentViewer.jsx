@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb } from "lucide-react";
+import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import NotesTab from "@/components/document-viewer/NotesTab";
@@ -479,10 +479,19 @@ export default function DocumentViewer() {
           </div>
         
         {/* Mobile: Original layout without AI tutor panel */}
-        <div className="md:hidden h-full flex flex-col w-full max-w-full">
+        <div className="md:hidden h-full flex flex-col w-full max-w-full overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full max-w-full overflow-hidden">
-            <div className="flex-shrink-0 pb-2 w-full overflow-x-auto scrollbar-hide">
-              <TabsList className="inline-flex w-auto bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
+            <div className="flex-shrink-0 pb-2 w-full relative">
+              {/* Scroll indicators */}
+              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-purple-50 to-transparent z-10 pointer-events-none flex items-center justify-start pl-1">
+                <ChevronLeft className="w-3 h-3 text-purple-600 animate-pulse" />
+              </div>
+              <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-purple-50 to-transparent z-10 pointer-events-none flex items-center justify-end pr-1">
+                <ChevronLeft className="w-3 h-3 text-purple-600 rotate-180 animate-pulse" />
+              </div>
+              
+              <div className="overflow-x-auto scrollbar-hide pb-2 -mb-2 px-2">
+                <TabsList className="inline-flex w-auto bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
@@ -532,6 +541,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
 
                 </TabsList>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto w-full">
