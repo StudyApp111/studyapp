@@ -496,7 +496,7 @@ export default function DocumentViewer() {
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 rounded-md min-w-0"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto rounded-md min-w-0"
                     >
                       <FileText className="w-4 h-4 flex-shrink-0" />
                       <span className="text-[8px] font-medium mt-0.5">Doc</span>
@@ -504,14 +504,14 @@ export default function DocumentViewer() {
                   )}
                   <TabsTrigger 
                     value="notes"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 rounded-md min-w-0"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto rounded-md min-w-0"
                   >
                     <NotebookPen className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[8px] font-medium mt-0.5">Notes</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 relative rounded-md min-w-0"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto relative rounded-md min-w-0"
                   >
                     {showExamDot && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Trophy className="w-4 h-4 flex-shrink-0" />
@@ -519,7 +519,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="grade"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 relative rounded-md min-w-0"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto relative rounded-md min-w-0"
                   >
                     {showGradeDot && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Trophy className="w-4 h-4 flex-shrink-0" />
@@ -527,7 +527,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 relative rounded-md min-w-0"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto relative rounded-md min-w-0"
                   >
                     {showFlashcardsDot && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
@@ -535,15 +535,13 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="teachit"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 relative rounded-md min-w-0"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto relative rounded-md min-w-0"
                   >
                     <Lightbulb className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[8px] font-medium mt-0.5">Teach</span>
                   </TabsTrigger>
 
                   </TabsList>
-                </div>
-              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden w-full">

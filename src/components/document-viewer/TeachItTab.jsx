@@ -270,14 +270,14 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center p-4 bg-gradient-to-br from-purple-50 via-pink-50/30 to-purple-100/40">
+      <div className="h-full flex items-center justify-center p-4 bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
           <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200 shadow-2xl overflow-hidden max-w-md">
-            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 px-6 py-8 text-center">
+            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-yellow-500 px-6 py-8 text-center">
               <motion.div
                 animate={{ rotate: [0, -10, 10, -10, 0] }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -295,7 +295,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               </p>
               <Button
                 onClick={generateCards}
-                className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 text-white font-bold text-lg rounded-xl shadow-xl"
+                className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-yellow-500 hover:from-purple-700 hover:via-purple-800 hover:to-yellow-600 text-white font-bold text-lg rounded-xl shadow-xl"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
                 Generate 5 Cards
@@ -320,9 +320,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
       />
 
-      <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-pink-50/30 to-purple-100/40 md:rounded-2xl overflow-hidden overflow-x-hidden w-full">
+      <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 md:rounded-2xl overflow-hidden overflow-x-hidden w-full">
         {/* Ultra-compact mobile header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 px-2 py-1.5 md:px-6 md:py-4 sticky top-0 z-10 shadow-lg w-full">
+        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-yellow-500 px-2 py-1.5 md:px-6 md:py-4 sticky top-0 z-10 shadow-lg w-full">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1.5 min-w-0">
               <div className="w-7 h-7 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0">
@@ -370,7 +370,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
             >
               <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200/50 shadow-2xl overflow-hidden w-full max-w-full">
                 {/* Ultra-compact card header */}
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-2 py-2 md:px-6 md:py-5 w-full">
+                <div className="bg-gradient-to-r from-purple-600 to-yellow-500 px-2 py-2 md:px-6 md:py-5 w-full">
                   <Badge className="mb-1 bg-white/20 text-white border-white/30 backdrop-blur-sm text-[9px] md:text-xs">
                     <Sparkles className="w-2 h-2 md:w-3 md:h-3 mr-0.5" />
                     Explain This
@@ -393,7 +393,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       <Button
                         onClick={gradeAnswer}
                         disabled={!userAnswer.trim() || isGrading}
-                        className="w-full max-w-full h-9 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg text-[11px] md:text-lg"
+                        className="w-full max-w-full h-9 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-yellow-500 hover:from-purple-700 hover:via-purple-800 hover:to-yellow-600 text-white font-semibold rounded-xl shadow-lg text-[11px] md:text-lg"
                       >
                         {isGrading ? (
                           <>
@@ -406,7 +406,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                             Submit
                           </>
                         )}
-                      </Button>
+                        </Button>
                     </>
                   ) : (
                     <motion.div 
@@ -523,7 +523,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
             <Button
               onClick={handleNext}
               disabled={currentCardIndex === cards.length - 1}
-              className="flex-1 h-8 md:h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg disabled:opacity-30 font-semibold text-[11px] md:text-base"
+              className="flex-1 h-8 md:h-12 bg-gradient-to-r from-purple-600 to-yellow-500 hover:from-purple-700 hover:to-yellow-600 text-white rounded-xl shadow-lg disabled:opacity-30 font-semibold text-[11px] md:text-base"
             >
               Next
             </Button>
