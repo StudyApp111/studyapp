@@ -542,15 +542,15 @@ export default function DocumentViewerTabs({ lesson }) {
 
       {/* Floating Selection Toolbar */}
       {showToolbar && selectedText && (
-        <div 
-          ref={toolbarRef}
-          className="fixed z-50 animate-in fade-in zoom-in duration-150"
-          style={{ 
-            left: `${toolbarPosition.x}px`, 
-            top: `${toolbarPosition.y}px`,
-            transform: 'translate(-50%, -100%)'
-          }}
-        >
+      <div 
+      ref={toolbarRef}
+      className="fixed z-50 animate-in fade-in zoom-in duration-150 max-w-[90vw]"
+      style={{ 
+      left: `${Math.min(toolbarPosition.x, window.innerWidth - 200)}px`, 
+      top: `${toolbarPosition.y}px`,
+      transform: 'translate(-50%, -100%)'
+      }}
+      >
           {!showNoteInput ? (
             <div className="bg-slate-900 rounded-lg shadow-2xl p-1.5 flex items-center gap-1">
               {/* Color buttons */}
@@ -585,7 +585,7 @@ export default function DocumentViewerTabs({ lesson }) {
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-xl shadow-2xl p-3 w-72 border border-slate-200">
+            <div className="bg-white rounded-xl shadow-2xl p-3 w-72 max-w-[85vw] border border-slate-200">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-700">Add a note</span>
