@@ -71,31 +71,46 @@ Student Grade: ${learningProfile.grade || "N/A"}
 Course: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
 
-Content Summary:
+STUDENT'S MATERIAL:
 ${contentDescription}
 
-OBJECTIVE:
-Generate 5 foundational concept cards that test deep understanding through explanation. Each card should:
-1. Ask the student to EXPLAIN a core concept in their own words
-2. Focus on WHY/HOW rather than memorization
-3. Cover different foundational concepts from the material
-4. Be answerable in 3-5 sentences
+CRITICAL INSTRUCTIONS:
+1. Read the student's material carefully and identify 5 SPECIFIC, CONCRETE concepts that are EXPLICITLY covered in their content
+2. DO NOT ask meta-questions like "Why do we study X?" or "What problem does X solve?"
+3. DO NOT ask about the purpose or value of studying the topic
+4. ONLY ask about SPECIFIC content from their material: theories, processes, mechanisms, relationships, definitions, or applications
 
-CARD TYPES (mix these):
-- "Explain in your own words: What is [concept] and why is it important?"
-- "How would you teach [concept] to someone who has never heard of it?"
-- "What's the relationship between [concept A] and [concept B]?"
-- "Why does [phenomenon] happen? Explain the underlying mechanism."
-- "What problem does [concept/method] solve and how does it work?"
+WHAT TO EXTRACT:
+- Specific theories, laws, or principles mentioned
+- Key processes or mechanisms explained
+- Important definitions or terminology
+- Relationships between specific concepts
+- How something works or functions
+- Specific examples or case studies discussed
+
+QUESTION FORMATS (use these):
+- "Explain how [specific process/mechanism from material] works."
+- "What is [specific concept from material] and how does it function?"
+- "Describe the relationship between [specific concept A] and [specific concept B] from the material."
+- "How does [specific theory/principle] explain [specific phenomenon]?"
+- "Walk through the steps of [specific process mentioned in material]."
+
+EXAMPLE OF GOOD vs BAD:
+❌ BAD (generic): "What problem does analyzing cartoons solve and how does it work?"
+✓ GOOD (specific): "Explain how political cartoonists use symbolism to convey complex political messages."
+
+❌ BAD (meta): "Why is photosynthesis important to study?"
+✓ GOOD (content): "Explain the process of photosynthesis and how light energy is converted to chemical energy."
 
 RULES:
-- Questions must be foundational (not trivial facts)
-- Each card should test a DIFFERENT concept
-- Model answers should be clear, 3-5 sentences, explaining the concept thoroughly
-- Use everyday language, not jargon-heavy
+- Extract questions from ACTUAL content in the material
+- Questions must be answerable using information FROM their material
+- Each card tests a DIFFERENT specific concept
+- Model answers: 3-5 sentences, clear explanation using material content
+- If content mentions specific examples, theories, or processes - use those
 
 OUTPUT:
-Return exactly 5 cards. Each with question and model_answer fields.`;
+Return exactly 5 cards with question and model_answer fields, each based on specific content from the student's material.`;
 
       const { data: cardsData } = await base44.functions.invoke('generateTeachItCards', {
         prompt,
@@ -305,9 +320,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
       />
 
-      <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-pink-50/30 to-purple-100/40 md:rounded-2xl overflow-hidden">
+      <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-pink-50/30 to-purple-100/40 md:rounded-2xl overflow-hidden md:overflow-auto">
         {/* Mobile-optimized sticky header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 px-3 py-3 md:px-6 md:py-4 sticky top-0 z-10 shadow-lg">
+        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 px-3 py-2.5 md:px-6 md:py-4 sticky top-0 z-10 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
@@ -342,8 +357,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
           </div>
         </div>
 
-        {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 md:px-6">
+        {/* Scrollable content area - optimized for 9:16 mobile */}
+        <div className="flex-1 overflow-y-auto px-3 py-3 md:px-6 md:py-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentCardIndex}
@@ -365,29 +380,29 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                   </h3>
                 </div>
 
-                <div className="p-4 md:p-6">
+                <div className="p-3 md:p-6">
                   {!showFeedback ? (
                     <>
                       <Textarea
                         value={userAnswer}
                         onChange={(e) => setUserAnswer(e.target.value)}
                         placeholder="Type your explanation here... (3-5 sentences)"
-                        className="min-h-[180px] md:min-h-[200px] mb-4 text-sm md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none"
+                        className="min-h-[160px] md:min-h-[200px] mb-3 text-sm md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none"
                         disabled={isGrading}
                       />
                       <Button
                         onClick={gradeAnswer}
                         disabled={!userAnswer.trim() || isGrading}
-                        className="w-full h-12 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg text-base md:text-lg"
+                        className="w-full h-11 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg text-sm md:text-lg"
                       >
                         {isGrading ? (
                           <>
-                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            <Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-2 animate-spin" />
                             Grading Your Answer...
                           </>
                         ) : (
                           <>
-                            <CheckCircle2 className="w-5 h-5 mr-2" />
+                            <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                             Submit Answer
                           </>
                         )}
@@ -398,7 +413,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="space-y-4"
+                      className="space-y-3 md:space-y-4"
                     >
                       {/* Score Badge */}
                       <motion.div 
@@ -407,47 +422,47 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                         transition={{ type: "spring", delay: 0.3 }}
                         className="flex items-center justify-center"
                       >
-                        <div className={`px-8 py-4 rounded-2xl ${
+                        <div className={`px-6 py-3 md:px-8 md:py-4 rounded-2xl ${
                           currentCard.score >= 90 ? 'bg-gradient-to-r from-emerald-500 to-green-600' :
                           currentCard.score >= 75 ? 'bg-gradient-to-r from-purple-500 to-indigo-600' :
                           currentCard.score >= 60 ? 'bg-gradient-to-r from-yellow-500 to-orange-600' :
                           'bg-gradient-to-r from-red-500 to-pink-600'
                         } shadow-2xl`}>
-                          <p className="text-white/80 text-xs font-medium mb-1 text-center">Your Score</p>
-                          <p className="text-white text-4xl font-black text-center">{currentCard.score}<span className="text-2xl">/100</span></p>
+                          <p className="text-white/80 text-xs font-medium mb-0.5 md:mb-1 text-center">Your Score</p>
+                          <p className="text-white text-3xl md:text-4xl font-black text-center">{currentCard.score}<span className="text-xl md:text-2xl">/100</span></p>
                         </div>
                       </motion.div>
 
                       {/* Your Answer */}
-                      <div className="bg-purple-50/50 border-2 border-purple-200/50 rounded-xl p-4">
-                        <h4 className="font-bold text-purple-900 mb-2 flex items-center gap-2 text-sm">
-                          <NotebookPen className="w-4 h-4" />
+                      <div className="bg-purple-50/50 border-2 border-purple-200/50 rounded-xl p-3 md:p-4">
+                        <h4 className="font-bold text-purple-900 mb-1.5 md:mb-2 flex items-center gap-2 text-xs md:text-sm">
+                          <NotebookPen className="w-3.5 h-3.5 md:w-4 md:h-4" />
                           Your Answer
                         </h4>
-                        <p className="text-slate-700 text-sm leading-relaxed">{currentCard.user_answer}</p>
+                        <p className="text-slate-700 text-xs md:text-sm leading-relaxed">{currentCard.user_answer}</p>
                       </div>
 
                       {/* Feedback */}
-                      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-300/50 rounded-xl p-4">
-                        <h4 className="font-bold text-purple-900 mb-2 text-sm">💡 AI Feedback</h4>
-                        <p className="text-slate-700 text-sm leading-relaxed">{currentCard.feedback}</p>
+                      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-300/50 rounded-xl p-3 md:p-4">
+                        <h4 className="font-bold text-purple-900 mb-1.5 md:mb-2 text-xs md:text-sm">💡 AI Feedback</h4>
+                        <p className="text-slate-700 text-xs md:text-sm leading-relaxed">{currentCard.feedback}</p>
                       </div>
 
                       {/* Strengths */}
                       {currentCard.strengths?.length > 0 && (
-                        <div className="bg-emerald-50/50 border-2 border-emerald-200/50 rounded-xl p-4">
-                          <h4 className="font-bold text-emerald-900 mb-2 flex items-center gap-2 text-sm">
-                            <CheckCircle2 className="w-4 h-4" />
+                        <div className="bg-emerald-50/50 border-2 border-emerald-200/50 rounded-xl p-3 md:p-4">
+                          <h4 className="font-bold text-emerald-900 mb-1.5 md:mb-2 flex items-center gap-2 text-xs md:text-sm">
+                            <CheckCircle2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                             What You Did Well
                           </h4>
-                          <ul className="space-y-2">
+                          <ul className="space-y-1.5 md:space-y-2">
                             {currentCard.strengths.map((strength, idx) => (
                               <motion.li 
                                 key={idx}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.5 + idx * 0.1 }}
-                                className="flex items-start gap-2 text-slate-700 text-sm"
+                                className="flex items-start gap-2 text-slate-700 text-xs md:text-sm"
                               >
                                 <span className="text-emerald-600 font-bold">✓</span>
                                 <span>{strength}</span>
@@ -459,19 +474,19 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
                       {/* Gaps */}
                       {currentCard.gaps?.length > 0 && (
-                        <div className="bg-amber-50/50 border-2 border-amber-200/50 rounded-xl p-4">
-                          <h4 className="font-bold text-amber-900 mb-2 flex items-center gap-2 text-sm">
-                            <AlertCircle className="w-4 h-4" />
+                        <div className="bg-amber-50/50 border-2 border-amber-200/50 rounded-xl p-3 md:p-4">
+                          <h4 className="font-bold text-amber-900 mb-1.5 md:mb-2 flex items-center gap-2 text-xs md:text-sm">
+                            <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />
                             Areas to Review
                           </h4>
-                          <ul className="space-y-2">
+                          <ul className="space-y-1.5 md:space-y-2">
                             {currentCard.gaps.map((gap, idx) => (
                               <motion.li 
                                 key={idx}
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.6 + idx * 0.1 }}
-                                className="flex items-start gap-2 text-slate-700 text-sm"
+                                className="flex items-start gap-2 text-slate-700 text-xs md:text-sm"
                               >
                                 <span className="text-amber-600 font-bold">→</span>
                                 <span>{gap}</span>
@@ -482,9 +497,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       )}
 
                       {/* Model Answer */}
-                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200/50 rounded-xl p-4">
-                        <h4 className="font-bold text-indigo-900 mb-2 text-sm">🎯 Model Answer</h4>
-                        <p className="text-slate-700 text-sm leading-relaxed">{currentCard.model_answer}</p>
+                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200/50 rounded-xl p-3 md:p-4">
+                        <h4 className="font-bold text-indigo-900 mb-1.5 md:mb-2 text-xs md:text-sm">🎯 Model Answer</h4>
+                        <p className="text-slate-700 text-xs md:text-sm leading-relaxed">{currentCard.model_answer}</p>
                       </div>
                     </motion.div>
                   )}
@@ -495,20 +510,20 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         </div>
 
         {/* Fixed navigation footer */}
-        <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-t border-purple-200 px-3 py-3 md:px-6 md:py-4 sticky bottom-0">
+        <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-t border-purple-200 px-3 py-2.5 md:px-6 md:py-4 sticky bottom-0">
           <div className="flex gap-2 md:gap-3 max-w-2xl mx-auto">
             <Button
               variant="outline"
               onClick={handlePrevious}
               disabled={currentCardIndex === 0}
-              className="flex-1 h-12 rounded-xl border-2 border-purple-300 hover:bg-purple-50 disabled:opacity-30 font-semibold"
+              className="flex-1 h-10 md:h-12 rounded-xl border-2 border-purple-300 hover:bg-purple-50 disabled:opacity-30 font-semibold text-sm md:text-base"
             >
               Previous
             </Button>
             <Button
               onClick={handleNext}
               disabled={currentCardIndex === cards.length - 1}
-              className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg disabled:opacity-30 font-semibold"
+              className="flex-1 h-10 md:h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg disabled:opacity-30 font-semibold text-sm md:text-base"
             >
               Next Card
             </Button>
