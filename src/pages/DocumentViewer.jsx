@@ -490,9 +490,8 @@ export default function DocumentViewer() {
                 <ChevronLeft className="w-3 h-3 text-purple-600 rotate-180 animate-pulse" />
               </div>
               
-              <div className="overflow-x-auto scrollbar-hide pb-2 -mb-2 w-full">
-                <div className="px-2">
-                  <TabsList className="inline-flex w-auto bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
+              <div className="w-full max-w-full px-1">
+                  <TabsList className="flex w-full bg-white border border-purple-200 p-0.5 gap-0.5 h-auto rounded-lg">
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
@@ -542,7 +541,8 @@ export default function DocumentViewer() {
                   </TabsTrigger>
 
                   </TabsList>
-
+              </div>
+            </div>
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden w-full">
               <TabsContent value="doc" className="mt-0 p-0 w-full h-full overflow-x-hidden">
