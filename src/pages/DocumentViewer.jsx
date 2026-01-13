@@ -4,12 +4,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen } from "lucide-react";
+import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import NotesTab from "@/components/document-viewer/NotesTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
+import TeachItTab from "@/components/document-viewer/TeachItTab";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import ParsingLoader from "@/components/document-viewer/ParsingLoader";
@@ -432,6 +433,13 @@ export default function DocumentViewer() {
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Flashcards</span>
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="teachit"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                  >
+                    <Lightbulb className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Teach It</span>
+                  </TabsTrigger>
 
                 </TabsList>
               </div>
@@ -461,6 +469,9 @@ export default function DocumentViewer() {
                   <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
                 </TabsContent>
 
+                <TabsContent value="teachit" className="mt-0 p-0 h-full">
+                  <TeachItTab lesson={lesson} />
+                </TabsContent>
 
               </div>
             </Tabs>
@@ -513,6 +524,13 @@ export default function DocumentViewer() {
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Flashcards</span>
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="teachit"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-1.5 py-2 h-auto whitespace-nowrap flex-1 relative"
+                  >
+                    <Lightbulb className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[10px] font-medium">Teach It</span>
+                  </TabsTrigger>
 
                 </TabsList>
               </div>
@@ -543,6 +561,9 @@ export default function DocumentViewer() {
                 <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
               </TabsContent>
 
+              <TabsContent value="teachit" className="mt-0 p-0 w-full max-w-full">
+                <TeachItTab lesson={lesson} />
+              </TabsContent>
 
             </div>
           </Tabs>
