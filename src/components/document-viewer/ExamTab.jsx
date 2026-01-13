@@ -266,27 +266,15 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer?.trim());
           setCurrentQuestion(firstUnanswered >= 0 ? firstUnanswered : loadedExam.questions.length - 1);
         } else {
-          // Questions not ready, show generating state
+          // Questions not ready - trigger generation
+          generationTriggeredRef.current.add(examNumber);
           setIsGenerating(true);
-          
-          // Poll efficiently with exponential backoff
-          let pollCount = 0;
-          const maxPolls = 60; // allow up to ~2-3 minutes total
-          const pollExam = async () => {
-            if (pollCount++ >= maxPolls) {
-              setIsGenerating(false);
-              return;
-            }
-            
-            const updated = await base44.entities.Exam.filter({ id: loadedExam.id });
-            if (updated[0]?.questions?.length > 0) {
-              setExam(updated[0]);
-              setIsGenerating(false);
-            } else {
-              setTimeout(pollExam, Math.min(2000 * Math.pow(1.2, pollCount), 5000));
-            }
-          };
-          pollExam();
+          try {
+            await generateExam(loadedExam.id, examNumber);
+          } finally {
+            setIsGenerating(false);
+            generationTriggeredRef.current.delete(examNumber);
+          }
         }
       } else {
         generationTriggeredRef.current.add(examNumber);
