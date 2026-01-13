@@ -496,49 +496,49 @@ export default function DocumentViewer() {
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-0.5 px-2 py-1.5 h-auto whitespace-nowrap flex-shrink-0 rounded-md"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 rounded-md min-w-0"
                     >
-                      <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span className="text-[9px] font-medium">Doc</span>
+                      <FileText className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-[8px] font-medium mt-0.5">Doc</span>
                     </TabsTrigger>
                   )}
                   <TabsTrigger 
                     value="notes"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-0.5 px-2 py-1.5 h-auto whitespace-nowrap flex-shrink-0 rounded-md"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 rounded-md min-w-0"
                   >
-                    <NotebookPen className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="text-[9px] font-medium">Notes</span>
+                    <NotebookPen className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[8px] font-medium mt-0.5">Notes</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-0.5 px-2 py-1.5 h-auto whitespace-nowrap flex-shrink-0 relative rounded-md"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 relative rounded-md min-w-0"
                   >
-                    {showExamDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="text-[9px] font-medium">Exam</span>
+                    {showExamDot && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                    <Trophy className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[8px] font-medium mt-0.5">Exam</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="grade"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-0.5 px-2 py-1.5 h-auto whitespace-nowrap flex-shrink-0 relative rounded-md"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 relative rounded-md min-w-0"
                   >
-                    {showGradeDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <Trophy className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="text-[9px] font-medium">Grade</span>
+                    {showGradeDot && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                    <Trophy className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[8px] font-medium mt-0.5">Grade</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-0.5 px-2 py-1.5 h-auto whitespace-nowrap flex-shrink-0 relative rounded-md"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 relative rounded-md min-w-0"
                   >
-                    {showFlashcardsDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <BookMarked className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="text-[9px] font-medium">Flash</span>
+                    {showFlashcardsDot && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                    <BookMarked className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[8px] font-medium mt-0.5">Flash</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="teachit"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-0.5 px-2 py-1.5 h-auto whitespace-nowrap flex-shrink-0 relative rounded-md"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex flex-col items-center justify-center px-2.5 py-1 h-auto flex-shrink-0 relative rounded-md min-w-0"
                   >
-                    <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="text-[9px] font-medium">Teach</span>
+                    <Lightbulb className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[8px] font-medium mt-0.5">Teach</span>
                   </TabsTrigger>
 
                   </TabsList>
