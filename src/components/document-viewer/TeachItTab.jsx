@@ -358,7 +358,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         </div>
 
         {/* Ultra-compact scrollable content for 9:16 */}
-        <div className="flex-1 overflow-y-auto px-2 py-1.5 md:px-6 md:py-4 w-full">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-1.5 md:px-6 md:py-4 w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentCardIndex}
@@ -366,34 +366,34 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25 }}
-              className="w-full"
+              className="w-full max-w-full"
             >
-              <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200/50 shadow-2xl overflow-hidden w-full">
+              <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200/50 shadow-2xl overflow-hidden w-full max-w-full">
                 {/* Ultra-compact card header */}
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-2.5 py-2 md:px-6 md:py-5 w-full">
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-2 py-2 md:px-6 md:py-5 w-full">
                   <Badge className="mb-1 bg-white/20 text-white border-white/30 backdrop-blur-sm text-[9px] md:text-xs">
                     <Sparkles className="w-2 h-2 md:w-3 md:h-3 mr-0.5" />
-                    Explain This Concept
+                    Explain This
                   </Badge>
-                  <h3 className="text-xs md:text-xl font-bold text-white leading-tight md:leading-relaxed">
+                  <h3 className="text-xs md:text-xl font-bold text-white leading-tight md:leading-relaxed break-words">
                     {currentCard.question}
                   </h3>
                 </div>
 
-                <div className="p-2 md:p-6 w-full">
+                <div className="p-1.5 md:p-6 w-full max-w-full overflow-x-hidden">
                   {!showFeedback ? (
                     <>
                       <Textarea
                         value={userAnswer}
                         onChange={(e) => setUserAnswer(e.target.value)}
                         placeholder="Type your explanation..."
-                        className="min-h-[120px] md:min-h-[200px] mb-2 text-[11px] md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none w-full"
+                        className="min-h-[120px] md:min-h-[200px] mb-1.5 text-[11px] md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none w-full max-w-full"
                         disabled={isGrading}
                       />
                       <Button
                         onClick={gradeAnswer}
                         disabled={!userAnswer.trim() || isGrading}
-                        className="w-full h-9 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg text-[11px] md:text-lg"
+                        className="w-full max-w-full h-9 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg text-[11px] md:text-lg"
                       >
                         {isGrading ? (
                           <>
@@ -434,24 +434,24 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       </motion.div>
 
                       {/* Your Answer */}
-                      <div className="bg-purple-50/50 border-2 border-purple-200/50 rounded-lg p-2 md:p-4 w-full">
-                        <h4 className="font-bold text-purple-900 mb-1 flex items-center gap-1 text-[10px] md:text-sm">
+                      <div className="bg-purple-50/50 border-2 border-purple-200/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
+                        <h4 className="font-bold text-purple-900 mb-0.5 flex items-center gap-1 text-[10px] md:text-sm">
                           <NotebookPen className="w-2.5 h-2.5 md:w-4 md:h-4" />
                           Your Answer
                         </h4>
-                        <p className="text-slate-700 text-[10px] md:text-sm leading-snug">{currentCard.user_answer}</p>
+                        <p className="text-slate-700 text-[10px] md:text-sm leading-snug break-words">{currentCard.user_answer}</p>
                       </div>
 
                       {/* Feedback */}
-                      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-300/50 rounded-lg p-2 md:p-4 w-full">
-                        <h4 className="font-bold text-purple-900 mb-1 text-[10px] md:text-sm">💡 Feedback</h4>
-                        <p className="text-slate-700 text-[10px] md:text-sm leading-snug">{currentCard.feedback}</p>
+                      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-300/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
+                        <h4 className="font-bold text-purple-900 mb-0.5 text-[10px] md:text-sm">💡 Feedback</h4>
+                        <p className="text-slate-700 text-[10px] md:text-sm leading-snug break-words">{currentCard.feedback}</p>
                       </div>
 
                       {/* Strengths */}
                       {currentCard.strengths?.length > 0 && (
-                        <div className="bg-emerald-50/50 border-2 border-emerald-200/50 rounded-lg p-2 md:p-4 w-full">
-                          <h4 className="font-bold text-emerald-900 mb-1 flex items-center gap-1 text-[10px] md:text-sm">
+                        <div className="bg-emerald-50/50 border-2 border-emerald-200/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
+                          <h4 className="font-bold text-emerald-900 mb-0.5 flex items-center gap-1 text-[10px] md:text-sm">
                             <CheckCircle2 className="w-2.5 h-2.5 md:w-4 md:h-4" />
                             Did Well
                           </h4>
@@ -464,8 +464,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                                 transition={{ delay: 0.5 + idx * 0.1 }}
                                 className="flex items-start gap-1 text-slate-700 text-[10px] md:text-sm"
                               >
-                                <span className="text-emerald-600 font-bold text-[10px]">✓</span>
-                                <span className="leading-snug">{strength}</span>
+                                <span className="text-emerald-600 font-bold text-[10px] flex-shrink-0">✓</span>
+                                <span className="leading-snug break-words">{strength}</span>
                               </motion.li>
                             ))}
                           </ul>
@@ -474,8 +474,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
                       {/* Gaps */}
                       {currentCard.gaps?.length > 0 && (
-                        <div className="bg-amber-50/50 border-2 border-amber-200/50 rounded-lg p-2 md:p-4 w-full">
-                          <h4 className="font-bold text-amber-900 mb-1 flex items-center gap-1 text-[10px] md:text-sm">
+                        <div className="bg-amber-50/50 border-2 border-amber-200/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
+                          <h4 className="font-bold text-amber-900 mb-0.5 flex items-center gap-1 text-[10px] md:text-sm">
                             <AlertCircle className="w-2.5 h-2.5 md:w-4 md:h-4" />
                             Review
                           </h4>
@@ -488,8 +488,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                                 transition={{ delay: 0.6 + idx * 0.1 }}
                                 className="flex items-start gap-1 text-slate-700 text-[10px] md:text-sm"
                               >
-                                <span className="text-amber-600 font-bold text-[10px]">→</span>
-                                <span className="leading-snug">{gap}</span>
+                                <span className="text-amber-600 font-bold text-[10px] flex-shrink-0">→</span>
+                                <span className="leading-snug break-words">{gap}</span>
                               </motion.li>
                             ))}
                           </ul>
@@ -497,9 +497,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       )}
 
                       {/* Model Answer */}
-                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200/50 rounded-lg p-2 md:p-4 w-full">
-                        <h4 className="font-bold text-indigo-900 mb-1 text-[10px] md:text-sm">🎯 Model</h4>
-                        <p className="text-slate-700 text-[10px] md:text-sm leading-snug">{currentCard.model_answer}</p>
+                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
+                        <h4 className="font-bold text-indigo-900 mb-0.5 text-[10px] md:text-sm">🎯 Model</h4>
+                        <p className="text-slate-700 text-[10px] md:text-sm leading-snug break-words">{currentCard.model_answer}</p>
                       </div>
                     </motion.div>
                   )}
@@ -510,8 +510,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         </div>
 
         {/* Ultra-compact fixed navigation */}
-        <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-t border-purple-200 px-2 py-1.5 md:px-6 md:py-4 sticky bottom-0 w-full">
-          <div className="flex gap-2 md:gap-3 w-full">
+        <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-t border-purple-200 px-1.5 py-1.5 md:px-6 md:py-4 sticky bottom-0 w-full max-w-full">
+          <div className="flex gap-1.5 md:gap-3 w-full max-w-full">
             <Button
               variant="outline"
               onClick={handlePrevious}
