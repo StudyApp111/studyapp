@@ -71,35 +71,31 @@ Student Grade: ${learningProfile.grade || "N/A"}
 Course: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
 
-ACTUAL LESSON CONTENT (Read Carefully):
+Content Summary:
 ${contentDescription}
 
-CRITICAL INSTRUCTION:
-Extract 5 SPECIFIC concepts, theories, formulas, or processes that are EXPLICITLY MENTIONED in the content above. Do NOT create generic "why study this subject" questions.
-
 OBJECTIVE:
-Generate 5 cards testing deep understanding of SPECIFIC content concepts. Each card must:
-1. Reference a CONCRETE concept/topic that appears in the lesson content
-2. Ask students to explain it in their own words (HOW it works, WHAT it means, WHY it matters)
-3. Be directly answerable using information from the provided content
-4. Test understanding, not memorization of definitions
+Generate 5 foundational concept cards that test deep understanding through explanation. Each card should:
+1. Ask the student to EXPLAIN a core concept in their own words
+2. Focus on WHY/HOW rather than memorization
+3. Cover different foundational concepts from the material
+4. Be answerable in 3-5 sentences
 
-QUESTION PATTERNS (adapt to actual content):
-- "Explain how [specific process from content] works."
-- "What is [specific concept from content] and how does it relate to [another concept]?"
-- "Describe the steps involved in [specific method from content]."
-- "Why is [specific principle from content] important? Explain with an example."
-- "How would you explain [specific theory/formula from content] to someone unfamiliar with it?"
+CARD TYPES (mix these):
+- "Explain in your own words: What is [concept] and why is it important?"
+- "How would you teach [concept] to someone who has never heard of it?"
+- "What's the relationship between [concept A] and [concept B]?"
+- "Why does [phenomenon] happen? Explain the underlying mechanism."
+- "What problem does [concept/method] solve and how does it work?"
 
-STRICT RULES:
-- ONLY use concepts that are EXPLICITLY in the content
-- NO generic questions about the subject in general
-- Each card = different specific concept from the material
-- Model answers: 3-5 sentences, explain the concept clearly using content details
-- Avoid meta questions like "why do we study X" or "what problem does analyzing X solve"
+RULES:
+- Questions must be foundational (not trivial facts)
+- Each card should test a DIFFERENT concept
+- Model answers should be clear, 3-5 sentences, explaining the concept thoroughly
+- Use everyday language, not jargon-heavy
 
 OUTPUT:
-Return exactly 5 cards with question and model_answer fields.`;
+Return exactly 5 cards. Each with question and model_answer fields.`;
 
       const { data: cardsData } = await base44.functions.invoke('generateTeachItCards', {
         prompt,
@@ -347,7 +343,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         </div>
 
         {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto overscroll-contain">
+        <div className="flex-1 overflow-y-auto px-3 py-4 md:px-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentCardIndex}
@@ -355,9 +351,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25 }}
-              className="h-full flex items-center px-3 py-4 md:px-6"
-            >
-              <div className="w-full max-w-2xl mx-auto"
+              className="max-w-2xl mx-auto"
             >
               <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200/50 shadow-2xl overflow-hidden">
                 {/* Card header with gradient */}
@@ -378,7 +372,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                         value={userAnswer}
                         onChange={(e) => setUserAnswer(e.target.value)}
                         placeholder="Type your explanation here... (3-5 sentences)"
-                        className="min-h-[220px] md:min-h-[200px] mb-4 text-sm md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none"
+                        className="min-h-[180px] md:min-h-[200px] mb-4 text-sm md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none"
                         disabled={isGrading}
                       />
                       <Button
@@ -496,7 +490,6 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                   )}
                 </div>
               </Card>
-              </div>
             </motion.div>
           </AnimatePresence>
         </div>
