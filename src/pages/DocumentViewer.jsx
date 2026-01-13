@@ -481,13 +481,12 @@ export default function DocumentViewer() {
         {/* Mobile: Original layout without AI tutor panel */}
         <div className="md:hidden h-full flex flex-col w-full max-w-full">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full max-w-full overflow-hidden">
-            <div className="flex-shrink-0 pb-2 w-full max-w-full overflow-x-hidden">
-              <div className="w-full overflow-x-auto scrollbar-hide -mx-2 px-2">
-                <TabsList className="inline-flex w-auto min-w-full bg-white border border-purple-200 p-1 gap-1 h-auto">
+            <div className="flex-shrink-0 pb-2 w-full overflow-x-auto scrollbar-hide">
+              <TabsList className="inline-flex w-auto bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
-                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
+                      className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-3 py-2 h-auto whitespace-nowrap flex-shrink-0 rounded-md"
                     >
                       <FileText className="w-4 h-4 flex-shrink-0" />
                       <span className="text-[10px] font-medium">Doc</span>
@@ -495,14 +494,14 @@ export default function DocumentViewer() {
                   )}
                   <TabsTrigger 
                     value="notes"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-3 py-2 h-auto whitespace-nowrap flex-shrink-0 rounded-md"
                   >
                     <NotebookPen className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Notes</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-3 py-2 h-auto whitespace-nowrap flex-shrink-0 relative rounded-md"
                   >
                     {showExamDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <FileText className="w-4 h-4 flex-shrink-0" />
@@ -510,7 +509,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="grade"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-2 py-2 h-auto whitespace-nowrap flex-1 relative"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-3 py-2 h-auto whitespace-nowrap flex-shrink-0 relative rounded-md"
                   >
                     {showGradeDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Trophy className="w-4 h-4 flex-shrink-0" />
@@ -518,7 +517,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-1.5 py-2 h-auto whitespace-nowrap flex-1 relative"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-3 py-2 h-auto whitespace-nowrap flex-shrink-0 relative rounded-md"
                   >
                     {showFlashcardsDot && <div className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
@@ -526,18 +525,17 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="teachit"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-1.5 py-2 h-auto whitespace-nowrap flex-1 relative"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1 px-3 py-2 h-auto whitespace-nowrap flex-shrink-0 relative rounded-md"
                   >
                     <Lightbulb className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[10px] font-medium">Teach It</span>
                   </TabsTrigger>
 
                 </TabsList>
-              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto w-full max-w-full">
-              <TabsContent value="doc" className="mt-0 p-0 w-full max-w-full h-full">
+            <div className="flex-1 overflow-y-auto w-full">
+              <TabsContent value="doc" className="mt-0 p-0 w-full h-full">
                 {!lesson ? (
                   <ParsingLoader />
                 ) : (
@@ -545,23 +543,23 @@ export default function DocumentViewer() {
                 )}
               </TabsContent>
 
-              <TabsContent value="notes" className="mt-0 p-0 w-full max-w-full h-full">
+              <TabsContent value="notes" className="mt-0 p-0 w-full h-full">
                 <NotesTab lesson={lesson} />
               </TabsContent>
 
-              <TabsContent value="exam" forceMount className="mt-0 p-0 w-full max-w-full data-[state=inactive]:hidden">
+              <TabsContent value="exam" forceMount className="mt-0 p-0 w-full data-[state=inactive]:hidden">
                 <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
               </TabsContent>
 
-              <TabsContent value="grade" className="mt-0 p-0 w-full max-w-full">
+              <TabsContent value="grade" className="mt-0 p-0 w-full">
                 <PredictedGradeTab lesson={lesson} exams={exams} />
               </TabsContent>
 
-              <TabsContent value="flashcards" className="mt-0 p-0 w-full max-w-full">
+              <TabsContent value="flashcards" className="mt-0 p-0 w-full">
                 <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
               </TabsContent>
 
-              <TabsContent value="teachit" className="mt-0 p-0 w-full max-w-full">
+              <TabsContent value="teachit" className="mt-0 p-0 w-full">
                 <TeachItTab lesson={lesson} />
               </TabsContent>
 
