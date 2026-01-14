@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, GraduationCap, FileText, Download, NotebookPen } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
 import NoteSettingsModal from "@/components/modals/NoteSettingsModal";
 import { toast } from "sonner";
 import EducationalLoader from "@/components/ui/EducationalLoader";
@@ -171,13 +169,23 @@ export default function NotesTab({ lesson }) {
           <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-50/50">
             <div className="max-w-4xl mx-auto">
               <Card className="p-8 sm:p-10 shadow-sm border-slate-200 bg-white">
-                <div className="[&_.ql-editor]:border-0 [&_.ql-editor]:p-0 [&_.ql-container]:border-0 [&_.ql-toolbar]:hidden">
-                  <ReactQuill
-                    value={note.content}
-                    readOnly={true}
-                    theme="snow"
-                    modules={{ toolbar: false }}
-                  />
+                <div className="prose prose-slate max-w-none 
+                  prose-headings:font-bold prose-headings:text-slate-900 
+                  prose-h1:text-3xl prose-h1:border-b prose-h1:border-slate-100 prose-h1:pb-4 prose-h1:mb-6
+                  prose-h2:text-2xl prose-h2:text-violet-700 prose-h2:mt-8 prose-h2:mb-4
+                  prose-h3:text-xl prose-h3:text-slate-800 prose-h3:mt-6 prose-h3:mb-3
+                  prose-p:text-slate-700 prose-p:leading-relaxed prose-p:text-base
+                  prose-li:text-slate-700 prose-li:marker:text-violet-400 prose-li:text-base
+                  prose-strong:text-slate-900 prose-strong:font-bold
+                  prose-em:text-slate-700 prose-em:italic
+                  prose-ul:my-4 prose-ol:my-4
+                  prose-blockquote:border-l-4 prose-blockquote:border-violet-500 prose-blockquote:bg-violet-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:text-violet-800 prose-blockquote:not-italic
+                  prose-code:bg-slate-100 prose-code:text-slate-700 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-code:font-mono prose-code:text-sm
+                  prose-pre:bg-slate-900 prose-pre:text-slate-50 prose-pre:rounded-xl prose-pre:shadow-lg prose-pre:p-4
+                  prose-hr:border-slate-200 prose-hr:my-8
+                  prose-table:text-sm
+                ">
+                  <ReactMarkdown>{note.content}</ReactMarkdown>
                 </div>
               </Card>
               
