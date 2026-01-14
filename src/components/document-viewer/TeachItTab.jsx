@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw } from "lucide-react";
+import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, Notebook } from "lucide-react";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
