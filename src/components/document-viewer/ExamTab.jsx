@@ -240,9 +240,9 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       console.error("ExamTab: Cannot load exam - lesson not ready");
       return;
     }
-    // Wait until OCR compression is available (for file uploads) to minimize prompt size and meet UX requirement
-    if (lesson.input_type === 'file' && !lesson.compressed_content) {
-      console.log('⏳ Waiting for compressed_content before generating exam...');
+    // Wait until compression is ready (if file upload with extracted content)
+    if (waitingForCompression) {
+      console.log('⏳ Waiting for compression to complete...');
       return;
     }
 
