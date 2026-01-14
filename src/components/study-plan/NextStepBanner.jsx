@@ -3,10 +3,10 @@ import { base44 } from "@/api/base44Client";
 import { ChevronRight, Target, FileText, Zap, Brain, BookOpen, Sparkles, Trophy } from "lucide-react";
 
 const TASK_ICONS = {
-  practice_questions: FileText,
   flashcards: Zap,
   teach_it: Brain,
-  review_notes: BookOpen
+  review_notes: BookOpen,
+  practice_questions: Zap // Legacy fallback
 };
 
 export default function NextStepBanner({ lessonId, onNavigateToStudyPlan }) {
@@ -88,9 +88,8 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan }) {
       >
         <Icon className="w-3.5 h-3.5 text-yellow-300" />
         <span className="text-xs text-white font-medium truncate max-w-[140px]">
-          {remaining} {nextTask.task_type === 'flashcards' ? 'cards' : 
-                       nextTask.task_type === 'practice_questions' ? 'questions' :
-                       nextTask.task_type === 'teach_it' ? 'concepts' : 'mins'} remaining
+          {remaining} {nextTask.task_type === 'flashcards' || nextTask.task_type === 'practice_questions' ? 'cards' : 
+                       nextTask.task_type === 'teach_it' ? 'concepts' : 'sections'} left
         </span>
         <ChevronRight className="w-3 h-3 text-white/60 group-hover:translate-x-0.5 transition-transform" />
       </button>
