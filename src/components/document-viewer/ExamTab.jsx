@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy, Zap } from "lucide-react";
+import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy, Zap, ChevronLeft } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import ExamQuestion from "@/components/exam/ExamQuestion.jsx";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
@@ -12,6 +12,7 @@ import EducationalLoader from "@/components/ui/EducationalLoader";
 import { logError } from "@/components/utils/errorLogger";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
+import FeedbackDisplay from "@/components/feedback/FeedbackDisplay";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -44,6 +45,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const [waitingForCompression, setWaitingForCompression] = useState(false);
   const [correctStreak, setCorrectStreak] = useState(0);
   const hasAutoSelectedRef = useRef(false);
+  const [viewingCompletedExam, setViewingCompletedExam] = useState(null);
   
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef(null);
@@ -1095,11 +1097,11 @@ No extra fields. % as strings.`;
         setNewBadges(earnedNow);
       }
 
-      // Notify completion and switch to grade tab
+      // Notify completion and switch to study plan tab
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
       setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('switchToGradeTab', { detail: { examId: exam.id } }));
+        window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
       }, 1000);
     } catch (error) {
       console.error("Error submitting exam:", error);
@@ -1108,6 +1110,30 @@ No extra fields. % as strings.`;
       setIsSubmitting(false);
     }
   };
+
+  // Show completed exam feedback inline
+  if (viewingCompletedExam) {
+    return (
+      <div className="pb-4">
+        <div className="px-3 py-2">
+          <Button 
+            variant="ghost" 
+            onClick={() => setViewingCompletedExam(null)}
+            className="mb-3 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back to Exams
+          </Button>
+        </div>
+        <FeedbackDisplay 
+          exam={viewingCompletedExam} 
+          lesson={lesson} 
+          allExams={exams}
+          courseName={lesson?.course_name}
+        />
+      </div>
+    );
+  }
 
   // Show exam selection if no exam in progress
   if (!exam && !isGenerating && !selectedExamNumber) {
@@ -1153,8 +1179,8 @@ No extra fields. % as strings.`;
                 key={e.id}
                 onClick={() => {
                   if (isCompleted) {
-                    // Navigate to grade tab with specific exam
-                    window.dispatchEvent(new CustomEvent('switchToGradeTab', { detail: { examId: e.id } }));
+                    // Show feedback inline
+                    setViewingCompletedExam(e);
                   } else if (canStart) {
                     setSelectedExamNumber(e.exam_number);
                   }
