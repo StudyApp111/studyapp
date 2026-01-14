@@ -16,14 +16,20 @@ const formatTime = (seconds) => {
 };
 
 export default function FeedbackDisplay({ exam, lesson, allExams = [], courseName }) {
-  const [showRoadmapModal, setShowRoadmapModal] = useState(false);
   const [sectionsExpanded, setSectionsExpanded] = useState({
     strengths: false,
     weaknesses: false,
     insights: false,
     breakdown: true
   });
-  const [expandedQuestions, setExpandedQuestions] = useState({});
+  // Default all questions to expanded
+  const [expandedQuestions, setExpandedQuestions] = useState(() => {
+    const expanded = {};
+    if (exam?.feedback) {
+      exam.feedback.forEach((_, idx) => { expanded[idx] = true; });
+    }
+    return expanded;
+  });
 
   const toggleSection = (section) => {
     setSectionsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
@@ -80,8 +86,13 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-6"
+        className="text-center space-y-4"
       >
+        {/* Intro Text */}
+        <p className="text-sm text-slate-600">
+          If your <span className="font-semibold text-slate-800">{courseName || lesson?.course_name || 'course'}</span> exam was today, you would score:
+        </p>
+
         {/* Grade Badge */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -103,20 +114,8 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
           </div>
         </motion.div>
 
-        {/* Title */}
-        <div className="space-y-2">
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900">
-            Your Roadmap to an A+
-          </h1>
-          {exam.ai_feedback?.overall_performance_summary_text && (
-            <p className="text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
-              {exam.ai_feedback.overall_performance_summary_text}
-            </p>
-          )}
-        </div>
-
-        {/* Stats Grid */}
-        <div className="flex items-center justify-center gap-3 flex-wrap">
+        {/* Stats Grid - moved directly below grade */}
+        <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
           <div className="flex items-center gap-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl px-4 py-3 shadow-sm">
             <TrendingUp className="w-5 h-5 text-purple-600" />
             <span className="font-bold text-slate-900">{Math.round(exam.total_score)}%</span>
@@ -130,6 +129,13 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
             <span className="font-bold text-slate-900">{exam.feedback?.filter(f => f.is_correct).length || 0}/{exam.questions?.length || 0}</span>
           </div>
         </div>
+
+        {/* Summary - max 1 sentence */}
+        {exam.ai_feedback?.overall_performance_summary_text && (
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            {exam.ai_feedback.overall_performance_summary_text.split('.')[0]}.
+          </p>
+        )}
       </motion.div>
 
       {/* Key Insights - Minimal Cards */}
@@ -222,68 +228,83 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className={`rounded-lg border overflow-hidden transition-all ${
+                      className={`rounded-xl border-2 overflow-hidden transition-all ${
                         feedback.is_correct 
                           ? 'border-emerald-200 bg-white' 
                           : 'border-amber-200 bg-white'
                       }`}
                     >
+                      {/* Question Header - Always visible */}
                       <div 
-                        className={`p-2.5 cursor-pointer hover:bg-slate-50 transition-colors ${
+                        className={`p-3 cursor-pointer hover:bg-slate-50 transition-colors ${
                           isExpanded ? 'border-b border-slate-100' : ''
                         }`}
                         onClick={() => toggleQuestion(idx)}
                       >
-                        <div className="flex items-center gap-2">
-                          <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${
+                        <div className="flex items-start gap-3">
+                          {/* Status Icon */}
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                             feedback.is_correct 
                               ? 'bg-emerald-500 text-white' 
                               : 'bg-amber-500 text-white'
                           }`}>
                             {feedback.is_correct ? (
-                              <CheckCircle className="w-3.5 h-3.5" />
+                              <CheckCircle className="w-4 h-4" />
                             ) : (
-                              <XCircle className="w-3.5 h-3.5" />
+                              <XCircle className="w-4 h-4" />
                             )}
                           </div>
                           
-                          <div className="flex-1 min-w-0 flex flex-wrap items-center gap-1.5">
-                            <span className="font-semibold text-slate-900 text-xs">
-                              Q{question.question_number}
-                            </span>
-                            {question.question_type && (
-                              <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-slate-50 text-slate-600 border-slate-200">
-                                {question.question_type}
-                              </Badge>
-                            )}
-                            {question.difficulty_index && (
-                              <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${
-                                question.difficulty_index.toLowerCase() === 'hard' ? 'bg-red-50 text-red-600 border-red-200' :
-                                question.difficulty_index.toLowerCase() === 'medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                'bg-green-50 text-green-600 border-green-200'
-                              }`}>
-                                {question.difficulty_index}
-                              </Badge>
-                            )}
-                            <Badge className={`text-[9px] px-1.5 py-0 ${feedback.is_correct ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                              {feedback.points_earned}/10
-                            </Badge>
-                            {questionTime > 0 && (
-                              <Badge variant="secondary" className="text-[9px] px-1.5 py-0 bg-purple-50 text-purple-700">
-                                <Clock className="w-2.5 h-2.5 mr-0.5" />
-                                {formatTime(questionTime)}
-                              </Badge>
-                            )}
+                          <div className="flex-1 min-w-0">
+                            {/* Question Number & Score Row */}
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-bold text-slate-900 text-sm">
+                                Question {question.question_number}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-bold ${feedback.is_correct ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                  {feedback.points_earned}/10
+                                </span>
+                                <div className="text-slate-400">
+                                  {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Meta Tags Row */}
+                            <div className="flex flex-wrap items-center gap-2">
+                              {question.question_type && (
+                                <Badge variant="outline" className="text-xs px-2 py-0.5 bg-slate-50 text-slate-600 border-slate-200">
+                                  {question.question_type}
+                                </Badge>
+                              )}
+                              {question.difficulty_index && (
+                                <Badge variant="outline" className={`text-xs px-2 py-0.5 ${
+                                  question.difficulty_index.toLowerCase() === 'hard' ? 'bg-red-50 text-red-600 border-red-200' :
+                                  question.difficulty_index.toLowerCase() === 'medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                  'bg-green-50 text-green-600 border-green-200'
+                                }`}>
+                                  {question.difficulty_index}
+                                </Badge>
+                              )}
+                              {questionTime > 0 && (
+                                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-purple-50 text-purple-700">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  {formatTime(questionTime)}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            {/* Competencies - Separate row for better hierarchy */}
                             {question.assessed_competencies && question.assessed_competencies.length > 0 && (
-                              <Badge variant="outline" className="text-[8px] px-1.5 py-0 bg-purple-50/50 text-purple-600 border-purple-200">
-                                {question.assessed_competencies[0]}
-                                {question.assessed_competencies.length > 1 && ` +${question.assessed_competencies.length - 1}`}
-                              </Badge>
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {question.assessed_competencies.map((comp, i) => (
+                                  <Badge key={i} variant="outline" className="text-[10px] px-2 py-0.5 bg-purple-50/50 text-purple-600 border-purple-200">
+                                    {comp}
+                                  </Badge>
+                                ))}
+                              </div>
                             )}
-                          </div>
-
-                          <div className="text-slate-400 flex-shrink-0">
-                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                           </div>
                         </div>
                       </div>
@@ -296,70 +317,69 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <div className="p-3 bg-slate-50/30 space-y-2">
-                              <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                                <MathText className="text-slate-800 font-medium text-xs mb-2">
+                            <div className="p-4 bg-slate-50/50 space-y-4">
+                              {/* Question Text */}
+                              <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                                <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Question</p>
+                                <MathText className="text-slate-800 font-medium text-sm leading-relaxed">
                                   {question.question_text}
                                 </MathText>
                                 {question.options && question.options.length > 0 && (
-                                  <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
+                                  <div className="mt-3 space-y-2 bg-slate-50 p-3 rounded-lg">
                                     {question.options.map((opt, i) => {
                                       const optionText = typeof opt === 'string' ? opt : (opt?.text || JSON.stringify(opt));
                                       return (
-                                        <MathText key={i} className="text-xs text-slate-600 block py-0.5" inline>
-                                          <span className="font-semibold w-5 inline-block">{String.fromCharCode(65 + i)}.</span> {optionText}
+                                        <MathText key={i} className="text-sm text-slate-700 block py-1" inline>
+                                          <span className="font-bold w-6 inline-block text-slate-500">{String.fromCharCode(65 + i)}.</span> {optionText}
                                         </MathText>
                                       );
                                     })}
                                   </div>
                                 )}
-                                <div className="mt-2 grid grid-cols-2 gap-2">
-                                  <div className="bg-blue-50 p-2 rounded-lg">
-                                    <p className="text-[9px] font-bold text-blue-700 uppercase mb-0.5">Your Answer</p>
-                                    <MathText className="text-xs text-slate-700 font-medium">
-                                      {question.user_answer || "No answer"}
-                                    </MathText>
-                                  </div>
-                                  <div className="bg-emerald-50 p-2 rounded-lg">
-                                    <p className="text-[9px] font-bold text-emerald-700 uppercase mb-0.5">Correct</p>
-                                    <MathText className="text-xs text-slate-700 font-medium">
-                                      {question.correct_answer}
-                                    </MathText>
-                                  </div>
+                              </div>
+
+                              {/* Answers Comparison */}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                                  <p className="text-xs font-bold text-blue-700 uppercase mb-2">Your Answer</p>
+                                  <MathText className="text-sm text-slate-800 font-medium">
+                                    {question.user_answer || "No answer"}
+                                  </MathText>
+                                </div>
+                                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                                  <p className="text-xs font-bold text-emerald-700 uppercase mb-2">Correct Answer</p>
+                                  <MathText className="text-sm text-slate-800 font-medium">
+                                    {question.correct_answer}
+                                  </MathText>
                                 </div>
                               </div>
 
-                              <div className={`p-2 rounded-lg ${
-                                feedback.is_correct ? 'bg-emerald-50' : 'bg-amber-50'
+                              {/* Feedback */}
+                              <div className={`p-4 rounded-xl ${
+                                feedback.is_correct ? 'bg-emerald-50 border border-emerald-100' : 'bg-amber-50 border border-amber-100'
                               }`}>
-                                <div className="flex items-start gap-2">
-                                  {feedback.is_correct ? <Sparkles className="w-3.5 h-3.5 text-emerald-600 mt-0.5" /> : <Zap className="w-3.5 h-3.5 text-amber-600 mt-0.5" />}
+                                <div className="flex items-start gap-3">
+                                  {feedback.is_correct ? <Sparkles className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" /> : <Zap className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />}
                                   <div>
-                                    <p className={`text-[10px] font-bold mb-0.5 ${feedback.is_correct ? 'text-emerald-800' : 'text-amber-800'}`}>
+                                    <p className={`text-sm font-bold mb-1 ${feedback.is_correct ? 'text-emerald-800' : 'text-amber-800'}`}>
                                       {feedback.is_correct ? 'Excellent!' : 'Learning Opportunity'}
                                     </p>
-                                    <MathText className="text-xs text-slate-700">
+                                    <MathText className="text-sm text-slate-700 leading-relaxed">
                                       {feedback.feedback}
                                     </MathText>
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="bg-purple-50 p-2 rounded-lg">
-                                <div className="flex items-center gap-1.5 mb-1">
-                                  <Brain className="w-3 h-3 text-purple-600" />
-                                  <p className="text-[9px] font-bold text-purple-700 uppercase">Explanation</p>
+                              {/* Explanation */}
+                              <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Brain className="w-4 h-4 text-purple-600" />
+                                  <p className="text-xs font-bold text-purple-700 uppercase">Full Explanation</p>
                                 </div>
-                                <MathText className="text-xs text-slate-700 mb-2">
+                                <MathText className="text-sm text-slate-700 leading-relaxed">
                                   {question.explanation}
                                 </MathText>
-                                <div className="flex flex-wrap gap-1">
-                                  {question.assessed_competencies?.map((comp, i) => (
-                                    <Badge key={i} variant="outline" className="bg-white text-purple-700 text-[9px] px-1.5 py-0">
-                                      {comp}
-                                    </Badge>
-                                  ))}
-                                </div>
                               </div>
                             </div>
                           </motion.div>
