@@ -1174,15 +1174,17 @@ No extra fields. % as strings.`;
             
             return (
               <button
-                key={e.id}
-                onClick={() => {
-                  if (isCompleted) {
-                    // Show feedback inline
-                    setViewingCompletedExam(e);
-                  } else if (canStart) {
-                    setSelectedExamNumber(e.exam_number);
-                  }
-                }}
+              key={e.id}
+              onClick={() => {
+                if (isCompleted) {
+                  // Show feedback inline
+                  setViewingCompletedExam(e);
+                } else if (canStart) {
+                  setExam(null); // Clear any previous exam
+                  setSelectedExamNumber(e.exam_number);
+                  hasAutoSelectedRef.current = true;
+                }
+              }}
                 disabled={!canStart && !isCompleted}
                 className={`p-3 md:p-5 rounded-xl border-2 transition-all text-left ${
                   isCompleted
@@ -1246,7 +1248,11 @@ No extra fields. % as strings.`;
             );
           }) : (
             <button
-              onClick={() => setSelectedExamNumber(1)}
+              onClick={() => {
+                setExam(null);
+                setSelectedExamNumber(1);
+                hasAutoSelectedRef.current = true;
+              }}
               className="p-3 md:p-5 rounded-xl border-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02] transition-all text-left"
             >
               <div className="flex items-center gap-2 md:gap-3">
