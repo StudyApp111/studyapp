@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
-import NotesTab from "@/components/document-viewer/NotesTab";
+
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import TeachItTab from "@/components/document-viewer/TeachItTab";
@@ -450,7 +450,7 @@ export default function DocumentViewer() {
                     className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
                     {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                    <FileText className="w-4 h-4 flex-shrink-0" />
+                    <Trophy className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Exams</span>
                   </TabsTrigger>
                   <TabsTrigger 
