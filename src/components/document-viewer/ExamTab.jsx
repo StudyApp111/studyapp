@@ -91,33 +91,54 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     loadOrGenerateExam(selectedExamNumber);
   }, [lesson?.id, selectedExamNumber, waitingForCompression]);
 
-  // Wait for background compression if file upload without compressed content
+  // Wait for background extraction+compression if file upload without content ready
   useEffect(() => {
     if (!lesson?.id) return;
     
-    // Only wait for compression if: file upload + has extracted content + NO compressed content yet
-    const needsCompression = lesson.input_type === 'file' && 
-                             lesson.extracted_content?.length > 0 && 
-                             !lesson.compressed_content;
+    // For file uploads: must wait for BOTH extraction AND compression to complete
+    // Content is NOT ready if: file upload AND (no extracted_content OR no compressed_content)
+    const isFileUpload = lesson.input_type === 'file';
+    const hasExtractedContent = lesson.extracted_content?.length > 0;
+    const hasCompressedContent = lesson.compressed_content?.length > 0;
     
-    if (needsCompression) {
+    // Need to wait if: file upload AND content not ready yet
+    const needsToWait = isFileUpload && (!hasExtractedContent || !hasCompressedContent);
+    
+    console.log('📊 ExamTab content check:', { 
+      isFileUpload, 
+      hasExtractedContent, 
+      hasCompressedContent, 
+      needsToWait 
+    });
+    
+    if (needsToWait) {
       setWaitingForCompression(true);
       let attempts = 0;
+      const maxAttempts = 60; // Wait up to 60 seconds for large documents
+      
       const interval = setInterval(async () => {
         attempts++;
+        console.log(`⏳ Waiting for content... attempt ${attempts}/${maxAttempts}`);
         try {
           const refreshed = await base44.entities.Lesson.filter({ id: lesson.id });
           const updated = refreshed?.[0];
-          if (updated?.compressed_content) {
+          
+          // Check if BOTH extracted AND compressed content are now available
+          if (updated?.extracted_content?.length > 0 && updated?.compressed_content?.length > 0) {
+            console.log('✅ Content ready! Extracted:', updated.extracted_content.length, 'chars, Compressed:', updated.compressed_content.length, 'chars');
             clearInterval(interval);
             setWaitingForCompression(false);
             window.dispatchEvent(new Event('reloadLesson'));
-          } else if (attempts >= 30) { // Wait up to 30 seconds
+          } else if (attempts >= maxAttempts) {
+            console.warn('⚠️ Timeout waiting for content, proceeding anyway');
             clearInterval(interval);
             setWaitingForCompression(false);
+            // Still reload to get whatever content is available
+            window.dispatchEvent(new Event('reloadLesson'));
           }
-        } catch {
-          if (attempts >= 30) {
+        } catch (err) {
+          console.error('Error checking content:', err);
+          if (attempts >= maxAttempts) {
             clearInterval(interval);
             setWaitingForCompression(false);
           }
@@ -127,7 +148,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     } else {
       setWaitingForCompression(false);
     }
-  }, [lesson?.id, lesson?.compressed_content]);
+  }, [lesson?.id, lesson?.extracted_content, lesson?.compressed_content]);
 
   useEffect(() => {
     if (exam && !exam.completed && exam.id !== examIdRef.current) {
