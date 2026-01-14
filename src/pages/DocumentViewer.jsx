@@ -306,16 +306,32 @@ export default function DocumentViewer() {
       {/* Mobile Header */}
       <div className="md:hidden border-b border-purple-200/60 bg-white/90 backdrop-blur-xl sticky top-0 z-10 w-full overflow-hidden">
         <div className="px-2 py-2 max-w-full">
-          <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 text-white px-2 py-1.5 rounded-lg shadow-lg max-w-full overflow-hidden">
+          <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 text-white px-2 py-1.5 rounded-lg shadow-lg max-w-full overflow-hidden">
             <div className="flex items-center justify-between gap-1.5 w-full max-w-full">
               <span className="text-[11px] font-bold truncate flex-1 min-w-0 overflow-hidden">{lesson?.course_name}</span>
               <div className="flex items-center gap-1 flex-shrink-0">
+                {predictedGrade && (
+                  <span className="text-[10px] font-bold bg-white/20 rounded px-1.5 py-0.5">{predictedGrade}</span>
+                )}
                 <div className="flex items-center gap-0.5 bg-white/20 rounded-lg px-1.5 py-0.5">
                   <Clock className="w-2.5 h-2.5 opacity-80" />
                   <span className="text-[9px] font-mono font-medium">{formatStudyTime(studyTime)}</span>
                 </div>
               </div>
             </div>
+            {/* Next Step - Tap to go to Study Plan */}
+            {lesson?.id && (
+              <button 
+                onClick={() => setActiveTab('studyplan')}
+                className="w-full mt-1.5 flex items-center justify-between bg-white/10 hover:bg-white/20 rounded-md px-2 py-1 transition-colors"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Target className="w-3 h-3 text-yellow-300" />
+                  <span className="text-[10px] font-medium">View Study Plan</span>
+                </div>
+                <ChevronRight className="w-3 h-3 opacity-60" />
+              </button>
+            )}
           </div>
         </div>
       </div>
