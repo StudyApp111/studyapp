@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, TrendingDown, Target, MapPin, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, TrendingDown, Target, MapPin, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, X, Rocket, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MathText from "../math/MathText";
@@ -75,159 +75,122 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
   const totalWorksheets = allExams.length || 6;
 
   return (
-    <div className="space-y-4 px-2">
+    <div className="space-y-6 px-3 max-w-4xl mx-auto">
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center"
+        className="text-center space-y-6"
       >
-        <div className="inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-lg mb-4">
-          <Award className="w-4 h-4 text-purple-600" />
-          <span className="text-xs font-medium text-slate-700">Exam {exam.exam_number} Complete</span>
-        </div>
-        
-        <h1 className="text-xl md:text-2xl font-bold text-slate-900 mb-4 px-2">
-          If Your {courseName || 'Course'} Exam Was Today, You Would Score:
-        </h1>
-        
+        {/* Grade Badge */}
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="inline-block"
+          transition={{ delay: 0.1, type: "spring" }}
+          className="relative inline-block"
         >
-          <div className={`px-10 md:px-20 py-6 rounded-2xl bg-gradient-to-r ${getGradeColor(exam.predicted_grade)} shadow-xl mb-3`}>
-            <div className="text-5xl font-bold text-white mb-1">
-              {exam.predicted_grade} {getGradeEmoji(exam.predicted_grade)}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-400 blur-2xl opacity-40 rounded-full" />
+          <div className={`relative px-16 py-8 rounded-3xl bg-gradient-to-br ${getGradeColor(exam.predicted_grade)} shadow-2xl`}>
+            <div className="text-7xl font-black text-white mb-2 drop-shadow-lg">
+              {exam.predicted_grade}
             </div>
-            <div className="text-lg text-white font-semibold">
+            <div className="text-xl text-white/90 font-semibold">
               {getPredictedScore()}
             </div>
           </div>
+          <div className="absolute -top-3 -right-3 text-4xl animate-bounce">
+            {getGradeEmoji(exam.predicted_grade)}
+          </div>
         </motion.div>
 
-        {exam.ai_feedback?.overall_performance_summary_text && (
-          <p className="text-sm text-slate-700 mx-auto mt-4 leading-relaxed px-2">
-            {exam.ai_feedback.overall_performance_summary_text}
-          </p>
-        )}
+        {/* Title */}
+        <div className="space-y-2">
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900">
+            Your Roadmap to an A+
+          </h1>
+          {exam.ai_feedback?.overall_performance_summary_text && (
+            <p className="text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
+              {exam.ai_feedback.overall_performance_summary_text}
+            </p>
+          )}
+        </div>
 
-        <div className="grid grid-cols-2 gap-2 text-slate-600 text-xs mt-4">
-          <div className="flex items-center justify-center gap-1.5 bg-white rounded-lg py-2 shadow-sm">
-            <TrendingUp className="w-4 h-4 text-purple-600" />
-            <span className="font-semibold">{Math.round(exam.total_score)}%</span>
+        {/* Stats Grid */}
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl px-4 py-3 shadow-sm">
+            <TrendingUp className="w-5 h-5 text-purple-600" />
+            <span className="font-bold text-slate-900">{Math.round(exam.total_score)}%</span>
           </div>
-          <div className="flex items-center justify-center gap-1.5 bg-white rounded-lg py-2 shadow-sm">
-            <Clock className="w-4 h-4 text-purple-700" />
-            <span className="font-semibold">{formatTime(exam.time_taken_seconds || 0)}</span>
+          <div className="flex items-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl px-4 py-3 shadow-sm">
+            <Clock className="w-5 h-5 text-blue-600" />
+            <span className="font-bold text-slate-900">{formatTime(exam.time_taken_seconds || 0)}</span>
           </div>
-          <div className="flex items-center justify-center bg-white rounded-lg py-2 shadow-sm">
-            <span>Exam {exam.exam_number}/{totalWorksheets}</span>
-          </div>
-          <div className="flex items-center justify-center bg-white rounded-lg py-2 shadow-sm">
-            <span>{exam.feedback?.filter(f => f.is_correct).length || 0} Correct</span>
+          <div className="flex items-center gap-2 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl px-4 py-3 shadow-sm">
+            <Award className="w-5 h-5 text-amber-600" />
+            <span className="font-bold text-slate-900">{exam.feedback?.filter(f => f.is_correct).length || 0}/{exam.questions?.length || 0}</span>
           </div>
         </div>
       </motion.div>
 
-      {/* Strengths & Weaknesses */}
-      <div className="grid grid-cols-1 gap-4">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="shadow-lg border-0 bg-gradient-to-br from-emerald-50 to-teal-50/50 overflow-hidden">
-            <CardHeader 
-              className="cursor-pointer hover:bg-emerald-100/50 transition-colors py-3 px-4"
-              onClick={() => toggleSection('strengths')}
-            >
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-emerald-700 text-base">
-                  <TrendingUp className="w-4 h-4" />
-                  Your Strengths
+      {/* Key Insights - Minimal Cards */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Strengths */}
+        {strengths.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="border-0 shadow-lg bg-white overflow-hidden group hover:shadow-xl transition-all">
+              <CardHeader className="pb-3 bg-gradient-to-br from-emerald-50 to-teal-50">
+                <CardTitle className="flex items-center gap-2 text-emerald-700">
+                  <Star className="w-5 h-5 fill-emerald-600" />
+                  <span className="text-base font-bold">What You Nailed</span>
                 </CardTitle>
-                {sectionsExpanded.strengths ? (
-                  <ChevronUp className="w-4 h-4 text-emerald-700" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-emerald-700" />
+              </CardHeader>
+              <CardContent className="pt-4 space-y-2">
+                {strengths.slice(0, 3).map((strength, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span>{strength}</span>
+                  </div>
+                ))}
+                {strengths.length > 3 && (
+                  <p className="text-xs text-slate-500 italic pt-1">+{strengths.length - 3} more strengths</p>
                 )}
-              </div>
-            </CardHeader>
-            <AnimatePresence>
-              {sectionsExpanded.strengths && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CardContent className="px-4 pb-4">
-                    <ul className="space-y-2">
-                      {strengths.length > 0 ? strengths.map((strength, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-slate-700 text-xs">{strength}</span>
-                        </li>
-                      )) : (
-                        <li className="text-slate-500 italic text-xs">Complete more questions to identify strengths</li>
-                      )}
-                    </ul>
-                  </CardContent>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="shadow-lg border-0 bg-gradient-to-br from-amber-50 to-orange-50/50 overflow-hidden">
-            <CardHeader 
-              className="cursor-pointer hover:bg-amber-100/50 transition-colors py-3 px-4"
-              onClick={() => toggleSection('weaknesses')}
-            >
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-amber-700 text-base">
-                  <TrendingDown className="w-4 h-4" />
-                  Areas for Improvement
+        {/* Growth Areas */}
+        {weaknesses.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card className="border-0 shadow-lg bg-white overflow-hidden group hover:shadow-xl transition-all">
+              <CardHeader className="pb-3 bg-gradient-to-br from-purple-50 to-indigo-50">
+                <CardTitle className="flex items-center gap-2 text-purple-700">
+                  <Rocket className="w-5 h-5" />
+                  <span className="text-base font-bold">Focus On This</span>
                 </CardTitle>
-                {sectionsExpanded.weaknesses ? (
-                  <ChevronUp className="w-4 h-4 text-amber-700" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-amber-700" />
+              </CardHeader>
+              <CardContent className="pt-4 space-y-2">
+                {weaknesses.slice(0, 3).map((weakness, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                    <Target className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
+                    <span>{weakness}</span>
+                  </div>
+                ))}
+                {weaknesses.length > 3 && (
+                  <p className="text-xs text-slate-500 italic pt-1">+{weaknesses.length - 3} more areas</p>
                 )}
-              </div>
-            </CardHeader>
-            <AnimatePresence>
-              {sectionsExpanded.weaknesses && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CardContent className="px-4 pb-4">
-                    <ul className="space-y-2">
-                      {weaknesses.length > 0 ? weaknesses.map((weakness, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <Target className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                          <span className="text-slate-700 text-xs">{weakness}</span>
-                        </li>
-                      )) : (
-                        <li className="text-slate-500 italic text-xs">Great job! Keep up the excellent work</li>
-                      )}
-                    </ul>
-                  </CardContent>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
 
       {/* Question Breakdown */}
@@ -235,12 +198,15 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.6 }}
         >
-          <Card className="shadow-lg border-0 overflow-hidden">
-            <CardHeader className="py-3 px-4">
-              <CardTitle className="text-base">Question Breakdown</CardTitle>
-              <p className="text-slate-600 text-xs mt-0.5">Review your answers</p>
+          <Card className="border-0 shadow-lg bg-white">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-slate-900">
+                <Eye className="w-5 h-5 text-indigo-600" />
+                <span className="text-lg font-bold">Review Questions</span>
+              </CardTitle>
+              <p className="text-slate-500 text-xs mt-1">Tap any question to see details</p>
             </CardHeader>
             
             <CardContent className="px-3 pb-3">
@@ -415,53 +381,29 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <Card className="shadow-lg border-0 overflow-hidden">
-            <CardHeader 
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white cursor-pointer hover:brightness-110 transition-all py-3 px-4"
-              onClick={() => toggleSection('insights')}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Brain className="w-4 h-4" />
-                    Learning Insights
-                  </CardTitle>
-                  <p className="text-purple-100 text-xs mt-0.5">How you learn</p>
-                </div>
-                {sectionsExpanded.insights ? (
-                  <ChevronUp className="w-4 h-4 text-white flex-shrink-0" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-white flex-shrink-0" />
-                )}
-              </div>
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-slate-900">
+                <Brain className="w-5 h-5 text-purple-600" />
+                <span className="text-lg font-bold">How You Learn</span>
+              </CardTitle>
             </CardHeader>
-            <AnimatePresence>
-              {sectionsExpanded.insights && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <CardContent className="p-3">
-                    <div className="space-y-3">
-                      {exam.ai_feedback.learning_patterns.map((pattern, idx) => (
-                        <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">{getPatternIcon(pattern.pattern_type)}</span>
-                            <span className="font-semibold text-slate-900 text-xs">{pattern.pattern_type}</span>
-                          </div>
-                          <p className="text-xs text-slate-700 mb-2">{pattern.what_it_means}</p>
-                          <div className="bg-purple-50 px-2 py-1.5 rounded-lg border border-purple-200">
-                            <p className="text-xs text-slate-700">{pattern.how_to_improve}</p>
-                          </div>
-                        </div>
-                      ))}
+            <CardContent className="space-y-3">
+              {exam.ai_feedback.learning_patterns.map((pattern, idx) => (
+                <div key={idx} className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl flex-shrink-0">{getPatternIcon(pattern.pattern_type)}</span>
+                    <div className="flex-1 space-y-2">
+                      <h4 className="font-bold text-sm text-slate-900">{pattern.pattern_type}</h4>
+                      <p className="text-xs text-slate-600 leading-relaxed">{pattern.what_it_means}</p>
+                      <div className="bg-purple-50 px-3 py-2 rounded-lg">
+                        <p className="text-xs text-slate-700 font-medium">💡 {pattern.how_to_improve}</p>
+                      </div>
                     </div>
-                  </CardContent>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
           </Card>
         </motion.div>
       )}
