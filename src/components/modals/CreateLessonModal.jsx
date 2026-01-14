@@ -233,7 +233,7 @@ Input Context:
 - School: ${learningProfile.school || "N/A"}
 - Location: ${learningProfile.city || "N/A"}
 - Student-Provided Content:
-${extractedContent}
+${compressedForPrompts || extractedContent}
 
 Analysis Priority (STRICT ORDER):
 1. Use the student-provided content as the PRIMARY source of truth.
