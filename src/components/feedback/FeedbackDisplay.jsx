@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, TrendingDown, Target, MapPin, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, X, Rocket, Star } from "lucide-react";
+import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, Target, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, Rocket, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MathText from "../math/MathText";
@@ -63,16 +63,6 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
   const getPredictedScore = () => {
     const scoreValue = exam.ai_feedback?.predicted_exam_score_percentage || exam.total_score.toString();
     return scoreValue.toString().includes('%') ? scoreValue : `${scoreValue}%`;
-  };
-
-  const getPatternIcon = (type) => {
-    const typeLower = type.toLowerCase();
-    if (typeLower.includes('guess') || typeLower.includes('pressure')) return '🎲';
-    if (typeLower.includes('overconfiden')) return '🎯';
-    if (typeLower.includes('underconfiden')) return '💭';
-    if (typeLower.includes('reason') || typeLower.includes('method')) return '🧠';
-    if (typeLower.includes('time') || typeLower.includes('rush')) return '⏱️';
-    return '💡';
   };
 
   const strengths = exam.ai_feedback?.identified_strengths_list || [];
@@ -317,20 +307,19 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <div className="p-4 bg-slate-50/50 space-y-4">
+                            <div className="p-3 md:p-4 bg-slate-50/50 space-y-3">
                               {/* Question Text */}
-                              <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
-                                <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Question</p>
-                                <MathText className="text-slate-800 font-medium text-sm leading-relaxed">
+                              <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
+                                <MathText className="text-slate-800 font-medium text-xs md:text-sm leading-relaxed">
                                   {question.question_text}
                                 </MathText>
                                 {question.options && question.options.length > 0 && (
-                                  <div className="mt-3 space-y-2 bg-slate-50 p-3 rounded-lg">
+                                  <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
                                     {question.options.map((opt, i) => {
                                       const optionText = typeof opt === 'string' ? opt : (opt?.text || JSON.stringify(opt));
                                       return (
-                                        <MathText key={i} className="text-sm text-slate-700 block py-1" inline>
-                                          <span className="font-bold w-6 inline-block text-slate-500">{String.fromCharCode(65 + i)}.</span> {optionText}
+                                        <MathText key={i} className="text-xs text-slate-700 block py-0.5" inline>
+                                          <span className="font-bold w-5 inline-block text-slate-500">{String.fromCharCode(65 + i)}.</span> {optionText}
                                         </MathText>
                                       );
                                     })}
@@ -338,46 +327,41 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                 )}
                               </div>
 
-                              {/* Answers Comparison */}
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
-                                  <p className="text-xs font-bold text-blue-700 uppercase mb-2">Your Answer</p>
-                                  <MathText className="text-sm text-slate-800 font-medium">
+                              {/* Answers Comparison - Stacked on mobile */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                <div className="bg-blue-50 p-2 md:p-3 rounded-xl border border-blue-100">
+                                  <p className="text-[10px] md:text-xs font-bold text-blue-700 uppercase mb-1">Your Answer</p>
+                                  <MathText className="text-xs md:text-sm text-slate-800 font-medium">
                                     {question.user_answer || "No answer"}
                                   </MathText>
                                 </div>
-                                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                                  <p className="text-xs font-bold text-emerald-700 uppercase mb-2">Correct Answer</p>
-                                  <MathText className="text-sm text-slate-800 font-medium">
+                                <div className="bg-emerald-50 p-2 md:p-3 rounded-xl border border-emerald-100">
+                                  <p className="text-[10px] md:text-xs font-bold text-emerald-700 uppercase mb-1">Correct</p>
+                                  <MathText className="text-xs md:text-sm text-slate-800 font-medium">
                                     {question.correct_answer}
                                   </MathText>
                                 </div>
                               </div>
 
                               {/* Feedback */}
-                              <div className={`p-4 rounded-xl ${
+                              <div className={`p-3 md:p-4 rounded-xl ${
                                 feedback.is_correct ? 'bg-emerald-50 border border-emerald-100' : 'bg-amber-50 border border-amber-100'
                               }`}>
-                                <div className="flex items-start gap-3">
-                                  {feedback.is_correct ? <Sparkles className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" /> : <Zap className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />}
-                                  <div>
-                                    <p className={`text-sm font-bold mb-1 ${feedback.is_correct ? 'text-emerald-800' : 'text-amber-800'}`}>
-                                      {feedback.is_correct ? 'Excellent!' : 'Learning Opportunity'}
-                                    </p>
-                                    <MathText className="text-sm text-slate-700 leading-relaxed">
-                                      {feedback.feedback}
-                                    </MathText>
-                                  </div>
+                                <div className="flex items-start gap-2">
+                                  {feedback.is_correct ? <Sparkles className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" /> : <Zap className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />}
+                                  <MathText className="text-xs md:text-sm text-slate-700 leading-relaxed">
+                                    {feedback.feedback}
+                                  </MathText>
                                 </div>
                               </div>
 
                               {/* Explanation */}
-                              <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <Brain className="w-4 h-4 text-purple-600" />
-                                  <p className="text-xs font-bold text-purple-700 uppercase">Full Explanation</p>
+                              <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <Brain className="w-3.5 h-3.5 text-purple-600" />
+                                  <p className="text-[10px] md:text-xs font-bold text-purple-700 uppercase">Explanation</p>
                                 </div>
-                                <MathText className="text-sm text-slate-700 leading-relaxed">
+                                <MathText className="text-xs md:text-sm text-slate-700 leading-relaxed">
                                   {question.explanation}
                                 </MathText>
                               </div>
@@ -394,39 +378,6 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
         </motion.div>
       )}
 
-      {/* Learning Insights */}
-      {exam.ai_feedback?.learning_patterns && exam.ai_feedback.learning_patterns.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-slate-900">
-                <Brain className="w-5 h-5 text-purple-600" />
-                <span className="text-lg font-bold">How You Learn</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {exam.ai_feedback.learning_patterns.map((pattern, idx) => (
-                <div key={idx} className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl flex-shrink-0">{getPatternIcon(pattern.pattern_type)}</span>
-                    <div className="flex-1 space-y-2">
-                      <h4 className="font-bold text-sm text-slate-900">{pattern.pattern_type}</h4>
-                      <p className="text-xs text-slate-600 leading-relaxed">{pattern.what_it_means}</p>
-                      <div className="bg-purple-50 px-3 py-2 rounded-lg">
-                        <p className="text-xs text-slate-700 font-medium">💡 {pattern.how_to_improve}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
     </div>
   );
 }

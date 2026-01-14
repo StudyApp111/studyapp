@@ -890,7 +890,6 @@ JSON Output (exact schema):
 - identified_strengths_list: 2-3 items
 - key_areas_for_improvement_list: 2-3 items (tied to misconceptions)
 - suggested_future_sessions_plan: 5 objects {session_number(2..6), session_name, session_focus_description} grounded in signals
-- learning_patterns: 3-5 objects {pattern_type, what_it_means(1 sentence), how_to_improve(1 sentence linked to future sessions)}
 No extra fields. % as strings.`;
 
       const { data: feedbackData } = await retryOperation(() => 
@@ -915,19 +914,6 @@ No extra fields. % as strings.`;
                     session_focus_description: { type: "string" }
                   }
                 }
-              },
-              learning_patterns: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    pattern_type: { type: "string" },
-                    what_it_means: { type: "string" },
-                    how_to_improve: { type: "string" }
-                  }
-                },
-                minItems: 3,
-                maxItems: 5
               }
             }
           }
