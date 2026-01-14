@@ -51,7 +51,7 @@ export default function NoteSettingsModal({ open, onOpenChange, settings, onSave
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0 gap-0 overflow-y-auto rounded-2xl">
         <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-6 text-white">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
