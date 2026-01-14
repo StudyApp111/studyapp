@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Uses Google Gemini 2.0 Flash Thinking with minimal thinking for exam generation
+// Uses Gemini 3 Flash Preview with minimal thinking for exam generation
 // Requires API_KEY environment variable (Google AI API key)
 
 Deno.serve(async (req) => {
