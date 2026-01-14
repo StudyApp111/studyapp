@@ -57,30 +57,20 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const lastSavedQuestionsRef = useRef(null);
   const generationTriggeredRef = useRef(new Set()); // Track which exams we've triggered generation for
 
-  // Auto-select Exam 1 (or in-progress) - only after exams are loaded from parent
+  // Auto-select in-progress exam ONLY - don't auto-start new exams
   useEffect(() => {
     // CRITICAL: Only auto-select once when exams first load
     if (!lesson?.id || exams === undefined || selectedExamNumber || hasAutoSelectedRef.current) return;
 
-    hasAutoSelectedRef.current = true;
     const allExamsForLesson = exams || [];
 
-    // First priority: in-progress exam
+    // Only auto-select if there's an in-progress exam
     const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
     if (inProgressExam) {
+      hasAutoSelectedRef.current = true;
       setSelectedExamNumber(inProgressExam.exam_number);
-      return;
     }
-
-    // Second priority: Exam 1 if it exists
-    const exam1 = allExamsForLesson.find(e => e.exam_number === 1);
-    if (exam1) {
-      setSelectedExamNumber(1);
-      return;
-    }
-
-    // Only generate if truly no exams exist
-    setSelectedExamNumber(1);
+    // Otherwise, show the exam selection screen - don't auto-start anything
   }, [lesson?.id, exams, selectedExamNumber]);
 
   // Load exam when selection changes - wait for exams to be loaded from database
