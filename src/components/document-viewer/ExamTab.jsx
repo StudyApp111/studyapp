@@ -85,9 +85,11 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   useEffect(() => {
     // CRITICAL: Don't run until exams are loaded (not undefined) to avoid duplicate generation
     if (!lesson?.id || !selectedExamNumber || exams === undefined || exam) return;
+    // Also don't proceed if waiting for compression
+    if (waitingForCompression) return;
     
     loadOrGenerateExam(selectedExamNumber);
-  }, [lesson?.id, selectedExamNumber]);
+  }, [lesson?.id, selectedExamNumber, waitingForCompression]);
 
   // Wait for background compression if file upload without compressed content
   useEffect(() => {
