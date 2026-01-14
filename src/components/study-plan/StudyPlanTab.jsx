@@ -11,16 +11,6 @@ import {
 import { motion } from "framer-motion";
 
 const TASK_CONFIG = {
-  practice_questions: { 
-    icon: FileText, 
-    color: "purple", 
-    bg: "bg-purple-500", 
-    bgLight: "bg-purple-100",
-    text: "text-purple-600",
-    label: "Practice Questions",
-    action: "Answer",
-    unit: "questions"
-  },
   flashcards: { 
     icon: Zap, 
     color: "amber", 
@@ -28,7 +18,7 @@ const TASK_CONFIG = {
     bgLight: "bg-amber-100",
     text: "text-amber-600",
     label: "Flashcards",
-    action: "Review",
+    action: "Master",
     unit: "cards"
   },
   teach_it: { 
@@ -48,8 +38,19 @@ const TASK_CONFIG = {
     bgLight: "bg-emerald-100",
     text: "text-emerald-600",
     label: "Review Notes",
-    action: "Read",
+    action: "Study",
     unit: "sections"
+  },
+  // Legacy fallback
+  practice_questions: { 
+    icon: FileText, 
+    color: "purple", 
+    bg: "bg-purple-500", 
+    bgLight: "bg-purple-100",
+    text: "text-purple-600",
+    label: "Flashcards",
+    action: "Review",
+    unit: "cards"
   }
 };
 
@@ -90,10 +91,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
 
   const handleTaskClick = (task) => {
     switch (task.task_type) {
-      case 'practice_questions':
-        // Go to exam tab for practice - it handles practice mode
-        onNavigate('exam');
-        break;
       case 'flashcards':
         onNavigate('flashcards');
         break;
@@ -102,6 +99,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         break;
       case 'review_notes':
         onNavigate('doc');
+        break;
+      default:
+        // Fallback for any legacy practice_questions tasks
+        onNavigate('flashcards');
         break;
     }
   };
