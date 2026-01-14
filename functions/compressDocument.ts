@@ -29,6 +29,7 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'API key not configured' }, { status: 500 });
         }
         console.log('✅ API key found');
+        console.log('📤 Calling Gemini API...');
 
         const prompt = `You are a document compression engine.
 
@@ -102,19 +103,25 @@ RULES:
             })
         });
 
+        console.log('📥 Gemini API response status:', response.status);
+
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Gemini API error:', errorText);
-            return Response.json({ error: 'Failed to compress document' }, { status: 500 });
+            console.error('❌ Gemini API error:', errorText);
+            return Response.json({ error: 'Failed to compress document', details: errorText }, { status: 500 });
         }
 
         const data = await response.json();
+        console.log('📥 Gemini response received, candidates:', data.candidates?.length);
+        
         const compressedContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!compressedContent) {
-            return Response.json({ error: 'No compressed content received' }, { status: 500 });
+            console.error('❌ No content in response:', JSON.stringify(data).substring(0, 500));
+            return Response.json({ error: 'No compressed content received', response_data: data }, { status: 500 });
         }
 
+        console.log('✅ Compression successful, output length:', compressedContent.length);
         return Response.json({ compressed_content: compressedContent });
 
     } catch (error) {
