@@ -26,7 +26,7 @@ import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/component
 export default function DocumentViewer() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState("doc");
+  const [activeTab, setActiveTab] = useState("studyplan");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -516,6 +516,13 @@ export default function DocumentViewer() {
               
               <div className="w-full max-w-full px-1">
                   <TabsList className="flex w-full bg-white border border-purple-200 p-0.5 gap-0.5 h-auto rounded-lg">
+                  <TabsTrigger 
+                    value="studyplan"
+                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto rounded-md min-w-0"
+                  >
+                    <Target className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-[8px] font-medium mt-0.5">Plan</span>
+                  </TabsTrigger>
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
@@ -525,13 +532,6 @@ export default function DocumentViewer() {
                       <span className="text-[8px] font-medium mt-0.5">Doc</span>
                     </TabsTrigger>
                   )}
-                  <TabsTrigger 
-                    value="notes"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto rounded-md min-w-0"
-                  >
-                    <NotebookPen className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[8px] font-medium mt-0.5">Notes</span>
-                  </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto relative rounded-md min-w-0"
@@ -569,16 +569,20 @@ export default function DocumentViewer() {
             </div>
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden w-full">
+              <TabsContent value="studyplan" className="mt-0 p-0 w-full h-full overflow-x-hidden">
+                <StudyPlanTab 
+                  lesson={lesson} 
+                  exams={exams} 
+                  onNavigate={handleStudyPlanNavigate} 
+                />
+              </TabsContent>
+
               <TabsContent value="doc" className="mt-0 p-0 w-full h-full overflow-x-hidden">
                 {!lesson ? (
                   <ParsingLoader />
                 ) : (
                   <DocumentViewerTabs lesson={lesson} />
                 )}
-              </TabsContent>
-
-              <TabsContent value="notes" className="mt-0 p-0 w-full h-full overflow-x-hidden">
-                <NotesTab lesson={lesson} />
               </TabsContent>
 
               <TabsContent value="exam" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
