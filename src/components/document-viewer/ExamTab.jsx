@@ -1291,11 +1291,14 @@ No extra fields. % as strings.`;
 
   if (!exam) return null;
 
-  if (exam.completed && !viewingCompletedExam) {
-    // Go back to selection view after completion
-    setExam(null);
-    setSelectedExamNumber(null);
-    hasAutoSelectedRef.current = false; // Reset so it doesn't auto-select again
+  // If current exam is completed and we're not viewing it, reset to selection
+  if (exam?.completed && !viewingCompletedExam) {
+    // Use setTimeout to avoid state update during render
+    setTimeout(() => {
+      setExam(null);
+      setSelectedExamNumber(null);
+      hasAutoSelectedRef.current = false;
+    }, 0);
     return null;
   }
 
