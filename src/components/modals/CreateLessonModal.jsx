@@ -198,12 +198,12 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
         lessonData.file_urls = fileUrls;
         lessonData.extracted_content = fullExtractedContent;
-        // Always save compressed content for prompt generation
         lessonData.compressed_content = compressedForPrompts;
       }
 
+      setProcessingStep("Creating lesson...");
       const lesson = await base44.entities.Lesson.create(lessonData);
-      const tempLessonId = lesson.id; // for post-navigation background saves
+      console.log("✅ Lesson created with content - extracted:", fullExtractedContent.length, "chars, compressed:", compressedForPrompts.length, "chars");
       sessionStorage.setItem('currentLessonId', lesson.id);
 
       if (!lesson || !lesson.id) {
