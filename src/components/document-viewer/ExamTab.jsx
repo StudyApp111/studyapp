@@ -984,6 +984,7 @@ No extra fields. % as strings.`;
             if (!existingNumbers.includes(session.session_number)) {
               await base44.entities.Exam.create({
                 lesson_id: lesson.id,
+                exam_type: "official",
                 exam_number: session.session_number,
                 focus_description: session.session_focus_description,
                 status: "not_started",
@@ -996,6 +997,17 @@ No extra fields. % as strings.`;
             }
           })
         );
+      }
+
+      // Generate study plan after official exam completion
+      try {
+        await base44.functions.invoke('generateStudyPlan', {
+          exam_id: exam.id,
+          lesson_id: lesson.id
+        });
+      } catch (planError) {
+        console.error("Error generating study plan:", planError);
+        // Non-blocking - continue even if plan generation fails
       }
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
