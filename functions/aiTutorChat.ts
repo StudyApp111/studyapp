@@ -25,10 +25,9 @@ Deno.serve(async (req) => {
     if (specificContext) {
       if (specificContext.type === 'question' && specificContext.question) {
         const q = specificContext.question;
-        const hasUserAnswer = q.user_answer && q.user_answer.trim() !== "";
+        const hasUserAnswer = q.user_answer && q.user_answer.trim() !== '';
         
         if (!hasUserAnswer) {
-          // User hasn't answered yet - DO NOT reveal the correct answer
           specificContextSection = `
 SPECIFIC CONTEXT - EXAM QUESTION (NOT YET ANSWERED):
 The student is working on this question and needs help understanding it:
@@ -41,7 +40,6 @@ IMPORTANT: The student has NOT answered yet. Do NOT reveal the correct answer!
 - Help them eliminate wrong options through reasoning
 - Do NOT say which answer is correct`;
         } else {
-          // User has answered - can discuss the answer
           specificContextSection = `
 SPECIFIC CONTEXT - EXAM QUESTION (ANSWERED):
 The student answered this question:
@@ -105,16 +103,7 @@ RULES:
 - Give practical examples when helpful`;
 
     // Prepare messages for Gemini
-    const geminiMessages = [
-      {
-        role: 'user',
-        parts: [{ text: systemPrompt }]
-      },
-      {
-        role: 'model',
-        parts: [{ text: 'I understand. I\'m ready to help you with your studies!' }]
-      }
-    ];
+    const geminiMessages = [];
 
     // Add conversation history
     for (const msg of messages) {
@@ -125,14 +114,14 @@ RULES:
     }
 
     // Call Gemini API
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-goog-api-key': apiKey
       },
       body: JSON.stringify({
-        contents: geminiMessages.slice(2), // Skip system message setup
+        contents: geminiMessages,
         systemInstruction: {
           parts: [{ text: systemPrompt }]
         },
