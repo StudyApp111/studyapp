@@ -85,6 +85,9 @@ RULES:
 - Total output MUST be ≤ 2000 characters.
 `;
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
         const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
             method: 'POST',
             headers: {
@@ -100,8 +103,9 @@ RULES:
                     temperature: 0.1,
                     maxOutputTokens: 5000
                 }
-            })
-        });
+            }),
+            signal: controller.signal
+        }).finally(() => clearTimeout(timeoutId));
 
         console.log('📥 Gemini API response status:', response.status);
 
@@ -125,7 +129,11 @@ RULES:
         return Response.json({ compressed_content: compressedContent });
 
     } catch (error) {
-        console.error('Error compressing document:', error);
+        console.error('❌ Error compressing document:', error.message);
+        console.error('❌ Error stack:', error.stack);
+        if (error.name === 'AbortError') {
+            return Response.json({ error: 'Request timeout - document too large' }, { status: 504 });
+        }
         return Response.json({ error: error.message }, { status: 500 });
     }
 });
