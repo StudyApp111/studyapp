@@ -59,7 +59,10 @@ export default function TeachItTab({ lesson }) {
       } else if (lesson.compressed_content) {
         contentDescription = lesson.compressed_content;
       } else if (lesson.extracted_content) {
-        contentDescription = lesson.extracted_content;
+        // Truncate very large extracted content to prevent API timeouts
+        contentDescription = lesson.extracted_content.length > 50000 
+          ? lesson.extracted_content.substring(0, 50000) + "\n...[content truncated]"
+          : lesson.extracted_content;
       } else {
         contentDescription = lesson.description || "N/A";
       }
