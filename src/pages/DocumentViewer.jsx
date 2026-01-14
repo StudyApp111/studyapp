@@ -8,7 +8,7 @@ import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, 
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 
-import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
+
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import TeachItTab from "@/components/document-viewer/TeachItTab";
 import StudyPlanTab from "@/components/study-plan/StudyPlanTab";
@@ -63,7 +63,7 @@ export default function DocumentViewer() {
   // - Grade tab: no red dot
   // - Flashcards tab: always show dot until user views it
   const showExamDot = completedExamCount < 6;
-  const showGradeDot = false;
+
   const showFlashcardsDot = true;
 
   useEffect(() => {
