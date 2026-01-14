@@ -75,26 +75,27 @@ Exam Results:
 - Weak Competencies: ${weakCompetencies.join(', ')}
 - Strengths: ${strengths.join(', ')}
 
-Available Study Tools:
-1. Practice Questions - Quick 5-question drills on specific topics
-2. Flashcards - ${unmasteredFlashcards} cards still to master (need 3 "Got it" ratings each)
-3. Teach It Cards - Explain concepts in your own words (need 70%+ score)
-4. Review Notes - Read generated notes for specific topics
+Available Study Tools (choose from these ONLY):
+1. flashcards - Review flashcard decks to reinforce concepts (need 3 "Got it" each)
+2. teach_it - Explain concepts in your own words to prove understanding (need 70%+ score)
+3. review_notes - Read and study the notes/document
 
 Current Progress:
 - Flashcards: ${masteredFlashcards}/${totalFlashcards} mastered
 - Teach It Cards: ${masteredTeachItCards}/${totalTeachItCards} mastered
 
-Create a focused study plan with 4-5 specific tasks to help this student improve to an A+. Each task should:
+Create a focused study plan with 3-4 specific tasks using ONLY the tools above. DO NOT include "practice_questions" as a task_type.
+
+Each task should:
 - Target a specific weak area or competency
-- Have a clear, achievable count
-- Use the appropriate study tool
+- Have a clear, achievable count (5-15 items typically)
+- Use one of these task_types: "flashcards", "teach_it", or "review_notes"
 
 Return JSON with this structure:
 {
   "tasks": [
     {
-      "task_type": "practice_questions" | "flashcards" | "teach_it" | "review_notes",
+      "task_type": "flashcards" | "teach_it" | "review_notes",
       "title": "Short action title",
       "description": "What this task will help with",
       "target_count": number,
