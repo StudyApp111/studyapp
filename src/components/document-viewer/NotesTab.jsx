@@ -196,50 +196,47 @@ export default function NotesTab({ lesson }) {
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative overflow-hidden bg-white">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/50 to-white"></div>
-          
-          <div className="relative z-10 max-w-md mx-auto">
-            <div className="w-24 h-24 bg-violet-100 rounded-3xl rotate-3 flex items-center justify-center mb-8 mx-auto shadow-xl shadow-violet-100">
-              <Sparkles className="w-12 h-12 text-violet-600" />
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-white">
+          <div className="max-w-md mx-auto text-center py-8">
+            <div className="w-20 h-20 md:w-24 md:h-24 bg-violet-100 rounded-3xl rotate-3 flex items-center justify-center mb-6 mx-auto shadow-xl shadow-violet-100">
+              <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-violet-600" />
             </div>
             
-            <h2 className="text-3xl font-bold text-slate-900 mb-3 tracking-tight">AI Study Assistant</h2>
-            <p className="text-slate-600 text-lg mb-8 leading-relaxed">
-              Transform your raw lesson content into structured, easy-to-digest study materials in seconds.
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 tracking-tight">Note Generator</h2>
+            <p className="text-slate-600 text-sm md:text-base mb-6 leading-relaxed px-2">
+              Transform your lesson content into structured study materials in seconds.
             </p>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-              <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-left">
-                <div className="flex items-center gap-2 mb-2 text-violet-700 font-bold text-sm">
-                  <BookOpen className="w-4 h-4" /> Detailed Notes
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-left">
+                <div className="flex items-center gap-1.5 mb-1 text-violet-700 font-bold text-xs">
+                  <BookOpen className="w-3.5 h-3.5" /> Detailed Notes
                 </div>
-                <p className="text-xs text-slate-500">Comprehensive coverage of all topics</p>
+                <p className="text-[10px] text-slate-500">Full topic coverage</p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-left">
-                <div className="flex items-center gap-2 mb-2 text-amber-600 font-bold text-sm">
-                  <Zap className="w-4 h-4" /> Cheat Sheets
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-left">
+                <div className="flex items-center gap-1.5 mb-1 text-amber-600 font-bold text-xs">
+                  <Zap className="w-3.5 h-3.5" /> Cheat Sheets
                 </div>
-                <p className="text-xs text-slate-500">Quick references for exam day</p>
+                <p className="text-[10px] text-slate-500">Quick exam references</p>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-3 w-full">
-               <Button 
-                variant="outline" 
-                onClick={() => setSettingsOpen(true)}
-                className="flex-1 h-12 border-slate-200 hover:bg-slate-50 hover:text-slate-900 text-slate-600"
-              >
-                <Settings2 className="w-4 h-4 mr-2" />
-                Customize
-              </Button>
+            <div className="flex flex-col gap-2 w-full">
               <Button 
                 onClick={() => generateNotes(settings)}
-                className="flex-1 h-12 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200 font-semibold"
+                className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200 font-semibold"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
                 Generate Notes
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setSettingsOpen(true)}
+                className="w-full h-10 border-slate-200 hover:bg-slate-50 hover:text-slate-900 text-slate-600"
+              >
+                <Settings2 className="w-4 h-4 mr-2" />
+                Customize Settings
               </Button>
             </div>
           </div>
