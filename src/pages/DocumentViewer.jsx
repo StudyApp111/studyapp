@@ -74,14 +74,14 @@ export default function DocumentViewer() {
   }, [location.search]);
 
   useEffect(() => {
-    const handleSwitchToGrade = () => setActiveTab('grade');
+    const handleSwitchToStudyPlan = () => setActiveTab('studyplan');
     const handleSwitchToExam = () => setActiveTab('exam');
     
-    window.addEventListener('switchToGradeTab', handleSwitchToGrade);
+    window.addEventListener('switchToStudyPlanTab', handleSwitchToStudyPlan);
     window.addEventListener('switchToExamTab', handleSwitchToExam);
     
     return () => {
-      window.removeEventListener('switchToGradeTab', handleSwitchToGrade);
+      window.removeEventListener('switchToStudyPlanTab', handleSwitchToStudyPlan);
       window.removeEventListener('switchToExamTab', handleSwitchToExam);
     };
   }, []);
