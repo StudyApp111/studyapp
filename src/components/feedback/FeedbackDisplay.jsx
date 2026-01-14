@@ -79,8 +79,8 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
         className="text-center space-y-4"
       >
         {/* Intro Text */}
-        <p className="text-sm text-slate-600">
-          If your <span className="font-semibold text-slate-800">{courseName || lesson?.course_name || 'course'}</span> exam was today, you would score:
+        <p className="text-lg md:text-xl text-slate-700 font-medium">
+          If your <span className="font-bold text-slate-900">{courseName || lesson?.course_name || 'course'}</span> exam was today, you would score:
         </p>
 
         {/* Grade Badge */}
@@ -316,7 +316,13 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                 {question.options && question.options.length > 0 && (
                                   <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
                                     {question.options.map((opt, i) => {
-                                      const optionText = typeof opt === 'string' ? opt : (opt?.text || JSON.stringify(opt));
+                                      let optionText = '';
+                                      if (typeof opt === 'string') {
+                                        optionText = opt;
+                                      } else if (opt && typeof opt === 'object') {
+                                        optionText = opt.text || opt.label || opt.value || opt.content || '';
+                                      }
+                                      if (!optionText) return null;
                                       return (
                                         <MathText key={i} className="text-xs text-slate-700 block py-0.5" inline>
                                           <span className="font-bold w-5 inline-block text-slate-500">{String.fromCharCode(65 + i)}.</span> {optionText}
