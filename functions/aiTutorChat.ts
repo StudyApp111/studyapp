@@ -53,7 +53,6 @@ ${q.explanation ? `Explanation: ${q.explanation}` : ''}
 
 Help the student understand WHY the correct answer is correct. If they got it wrong, explain their misconception.`;
         }
-      }
       } else if (specificContext.type === 'flashcard' && specificContext.flashcard) {
         specificContextSection = `
 SPECIFIC CONTEXT - FLASHCARD:
