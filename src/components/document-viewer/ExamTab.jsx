@@ -89,11 +89,16 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     loadOrGenerateExam(selectedExamNumber);
   }, [lesson?.id, selectedExamNumber]);
 
-  // Wait briefly for background compression to finish to reduce prompt size
+  // Wait for background compression if file upload without compressed content
   useEffect(() => {
     if (!lesson?.id) return;
-    const cc = lesson?.compressed_content;
-    if (cc && cc.length > 2500 && (lesson?.extracted_content?.length || 0) > 0) {
+    
+    // Only wait for compression if: file upload + has extracted content + NO compressed content yet
+    const needsCompression = lesson.input_type === 'file' && 
+                             lesson.extracted_content?.length > 0 && 
+                             !lesson.compressed_content;
+    
+    if (needsCompression) {
       setWaitingForCompression(true);
       let attempts = 0;
       const interval = setInterval(async () => {
@@ -101,25 +106,26 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         try {
           const refreshed = await base44.entities.Lesson.filter({ id: lesson.id });
           const updated = refreshed?.[0];
-          if (updated?.compressed_content && updated.compressed_content.length <= 2500) {
+          if (updated?.compressed_content) {
             clearInterval(interval);
             setWaitingForCompression(false);
-            // Ask the viewer to reload so child components get the optimized content
             window.dispatchEvent(new Event('reloadLesson'));
-          } else if (attempts >= 10) {
+          } else if (attempts >= 30) { // Wait up to 30 seconds
             clearInterval(interval);
             setWaitingForCompression(false);
           }
         } catch {
-          if (attempts >= 10) {
+          if (attempts >= 30) {
             clearInterval(interval);
             setWaitingForCompression(false);
           }
         }
       }, 1000);
       return () => clearInterval(interval);
+    } else {
+      setWaitingForCompression(false);
     }
-  }, [lesson?.id]);
+  }, [lesson?.id, lesson?.compressed_content]);
 
   useEffect(() => {
     if (exam && !exam.completed && exam.id !== examIdRef.current) {
