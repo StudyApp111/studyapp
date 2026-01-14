@@ -132,12 +132,13 @@ Create flashcards that:
   const handleRating = async (knew) => {
     const currentCard = cards[currentIndex];
     
-    // Update mastery based on whether they knew it
-    const newMastery = knew 
-      ? Math.min((currentCard.mastery_level || 0) + 1, 5)
-      : Math.max((currentCard.mastery_level || 0) - 1, 0);
+    // Track review count for mastery (need 3 "Got it" ratings)
+    const newReviewCount = knew 
+      ? (currentCard.review_count || 0) + 1 
+      : 0; // Reset on miss
     
-    const newStatus = newMastery >= 4 ? 'mastered' : newMastery >= 2 ? 'learning' : 'new';
+    const isMastered = newReviewCount >= 3;
+    const newStatus = isMastered ? 'mastered' : newReviewCount >= 1 ? 'learning' : 'new';
     
     // Update streak and award XP
     if (knew) {
@@ -151,7 +152,7 @@ Create flashcards that:
       if (newStreak >= 5 && newStreak % 5 === 0) {
         xpAmount = 10;
         reason = `${newStreak} card streak! 🔥`;
-      } else if (newMastery === 4) {
+      } else if (isMastered && !currentCard.mastered) {
         xpAmount = 5;
         reason = 'Card mastered! ⭐';
       }
@@ -164,18 +165,27 @@ Create flashcards that:
     try {
       await base44.entities.Flashcard.update(currentCard.id, {
         status: newStatus,
-        mastery_level: newMastery,
+        review_count: newReviewCount,
+        mastered: isMastered,
         last_reviewed: new Date().toISOString()
       });
 
       const updatedCards = [...cards];
-      updatedCards[currentIndex] = { ...currentCard, status: newStatus, mastery_level: newMastery };
+      updatedCards[currentIndex] = { 
+        ...currentCard, 
+        status: newStatus, 
+        review_count: newReviewCount,
+        mastered: isMastered 
+      };
       setCards(updatedCards);
       
       setSessionStats(prev => ({
         reviewed: prev.reviewed + 1,
         correct: knew ? prev.correct + 1 : prev.correct
       }));
+
+      // Update study plan task progress if applicable
+      updateStudyPlanProgress('flashcards', knew && isMastered && !currentCard.mastered ? 1 : 0);
     } catch (error) {
       console.error("Error updating flashcard:", error);
     }
@@ -189,6 +199,41 @@ Create flashcards that:
         setCurrentIndex(0);
       }
     }, 200);
+  };
+
+  const updateStudyPlanProgress = async (taskType, increment) => {
+    if (increment <= 0) return;
+    try {
+      const plans = await base44.entities.StudyPlan.filter({ 
+        lesson_id: lesson.id,
+        status: 'active'
+      });
+      if (plans.length === 0) return;
+      
+      const plan = plans[0];
+      const updatedTasks = plan.tasks.map(task => {
+        if (task.task_type === taskType && !task.completed) {
+          const newCount = (task.completed_count || 0) + increment;
+          return {
+            ...task,
+            completed_count: newCount,
+            completed: newCount >= task.target_count,
+            completed_date: newCount >= task.target_count ? new Date().toISOString() : null
+          };
+        }
+        return task;
+      });
+      
+      const allComplete = updatedTasks.every(t => t.completed);
+      
+      await base44.entities.StudyPlan.update(plan.id, {
+        tasks: updatedTasks,
+        all_tasks_completed: allComplete,
+        official_exam_unlocked: allComplete
+      });
+    } catch (error) {
+      console.error("Error updating study plan:", error);
+    }
   };
 
   const handleShuffle = () => {
@@ -310,7 +355,7 @@ Create flashcards that:
 
   const currentCard = cards[currentIndex];
   const progress = ((currentIndex + 1) / cards.length) * 100;
-  const masteredCount = cards.filter(c => c.mastery_level >= 4).length;
+  const masteredCount = cards.filter(c => c.mastered).length;
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -494,15 +539,16 @@ Create flashcards that:
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-3 flex items-center justify-between">
                   <span className="font-semibold text-sm text-white">Answer</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-white/80">Mastery:</span>
+                    <span className="text-[10px] text-white/80">Progress:</span>
                     <div className="flex gap-0.5">
-                      {[1,2,3,4,5].map(i => (
+                      {[1,2,3].map(i => (
                         <div 
                           key={i} 
-                          className={`w-2 h-2 rounded-full ${i <= (currentCard.mastery_level || 0) ? getMasteryColor(currentCard.mastery_level) : 'bg-white/30'}`}
+                          className={`w-2 h-2 rounded-full ${i <= (currentCard.review_count || 0) ? 'bg-emerald-500' : 'bg-white/30'}`}
                         />
                       ))}
                     </div>
+                    {currentCard.mastered && <span className="text-[10px] ml-1">✓</span>}
                   </div>
                 </div>
                 <div className="p-6 flex flex-col min-h-[220px] bg-white">
