@@ -39,10 +39,16 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
   const handleGenerate = async () => {
     setIsGenerating(true);
     try {
+      // Use compressed content if available, otherwise truncate large content
+      let contentForFlashcards = lesson.compressed_content || extractedContent || lesson.description || 'General course material';
+      if (contentForFlashcards.length > 50000) {
+        contentForFlashcards = contentForFlashcards.substring(0, 50000) + "\n...[content truncated]";
+      }
+      
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate 20 high-quality flashcards for this course: ${lesson.course_name}
 
-Content: ${extractedContent || lesson.description || 'General course material'}
+Content: ${contentForFlashcards}
 
 Create flashcards that:
 1. Cover key concepts, definitions, and important facts
