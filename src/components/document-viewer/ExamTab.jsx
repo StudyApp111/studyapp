@@ -1097,12 +1097,18 @@ No extra fields. % as strings.`;
         setNewBadges(earnedNow);
       }
 
-      // Notify completion and switch to study plan tab
+      // Clear exam state and notify completion
+      setExam(null);
+      setSelectedExamNumber(null);
+      hasAutoSelectedRef.current = false;
+      
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
+      
+      // Switch to study plan tab after a short delay
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
-      }, 1000);
+      }, 500);
     } catch (error) {
       console.error("Error submitting exam:", error);
       await logError('exam_submission', error, { lesson_id: lesson?.id, exam_id: exam?.id });
@@ -1287,10 +1293,11 @@ No extra fields. % as strings.`;
 
   if (!exam) return null;
 
-  if (exam.completed) {
+  if (exam.completed && !viewingCompletedExam) {
     // Go back to selection view after completion
     setExam(null);
     setSelectedExamNumber(null);
+    hasAutoSelectedRef.current = false; // Reset so it doesn't auto-select again
     return null;
   }
 
