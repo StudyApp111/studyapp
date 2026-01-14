@@ -1131,8 +1131,8 @@ No extra fields. % as strings.`;
     );
   }
 
-  // Show exam selection if no exam in progress
-  if (!exam && !isGenerating && !selectedExamNumber) {
+  // Show exam selection if no exam selected
+  if (!exam && !isGenerating) {
     // Wait for exams to load from database
     if (exams === undefined) {
       return (
