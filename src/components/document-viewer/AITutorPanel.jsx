@@ -58,19 +58,52 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     setShowQuickActions(false);
 
     try {
-      const response = await base44.functions.invoke('aiTutorChat', {
-        messages: [...messages, { role: "user", content: messageToSend }],
-        lessonContext: lesson || {},
-        documentContent: lesson?.extracted_content || null
-      });
+      const docContent = lesson?.extracted_content || '';
+      const hasDocument = docContent && docContent.length > 50;
+      
+      const conversationHistory = messages
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .map(m => `${m.role === 'user' ? 'Student' : 'Polly'}: ${m.content}`)
+        .join('\n\n');
 
-      if (response.data.error) {
-        throw new Error(response.data.error);
-      }
+      const prompt = `You are Polly, an expert AI study tutor. Keep responses SHORT and concise (2-4 sentences unless explaining something complex).
+
+${lesson?.course_name ? `Course: ${lesson.course_name}` : ''}
+
+${hasDocument ? `
+DOCUMENT CONTENT (use this to answer questions):
+---
+${docContent.substring(0, 10000)}
+---
+Reference specific content from the document when answering.
+` : 'No document uploaded - provide general help.'}
+
+CONVERSATION SO FAR:
+${conversationHistory}
+
+Student: ${messageToSend}
+
+RULES:
+- Be concise - students have limited attention
+- Use bullet points for lists
+- Be encouraging and supportive
+- Give practical examples when helpful
+
+Respond as Polly:`;
+
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            reply: { type: "string" }
+          }
+        }
+      });
 
       setMessages((prev) => [...prev, {
         role: "assistant",
-        content: response.data.reply
+        content: response.reply || "I'm sorry, I couldn't generate a response. Please try again."
       }]);
     } catch (error) {
       console.error("Tutor error:", error);
