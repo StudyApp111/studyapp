@@ -205,19 +205,28 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         }
       });
 
+      const isMastered = gradingResult.score >= 70;
+      const wasPreviouslyMastered = currentCard.mastered;
+
       const updatedCard = await base44.entities.TeachItCard.update(currentCard.id, {
         user_answer: userAnswer,
         score: gradingResult.score,
         feedback: gradingResult.feedback,
         strengths: gradingResult.strengths,
         gaps: gradingResult.gaps,
-        completed: true
+        completed: true,
+        mastered: isMastered
       });
 
       const updatedCards = [...cards];
       updatedCards[currentCardIndex] = updatedCard;
       setCards(updatedCards);
       setShowFeedback(true);
+
+      // Update study plan progress if newly mastered
+      if (isMastered && !wasPreviouslyMastered) {
+        updateStudyPlanProgress();
+      }
 
       // Award XP
       const xpAmount = gradingResult.score >= 90 ? 20 : gradingResult.score >= 75 ? 15 : 10;
@@ -259,6 +268,40 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       } catch (error) {
         console.error("Error regenerating cards:", error);
       }
+    }
+  };
+
+  const updateStudyPlanProgress = async () => {
+    try {
+      const plans = await base44.entities.StudyPlan.filter({ 
+        lesson_id: lesson.id,
+        status: 'active'
+      });
+      if (plans.length === 0) return;
+      
+      const plan = plans[0];
+      const updatedTasks = plan.tasks.map(task => {
+        if (task.task_type === 'teach_it' && !task.completed) {
+          const newCount = (task.completed_count || 0) + 1;
+          return {
+            ...task,
+            completed_count: newCount,
+            completed: newCount >= task.target_count,
+            completed_date: newCount >= task.target_count ? new Date().toISOString() : null
+          };
+        }
+        return task;
+      });
+      
+      const allComplete = updatedTasks.every(t => t.completed);
+      
+      await base44.entities.StudyPlan.update(plan.id, {
+        tasks: updatedTasks,
+        all_tasks_completed: allComplete,
+        official_exam_unlocked: allComplete
+      });
+    } catch (error) {
+      console.error("Error updating study plan:", error);
     }
   };
 
