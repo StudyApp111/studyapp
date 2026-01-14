@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        let systemPrompt = `You are an expert study assistant. Your task is to generate "${note_type}" based on the provided lesson content. Use Markdown formatting.`;
+        let systemPrompt = `You are an expert study assistant. Your task is to generate "${note_type}" based on the provided lesson content. Use Markdown formatting and ensure good formatting practices inlcuding spaces, bold, sections, lines, etc...`;
 
         if (note_type === 'Detailed Notes') {
             systemPrompt += " Create comprehensive, well-structured study notes covering all key concepts, definitions, and examples in depth.";
@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
         // Using gemini-2.0-flash-lite-preview-02-05 as requested (closest match to 2.5 lite)
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
