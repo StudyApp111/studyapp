@@ -859,15 +859,21 @@ Return ONE valid JSON object. No extra text.
         } : null
       }));
 
-      // Guard: Ensure curriculum_map exists before predicting grade
+      // Fetch fresh lesson data to ensure curriculum_map is available
+      let currentLesson = lesson;
       if (!lesson.curriculum_map || !lesson.curriculum_map.core_competencies) {
-        throw new Error("Curriculum analysis not ready. Please wait and try submitting again.");
+        const refreshedLessons = await base44.entities.Lesson.filter({ id: lesson.id });
+        if (refreshedLessons.length > 0 && refreshedLessons[0].curriculum_map?.core_competencies) {
+          currentLesson = refreshedLessons[0];
+        } else {
+          throw new Error("Curriculum analysis not ready. Please wait and try submitting again.");
+        }
       }
 
-      const feedbackPrompt = `Expert educator for ${lesson.course_name} (grade ${learningProfile.grade || "N/A"}). Analyze exam performance using curriculum map to predict grade.
+      const feedbackPrompt = `Expert educator for ${currentLesson.course_name} (grade ${learningProfile.grade || "N/A"}). Analyze exam performance using curriculum map to predict grade.
 
-Input: Grade ${learningProfile.grade || "N/A"}, ${lesson.course_name}, Exam ${exam.exam_number}/6
-Curriculum: ${JSON.stringify(lesson.curriculum_map, null, 2)}
+Input: Grade ${learningProfile.grade || "N/A"}, ${currentLesson.course_name}, Exam ${exam.exam_number}/6
+Curriculum: ${JSON.stringify(currentLesson.curriculum_map, null, 2)}
 Performance: ${JSON.stringify(examPerformanceData, null, 2)}
 
 Fields: question_number, question_type, difficulty_index, question_text, options, student_answer, correct_answer, explanation, assessed_competencies[], targeted_misconception, is_correct, ai_grading{score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[]}.
