@@ -29,100 +29,110 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'API key not configured' }, { status: 500 });
         }
         console.log('✅ API key found');
-        console.log('📤 Calling Gemini API...');
 
-        const prompt = `You are a document compression engine.
+        const MAX_CHUNK_SIZE = 40000; // ~10K tokens safe limit
 
-Your ONLY task is to extract and reorganize information that is explicitly present in the input text. 
-Compress the result to a maximum of 2000 characters.
+        const compressChunk = async (chunkContent, isFinalPass = false) => {
+            const prompt = isFinalPass 
+                ? `You are a document compression engine. Consolidate this extracted information into a final summary.
 
-Input Content:
-${content}
+Input:
+${chunkContent}
 
-DO NOT:
-- search the web
-- infer or guess missing topics
-- add background or canonical knowledge
-- explain, prioritize, or interpret
-- rewrite pedagogically
-- introduce examples not in the text
-- merge or rename concepts unless the document does
-
-If a section has no content, write: None found.
-
-OUTPUT (simple text only, EXACT headings, in this order):
+OUTPUT (simple text only, EXACT headings):
 
 KEY TERMS / DEFINITIONS
-- Terms explicitly defined or clearly described.
-- Format: Term: definition (use original wording or light paraphrase only)
+- Format: Term: definition
 
 THEOREMS / FORMULAS / METHODS
-- Any theorem, formula, algorithm, method, or step-by-step process explicitly stated.
-- Include equations if present.
-- Format: Name or Label: statement / steps
+- Format: Name: statement/steps
 
 READING THEMES / ARGUMENTS
-- Explicit themes, claims, or arguments.
-- No synthesis.
 - Format: • label — 1 sentence
 
 EXAMPLES TO REUSE IN QUESTIONS
-- Worked examples, cases, sample problems, or scenarios explicitly included.
-- Keep concise and specific.
 - Format: Example: brief description
 
 EMPHASIZED VS OPTIONAL
-Emphasized:
-- Items marked by repetition, headings, or cues like “important”, “key”, “focus”.
-Optional:
-- Items explicitly labeled optional, supplementary, background, or not required.
-- If none: None found.
+Emphasized: items marked important
+Optional: items marked optional
 
 RULES:
-- Use ONLY information from the input.
-- No extra headings, bullets, metadata, or commentary.
-- This is compression, NOT analysis.
 - Total output MUST be ≤ 2000 characters.
-`;
+- No extra commentary.`
+                : `Extract key educational content from this text section. Be concise.
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+Input:
+${chunkContent}
 
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{
-                        text: prompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.1,
-                    maxOutputTokens: 5000
-                }
-            }),
-            signal: controller.signal
-        }).finally(() => clearTimeout(timeoutId));
+Extract:
+1. KEY TERMS with definitions
+2. FORMULAS/METHODS/THEOREMS
+3. MAIN ARGUMENTS/THEMES
+4. EXAMPLES mentioned
+5. What's EMPHASIZED vs OPTIONAL
 
-        console.log('📥 Gemini API response status:', response.status);
+Output concise bullet points only. No commentary.`;
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Gemini API error:', errorText);
-            return Response.json({ error: 'Failed to compress document', details: errorText }, { status: 500 });
+            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.1, maxOutputTokens: isFinalPass ? 2500 : 1500 }
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Gemini chunk error:', errorText);
+                throw new Error(`Gemini API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        };
+
+        let compressedContent;
+
+        if (content.length <= MAX_CHUNK_SIZE) {
+            console.log('📤 Direct compression (small document)');
+            compressedContent = await compressChunk(content, true);
+        } else {
+            console.log('📤 Chunked compression - document size:', content.length);
+            
+            // Split into chunks
+            const chunks = [];
+            for (let i = 0; i < content.length; i += MAX_CHUNK_SIZE) {
+                chunks.push(content.slice(i, i + MAX_CHUNK_SIZE));
+            }
+            console.log('📦 Split into', chunks.length, 'chunks');
+
+            // Process chunks in parallel (max 3 concurrent)
+            const chunkResults = [];
+            const batchSize = 3;
+            
+            for (let i = 0; i < chunks.length; i += batchSize) {
+                const batch = chunks.slice(i, i + batchSize);
+                console.log(`📤 Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(chunks.length/batchSize)}`);
+                
+                const batchResults = await Promise.all(
+                    batch.map(chunk => compressChunk(chunk, false))
+                );
+                chunkResults.push(...batchResults);
+            }
+
+            // Merge and do final compression
+            const mergedContent = chunkResults.filter(r => r).join('\n\n');
+            console.log('🔗 Merged extractions, length:', mergedContent.length);
+
+            console.log('📤 Final consolidation pass');
+            compressedContent = await compressChunk(mergedContent, true);
         }
 
-        const data = await response.json();
-        console.log('📥 Gemini response received, candidates:', data.candidates?.length);
-        
-        const compressedContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
         if (!compressedContent) {
-            console.error('❌ No content in response:', JSON.stringify(data).substring(0, 500));
-            return Response.json({ error: 'No compressed content received', response_data: data }, { status: 500 });
+            console.error('❌ No content in response');
+            return Response.json({ error: 'No compressed content received' }, { status: 500 });
         }
 
         console.log('✅ Compression successful, output length:', compressedContent.length);
@@ -130,10 +140,6 @@ RULES:
 
     } catch (error) {
         console.error('❌ Error compressing document:', error.message);
-        console.error('❌ Error stack:', error.stack);
-        if (error.name === 'AbortError') {
-            return Response.json({ error: 'Request timeout - document too large' }, { status: 504 });
-        }
         return Response.json({ error: error.message }, { status: 500 });
     }
 });
