@@ -11,18 +11,11 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const TASK_ICONS = {
-  practice_questions: FileText,
-  flashcards: Zap,
-  teach_it: Brain,
-  review_notes: BookOpen
-};
-
-const TASK_COLORS = {
-  practice_questions: "purple",
-  flashcards: "amber",
-  teach_it: "blue",
-  review_notes: "emerald"
+const TASK_CONFIG = {
+  practice_questions: { icon: FileText, color: "purple", bg: "bg-purple-100", text: "text-purple-600" },
+  flashcards: { icon: Zap, color: "amber", bg: "bg-amber-100", text: "text-amber-600" },
+  teach_it: { icon: Brain, color: "blue", bg: "bg-blue-100", text: "text-blue-600" },
+  review_notes: { icon: BookOpen, color: "emerald", bg: "bg-emerald-100", text: "text-emerald-600" }
 };
 
 export default function StudyPlanTab({ lesson, exams, onNavigate }) {
@@ -195,9 +188,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
             onClick={() => handleTaskClick(nextTask)}
           >
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl bg-${TASK_COLORS[nextTask.task_type]}-100 flex items-center justify-center`}>
-                {React.createElement(TASK_ICONS[nextTask.task_type], { 
-                  className: `w-5 h-5 text-${TASK_COLORS[nextTask.task_type]}-600` 
+              <div className={`w-10 h-10 rounded-xl ${TASK_CONFIG[nextTask.task_type]?.bg || 'bg-purple-100'} flex items-center justify-center`}>
+                {React.createElement(TASK_CONFIG[nextTask.task_type]?.icon || Target, { 
+                  className: `w-5 h-5 ${TASK_CONFIG[nextTask.task_type]?.text || 'text-purple-600'}` 
                 })}
               </div>
               <div className="flex-1 min-w-0">
@@ -233,8 +226,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
       <div className="space-y-2">
         <h3 className="text-sm font-bold text-slate-700 px-1">Study Tasks</h3>
         {studyPlan?.tasks?.map((task, idx) => {
-          const Icon = TASK_ICONS[task.task_type];
-          const color = TASK_COLORS[task.task_type];
+          const config = TASK_CONFIG[task.task_type] || TASK_CONFIG.practice_questions;
+          const Icon = config.icon;
           const progressPct = task.target_count > 0 
             ? Math.min((task.completed_count / task.target_count) * 100, 100) 
             : 0;
@@ -259,12 +252,12 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                     task.completed 
                       ? 'bg-emerald-500' 
-                      : `bg-${color}-100`
+                      : config.bg
                   }`}>
                     {task.completed ? (
                       <CheckCircle2 className="w-4 h-4 text-white" />
                     ) : (
-                      <Icon className={`w-4 h-4 text-${color}-600`} />
+                      <Icon className={`w-4 h-4 ${config.text}`} />
                     )}
                   </div>
 
@@ -287,13 +280,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                       <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div 
                           className={`h-full rounded-full transition-all ${
-                            task.completed ? 'bg-emerald-500' : `bg-${color}-500`
+                            task.completed ? 'bg-emerald-500' : 'bg-purple-500'
                           }`}
                           style={{ width: `${progressPct}%` }}
                         />
                       </div>
                       <span className="text-[10px] text-slate-500 font-medium">
-                        {task.completed_count}/{task.target_count}
+                        {task.completed_count || 0}/{task.target_count}
                       </span>
                     </div>
                   </div>
