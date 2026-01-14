@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, MessageCircle } from "lucide-react";
+import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, MessageCircle, NotebookPen } from "lucide-react";
+import NotesTab from "./NotesTab";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 
@@ -339,6 +340,15 @@ export default function DocumentViewerTabs({ lesson }) {
                   <Highlighter className="w-3 h-3 mr-1" />
                   Annotate
                 </Button>
+                <Button
+                  variant={viewMode === "notes" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("notes")}
+                  className={`text-xs h-7 px-3 ${viewMode === "notes" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+                >
+                  <StickyNote className="w-3 h-3 mr-1" />
+                  Notes
+                </Button>
                 </div>
               
               {viewMode === "transcript" && (
@@ -450,6 +460,19 @@ export default function DocumentViewerTabs({ lesson }) {
               </div>
             )}
             
+            {/* Notes View */}
+            <div 
+              className="absolute inset-0"
+              style={{ 
+                opacity: viewMode === "notes" ? 1 : 0,
+                pointerEvents: viewMode === "notes" ? "auto" : "none",
+                zIndex: viewMode === "notes" ? 10 : 0,
+                visibility: viewMode === "notes" ? "visible" : "hidden"
+              }}
+            >
+              <NotesTab lesson={lesson} />
+            </div>
+
             {/* Transcript View - Always mounted, controlled via opacity */}
             <div 
               className="absolute inset-0 flex"
