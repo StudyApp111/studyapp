@@ -29,7 +29,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
       
       setMessages([{
         role: "assistant",
-        content: `👋 Hey! I'm **Polli**, your AI tutor.\n\n${contentPreview}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something you don't understand`
+        content: `👋 Hey! I'm **Polly**, your AI tutor.\n\n${contentPreview}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something you don't understand`
       }]);
     }
   }, [lesson?.id]);
@@ -100,7 +100,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
           <Sparkles className="w-4 h-4 text-white" />
         </div>
         <div>
-          <h3 className="font-bold text-white text-sm">Polli</h3>
+          <h3 className="font-bold text-white text-sm">Polly</h3>
           <p className="text-xs text-white/80">Your AI study buddy</p>
         </div>
       </div>

@@ -74,7 +74,7 @@ Break this down clearly and explain any technical terms or concepts.`;
     }
 
     // Build system prompt with lesson context
-    const systemPrompt = `You are Polli, an expert AI study tutor in StudyApp. Keep responses SHORT and concise (2-4 sentences unless explaining something complex).
+    const systemPrompt = `You are Polly, an expert AI study tutor in StudyApp. Keep responses SHORT and concise (2-4 sentences unless explaining something complex).
 
 ${lessonContext?.course_name ? `Course: ${lessonContext.course_name}` : ''}
 ${specificContextSection}
