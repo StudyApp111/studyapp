@@ -126,45 +126,40 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           const uploadResults = await Promise.all(uploadPromises);
           fileUrls = uploadResults.map(result => result.file_url);
 
-          setProcessingStep("Preparing your lesson...");
+          setProcessingStep("Extracting content...");
           
-          // Fire-and-forget: start extraction immediately, but DON'T await
-          const extractionJobs = fileUrls.map(fileUrl =>
-            base44.functions.invoke('extractDocumentContent', { file_url: fileUrl })
+          // AWAIT extraction - don't fire and forget
+          const extractionResults = await Promise.allSettled(
+            fileUrls.map(fileUrl =>
+              base44.functions.invoke('extractDocumentContent', { file_url: fileUrl })
+            )
           );
-
-          // Navigate now; we'll stitch + save content once finished in background
-          extractedContent = '';
-          fullExtractedContent = '';
-
-          // After navigating, stitch and save content and compressed version
-          Promise.allSettled(extractionJobs).then(async (results) => {
-            const ok = results
-              .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
-              .map(r => r.value.data.extracted_content);
-            const combined = ok.join("\n\n--- NEXT DOCUMENT ---\n\n");
-            const contentToSave = combined?.trim?.() || '';
+          
+          const extractedParts = extractionResults
+            .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
+            .map(r => r.value.data.extracted_content);
+          
+          fullExtractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
+          extractedContent = fullExtractedContent;
+          
+          console.log("📄 Extracted content length:", fullExtractedContent.length, "chars");
+          
+          // Compress if content is large (>5000 chars)
+          if (fullExtractedContent.length > 5000) {
+            setProcessingStep("Optimizing content...");
             try {
-              if (contentToSave.length > 0) {
-                // Save extracted content
-                await base44.entities.Lesson.update((tempLessonId || sessionStorage.getItem('currentLessonId')), {
-                  extracted_content: contentToSave
-                });
-                // Kick off compression and save when done
-                const comp = await base44.functions.invoke('compressDocument', { content: contentToSave });
-                const cc = comp?.data?.compressed_content || contentToSave;
-                await base44.entities.Lesson.update((tempLessonId || sessionStorage.getItem('currentLessonId')), {
-                  compressed_content: cc
-                });
-                window.dispatchEvent(new Event('reloadLesson'));
-              }
-            } catch (bgErr) {
-              console.warn('Post-nav extraction/compression failed:', bgErr);
+              const compResult = await base44.functions.invoke('compressDocument', { 
+                content: fullExtractedContent 
+              });
+              compressedForPrompts = compResult?.data?.compressed_content || fullExtractedContent;
+              console.log("📦 Compressed content length:", compressedForPrompts.length, "chars");
+            } catch (compErr) {
+              console.warn('Compression failed, using full content:', compErr);
+              compressedForPrompts = fullExtractedContent;
             }
-          });
-
-          // Use full content placeholder for prompt fields; background job will update real compressed_content later
-          compressedForPrompts = extractedContent;
+          } else {
+            compressedForPrompts = fullExtractedContent;
+          }
           
         } catch (fileError) {
           console.error("Error processing files:", fileError);
