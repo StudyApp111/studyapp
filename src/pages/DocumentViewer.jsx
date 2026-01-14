@@ -4,13 +4,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight } from "lucide-react";
+import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import NotesTab from "@/components/document-viewer/NotesTab";
 import PredictedGradeTab from "@/components/document-viewer/PredictedGradeTab";
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import TeachItTab from "@/components/document-viewer/TeachItTab";
+import StudyPlanTab from "@/components/study-plan/StudyPlanTab";
+import NextStepBanner from "@/components/study-plan/NextStepBanner";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import ParsingLoader from "@/components/document-viewer/ParsingLoader";
@@ -42,9 +44,16 @@ export default function DocumentViewer() {
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [userStreak, setUserStreak] = useState(0);
   const [userDailyXP, setUserDailyXP] = useState(0);
+  const [studyPlan, setStudyPlan] = useState(null);
   
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
+
+  // Handle navigation from study plan
+  const handleStudyPlanNavigate = (tab, options = {}) => {
+    setActiveTab(tab);
+    // Could pass practice mode options to ExamTab via state if needed
+  };
   
   // Check exam completion status for red dot logic
   const completedExamCount = (exams || []).filter(e => e.completed).length;
@@ -330,11 +339,22 @@ export default function DocumentViewer() {
               </div>
             </div>
             
-            {/* Right: Grade + XP + Timer */}
+            {/* Right: Next Step + Grade + XP + Timer */}
             <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Next Step Banner */}
+              {lesson?.id && (
+                <NextStepBanner 
+                  lessonId={lesson.id} 
+                  onNavigateToStudyPlan={() => setActiveTab('studyplan')} 
+                />
+              )}
+              
+              {/* Subtle Divider */}
+              <div className="h-6 w-px bg-white/20" />
+              
               {/* Predicted Grade */}
               <div className="flex items-center gap-2">
-                <span className="text-white/70 text-xs font-medium">StudyApp Predicted Grade:</span>
+                <span className="text-white/70 text-xs font-medium">Grade:</span>
                 <span className="text-white text-xl font-bold tracking-tight">{predictedGrade || '—'}</span>
               </div>
               
@@ -393,6 +413,13 @@ export default function DocumentViewer() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
               <div className="flex-shrink-0">
                 <TabsList className="flex w-full bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
+                  <TabsTrigger 
+                    value="studyplan"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
+                  >
+                    <Target className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Study Plan</span>
+                  </TabsTrigger>
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
@@ -403,19 +430,12 @@ export default function DocumentViewer() {
                     </TabsTrigger>
                   )}
                   <TabsTrigger 
-                    value="notes"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
-                  >
-                    <NotebookPen className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Notes</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
                     value="exam"
                     className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
                     {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <FileText className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Exam</span>
+                    <span className="text-xs font-medium">Exams</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="grade"
@@ -445,16 +465,20 @@ export default function DocumentViewer() {
               </div>
 
               <div className="w-full flex-1 overflow-auto">
-                <TabsContent value="doc" className="mt-0 p-0 h-full">
-                        {!lesson ? (
-                          <ParsingLoader />
-                        ) : (
-                          <DocumentViewerTabs lesson={lesson} />
-                        )}
-                      </TabsContent>
+                <TabsContent value="studyplan" className="mt-0 p-0 h-full">
+                  <StudyPlanTab 
+                    lesson={lesson} 
+                    exams={exams} 
+                    onNavigate={handleStudyPlanNavigate} 
+                  />
+                </TabsContent>
 
-                <TabsContent value="notes" className="mt-0 p-0 h-full">
-                  <NotesTab lesson={lesson} />
+                <TabsContent value="doc" className="mt-0 p-0 h-full">
+                  {!lesson ? (
+                    <ParsingLoader />
+                  ) : (
+                    <DocumentViewerTabs lesson={lesson} />
+                  )}
                 </TabsContent>
 
                 <TabsContent value="exam" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
