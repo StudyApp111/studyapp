@@ -453,14 +453,7 @@ export default function DocumentViewer() {
                     <Trophy className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Exams</span>
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="grade"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
-                  >
-                    {showGradeDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                    <Trophy className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Grade</span>
-                  </TabsTrigger>
+
                   <TabsTrigger 
                     value="flashcards"
                     className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
@@ -501,9 +494,7 @@ export default function DocumentViewer() {
                   <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
                 </TabsContent>
 
-                <TabsContent value="grade" className="mt-0 p-0 h-full">
-                  <PredictedGradeTab lesson={lesson} exams={exams} />
-                </TabsContent>
+
 
                 <TabsContent value="flashcards" className="mt-0 p-0 h-full">
                   <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
@@ -556,14 +547,7 @@ export default function DocumentViewer() {
                     <Trophy className="w-4 h-4 flex-shrink-0" />
                     <span className="text-[8px] font-medium mt-0.5">Exam</span>
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="grade"
-                    className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto relative rounded-md min-w-0"
-                  >
-                    {showGradeDot && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <Trophy className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-[8px] font-medium mt-0.5">Grade</span>
-                  </TabsTrigger>
+
                   <TabsTrigger 
                     value="flashcards"
                     className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex-1 flex flex-col items-center justify-center py-1 h-auto relative rounded-md min-w-0"
@@ -605,9 +589,7 @@ export default function DocumentViewer() {
                 <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
               </TabsContent>
 
-              <TabsContent value="grade" className="mt-0 p-0 w-full overflow-x-hidden">
-                <PredictedGradeTab lesson={lesson} exams={exams} />
-              </TabsContent>
+
 
               <TabsContent value="flashcards" className="mt-0 p-0 w-full overflow-x-hidden">
                 <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
