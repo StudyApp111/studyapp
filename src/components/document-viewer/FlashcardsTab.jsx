@@ -10,7 +10,7 @@ import XPGainToast from "@/components/gamification/XPGainToast";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 
-export default function FlashcardsTab({ lesson, extractedContent }) {
+export default function FlashcardsTab({ lesson, extractedContent, focusTopics }) {
   const [cards, setCards] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -19,10 +19,29 @@ export default function FlashcardsTab({ lesson, extractedContent }) {
   const [sessionStats, setSessionStats] = useState({ reviewed: 0, correct: 0 });
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [streakCount, setStreakCount] = useState(0);
+  const [studyPlanTopics, setStudyPlanTopics] = useState(null);
 
   useEffect(() => {
     loadFlashcards();
+    loadStudyPlanTopics();
   }, [lesson?.id]);
+  
+  const loadStudyPlanTopics = async () => {
+    try {
+      const plans = await base44.entities.StudyPlan.filter({ 
+        lesson_id: lesson.id,
+        status: 'active'
+      });
+      if (plans.length > 0) {
+        const flashcardTask = plans[0].tasks?.find(t => t.task_type === 'flashcards' && !t.completed);
+        if (flashcardTask?.focus_topics?.length > 0) {
+          setStudyPlanTopics(flashcardTask.focus_topics);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading study plan topics:", error);
+    }
+  };
 
   const loadFlashcards = async () => {
     if (!lesson) return;
