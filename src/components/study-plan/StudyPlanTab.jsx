@@ -197,7 +197,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
           animate={{ opacity: 1, y: 0 }}
         >
           {/* Hero Card */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 p-6 shadow-2xl mb-5">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 p-6 shadow-2xl mb-6">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl" />
             
@@ -206,48 +206,103 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                 <Target className="w-8 h-8 text-yellow-300" />
               </div>
               
-              <h2 className="text-xl font-black text-white mb-2">
-                Get Your Study Plan
+              <h2 className="text-2xl font-black text-white mb-2">
+                Stop Guessing What to Study
               </h2>
-              <p className="text-purple-200 text-sm max-w-xs mx-auto mb-6">
-                Take a quick diagnostic exam to unlock your personalized study plan
+              <p className="text-purple-200 text-sm max-w-xs mx-auto mb-6 leading-relaxed">
+                A 5-minute quiz tells us exactly where you need help. We'll build your perfect study plan — so you study smarter, not harder.
               </p>
               
               <Button 
                 onClick={() => onNavigate('exam')}
-                className="w-full bg-white hover:bg-purple-50 text-purple-700 font-bold py-3.5 text-base rounded-xl shadow-lg"
+                className="w-full bg-white hover:bg-purple-50 text-purple-700 font-bold py-4 text-base rounded-xl shadow-lg"
               >
                 <Play className="w-5 h-5 mr-2" />
-                Start Diagnostic
+                Take Quick Diagnostic
               </Button>
+              <p className="text-purple-300/80 text-[11px] mt-3">Only 5 questions • Takes ~5 minutes</p>
             </div>
           </div>
 
-          {/* Steps */}
+          {/* Value Props */}
+          <div className="mb-5">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-3">What you'll get</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { emoji: "🎯", text: "Know exactly what to study" },
+                { emoji: "⏱️", text: "Save hours of study time" },
+                { emoji: "😌", text: "Less stress, more confidence" },
+                { emoji: "📈", text: "Better grades, guaranteed" }
+              ].map((item, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1 + idx * 0.05 }}
+                  className="flex items-center gap-2 p-3 bg-gradient-to-br from-purple-50 to-white rounded-xl border border-purple-100"
+                >
+                  <span className="text-lg">{item.emoji}</span>
+                  <span className="text-xs font-semibold text-slate-700">{item.text}</span>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* How it works - Numbered Steps */}
           <div className="space-y-2.5">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">How it works</p>
             {[
-              { icon: "📝", title: "Take Diagnostic", desc: "10 questions to find your gaps" },
-              { icon: "🎯", title: "Get Your Plan", desc: "Custom tasks for weak areas" },
-              { icon: "📈", title: "Improve Grade", desc: "Complete tasks then retake exam" }
+              { num: "1", title: "Quick Diagnostic", desc: "5 smart questions find your strengths & gaps", highlight: true },
+              { num: "2", title: "Get Your Personalized Plan", desc: "AI creates tasks targeting YOUR weak spots" },
+              { num: "3", title: "Study with Direction", desc: "Follow the plan, skip what you already know" },
+              { num: "4", title: "See Your Grade Improve", desc: "Retake exam to unlock your next level" }
             ].map((step, idx) => (
               <motion.div
                 key={idx}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + idx * 0.1 }}
-                className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100 shadow-sm"
+                transition={{ delay: 0.15 + idx * 0.08 }}
+                className={`flex items-center gap-3 p-3.5 rounded-xl border shadow-sm ${
+                  step.highlight 
+                    ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200' 
+                    : 'bg-white border-slate-100'
+                }`}
               >
-                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-lg">
-                  {step.icon}
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-base font-black ${
+                  step.highlight 
+                    ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white' 
+                    : 'bg-slate-100 text-slate-500'
+                }`}>
+                  {step.num}
                 </div>
-                <div>
+                <div className="flex-1">
                   <h4 className="font-bold text-slate-900 text-sm">{step.title}</h4>
-                  <p className="text-[11px] text-slate-500">{step.desc}</p>
+                  <p className="text-[11px] text-slate-500 leading-snug">{step.desc}</p>
                 </div>
+                {step.highlight && (
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <ChevronRight className="w-4 h-4 text-purple-600" />
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
+
+          {/* Bottom CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-6"
+          >
+            <Button 
+              onClick={() => onNavigate('exam')}
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 text-base rounded-xl shadow-lg"
+            >
+              <Target className="w-5 h-5 mr-2" />
+              Start My Study Plan
+            </Button>
+          </motion.div>
         </motion.div>
       </div>
     );
