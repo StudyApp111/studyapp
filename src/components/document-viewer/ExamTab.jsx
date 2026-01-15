@@ -1159,91 +1159,105 @@ No extra fields. % as strings.`;
     return (
       <div className="pb-4">
         <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl p-3 md:p-6 m-1 md:m-2">
-        <div className="mb-3 md:mb-6">
-          <h3 className="text-base md:text-2xl font-bold text-slate-900 mb-1 md:mb-2 flex items-center gap-1.5 md:gap-2">
-            <Trophy className="w-5 h-5 md:w-7 md:h-7 text-yellow-500" />
-            Your Roadmap to 90%+
+        <div className="mb-3 md:mb-4">
+          <h3 className="text-base md:text-xl font-bold text-slate-900 mb-1 flex items-center gap-1.5">
+            <Trophy className="w-5 h-5 text-yellow-500" />
+            Official Grade Exams
           </h3>
-          <p className="text-xs md:text-base text-slate-600">Complete exams to track your progress and improve your predicted grade</p>
+          <p className="text-[11px] md:text-sm text-slate-500">AI-graded exams that predict your actual course grade</p>
         </div>
         
-        <div className="grid gap-2 md:gap-3">
+        <div className="grid gap-2">
           {sortedExams.length > 0 ? sortedExams.map((e) => {
             const isCompleted = e.completed;
             const canStart = e.exam_number === 1 || sortedExams.find(ex => ex.exam_number === e.exam_number - 1)?.completed;
+            const isFirstExam = e.exam_number === 1;
             
             return (
               <button
               key={e.id}
               onClick={() => {
                 if (isCompleted) {
-                  // Show feedback inline
                   setViewingCompletedExam(e);
                 } else if (canStart) {
-                  setExam(null); // Clear any previous exam
+                  setExam(null);
                   setSelectedExamNumber(e.exam_number);
                   hasAutoSelectedRef.current = true;
                 }
               }}
                 disabled={!canStart && !isCompleted}
-                className={`p-3 md:p-5 rounded-xl border-2 transition-all text-left ${
+                className={`p-2.5 md:p-4 rounded-xl border-2 transition-all text-left ${
                   isCompleted
-                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300 hover:shadow-lg hover:scale-[1.02] cursor-pointer'
+                    ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/80 border-emerald-300 hover:shadow-md'
                     : canStart
-                    ? 'bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02]'
-                    : 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                    ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-300 hover:shadow-md hover:border-purple-400'
+                    : 'bg-slate-50/80 border-slate-200 opacity-50 cursor-not-allowed'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1 md:mb-2">
-                  <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                    {isCompleted ? (
-                      <div className="w-9 h-9 md:w-12 md:h-12 bg-emerald-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                      </div>
-                    ) : canStart ? (
-                      <div className="w-9 h-9 md:w-12 md:h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Play className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                      </div>
-                    ) : (
-                      <div className="w-9 h-9 md:w-12 md:h-12 bg-slate-300 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Lock className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h5 className="font-bold text-slate-900 text-sm md:text-lg">
-                        Exam {e.exam_number}
-                      </h5>
-                      <p className="text-xs md:text-sm text-slate-600 line-clamp-2">
-                        {e.focus_description || (e.exam_number === 1 ? 'Diagnostic Assessment' : 'Practice Exam')}
-                      </p>
+                <div className="flex items-center gap-2.5">
+                  {/* Status Icon */}
+                  {isCompleted ? (
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <CheckCircle2 className="w-5 h-5 text-white" />
                     </div>
+                  ) : canStart ? (
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <Play className="w-5 h-5 text-white" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 bg-slate-300 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Lock className="w-5 h-5 text-white" />
+                    </div>
+                  )}
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="font-bold text-slate-900 text-sm">
+                        {isFirstExam ? 'Diagnostic' : `Exam ${e.exam_number}`}
+                      </span>
+                      <Badge className={`text-[9px] px-1.5 py-0 ${
+                        isCompleted 
+                          ? 'bg-emerald-100 text-emerald-700' 
+                          : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {isFirstExam ? 'BASELINE' : 'GRADED'}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500 line-clamp-1">
+                      {e.focus_description || (isFirstExam ? 'Establishes your starting grade' : 'Adaptive to your progress')}
+                    </p>
+                    
+                    {/* Action hint */}
+                    {canStart && !isCompleted && (
+                      <p className="text-[10px] text-purple-600 font-medium mt-1">
+                        {e.status === 'in_progress' ? 'Continue →' : 'Start →'}
+                      </p>
+                    )}
+                    {isCompleted && (
+                      <p className="text-[10px] text-emerald-600 font-medium mt-1">
+                        View feedback →
+                      </p>
+                    )}
                   </div>
+                  
+                  {/* Grade Badge */}
                   {isCompleted && e.predicted_grade && (
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      <Badge className="bg-emerald-600 text-white font-bold text-base md:text-xl px-3 py-1.5 md:px-4 md:py-2">
+                    <div className="flex flex-col items-center flex-shrink-0">
+                      <Badge className={`font-bold text-sm px-2.5 py-1 ${
+                        e.predicted_grade.startsWith('A') ? 'bg-emerald-600 text-white' :
+                        e.predicted_grade.startsWith('B') ? 'bg-blue-600 text-white' :
+                        e.predicted_grade.startsWith('C') ? 'bg-amber-600 text-white' :
+                        'bg-red-600 text-white'
+                      }`}>
                         {e.predicted_grade}
                       </Badge>
                       {e.total_score !== undefined && (
-                        <span className="text-xs text-emerald-700 font-medium">{e.total_score}%</span>
+                        <span className="text-[10px] text-slate-500 mt-0.5">{e.total_score}%</span>
                       )}
                     </div>
                   )}
                 </div>
-                {isCompleted && (
-                  <p className="text-xs md:text-sm text-emerald-700 font-medium ml-11 md:ml-12 flex items-center gap-1">
-                    View detailed feedback →
-                  </p>
-                )}
-                {canStart && !isCompleted && e.status === 'in_progress' && e.questions?.length > 0 && (
-                  <p className="text-xs md:text-sm text-purple-700 font-medium ml-11 md:ml-12">
-                    Continue exam →
-                  </p>
-                )}
-                {canStart && !isCompleted && e.status !== 'in_progress' && (
-                  <p className="text-xs md:text-sm text-purple-700 font-medium ml-11 md:ml-12">
-                    Start exam →
-                  </p>
-                )}
               </button>
             );
           }) : (
