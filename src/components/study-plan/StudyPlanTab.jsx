@@ -98,7 +98,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         onNavigate('teachit');
         break;
       case 'review_notes':
-        onNavigate('doc');
+        onNavigate('notes');
         break;
       case 'practice_exam':
         onNavigate('practice_exam', task);

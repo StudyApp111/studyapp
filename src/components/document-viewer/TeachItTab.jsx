@@ -55,9 +55,8 @@ export default function TeachItTab({ lesson, focusTopics }) {
         // Find first incomplete card
         const incompleteIndex = existingCards.findIndex(c => !c.completed);
         setCurrentCardIndex(incompleteIndex >= 0 ? incompleteIndex : 0);
-      } else {
-        await generateCards();
       }
+      // Don't auto-generate - let user click to generate
     } catch (error) {
       console.error("Error loading cards:", error);
     }

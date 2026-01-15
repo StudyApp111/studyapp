@@ -48,6 +48,9 @@ export default function DocumentViewer() {
   
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
+  
+  // Show Notes tab for lessons WITHOUT uploaded documents
+  const showNotesTab = !hasDocument;
 
   // Handle navigation from study plan
   const handleStudyPlanNavigate = (tab, options = {}) => {
