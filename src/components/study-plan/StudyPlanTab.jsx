@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { 
   Target, CheckCircle2, BookOpen, Zap, Brain, 
-  Trophy, Play, ArrowRight, ChevronRight
+  Trophy, Play, ArrowRight, ChevronRight, Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -135,7 +135,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
     }
   };
 
-  const handleTaskClick = (task) => {
+  const [generatingPractice, setGeneratingPractice] = useState(null);
+
+  const handleTaskClick = async (task) => {
     switch (task.task_type) {
       case 'flashcards':
         onNavigate('flashcards');
@@ -147,7 +149,25 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         onNavigate('notes');
         break;
       case 'practice_exam':
-        onNavigate('practice_exam', task);
+        // Generate practice exam and then navigate to exam tab
+        setGeneratingPractice(task.task_id);
+        try {
+          const { data } = await base44.functions.invoke('generatePracticeExam', {
+            lesson_id: lesson.id,
+            focus_topics: task.focus_topics || [],
+            target_competency: task.target_competency || '',
+            misconception_addressed: task.misconception_addressed || ''
+          });
+          
+          if (data?.success) {
+            // Reload to get fresh exams and navigate
+            onNavigate('exam');
+          }
+        } catch (error) {
+          console.error("Error generating practice exam:", error);
+        } finally {
+          setGeneratingPractice(null);
+        }
         break;
       default:
         onNavigate('flashcards');
@@ -330,8 +350,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                 }`} />
                 
                 <button
-                  onClick={() => !isComplete && handleTaskClick(task)}
-                  disabled={isComplete}
+                  onClick={() => !isComplete && !generatingPractice && handleTaskClick(task)}
+                  disabled={isComplete || generatingPractice === task.task_id}
                   className="w-full text-left ml-8 group"
                 >
                   <div className={`relative overflow-hidden rounded-xl transition-all ${
@@ -389,9 +409,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                         )}
                       </div>
 
-                      {/* Arrow for incomplete */}
+                      {/* Arrow or loader for incomplete */}
                       {!isComplete && (
-                        <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                        generatingPractice === task.task_id ? (
+                          <Loader2 className="w-5 h-5 text-purple-600 flex-shrink-0 animate-spin" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+                        )
                       )}
                     </div>
                   </div>
