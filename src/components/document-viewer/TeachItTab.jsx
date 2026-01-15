@@ -252,10 +252,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       setCards(updatedCards);
       setShowFeedback(true);
 
-      // Update study plan progress if newly mastered
-      if (isMastered && !wasPreviouslyMastered) {
-        updateStudyPlanProgress();
-      }
+      // Update study plan with total mastered count
+      const totalMastered = updatedCards.filter(c => c.mastered).length;
+      updateStudyPlanProgress(totalMastered);
 
       // Award XP
       const xpAmount = gradingResult.score >= 90 ? 20 : gradingResult.score >= 75 ? 15 : 10;
@@ -300,7 +299,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
     }
   };
 
-  const updateStudyPlanProgress = async () => {
+  const updateStudyPlanProgress = async (masteredCount) => {
     try {
       const plans = await base44.entities.StudyPlan.filter({ 
         lesson_id: lesson.id,
@@ -310,13 +309,14 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       
       const plan = plans[0];
       const updatedTasks = plan.tasks.map(task => {
-        if (task.task_type === 'teach_it' && !task.completed) {
-          const newCount = (task.completed_count || 0) + 1;
+        if (task.task_type === 'teach_it') {
+          const newCount = masteredCount;
+          const isComplete = newCount >= task.target_count;
           return {
             ...task,
             completed_count: newCount,
-            completed: newCount >= task.target_count,
-            completed_date: newCount >= task.target_count ? new Date().toISOString() : null
+            completed: isComplete,
+            completed_date: isComplete && !task.completed_date ? new Date().toISOString() : task.completed_date
           };
         }
         return task;

@@ -213,8 +213,9 @@ Create flashcards that:
         correct: knew ? prev.correct + 1 : prev.correct
       }));
 
-      // Update study plan task progress if applicable
-      updateStudyPlanProgress('flashcards', knew && isMastered && !currentCard.mastered ? 1 : 0);
+      // Update study plan with total mastered count
+      const totalMastered = updatedCards.filter(c => c.mastered).length;
+      updateStudyPlanProgress('flashcards', totalMastered);
     } catch (error) {
       console.error("Error updating flashcard:", error);
     }
@@ -230,8 +231,8 @@ Create flashcards that:
     }, 200);
   };
 
-  const updateStudyPlanProgress = async (taskType, increment) => {
-    if (increment <= 0) return;
+  const updateStudyPlanProgress = async (taskType, masteredCount) => {
+    // Update study plan with total mastered count (not increments)
     try {
       const plans = await base44.entities.StudyPlan.filter({ 
         lesson_id: lesson.id,
@@ -241,13 +242,14 @@ Create flashcards that:
       
       const plan = plans[0];
       const updatedTasks = plan.tasks.map(task => {
-        if (task.task_type === taskType && !task.completed) {
-          const newCount = (task.completed_count || 0) + increment;
+        if (task.task_type === taskType) {
+          const newCount = masteredCount;
+          const isComplete = newCount >= task.target_count;
           return {
             ...task,
             completed_count: newCount,
-            completed: newCount >= task.target_count,
-            completed_date: newCount >= task.target_count ? new Date().toISOString() : null
+            completed: isComplete,
+            completed_date: isComplete && !task.completed_date ? new Date().toISOString() : task.completed_date
           };
         }
         return task;
