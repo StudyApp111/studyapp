@@ -438,6 +438,15 @@ Constraints:
         });
 
         console.log("✅ Curriculum map saved");
+
+        // Auto-generate Exam 1 now that content is ready
+        console.log("🎯 Starting Exam 1 auto-generation...");
+        try {
+          await base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id });
+          console.log("✅ Exam 1 auto-generated");
+        } catch (examErr) {
+          console.warn("⚠️ Exam 1 auto-generation deferred:", examErr.message);
+        }
         } catch (err) {
         console.error("❌ Background curriculum mapping error:", err);
         }

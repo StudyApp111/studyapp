@@ -270,16 +270,19 @@ export default function DocumentViewer() {
         setPredictedGrade(examWithGrade.predicted_grade);
       }
 
-      // Auto-generate Exam 1 if no exams exist yet and content is ready
+      // Check if Exam 1 needs generation (fallback if CreateLessonModal didn't trigger it)
       const validExams = examsData.filter(e => e?.id);
       const hasExam1WithQuestions = validExams.some(e => e.exam_number === 1 && e.questions?.length > 0);
-      if (!hasExam1WithQuestions && lessonData.compressed_content) {
-        // Fire and forget - don't block UI
+      const exam1InProgress = validExams.some(e => e.exam_number === 1 && e.questions?.length === 0);
+      
+      // Only trigger if no exam 1 exists at all AND content is ready
+      if (!hasExam1WithQuestions && !exam1InProgress && lessonData.compressed_content) {
+        console.log("🎯 Triggering Exam 1 generation from DocumentViewer (fallback)...");
         base44.functions.invoke('autoGenerateExam1', { lesson_id: lessonId })
           .then(res => {
-            if (res?.data?.success) {
-              console.log("✅ Exam 1 auto-generated");
-              loadLesson(); // Reload to get the new exam
+            if (res?.data?.success && !res?.data?.skipped) {
+              console.log("✅ Exam 1 auto-generated (fallback)");
+              loadLesson();
             }
           })
           .catch(err => console.log("Exam 1 generation deferred:", err.message));
