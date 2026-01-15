@@ -43,6 +43,17 @@ const TASK_CONFIG = {
     action: "Read",
     unit: "sections",
     emoji: "📖"
+  },
+  practice_exam: { 
+    icon: Trophy, 
+    bg: "bg-blue-500", 
+    bgLight: "bg-blue-50",
+    border: "border-blue-200",
+    text: "text-blue-700",
+    label: "Practice Quiz",
+    action: "Complete",
+    unit: "questions",
+    emoji: "🎯"
   }
 };
 
@@ -92,8 +103,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
       case 'review_notes':
         onNavigate('doc');
         break;
+      case 'practice_exam':
+        onNavigate('practice_exam', task);
+        break;
       default:
-        // Fallback for any legacy practice_questions tasks
         onNavigate('flashcards');
         break;
     }
