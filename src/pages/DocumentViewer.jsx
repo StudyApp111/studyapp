@@ -16,6 +16,7 @@ import NextStepBanner from "@/components/study-plan/NextStepBanner";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import ParsingLoader from "@/components/document-viewer/ParsingLoader";
+import NotesTab from "@/components/document-viewer/NotesTab";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
 
