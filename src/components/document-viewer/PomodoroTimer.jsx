@@ -86,7 +86,7 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
   return (
     <>
       <Dialog open={showBreakPrompt || isOnBreak} onOpenChange={(open) => !open && handleSkipBreak()}>
-        <DialogContent className="max-w-[320px] w-[calc(100%-2rem)] mx-auto rounded-2xl p-4 max-h-[70vh] overflow-y-auto border-0">
+        <DialogContent className="max-w-[300px] w-[calc(100%-2rem)] mx-auto rounded-2xl p-4 border-0 overflow-hidden">
           {isOnBreak ? (
             <div className="space-y-3">
               {/* Break header */}
@@ -94,12 +94,11 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ repeat: Infinity, duration: 2 }}
-                  className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-3"
+                  className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-2"
                 >
-                  <Coffee className="w-7 h-7 text-white" />
+                  <Coffee className="w-5 h-5 text-white" />
                 </motion.div>
-                <h2 className="text-lg font-bold text-slate-900">Recharging Your Brain</h2>
-                <p className="text-xs text-slate-500 mt-1">Stay away from screens for best results</p>
+                <h2 className="text-base font-bold text-slate-900">Break Time</h2>
               </div>
 
               {/* Timer with progress ring */}
@@ -140,24 +139,10 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
               </div>
 
               {/* XP reward preview */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-3 text-center"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Sparkles className="w-4 h-4 text-yellow-600" />
-                  <span className="text-xs text-yellow-800">
-                    Complete break for <span className="font-bold">+25 XP</span> bonus!
-                  </span>
-                </div>
-              </motion.div>
-
-              {/* Tips */}
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
-                <p className="text-[11px] text-slate-600 text-center">
-                  💡 <span className="font-medium">Stand up, stretch, hydrate, or look outside!</span>
-                </p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-center">
+                <span className="text-[10px] text-yellow-800">
+                  Complete for <span className="font-bold">+25 XP</span>
+                </span>
               </div>
 
               <Button
@@ -176,67 +161,44 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 0.5 }}
-                  className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-yellow-500/30"
+                  className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg shadow-yellow-500/30"
                 >
-                  <Trophy className="w-7 h-7 text-white" />
+                  <Trophy className="w-5 h-5 text-white" />
                 </motion.div>
-                <h2 className="text-lg font-bold text-slate-900">Pomodoro Complete! 🎉</h2>
-                <p className="text-xs text-slate-500 mt-1">20 minutes of focused studying</p>
+                <h2 className="text-base font-bold text-slate-900">Pomodoro Complete! 🎉</h2>
+                <p className="text-[10px] text-slate-500">20 min focused studying</p>
               </div>
 
               {/* XP Earned */}
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-4 text-center text-white"
-              >
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <Zap className="w-5 h-5 text-yellow-300" />
-                  <span className="text-2xl font-bold">+25 XP</span>
-                </div>
-                <p className="text-xs opacity-90">Focus session reward</p>
-              </motion.div>
-
-              {/* Pomodoro explanation - compact */}
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2">
-                <div className="flex gap-2 items-start">
-                  <Brain className="w-3.5 h-3.5 text-purple-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-[10px] text-slate-600 leading-relaxed">
-                    <span className="font-medium">Pomodoro Technique:</span> Short breaks boost retention by up to 40%!
-                  </p>
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-lg p-3 text-center text-white">
+                <div className="flex items-center justify-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-300" />
+                  <span className="text-xl font-bold">+25 XP</span>
                 </div>
               </div>
 
-              {/* Bonus XP incentive */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-3 text-center"
-              >
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <Coffee className="w-4 h-4 text-emerald-600" />
-                  <span className="text-xs font-bold text-emerald-800">Take a 5 min break</span>
-                </div>
-                <p className="text-[11px] text-emerald-700">
-                  Complete the full break for <span className="font-bold">+25 bonus XP</span>!
+              {/* Break incentive */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-center">
+                <p className="text-[10px] text-emerald-800">
+                  <Coffee className="w-3 h-3 inline mr-1" />
+                  5 min break = <span className="font-bold">+25 bonus XP</span>
                 </p>
-              </motion.div>
+              </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <Button
                   onClick={handleStartBreak}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 h-11 text-sm font-semibold shadow-lg shadow-emerald-500/30"
+                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 h-9 text-xs font-semibold"
                 >
-                  <Coffee className="w-4 h-4 mr-2" />
-                  Start 5 min Break (+25 XP)
+                  <Coffee className="w-3.5 h-3.5 mr-1.5" />
+                  Start Break
                 </Button>
                 <Button
                   onClick={handleSkipBreak}
                   variant="ghost"
-                  className="w-full h-8 text-xs text-slate-400 hover:text-slate-600"
+                  className="w-full h-7 text-[10px] text-slate-400"
                 >
-                  Skip break
+                  Skip
                 </Button>
               </div>
             </div>
