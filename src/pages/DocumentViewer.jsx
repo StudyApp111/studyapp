@@ -270,11 +270,19 @@ export default function DocumentViewer() {
         setPredictedGrade(examWithGrade.predicted_grade);
       }
 
-      // Preload Exam 1 in background if no exams exist yet
+      // Auto-generate Exam 1 if no exams exist yet and content is ready
       const validExams = examsData.filter(e => e?.id);
-      if (validExams.length === 0 && lessonData.compressed_content) {
+      const hasExam1WithQuestions = validExams.some(e => e.exam_number === 1 && e.questions?.length > 0);
+      if (!hasExam1WithQuestions && lessonData.compressed_content) {
         // Fire and forget - don't block UI
-        preloadExam1(lessonId).catch(err => console.log("Exam 1 preload deferred:", err.message));
+        base44.functions.invoke('autoGenerateExam1', { lesson_id: lessonId })
+          .then(res => {
+            if (res?.data?.success) {
+              console.log("✅ Exam 1 auto-generated");
+              loadLesson(); // Reload to get the new exam
+            }
+          })
+          .catch(err => console.log("Exam 1 generation deferred:", err.message));
       }
 
       setLoading(false);
@@ -285,44 +293,7 @@ export default function DocumentViewer() {
     }
   };
 
-  // Preload Exam 1 questions in background
-  const preloadExam1 = async (lessonId) => {
-    try {
-      // Check if exam 1 already exists
-      const existingExams = await base44.entities.Exam.filter({ lesson_id: lessonId, exam_number: 1 });
-      if (existingExams.length > 0 && existingExams[0].questions?.length > 0) {
-        return; // Already exists with questions
-      }
-      
-      // Create placeholder exam record
-      let examRecord;
-      if (existingExams.length > 0) {
-        examRecord = existingExams[0];
-      } else {
-        examRecord = await base44.entities.Exam.create({
-          lesson_id: lessonId,
-          exam_number: 1,
-          exam_type: "official",
-          status: "not_started",
-          completed: false,
-          questions: [],
-          time_taken_seconds: 0,
-          question_time_laps: []
-        });
-      }
-      
-      // Generate questions in background via the generateExam function
-      await base44.functions.invoke('generateExam', {
-        exam_id: examRecord.id,
-        lesson_id: lessonId,
-        exam_number: 1
-      });
-      
-      console.log("✅ Exam 1 preloaded successfully");
-    } catch (error) {
-      console.log("Exam 1 preload skipped:", error.message);
-    }
-  };
+
 
   useEffect(() => {
     const handleReloadLesson = () => {

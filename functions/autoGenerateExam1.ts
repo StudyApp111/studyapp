@@ -1,0 +1,183 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+// Auto-generates Exam 1 questions when lesson is ready
+// Called from DocumentViewer preload logic
+
+Deno.serve(async (req) => {
+  console.log('=== autoGenerateExam1 Start ===');
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { lesson_id } = await req.json();
+    
+    if (!lesson_id) {
+      return Response.json({ error: 'lesson_id is required' }, { status: 400 });
+    }
+
+    // Check if exam 1 already exists with questions
+    const existingExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
+    if (existingExams.length > 0 && existingExams[0].questions?.length > 0) {
+      console.log('Exam 1 already has questions, skipping generation');
+      return Response.json({ success: true, skipped: true, exam_id: existingExams[0].id });
+    }
+
+    // Get lesson data
+    const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
+    const lesson = lessons[0];
+    if (!lesson) {
+      return Response.json({ error: 'Lesson not found' }, { status: 400 });
+    }
+
+    // Wait for compressed content
+    if (!lesson.compressed_content && lesson.input_type === 'file') {
+      return Response.json({ error: 'Content not ready yet', retry: true }, { status: 202 });
+    }
+
+    // Get learning profile
+    const profiles = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
+    const learningProfile = profiles[0] || {};
+
+    // Determine content
+    let contentDescription = "";
+    if (lesson.input_type === "description" && lesson.description) {
+      contentDescription = lesson.description;
+    } else if (lesson.compressed_content) {
+      contentDescription = lesson.compressed_content;
+    } else if (lesson.extracted_content) {
+      contentDescription = lesson.extracted_content;
+    } else {
+      contentDescription = lesson.description || "N/A";
+    }
+
+    // Build the exam generation prompt (same as ExamTab)
+    const aiPrompt = `
+[Context]
+You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}. This worksheet establishes an accurate learning baseline and must stay tightly grounded in the student's materials.
+
+Do NOT rely on prior diagnostics.
+
+────────────────────────────
+Input Context
+
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course / Unit Name: ${lesson.course_name}
+School: ${learningProfile.school || "N/A"}
+
+Content Summary (OCR notes or user description):
+${contentDescription}
+
+────────────────────────────
+Internal Rules (Do NOT Output)
+
+• Topic Lock:
+If content specifies a concrete skill/topic (e.g., "factoring", "photosynthesis"), ALL questions must stay strictly within it.
+Only broaden scope if the user explicitly requests review or exam prep.
+
+• Light Search (Minimal):
+Use Google Search ONLY to confirm terminology or common exam phrasing for this course IF Content Summary IS <200 CHARACTERS LONG.
+Do NOT introduce new topics.
+
+• Difficulty Progression:
+Q1–2: Moderate
+Q3–4: Challenging
+Q5: Challenging → High Challenge (depth, not new content)
+
+────────────────────────────
+QUESTION-TYPE RULES (STRICT)
+
+Choose question_type for EACH question:
+Multiple Choice | True/False | Fill in the Blank | Short Answer
+
+• Multiple Choice → EXACTLY 4 options (A–D)
+• True/False → options = ["True","False"]
+• Fill in the Blank → ONE blank written as ____ , options = []
+• Short Answer → options = []
+
+MCQ cue phrases are FORBIDDEN in non-MCQ questions.
+If violated, auto-convert to Multiple Choice.
+
+────────────────────────────
+Output Requirements
+
+Generate EXACTLY 5 questions.
+Each must include:
+question_type, question_text, options, difficulty_index
+
+Then include an answer key with:
+correct_answer, explanation (2–3 sentences),
+assessed_competencies, targeted_misconception
+
+Output Format
+Return ONE valid JSON object matching the required schema.
+No extra text.`;
+
+    // Call the generateExam function
+    const { data: examData } = await base44.functions.invoke('generateExam', {
+      prompt: aiPrompt,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          exam_questions: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                question_number: { type: "integer" },
+                question_type: { type: "string" },
+                difficulty_index: { type: "string" },
+                question_text: { type: "string" },
+                options: { type: "array", items: { type: "string" } },
+                correct_answer: { type: "string" },
+                explanation: { type: "string" },
+                assessed_competencies: { type: "array", items: { type: "string" } },
+                targeted_misconception: { type: "string" }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const examQuestions = examData?.exam_questions || [];
+    if (!Array.isArray(examQuestions) || examQuestions.length === 0) {
+      console.error('Invalid exam_questions:', examData);
+      return Response.json({ error: 'Failed to generate exam questions' }, { status: 500 });
+    }
+
+    const questionsWithPlaceholder = examQuestions.map(q => ({
+      ...q,
+      user_answer: ""
+    }));
+
+    // Create or update exam record
+    let exam;
+    if (existingExams.length > 0) {
+      exam = await base44.entities.Exam.update(existingExams[0].id, {
+        questions: questionsWithPlaceholder,
+        status: "not_started"
+      });
+    } else {
+      exam = await base44.entities.Exam.create({
+        lesson_id,
+        exam_number: 1,
+        exam_type: "official",
+        questions: questionsWithPlaceholder,
+        status: "not_started",
+        completed: false,
+        time_taken_seconds: 0,
+        question_time_laps: []
+      });
+    }
+
+    console.log('Exam 1 generated successfully:', exam.id);
+    return Response.json({ success: true, exam_id: exam.id, question_count: questionsWithPlaceholder.length });
+
+  } catch (error) {
+    console.error('Error in autoGenerateExam1:', error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
