@@ -212,11 +212,17 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       console.log("✅ Lesson created:", lesson.id);
 
-      // No compression await here; handled fully after navigation
+      // Auto-generate Exam 1 immediately (only needs compressed content, not curriculum)
+      console.log("🎯 Starting Exam 1 auto-generation...");
+      base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+        .then(res => {
+          if (res?.data?.success) console.log("✅ Exam 1 auto-generated");
+        })
+        .catch(err => console.warn("⚠️ Exam 1 generation:", err.message));
 
       // Close modal and navigate immediately (client-side to avoid white flash)
       onOpenChange(false);
-      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=doc`);
+      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=studyplan`);
 
       // === BACKGROUND TASKS (curriculum mapping only; extraction/compression handled above) ===
       (async () => {
@@ -438,15 +444,6 @@ Constraints:
         });
 
         console.log("✅ Curriculum map saved");
-
-        // Auto-generate Exam 1 now that content is ready
-        console.log("🎯 Starting Exam 1 auto-generation...");
-        try {
-          await base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id });
-          console.log("✅ Exam 1 auto-generated");
-        } catch (examErr) {
-          console.warn("⚠️ Exam 1 auto-generation deferred:", examErr.message);
-        }
         } catch (err) {
         console.error("❌ Background curriculum mapping error:", err);
         }
