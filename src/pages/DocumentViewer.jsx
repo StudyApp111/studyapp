@@ -303,45 +303,31 @@ export default function DocumentViewer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full">
-      {/* Mobile Header - Unified Banner (replaces global header) */}
-      <div className="md:hidden bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 sticky top-0 z-50 w-full shadow-lg">
-        <div className="px-3 py-2.5">
-          {/* Top row: Logo + Course Name + Grade */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
-                alt="StudyApp"
-                className="w-7 h-7 flex-shrink-0"
-              />
-              <span className="text-white font-bold text-sm truncate">{lesson?.course_name || 'Loading...'}</span>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {predictedGrade && (
-                <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2.5 py-1">
-                  <span className="text-white font-black text-lg">{predictedGrade}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-1 bg-white/15 rounded-lg px-2 py-1">
-                <Clock className="w-3.5 h-3.5 text-white/80" />
-                <span className="text-white text-xs font-mono font-semibold">{formatStudyTime(studyTime)}</span>
-              </div>
+      {/* Mobile Header - Merged Single Banner */}
+      <div className="md:hidden sticky top-0 z-50 w-full shadow-md">
+        {/* White logo section */}
+        <div className="bg-white px-3 py-1.5 flex items-center justify-between border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+              alt="StudyApp"
+              className="w-5 h-5"
+            />
+            <span className="font-bold text-slate-900 text-xs">StudyApp</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {predictedGrade && (
+              <span className="text-purple-700 font-black text-base">{predictedGrade}</span>
+            )}
+            <div className="flex items-center gap-1 text-slate-500">
+              <Clock className="w-3 h-3" />
+              <span className="text-[10px] font-mono font-medium">{formatStudyTime(studyTime)}</span>
             </div>
           </div>
-          
-          {/* Bottom row: Study Plan CTA */}
-          {lesson?.id && (
-            <button 
-              onClick={() => setActiveTab('studyplan')}
-              className="w-full mt-2 flex items-center justify-between bg-white/10 hover:bg-white/20 rounded-lg px-3 py-1.5 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Target className="w-3.5 h-3.5 text-yellow-300" />
-                <span className="text-white/90 text-xs font-medium">View Study Plan</span>
-              </div>
-              <ChevronRight className="w-4 h-4 text-white/60" />
-            </button>
-          )}
+        </div>
+        {/* Purple course info section */}
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5">
+          <span className="text-white font-semibold text-xs truncate block">{lesson?.course_name || 'Loading...'}</span>
         </div>
       </div>
       
