@@ -27,82 +27,130 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Lesson not found' }, { status: 400 });
     }
 
-    // Get existing flashcard and teach it card counts
-    const flashcards = await base44.entities.Flashcard.filter({ lesson_id });
-    const teachItCards = await base44.entities.TeachItCard.filter({ lesson_id });
-
-    const totalFlashcards = flashcards.length;
-    const masteredFlashcards = flashcards.filter(f => f.mastered).length;
-    const unmasteredFlashcards = totalFlashcards - masteredFlashcards;
-
-    const totalTeachItCards = teachItCards.length;
-    const masteredTeachItCards = teachItCards.filter(t => t.mastered || t.score >= 70).length;
-
-    // Extract weak areas from exam feedback
-    const weakAreas = exam.ai_feedback?.key_areas_for_improvement_list || [];
-    const strengths = exam.ai_feedback?.identified_strengths_list || [];
-    
-    // Extract competency performance from questions
+    // Extract detailed question-level analysis
+    const questionAnalysis = [];
     const competencyScores = {};
+    const misconceptions = [];
+    const wrongQuestions = [];
+    
     if (exam.questions) {
-      exam.questions.forEach(q => {
+      exam.questions.forEach((q, idx) => {
+        // Track competency performance
         if (q.assessed_competencies) {
           q.assessed_competencies.forEach(comp => {
             if (!competencyScores[comp]) {
-              competencyScores[comp] = { correct: 0, total: 0 };
+              competencyScores[comp] = { correct: 0, total: 0, questions: [] };
             }
             competencyScores[comp].total++;
+            competencyScores[comp].questions.push({
+              question: q.question_text,
+              correct: q.is_correct,
+              difficulty: q.difficulty_index
+            });
             if (q.is_correct) {
               competencyScores[comp].correct++;
             }
           });
         }
+        
+        // Collect wrong questions for targeted review
+        if (!q.is_correct) {
+          wrongQuestions.push({
+            question: q.question_text,
+            correct_answer: q.correct_answer,
+            student_answer: q.user_answer,
+            explanation: q.explanation,
+            competencies: q.assessed_competencies || [],
+            misconception: q.targeted_misconception
+          });
+          
+          if (q.targeted_misconception) {
+            misconceptions.push(q.targeted_misconception);
+          }
+        }
       });
     }
 
-    // Find weak competencies (below 70% or with few correct answers)
-    const weakCompetencies = Object.entries(competencyScores)
-      .filter(([_, scores]) => (scores.correct / scores.total) < 0.7)
-      .map(([comp, _]) => comp);
+    // Rank competencies by weakness (lowest score first)
+    const rankedCompetencies = Object.entries(competencyScores)
+      .map(([name, data]) => ({
+        name,
+        score: Math.round((data.correct / data.total) * 100),
+        total: data.total,
+        correct: data.correct,
+        questions: data.questions
+      }))
+      .sort((a, b) => a.score - b.score);
 
-    // Generate study plan using AI
-    const planPrompt = `You are creating a personalized study plan for a student who just completed an exam.
+    // Get top 3 weakest competencies
+    const weakestCompetencies = rankedCompetencies.slice(0, 3);
+    
+    // Extract weak areas and strengths from AI feedback
+    const weakAreas = exam.ai_feedback?.key_areas_for_improvement_list || [];
+    const strengths = exam.ai_feedback?.identified_strengths_list || [];
 
-Exam Results:
+    // Get content summary for context
+    const contentSummary = lesson.compressed_content || 
+      (lesson.extracted_content ? lesson.extracted_content.substring(0, 3000) : lesson.description) || 
+      lesson.description || '';
+
+    // Generate intelligent study plan
+    const planPrompt = `You are an expert learning scientist creating a HIGHLY TARGETED study plan.
+
+STUDENT PERFORMANCE DATA:
+- Course: ${lesson.course_name}
+- Exam Score: ${exam.total_score}%
 - Predicted Grade: ${exam.predicted_grade}
-- Score: ${exam.total_score}%
-- Weak Areas: ${weakAreas.join(', ')}
-- Weak Competencies: ${weakCompetencies.join(', ')}
-- Strengths: ${strengths.join(', ')}
 
-Available Study Tools (choose from these ONLY):
-1. flashcards - Review flashcard decks to reinforce concepts (need 3 "Got it" each)
-2. teach_it - Explain concepts in your own words to prove understanding (need 70%+ score)
-3. review_notes - Read and study the notes/document
+COMPETENCY BREAKDOWN (ranked by weakness):
+${rankedCompetencies.map(c => `- ${c.name}: ${c.score}% (${c.correct}/${c.total} correct)`).join('\n')}
 
-Current Progress:
-- Flashcards: ${masteredFlashcards}/${totalFlashcards} mastered
-- Teach It Cards: ${masteredTeachItCards}/${totalTeachItCards} mastered
+SPECIFIC QUESTIONS MISSED:
+${wrongQuestions.slice(0, 5).map((q, i) => `
+${i + 1}. Question: "${q.question}"
+   - Student answered: "${q.student_answer}"
+   - Correct answer: "${q.correct_answer}"
+   - Competencies tested: ${q.competencies.join(', ')}
+   - Misconception: ${q.misconception || 'None identified'}`).join('\n')}
 
-Create a focused study plan with 3-4 specific tasks using ONLY the tools above. DO NOT include "practice_questions" as a task_type.
+IDENTIFIED MISCONCEPTIONS:
+${misconceptions.length > 0 ? misconceptions.join('\n- ') : 'None explicitly identified'}
 
-Each task should:
-- Target a specific weak area or competency
-- Have a clear, achievable count (5-15 items typically)
-- Use one of these task_types: "flashcards", "teach_it", or "review_notes"
+AI FEEDBACK SUMMARY:
+- Areas to improve: ${weakAreas.join(', ')}
+- Strengths to build on: ${strengths.join(', ')}
 
-Return JSON with this structure:
+COURSE CONTENT OVERVIEW:
+${contentSummary.substring(0, 2000)}
+
+YOUR TASK:
+Create 3-4 HIGHLY SPECIFIC study tasks. Each task must:
+1. Target a SPECIFIC weak competency or misconception
+2. Include SPECIFIC topics/concepts from the course material to focus on
+3. Be actionable and measurable
+
+AVAILABLE TASK TYPES:
+- "flashcards": For memorizing key terms, definitions, relationships. Include SPECIFIC topics to generate cards for.
+- "teach_it": For deep understanding. Include SPECIFIC concepts student must explain.
+- "review_notes": For re-reading specific sections. Include SPECIFIC sections/topics to review.
+
+CRITICAL: Each task's "focus_topics" array must contain SPECIFIC concepts from the course material that relate to the weak competency. These will be used to generate targeted content.
+
+Return JSON:
 {
   "tasks": [
     {
       "task_type": "flashcards" | "teach_it" | "review_notes",
-      "title": "Short action title",
-      "description": "What this task will help with",
-      "target_count": number,
-      "target_competency": "specific competency or topic"
+      "title": "Clear action title (e.g., 'Master Key Terms for X')",
+      "description": "What this helps with and why",
+      "target_count": number (5-15 realistic),
+      "target_competency": "The specific competency being addressed",
+      "focus_topics": ["specific topic 1", "specific topic 2", "specific topic 3"],
+      "misconception_addressed": "The specific misconception this task addresses (if any)"
     }
   ],
-  "summary": "One sentence summary of the plan focus"
+  "plan_rationale": "2-3 sentences explaining why this plan was designed this way",
+  "priority_focus": "The single most important thing to improve"
 }`;
 
     const response = await base44.integrations.Core.InvokeLLM({
@@ -119,30 +167,38 @@ Return JSON with this structure:
                 title: { type: "string" },
                 description: { type: "string" },
                 target_count: { type: "integer" },
-                target_competency: { type: "string" }
+                target_competency: { type: "string" },
+                focus_topics: { type: "array", items: { type: "string" } },
+                misconception_addressed: { type: "string" }
               }
             }
           },
-          summary: { type: "string" }
+          plan_rationale: { type: "string" },
+          priority_focus: { type: "string" }
         }
       }
     });
 
-    // Generate unique task IDs
-    const tasksWithIds = response.tasks.map((task, idx) => ({
-      ...task,
-      task_id: `task_${Date.now()}_${idx}`,
-      completed_count: 0,
-      completed: false
-    }));
+    // Validate and filter tasks to only allowed types
+    const validTaskTypes = ['flashcards', 'teach_it', 'review_notes'];
+    const validatedTasks = (response.tasks || [])
+      .filter(task => validTaskTypes.includes(task.task_type))
+      .map((task, idx) => ({
+        ...task,
+        task_id: `task_${Date.now()}_${idx}`,
+        completed_count: 0,
+        completed: false,
+        focus_topics: task.focus_topics || [],
+        misconception_addressed: task.misconception_addressed || null
+      }));
 
     // Build competency progress array
-    const competencyProgress = Object.entries(competencyScores).map(([name, scores]) => ({
-      competency_name: name,
-      initial_score: Math.round((scores.correct / scores.total) * 100),
-      current_score: Math.round((scores.correct / scores.total) * 100),
-      questions_attempted: scores.total,
-      questions_correct: scores.correct
+    const competencyProgress = rankedCompetencies.map(c => ({
+      competency_name: c.name,
+      initial_score: c.score,
+      current_score: c.score,
+      questions_attempted: c.total,
+      questions_correct: c.correct
     }));
 
     // Check for existing active plan
@@ -160,7 +216,7 @@ Return JSON with this structure:
     const allPlans = await base44.entities.StudyPlan.filter({ lesson_id });
     const cycleNumber = allPlans.length + 1;
 
-    // Create new study plan
+    // Create new study plan with enriched data
     const studyPlan = await base44.entities.StudyPlan.create({
       lesson_id,
       generated_from_exam_id: exam_id,
@@ -168,8 +224,8 @@ Return JSON with this structure:
       initial_predicted_grade: exam.predicted_grade,
       initial_score: exam.total_score,
       target_grade: "A+",
-      weak_competencies: weakCompetencies,
-      tasks: tasksWithIds,
+      weak_competencies: weakestCompetencies.map(c => c.name),
+      tasks: validatedTasks,
       competency_progress: competencyProgress,
       grade_history: [{
         date: new Date().toISOString(),
@@ -177,6 +233,8 @@ Return JSON with this structure:
         predicted_grade: exam.predicted_grade,
         score: exam.total_score
       }],
+      plan_rationale: response.plan_rationale,
+      priority_focus: response.priority_focus,
       all_tasks_completed: false,
       official_exam_unlocked: false,
       status: 'active'
@@ -185,7 +243,7 @@ Return JSON with this structure:
     return Response.json({ 
       success: true, 
       study_plan: studyPlan,
-      summary: response.summary
+      summary: response.plan_rationale
     });
 
   } catch (error) {
