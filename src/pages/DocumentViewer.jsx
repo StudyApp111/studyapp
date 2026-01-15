@@ -307,38 +307,38 @@ export default function DocumentViewer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full">
-      {/* Mobile Header - Clean Single-Line Banner */}
-      <div className="md:hidden bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 sticky top-0 z-50 w-full">
-        <div className="px-3 py-2 flex items-center gap-3">
+      {/* Mobile Header - Purple Gradient with Even Sections */}
+      <div className="md:hidden bg-gradient-to-r from-purple-600 via-purple-700 to-purple-600 sticky top-0 z-50 w-full shadow-lg">
+        <div className="px-2 py-2 grid grid-cols-4 gap-1.5 items-center">
           {/* Course Name */}
-          <span className="text-white/90 font-medium text-xs truncate flex-1 min-w-0">
-            {lesson?.course_name || 'Loading...'}
-          </span>
+          <div className="col-span-1 text-center">
+            <span className="text-white text-[10px] font-bold truncate block">
+              {lesson?.course_name || 'Loading...'}
+            </span>
+          </div>
           
-          {/* Right side items */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Grade */}
-            {predictedGrade && (
-              <span className="text-emerald-400 font-bold text-sm">{predictedGrade}</span>
-            )}
-            
-            {/* Study Plan */}
-            <button 
-              onClick={() => setActiveTab('studyplan')}
-              className="flex items-center gap-1 text-yellow-400 hover:text-yellow-300 transition-colors"
-            >
-              <Target className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-semibold">Study Plan</span>
-            </button>
-            
-            {/* Divider */}
-            <div className="w-px h-3 bg-white/20" />
-            
-            {/* Timer */}
-            <div className="flex items-center gap-1 text-white/60">
-              <Clock className="w-3 h-3" />
-              <span className="text-[10px] font-mono">{formatStudyTime(studyTime)}</span>
+          {/* Grade */}
+          {predictedGrade ? (
+            <div className="col-span-1 text-center">
+              <span className="text-yellow-300 font-black text-sm">{predictedGrade}</span>
             </div>
+          ) : (
+            <div className="col-span-1" />
+          )}
+          
+          {/* Study Plan */}
+          <button 
+            onClick={() => setActiveTab('studyplan')}
+            className="col-span-1 flex flex-col items-center justify-center gap-0.5 hover:opacity-80 transition-opacity"
+          >
+            <Target className="w-3.5 h-3.5 text-yellow-300" />
+            <span className="text-white text-[9px] font-medium">Plan</span>
+          </button>
+          
+          {/* Timer */}
+          <div className="col-span-1 flex flex-col items-center justify-center gap-0.5">
+            <Clock className="w-3.5 h-3.5 text-white/80" />
+            <span className="text-white/90 text-[9px] font-mono font-medium">{formatStudyTime(studyTime)}</span>
           </div>
         </div>
       </div>
