@@ -24,7 +24,7 @@ export default function AITutorSheet() {
       setHasUsedInitialPrompt(false);
       
       // Create welcome message based on context type
-      let welcomeMessage = "👋 Hi! I'm Polli, your AI tutor.";
+      let welcomeMessage = "👋 Hi! I'm Polly, your AI tutor.";
       
       if (context.type === "question") {
         welcomeMessage = `👋 I see you need help with this **${context.question?.type || 'question'}**!\n\nI'll explain the concept and help you understand why the answer is correct. Ready?`;
@@ -108,16 +108,17 @@ export default function AITutorSheet() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            className="fixed bottom-0 left-0 right-0 z-50 h-[70%] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
+            className="fixed left-0 right-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
+            style={{ bottom: 'calc(70px + env(safe-area-inset-bottom))', height: '60vh' }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <span className="font-semibold text-white text-sm">Polli</span>
+                  <span className="font-semibold text-white text-sm">Polly</span>
                   {getContextLabel() && (
                     <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-[10px] text-white/90">
                       {getContextLabel()}
@@ -210,7 +211,7 @@ export default function AITutorSheet() {
             )}
 
             {/* Input */}
-            <div className="border-t border-slate-200 p-3 bg-white" style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
+            <div className="border-t border-slate-200 p-3 bg-white flex-shrink-0">
               <div className="flex gap-2">
                 <input
                   ref={inputRef}
