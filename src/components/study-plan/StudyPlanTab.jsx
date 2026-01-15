@@ -176,125 +176,137 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   }
 
   return (
-    <div className="p-3 md:p-4 space-y-4 max-w-2xl mx-auto pb-20">
-      {/* Grade Hero */}
+    <div className="px-2 py-3 space-y-3 pb-24 max-w-lg mx-auto">
+      {/* Compact Grade Card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <Card className="overflow-hidden border-0 shadow-xl">
-          <div className={`bg-gradient-to-r ${getGradeColor(currentGrade)} p-5 text-white`}>
+        <Card className="overflow-hidden border-0 shadow-lg">
+          <div className={`bg-gradient-to-r ${getGradeColor(currentGrade)} p-4`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/80 text-xs font-medium uppercase tracking-wide mb-1">
+                <p className="text-white/70 text-[10px] font-medium uppercase tracking-wide">
                   Predicted Grade
                 </p>
-                <div className="flex items-baseline gap-3">
-                  <span className="text-5xl font-black">{currentGrade}</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-black text-white">{currentGrade}</span>
                   {currentScore && (
-                    <span className="text-white/80 text-lg font-semibold">{currentScore}%</span>
+                    <span className="text-white/70 text-sm font-semibold">{currentScore}%</span>
                   )}
                 </div>
               </div>
               <div className="text-right">
-                <div className="flex items-center gap-1 mb-1">
-                  <Star className="w-4 h-4 text-yellow-300 fill-yellow-300" />
-                  <span className="text-white/80 text-xs">Target</span>
+                <div className="flex items-center gap-1">
+                  <Star className="w-3 h-3 text-yellow-300 fill-yellow-300" />
+                  <span className="text-white/70 text-[10px]">Target</span>
                 </div>
-                <span className="text-3xl font-bold text-yellow-300">A+</span>
+                <span className="text-2xl font-bold text-yellow-300">A+</span>
               </div>
             </div>
-          </div>
-          
-          {/* Progress Bar */}
-          <div className="bg-white px-5 py-3">
-            <div className="flex items-center justify-between text-xs mb-2">
-              <span className="text-slate-600 font-medium">Study Progress</span>
-              <span className="font-bold text-slate-900">{completedTasks} of {totalTasks} complete</span>
-            </div>
-            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%' }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              />
+            
+            {/* Progress inline */}
+            <div className="mt-3 pt-3 border-t border-white/20">
+              <div className="flex items-center justify-between text-[10px] text-white/70 mb-1">
+                <span>Progress</span>
+                <span className="font-semibold text-white">{completedTasks}/{totalTasks}</span>
+              </div>
+              <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-white rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%' }}
+                />
+              </div>
             </div>
           </div>
         </Card>
       </motion.div>
 
-      {/* Next Action - Big CTA */}
+      {/* Priority Focus Banner */}
+      {studyPlan?.priority_focus && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-3">
+            <div className="flex items-start gap-2">
+              <Lightbulb className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] font-bold text-purple-700 uppercase tracking-wide mb-0.5">Focus Area</p>
+                <p className="text-xs text-slate-700 leading-snug">{studyPlan.priority_focus}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Next Action CTA */}
       {nextTask && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <button
-            onClick={() => handleTaskClick(nextTask)}
-            className="w-full"
-          >
-            <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50 hover:shadow-lg transition-all p-4">
-              <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-xl ${TASK_CONFIG[nextTask.task_type]?.bg || 'bg-purple-500'} flex items-center justify-center shadow-lg`}>
-                  {React.createElement(TASK_CONFIG[nextTask.task_type]?.icon || Target, { 
-                    className: "w-7 h-7 text-white" 
-                  })}
+          <button onClick={() => handleTaskClick(nextTask)} className="w-full">
+            <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-indigo-50 hover:shadow-lg transition-all p-3">
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-xl ${TASK_CONFIG[nextTask.task_type]?.bg || 'bg-purple-500'} flex items-center justify-center shadow-md`}>
+                  <span className="text-xl">{TASK_CONFIG[nextTask.task_type]?.emoji || '📚'}</span>
                 </div>
-                <div className="flex-1 text-left">
-                  <p className="text-purple-600 text-xs font-bold uppercase tracking-wide mb-0.5">
-                    Up Next
-                  </p>
-                  <h3 className="text-lg font-bold text-slate-900 mb-0.5">
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-purple-600 text-[10px] font-bold uppercase tracking-wide">Up Next</p>
+                  <h3 className="text-sm font-bold text-slate-900 truncate">
                     {TASK_CONFIG[nextTask.task_type]?.action} {nextTask.target_count} {TASK_CONFIG[nextTask.task_type]?.unit}
                   </h3>
-                  <p className="text-sm text-slate-600">
-                    {nextTask.target_competency || TASK_CONFIG[nextTask.task_type]?.label}
-                  </p>
+                  {nextTask.target_competency && (
+                    <p className="text-[11px] text-slate-500 truncate">{nextTask.target_competency}</p>
+                  )}
                 </div>
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center">
-                    <ArrowRight className="w-5 h-5 text-white" />
-                  </div>
+                <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
+                  <ArrowRight className="w-4 h-4 text-white" />
                 </div>
               </div>
+              
+              {/* Focus topics preview */}
+              {nextTask.focus_topics?.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-purple-200/50">
+                  <p className="text-[10px] text-purple-600 font-medium mb-1">Topics to cover:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {nextTask.focus_topics.slice(0, 3).map((topic, i) => (
+                      <span key={i} className="text-[10px] bg-white/80 text-slate-600 px-2 py-0.5 rounded-full border border-purple-100">
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </Card>
           </button>
         </motion.div>
       )}
 
-      {/* All tasks complete - Retake Exam */}
+      {/* All tasks complete */}
       {studyPlan?.all_tasks_completed && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <button
-            onClick={() => onNavigate('exam')}
-            className="w-full"
-          >
-            <Card className="border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-50 hover:shadow-lg transition-all p-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg">
-                  <Trophy className="w-7 h-7 text-white" />
+          <button onClick={() => onNavigate('exam')} className="w-full">
+            <Card className="border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-50 hover:shadow-lg transition-all p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center shadow-md">
+                  <Trophy className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-emerald-600 text-xs font-bold uppercase tracking-wide mb-0.5">
-                    Ready!
-                  </p>
-                  <h3 className="text-lg font-bold text-slate-900">
-                    Take Next Official Exam
-                  </h3>
-                  <p className="text-sm text-slate-600">
-                    See how much you've improved
-                  </p>
+                  <p className="text-emerald-600 text-[10px] font-bold uppercase">Ready!</p>
+                  <h3 className="text-sm font-bold text-slate-900">Take Next Exam</h3>
+                  <p className="text-[11px] text-slate-500">See your improvement</p>
                 </div>
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center">
-                    <ArrowRight className="w-5 h-5 text-white" />
-                  </div>
+                <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center">
+                  <ArrowRight className="w-4 h-4 text-white" />
                 </div>
               </div>
             </Card>
@@ -302,78 +314,78 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         </motion.div>
       )}
 
-      {/* Tasks List */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-bold text-slate-700 px-1 flex items-center gap-2">
-          <Target className="w-4 h-4 text-purple-600" />
-          Your Study Tasks
+      {/* Tasks List - Compact */}
+      <div className="space-y-2">
+        <h3 className="text-xs font-bold text-slate-600 px-1 flex items-center gap-1.5">
+          <Target className="w-3.5 h-3.5 text-purple-600" />
+          Study Tasks
         </h3>
         
         {studyPlan?.tasks?.map((task, idx) => {
-          const config = TASK_CONFIG[task.task_type] || TASK_CONFIG.practice_questions;
-          const Icon = config.icon;
+          const config = TASK_CONFIG[task.task_type] || TASK_CONFIG.flashcards;
           const isComplete = task.completed;
+          const progress = task.target_count > 0 ? ((task.completed_count || 0) / task.target_count) * 100 : 0;
 
           return (
             <motion.div
               key={task.task_id}
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 + idx * 0.05 }}
+              transition={{ delay: 0.1 + idx * 0.03 }}
             >
               <button
                 onClick={() => !isComplete && handleTaskClick(task)}
                 disabled={isComplete}
                 className="w-full text-left"
               >
-                <Card className={`p-3 transition-all ${
+                <Card className={`p-2.5 transition-all ${
                   isComplete 
-                    ? 'bg-emerald-50 border-emerald-200 opacity-75' 
-                    : 'bg-white hover:shadow-md hover:border-purple-300 cursor-pointer'
+                    ? 'bg-emerald-50/80 border-emerald-200' 
+                    : `${config.bgLight} ${config.border} hover:shadow-md`
                 }`}>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     {/* Icon */}
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                       isComplete ? 'bg-emerald-500' : config.bg
-                    } shadow-sm`}>
+                    }`}>
                       {isComplete ? (
-                        <CheckCircle2 className="w-6 h-6 text-white" />
+                        <CheckCircle2 className="w-5 h-5 text-white" />
                       ) : (
-                        <Icon className="w-6 h-6 text-white" />
+                        <span className="text-lg">{config.emoji}</span>
                       )}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <Badge className={`text-[10px] px-2 py-0 ${
-                          isComplete 
-                            ? 'bg-emerald-100 text-emerald-700' 
-                            : `${config.bgLight} ${config.text}`
-                        }`}>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className={`text-[10px] font-bold uppercase ${isComplete ? 'text-emerald-600' : config.text}`}>
                           {config.label}
-                        </Badge>
+                        </span>
+                        {!isComplete && task.completed_count > 0 && (
+                          <span className="text-[10px] text-slate-400">
+                            {task.completed_count}/{task.target_count}
+                          </span>
+                        )}
                       </div>
-                      <h4 className={`font-bold text-sm ${isComplete ? 'text-emerald-800 line-through' : 'text-slate-900'}`}>
-                        {config.action} {task.target_count} {config.unit}
+                      <h4 className={`font-semibold text-xs ${isComplete ? 'text-emerald-700 line-through' : 'text-slate-800'}`}>
+                        {task.title || `${config.action} ${task.target_count} ${config.unit}`}
                       </h4>
-                      {task.target_competency && (
-                        <p className="text-xs text-slate-500 truncate">
-                          Focus: {task.target_competency}
-                        </p>
+                      {task.target_competency && !isComplete && (
+                        <p className="text-[10px] text-slate-500 truncate mt-0.5">{task.target_competency}</p>
+                      )}
+                      
+                      {/* Progress bar for incomplete tasks */}
+                      {!isComplete && task.completed_count > 0 && (
+                        <div className="h-1 bg-slate-200 rounded-full mt-1.5 overflow-hidden">
+                          <div className={`h-full ${config.bg} rounded-full`} style={{ width: `${progress}%` }} />
+                        </div>
                       )}
                     </div>
 
-                    {/* Arrow or Check */}
-                    <div className="flex-shrink-0">
-                      {isComplete ? (
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        </div>
-                      ) : (
-                        <ChevronRight className="w-5 h-5 text-slate-400" />
-                      )}
-                    </div>
+                    {/* Arrow */}
+                    {!isComplete && (
+                      <ChevronRight className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    )}
                   </div>
                 </Card>
               </button>
@@ -382,26 +394,17 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         })}
       </div>
 
-      {/* AI Feedback Summary */}
-      {latestOfficialExam?.ai_feedback && (
+      {/* Plan Rationale */}
+      {studyPlan?.plan_rationale && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="p-4 bg-slate-50 border-slate-200">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                <Award className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <h4 className="font-bold text-slate-900 text-sm mb-1">Latest Exam Feedback</h4>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {latestOfficialExam.ai_feedback.overall_performance_summary_text}
-                </p>
-              </div>
-            </div>
-          </Card>
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Why this plan?</p>
+            <p className="text-xs text-slate-600 leading-relaxed">{studyPlan.plan_rationale}</p>
+          </div>
         </motion.div>
       )}
     </div>
