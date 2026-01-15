@@ -65,11 +65,25 @@ const getGradeColor = (grade) => {
 export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [liveProgress, setLiveProgress] = useState({});
 
   useEffect(() => {
     if (lesson?.id) {
       loadStudyPlan();
+      loadLiveProgress();
     }
+  }, [lesson?.id]);
+
+  // Refresh live progress when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && lesson?.id) {
+        loadLiveProgress();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [lesson?.id]);
 
   const loadStudyPlan = async () => {
@@ -86,6 +100,38 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
     } catch (error) {
       console.error("Error loading study plan:", error);
       setLoading(false);
+    }
+  };
+
+  // Load live progress from actual entities (flashcards, teachit cards, practice exams)
+  const loadLiveProgress = async () => {
+    try {
+      const [flashcards, teachItCards, practiceExams] = await Promise.all([
+        base44.entities.Flashcard.filter({ lesson_id: lesson.id }),
+        base44.entities.TeachItCard.filter({ lesson_id: lesson.id }),
+        base44.entities.Exam.filter({ lesson_id: lesson.id, exam_type: 'practice' })
+      ]);
+      
+      setLiveProgress({
+        flashcards: {
+          total: flashcards.length,
+          mastered: flashcards.filter(f => f.mastered).length,
+          reviewed: flashcards.filter(f => f.review_count > 0).length
+        },
+        teach_it: {
+          total: teachItCards.length,
+          completed: teachItCards.filter(t => t.completed).length,
+          mastered: teachItCards.filter(t => t.mastered).length
+        },
+        practice_exam: {
+          total: practiceExams.length,
+          completed: practiceExams.filter(e => e.completed).length,
+          totalQuestions: practiceExams.reduce((sum, e) => sum + (e.questions?.length || 0), 0),
+          correctAnswers: practiceExams.reduce((sum, e) => sum + (e.correct_count || 0), 0)
+        }
+      });
+    } catch (error) {
+      console.error("Error loading live progress:", error);
     }
   };
 
@@ -247,8 +293,28 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
           {/* Tasks */}
           {studyPlan?.tasks?.map((task, idx) => {
             const config = TASK_CONFIG[task.task_type] || TASK_CONFIG.flashcards;
-            const isComplete = task.completed;
-            const progress = task.target_count > 0 ? ((task.completed_count || 0) / task.target_count) * 100 : 0;
+            
+            // Get live progress for this task type
+            const live = liveProgress[task.task_type] || {};
+            let actualCount = task.completed_count || 0;
+            let displayText = '';
+            
+            // Calculate actual progress from live data
+            if (task.task_type === 'flashcards' && live.mastered !== undefined) {
+              actualCount = Math.max(actualCount, live.mastered);
+              displayText = `${live.mastered} mastered (${live.reviewed} reviewed)`;
+            } else if (task.task_type === 'teach_it' && live.mastered !== undefined) {
+              actualCount = Math.max(actualCount, live.mastered);
+              displayText = `${live.mastered} mastered (${live.completed} completed)`;
+            } else if (task.task_type === 'practice_exam' && live.completed !== undefined) {
+              actualCount = Math.max(actualCount, live.completed);
+              displayText = live.totalQuestions > 0 
+                ? `${live.correctAnswers}/${live.totalQuestions} correct`
+                : `${live.completed} completed`;
+            }
+            
+            const isComplete = task.completed || (task.target_count > 0 && actualCount >= task.target_count);
+            const progress = task.target_count > 0 ? (actualCount / task.target_count) * 100 : 0;
 
             return (
               <motion.div
@@ -303,20 +369,20 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                         </p>
                         
                         {/* Always show progress bar for tasks with target_count */}
-                        {!isComplete && task.target_count > 0 && (
+                        {task.target_count > 0 && (
                           <div className="mt-2">
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-[10px] text-slate-500 font-medium">
-                                {task.completed_count || 0} / {task.target_count} {config.unit}
+                                {displayText || `${actualCount} / ${task.target_count} ${config.unit}`}
                               </span>
                               <span className="text-[10px] text-slate-400">
-                                {Math.round(progress)}%
+                                {Math.min(100, Math.round(progress))}%
                               </span>
                             </div>
                             <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                               <div 
-                                className={`h-full bg-gradient-to-r ${config.gradient} rounded-full transition-all`} 
-                                style={{ width: `${progress}%` }} 
+                                className={`h-full bg-gradient-to-r ${isComplete ? 'from-emerald-500 to-teal-500' : config.gradient} rounded-full transition-all`} 
+                                style={{ width: `${Math.min(100, progress)}%` }} 
                               />
                             </div>
                           </div>
