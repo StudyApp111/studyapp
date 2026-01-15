@@ -38,6 +38,8 @@ export default function DocumentViewer() {
   const [isTimerRunning, setIsTimerRunning] = useState(true);
   const [timerInterval, setTimerInterval] = useState(null);
   const saveProgressRef = useRef(null);
+  const lastSaveTimeRef = useRef(Date.now());
+  const lastMinuteTrackRef = useRef(Date.now());
   const [messages, setMessages] = useState([]);
   const [aiInput, setAiInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -155,9 +157,6 @@ export default function DocumentViewer() {
 
   // Save progress every 1 second for accurate timer persistence
   // Track study_minutes_today every minute for daily challenges
-  const lastSaveTimeRef = useRef(Date.now());
-  const lastMinuteTrackRef = useRef(Date.now());
-  
   useEffect(() => {
     if (saveProgressRef.current) {
       clearInterval(saveProgressRef.current);
