@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, LogOut, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
-import AddToHomeScreen from "../components/onboarding/AddToHomeScreen";
+// AddToHomeScreen removed - tracking kept via userTracking
 import { trackUserSession } from "../components/utils/userTracking";
 
 const questions = [
@@ -53,19 +53,8 @@ export default function Onboarding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showAddToHome, setShowAddToHome] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
   useEffect(() => {
     loadExistingProfile();
-
-    // Detect if mobile
-    const checkMobile = () => {
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isMobileDevice = /mobile|android|iphone|ipad|ipod/.test(userAgent);
-      setIsMobile(isMobileDevice);
-    };
-    checkMobile();
   }, []);
 
   const loadExistingProfile = async () => {
@@ -98,18 +87,8 @@ export default function Onboarding() {
     if (currentStep < questions.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
-      // If mobile and last step, show Add to Home Screen
-      if (isMobile) {
-        setShowAddToHome(true);
-      } else {
-        handleSubmit();
-      }
+      handleSubmit();
     }
-  };
-
-  const handleContinueAfterAddToHome = () => {
-    setShowAddToHome(false);
-    handleSubmit();
   };
 
   const handleBack = () => {
@@ -198,10 +177,7 @@ export default function Onboarding() {
     );
   }
 
-  // Show Add to Home Screen for mobile users after completing step 3
-  if (showAddToHome) {
-    return <AddToHomeScreen onContinue={handleContinueAfterAddToHome} />;
-  }
+
 
   const currentQuestion = questions[currentStep];
   const isAnswered = answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== "";
