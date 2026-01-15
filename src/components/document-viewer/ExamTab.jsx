@@ -1269,7 +1269,6 @@ JSON Output (exact schema):
             </button>
           )}
         </div>
-        </div>
       </div>
     );
   }
