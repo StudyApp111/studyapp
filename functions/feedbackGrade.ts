@@ -110,30 +110,8 @@ Deno.serve(async (req) => {
 
                 const parsedResponse = JSON.parse(generatedText);
                 
-                // Validate required fields
-                const requiredFields = [
-                    'feedback_session_title',
-                    'predicted_exam_score_percentage',
-                    'prediction_calculation_rationale',
-                    'overall_performance_summary_text',
-                    'identified_strengths_list',
-                    'key_areas_for_improvement_list'
-                ];
-                
-                const missingFields = requiredFields.filter(field => !parsedResponse[field]);
-                
-                if (missingFields.length > 0) {
-                    console.error('❌ Missing required fields:', missingFields);
-                    return Response.json({ 
-                        error: 'Incomplete feedback data',
-                        code: 'JSON_002',
-                        details: `Missing fields: ${missingFields.join(', ')}`,
-                        partialData: parsedResponse
-                    }, { status: 505 });
-                }
-                
                 console.log('✅ JSON parsed successfully');
-                console.log('✅ All required fields present');
+                console.log('📋 Response fields:', Object.keys(parsedResponse));
                 console.log('=== feedbackGrade Function Complete ===');
                 return Response.json(parsedResponse);
             } catch (parseError) {
