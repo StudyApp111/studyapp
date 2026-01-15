@@ -521,47 +521,47 @@ export default function DocumentViewer() {
         {/* Mobile: Original layout without AI tutor panel */}
         <div className="md:hidden h-full flex flex-col w-full overflow-x-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full overflow-x-hidden">
-            <div className="flex-shrink-0 pb-2 w-full">
+            <div className="flex-shrink-0 pb-1.5 w-full">
               <div className="w-full px-1">
-                <TabsList className="grid w-full bg-white border border-purple-200 p-1 h-auto rounded-xl shadow-sm" style={{ gridTemplateColumns: hasDocument ? 'repeat(5, 1fr)' : 'repeat(4, 1fr)' }}>
+                <TabsList className="flex w-full bg-white border border-purple-200 p-0.5 h-auto rounded-lg shadow-sm gap-0.5">
                   <TabsTrigger 
                     value="studyplan"
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-md flex flex-col items-center justify-center gap-0.5 py-2 px-1 rounded-lg transition-all"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
                   >
-                    <Target className="w-5 h-5" />
-                    <span className="text-[9px] font-semibold">Plan</span>
+                    <Target className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-semibold">Plan</span>
                   </TabsTrigger>
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
-                      className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-md flex flex-col items-center justify-center gap-0.5 py-2 px-1 rounded-lg transition-all"
+                      className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
                     >
-                      <FileText className="w-5 h-5" />
-                      <span className="text-[9px] font-semibold">Doc</span>
+                      <FileText className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Doc</span>
                     </TabsTrigger>
                   )}
                   <TabsTrigger 
                     value="exam"
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-md flex flex-col items-center justify-center gap-0.5 py-2 px-1 rounded-lg transition-all relative"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
                   >
-                    {showExamDot && <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                    <Trophy className="w-5 h-5" />
-                    <span className="text-[9px] font-semibold">Exam</span>
+                    {showExamDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                    <Trophy className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-semibold">Exam</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-md flex flex-col items-center justify-center gap-0.5 py-2 px-1 rounded-lg transition-all relative"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
                   >
-                    {showFlashcardsDot && <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                    <BookMarked className="w-5 h-5" />
-                    <span className="text-[9px] font-semibold">Flash</span>
+                    {showFlashcardsDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                    <BookMarked className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-semibold">Flash</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="teachit"
-                    className="data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-md flex flex-col items-center justify-center gap-0.5 py-2 px-1 rounded-lg transition-all"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
                   >
-                    <Lightbulb className="w-5 h-5" />
-                    <span className="text-[9px] font-semibold">Teach</span>
+                    <Lightbulb className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-semibold">Teach</span>
                   </TabsTrigger>
                 </TabsList>
               </div>

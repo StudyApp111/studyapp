@@ -206,41 +206,18 @@ export default function Layout({ children, currentPageName }) {
         <main className="flex-1 flex flex-col">
           {/* Mobile Header - Hidden during onboarding and on DocumentViewer */}
           {showNavigation && !isOnboardingPage && showMobileHeader && (
-            <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-3 py-2.5 md:hidden">
-                <div className="flex items-center justify-between">
-                  {/* Streak - left */}
-                  <div className="flex items-center gap-1 bg-orange-100 px-2 py-1 rounded-full">
-                    <Flame className="w-3.5 h-3.5 text-orange-500" />
-                    <span className="text-xs font-bold text-orange-700">{user?.current_streak || 0}</span>
-                  </div>
-                  {/* Logo + App Name - center */}
-                  <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity absolute left-1/2 -translate-x-1/2">
-                    <img 
-                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
-                      alt="StudyApp Logo"
-                      className="w-7 h-7"
-                    />
-                    <span className="font-bold text-slate-900 text-sm">StudyApp</span>
-                  </Link>
-                  {/* Profile - right */}
-                  <div className="flex items-center gap-1">
-                    {user && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          navigate(createPageUrl("Settings"));
-                        }}
-                        className="w-7 h-7 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full flex items-center justify-center shadow-sm cursor-pointer"
-                      >
-                        <span className="text-white font-semibold text-[10px]">
-                          {user.full_name?.[0]?.toUpperCase() || 'U'}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                </div>
+            <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-3 py-2 md:hidden">
+              <div className="flex items-center justify-center">
+                {/* Logo + App Name - centered */}
+                <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <img 
+                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+                    alt="StudyApp Logo"
+                    className="w-6 h-6"
+                  />
+                  <span className="font-bold text-slate-900 text-sm">StudyApp</span>
+                </Link>
+              </div>
             </header>
           )}
 
