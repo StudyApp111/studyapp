@@ -86,6 +86,15 @@ export default function TeachItTab({ lesson, focusTopics }) {
         contentDescription = lesson.description || "N/A";
       }
 
+      // Get focus topics from study plan if available
+      const topicsToFocus = focusTopics || studyPlanTopics;
+      const focusInstruction = topicsToFocus?.length > 0 
+        ? `\n\nPRIORITY FOCUS TOPICS (from student's study plan - they struggled with these):
+${topicsToFocus.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+
+Generate cards that specifically address these topics. At least 3 of the 5 cards MUST directly cover these focus areas.`
+        : '';
+
       const prompt = `You are an expert educator creating "Teach It" cards for ${lesson.course_name}.
 
 CONTEXT:
@@ -95,6 +104,7 @@ School: ${learningProfile.school || "N/A"}
 
 STUDENT'S MATERIAL:
 ${contentDescription}
+${focusInstruction}
 
 CRITICAL INSTRUCTIONS:
 1. Read the student's material carefully and identify 5 SPECIFIC, CONCRETE concepts that are EXPLICITLY covered in their content
