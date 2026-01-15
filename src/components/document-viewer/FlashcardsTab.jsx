@@ -64,10 +64,20 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         contentForFlashcards = contentForFlashcards.substring(0, 50000) + "\n...[content truncated]";
       }
       
+      // Get focus topics from study plan if available
+      const topicsToFocus = focusTopics || studyPlanTopics;
+      const focusInstruction = topicsToFocus?.length > 0 
+        ? `\n\nPRIORITY FOCUS: Generate cards that specifically cover these topics (from the student's study plan):
+${topicsToFocus.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+
+At least 60% of the flashcards should directly address these focus topics.`
+        : '';
+      
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: `Generate 20 high-quality flashcards for this course: ${lesson.course_name}
 
 Content: ${contentForFlashcards}
+${focusInstruction}
 
 Create flashcards that:
 1. Cover key concepts, definitions, and important facts
