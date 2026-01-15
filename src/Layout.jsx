@@ -205,7 +205,7 @@ export default function Layout({ children, currentPageName }) {
 
         <main className="flex-1 flex flex-col">
           {/* Mobile Header - Hidden during onboarding and on DocumentViewer */}
-          {showNavigation && !isOnboardingPage && !isDocumentViewerPage && (
+          {showNavigation && !isOnboardingPage && showMobileHeader && (
             <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-3 py-2 md:hidden">
               <div className="flex items-center justify-center">
                 {/* Logo + App Name - centered */}
