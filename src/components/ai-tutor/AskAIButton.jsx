@@ -5,7 +5,7 @@ import { useAITutor } from "./AITutorContext";
 /**
  * Contextual "Ask AI" button that pre-loads context into the AI tutor
  * 
- * @param {string} type - "question" | "flashcard" | "document"
+ * @param {string} type - "question" | "flashcard" | "document" | "teachit"
  * @param {object} data - Context data (question object, flashcard, or selected text)
  * @param {object} lesson - Lesson context for additional info
  * @param {string} size - "sm" | "md" (default: "sm")
@@ -62,6 +62,13 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
         topics: data.topics
       };
       contextData.initialPrompt = `Help me understand this flashcard:\n\nQuestion: "${data.question}"\nAnswer: "${data.answer}"\n\nExplain this concept in more detail.`;
+    }
+    else if (type === "teachit") {
+      contextData.teachit = {
+        question: data.question,
+        model_answer: data.model_answer
+      };
+      contextData.initialPrompt = `Help me understand how to explain this concept:\n\n"${data.question}"\n\nGive me hints on how to structure my explanation without giving me the full answer.`;
     }
     else if (type === "document") {
       contextData.selectedText = data.selectedText;
