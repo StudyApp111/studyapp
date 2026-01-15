@@ -373,7 +373,7 @@ If content specifies a concrete skill/topic (e.g., “factoring”, “photosynt
 Only broaden scope if the user explicitly requests review or exam prep.
 
 • Light Search (Minimal):
-Use Google Search ONLY to confirm terminology or common exam phrasing for this course.
+Use Google Search ONLY to confirm terminology or common exam phrasing for this course IF Content Summary IS <200 CHARACTERS LONG.
 Do NOT introduce new topics.
 
 • Difficulty Progression:
@@ -864,7 +864,7 @@ Return ONE valid JSON object. No extra text.
         }
       }
 
-      const feedbackPrompt = `Expert educator for ${currentLesson.course_name} (grade ${learningProfile.grade || "N/A"}). Analyze exam performance using curriculum map to predict grade.
+      const feedbackPrompt = `Expert educator for ${currentLesson.course_name} (grade ${learningProfile.grade || "N/A"}). Analyze exam performance using curriculum map to predict grade as if you were a teacher at this school teaching this course.
 
 Input: Grade ${learningProfile.grade || "N/A"}, ${currentLesson.course_name}, Exam ${exam.exam_number}/6
 Curriculum: ${JSON.stringify(currentLesson.curriculum_map, null, 2)}
@@ -880,15 +880,9 @@ Prediction Algorithm:
 5) Coverage: competency weight≥25% & <2 items→-2 each (max -4); ≥80% assessed→+1 to +2. Cap [-8,+4].
 6) Final: round(aggregate+modifier) [0,100]+"%". If 0/10→"Not Calculable".
 
-Planning Signals (internal): priority_competencies (bottom 2-3 weighted), misconception_targets (recurring/weighted), exam_format_deficits (type<40% & weight≥20%), trend_direction (trajectory). Use to shape suggested_future_sessions_plan & learning_patterns.
-
 JSON Output (exact schema):
 - feedback_session_title: "Exam ${exam.exam_number} Performance & Grade Prediction"
-- predicted_exam_score_percentage: "%"|"Not Calculable"
-- prediction_calculation_rationale: 1-3 sentences (difficulty, weighting, type, coverage)
-- overall_performance_summary_text: 1-2 sentences w/next-focus
-- identified_strengths_list: 2-3 items
-- key_areas_for_improvement_list: 2-3 items (tied to misconceptions)`;
+- predicted_exam_score_percentage: "%"|"Not Calculable"`;
 
       const { data: feedbackData } = await retryOperation(() => 
         base44.functions.invoke('feedbackGrade', {
