@@ -1267,20 +1267,21 @@ No extra fields. % as strings.`;
                 setSelectedExamNumber(1);
                 hasAutoSelectedRef.current = true;
               }}
-              className="p-3 md:p-5 rounded-xl border-2 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-300 hover:shadow-lg hover:scale-[1.02] transition-all text-left"
+              className="p-2.5 rounded-xl border-2 bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-300 hover:shadow-md transition-all text-left"
             >
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-9 h-9 md:w-12 md:h-12 bg-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Play className="w-4 h-4 md:w-6 md:h-6 text-white" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Play className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <h5 className="font-bold text-slate-900 text-sm md:text-lg">Exam 1</h5>
-                  <p className="text-xs md:text-sm text-slate-600">Diagnostic Assessment</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="font-bold text-slate-900 text-sm">Diagnostic</span>
+                    <Badge className="text-[9px] px-1.5 py-0 bg-purple-100 text-purple-700">BASELINE</Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-500">Establishes your starting grade</p>
+                  <p className="text-[10px] text-purple-600 font-medium mt-1">Start →</p>
                 </div>
               </div>
-              <p className="text-xs md:text-sm text-purple-700 font-medium ml-11 md:ml-12 mt-1 md:mt-2">
-                Click to start your first exam →
-              </p>
             </button>
           )}
         </div>
