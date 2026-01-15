@@ -1160,11 +1160,16 @@ No extra fields. % as strings.`;
       <div className="px-3 py-4 max-w-md mx-auto md:max-w-2xl">
         {/* Header */}
         <div className="mb-4">
-          <h2 className="text-lg md:text-xl font-bold text-slate-900">Exams</h2>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+              <Trophy className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-lg md:text-xl font-bold text-slate-900">Exams</h2>
+          </div>
           <p className="text-xs text-slate-500">AI-graded assessments to track your progress</p>
         </div>
         
-        <div className="space-y-2 md:space-y-3">
+        <div className="space-y-2.5 md:space-y-3">
           {sortedExams.length > 0 ? sortedExams.map((e, index) => {
             const isCompleted = e.completed;
             const canStart = e.exam_number === 1 || sortedExams.find(ex => ex.exam_number === e.exam_number - 1)?.completed;
@@ -1184,47 +1189,52 @@ No extra fields. % as strings.`;
                   }
                 }}
                 disabled={!canStart && !isCompleted}
-                className={`w-full p-3 md:p-4 rounded-2xl border transition-all text-left ${
+                className={`w-full group relative overflow-hidden p-3 md:p-4 rounded-2xl transition-all text-left shadow-sm ${
                   isCompleted
-                    ? 'bg-white border-slate-200 hover:border-emerald-300 hover:shadow-sm'
+                    ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 hover:shadow-md'
                     : canStart
-                    ? 'bg-white border-purple-200 hover:border-purple-400 hover:shadow-md'
-                    : 'bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed'
+                    ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 hover:border-purple-400 hover:shadow-lg'
+                    : 'bg-slate-50 border border-slate-100 opacity-60 cursor-not-allowed'
                 }`}
               >
-                <div className="flex items-center gap-3">
+                {canStart && !isCompleted && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                )}
+                <div className="relative flex items-center gap-3">
                   {/* Number/Status indicator */}
-                  <div className={`w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md transform group-hover:scale-105 transition-transform ${
                     isCompleted 
-                      ? 'bg-emerald-100' 
+                      ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' 
                       : canStart 
-                      ? 'bg-purple-100' 
-                      : 'bg-slate-100'
+                      ? isInProgress 
+                        ? 'bg-gradient-to-br from-purple-600 to-purple-700'
+                        : 'bg-gradient-to-br from-purple-500 to-purple-600'
+                      : 'bg-slate-200'
                   }`}>
                     {isCompleted ? (
-                      <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
+                      <CheckCircle2 className="w-6 h-6 md:w-7 md:h-7 text-white" />
                     ) : canStart ? (
-                      <span className={`text-lg md:text-xl font-bold ${isInProgress ? 'text-purple-600' : 'text-purple-500'}`}>
+                      <span className="text-lg md:text-xl font-black text-white">
                         {e.exam_number}
                       </span>
                     ) : (
-                      <Lock className="w-4 h-4 md:w-5 md:h-5 text-slate-400" />
+                      <Lock className="w-5 h-5 md:w-6 md:h-6 text-slate-400" />
                     )}
                   </div>
                   
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-semibold text-slate-900 text-sm md:text-base">
+                      <span className="font-bold text-slate-900 text-sm md:text-base">
                         {isFirstExam ? 'Diagnostic' : `Exam ${e.exam_number}`}
                       </span>
                       {isInProgress && (
-                        <span className="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium">
+                        <span className="text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded-full font-bold">
                           In Progress
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] md:text-xs text-slate-500 line-clamp-1">
+                    <p className="text-[11px] md:text-xs text-slate-600 line-clamp-1 font-medium">
                       {e.focus_description || (isFirstExam ? 'Baseline assessment' : 'Adaptive assessment')}
                     </p>
                   </div>
@@ -1232,22 +1242,22 @@ No extra fields. % as strings.`;
                   {/* Right side - Grade or Action */}
                   {isCompleted && e.predicted_grade ? (
                     <div className="flex flex-col items-center flex-shrink-0">
-                      <div className={`w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center font-bold text-white text-base md:text-lg ${
-                        e.predicted_grade.startsWith('A') ? 'bg-emerald-500' :
-                        e.predicted_grade.startsWith('B') ? 'bg-blue-500' :
-                        e.predicted_grade.startsWith('C') ? 'bg-amber-500' :
-                        e.predicted_grade.startsWith('D') ? 'bg-orange-500' :
-                        'bg-red-500'
+                      <div className={`w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center font-black text-white text-base md:text-lg shadow-md bg-gradient-to-br ${
+                        e.predicted_grade.startsWith('A') ? 'from-emerald-500 to-teal-600' :
+                        e.predicted_grade.startsWith('B') ? 'from-blue-500 to-indigo-600' :
+                        e.predicted_grade.startsWith('C') ? 'from-amber-500 to-orange-600' :
+                        e.predicted_grade.startsWith('D') ? 'from-orange-500 to-red-600' :
+                        'from-red-500 to-pink-600'
                       }`}>
                         {e.predicted_grade}
                       </div>
-                      <span className="text-[10px] text-slate-400 mt-0.5">{e.total_score}%</span>
+                      <span className="text-[10px] text-slate-500 font-semibold mt-1">{e.total_score}%</span>
                     </div>
                   ) : canStart ? (
-                    <div className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      isInProgress ? 'bg-purple-600' : 'bg-purple-100'
+                    <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-md transform group-hover:translate-x-1 transition-transform bg-gradient-to-br ${
+                      isInProgress ? 'from-purple-600 to-purple-700' : 'from-purple-500 to-purple-600'
                     }`}>
-                      <Play className={`w-4 h-4 ${isInProgress ? 'text-white' : 'text-purple-600'}`} />
+                      <Play className="w-4 h-4 md:w-5 md:h-5 text-white" />
                     </div>
                   ) : null}
                 </div>
@@ -1260,18 +1270,19 @@ No extra fields. % as strings.`;
                 setSelectedExamNumber(1);
                 hasAutoSelectedRef.current = true;
               }}
-              className="w-full p-3 md:p-4 rounded-2xl bg-white border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all text-left"
+              className="w-full group relative overflow-hidden p-3 md:p-4 rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 hover:border-purple-400 hover:shadow-lg transition-all text-left shadow-sm"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg md:text-xl font-bold text-purple-500">1</span>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center gap-3">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md transform group-hover:scale-105 transition-transform">
+                  <span className="text-lg md:text-xl font-black text-white">1</span>
                 </div>
                 <div className="flex-1">
-                  <span className="font-semibold text-slate-900 text-sm md:text-base">Diagnostic</span>
-                  <p className="text-[11px] md:text-xs text-slate-500">Baseline assessment</p>
+                  <span className="font-bold text-slate-900 text-sm md:text-base">Diagnostic</span>
+                  <p className="text-[11px] md:text-xs text-slate-600 font-medium">Baseline assessment</p>
                 </div>
-                <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                  <Play className="w-4 h-4 text-purple-600" />
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-md transform group-hover:translate-x-1 transition-transform">
+                  <Play className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
               </div>
             </button>

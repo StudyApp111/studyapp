@@ -154,71 +154,91 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
 
   return (
     <div className="px-3 py-4 space-y-3 pb-24 max-w-sm mx-auto md:max-w-lg">
-      {/* Grade Header - Compact inline */}
+      {/* Grade Header - Vibrant */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-center justify-between bg-white rounded-2xl border border-slate-200 p-3 md:p-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br ${getGradeColor(currentGrade)} flex items-center justify-center`}>
-              <span className="text-xl md:text-2xl font-black text-white">{currentGrade}</span>
-            </div>
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-4 md:p-5 shadow-lg`}>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
+          <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-slate-500 font-medium">Current Grade</p>
-              {currentScore && <p className="text-xs text-slate-600">{currentScore}%</p>}
+              <p className="text-white/70 text-[10px] font-bold uppercase tracking-wide mb-1">Current Grade</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl md:text-5xl font-black text-white">{currentGrade}</span>
+                {currentScore && <span className="text-white/80 text-sm font-semibold">{currentScore}%</span>}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="flex items-center gap-1 justify-end mb-1">
+                <Star className="w-3 h-3 text-yellow-300 fill-yellow-300" />
+                <span className="text-white/70 text-[10px] font-medium">Target</span>
+              </div>
+              <span className="text-2xl md:text-3xl font-black text-yellow-300">A+</span>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-[10px] text-slate-400">Progress</p>
-            <p className="text-sm font-bold text-slate-900">{completedTasks}/{totalTasks}</p>
-            <div className="w-16 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
-              <div 
-                className="h-full bg-purple-500 rounded-full transition-all"
-                style={{ width: totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%' }}
+          
+          <div className="relative mt-3 pt-3 border-t border-white/20">
+            <div className="flex items-center justify-between text-[10px] text-white/70 mb-1.5">
+              <span className="font-medium">Progress</span>
+              <span className="font-bold text-white">{completedTasks}/{totalTasks} tasks</span>
+            </div>
+            <div className="h-2 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+              <motion.div 
+                className="h-full bg-white rounded-full shadow-sm"
+                initial={{ width: 0 }}
+                animate={{ width: totalTasks > 0 ? `${(completedTasks / totalTasks) * 100}%` : '0%' }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
               />
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Priority Focus - Compact */}
+      {/* Priority Focus - Vibrant */}
       {studyPlan?.priority_focus && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
         >
-          <div className="bg-purple-50 rounded-xl p-2.5 md:p-3">
-            <div className="flex items-start gap-2">
-              <Lightbulb className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-slate-700 leading-snug">{studyPlan.priority_focus}</p>
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-3 shadow-md">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
+            <div className="relative flex items-start gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                <Lightbulb className="w-4 h-4 text-yellow-300" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-bold text-white/80 uppercase tracking-wide mb-0.5">Focus Area</p>
+                <p className="text-xs text-white font-medium leading-snug">{studyPlan.priority_focus}</p>
+              </div>
             </div>
           </div>
         </motion.div>
       )}
 
-      {/* Next Action CTA - Sleek */}
+      {/* Next Action CTA - Vibrant */}
       {nextTask && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
         >
-          <button onClick={() => handleTaskClick(nextTask)} className="w-full">
-            <div className="bg-white rounded-2xl border-2 border-purple-200 hover:border-purple-400 hover:shadow-md transition-all p-3 md:p-4">
-              <div className="flex items-center gap-3">
-                <div className={`w-11 h-11 md:w-12 md:h-12 rounded-xl ${TASK_CONFIG[nextTask.task_type]?.bg || 'bg-purple-500'} flex items-center justify-center`}>
-                  <span className="text-lg md:text-xl">{TASK_CONFIG[nextTask.task_type]?.emoji || '📚'}</span>
+          <button onClick={() => handleTaskClick(nextTask)} className="w-full group">
+            <div className="relative overflow-hidden bg-gradient-to-br from-white to-purple-50/50 rounded-2xl border-2 border-purple-300 hover:border-purple-500 shadow-md hover:shadow-xl transition-all p-3 md:p-4">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center gap-3">
+                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br ${TASK_CONFIG[nextTask.task_type]?.bg || 'bg-purple-500'} shadow-lg flex items-center justify-center transform group-hover:scale-110 transition-transform`}>
+                  <span className="text-xl md:text-2xl">{TASK_CONFIG[nextTask.task_type]?.emoji || '📚'}</span>
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <p className="text-purple-600 text-[10px] font-bold uppercase">Up Next</p>
-                  <h3 className="text-sm font-semibold text-slate-900 truncate">
+                  <p className="text-purple-600 text-[10px] font-bold uppercase tracking-wide mb-0.5">Up Next</p>
+                  <h3 className="text-sm md:text-base font-bold text-slate-900 truncate">
                     {TASK_CONFIG[nextTask.task_type]?.action} {nextTask.target_count} {TASK_CONFIG[nextTask.task_type]?.unit}
                   </h3>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
-                  <ArrowRight className="w-4 h-4 text-white" />
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-md transform group-hover:translate-x-1 transition-transform">
+                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
               </div>
             </div>
@@ -226,25 +246,26 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         </motion.div>
       )}
 
-      {/* All tasks complete */}
+      {/* All tasks complete - Vibrant */}
       {studyPlan?.all_tasks_completed && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
         >
-          <button onClick={() => onNavigate('exam')} className="w-full">
-            <div className="bg-white rounded-2xl border-2 border-emerald-200 hover:border-emerald-400 hover:shadow-md transition-all p-3 md:p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-emerald-500 flex items-center justify-center">
-                  <Trophy className="w-5 h-5 md:w-6 md:h-6 text-white" />
+          <button onClick={() => onNavigate('exam')} className="w-full group">
+            <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl shadow-lg hover:shadow-xl transition-all p-3 md:p-4">
+              <div className="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full blur-2xl" />
+              <div className="relative flex items-center gap-3">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
+                  <Trophy className="w-6 h-6 md:w-7 md:h-7 text-yellow-300" />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-emerald-600 text-[10px] font-bold uppercase">Ready!</p>
-                  <h3 className="text-sm font-semibold text-slate-900">Take Next Exam</h3>
+                  <p className="text-emerald-100 text-[10px] font-bold uppercase tracking-wide">Ready!</p>
+                  <h3 className="text-sm md:text-base font-bold text-white">Take Next Exam</h3>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center">
-                  <ArrowRight className="w-4 h-4 text-white" />
+                <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-md transform group-hover:translate-x-1 transition-transform">
+                  <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
               </div>
             </div>
@@ -271,52 +292,52 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
               <button
                 onClick={() => !isComplete && handleTaskClick(task)}
                 disabled={isComplete}
-                className="w-full text-left"
+                className="w-full text-left group"
               >
-                <div className={`p-2.5 md:p-3 rounded-xl border transition-all ${
+                <div className={`relative overflow-hidden p-3 md:p-3.5 rounded-xl transition-all ${
                   isComplete 
-                    ? 'bg-emerald-50/50 border-emerald-200' 
-                    : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
+                    ? 'bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200' 
+                    : `bg-gradient-to-br ${config.bgLight} border ${config.border} hover:shadow-md`
                 }`}>
-                  <div className="flex items-center gap-2.5">
+                  <div className="relative flex items-center gap-3">
                     {/* Icon */}
-                    <div className={`w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                      isComplete ? 'bg-emerald-100' : config.bgLight
-                    }`}>
+                    <div className={`w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
+                      isComplete ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' : `bg-gradient-to-br ${config.bg}`
+                    } group-hover:scale-105 transition-transform`}>
                       {isComplete ? (
-                        <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" />
+                        <CheckCircle2 className="w-5 h-5 md:w-5.5 md:h-5.5 text-white" />
                       ) : (
-                        <span className="text-base md:text-lg">{config.emoji}</span>
+                        <span className="text-lg md:text-xl">{config.emoji}</span>
                       )}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-[10px] font-bold uppercase ${isComplete ? 'text-emerald-600' : config.text}`}>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className={`text-[10px] font-bold uppercase tracking-wide ${isComplete ? 'text-emerald-700' : config.text}`}>
                           {config.label}
                         </span>
                         {!isComplete && task.completed_count > 0 && (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-500 font-medium">
                             {task.completed_count}/{task.target_count}
                           </span>
                         )}
                       </div>
-                      <h4 className={`font-medium text-xs ${isComplete ? 'text-emerald-700 line-through' : 'text-slate-800'}`}>
+                      <h4 className={`font-semibold text-xs md:text-sm ${isComplete ? 'text-emerald-700 line-through' : 'text-slate-900'}`}>
                         {task.title || `${config.action} ${task.target_count} ${config.unit}`}
                       </h4>
                       
                       {/* Progress bar */}
                       {!isComplete && task.completed_count > 0 && (
-                        <div className="h-1 bg-slate-100 rounded-full mt-1.5 overflow-hidden">
-                          <div className={`h-full ${config.bg} rounded-full`} style={{ width: `${progress}%` }} />
+                        <div className="h-1.5 bg-white/50 rounded-full mt-2 overflow-hidden shadow-inner">
+                          <div className={`h-full bg-gradient-to-r ${config.bg} rounded-full shadow-sm`} style={{ width: `${progress}%` }} />
                         </div>
                       )}
                     </div>
 
                     {/* Arrow */}
                     {!isComplete && (
-                      <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0" />
+                      <ChevronRight className={`w-4 h-4 ${config.text} flex-shrink-0 group-hover:translate-x-1 transition-transform`} />
                     )}
                   </div>
                 </div>
