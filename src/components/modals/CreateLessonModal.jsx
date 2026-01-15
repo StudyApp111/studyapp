@@ -458,13 +458,11 @@ Constraints:
           <>
             {/* Compact Header */}
             <div className="relative bg-gradient-to-r from-purple-600 to-indigo-700 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-7 h-7 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-white" />
                 </div>
-                <div>
-                  <h2 className="text-base font-bold text-white">New Lesson</h2>
-                </div>
+                <h2 className="text-base font-bold text-white">New Lesson</h2>
               </div>
             </div>
 
@@ -535,6 +533,49 @@ Constraints:
                       disabled={isProcessing}
                       className="min-h-[60px] resize-none text-sm"
                     />
+
+                    {/* Smart suggestions for short descriptions */}
+                    {description.length > 0 && description.length < 50 && courseName.trim() && (
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-purple-700 font-medium">Need ideas?</span>
+                          {!loadingSuggestions && suggestions.length === 0 && (
+                            <button
+                              type="button"
+                              onClick={generateSuggestions}
+                              className="text-[10px] bg-purple-600 hover:bg-purple-700 text-white font-medium px-2 py-1 rounded transition-colors"
+                            >
+                              Suggest Topics
+                            </button>
+                          )}
+                        </div>
+                        
+                        {loadingSuggestions && (
+                          <div className="flex items-center gap-1.5 text-[10px] text-purple-600 mt-1.5">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Finding topics...
+                          </div>
+                        )}
+                        
+                        {suggestions.length > 0 && (
+                          <div className="grid grid-cols-1 gap-1 mt-1.5">
+                            {suggestions.slice(0, 3).map((suggestion, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  setDescription(suggestion);
+                                  setSuggestions([]);
+                                }}
+                                className="w-full text-left text-[10px] text-slate-700 bg-white hover:bg-purple-100 border border-purple-100 rounded p-1.5 transition-all truncate"
+                              >
+                                {suggestion}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {description.length >= 30 && description.length < 100 && (
                       <p className="text-[10px] text-yellow-700 flex items-center gap-1">

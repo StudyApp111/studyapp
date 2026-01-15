@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, PenLine } from "lucide-react";
+import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, PenLine, HelpCircle } from "lucide-react";
+import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
 
-export default function TeachItTab({ lesson, focusTopics }) {
+export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [cards, setCards] = useState([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
@@ -445,10 +446,20 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200/50 shadow-2xl overflow-hidden w-full max-w-full">
                 {/* Ultra-compact card header */}
                 <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-2 py-2 md:px-6 md:py-5 w-full">
-                  <Badge className="mb-1 bg-white/20 text-white border-white/30 backdrop-blur-sm text-[9px] md:text-xs">
-                    <Sparkles className="w-2 h-2 md:w-3 md:h-3 mr-0.5" />
-                    Explain This
-                  </Badge>
+                  <div className="flex items-center justify-between mb-1">
+                    <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[9px] md:text-xs">
+                      <HelpCircle className="w-2 h-2 md:w-3 md:h-3 mr-0.5" />
+                      Explain This
+                    </Badge>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <AskAIButton 
+                        type="teachit" 
+                        data={{ question: currentCard.question, model_answer: currentCard.model_answer }} 
+                        lesson={lesson} 
+                        size="sm" 
+                      />
+                    </div>
+                  </div>
                   <h3 className="text-xs md:text-xl font-bold text-white leading-tight md:leading-relaxed break-words">
                     {currentCard.question}
                   </h3>
