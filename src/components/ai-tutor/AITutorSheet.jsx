@@ -108,8 +108,8 @@ export default function AITutorSheet() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            className="fixed left-0 right-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
-            style={{ bottom: 'calc(70px + env(safe-area-inset-bottom))', height: '60vh' }}
+            className="fixed left-0 right-0 bottom-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
+            style={{ height: '75vh', maxHeight: 'calc(100vh - 60px)' }}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between flex-shrink-0">
@@ -163,11 +163,11 @@ export default function AITutorSheet() {
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <ReactMarkdown className="text-xs prose prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-xs [&>ol]:my-1 [&>ol]:ml-3">
+                      <ReactMarkdown className="text-[11px] leading-relaxed prose prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-[11px] [&>ol]:my-1 [&>ol]:ml-3">
                         {msg.content}
                       </ReactMarkdown>
                     ) : (
-                      <p className="text-xs">{msg.content}</p>
+                      <p className="text-[11px]">{msg.content}</p>
                     )}
                   </div>
                 </motion.div>
