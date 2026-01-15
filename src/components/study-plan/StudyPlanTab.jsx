@@ -116,47 +116,39 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
 
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
-    const hasCompletedOfficialExam = (exams || []).some(e => e.exam_type !== 'practice' && e.completed);
-
     return (
-      <div className="p-3 md:p-4 space-y-4 max-w-2xl mx-auto">
-        {/* Hero Card - First Exam */}
+      <div className="px-3 py-4 max-w-lg mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <Card className="overflow-hidden border-0 shadow-xl">
-            <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 p-6 text-center">
-              <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Trophy className="w-10 h-10 text-yellow-300" />
+            <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 p-5 text-center">
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <Trophy className="w-8 h-8 text-yellow-300" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Get Your Predicted Grade</h2>
-              <p className="text-purple-200 text-sm max-w-sm mx-auto mb-6">
-                Take a quick 5-question diagnostic to see where you stand and get a personalized study plan.
+              <h2 className="text-xl font-bold text-white mb-1">Get Your Predicted Grade</h2>
+              <p className="text-purple-200 text-xs max-w-xs mx-auto mb-4">
+                Take a 5-question diagnostic and get a personalized study plan.
               </p>
               
               <Button 
                 onClick={() => onNavigate('exam')}
-                size="lg"
-                className="bg-white text-purple-700 hover:bg-purple-50 font-bold px-8 py-6 text-lg rounded-xl shadow-lg"
+                className="bg-white text-purple-700 hover:bg-purple-50 font-bold px-6 py-5 text-sm rounded-xl shadow-lg"
               >
-                <Play className="w-5 h-5 mr-2" />
-                Start Diagnostic Exam
+                <Play className="w-4 h-4 mr-2" />
+                Start Diagnostic
               </Button>
             </div>
             
-            <div className="bg-white p-4">
-              <div className="flex items-center justify-center gap-6 text-sm text-slate-600">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-purple-500" />
+            <div className="bg-white p-3">
+              <div className="flex items-center justify-center gap-4 text-xs text-slate-600">
+                <div className="flex items-center gap-1.5">
+                  <Target className="w-3.5 h-3.5 text-purple-500" />
                   <span>5 questions</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-purple-500" />
-                  <span>~10 minutes</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-500" />
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-500" />
                   <span>AI graded</span>
                 </div>
               </div>
