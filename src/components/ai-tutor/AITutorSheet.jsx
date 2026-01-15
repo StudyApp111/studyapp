@@ -210,7 +210,7 @@ export default function AITutorSheet() {
             )}
 
             {/* Input */}
-            <div className="border-t border-slate-200 p-3 pb-6 bg-white">
+            <div className="border-t border-slate-200 p-3 bg-white" style={{ paddingBottom: 'max(24px, env(safe-area-inset-bottom))' }}>
               <div className="flex gap-2">
                 <input
                   ref={inputRef}
