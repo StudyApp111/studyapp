@@ -184,7 +184,7 @@ Remember: Keep it brief!`,
               </div>
 
               {/* Input */}
-              <div className="border-t border-slate-200 p-3 pb-6">
+              <div className="border-t border-slate-200 p-3" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
                 <div className="flex gap-2">
                   <input
                     type="text"
