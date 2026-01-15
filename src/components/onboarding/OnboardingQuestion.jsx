@@ -152,6 +152,13 @@ export default function OnboardingQuestion({ question, value, onChange }) {
           onChange={(e) => onChange(e.target.value)}
           placeholder={question.placeholder}
           className="text-lg p-6 h-auto text-center"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="words"
+          spellCheck="false"
+          data-form-type="other"
+          data-lpignore="true"
+          name={`onboarding-${question.id}-${Date.now()}`}
         />
       </div>
     );
