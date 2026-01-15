@@ -10,7 +10,7 @@ import EducationalLoader from "@/components/ui/EducationalLoader";
 import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
 
-export default function TeachItTab({ lesson }) {
+export default function TeachItTab({ lesson, focusTopics }) {
   const [cards, setCards] = useState([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
@@ -18,12 +18,31 @@ export default function TeachItTab({ lesson }) {
   const [isGrading, setIsGrading] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
+  const [studyPlanTopics, setStudyPlanTopics] = useState(null);
 
   useEffect(() => {
     if (lesson?.id) {
       loadCards();
+      loadStudyPlanTopics();
     }
   }, [lesson?.id]);
+  
+  const loadStudyPlanTopics = async () => {
+    try {
+      const plans = await base44.entities.StudyPlan.filter({ 
+        lesson_id: lesson.id,
+        status: 'active'
+      });
+      if (plans.length > 0) {
+        const teachItTask = plans[0].tasks?.find(t => t.task_type === 'teach_it' && !t.completed);
+        if (teachItTask?.focus_topics?.length > 0) {
+          setStudyPlanTopics(teachItTask.focus_topics);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading study plan topics:", error);
+    }
+  };
 
   const loadCards = async () => {
     try {
