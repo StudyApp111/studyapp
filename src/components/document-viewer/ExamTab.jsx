@@ -891,22 +891,7 @@ JSON Output (exact schema):
             type: "object",
             properties: {
               feedback_session_title: { type: "string" },
-              predicted_exam_score_percentage: { type: "string" },
-              prediction_calculation_rationale: { type: "string" },
-              overall_performance_summary_text: { type: "string" },
-              identified_strengths_list: { type: "array", items: { type: "string" } },
-              key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
-              suggested_future_sessions_plan: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    session_number: { type: "integer" },
-                    session_name: { type: "string" },
-                    session_focus_description: { type: "string" }
-                  }
-                }
-              }
+              predicted_exam_score_percentage: { type: "string" }
             }
           }
         })
@@ -966,29 +951,28 @@ JSON Output (exact schema):
         })
       );
 
-      // Create all 6 exams after completing exam 1
-      if (exam.exam_number === 1 && feedbackData.suggested_future_sessions_plan) {
+      // Create exams 2-6 after completing exam 1
+      if (exam.exam_number === 1) {
         const existingExams = await base44.entities.Exam.filter({ lesson_id: lesson.id });
         const existingNumbers = existingExams.map(e => e.exam_number);
         
-        await Promise.all(
-          feedbackData.suggested_future_sessions_plan.map(async (session) => {
-            if (!existingNumbers.includes(session.session_number)) {
-              await base44.entities.Exam.create({
-                lesson_id: lesson.id,
-                exam_type: "official",
-                exam_number: session.session_number,
-                focus_description: session.session_focus_description,
-                status: "not_started",
-                completed: false,
-                questions: [],
-                feedback: [],
-                time_taken_seconds: 0,
-                question_time_laps: []
-              });
-            }
-          })
-        );
+        // Create exams 2-6 without pre-defined focus (will be determined dynamically)
+        for (let i = 2; i <= 6; i++) {
+          if (!existingNumbers.includes(i)) {
+            await base44.entities.Exam.create({
+              lesson_id: lesson.id,
+              exam_type: "official",
+              exam_number: i,
+              focus_description: "Adaptive assessment based on your progress",
+              status: "not_started",
+              completed: false,
+              questions: [],
+              feedback: [],
+              time_taken_seconds: 0,
+              question_time_laps: []
+            });
+          }
+        }
       }
 
       // Generate study plan after official exam completion
