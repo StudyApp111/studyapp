@@ -86,9 +86,9 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
   return (
     <>
       <Dialog open={showBreakPrompt || isOnBreak} onOpenChange={(open) => !open && handleSkipBreak()}>
-        <DialogContent className="max-w-[320px] w-[calc(100%-2rem)] mx-auto rounded-2xl p-5">
+        <DialogContent className="max-w-[320px] w-[calc(100%-2rem)] mx-auto rounded-2xl p-4 max-h-[70vh] overflow-y-auto border-0">
           {isOnBreak ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Break header */}
               <div className="text-center">
                 <motion.div
@@ -103,26 +103,26 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
               </div>
 
               {/* Timer with progress ring */}
-              <div className="relative flex items-center justify-center py-4">
-                <svg className="w-32 h-32 transform -rotate-90">
+              <div className="relative flex items-center justify-center py-2">
+                <svg className="w-28 h-28 transform -rotate-90">
                   <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
+                    cx="56"
+                    cy="56"
+                    r="48"
                     fill="none"
                     stroke="#e2e8f0"
-                    strokeWidth="8"
+                    strokeWidth="6"
                   />
                   <motion.circle
-                    cx="64"
-                    cy="64"
-                    r="56"
+                    cx="56"
+                    cy="56"
+                    r="48"
                     fill="none"
                     stroke="url(#breakGradient)"
-                    strokeWidth="8"
+                    strokeWidth="6"
                     strokeLinecap="round"
-                    strokeDasharray={352}
-                    strokeDashoffset={352 - (352 * breakProgress / 100)}
+                    strokeDasharray={302}
+                    strokeDashoffset={302 - (302 * breakProgress / 100)}
                   />
                   <defs>
                     <linearGradient id="breakGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -132,10 +132,10 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
                   </defs>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-bold text-emerald-600 font-mono">
+                  <span className="text-2xl font-bold text-emerald-600 font-mono">
                     {formatTime(breakTimeLeft)}
                   </span>
-                  <span className="text-[10px] text-slate-400 mt-1">remaining</span>
+                  <span className="text-[10px] text-slate-400">remaining</span>
                 </div>
               </div>
 
@@ -169,7 +169,7 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Celebration header */}
               <div className="text-center">
                 <motion.div
@@ -197,18 +197,13 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
                 <p className="text-xs opacity-90">Focus session reward</p>
               </motion.div>
 
-              {/* Pomodoro explanation */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
-                <div className="flex gap-2">
-                  <Brain className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-xs font-semibold text-slate-800 mb-1">Why take a break?</p>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                      The <span className="font-medium">Pomodoro Technique</span> uses timed intervals to boost focus. 
-                      Short breaks help your brain consolidate what you learned and prevent burnout. 
-                      Studies show this improves retention by up to 40%!
-                    </p>
-                  </div>
+              {/* Pomodoro explanation - compact */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-2">
+                <div className="flex gap-2 items-start">
+                  <Brain className="w-3.5 h-3.5 text-purple-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-slate-600 leading-relaxed">
+                    <span className="font-medium">Pomodoro Technique:</span> Short breaks boost retention by up to 40%!
+                  </p>
                 </div>
               </div>
 
