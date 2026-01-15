@@ -117,27 +117,64 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
-      <div className="px-3 py-4 max-w-sm mx-auto md:max-w-lg">
+      <div className="px-3 py-4 max-w-sm mx-auto md:max-w-none md:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="max-w-lg mx-auto"
         >
-          <div className="text-center py-6">
-            <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <Trophy className="w-7 h-7 text-purple-600" />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900 mb-1">No Study Plan Yet</h2>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto mb-4">
-              Complete the diagnostic exam to get your personalized study plan.
-            </p>
+          {/* Hero Card */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 p-6 md:p-8 shadow-2xl mb-4">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl" />
             
-            <Button 
-              onClick={() => onNavigate('exam')}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2.5 text-sm rounded-xl"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Take Diagnostic
-            </Button>
+            <div className="relative">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Target className="w-8 h-8 text-yellow-300" />
+              </div>
+              
+              <h2 className="text-xl md:text-2xl font-black text-white text-center mb-2">
+                Your Personalized Study Plan
+              </h2>
+              <p className="text-purple-200 text-sm md:text-base text-center max-w-sm mx-auto mb-6">
+                Take a quick diagnostic to unlock an AI-powered study plan tailored to your weak spots
+              </p>
+              
+              <Button 
+                onClick={() => onNavigate('exam')}
+                className="w-full bg-white hover:bg-purple-50 text-purple-700 font-bold px-6 py-3.5 text-base rounded-xl shadow-lg hover:shadow-xl transition-all"
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Start Diagnostic
+              </Button>
+            </div>
+          </div>
+
+          {/* How it works */}
+          <div className="space-y-2.5">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide px-1">How it works</p>
+            
+            {[
+              { icon: "📝", title: "Quick Assessment", desc: "10 AI-generated questions to find gaps" },
+              { icon: "🎯", title: "Targeted Plan", desc: "Custom tasks based on your weak areas" },
+              { icon: "📈", title: "Track Progress", desc: "Watch your grade improve with each cycle" }
+            ].map((step, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 + idx * 0.1 }}
+                className="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100 shadow-sm"
+              >
+                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-lg">
+                  {step.icon}
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">{step.title}</h4>
+                  <p className="text-[11px] text-slate-500">{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
       </div>
