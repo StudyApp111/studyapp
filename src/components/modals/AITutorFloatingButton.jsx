@@ -32,7 +32,7 @@ export default function AITutorFloatingButton({ hidden = false }) {
     if (isOpen && messages.length === 0) {
       setMessages([{
         role: "assistant",
-        content: `Hey${userName ? ` ${userName}` : ""}! 👋 I'm your StudyApp AI tutor.
+        content: `Hey${userName ? ` ${userName}` : ""}! 👋 I'm Polly, your StudyApp AI tutor.
 
 **Quick start:**
 • Upload notes on Home → get quizzes & flashcards
@@ -126,13 +126,14 @@ Remember: Keep it brief!`,
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-[55%] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
+              className="md:hidden fixed left-0 right-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
+              style={{ bottom: 'calc(70px + env(safe-area-inset-bottom))', height: '50vh' }}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-white" />
-                  <span className="font-semibold text-white">AI Tutor</span>
+                  <span className="font-semibold text-white">Polly</span>
                 </div>
                 <button
                   type="button"
@@ -184,7 +185,7 @@ Remember: Keep it brief!`,
               </div>
 
               {/* Input */}
-              <div className="border-t border-slate-200 p-3" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+              <div className="border-t border-slate-200 p-3 flex-shrink-0">
                 <div className="flex gap-2">
                   <input
                     type="text"
