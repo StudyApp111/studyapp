@@ -125,7 +125,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
-      <div className="px-4 py-6 max-w-md mx-auto">
+      <div className="px-4 py-6 max-w-lg mx-auto md:max-w-2xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -196,8 +196,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   }
 
   return (
-    <div className="px-4 py-5 max-w-md mx-auto space-y-4 pb-32">
-      {/* Grade Card */}
+    <div className="px-4 py-5 max-w-lg mx-auto md:max-w-2xl space-y-4 pb-32">
+      {/* Grade + Target Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -205,17 +205,23 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-5 shadow-xl`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
           
-          <div className="relative flex items-center justify-between">
-            <div>
+          <div className="relative">
+            {/* Current Grade */}
+            <div className="text-center mb-4">
               <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider mb-1">Current Grade</p>
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-baseline justify-center gap-2">
                 <span className="text-5xl font-black text-white">{currentGrade}</span>
                 {currentScore && <span className="text-white/80 text-sm font-medium">{Math.round(currentScore)}%</span>}
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-white/60 text-[10px] font-medium mb-1">Target</p>
-              <span className="text-3xl font-black text-yellow-300">A+</span>
+            
+            {/* Arrow + Target */}
+            <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
+              <span className="text-white/60 text-xs font-medium">Complete tasks to reach</span>
+              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
+                <ArrowRight className="w-4 h-4 text-yellow-300" />
+                <span className="text-2xl font-black text-yellow-300">A+</span>
+              </div>
             </div>
           </div>
         </div>
@@ -289,11 +295,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                           }`}>
                             {config.label}
                           </span>
-                          {!isComplete && task.completed_count > 0 && (
-                            <span className="text-[10px] text-slate-400 font-medium">
-                              {task.completed_count}/{task.target_count}
-                            </span>
-                          )}
                         </div>
                         <p className={`font-semibold text-sm leading-tight ${
                           isComplete ? 'text-emerald-700 line-through' : 'text-slate-900'
@@ -301,13 +302,23 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                           {task.title || `${config.action} ${task.target_count} ${config.unit}`}
                         </p>
                         
-                        {/* Progress bar for in-progress tasks */}
-                        {!isComplete && task.completed_count > 0 && (
-                          <div className="h-1.5 bg-slate-100 rounded-full mt-2 overflow-hidden">
-                            <div 
-                              className={`h-full bg-gradient-to-r ${config.gradient} rounded-full`} 
-                              style={{ width: `${progress}%` }} 
-                            />
+                        {/* Always show progress bar for tasks with target_count */}
+                        {!isComplete && task.target_count > 0 && (
+                          <div className="mt-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] text-slate-500 font-medium">
+                                {task.completed_count || 0} / {task.target_count} {config.unit}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                {Math.round(progress)}%
+                              </span>
+                            </div>
+                            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full bg-gradient-to-r ${config.gradient} rounded-full transition-all`} 
+                                style={{ width: `${progress}%` }} 
+                              />
+                            </div>
                           </div>
                         )}
                       </div>

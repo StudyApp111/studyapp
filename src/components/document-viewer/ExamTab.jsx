@@ -1155,7 +1155,7 @@ JSON Output (exact schema):
     const sortedExams = Object.values(examsByNumber).sort((a, b) => a.exam_number - b.exam_number);
     
     return (
-      <div className="px-3 py-4 max-w-md mx-auto md:max-w-none md:px-6 lg:px-8">
+      <div className="px-3 py-4 max-w-lg mx-auto md:max-w-2xl md:px-6">
         {/* Header - Vibrant */}
         <div className="mb-5">
           <div className="flex items-center gap-3 mb-2">
@@ -1169,7 +1169,7 @@ JSON Output (exact schema):
           </div>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        <div className="space-y-3">
           {sortedExams.length > 0 ? sortedExams.map((e, index) => {
             const isCompleted = e.completed;
             const canStart = e.exam_number === 1 || sortedExams.find(ex => ex.exam_number === e.exam_number - 1)?.completed;
@@ -1189,92 +1189,59 @@ JSON Output (exact schema):
                   }
                 }}
                 disabled={!canStart && !isCompleted}
-                className={`group relative overflow-hidden p-4 md:p-5 rounded-2xl transition-all text-left shadow-lg hover:shadow-2xl ${
+                className={`group relative w-full overflow-hidden p-4 rounded-xl transition-all text-left shadow-md hover:shadow-lg ${
                   isCompleted
-                    ? 'bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-500'
+                    ? 'bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-700'
                     : canStart
-                    ? 'bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600'
-                    : 'bg-gradient-to-br from-slate-300 to-slate-400 opacity-60 cursor-not-allowed'
+                    ? 'bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600'
+                    : 'bg-slate-200 opacity-60 cursor-not-allowed'
                 }`}
               >
-                {/* Glow effect */}
-                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
-                
-                {/* Decorative circles */}
-                <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-                <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-                
-                <div className="relative">
-                  {/* Header with number/icon */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-xl transform group-hover:scale-110 group-hover:rotate-3 transition-all ${
-                      isCompleted 
-                        ? 'bg-white/20 backdrop-blur-sm' 
-                        : canStart 
-                        ? 'bg-white/20 backdrop-blur-sm'
-                        : 'bg-white/10'
-                    }`}>
-                      {isCompleted ? (
-                        <CheckCircle2 className="w-7 h-7 md:w-8 md:h-8 text-white" />
-                      ) : canStart ? (
-                        <span className="text-2xl md:text-3xl font-black text-white">
-                          {e.exam_number}
-                        </span>
-                      ) : (
-                        <Lock className="w-6 h-6 md:w-7 md:h-7 text-white/60" />
-                      )}
-                    </div>
-                    
-                    {/* Status badge */}
-                    {isInProgress && (
-                      <span className="text-[10px] bg-white/30 backdrop-blur-sm text-white px-2 py-1 rounded-full font-bold uppercase tracking-wide">
-                        In Progress
-                      </span>
+                <div className="relative flex items-center gap-4">
+                  {/* Icon */}
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    isCompleted || canStart ? 'bg-white/20' : 'bg-white/10'
+                  }`}>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-6 h-6 text-white" />
+                    ) : canStart ? (
+                      <span className="text-xl font-black text-white">{e.exam_number}</span>
+                    ) : (
+                      <Lock className="w-5 h-5 text-white/60" />
                     )}
                   </div>
                   
                   {/* Content */}
-                  <div className="mb-3">
-                    <h3 className="font-black text-white text-lg md:text-xl mb-1">
-                      {isFirstExam ? 'Diagnostic' : `Exam ${e.exam_number}`}
-                    </h3>
-                    <p className="text-xs md:text-sm text-white/80 line-clamp-2 font-medium">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h3 className="font-bold text-white text-sm">
+                        {isFirstExam ? 'Diagnostic' : `Exam ${e.exam_number}`}
+                      </h3>
+                      {isInProgress && (
+                        <span className="text-[9px] bg-white/30 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">
+                          In Progress
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-white/70 truncate">
                       {e.focus_description || (isFirstExam ? 'Baseline assessment' : 'Adaptive assessment')}
                     </p>
                   </div>
                   
-                  {/* Footer - Grade or CTA */}
+                  {/* Right side - Grade or Action */}
                   {isCompleted && e.predicted_grade ? (
-                    <div className="flex items-center justify-between pt-3 border-t border-white/20">
-                      <div className="flex items-center gap-2">
-                        <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                          <span className="text-2xl md:text-3xl font-black text-white">
-                            {e.predicted_grade}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-white/70 font-medium uppercase tracking-wide">Grade</p>
-                          <p className="text-sm font-bold text-white">{e.total_score}%</p>
-                        </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <div className="text-right">
+                        <span className="text-2xl font-black text-white">{e.predicted_grade}</span>
+                        <p className="text-[10px] text-white/70">{e.total_score}%</p>
                       </div>
-                      <div className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                        <ChevronRight className="w-5 h-5 text-white" />
-                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/70" />
                     </div>
                   ) : canStart ? (
-                    <div className="flex items-center justify-between pt-3 border-t border-white/20">
-                      <span className="text-sm font-bold text-white">
-                        {isInProgress ? 'Continue' : 'Start Exam'}
-                      </span>
-                      <div className="w-9 h-9 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-md transform group-hover:translate-x-1 transition-transform">
-                        <Play className="w-4 h-4 text-white" />
-                      </div>
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
+                      <Play className="w-4 h-4 text-white" />
                     </div>
-                  ) : (
-                    <div className="pt-3 border-t border-white/10">
-                      <span className="text-xs text-white/60 font-medium">Locked</span>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               </button>
             );
@@ -1285,33 +1252,23 @@ JSON Output (exact schema):
                 setSelectedExamNumber(1);
                 hasAutoSelectedRef.current = true;
               }}
-              className="group relative overflow-hidden p-4 md:p-5 rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 shadow-lg hover:shadow-2xl transition-all text-left"
+              className="group relative w-full overflow-hidden p-4 rounded-xl bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600 shadow-md hover:shadow-lg transition-all text-left"
             >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
-              <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-              <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-              
-              <div className="relative">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-xl transform group-hover:scale-110 group-hover:rotate-3 transition-all">
-                    <span className="text-2xl md:text-3xl font-black text-white">1</span>
-                  </div>
+              <div className="relative flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl font-black text-white">1</span>
                 </div>
-                
-                <div className="mb-3">
-                  <h3 className="font-black text-white text-lg md:text-xl mb-1">Diagnostic</h3>
-                  <p className="text-xs md:text-sm text-white/80 font-medium">Baseline assessment</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-white text-sm">Diagnostic</h3>
+                  <p className="text-xs text-white/70">Baseline assessment</p>
                 </div>
-                
-                <div className="flex items-center justify-between pt-3 border-t border-white/20">
-                  <span className="text-sm font-bold text-white">Start Exam</span>
-                  <div className="w-9 h-9 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-md transform group-hover:translate-x-1 transition-transform">
-                    <Play className="w-4 h-4 text-white" />
-                  </div>
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
+                  <Play className="w-4 h-4 text-white" />
                 </div>
               </div>
             </button>
           )}
+        </div>
         </div>
       </div>
     );
