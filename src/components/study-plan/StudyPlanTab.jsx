@@ -153,7 +153,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   }
 
   return (
-    <div className="px-3 py-4 space-y-3 pb-24 max-w-sm mx-auto md:max-w-lg">
+    <div className="px-3 py-4 space-y-3 pb-24 max-w-sm mx-auto md:max-w-none md:px-6 lg:px-8">
       {/* Grade Header - Vibrant */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
