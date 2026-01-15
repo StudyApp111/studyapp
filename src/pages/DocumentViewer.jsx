@@ -451,6 +451,15 @@ export default function DocumentViewer() {
                       <span className="text-xs font-medium">Document</span>
                     </TabsTrigger>
                   )}
+                  {showNotesTab && (
+                    <TabsTrigger 
+                      value="notes"
+                      className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
+                    >
+                      <StickyNote className="w-4 h-4 flex-shrink-0" />
+                      <span className="text-xs font-medium">Notes</span>
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger 
                     value="exam"
                     className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
@@ -496,6 +505,10 @@ export default function DocumentViewer() {
                   )}
                 </TabsContent>
 
+                <TabsContent value="notes" className="mt-0 p-0 h-full">
+                  <NotesTab lesson={lesson} />
+                </TabsContent>
+
                 <TabsContent value="exam" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} />
                 </TabsContent>
@@ -535,6 +548,15 @@ export default function DocumentViewer() {
                     >
                       <FileText className="w-3.5 h-3.5" />
                       <span className="text-[10px] font-semibold">Doc</span>
+                    </TabsTrigger>
+                  )}
+                  {showNotesTab && (
+                    <TabsTrigger 
+                      value="notes"
+                      className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
+                    >
+                      <StickyNote className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Notes</span>
                     </TabsTrigger>
                   )}
                   <TabsTrigger 
@@ -579,6 +601,10 @@ export default function DocumentViewer() {
                 ) : (
                   <DocumentViewerTabs lesson={lesson} />
                 )}
+              </TabsContent>
+
+              <TabsContent value="notes" className="mt-0 p-0 w-full h-full overflow-x-hidden">
+                <NotesTab lesson={lesson} />
               </TabsContent>
 
               <TabsContent value="exam" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
