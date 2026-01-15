@@ -4,53 +4,45 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Target, CheckCircle2, BookOpen, Zap, Brain, FileText,
-  Trophy, Sparkles, ArrowRight, TrendingUp, ChevronRight,
-  Play, Star, Award
+  Target, CheckCircle2, BookOpen, Zap, Brain, 
+  Trophy, Sparkles, ArrowRight, ChevronRight,
+  Play, Star, Lightbulb
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const TASK_CONFIG = {
   flashcards: { 
     icon: Zap, 
-    color: "amber", 
     bg: "bg-amber-500", 
-    bgLight: "bg-amber-100",
-    text: "text-amber-600",
+    bgLight: "bg-amber-50",
+    border: "border-amber-200",
+    text: "text-amber-700",
     label: "Flashcards",
     action: "Master",
-    unit: "cards"
+    unit: "cards",
+    emoji: "⚡"
   },
   teach_it: { 
     icon: Brain, 
-    color: "blue", 
-    bg: "bg-blue-500", 
-    bgLight: "bg-blue-100",
-    text: "text-blue-600",
+    bg: "bg-purple-500", 
+    bgLight: "bg-purple-50",
+    border: "border-purple-200",
+    text: "text-purple-700",
     label: "Teach It",
     action: "Explain",
-    unit: "concepts"
+    unit: "concepts",
+    emoji: "🧠"
   },
   review_notes: { 
     icon: BookOpen, 
-    color: "emerald", 
     bg: "bg-emerald-500", 
-    bgLight: "bg-emerald-100",
-    text: "text-emerald-600",
-    label: "Review Notes",
-    action: "Study",
-    unit: "sections"
-  },
-  // Legacy fallback
-  practice_questions: { 
-    icon: FileText, 
-    color: "purple", 
-    bg: "bg-purple-500", 
-    bgLight: "bg-purple-100",
-    text: "text-purple-600",
-    label: "Flashcards",
-    action: "Review",
-    unit: "cards"
+    bgLight: "bg-emerald-50",
+    border: "border-emerald-200",
+    text: "text-emerald-700",
+    label: "Review",
+    action: "Read",
+    unit: "sections",
+    emoji: "📖"
   }
 };
 
