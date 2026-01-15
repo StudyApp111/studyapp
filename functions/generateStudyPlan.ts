@@ -95,7 +95,9 @@ Deno.serve(async (req) => {
       lesson.description || '';
 
     // Generate intelligent study plan
-    const planPrompt = `You are an expert learning scientist creating a HIGHLY TARGETED study plan.
+    const planPrompt = `You are an expert learning scientist designing a HIGHLY TARGETED, exam-focused study plan that will measurably improve the student’s grade from ${exam.predicted_grade} to an A+/90% .
+
+Use ONLY the data below. Be specific, practical, and realistic.
 
 STUDENT PERFORMANCE DATA:
 - Course: ${lesson.course_name}
@@ -123,11 +125,18 @@ AI FEEDBACK SUMMARY:
 COURSE CONTENT OVERVIEW:
 ${contentSummary.substring(0, 2000)}
 
-YOUR TASK:
-Create 4-5 HIGHLY SPECIFIC study tasks. Each task must:
-1. Target a SPECIFIC weak competency or misconception
-2. Include SPECIFIC topics/concepts from the course material to focus on
-3. Be actionable and measurable
+Each task MUST:
+- Target ONE weak competency OR one explicitly identified misconception
+- Be grounded in the Course Content Summary AND directly traceable to:
+  • at least one missed question OR
+  • a listed misconception OR
+  • a bottom-ranked competency
+- Reference SPECIFIC course concepts, terms, theories, formulas, or methods
+  that appear in the Course Content Summary (no generic skills or study advice)
+- Address the underlying *reason* the student lost marks
+  (e.g., concept confusion, misapplication, incomplete reasoning)
+- Be actionable and measurable (clear output, count, or completion signal)
+- Directly support exam performance for this course at this school
 
 AVAILABLE TASK TYPES:
 - "flashcards": For memorizing key terms, definitions, relationships. Include SPECIFIC topics to generate cards for.
