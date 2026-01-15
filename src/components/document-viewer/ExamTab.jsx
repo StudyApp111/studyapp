@@ -888,9 +888,7 @@ JSON Output (exact schema):
 - prediction_calculation_rationale: 1-3 sentences (difficulty, weighting, type, coverage)
 - overall_performance_summary_text: 1-2 sentences w/next-focus
 - identified_strengths_list: 2-3 items
-- key_areas_for_improvement_list: 2-3 items (tied to misconceptions)
-- suggested_future_sessions_plan: 5 objects {session_number(2..6), session_name, session_focus_description} grounded in signals
-No extra fields. % as strings.`;
+- key_areas_for_improvement_list: 2-3 items (tied to misconceptions)`;
 
       const { data: feedbackData } = await retryOperation(() => 
         base44.functions.invoke('feedbackGrade', {
