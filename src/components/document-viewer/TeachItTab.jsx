@@ -498,93 +498,99 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="space-y-1.5 md:space-y-4 w-full"
+                      className="space-y-2 md:space-y-4 w-full"
                     >
-                      {/* Ultra-compact Score Badge */}
+                      {/* Score Badge */}
                       <motion.div 
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", delay: 0.3 }}
                         className="flex items-center justify-center"
                       >
-                        <div className={`px-4 py-1.5 md:px-8 md:py-4 rounded-2xl ${
+                        <div className={`px-5 py-2 md:px-8 md:py-4 rounded-2xl ${
                           currentCard.score >= 90 ? 'bg-gradient-to-r from-emerald-500 to-green-600' :
                           currentCard.score >= 75 ? 'bg-gradient-to-r from-purple-500 to-indigo-600' :
                           currentCard.score >= 60 ? 'bg-gradient-to-r from-yellow-500 to-orange-600' :
                           'bg-gradient-to-r from-red-500 to-pink-600'
-                        } shadow-2xl`}>
-                          <p className="text-white/80 text-[9px] md:text-xs font-medium mb-0 text-center">Score</p>
-                          <p className="text-white text-xl md:text-4xl font-black text-center">{currentCard.score}<span className="text-sm md:text-2xl">/100</span></p>
+                        } shadow-xl`}>
+                          <p className="text-white/80 text-[10px] md:text-xs font-medium text-center">Your Score</p>
+                          <p className="text-white text-2xl md:text-4xl font-black text-center">{currentCard.score}<span className="text-base md:text-2xl">/100</span></p>
                         </div>
                       </motion.div>
 
-                      {/* Your Answer */}
-                      <div className="bg-purple-50/50 border-2 border-purple-200/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
-                        <h4 className="font-bold text-purple-900 mb-0.5 flex items-center gap-1 text-[10px] md:text-sm">
-                          <PenLine className="w-2.5 h-2.5 md:w-4 md:h-4" />
+                      {/* 1. Your Answer */}
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 w-full">
+                        <h4 className="font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
+                          <PenLine className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-500" />
                           Your Answer
                         </h4>
-                        <p className="text-slate-700 text-[10px] md:text-sm leading-snug break-words">{currentCard.user_answer}</p>
+                        <p className="text-slate-600 text-xs md:text-sm leading-relaxed">{currentCard.user_answer}</p>
                       </div>
 
-                      {/* Feedback */}
-                      <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-2 border-purple-300/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
-                        <h4 className="font-bold text-purple-900 mb-0.5 text-[10px] md:text-sm">💡 Feedback</h4>
-                        <p className="text-slate-700 text-[10px] md:text-sm leading-snug break-words">{currentCard.feedback}</p>
-                      </div>
-
-                      {/* Strengths */}
+                      {/* 2. Did Well (Strengths) */}
                       {currentCard.strengths?.length > 0 && (
-                        <div className="bg-emerald-50/50 border-2 border-emerald-200/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
-                          <h4 className="font-bold text-emerald-900 mb-0.5 flex items-center gap-1 text-[10px] md:text-sm">
-                            <CheckCircle2 className="w-2.5 h-2.5 md:w-4 md:h-4" />
-                            Did Well
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 md:p-4 w-full">
+                          <h4 className="font-semibold text-emerald-800 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
+                            <CheckCircle2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-600" />
+                            What You Did Well
                           </h4>
-                          <ul className="space-y-0.5 md:space-y-2">
+                          <ul className="space-y-1 md:space-y-1.5">
                             {currentCard.strengths.map((strength, idx) => (
                               <motion.li 
                                 key={idx}
-                                initial={{ opacity: 0, x: -20 }}
+                                initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.5 + idx * 0.1 }}
-                                className="flex items-start gap-1 text-slate-700 text-[10px] md:text-sm"
+                                transition={{ delay: 0.4 + idx * 0.1 }}
+                                className="flex items-start gap-2 text-slate-700 text-xs md:text-sm"
                               >
-                                <span className="text-emerald-600 font-bold text-[10px] flex-shrink-0">✓</span>
-                                <span className="leading-snug break-words">{strength}</span>
+                                <span className="text-emerald-500 mt-0.5">✓</span>
+                                <span className="leading-relaxed">{strength}</span>
                               </motion.li>
                             ))}
                           </ul>
                         </div>
                       )}
 
-                      {/* Gaps */}
+                      {/* 3. To Review (Gaps) */}
                       {currentCard.gaps?.length > 0 && (
-                        <div className="bg-amber-50/50 border-2 border-amber-200/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
-                          <h4 className="font-bold text-amber-900 mb-0.5 flex items-center gap-1 text-[10px] md:text-sm">
-                            <AlertCircle className="w-2.5 h-2.5 md:w-4 md:h-4" />
-                            Review
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 md:p-4 w-full">
+                          <h4 className="font-semibold text-amber-800 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
+                            <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-600" />
+                            To Review
                           </h4>
-                          <ul className="space-y-0.5 md:space-y-2">
+                          <ul className="space-y-1 md:space-y-1.5">
                             {currentCard.gaps.map((gap, idx) => (
                               <motion.li 
                                 key={idx}
-                                initial={{ opacity: 0, x: -20 }}
+                                initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.6 + idx * 0.1 }}
-                                className="flex items-start gap-1 text-slate-700 text-[10px] md:text-sm"
+                                transition={{ delay: 0.5 + idx * 0.1 }}
+                                className="flex items-start gap-2 text-slate-700 text-xs md:text-sm"
                               >
-                                <span className="text-amber-600 font-bold text-[10px] flex-shrink-0">→</span>
-                                <span className="leading-snug break-words">{gap}</span>
+                                <span className="text-amber-500 mt-0.5">→</span>
+                                <span className="leading-relaxed">{gap}</span>
                               </motion.li>
                             ))}
                           </ul>
                         </div>
                       )}
 
-                      {/* Model Answer */}
-                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200/50 rounded-lg p-1.5 md:p-4 w-full max-w-full overflow-hidden">
-                        <h4 className="font-bold text-indigo-900 mb-0.5 text-[10px] md:text-sm">🎯 Model</h4>
-                        <p className="text-slate-700 text-[10px] md:text-sm leading-snug break-words">{currentCard.model_answer}</p>
+                      {/* 4. Correct Answer */}
+                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-3 md:p-4 w-full">
+                        <h4 className="font-semibold text-indigo-800 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
+                          <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-600" />
+                          Correct Answer
+                        </h4>
+                        <p className="text-slate-700 text-xs md:text-sm leading-relaxed">{currentCard.model_answer}</p>
+                      </div>
+
+                      {/* 5. Feedback */}
+                      <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 md:p-4 w-full">
+                        <h4 className="font-semibold text-purple-800 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
+                          <Lightbulb className="w-3.5 h-3.5 md:w-4 md:h-4 text-purple-600" />
+                          AI Feedback
+                        </h4>
+                        <p className="text-slate-700 text-xs md:text-sm leading-relaxed">{currentCard.feedback}</p>
                       </div>
                     </motion.div>
                   )}
