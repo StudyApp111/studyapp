@@ -1149,131 +1149,211 @@ JSON Output (exact schema):
     }
     
     const allExamsForLesson = exams || [];
-    // Deduplicate by exam_number, keeping the most recent or completed one
+    
+    // Separate official exams and practice exams
+    const officialExams = allExamsForLesson.filter(e => e.exam_type !== 'practice');
+    const practiceExams = allExamsForLesson.filter(e => e.exam_type === 'practice');
+    
+    // Deduplicate official exams by exam_number
     const examsByNumber = {};
-    allExamsForLesson.forEach(e => {
+    officialExams.forEach(e => {
       const existing = examsByNumber[e.exam_number];
       if (!existing || e.completed || (!existing.completed && e.updated_date > existing.updated_date)) {
         examsByNumber[e.exam_number] = e;
       }
     });
-    const sortedExams = Object.values(examsByNumber).sort((a, b) => a.exam_number - b.exam_number);
+    const sortedOfficialExams = Object.values(examsByNumber).sort((a, b) => a.exam_number - b.exam_number);
+    
+    // Sort practice exams by date (newest first)
+    const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-      <div className="px-4 py-4 max-w-md mx-auto md:max-w-lg md:px-6">
-        {/* Header - Vibrant */}
-        <div className="mb-5">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 flex items-center justify-center shadow-lg">
-              <Trophy className="w-5 h-5 text-yellow-300" />
+      <div className="px-4 py-4 max-w-md mx-auto md:max-w-lg md:px-6 space-y-6">
+        {/* Official Exams Section */}
+        <div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+              <Trophy className="w-4 h-4 text-yellow-300" />
             </div>
             <div>
-              <h2 className="text-xl md:text-2xl font-black text-slate-900">Official Exams</h2>
-              <p className="text-xs text-slate-500">Track your grade with AI assessments</p>
+              <h2 className="text-lg font-black text-slate-900">Official Exams</h2>
+              <p className="text-[11px] text-slate-500">Updates your predicted grade</p>
             </div>
           </div>
-        </div>
-        
-        <div className="space-y-3">
-          {sortedExams.length > 0 ? sortedExams.map((e, index) => {
-            const isCompleted = e.completed;
-            const canStart = e.exam_number === 1 || sortedExams.find(ex => ex.exam_number === e.exam_number - 1)?.completed;
-            const isFirstExam = e.exam_number === 1;
-            const isInProgress = e.status === 'in_progress' && !isCompleted;
-            
-            return (
-              <button
-                key={e.id}
-                onClick={() => {
-                  if (isCompleted) {
-                    setViewingCompletedExam(e);
-                  } else if (canStart) {
-                    setExam(null);
-                    setSelectedExamNumber(e.exam_number);
-                    hasAutoSelectedRef.current = true;
-                  }
-                }}
-                disabled={!canStart && !isCompleted}
-                className={`group relative w-full overflow-hidden p-4 rounded-xl transition-all text-left shadow-md hover:shadow-lg ${
-                  isCompleted
-                    ? 'bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-700'
-                    : canStart
-                    ? 'bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600'
-                    : 'bg-slate-200 opacity-60 cursor-not-allowed'
-                }`}
-              >
-                <div className="relative flex items-center gap-4">
-                  {/* Icon */}
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    isCompleted || canStart ? 'bg-white/20' : 'bg-white/10'
-                  }`}>
-                    {isCompleted ? (
-                      <CheckCircle2 className="w-6 h-6 text-white" />
-                    ) : canStart ? (
-                      <span className="text-xl font-black text-white">{e.exam_number}</span>
-                    ) : (
-                      <Lock className="w-5 h-5 text-white/60" />
-                    )}
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-bold text-white text-sm">
-                        {isFirstExam ? 'Diagnostic' : `Exam ${e.exam_number}`}
-                      </h3>
-                      {isInProgress && (
-                        <span className="text-[9px] bg-white/30 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">
-                          In Progress
-                        </span>
+          
+          <div className="space-y-2">
+            {sortedOfficialExams.length > 0 ? sortedOfficialExams.map((e) => {
+              const isCompleted = e.completed;
+              const canStart = e.exam_number === 1 || sortedOfficialExams.find(ex => ex.exam_number === e.exam_number - 1)?.completed;
+              const isFirstExam = e.exam_number === 1;
+              const isInProgress = e.status === 'in_progress' && !isCompleted;
+              
+              return (
+                <button
+                  key={e.id}
+                  onClick={() => {
+                    if (isCompleted) {
+                      setViewingCompletedExam(e);
+                    } else if (canStart) {
+                      setExam(null);
+                      setSelectedExamNumber(e.exam_number);
+                      hasAutoSelectedRef.current = true;
+                    }
+                  }}
+                  disabled={!canStart && !isCompleted}
+                  className={`group relative w-full overflow-hidden p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
+                    isCompleted
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
+                      : canStart
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600'
+                      : 'bg-slate-200 opacity-60 cursor-not-allowed'
+                  }`}
+                >
+                  <div className="relative flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      isCompleted || canStart ? 'bg-white/20' : 'bg-white/10'
+                    }`}>
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-5 h-5 text-white" />
+                      ) : canStart ? (
+                        <span className="text-lg font-black text-white">{e.exam_number}</span>
+                      ) : (
+                        <Lock className="w-4 h-4 text-white/60" />
                       )}
                     </div>
-                    <p className="text-xs text-white/70 truncate">
-                      {e.focus_description || (isFirstExam ? 'Baseline assessment' : 'Adaptive assessment')}
-                    </p>
-                  </div>
-                  
-                  {/* Right side - Grade or Action */}
-                  {isCompleted && e.predicted_grade ? (
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <div className="text-right">
-                        <span className="text-2xl font-black text-white">{e.predicted_grade}</span>
-                        <p className="text-[10px] text-white/70">{e.total_score}%</p>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="font-bold text-white text-sm">
+                          {isFirstExam ? 'Diagnostic' : `Exam ${e.exam_number}`}
+                        </h3>
+                        {isInProgress && (
+                          <span className="text-[9px] bg-white/30 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">
+                            In Progress
+                          </span>
+                        )}
                       </div>
-                      <ChevronRight className="w-5 h-5 text-white/70" />
+                      <p className="text-[11px] text-white/70 truncate">
+                        {isFirstExam ? 'Baseline assessment' : 'Adaptive assessment'}
+                      </p>
                     </div>
-                  ) : canStart ? (
-                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
-                      <Play className="w-4 h-4 text-white" />
-                    </div>
-                  ) : null}
+                    
+                    {isCompleted && e.predicted_grade ? (
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="text-right">
+                          <span className="text-xl font-black text-white">{e.predicted_grade}</span>
+                          <p className="text-[9px] text-white/70">{e.total_score}%</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-white/70" />
+                      </div>
+                    ) : canStart ? (
+                      <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <Play className="w-3 h-3 text-white" />
+                      </div>
+                    ) : null}
+                  </div>
+                </button>
+              );
+            }) : (
+              <button
+                onClick={() => {
+                  setExam(null);
+                  setSelectedExamNumber(1);
+                  hasAutoSelectedRef.current = true;
+                }}
+                className="group relative w-full overflow-hidden p-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 shadow-sm hover:shadow-md transition-all text-left"
+              >
+                <div className="relative flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-lg font-black text-white">1</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-white text-sm">Diagnostic</h3>
+                    <p className="text-[11px] text-white/70">Baseline assessment</p>
+                  </div>
+                  <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <Play className="w-3 h-3 text-white" />
+                  </div>
                 </div>
               </button>
-            );
-          }) : (
-            <button
-              onClick={() => {
-                setExam(null);
-                setSelectedExamNumber(1);
-                hasAutoSelectedRef.current = true;
-              }}
-              className="group relative w-full overflow-hidden p-4 rounded-xl bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-600 shadow-md hover:shadow-lg transition-all text-left"
-            >
-              <div className="relative flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-xl font-black text-white">1</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-sm">Diagnostic</h3>
-                  <p className="text-xs text-white/70">Baseline assessment</p>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:bg-white/30 transition-colors">
-                  <Play className="w-4 h-4 text-white" />
-                </div>
-              </div>
-            </button>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Practice Quizzes Section */}
+        {sortedPracticeExams.length > 0 && (
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-slate-900">Practice Quizzes</h2>
+                <p className="text-[11px] text-slate-500">Quick drills • No grade impact</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {sortedPracticeExams.slice(0, 5).map((e) => {
+                const isCompleted = e.completed;
+                const correctCount = e.correct_count || 0;
+                const totalQuestions = e.questions?.length || 0;
+                
+                return (
+                  <button
+                    key={e.id}
+                    onClick={() => {
+                      if (isCompleted) {
+                        setViewingCompletedExam(e);
+                      } else {
+                        setExam(e);
+                        setCurrentQuestion(0);
+                        hasAutoSelectedRef.current = true;
+                      }
+                    }}
+                    className={`group relative w-full overflow-hidden p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
+                      isCompleted
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-600'
+                        : 'bg-white border border-blue-200 hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="relative flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        isCompleted ? 'bg-white/20' : 'bg-blue-50'
+                      }`}>
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-5 h-5 text-white" />
+                        ) : (
+                          <Zap className="w-5 h-5 text-blue-600" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`font-semibold text-sm truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
+                          {e.focus_description || 'Practice Quiz'}
+                        </h3>
+                        <p className={`text-[11px] ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
+                          {totalQuestions} questions
+                        </p>
+                      </div>
+                      
+                      {isCompleted ? (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-lg font-black text-white">{correctCount}/{totalQuestions}</span>
+                          <ChevronRight className="w-4 h-4 text-white/70" />
+                        </div>
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <Play className="w-3 h-3 text-blue-600" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
