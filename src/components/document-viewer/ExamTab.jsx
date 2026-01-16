@@ -874,8 +874,16 @@ Return ONE valid JSON object. No extra text.
       setXpToast({ show: true, xp: xpAmount, reason: 'Practice complete!' });
 
       // Show results immediately by setting the completed exam to view
-      setExam({ ...exam, questions: questionsWithGrading, correct_count: correctCount, completed: true });
-      setViewingCompletedExam({ ...exam, questions: questionsWithGrading, correct_count: correctCount, completed: true, exam_type: 'practice' });
+      const completedExam = { 
+        ...exam, 
+        questions: questionsWithGrading, 
+        correct_count: correctCount, 
+        completed: true, 
+        exam_type: 'practice',
+        time_taken_seconds: finalElapsedSeconds
+      };
+      setExam(completedExam);
+      setViewingCompletedExam(completedExam);
       
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
