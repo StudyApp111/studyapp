@@ -82,19 +82,14 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
   if (isPracticeExam) {
     return (
       <div className="space-y-5 px-3 max-w-lg mx-auto">
-        {/* Practice Quiz Hero */}
+        {/* Practice Exam Hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-4"
         >
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-bold uppercase">
-            <Zap className="w-3.5 h-3.5" />
-            Practice Quiz
-          </div>
-          
           <h2 className="text-xl font-bold text-slate-900">
-            {exam.focus_description || 'Practice Results'}
+            Practice Exam
           </h2>
 
           {/* Score Display */}
@@ -123,7 +118,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
           </div>
 
           <p className="text-xs text-slate-500">
-            Practice quizzes don't affect your predicted grade
+            Practice exams don't affect your predicted grade
           </p>
         </motion.div>
 
