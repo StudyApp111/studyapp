@@ -1556,6 +1556,12 @@ JSON Output (exact schema):
     <>
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
+      <TaskCompletionToast 
+        show={taskCompletionToast}
+        gradeIncrease={2.5}
+        onComplete={() => setTaskCompletionToast(false)}
+      />
+      
       {newBadges.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -100 }}
