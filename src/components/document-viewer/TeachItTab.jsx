@@ -444,6 +444,12 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         show={xpToast.show}
         onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
       />
+      
+      <TaskCompletionToast 
+        show={taskCompletionToast}
+        gradeIncrease={2.5}
+        onComplete={() => setTaskCompletionToast(false)}
+      />
 
       <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl overflow-hidden overflow-x-hidden w-full">
         {/* Ultra-compact mobile header */}
