@@ -11,6 +11,7 @@ import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { logError } from "@/components/utils/errorLogger";
 import XPGainToast from "@/components/gamification/XPGainToast";
+import TaskCompletionToast from "@/components/gamification/TaskCompletionToast";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 import FeedbackDisplay from "@/components/feedback/FeedbackDisplay";
 
