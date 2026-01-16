@@ -16,6 +16,8 @@ const formatTime = (seconds) => {
 };
 
 export default function FeedbackDisplay({ exam, lesson, allExams = [], courseName }) {
+  const isPracticeExam = exam?.exam_type === 'practice';
+  
   const [sectionsExpanded, setSectionsExpanded] = useState({
     strengths: false,
     weaknesses: false,
@@ -25,8 +27,8 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
   // Default all questions to expanded
   const [expandedQuestions, setExpandedQuestions] = useState(() => {
     const expanded = {};
-    if (exam?.feedback) {
-      exam.feedback.forEach((_, idx) => { expanded[idx] = true; });
+    if (exam?.questions) {
+      exam.questions.forEach((_, idx) => { expanded[idx] = true; });
     }
     return expanded;
   });
@@ -70,6 +72,189 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
   const futureWorksheets = exam.ai_feedback?.suggested_future_sessions_plan || [];
   const totalWorksheets = allExams.length || 6;
 
+  // For practice exams, calculate correct count from questions
+  const correctCount = isPracticeExam 
+    ? (exam.correct_count || exam.questions?.filter(q => q.is_correct).length || 0)
+    : (exam.feedback?.filter(f => f.is_correct).length || 0);
+  const totalQuestions = exam.questions?.length || 0;
+
+  // Practice Exam Results UI
+  if (isPracticeExam) {
+    return (
+      <div className="space-y-5 px-3 max-w-lg mx-auto">
+        {/* Practice Quiz Hero */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-4"
+        >
+          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-bold uppercase">
+            <Zap className="w-3.5 h-3.5" />
+            Practice Quiz
+          </div>
+          
+          <h2 className="text-xl font-bold text-slate-900">
+            {exam.focus_description || 'Practice Results'}
+          </h2>
+
+          {/* Score Display */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1, type: "spring" }}
+            className="relative inline-block"
+          >
+            <div className="px-12 py-6 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-xl">
+              <div className="text-5xl font-black text-white mb-1">
+                {correctCount}/{totalQuestions}
+              </div>
+              <div className="text-sm text-white/80 font-medium">
+                {Math.round((correctCount / totalQuestions) * 100)}% correct
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Quick Stats */}
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center gap-2 bg-blue-50 rounded-xl px-3 py-2">
+              <Clock className="w-4 h-4 text-blue-600" />
+              <span className="font-semibold text-slate-900 text-sm">{formatTime(exam.time_taken_seconds || 0)}</span>
+            </div>
+          </div>
+
+          <p className="text-xs text-slate-500">
+            Practice quizzes don't affect your predicted grade
+          </p>
+        </motion.div>
+
+        {/* Question Breakdown for Practice */}
+        {exam.questions && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="border-0 shadow-lg bg-white">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <Eye className="w-5 h-5 text-blue-600" />
+                  <span className="text-base font-bold">Question Review</span>
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="px-3 pb-3">
+                <div className="space-y-2">
+                  {exam.questions.map((question, idx) => {
+                    const isCorrect = question.is_correct;
+                    const isExpanded = expandedQuestions[idx];
+                    
+                    return (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.03 }}
+                        className={`rounded-xl border-2 overflow-hidden transition-all ${
+                          isCorrect ? 'border-emerald-200' : 'border-amber-200'
+                        }`}
+                      >
+                        <div 
+                          className={`p-3 cursor-pointer hover:bg-slate-50 transition-colors ${isExpanded ? 'border-b border-slate-100' : ''}`}
+                          onClick={() => toggleQuestion(idx)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              isCorrect ? 'bg-emerald-500' : 'bg-amber-500'
+                            } text-white`}>
+                              {isCorrect ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <span className="font-bold text-slate-900 text-sm">Q{idx + 1}</span>
+                              {question.difficulty_index && (
+                                <Badge variant="outline" className={`ml-2 text-[10px] px-1.5 py-0 ${
+                                  question.difficulty_index.toLowerCase() === 'hard' ? 'text-red-600 border-red-200' :
+                                  question.difficulty_index.toLowerCase() === 'medium' ? 'text-amber-600 border-amber-200' :
+                                  'text-green-600 border-green-200'
+                                }`}>
+                                  {question.difficulty_index}
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <div className="text-slate-400">
+                              {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                            </div>
+                          </div>
+                        </div>
+
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <div className="p-3 bg-slate-50/50 space-y-3">
+                                <div className="bg-white rounded-xl p-3 border border-slate-200">
+                                  <MathText className="text-slate-800 font-medium text-xs leading-relaxed">
+                                    {question.question_text}
+                                  </MathText>
+                                  {question.options && question.options.length > 0 && (
+                                    <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
+                                      {question.options.map((opt, i) => (
+                                        <MathText key={i} className="text-xs text-slate-700 block py-0.5" inline>
+                                          <span className="font-bold w-5 inline-block text-slate-500">{String.fromCharCode(65 + i)}.</span> {typeof opt === 'string' ? opt : opt.text || ''}
+                                        </MathText>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-blue-50 p-2 rounded-xl border border-blue-100">
+                                    <p className="text-[10px] font-bold text-blue-700 uppercase mb-1">Your Answer</p>
+                                    <MathText className="text-xs text-slate-800 font-medium">
+                                      {question.user_answer || "No answer"}
+                                    </MathText>
+                                  </div>
+                                  <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-100">
+                                    <p className="text-[10px] font-bold text-emerald-700 uppercase mb-1">Correct</p>
+                                    <MathText className="text-xs text-slate-800 font-medium">
+                                      {question.correct_answer}
+                                    </MathText>
+                                  </div>
+                                </div>
+
+                                {question.explanation && (
+                                  <div className="bg-purple-50 p-2.5 rounded-xl border border-purple-100">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                      <Brain className="w-3 h-3 text-purple-600" />
+                                      <p className="text-[10px] font-bold text-purple-700 uppercase">Explanation</p>
+                                    </div>
+                                    <MathText className="text-xs text-slate-700 leading-relaxed">
+                                      {question.explanation}
+                                    </MathText>
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </div>
+    );
+  }
+
+  // Official Exam Results UI (existing)
   return (
     <div className="space-y-6 px-3 max-w-4xl mx-auto">
       {/* Hero Section */}
