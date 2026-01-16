@@ -159,10 +159,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
             misconception_addressed: task.misconception_addressed || ''
           });
           
-          if (data?.success && data.exam_id) {
-            // Navigate to exam tab with the specific practice exam ID to auto-start it
+          if (data?.success && data.exam) {
+            // Pass the full exam object directly to avoid refetch timing issues
             window.dispatchEvent(new CustomEvent('startPracticeExam', { 
-              detail: { examId: data.exam_id } 
+              detail: { exam: data.exam }
             }));
             onNavigate('exam');
           }
