@@ -407,7 +407,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                 <button
                   onClick={() => !isComplete && !generatingPractice && handleTaskClick(task)}
                   disabled={isComplete || generatingPractice === task.task_id}
-                  className="w-full text-left ml-8 group"
+                  className="w-full text-left ml-8 group pr-1"
                 >
                   <div className={`relative overflow-hidden rounded-xl transition-all ${
                     isComplete 
@@ -495,7 +495,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
             
             <button
               onClick={() => onNavigate('exam')}
-              className="w-full ml-8 group"
+              className="w-full ml-8 group pr-1"
             >
               <div className={`relative overflow-hidden rounded-xl p-4 transition-all ${
                 allComplete 

@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const GROK_API_KEY = Deno.env.get("GROK_API_KEY");
+const API_KEY = Deno.env.get("API_KEY");
 
 Deno.serve(async (req) => {
   try {
@@ -21,10 +21,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Lesson not found' }, { status: 400 });
     }
 
-    // Get content summary
-    const contentSummary = lesson.compressed_content || 
-      (lesson.extracted_content ? lesson.extracted_content.substring(0, 4000) : lesson.description) || 
+    // Get content - prefer compressed, fall back to extracted, then description
+    const contentForExam = lesson.compressed_content || 
+      (lesson.extracted_content ? lesson.extracted_content.substring(0, 8000) : '') || 
       lesson.description || '';
+
+    if (!contentForExam || contentForExam.length < 50) {
+      return Response.json({ error: 'Insufficient lesson content to generate exam' }, { status: 400 });
+    }
 
     // Build the prompt for practice exam generation
     const prompt = `You are an expert educator creating a focused PRACTICE QUIZ for a student.
@@ -36,78 +40,83 @@ FOCUS AREAS:
 - Specific Topics: ${(focus_topics || []).join(', ') || 'All topics'}
 - Misconception to Address: ${misconception_addressed || 'None specified'}
 
-COURSE CONTENT:
-${contentSummary}
+COURSE CONTENT (use this as your PRIMARY source for questions):
+${contentForExam}
 
 TASK: Generate exactly 10 practice questions that:
-1. Test understanding of the specified focus topics
-2. Address the identified misconception if provided
-3. Use a MIX of question types for variety
-4. Range from foundational to challenging
-5. Are directly grounded in the course content
+1. Are DIRECTLY based on the course content provided above
+2. Test understanding of the specified focus topics
+3. Address the identified misconception if provided
+4. Use a MIX of question types for variety
+5. Range from foundational to challenging
+
+CRITICAL: All questions MUST be answerable using the course content above. Do not create questions about topics not covered in the content.
 
 QUESTION TYPE DISTRIBUTION (use this mix):
 - 4 Multiple Choice questions
 - 2 True/False questions  
 - 2 Fill-in-the-Blank questions
-- 2 Short Answer questions (1-2 sentence responses)
+- 2 Short Answer questions (1-2 sentence responses)`;
 
-Return JSON:
-{
-  "questions": [
-    {
-      "question_number": 1,
-      "question_type": "multiple_choice" | "true_false" | "fill_blank" | "short_answer",
-      "question_text": "The question text",
-      "options": ["A) ...", "B) ...", "C) ...", "D) ..."] (for multiple choice only, null otherwise),
-      "correct_answer": "The correct answer",
-      "explanation": "Brief explanation of why this is correct",
-      "difficulty_index": "easy" | "medium" | "hard",
-      "assessed_competencies": ["competency being tested"]
-    }
-  ],
-  "exam_focus_summary": "1-2 sentence summary of what this practice exam tests"
-}`;
-
-    // Call Grok API for fast generation
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+    // Call Gemini Flash Lite for fast, cost-effective generation
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${API_KEY}`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROK_API_KEY}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'grok-3-fast',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert educator. Always respond with valid JSON only, no markdown or extra text.'
-          },
-          {
-            role: 'user',
-            content: prompt
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "object",
+            properties: {
+              questions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    question_number: { type: "integer" },
+                    question_type: { type: "string", enum: ["multiple_choice", "true_false", "fill_blank", "short_answer"] },
+                    question_text: { type: "string" },
+                    options: { type: "array", items: { type: "string" } },
+                    correct_answer: { type: "string" },
+                    explanation: { type: "string" },
+                    difficulty_index: { type: "string", enum: ["easy", "medium", "hard"] },
+                    assessed_competencies: { type: "array", items: { type: "string" } }
+                  },
+                  required: ["question_number", "question_type", "question_text", "correct_answer", "explanation", "difficulty_index"]
+                }
+              },
+              exam_focus_summary: { type: "string" }
+            },
+            required: ["questions", "exam_focus_summary"]
           }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000
+        }
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Grok API error:', errorText);
+      console.error('Gemini API error:', errorText);
       return Response.json({ error: 'Failed to generate practice exam' }, { status: 500 });
     }
 
     const result = await response.json();
-    const content = result.choices[0]?.message?.content;
+    const content = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!content) {
+      console.error('No content in Gemini response:', result);
+      return Response.json({ error: 'No response from AI' }, { status: 500 });
+    }
     
     // Parse JSON from response
     let examData;
     try {
-      // Clean up potential markdown formatting
-      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      examData = JSON.parse(cleanContent);
+      examData = JSON.parse(content);
     } catch (parseError) {
       console.error('Failed to parse exam response:', content);
       return Response.json({ error: 'Failed to parse exam data' }, { status: 500 });
