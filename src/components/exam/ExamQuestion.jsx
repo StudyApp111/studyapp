@@ -19,8 +19,10 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   const [showCorrectBurst, setShowCorrectBurst] = useState(false);
 
   const questionType = question.question_type?.toLowerCase() || "";
-  const isMCQ = questionType.includes("multiple choice") || questionType.includes("mcq");
-  const isTrueFalse = questionType.includes("true") && questionType.includes("false");
+  // Handle both official exam types ("Multiple Choice") and practice exam types ("multiple_choice")
+  const isMCQ = questionType.includes("multiple choice") || questionType.includes("multiple_choice") || questionType.includes("mcq");
+  const isTrueFalse = (questionType.includes("true") && questionType.includes("false")) || questionType.includes("true_false");
+  const isFillBlank = questionType.includes("fill") && questionType.includes("blank") || questionType.includes("fill_blank");
   const isObjective = isMCQ || isTrueFalse;
 
   useEffect(() => {
