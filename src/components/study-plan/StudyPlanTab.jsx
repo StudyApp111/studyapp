@@ -307,7 +307,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   }
 
   return (
-    <div className="px-3 py-5 w-full max-w-full md:max-w-lg md:mx-auto space-y-4 pb-32 overflow-x-hidden">
+    <div className="px-3 py-5 w-full max-w-[calc(100vw-1rem)] md:max-w-lg md:mx-auto space-y-4 pb-32 overflow-x-hidden">
       {/* Grade + Target Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
