@@ -159,9 +159,26 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     />
   );
 
+  const renderFillBlankInput = () => (
+    <div className="space-y-2">
+      <p className="text-xs text-slate-500">Fill in the blank:</p>
+      <input
+        type="text"
+        value={selectedAnswer}
+        onChange={(e) => {
+          setSelectedAnswer(e.target.value);
+          onAnswer(e.target.value);
+        }}
+        placeholder="Type your answer..."
+        className="w-full p-2.5 text-sm border-2 border-slate-200 rounded-lg focus:border-purple-500 focus:ring-0 transition-colors"
+      />
+    </div>
+  );
+
   const renderInput = () => {
     if (isMCQ) return renderMCQOptions();
     if (isTrueFalse) return renderTrueFalseOptions();
+    if (isFillBlank) return renderFillBlankInput();
     return renderSubjectiveInput();
   };
 
