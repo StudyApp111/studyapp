@@ -120,10 +120,12 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         )
       );
       setCards(savedCards);
+      pendingStudyTaskRef.current = null;
     } catch (error) {
       console.error("Error generating flashcards:", error);
     }
     setIsGenerating(false);
+    isGeneratingRef.current = false;
   };
 
   const handleFlip = () => {
