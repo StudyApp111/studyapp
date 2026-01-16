@@ -1314,7 +1314,7 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-        <div className="px-3 py-4 w-full max-w-full md:max-w-lg md:mx-auto md:px-6 space-y-6 overflow-x-hidden">
+        <div className="px-3 py-4 w-full max-w-[calc(100vw-1rem)] md:max-w-lg md:mx-auto md:px-6 space-y-6 overflow-x-hidden">
         {/* Official Exams Section */}
         <div>
           <div className="flex items-center gap-3 mb-3">
