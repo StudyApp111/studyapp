@@ -516,7 +516,13 @@ Constraints:
                     </button>
                     <button
                       type="button"
-                      onClick={() => setInputType("description")}
+                      onClick={() => {
+                        setInputType("description");
+                        // Auto-generate suggestions when switching to describe mode
+                        if (courseName.trim() && suggestions.length === 0 && !loadingSuggestions) {
+                          setTimeout(() => generateSuggestions(), 100);
+                        }
+                      }}
                       className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 transition-all ${
                         inputType === "description"
                           ? "border-purple-500 bg-purple-50 text-purple-700"
@@ -531,56 +537,61 @@ Constraints:
 
                 {/* Description Input */}
                 {inputType === "description" && (
-                  <div className="space-y-1">
-                    <Textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="e.g., 'Chapter 5 - Photosynthesis, chloroplasts, light reactions...'"
-                      disabled={isProcessing}
-                      className="min-h-[60px] resize-none text-sm"
-                    />
-
-                    {/* Smart suggestions for short descriptions */}
-                    {description.length > 0 && description.length < 50 && courseName.trim() && (
-                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-purple-700 font-medium">Need ideas?</span>
-                          {!loadingSuggestions && suggestions.length === 0 && (
-                            <button
-                              type="button"
-                              onClick={generateSuggestions}
-                              className="text-[10px] bg-purple-600 hover:bg-purple-700 text-white font-medium px-2 py-1 rounded transition-colors"
-                            >
-                              Suggest Topics
-                            </button>
-                          )}
+                  <div className="space-y-2">
+                    {/* Suggestions Panel - Always visible when in describe mode */}
+                    {courseName.trim() && (
+                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Lightbulb className="w-4 h-4 text-purple-600" />
+                          <span className="text-xs font-semibold text-purple-800">Suggested Topics</span>
+                          {loadingSuggestions && <Loader2 className="w-3 h-3 animate-spin text-purple-600" />}
                         </div>
                         
-                        {loadingSuggestions && (
-                          <div className="flex items-center gap-1.5 text-[10px] text-purple-600 mt-1.5">
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                            Finding topics...
-                          </div>
+                        {loadingSuggestions && suggestions.length === 0 && (
+                          <p className="text-[11px] text-purple-600">Finding relevant topics for {courseName}...</p>
                         )}
                         
                         {suggestions.length > 0 && (
-                          <div className="grid grid-cols-1 gap-1 mt-1.5">
-                            {suggestions.slice(0, 3).map((suggestion, idx) => (
+                          <div className="grid grid-cols-1 gap-1.5">
+                            {suggestions.map((suggestion, idx) => (
                               <button
                                 key={idx}
                                 type="button"
                                 onClick={() => {
                                   setDescription(suggestion);
-                                  setSuggestions([]);
                                 }}
-                                className="w-full text-left text-[10px] text-slate-700 bg-white hover:bg-purple-100 border border-purple-100 rounded p-1.5 transition-all truncate"
+                                className="w-full text-left text-[11px] text-slate-700 bg-white hover:bg-purple-100 border border-purple-100 rounded-lg px-3 py-2 transition-all shadow-sm hover:shadow"
                               >
                                 {suggestion}
                               </button>
                             ))}
                           </div>
                         )}
+                        
+                        {!loadingSuggestions && suggestions.length === 0 && (
+                          <button
+                            type="button"
+                            onClick={generateSuggestions}
+                            className="w-full text-[11px] bg-purple-600 hover:bg-purple-700 text-white font-medium px-3 py-2 rounded-lg transition-colors"
+                          >
+                            Generate Topic Ideas
+                          </button>
+                        )}
                       </div>
+                    )}
+
+                    <Textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Select a topic above or type your own: e.g., 'Chapter 5 - Photosynthesis, chloroplasts, light reactions...'"
+                      disabled={isProcessing}
+                      className="min-h-[70px] resize-none text-sm"
+                    />
+
+                    {description.length > 0 && description.length < 30 && (
+                      <p className="text-[10px] text-amber-600 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> Add more detail (min 30 characters)
+                      </p>
                     )}
 
                     {description.length >= 30 && description.length < 100 && (

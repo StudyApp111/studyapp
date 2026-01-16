@@ -66,42 +66,12 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       
       // Get focus topics from study plan if available
       const topicsToFocus = focusTopics || studyPlanTopics;
-      const focusInstruction = topicsToFocus?.length > 0 
-        ? `\n\nPRIORITY FOCUS: Generate cards that specifically cover these topics (from the student's study plan):
-${topicsToFocus.map((t, i) => `${i + 1}. ${t}`).join('\n')}
-
-At least 60% of the flashcards should directly address these focus topics.`
-        : '';
       
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate 10 high-quality flashcards for this course: ${lesson.course_name}
-
-Content: ${contentForFlashcards}
-${focusInstruction}
-
-Create flashcards that:
-1. Cover key concepts, definitions, and important facts
-2. Are clear and concise
-3. Have a question/front side and detailed answer/back side
-4. Include topic tags for categorization
-5. Vary in difficulty (mark as Easy/Medium/Hard)`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            flashcards: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  question: { type: "string" },
-                  answer: { type: "string" },
-                  topics: { type: "array", items: { type: "string" } },
-                  difficulty: { type: "string", enum: ["easy", "medium", "hard"] }
-                }
-              }
-            }
-          }
-        }
+      // Use Gemini Flash Lite via backend function
+      const { data: response } = await base44.functions.invoke('generateFlashcards', {
+        course_name: lesson.course_name,
+        content: contentForFlashcards,
+        focus_topics: topicsToFocus || []
       });
 
       const generatedCards = response?.flashcards || [];
