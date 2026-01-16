@@ -803,6 +803,9 @@ Return ONE valid JSON object. No extra text.
     setIsSubmitting(true);
     recordQuestionTime(currentQuestion);
 
+    // Capture final elapsed time before clearing timer
+    const finalElapsedSeconds = elapsedSeconds;
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -832,7 +835,7 @@ Return ONE valid JSON object. No extra text.
         questions: questionsWithGrading,
         correct_count: correctCount,
         total_score: Math.round((correctCount / questionsWithGrading.length) * 100),
-        time_taken_seconds: elapsedSeconds,
+        time_taken_seconds: finalElapsedSeconds,
         status: "completed",
         completed: true
       });
