@@ -77,6 +77,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   const handleGenerate = async () => {
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
     setIsGenerating(true);
     try {
       // Use compressed content if available, otherwise truncate large content
