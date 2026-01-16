@@ -21,10 +21,31 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const [streakCount, setStreakCount] = useState(0);
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
 
+  // Track if we're generating to prevent tab switch interruption
+  const isGeneratingRef = useRef(false);
+  const pendingStudyTaskRef = useRef(null);
+
   useEffect(() => {
     loadFlashcards();
     loadStudyPlanTopics();
   }, [lesson?.id]);
+
+  // Listen for study task generation requests
+  useEffect(() => {
+    const handleStudyTask = (e) => {
+      if (e.detail.taskType === 'flashcards') {
+        console.log('🎯 Received flashcard generation request from study plan');
+        pendingStudyTaskRef.current = e.detail.task;
+        // If no cards exist, auto-generate
+        if (!cards || cards.length === 0) {
+          handleGenerate();
+        }
+      }
+    };
+    
+    window.addEventListener('generateFromStudyTask', handleStudyTask);
+    return () => window.removeEventListener('generateFromStudyTask', handleStudyTask);
+  }, [cards]);
   
   const loadStudyPlanTopics = async () => {
     try {
