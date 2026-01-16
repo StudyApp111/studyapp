@@ -20,6 +20,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [isGrading, setIsGrading] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
+  const [taskCompleteToast, setTaskCompleteToast] = useState({ show: false, taskType: '' });
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
 
   // Track if we're generating to prevent tab switch interruption
