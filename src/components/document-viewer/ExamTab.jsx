@@ -1263,6 +1263,7 @@ JSON Output (exact schema):
               setViewingCompletedExam(null);
               setExam(null);
               setSelectedExamNumber(null);
+              setCurrentQuestion(0);
               hasAutoSelectedRef.current = false;
             }}
             className="mb-3 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
