@@ -809,7 +809,95 @@ Return ONE valid JSON object. No extra text.
     }
   };
 
+  const submitPracticeExam = async () => {
+    setIsSubmitting(true);
+    recordQuestionTime(currentQuestion);
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    try {
+      // Grade all questions
+      const questionsWithGrading = exam.questions.map((q) => {
+        const questionType = q.question_type?.toLowerCase() || '';
+        let isCorrect = false;
+        
+        if (questionType.includes("multiple_choice") || questionType.includes("multiple choice") || 
+            questionType.includes("true_false") || questionType.includes("true/false")) {
+          isCorrect = q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase();
+        } else {
+          // For fill-in-blank and short answer, do simple match
+          isCorrect = q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase();
+        }
+        
+        return { ...q, is_correct: isCorrect };
+      });
+
+      const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
+
+      // Update practice exam - NO predicted grade, just score
+      await base44.entities.Exam.update(exam.id, {
+        questions: questionsWithGrading,
+        correct_count: correctCount,
+        total_score: Math.round((correctCount / questionsWithGrading.length) * 100),
+        time_taken_seconds: elapsedSeconds,
+        status: "completed",
+        completed: true
+      });
+
+      // Update study plan progress if this was from a task
+      try {
+        const studyPlans = await base44.entities.StudyPlan.filter({ 
+          lesson_id: lesson.id, 
+          status: 'active' 
+        });
+        if (studyPlans.length > 0) {
+          const plan = studyPlans[0];
+          const updatedTasks = plan.tasks?.map(task => {
+            if (task.task_type === 'practice_exam' && !task.completed) {
+              const newCount = (task.completed_count || 0) + 1;
+              return {
+                ...task,
+                completed_count: newCount,
+                completed: newCount >= (task.target_count || 1),
+                completed_date: newCount >= (task.target_count || 1) ? new Date().toISOString() : null
+              };
+            }
+            return task;
+          });
+          
+          await base44.entities.StudyPlan.update(plan.id, { tasks: updatedTasks });
+        }
+      } catch (planError) {
+        console.error("Error updating study plan:", planError);
+      }
+
+      // Award XP
+      let xpAmount = 15;
+      if (correctCount === questionsWithGrading.length) xpAmount += 10;
+      await awardDailyXP(xpAmount, 'Practice quiz completed!');
+      setXpToast({ show: true, xp: xpAmount, reason: 'Practice complete!' });
+
+      // Show results immediately by setting the completed exam to view
+      setExam({ ...exam, questions: questionsWithGrading, correct_count: correctCount, completed: true });
+      setViewingCompletedExam({ ...exam, questions: questionsWithGrading, correct_count: correctCount, completed: true, exam_type: 'practice' });
+      
+      if (onExamComplete) onExamComplete();
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error("Error submitting practice exam:", error);
+      setIsSubmitting(false);
+    }
+  };
+
   const submitExam = async () => {
+    // Route to practice exam handler if this is a practice exam
+    if (exam.exam_type === 'practice') {
+      return submitPracticeExam();
+    }
+
     setIsSubmitting(true);
     recordQuestionTime(currentQuestion);
 
