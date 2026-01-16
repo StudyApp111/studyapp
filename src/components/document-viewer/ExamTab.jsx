@@ -878,20 +878,41 @@ Return ONE valid JSON object. No extra text.
         });
         if (studyPlans.length > 0) {
           const plan = studyPlans[0];
+          let taskJustCompleted = false;
+          
           const updatedTasks = plan.tasks?.map(task => {
             if (task.task_type === 'practice_exam' && !task.completed) {
               const newCount = (task.completed_count || 0) + 1;
+              const wasComplete = task.completed;
+              const isComplete = newCount >= (task.target_count || 1);
+              
+              // Check if task just became complete
+              if (isComplete && !wasComplete) {
+                taskJustCompleted = true;
+              }
+              
               return {
                 ...task,
                 completed_count: newCount,
-                completed: newCount >= (task.target_count || 1),
-                completed_date: newCount >= (task.target_count || 1) ? new Date().toISOString() : null
+                completed: isComplete,
+                completed_date: isComplete ? new Date().toISOString() : null
               };
             }
             return task;
           });
           
-          await base44.entities.StudyPlan.update(plan.id, { tasks: updatedTasks });
+          const allComplete = updatedTasks?.every(t => t.completed);
+          
+          await base44.entities.StudyPlan.update(plan.id, { 
+            tasks: updatedTasks,
+            all_tasks_completed: allComplete,
+            official_exam_unlocked: allComplete
+          });
+          
+          // Show task completion toast
+          if (taskJustCompleted) {
+            setTaskCompletionToast(true);
+          }
         }
       } catch (planError) {
         console.error("Error updating study plan:", planError);
