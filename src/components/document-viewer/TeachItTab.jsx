@@ -205,11 +205,13 @@ Return exactly 5 cards with question and model_answer fields, each based on spec
 
       setCards(savedCards);
       setCurrentCardIndex(0);
+      pendingStudyTaskRef.current = null;
     } catch (error) {
       console.error("Error generating cards:", error);
       alert("Failed to generate cards. Please try again.");
     } finally {
       setIsGenerating(false);
+      isGeneratingRef.current = false;
     }
   };
 
