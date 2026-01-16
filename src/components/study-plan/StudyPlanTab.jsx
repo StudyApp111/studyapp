@@ -462,13 +462,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                         )}
                       </div>
 
-                      {/* Arrow or loader for incomplete */}
+                      {/* Arrow for incomplete */}
                       {!isComplete && (
-                        generatingPractice === task.task_id ? (
-                          <Loader2 className="w-5 h-5 text-purple-600 flex-shrink-0 animate-spin" />
-                        ) : (
-                          <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
-                        )
+                        <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
                       )}
                     </div>
                   </div>
