@@ -43,6 +43,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const [gradingInProgress, setGradingInProgress] = useState({});
   const [selectedExamNumber, setSelectedExamNumber] = useState(null);
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
+  const [taskCompleteToast, setTaskCompleteToast] = useState({ show: false, taskType: '' });
   const [waitingForCompression, setWaitingForCompression] = useState(false);
   const [correctStreak, setCorrectStreak] = useState(0);
   const hasAutoSelectedRef = useRef(false);
