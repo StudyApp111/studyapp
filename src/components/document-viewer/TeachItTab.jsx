@@ -85,6 +85,8 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   };
 
   const generateCards = async () => {
+    if (isGeneratingRef.current) return;
+    isGeneratingRef.current = true;
     setIsGenerating(true);
     try {
       const user = await base44.auth.me();
