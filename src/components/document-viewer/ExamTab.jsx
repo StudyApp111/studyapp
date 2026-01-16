@@ -56,6 +56,33 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
   const generationTriggeredRef = useRef(new Set()); // Track which exams we've triggered generation for
+  const [practiceExamToStart, setPracticeExamToStart] = useState(null);
+
+  // Listen for practice exam start events from StudyPlanTab
+  useEffect(() => {
+    const handleStartPracticeExam = (e) => {
+      const { examId } = e.detail;
+      if (examId) {
+        setPracticeExamToStart(examId);
+      }
+    };
+    
+    window.addEventListener('startPracticeExam', handleStartPracticeExam);
+    return () => window.removeEventListener('startPracticeExam', handleStartPracticeExam);
+  }, []);
+
+  // Auto-load practice exam when triggered
+  useEffect(() => {
+    if (!practiceExamToStart || !exams) return;
+    
+    const practiceExam = exams.find(e => e.id === practiceExamToStart);
+    if (practiceExam) {
+      setExam(practiceExam);
+      setCurrentQuestion(0);
+      setPracticeExamToStart(null);
+      hasAutoSelectedRef.current = true;
+    }
+  }, [practiceExamToStart, exams]);
 
   // Auto-select in-progress exam ONLY - don't auto-start new exams
   useEffect(() => {
@@ -1133,7 +1160,7 @@ JSON Output (exact schema):
     const sortedExams = Object.values(examsByNumber).sort((a, b) => a.exam_number - b.exam_number);
     
     return (
-      <div className="px-3 py-4 max-w-lg mx-auto md:max-w-2xl md:px-6">
+      <div className="px-4 py-4 max-w-md mx-auto md:max-w-lg md:px-6">
         {/* Header - Vibrant */}
         <div className="mb-5">
           <div className="flex items-center gap-3 mb-2">

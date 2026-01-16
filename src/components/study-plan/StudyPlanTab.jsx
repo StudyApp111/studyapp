@@ -149,7 +149,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         onNavigate('notes');
         break;
       case 'practice_exam':
-        // Generate practice exam and then navigate to exam tab
+        // Generate practice exam and start it directly
         setGeneratingPractice(task.task_id);
         try {
           const { data } = await base44.functions.invoke('generatePracticeExam', {
@@ -159,8 +159,11 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
             misconception_addressed: task.misconception_addressed || ''
           });
           
-          if (data?.success) {
-            // Reload to get fresh exams and navigate
+          if (data?.success && data.exam_id) {
+            // Navigate to exam tab with the specific practice exam ID to auto-start it
+            window.dispatchEvent(new CustomEvent('startPracticeExam', { 
+              detail: { examId: data.exam_id } 
+            }));
             onNavigate('exam');
           }
         } catch (error) {
