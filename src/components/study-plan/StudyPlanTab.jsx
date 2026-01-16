@@ -149,28 +149,17 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         onNavigate('notes');
         break;
       case 'practice_exam':
-        // Generate practice exam and start it directly
-        setGeneratingPractice(task.task_id);
-        try {
-          const { data } = await base44.functions.invoke('generatePracticeExam', {
-            lesson_id: lesson.id,
+        // Navigate to exam tab and trigger practice exam generation there
+        // This prevents duplicate exam creation and keeps generation in ExamTab
+        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
+          detail: { 
+            task,
             focus_topics: task.focus_topics || [],
             target_competency: task.target_competency || '',
             misconception_addressed: task.misconception_addressed || ''
-          });
-          
-          if (data?.success && data.exam) {
-            // Pass the full exam object directly to avoid refetch timing issues
-            window.dispatchEvent(new CustomEvent('startPracticeExam', { 
-              detail: { exam: data.exam }
-            }));
-            onNavigate('exam');
           }
-        } catch (error) {
-          console.error("Error generating practice exam:", error);
-        } finally {
-          setGeneratingPractice(null);
-        }
+        }));
+        onNavigate('exam');
         break;
       default:
         onNavigate('flashcards');
