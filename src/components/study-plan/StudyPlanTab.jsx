@@ -135,14 +135,20 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
     }
   };
 
-  const [generatingPractice, setGeneratingPractice] = useState(null);
-
   const handleTaskClick = async (task) => {
     switch (task.task_type) {
       case 'flashcards':
+        // Pass task info to flashcards tab for targeted generation
+        window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
+          detail: { taskType: 'flashcards', task }
+        }));
         onNavigate('flashcards');
         break;
       case 'teach_it':
+        // Pass task info to teach it tab for targeted generation
+        window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
+          detail: { taskType: 'teach_it', task }
+        }));
         onNavigate('teachit');
         break;
       case 'review_notes':
