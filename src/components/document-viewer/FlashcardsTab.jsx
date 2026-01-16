@@ -19,6 +19,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const [showHowTo, setShowHowTo] = useState(false);
   const [sessionStats, setSessionStats] = useState({ reviewed: 0, correct: 0 });
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
+  const [taskCompleteToast, setTaskCompleteToast] = useState({ show: false, taskType: '' });
   const [streakCount, setStreakCount] = useState(0);
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
 
