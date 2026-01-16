@@ -87,8 +87,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         contentForFlashcards = contentForFlashcards.substring(0, 50000) + "\n...[content truncated]";
       }
       
-      // Get focus topics from study plan if available
-      const topicsToFocus = focusTopics || studyPlanTopics;
+      // Get focus topics from study plan task or props
+      const taskTopics = pendingStudyTaskRef.current?.focus_topics;
+      const topicsToFocus = taskTopics || focusTopics || studyPlanTopics;
       
       // Use Gemini Flash Lite via backend function
       const { data: response } = await base44.functions.invoke('generateFlashcards', {
