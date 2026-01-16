@@ -74,7 +74,7 @@ At least 60% of the flashcards should directly address these focus topics.`
         : '';
       
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `Generate 20 high-quality flashcards for this course: ${lesson.course_name}
+        prompt: `Generate 10 high-quality flashcards for this course: ${lesson.course_name}
 
 Content: ${contentForFlashcards}
 ${focusInstruction}
@@ -84,7 +84,7 @@ Create flashcards that:
 2. Are clear and concise
 3. Have a question/front side and detailed answer/back side
 4. Include topic tags for categorization
-5. Vary in difficulty (mark as easy/medium/hard)`,
+5. Vary in difficulty (mark as Easy/Medium/Hard)`,
         response_json_schema: {
           type: "object",
           properties: {
