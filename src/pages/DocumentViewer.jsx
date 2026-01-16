@@ -534,11 +534,11 @@ export default function DocumentViewer() {
 
 
 
-                <TabsContent value="flashcards" className="mt-0 p-0 h-full">
+                <TabsContent value="flashcards" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
                 </TabsContent>
 
-                <TabsContent value="teachit" className="mt-0 p-0 h-full">
+                <TabsContent value="teachit" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <TeachItTab lesson={lesson} />
                 </TabsContent>
 
