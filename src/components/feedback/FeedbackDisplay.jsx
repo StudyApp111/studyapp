@@ -150,7 +150,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.03 }}
                         className={`rounded-xl border-2 overflow-hidden transition-all ${
-                          isCorrect ? 'border-emerald-200' : 'border-amber-200'
+                          isCorrect ? 'border-emerald-200' : 'border-red-200'
                         }`}
                       >
                         <div 
@@ -159,7 +159,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              isCorrect ? 'bg-emerald-500' : 'bg-amber-500'
+                              isCorrect ? 'bg-emerald-500' : 'bg-red-500'
                             } text-white`}>
                               {isCorrect ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                             </div>
