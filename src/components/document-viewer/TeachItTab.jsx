@@ -21,12 +21,33 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
 
+  // Track if we're generating to prevent tab switch interruption
+  const isGeneratingRef = useRef(false);
+  const pendingStudyTaskRef = useRef(null);
+
   useEffect(() => {
     if (lesson?.id) {
       loadCards();
       loadStudyPlanTopics();
     }
   }, [lesson?.id]);
+
+  // Listen for study task generation requests
+  useEffect(() => {
+    const handleStudyTask = (e) => {
+      if (e.detail.taskType === 'teach_it') {
+        console.log('🎯 Received teach-it generation request from study plan');
+        pendingStudyTaskRef.current = e.detail.task;
+        // If no cards exist, auto-generate
+        if (cards.length === 0) {
+          generateCards();
+        }
+      }
+    };
+    
+    window.addEventListener('generateFromStudyTask', handleStudyTask);
+    return () => window.removeEventListener('generateFromStudyTask', handleStudyTask);
+  }, [cards.length]);
   
   const loadStudyPlanTopics = async () => {
     try {
