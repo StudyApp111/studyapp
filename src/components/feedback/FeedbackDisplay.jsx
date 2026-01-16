@@ -198,11 +198,21 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                   </MathText>
                                   {question.options && question.options.length > 0 && (
                                     <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
-                                      {question.options.map((opt, i) => (
-                                        <MathText key={i} className="text-xs text-slate-700 block py-0.5" inline>
-                                          <span className="font-bold w-5 inline-block text-slate-500">{String.fromCharCode(65 + i)}.</span> {typeof opt === 'string' ? opt : opt.text || ''}
-                                        </MathText>
-                                      ))}
+                                      {question.options.map((opt, i) => {
+                                        let optionText = '';
+                                        if (typeof opt === 'string') {
+                                          optionText = opt;
+                                        } else if (opt && typeof opt === 'object') {
+                                          optionText = opt.text || opt.label || opt.value || opt.content || JSON.stringify(opt);
+                                        } else {
+                                          optionText = String(opt);
+                                        }
+                                        return (
+                                          <MathText key={i} className="text-xs text-slate-700 block py-0.5" inline>
+                                            <span className="font-bold w-5 inline-block text-slate-500">{String.fromCharCode(65 + i)}.</span> {optionText}
+                                          </MathText>
+                                        );
+                                      })}
                                     </div>
                                   )}
                                 </div>
