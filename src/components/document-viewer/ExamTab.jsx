@@ -1208,7 +1208,12 @@ JSON Output (exact schema):
         <div className="px-3 py-2">
           <Button 
             variant="ghost" 
-            onClick={() => setViewingCompletedExam(null)}
+            onClick={() => {
+              setViewingCompletedExam(null);
+              setExam(null);
+              setSelectedExamNumber(null);
+              hasAutoSelectedRef.current = false;
+            }}
             className="mb-3 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
@@ -1257,7 +1262,7 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-      <div className="px-4 py-4 max-w-md mx-auto md:max-w-lg md:px-6 space-y-6">
+        <div className="px-3 py-4 w-full max-w-full md:max-w-lg md:mx-auto md:px-6 space-y-6 overflow-x-hidden">
         {/* Official Exams Section */}
         <div>
           <div className="flex items-center gap-3 mb-3">

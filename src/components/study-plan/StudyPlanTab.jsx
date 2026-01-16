@@ -194,7 +194,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
-      <div className="px-4 py-6 max-w-lg mx-auto md:max-w-2xl">
+      <div className="px-3 py-6 w-full max-w-full md:max-w-lg md:mx-auto overflow-x-hidden">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -320,7 +320,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   }
 
   return (
-    <div className="px-4 py-5 max-w-lg mx-auto md:max-w-2xl space-y-4 pb-32">
+    <div className="px-3 py-5 w-full max-w-full md:max-w-lg md:mx-auto space-y-4 pb-32 overflow-x-hidden">
       {/* Grade + Target Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
