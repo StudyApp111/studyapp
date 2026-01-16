@@ -181,7 +181,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
-      <div className="px-3 py-6 w-full max-w-full md:max-w-lg md:mx-auto overflow-x-hidden">
+      <div className="px-3 py-6 w-full max-w-[calc(100vw-1rem)] md:max-w-lg md:mx-auto overflow-x-hidden">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
