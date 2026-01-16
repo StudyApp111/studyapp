@@ -10,6 +10,7 @@ import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
+import TaskCompletionToast from "@/components/gamification/TaskCompletionToast";
 
 export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [cards, setCards] = useState([]);
