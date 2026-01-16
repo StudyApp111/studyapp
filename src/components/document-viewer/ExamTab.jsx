@@ -57,22 +57,50 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const lastSavedQuestionsRef = useRef(null);
   const generationTriggeredRef = useRef(new Set()); // Track which exams we've triggered generation for
 
-  // Listen for practice exam start events from StudyPlanTab
+  // Track if we're currently generating a practice exam to prevent duplicates
+  const practiceExamGeneratingRef = useRef(false);
+
+  // Listen for practice exam generation request from StudyPlanTab
   useEffect(() => {
-    const handleStartPracticeExam = (e) => {
-      // Receive the full exam object directly - no refetch needed
-      const { exam: practiceExam } = e.detail;
-      if (practiceExam && practiceExam.questions?.length > 0) {
-        console.log('🎯 Starting practice exam directly:', practiceExam.id);
-        setExam(practiceExam);
-        setCurrentQuestion(0);
-        hasAutoSelectedRef.current = true;
+    const handleGeneratePracticeExam = async (e) => {
+      // Prevent duplicate generation
+      if (practiceExamGeneratingRef.current) {
+        console.log('⚠️ Practice exam generation already in progress, skipping');
+        return;
+      }
+
+      const { task, focus_topics, target_competency, misconception_addressed } = e.detail;
+      console.log('🎯 Received practice exam generation request from study plan');
+
+      practiceExamGeneratingRef.current = true;
+      setIsGenerating(true);
+
+      try {
+        const { data } = await base44.functions.invoke('generatePracticeExam', {
+          lesson_id: lesson.id,
+          focus_topics: focus_topics || [],
+          target_competency: target_competency || '',
+          misconception_addressed: misconception_addressed || ''
+        });
+
+        if (data?.success && data.exam) {
+          console.log('✅ Practice exam generated:', data.exam.id);
+          setExam(data.exam);
+          setCurrentQuestion(0);
+          hasAutoSelectedRef.current = true;
+          if (onExamComplete) onExamComplete(); // Refresh exams list
+        }
+      } catch (error) {
+        console.error("Error generating practice exam:", error);
+      } finally {
+        setIsGenerating(false);
+        practiceExamGeneratingRef.current = false;
       }
     };
-    
-    window.addEventListener('startPracticeExam', handleStartPracticeExam);
-    return () => window.removeEventListener('startPracticeExam', handleStartPracticeExam);
-  }, []);
+
+    window.addEventListener('generatePracticeExamFromTask', handleGeneratePracticeExam);
+    return () => window.removeEventListener('generatePracticeExamFromTask', handleGeneratePracticeExam);
+  }, [lesson?.id]);
 
   // Auto-select in-progress exam ONLY - don't auto-start new exams
   useEffect(() => {
