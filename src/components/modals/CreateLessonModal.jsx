@@ -457,7 +457,7 @@ Constraints:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-[calc(100%-2rem)] p-0 gap-0 rounded-2xl border-0 overflow-hidden">
+      <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[85vh] p-0 gap-0 rounded-2xl border-0 overflow-hidden flex flex-col">
         {isProcessing ? (
           <EducationalLoader />
         ) : (
@@ -473,7 +473,7 @@ Constraints:
             </div>
 
             {/* Form */}
-            <div className="p-4">
+            <div className="p-4 overflow-y-auto flex-1">
               <form onSubmit={handleSubmit} className="space-y-3">
                 {error && (
                   <Alert variant="destructive" className="py-2">
@@ -538,52 +538,10 @@ Constraints:
                 {/* Description Input */}
                 {inputType === "description" && (
                   <div className="space-y-2">
-                    {/* Suggestions Panel - Always visible when in describe mode */}
-                    {courseName.trim() && (
-                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Lightbulb className="w-4 h-4 text-purple-600" />
-                          <span className="text-xs font-semibold text-purple-800">Suggested Topics</span>
-                          {loadingSuggestions && <Loader2 className="w-3 h-3 animate-spin text-purple-600" />}
-                        </div>
-                        
-                        {loadingSuggestions && suggestions.length === 0 && (
-                          <p className="text-[11px] text-purple-600">Finding relevant topics for {courseName}...</p>
-                        )}
-                        
-                        {suggestions.length > 0 && (
-                          <div className="grid grid-cols-1 gap-1.5">
-                            {suggestions.map((suggestion, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => {
-                                  setDescription(suggestion);
-                                }}
-                                className="w-full text-left text-[11px] text-slate-700 bg-white hover:bg-purple-100 border border-purple-100 rounded-lg px-3 py-2 transition-all shadow-sm hover:shadow"
-                              >
-                                {suggestion}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {!loadingSuggestions && suggestions.length === 0 && (
-                          <button
-                            type="button"
-                            onClick={generateSuggestions}
-                            className="w-full text-[11px] bg-purple-600 hover:bg-purple-700 text-white font-medium px-3 py-2 rounded-lg transition-colors"
-                          >
-                            Generate Topic Ideas
-                          </button>
-                        )}
-                      </div>
-                    )}
-
                     <Textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Select a topic above or type your own: e.g., 'Chapter 5 - Photosynthesis, chloroplasts, light reactions...'"
+                      placeholder="Describe what you want to study: e.g., 'Chapter 5 - Photosynthesis, chloroplasts, light reactions...'"
                       disabled={isProcessing}
                       className="min-h-[70px] resize-none text-sm"
                     />
@@ -604,6 +562,48 @@ Constraints:
                       <p className="text-[10px] text-emerald-700 flex items-center gap-1">
                         <FileCheck className="w-3 h-3" /> Ready to generate
                       </p>
+                    )}
+
+                    {/* Suggestions Panel - Below textarea */}
+                    {courseName.trim() && (
+                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Lightbulb className="w-4 h-4 text-purple-600" />
+                            <span className="text-xs font-semibold text-purple-800">Topic Ideas</span>
+                          </div>
+                          {loadingSuggestions && <Loader2 className="w-3 h-3 animate-spin text-purple-600" />}
+                        </div>
+                        
+                        {loadingSuggestions && suggestions.length === 0 && (
+                          <p className="text-[11px] text-purple-600">Finding topics...</p>
+                        )}
+                        
+                        {suggestions.length > 0 && (
+                          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                            {suggestions.map((suggestion, idx) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setDescription(suggestion)}
+                                className="flex-shrink-0 text-[11px] text-slate-700 bg-white hover:bg-purple-100 border border-purple-100 rounded-full px-3 py-1.5 transition-all shadow-sm hover:shadow whitespace-nowrap"
+                              >
+                                {suggestion.length > 40 ? suggestion.substring(0, 40) + '...' : suggestion}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {!loadingSuggestions && suggestions.length === 0 && (
+                          <button
+                            type="button"
+                            onClick={generateSuggestions}
+                            className="w-full text-[11px] bg-purple-600 hover:bg-purple-700 text-white font-medium px-3 py-2 rounded-lg transition-colors"
+                          >
+                            Generate Topic Ideas
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
