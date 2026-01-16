@@ -690,6 +690,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         show={xpToast.show}
         onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
       />
+      
+      {/* Task Completion Toast */}
+      <TaskCompletionToast 
+        show={taskCompletionToast}
+        gradeIncrease={2.5}
+        onComplete={() => setTaskCompletionToast(false)}
+      />
     </div>
   );
 }
