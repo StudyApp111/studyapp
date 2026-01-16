@@ -56,33 +56,23 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
   const generationTriggeredRef = useRef(new Set()); // Track which exams we've triggered generation for
-  const [practiceExamToStart, setPracticeExamToStart] = useState(null);
 
   // Listen for practice exam start events from StudyPlanTab
   useEffect(() => {
     const handleStartPracticeExam = (e) => {
-      const { examId } = e.detail;
-      if (examId) {
-        setPracticeExamToStart(examId);
+      // Receive the full exam object directly - no refetch needed
+      const { exam: practiceExam } = e.detail;
+      if (practiceExam && practiceExam.questions?.length > 0) {
+        console.log('🎯 Starting practice exam directly:', practiceExam.id);
+        setExam(practiceExam);
+        setCurrentQuestion(0);
+        hasAutoSelectedRef.current = true;
       }
     };
     
     window.addEventListener('startPracticeExam', handleStartPracticeExam);
     return () => window.removeEventListener('startPracticeExam', handleStartPracticeExam);
   }, []);
-
-  // Auto-load practice exam when triggered
-  useEffect(() => {
-    if (!practiceExamToStart || !exams) return;
-    
-    const practiceExam = exams.find(e => e.id === practiceExamToStart);
-    if (practiceExam) {
-      setExam(practiceExam);
-      setCurrentQuestion(0);
-      setPracticeExamToStart(null);
-      hasAutoSelectedRef.current = true;
-    }
-  }, [practiceExamToStart, exams]);
 
   // Auto-select in-progress exam ONLY - don't auto-start new exams
   useEffect(() => {
