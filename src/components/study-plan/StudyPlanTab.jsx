@@ -372,10 +372,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
               actualCount = Math.max(actualCount, live.mastered);
               displayText = `${live.mastered} mastered (${live.completed} completed)`;
             } else if (task.task_type === 'practice_exam' && live.completed !== undefined) {
+              // For practice exams, target_count is the number of exams to complete (usually 1)
               actualCount = Math.max(actualCount, live.completed);
-              displayText = live.totalQuestions > 0 
-                ? `${live.correctAnswers}/${live.totalQuestions} correct`
-                : `${live.completed} completed`;
+              displayText = `${live.completed} quiz${live.completed !== 1 ? 'zes' : ''} completed`;
             }
             
             const isComplete = task.completed || (task.target_count > 0 && actualCount >= task.target_count);
