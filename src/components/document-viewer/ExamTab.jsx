@@ -57,15 +57,12 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const examIdRef = useRef(null);
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
-  const generationTriggeredRef = useRef(new Set()); // Track which exams we've triggered generation for
+  const generationTriggeredRef = useRef(new Set());
 
-  // Track if we're currently generating a practice exam to prevent duplicates
   const practiceExamGeneratingRef = useRef(false);
 
-  // Listen for practice exam generation request from StudyPlanTab
   useEffect(() => {
     const handleGeneratePracticeExam = async (e) => {
-      // Prevent duplicate generation
       if (practiceExamGeneratingRef.current) {
         console.log('⚠️ Practice exam generation already in progress, skipping');
         return;
@@ -90,7 +87,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           setExam(data.exam);
           setCurrentQuestion(0);
           hasAutoSelectedRef.current = true;
-          if (onExamComplete) onExamComplete(); // Refresh exams list
+          if (onExamComplete) onExamComplete();
         }
       } catch (error) {
         console.error("Error generating practice exam:", error);
@@ -104,45 +101,32 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     return () => window.removeEventListener('generatePracticeExamFromTask', handleGeneratePracticeExam);
   }, [lesson?.id]);
 
-  // Auto-select in-progress exam ONLY - don't auto-start new exams
   useEffect(() => {
-    // CRITICAL: Only auto-select once when exams first load
     if (!lesson?.id || exams === undefined || selectedExamNumber || hasAutoSelectedRef.current) return;
 
     const allExamsForLesson = exams || [];
-
-    // Only auto-select if there's an in-progress exam
     const inProgressExam = allExamsForLesson.find(e => e.status === 'in_progress' && !e.completed);
     if (inProgressExam) {
       hasAutoSelectedRef.current = true;
       setSelectedExamNumber(inProgressExam.exam_number);
     }
-    // Otherwise, show the exam selection screen - don't auto-start anything
   }, [lesson?.id, exams, selectedExamNumber]);
 
-  // Load exam when selection changes - wait for exams to be loaded from database
   useEffect(() => {
-    // CRITICAL: Don't run until exams are loaded (not undefined) to avoid duplicate generation
     if (!lesson?.id || !selectedExamNumber || exams === undefined) return;
-    // Don't reload if we already have the exam loaded
     if (exam && exam.exam_number === selectedExamNumber) return;
-    // Also don't proceed if waiting for compression
     if (waitingForCompression) return;
     
     loadOrGenerateExam(selectedExamNumber);
   }, [lesson?.id, selectedExamNumber, waitingForCompression, exams]);
 
-  // Wait for background extraction+compression if file upload without content ready
+  // FIXED: Use exponential backoff polling to avoid rate limits
   useEffect(() => {
     if (!lesson?.id) return;
     
-    // For file uploads: must wait for BOTH extraction AND compression to complete
-    // Content is NOT ready if: file upload AND (no extracted_content OR no compressed_content)
     const isFileUpload = lesson.input_type === 'file';
     const hasExtractedContent = lesson.extracted_content?.length > 0;
     const hasCompressedContent = lesson.compressed_content?.length > 0;
-    
-    // Need to wait if: file upload AND content not ready yet
     const needsToWait = isFileUpload && (!hasExtractedContent || !hasCompressedContent);
     
     console.log('📊 ExamTab content check:', { 
@@ -155,37 +139,50 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     if (needsToWait) {
       setWaitingForCompression(true);
       let attempts = 0;
-      const maxAttempts = 60; // Wait up to 60 seconds for large documents
+      const maxAttempts = 20; // Reduced from 60
+      let pollInterval = 2000; // Start with 2 seconds instead of 1
       
-      const interval = setInterval(async () => {
+      const checkContent = async () => {
         attempts++;
         console.log(`⏳ Waiting for content... attempt ${attempts}/${maxAttempts}`);
+        
         try {
           const refreshed = await base44.entities.Lesson.filter({ id: lesson.id });
           const updated = refreshed?.[0];
           
-          // Check if BOTH extracted AND compressed content are now available
           if (updated?.extracted_content?.length > 0 && updated?.compressed_content?.length > 0) {
             console.log('✅ Content ready! Extracted:', updated.extracted_content.length, 'chars, Compressed:', updated.compressed_content.length, 'chars');
-            clearInterval(interval);
             setWaitingForCompression(false);
             window.dispatchEvent(new Event('reloadLesson'));
+            return true; // Stop polling
           } else if (attempts >= maxAttempts) {
             console.warn('⚠️ Timeout waiting for content, proceeding anyway');
-            clearInterval(interval);
             setWaitingForCompression(false);
-            // Still reload to get whatever content is available
             window.dispatchEvent(new Event('reloadLesson'));
+            return true; // Stop polling
           }
+          
+          // Exponential backoff: 2s, 3s, 4s, 5s, then cap at 5s
+          pollInterval = Math.min(pollInterval + 1000, 5000);
+          setTimeout(checkContent, pollInterval);
+          return false;
         } catch (err) {
           console.error('Error checking content:', err);
           if (attempts >= maxAttempts) {
-            clearInterval(interval);
             setWaitingForCompression(false);
+            return true; // Stop polling
           }
+          
+          // On error, increase backoff more aggressively
+          pollInterval = Math.min(pollInterval + 2000, 8000);
+          setTimeout(checkContent, pollInterval);
+          return false;
         }
-      }, 1000);
-      return () => clearInterval(interval);
+      };
+      
+      // Start first check after 2 seconds
+      const timeoutId = setTimeout(checkContent, pollInterval);
+      return () => clearTimeout(timeoutId);
     } else {
       setWaitingForCompression(false);
     }
@@ -200,7 +197,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         timerRef.current = null;
       }
       
-      // Restore elapsed time from saved exam data
       const savedElapsed = exam.time_taken_seconds || 0;
       setElapsedSeconds(savedElapsed);
       startTimeRef.current = Date.now() - (savedElapsed * 1000);
@@ -236,12 +232,11 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     }
   }, [exam?.id, exam?.completed]);
 
-  // Auto-save progress every 10 seconds and on answer changes
   const saveExamProgress = async () => {
     if (!exam || exam.completed) return;
     
     const questionsJson = JSON.stringify(exam.questions);
-    if (lastSavedQuestionsRef.current === questionsJson) return; // No changes
+    if (lastSavedQuestionsRef.current === questionsJson) return;
     
     try {
       const questionTimeLaps = Object.keys(questionTimesRef.current).map(key => ({
@@ -260,7 +255,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     }
   };
 
-  // Auto-save every 1 second
   useEffect(() => {
     if (!exam || exam.completed) return;
     
@@ -268,7 +262,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     return () => clearInterval(intervalId);
   }, [exam?.id, exam?.completed, elapsedSeconds]);
 
-  // Save on page unload/visibility change
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (exam && !exam.completed) {
@@ -304,20 +297,17 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       console.error("ExamTab: Cannot load exam - lesson not ready");
       return;
     }
-    // Wait until compression is ready (if file upload with extracted content)
     if (waitingForCompression) {
       console.log('⏳ Waiting for compression to complete...');
       return;
     }
 
-    // Prevent double generation triggers
     if (generationTriggeredRef.current.has(examNumber)) {
       console.log(`⚠️ Generation already in progress for Exam ${examNumber}, skipping duplicate call.`);
       return;
     }
 
     try {
-      // Use exams prop (already loaded from database by parent)
       const existingExams = (exams || []).filter(e => e.exam_number === examNumber);
       console.log(`📋 Looking for Exam ${examNumber} in loaded exams:`, existingExams.length > 0 ? 'FOUND' : 'NOT FOUND');
 
@@ -329,14 +319,11 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           return;
         }
         
-        // Check if questions are ready
         if (loadedExam.questions?.length > 0) {
           setExam(loadedExam);
-          // Restore position to first unanswered
           const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer?.trim());
           setCurrentQuestion(firstUnanswered >= 0 ? firstUnanswered : loadedExam.questions.length - 1);
         } else {
-          // Questions not ready - trigger generation
           generationTriggeredRef.current.add(examNumber);
           setIsGenerating(true);
           try {
@@ -394,11 +381,10 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       let aiPrompt;
 
       if (examNumber === 1) {
-        // Exam 1: Diagnostic baseline
         aiPrompt = `
 
 [Context]
-You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}. This worksheet establishes an accurate learning baseline and must stay tightly grounded in the student’s materials.
+You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}. This worksheet establishes an accurate learning baseline and must stay tightly grounded in the student's materials.
 
 Do NOT rely on prior diagnostics.
 
@@ -416,7 +402,7 @@ ${contentDescription}
 Internal Rules (Do NOT Output)
 
 • Topic Lock:
-If content specifies a concrete skill/topic (e.g., “factoring”, “photosynthesis”), ALL questions must stay strictly within it.
+If content specifies a concrete skill/topic (e.g., "factoring", "photosynthesis"), ALL questions must stay strictly within it.
 Only broaden scope if the user explicitly requests review or exam prep.
 
 • Light Search (Minimal):
@@ -457,28 +443,23 @@ Output Format
 Return ONE valid JSON object matching the required schema.
 No extra text.`;
       } else {
-        // Exams 2-6: Adaptive based on prior performance
         let suggestedFutureSessions = null;
         let priorPredictedScore = null;
         let difficultyCalibration = "Moderate → Challenging";
         
         try {
-          // Fetch all completed exams to get the most recent performance
           const completedExams = await base44.entities.Exam.filter({ 
             lesson_id: lesson.id,
             completed: true
           });
           
           if (completedExams && completedExams.length > 0) {
-            // Get most recent completed exam
             const sortedExams = completedExams.sort((a, b) => b.exam_number - a.exam_number);
             const mostRecentExam = sortedExams[0];
             
-            // Extract predicted score percentage
             if (mostRecentExam.total_score !== undefined) {
               priorPredictedScore = mostRecentExam.total_score;
               
-              // Set difficulty calibration based on performance
               if (priorPredictedScore >= 85) {
                 difficultyCalibration = "Challenging → High Challenge (student excelling, increase rigor)";
               } else if (priorPredictedScore >= 70) {
@@ -488,7 +469,6 @@ No extra text.`;
               }
             }
             
-            // Get Exam 1 feedback for future sessions plan
             const exam1 = completedExams.find(e => e.exam_number === 1);
             if (exam1?.ai_feedback?.suggested_future_sessions_plan) {
               suggestedFutureSessions = exam1.ai_feedback.suggested_future_sessions_plan;
@@ -629,7 +609,6 @@ Return ONE valid JSON object. No extra text.
       console.log("📊 Response structure:", examData ? Object.keys(examData) : 'null');
       console.log("📊 exam_questions array length:", examData?.exam_questions?.length || 0);
 
-      // Guard against missing or invalid exam_questions
       const examQuestions = examData?.exam_questions || [];
       if (!Array.isArray(examQuestions) || examQuestions.length === 0) {
         console.error("❌ Invalid exam_questions:", examData);
@@ -666,7 +645,6 @@ Return ONE valid JSON object. No extra text.
       console.log("✅ Exam saved successfully:", createdExam.id);
       setExam(createdExam);
       
-      // Notify parent to refresh (will be picked up by periodic refetch)
       if (onExamComplete) onExamComplete();
     } catch (error) {
       console.error("❌ Error in generateExam:", error);
@@ -742,13 +720,10 @@ Return ONE valid JSON object. No extra text.
 
   const awardXP = async (amount, reason) => {
     try {
-      // Use centralized XP tracking
       const result = await awardDailyXP(amount, reason);
       if (result.success) {
-        // Also record question activity
         await recordDailyActivity('questions', 1);
         
-        // Update questions_completed count
         const user = await base44.auth.me();
         await base44.auth.updateMe({
           questions_completed: (user.questions_completed || 0) + 1
@@ -770,7 +745,6 @@ Return ONE valid JSON object. No extra text.
       questions: updatedQuestions
     }));
 
-    // Debounce auto-save on answer change
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);
     }
@@ -798,13 +772,11 @@ Return ONE valid JSON object. No extra text.
   const handleNext = () => {
     recordQuestionTime(currentQuestion);
 
-    // Award XP for answering a question
     const currentQ = exam.questions[currentQuestion];
     if (currentQ.user_answer) {
       awardXP(3, 'Question answered!');
     }
 
-    // Save progress when navigating
     saveExamProgress();
 
     if (currentQuestion < exam.questions.length - 1) {
@@ -833,7 +805,6 @@ Return ONE valid JSON object. No extra text.
     setIsSubmitting(true);
     recordQuestionTime(currentQuestion);
 
-    // Capture final elapsed time before clearing timer
     const finalElapsedSeconds = elapsedSeconds;
 
     if (timerRef.current) {
@@ -842,7 +813,6 @@ Return ONE valid JSON object. No extra text.
     }
 
     try {
-      // Grade all questions
       const questionsWithGrading = exam.questions.map((q) => {
         const questionType = q.question_type?.toLowerCase() || '';
         let isCorrect = false;
@@ -851,7 +821,6 @@ Return ONE valid JSON object. No extra text.
             questionType.includes("true_false") || questionType.includes("true/false")) {
           isCorrect = q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase();
         } else {
-          // For fill-in-blank and short answer, do simple match
           isCorrect = q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase();
         }
         
@@ -860,7 +829,6 @@ Return ONE valid JSON object. No extra text.
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
 
-      // Update practice exam - NO predicted grade, just score
       await base44.entities.Exam.update(exam.id, {
         questions: questionsWithGrading,
         correct_count: correctCount,
@@ -870,7 +838,6 @@ Return ONE valid JSON object. No extra text.
         completed: true
       });
 
-      // Update study plan progress if this was from a task
       try {
         const studyPlans = await base44.entities.StudyPlan.filter({ 
           lesson_id: lesson.id, 
@@ -886,7 +853,6 @@ Return ONE valid JSON object. No extra text.
               const wasComplete = task.completed;
               const isComplete = newCount >= (task.target_count || 1);
               
-              // Check if task just became complete
               if (isComplete && !wasComplete) {
                 taskJustCompleted = true;
               }
@@ -909,7 +875,6 @@ Return ONE valid JSON object. No extra text.
             official_exam_unlocked: allComplete
           });
           
-          // Show task completion toast
           if (taskJustCompleted) {
             setTaskCompletionToast(true);
           }
@@ -918,13 +883,11 @@ Return ONE valid JSON object. No extra text.
         console.error("Error updating study plan:", planError);
       }
 
-      // Award XP
       let xpAmount = 15;
       if (correctCount === questionsWithGrading.length) xpAmount += 10;
       await awardDailyXP(xpAmount, 'Practice quiz completed!');
       setXpToast({ show: true, xp: xpAmount, reason: 'Practice complete!' });
 
-      // Show results immediately by setting the completed exam to view
       const completedExam = { 
         ...exam, 
         questions: questionsWithGrading, 
@@ -945,7 +908,6 @@ Return ONE valid JSON object. No extra text.
   };
 
   const submitExam = async () => {
-    // Route to practice exam handler if this is a practice exam
     if (exam.exam_type === 'practice') {
       return submitPracticeExam();
     }
@@ -1020,7 +982,6 @@ Return ONE valid JSON object. No extra text.
         } : null
       }));
 
-      // Fetch fresh lesson data to ensure curriculum_map is available
       let currentLesson = lesson;
       if (!lesson.curriculum_map || !lesson.curriculum_map.core_competencies) {
         const refreshedLessons = await base44.entities.Lesson.filter({ id: lesson.id });
@@ -1118,12 +1079,10 @@ JSON Output (exact schema):
         })
       );
 
-      // Create exams 2-6 after completing exam 1
       if (exam.exam_number === 1) {
         const existingExams = await base44.entities.Exam.filter({ lesson_id: lesson.id });
         const existingNumbers = existingExams.map(e => e.exam_number);
         
-        // Create exams 2-6 without pre-defined focus (will be determined dynamically)
         for (let i = 2; i <= 6; i++) {
           if (!existingNumbers.includes(i)) {
             await base44.entities.Exam.create({
@@ -1142,7 +1101,6 @@ JSON Output (exact schema):
         }
       }
 
-      // Generate study plan after official exam completion
       try {
         await base44.functions.invoke('generateStudyPlan', {
           exam_id: exam.id,
@@ -1150,21 +1108,17 @@ JSON Output (exact schema):
         });
       } catch (planError) {
         console.error("Error generating study plan:", planError);
-        // Non-blocking - continue even if plan generation fails
       }
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
 
-      // Award XP for exam completion using centralized tracking
-      let examXP = 25; // Base XP for completing exam
-      if (correctCount >= 8) examXP += 25; // Bonus for high score
-      if (correctCount === questionsWithGrading.length) examXP += 50; // Perfect score bonus
+      let examXP = 25;
+      if (correctCount >= 8) examXP += 25;
+      if (correctCount === questionsWithGrading.length) examXP += 50;
 
       try {
-        // Use centralized XP tracking
         const xpResult = await awardDailyXP(examXP, 'Exam completed!');
         
-        // Update exam-specific stats
         const currentUserXP = await base44.auth.me();
         await base44.auth.updateMe({
           total_exams_completed: (currentUserXP.total_exams_completed || 0) + 1
@@ -1232,7 +1186,6 @@ JSON Output (exact schema):
         setNewBadges(earnedNow);
       }
 
-      // Clear exam state and notify completion
       setExam(null);
       setSelectedExamNumber(null);
       hasAutoSelectedRef.current = false;
@@ -1240,7 +1193,6 @@ JSON Output (exact schema):
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
       
-      // Switch to study plan tab after a short delay
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
       }, 500);
@@ -1252,7 +1204,6 @@ JSON Output (exact schema):
     }
   };
 
-  // Show completed exam feedback inline
   if (viewingCompletedExam) {
     return (
       <div className="pb-4">
@@ -1282,9 +1233,7 @@ JSON Output (exact schema):
     );
   }
 
-  // Show exam selection if no exam selected
   if (!exam && !isGenerating) {
-    // Wait for exams to load from database
     if (exams === undefined) {
       return (
         <div className="flex items-center justify-center p-8">
@@ -1295,12 +1244,9 @@ JSON Output (exact schema):
     }
     
     const allExamsForLesson = exams || [];
-    
-    // Separate official exams and practice exams
     const officialExams = allExamsForLesson.filter(e => e.exam_type !== 'practice');
     const practiceExams = allExamsForLesson.filter(e => e.exam_type === 'practice');
     
-    // Deduplicate official exams by exam_number
     const examsByNumber = {};
     officialExams.forEach(e => {
       const existing = examsByNumber[e.exam_number];
@@ -1309,8 +1255,6 @@ JSON Output (exact schema):
       }
     });
     const sortedOfficialExams = Object.values(examsByNumber).sort((a, b) => a.exam_number - b.exam_number);
-    
-    // Sort practice exams by date (newest first)
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
@@ -1520,9 +1464,7 @@ JSON Output (exact schema):
 
   if (!exam) return null;
 
-  // If current exam is completed and we're not viewing it, reset to selection
   if (exam?.completed && !viewingCompletedExam) {
-    // Use setTimeout to avoid state update during render
     setTimeout(() => {
       setExam(null);
       setSelectedExamNumber(null);
@@ -1531,7 +1473,6 @@ JSON Output (exact schema):
     return null;
   }
 
-  // Guard against missing questions array
   if (!exam.questions || exam.questions.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -1545,7 +1486,6 @@ JSON Output (exact schema):
   const isLastQuestion = currentQuestion === exam.questions.length - 1;
   const currentQ = exam.questions[currentQuestion];
   
-  // Guard against invalid current question
   if (!currentQ) {
     setCurrentQuestion(0);
     return null;
@@ -1587,10 +1527,8 @@ JSON Output (exact schema):
         </motion.div>
       )}
 
-      {/* Mobile-optimized full-height layout */}
       <div className="flex flex-col h-full md:h-auto md:pb-4">
         <div className="flex-1 flex flex-col bg-white/95 backdrop-blur-xl md:rounded-2xl border-0 md:border border-purple-200/80 shadow-none md:shadow-sm md:mx-0 overflow-hidden">
-          {/* Sticky compact header */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-purple-100 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
@@ -1604,7 +1542,6 @@ JSON Output (exact schema):
             </div>
           </div>
 
-          {/* Scrollable question content */}
           <div className="flex-1 overflow-y-auto overscroll-contain p-3 md:p-5">
             <AnimatePresence mode="wait">
               <ExamQuestion
@@ -1618,7 +1555,6 @@ JSON Output (exact schema):
             </AnimatePresence>
           </div>
 
-          {/* Fixed bottom navigation */}
           <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-4 border-t border-purple-100 bg-white/95 backdrop-blur-sm shrink-0">
             <Button
               variant="outline"
