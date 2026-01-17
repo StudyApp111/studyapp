@@ -123,12 +123,26 @@ export default function Layout({ children, currentPageName }) {
             --primary-foreground: 0 0% 100%;
             --secondary: 45 100% 85%;
             --accent: 280 60% 60%;
+            --sat: env(safe-area-inset-top);
+            --sab: env(safe-area-inset-bottom);
+            --sal: env(safe-area-inset-left);
+            --sar: env(safe-area-inset-right);
           }
-          
+
           /* Hide desktop sidebar on mobile */
           @media (max-width: 768px) {
             aside[data-sidebar] {
               display: none;
+            }
+          }
+
+          /* Native app safe area support */
+          @supports (padding-top: env(safe-area-inset-top)) {
+            .native-safe-top {
+              padding-top: env(safe-area-inset-top);
+            }
+            .native-safe-bottom {
+              padding-bottom: env(safe-area-inset-bottom);
             }
           }
         `}</style>
