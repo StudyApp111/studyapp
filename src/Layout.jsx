@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText, MessageCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText, MessageCircle, ChevronDown, ChevronRight, Upload } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -288,7 +288,7 @@ export default function Layout({ children, currentPageName }) {
 
                     {/* Main button - Upload icon */}
                     <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 rounded-2xl shadow-xl ring-4 ring-white flex items-center justify-center transform group-hover:scale-105 transition-transform duration-200">
-                      <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
+                      <Upload className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
                   </div>
                 </button>

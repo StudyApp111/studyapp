@@ -126,39 +126,46 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           const uploadResults = await Promise.all(uploadPromises);
           fileUrls = uploadResults.map(result => result.file_url);
 
-          setProcessingStep("Extracting content...");
+          // Start extraction in background - don't wait for it
+          // We'll create the lesson immediately and let extraction happen async
+          setProcessingStep("Processing...");
           
-          // AWAIT extraction - don't fire and forget
-          const extractionResults = await Promise.allSettled(
-            fileUrls.map(fileUrl =>
-              base44.functions.invoke('extractDocumentContent', { file_url: fileUrl })
-            )
-          );
+          // Fire off extraction but don't await - set a 3 second max wait
+          const extractionPromise = Promise.race([
+            Promise.allSettled(
+              fileUrls.map(fileUrl =>
+                base44.functions.invoke('extractDocumentContent', { file_url: fileUrl })
+              )
+            ),
+            new Promise(resolve => setTimeout(() => resolve([]), 3000)) // 3s timeout
+          ]);
           
-          const extractedParts = extractionResults
-            .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
-            .map(r => r.value.data.extracted_content);
+          const extractionResults = await extractionPromise;
           
-          fullExtractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
-          extractedContent = fullExtractedContent;
-          
-          console.log("📄 Extracted content length:", fullExtractedContent.length, "chars");
-          
-          // Compress if content is large (>5000 chars)
-          if (fullExtractedContent.length > 5000) {
-            setProcessingStep("Optimizing content...");
-            try {
-              const compResult = await base44.functions.invoke('compressDocument', { 
-                content: fullExtractedContent 
-              });
-              compressedForPrompts = compResult?.data?.compressed_content || fullExtractedContent;
-              console.log("📦 Compressed content length:", compressedForPrompts.length, "chars");
-            } catch (compErr) {
-              console.warn('Compression failed, using full content:', compErr);
+          if (Array.isArray(extractionResults) && extractionResults.length > 0) {
+            const extractedParts = extractionResults
+              .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
+              .map(r => r.value.data.extracted_content);
+            
+            fullExtractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
+            extractedContent = fullExtractedContent;
+            
+            console.log("📄 Extracted content length:", fullExtractedContent.length, "chars");
+            
+            // Quick compress only if we have content and it's large
+            if (fullExtractedContent.length > 5000) {
+              try {
+                const compResult = await Promise.race([
+                  base44.functions.invoke('compressDocument', { content: fullExtractedContent }),
+                  new Promise(resolve => setTimeout(() => resolve(null), 2000)) // 2s timeout
+                ]);
+                compressedForPrompts = compResult?.data?.compressed_content || fullExtractedContent;
+              } catch {
+                compressedForPrompts = fullExtractedContent;
+              }
+            } else {
               compressedForPrompts = fullExtractedContent;
             }
-          } else {
-            compressedForPrompts = fullExtractedContent;
           }
           
         } catch (fileError) {

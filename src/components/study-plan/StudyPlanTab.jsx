@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { 
@@ -66,6 +66,11 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveProgress, setLiveProgress] = useState({});
+  const ctaRef = useRef(null);
+
+  const scrollToCTA = () => {
+    ctaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
   useEffect(() => {
     if (lesson?.id) {
@@ -213,14 +218,12 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
           {/* The Problem → Solution */}
           <div className="space-y-3">
             <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">❌</span>
-                <div>
-                  <h3 className="font-bold text-red-800 text-sm mb-1">The Old Way</h3>
-                  <p className="text-red-700 text-xs leading-relaxed">
-                    Re-reading everything. Highlighting randomly. Studying what you already know. Panicking before exams.
-                  </p>
-                </div>
+              <div className="flex flex-col items-center text-center">
+                <span className="text-2xl mb-2">❌</span>
+                <h3 className="font-bold text-red-800 text-sm mb-1">The Old Way</h3>
+                <p className="text-red-700 text-xs leading-relaxed max-w-xs">
+                  Re-reading everything. Highlighting randomly. Studying what you already know. Panicking before exams.
+                </p>
               </div>
             </div>
             
@@ -231,14 +234,12 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
             </div>
             
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">✨</span>
-                <div>
-                  <h3 className="font-bold text-emerald-800 text-sm mb-1">The StudyApp Way</h3>
-                  <p className="text-emerald-700 text-xs leading-relaxed">
-                    AI finds your weak spots in 5 minutes. Then gives you a personalized plan that targets exactly what you need.
-                  </p>
-                </div>
+              <div className="flex flex-col items-center text-center">
+                <span className="text-2xl mb-2">✨</span>
+                <h3 className="font-bold text-emerald-800 text-sm mb-1">The StudyApp Way</h3>
+                <p className="text-emerald-700 text-xs leading-relaxed max-w-xs">
+                  AI finds your weak spots in 5 minutes. Then gives you a personalized plan that targets exactly what you need.
+                </p>
               </div>
             </div>
           </div>
@@ -271,7 +272,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
               
               <div className="space-y-3">
                 {[
-                  { emoji: "🎯", title: "5-Min Diagnostic", desc: "AI discovers your knowledge gaps", time: "Now", active: true },
+                  { emoji: "🎯", title: "5-Min Diagnostic", desc: "AI discovers your knowledge gaps", time: "Now", active: true, clickable: true },
                   { emoji: "📋", title: "Personal Study Plan", desc: "Tasks designed for YOUR weaknesses", time: "+2 min" },
                   { emoji: "🧠", title: "Focused Practice", desc: "Flashcards, quizzes, and more", time: "+15 min" },
                   { emoji: "🏆", title: "Grade Improvement", desc: "Watch your predicted grade climb", time: "Ongoing" }
@@ -282,6 +283,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 + idx * 0.1 }}
                     className="relative"
+                    onClick={step.clickable ? scrollToCTA : undefined}
+                    style={step.clickable ? { cursor: 'pointer' } : undefined}
                   >
                     {/* Timeline dot */}
                     <div className={`absolute -left-6 top-3 w-4 h-4 rounded-full border-2 ${
@@ -294,7 +297,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                       step.active 
                         ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-300 shadow-md' 
                         : 'bg-white border-slate-200'
-                    }`}>
+                    } ${step.clickable ? 'hover:shadow-lg transition-shadow' : ''}`}>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">{step.emoji}</span>
                         <h4 className="font-bold text-slate-900 text-sm flex-1">{step.title}</h4>
@@ -332,6 +335,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
 
           {/* Final CTA - Must scroll to see */}
           <motion.div
+            ref={ctaRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
