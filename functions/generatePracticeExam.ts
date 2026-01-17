@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-const API_KEY = Deno.env.get("API_KEY");
+const API_KEY = Deno.env.get("GEMINIAPIKEY");
 
 Deno.serve(async (req) => {
   try {

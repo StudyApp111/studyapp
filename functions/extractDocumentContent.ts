@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
         }
         console.log('File URL received:', file_url);
 
-        const googleApiKey = Deno.env.get("GEMINI_API_KEY");
+        const googleApiKey = Deno.env.get("GEMINIAPIKEY");
         if (!googleApiKey) {
             return Response.json({ error: 'Google API key not configured' }, { status: 500 });
         }

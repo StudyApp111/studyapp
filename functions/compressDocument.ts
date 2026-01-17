@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Content is required' }, { status: 400 });
         }
 
-        const apiKey = Deno.env.get('GEMINI_API_KEY');
+        const apiKey = Deno.env.get('GEMINIAPIKEY');
         if (!apiKey) {
             console.error('❌ CRITICAL: API_KEY not found in environment');
             return Response.json({ error: 'API key not configured' }, { status: 500 });
