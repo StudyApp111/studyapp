@@ -171,6 +171,10 @@ Return JSON:
   "priority_focus": "The single most important thing to improve"
 }`;
 
+    console.log(`⏱️ [generateStudyPlan] Pre-LLM prep: ${Date.now() - startTime}ms`);
+    console.log(`⏱️ [generateStudyPlan] Prompt length: ${planPrompt.length} chars`);
+    
+    const llmStartTime = Date.now();
     const response = await base44.integrations.Core.InvokeLLM({
       prompt: planPrompt,
       response_json_schema: {
@@ -196,6 +200,7 @@ Return JSON:
         }
       }
     });
+    console.log(`⏱️ [generateStudyPlan] LLM call: ${Date.now() - llmStartTime}ms`);
 
     // Validate and filter tasks to only allowed types
     const validTaskTypes = ['flashcards', 'teach_it', 'review_notes', 'practice_exam'];
