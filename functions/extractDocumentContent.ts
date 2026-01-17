@@ -19,9 +19,9 @@ Deno.serve(async (req) => {
         }
         console.log('File URL received:', file_url);
 
-        const apiKey = Deno.env.get("MistralDocumentAIKey");
-        if (!apiKey) {
-            return Response.json({ error: 'API key not configured' }, { status: 500 });
+        const googleApiKey = Deno.env.get("API_KEY");
+        if (!googleApiKey) {
+            return Response.json({ error: 'Google API key not configured' }, { status: 500 });
         }
 
         // Download file
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
                     });
                 }
             } catch (pdfError) {
-                console.log('Direct PDF extraction failed, falling back to OCR');
+                console.log('Direct PDF extraction failed, falling back to Google Vision OCR');
             }
         }
 
@@ -117,55 +117,44 @@ Deno.serve(async (req) => {
                     });
                 }
             } catch (docxError) {
-                console.log('Direct DOCX extraction failed, falling back to OCR');
+                console.log('Direct DOCX extraction failed, falling back to Google Vision OCR');
             }
         }
 
-        // Use Mistral for OCR
-        const prompt = `Extract ALL educational content from this document. Include every detail - text, questions, rubrics, criteria, and instructions.`;
+        // Use Google Vision OCR for images and fallback for documents
+        console.log('Using Google Vision OCR...');
+        
+        // Convert blob to base64
+        const arrayBuffer = await fileBlob.arrayBuffer();
+        const base64Content = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-        const contentItem = isDocument ? {
-            type: 'document_url',
-            document_url: file_url
-        } : {
-            type: 'image_url',
-            image_url: file_url
-        };
-
-        const requestBody = {
-            model: 'pixtral-12b-2409',
-            temperature: 0,
-            max_tokens: 8192,
-            messages: [{
-                role: 'user',
-                content: [
-                    { type: 'text', text: prompt },
-                    contentItem
-                ]
+        const visionRequestBody = {
+            requests: [{
+                image: { content: base64Content },
+                features: [{ type: 'DOCUMENT_TEXT_DETECTION' }]
             }]
         };
 
-        console.log('Calling Mistral API...');
-        const chatResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify(requestBody)
-        });
+        const visionResponse = await fetch(
+            `https://vision.googleapis.com/v1/images:annotate?key=${googleApiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(visionRequestBody)
+            }
+        );
 
-        if (!chatResponse.ok) {
-            const errorBody = await chatResponse.text();
-            console.error('Mistral API error:', errorBody);
+        if (!visionResponse.ok) {
+            const errorBody = await visionResponse.text();
+            console.error('Google Vision API error:', errorBody);
             return Response.json({ 
-                error: 'Mistral API request failed',
+                error: 'Google Vision API request failed',
                 details: errorBody
             }, { status: 500 });
         }
 
-        const chatData = await chatResponse.json();
-        const extractedContent = chatData.choices?.[0]?.message?.content;
+        const visionData = await visionResponse.json();
+        const extractedContent = visionData.responses?.[0]?.fullTextAnnotation?.text;
 
         if (!extractedContent || extractedContent.trim().length === 0) {
             return Response.json({ 
@@ -173,14 +162,14 @@ Deno.serve(async (req) => {
             }, { status: 500 });
         }
 
-        console.log('Content extracted, length:', extractedContent.length);
+        console.log('Content extracted via Google Vision, length:', extractedContent.length);
 
         return Response.json({ 
-            extracted_content: extractedContent,
-            characters: extractedContent.length,
+            extracted_content: extractedContent.trim(),
+            characters: extractedContent.trim().length,
             file_size: fileSize,
             file_type: isImage ? 'IMAGE' : 'DOCUMENT',
-            method: 'mistral_pixtral_ocr'
+            method: 'google_vision_ocr'
         });
 
     } catch (error) {
