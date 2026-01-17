@@ -121,40 +121,62 @@ Deno.serve(async (req) => {
             }
         }
 
-        // Use Google Vision OCR for images and fallback for documents
-        console.log('Using Google Vision OCR...');
+        // Use Gemini for document/image OCR and understanding
+        console.log('Using Gemini Vision for OCR...');
         
         // Convert blob to base64
         const arrayBuffer = await fileBlob.arrayBuffer();
         const base64Content = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        
+        // Determine MIME type
+        const mimeTypes = {
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'webp': 'image/webp',
+            'gif': 'image/gif',
+            'pdf': 'application/pdf'
+        };
+        const mimeType = mimeTypes[fileExt] || 'application/octet-stream';
 
-        const visionRequestBody = {
-            requests: [{
-                image: { content: base64Content },
-                features: [{ type: 'DOCUMENT_TEXT_DETECTION' }]
-            }]
+        const geminiRequestBody = {
+            contents: [{
+                parts: [
+                    { text: 'Extract ALL educational content from this document. Include every detail - text, questions, rubrics, criteria, and instructions. Preserve structure and formatting.' },
+                    {
+                        inline_data: {
+                            mime_type: mimeType,
+                            data: base64Content
+                        }
+                    }
+                ]
+            }],
+            generationConfig: {
+                temperature: 0,
+                maxOutputTokens: 8192
+            }
         };
 
-        const visionResponse = await fetch(
-            `https://vision.googleapis.com/v1/images:annotate?key=${googleApiKey}`,
+        const geminiResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${googleApiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(visionRequestBody)
+                body: JSON.stringify(geminiRequestBody)
             }
         );
 
-        if (!visionResponse.ok) {
-            const errorBody = await visionResponse.text();
-            console.error('Google Vision API error:', errorBody);
+        if (!geminiResponse.ok) {
+            const errorBody = await geminiResponse.text();
+            console.error('Gemini Vision API error:', errorBody);
             return Response.json({ 
-                error: 'Google Vision API request failed',
+                error: 'Gemini Vision API request failed',
                 details: errorBody
             }, { status: 500 });
         }
 
-        const visionData = await visionResponse.json();
-        const extractedContent = visionData.responses?.[0]?.fullTextAnnotation?.text;
+        const geminiData = await geminiResponse.json();
+        const extractedContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!extractedContent || extractedContent.trim().length === 0) {
             return Response.json({ 
@@ -162,14 +184,14 @@ Deno.serve(async (req) => {
             }, { status: 500 });
         }
 
-        console.log('Content extracted via Google Vision, length:', extractedContent.length);
+        console.log('Content extracted via Gemini Vision, length:', extractedContent.length);
 
         return Response.json({ 
             extracted_content: extractedContent.trim(),
             characters: extractedContent.trim().length,
             file_size: fileSize,
             file_type: isImage ? 'IMAGE' : 'DOCUMENT',
-            method: 'google_vision_ocr'
+            method: 'gemini_vision_ocr'
         });
 
     } catch (error) {
