@@ -239,6 +239,8 @@ Return JSON:
     const allPlans = await base44.entities.StudyPlan.filter({ lesson_id });
     const cycleNumber = allPlans.length + 1;
 
+    console.log(`⏱️ [generateStudyPlan] Pre-create: ${Date.now() - startTime}ms`);
+    
     // Create new study plan with enriched data
     const studyPlan = await base44.entities.StudyPlan.create({
       lesson_id,
