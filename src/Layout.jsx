@@ -229,14 +229,17 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
           {showNavigation && !isOnboardingPage && showMobileBottomNav && (
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-2 z-[9999]" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
-              <div className="flex items-center justify-between max-w-lg mx-auto relative">
+            <nav 
+              className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-[9999]"
+              style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
+            >
+              <div className="flex items-center justify-between max-w-lg mx-auto relative px-6 py-3">
                 <Link
                   to={createPageUrl("Home")}
-                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                  className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("Home")
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-slate-600'
+                      ? 'text-purple-600 bg-purple-50'
+                      : 'text-slate-500'
                   }`}
                 >
                   <Home className="w-6 h-6" />
@@ -244,48 +247,48 @@ export default function Layout({ children, currentPageName }) {
 
                 <Link
                   to={createPageUrl("LessonHistory")}
-                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                  className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("LessonHistory")
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-slate-600'
+                      ? 'text-purple-600 bg-purple-50'
+                      : 'text-slate-500'
                   }`}
                 >
                   <History className="w-6 h-6" />
                 </Link>
 
                 {/* Space for center CTA */}
-                <div className="w-14" />
+                <div className="w-16" />
 
                 <button
                   onClick={() => setFeedbackModalOpen(true)}
-                  className="flex items-center justify-center p-2 rounded-lg transition-all min-w-0 text-slate-600 hover:text-yellow-600 hover:bg-yellow-50"
+                  className="flex items-center justify-center p-2.5 rounded-xl transition-all text-slate-500 hover:text-purple-600 hover:bg-purple-50"
                 >
                   <MessageCircle className="w-6 h-6" />
                 </button>
 
                 <Link
                   to={createPageUrl("Settings")}
-                  className={`flex items-center justify-center p-2 rounded-lg transition-all min-w-0 ${
+                  className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("Settings")
-                      ? 'text-yellow-600 bg-yellow-50'
-                      : 'text-slate-600'
+                      ? 'text-purple-600 bg-purple-50'
+                      : 'text-slate-500'
                   }`}
                 >
                   <Settings className="w-6 h-6" />
                 </Link>
 
-                {/* New Lesson CTA Button */}
+                {/* Upload CTA Button */}
                 <button
                   onClick={() => setCreateLessonModalOpen(true)}
-                  className="absolute left-1/2 -translate-x-1/2 -top-4 group"
+                  className="absolute left-1/2 -translate-x-1/2 -top-5 group"
                 >
                   <div className="relative">
                     {/* Subtle glow */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 blur-xl opacity-50 group-hover:opacity-70 transition-opacity" />
 
-                    {/* Main button - sleek and minimal */}
-                    <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 to-purple-800 rounded-full shadow-2xl ring-4 ring-white/70 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200 border border-white">
-                      <Sparkles className="w-6 h-6 text-white drop-shadow" strokeWidth={2.5} />
+                    {/* Main button - Upload icon */}
+                    <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 rounded-2xl shadow-xl ring-4 ring-white flex items-center justify-center transform group-hover:scale-105 transition-transform duration-200">
+                      <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
                   </div>
                 </button>
