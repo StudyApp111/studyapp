@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
     // Get the exam data
     const exams = await base44.entities.Exam.filter({ id: exam_id });
     const exam = exams[0];
+    console.log(`⏱️ [generateStudyPlan] Exam fetch: ${Date.now() - startTime}ms`);
     
     if (!exam || !exam.completed) {
       return Response.json({ error: 'Exam not found or not completed' }, { status: 400 });
@@ -26,6 +27,7 @@ Deno.serve(async (req) => {
     // Get lesson data
     const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
     const lesson = lessons[0];
+    console.log(`⏱️ [generateStudyPlan] Lesson fetch: ${Date.now() - startTime}ms`);
 
     if (!lesson) {
       return Response.json({ error: 'Lesson not found' }, { status: 400 });
