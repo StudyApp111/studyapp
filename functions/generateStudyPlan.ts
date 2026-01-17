@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
+  const startTime = Date.now();
+  console.log('⏱️ [generateStudyPlan] START');
+  
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    console.log(`⏱️ [generateStudyPlan] Auth check: ${Date.now() - startTime}ms`);
     
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
