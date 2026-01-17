@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
-        const apiKey = Deno.env.get("API_KEY");
+        const apiKey = Deno.env.get("GEMINI_API_KEY");
         if (!apiKey) {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
