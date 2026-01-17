@@ -123,26 +123,12 @@ export default function Layout({ children, currentPageName }) {
             --primary-foreground: 0 0% 100%;
             --secondary: 45 100% 85%;
             --accent: 280 60% 60%;
-            --sat: env(safe-area-inset-top);
-            --sab: env(safe-area-inset-bottom);
-            --sal: env(safe-area-inset-left);
-            --sar: env(safe-area-inset-right);
           }
-
+          
           /* Hide desktop sidebar on mobile */
           @media (max-width: 768px) {
             aside[data-sidebar] {
               display: none;
-            }
-          }
-
-          /* Native app safe area support */
-          @supports (padding-top: env(safe-area-inset-top)) {
-            .native-safe-top {
-              padding-top: env(safe-area-inset-top);
-            }
-            .native-safe-bottom {
-              padding-bottom: env(safe-area-inset-bottom);
             }
           }
         `}</style>
@@ -220,8 +206,8 @@ export default function Layout({ children, currentPageName }) {
         <main className="flex-1 flex flex-col">
           {/* Mobile Header - Hidden during onboarding and on DocumentViewer */}
           {showNavigation && !isOnboardingPage && showMobileHeader && (
-            <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-3 md:hidden native-safe-top" style={{ paddingTop: 'max(8px, env(safe-area-inset-top))' }}>
-              <div className="flex items-center justify-center py-2">
+            <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-3 py-2 md:hidden">
+              <div className="flex items-center justify-center">
                 {/* Logo + App Name - centered */}
                 <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                   <img 
@@ -243,7 +229,7 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
           {showNavigation && !isOnboardingPage && showMobileBottomNav && (
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 pt-2 z-[9999] native-safe-bottom" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-2 z-[9999]" style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
               <div className="flex items-center justify-between max-w-lg mx-auto relative">
                 <Link
                   to={createPageUrl("Home")}
