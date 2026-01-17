@@ -120,7 +120,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     loadOrGenerateExam(selectedExamNumber);
   }, [lesson?.id, selectedExamNumber, waitingForCompression, exams]);
 
-  // FIXED: Use exponential backoff polling to avoid rate limits
+  // Wait for lesson content to be ready using realtime subscriptions instead of polling
   useEffect(() => {
     if (!lesson?.id) return;
     
@@ -129,60 +129,23 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     const hasCompressedContent = lesson.compressed_content?.length > 0;
     const needsToWait = isFileUpload && (!hasExtractedContent || !hasCompressedContent);
     
-    console.log('📊 ExamTab content check:', { 
-      isFileUpload, 
-      hasExtractedContent, 
-      hasCompressedContent, 
-      needsToWait 
-    });
-    
     if (needsToWait) {
       setWaitingForCompression(true);
-      let attempts = 0;
-      const maxAttempts = 20; // Reduced from 60
-      let pollInterval = 2000; // Start with 2 seconds instead of 1
+      console.log('⏳ Waiting for content extraction and compression to complete...');
       
-      const checkContent = async () => {
-        attempts++;
-        console.log(`⏳ Waiting for content... attempt ${attempts}/${maxAttempts}`);
-        
-        try {
-          const refreshed = await base44.entities.Lesson.filter({ id: lesson.id });
-          const updated = refreshed?.[0];
-          
+      // Subscribe to lesson updates
+      const unsubscribe = base44.entities.Lesson.subscribe((event) => {
+        if (event.id === lesson.id && event.type === 'update') {
+          const updated = event.data;
           if (updated?.extracted_content?.length > 0 && updated?.compressed_content?.length > 0) {
-            console.log('✅ Content ready! Extracted:', updated.extracted_content.length, 'chars, Compressed:', updated.compressed_content.length, 'chars');
+            console.log('✅ Content ready via realtime update!');
             setWaitingForCompression(false);
             window.dispatchEvent(new Event('reloadLesson'));
-            return true; // Stop polling
-          } else if (attempts >= maxAttempts) {
-            console.warn('⚠️ Timeout waiting for content, proceeding anyway');
-            setWaitingForCompression(false);
-            window.dispatchEvent(new Event('reloadLesson'));
-            return true; // Stop polling
           }
-          
-          // Exponential backoff: 2s, 3s, 4s, 5s, then cap at 5s
-          pollInterval = Math.min(pollInterval + 1000, 5000);
-          setTimeout(checkContent, pollInterval);
-          return false;
-        } catch (err) {
-          console.error('Error checking content:', err);
-          if (attempts >= maxAttempts) {
-            setWaitingForCompression(false);
-            return true; // Stop polling
-          }
-          
-          // On error, increase backoff more aggressively
-          pollInterval = Math.min(pollInterval + 2000, 8000);
-          setTimeout(checkContent, pollInterval);
-          return false;
         }
-      };
+      });
       
-      // Start first check after 2 seconds
-      const timeoutId = setTimeout(checkContent, pollInterval);
-      return () => clearTimeout(timeoutId);
+      return () => unsubscribe();
     } else {
       setWaitingForCompression(false);
     }
