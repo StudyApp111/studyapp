@@ -265,10 +265,13 @@ Return JSON:
       status: 'active'
     });
 
+    console.log(`⏱️ [generateStudyPlan] COMPLETE: ${Date.now() - startTime}ms total`);
+    
     return Response.json({ 
       success: true, 
       study_plan: studyPlan,
-      summary: response.plan_rationale
+      summary: response.plan_rationale,
+      timing_ms: Date.now() - startTime
     });
 
   } catch (error) {
