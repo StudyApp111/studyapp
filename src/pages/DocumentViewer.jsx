@@ -334,47 +334,35 @@ export default function DocumentViewer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full">
-      {/* Mobile Header - Global StudyApp Banner + Session Info */}
-      <div className="md:hidden sticky top-0 z-50 w-full">
-        {/* Top: StudyApp brand bar with safe area for notch/island */}
-        <div className="bg-slate-900" style={{ paddingTop: 'max(8px, env(safe-area-inset-top))' }}>
-          <div className="flex items-center justify-center gap-2 py-1.5">
-            <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
-              alt="StudyApp"
-              className="w-4 h-4"
-            />
-            <span className="text-white font-bold text-xs tracking-wide">StudyApp</span>
+      {/* Mobile Header - Single unified banner with safe area */}
+      <div 
+        className="md:hidden bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 sticky top-0 z-50 w-full shadow-lg"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      >
+        <div className="px-4 py-2.5 flex items-center justify-between">
+          {/* Left: Course Name */}
+          <div className="flex-1 min-w-0 pr-3">
+            <p className="text-white font-semibold text-sm truncate">
+              {lesson?.course_name || 'Loading...'}
+            </p>
           </div>
-        </div>
-        
-        {/* Bottom: Session info bar */}
-        <div className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 shadow-lg">
-          <div className="px-3 py-2 flex items-center justify-between">
-            {/* Left: Course Name */}
-            <div className="flex-1 min-w-0 pr-2">
-              <p className="text-white font-semibold text-xs truncate">
-                {lesson?.course_name || 'Loading...'}
-              </p>
-            </div>
-            
-            {/* Center: Predicted Grade */}
-            <div className="flex items-center gap-1 px-2.5 py-0.5 bg-white/15 backdrop-blur-sm rounded-full">
-              {predictedGrade ? (
-                <>
-                  <span className="text-white/70 text-[9px] font-medium">Grade:</span>
-                  <span className="text-yellow-300 font-black text-xs">{predictedGrade}</span>
-                </>
-              ) : (
-                <span className="text-white/50 text-[9px]">No grade</span>
-              )}
-            </div>
-            
-            {/* Right: Timer */}
-            <div className="flex items-center gap-1 pl-2">
-              <Clock className="w-3 h-3 text-white/60" />
-              <span className="text-white font-mono text-[11px] font-medium">{formatStudyTime(studyTime)}</span>
-            </div>
+          
+          {/* Center: Predicted Grade */}
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full">
+            {predictedGrade ? (
+              <>
+                <span className="text-white/80 text-[10px] font-medium">Grade:</span>
+                <span className="text-yellow-300 font-black text-sm">{predictedGrade}</span>
+              </>
+            ) : (
+              <span className="text-white/60 text-[10px]">No grade yet</span>
+            )}
+          </div>
+          
+          {/* Right: Timer */}
+          <div className="flex items-center gap-1.5 pl-3">
+            <Clock className="w-3.5 h-3.5 text-white/70" />
+            <span className="text-white font-mono text-xs font-medium">{formatStudyTime(studyTime)}</span>
           </div>
         </div>
       </div>
@@ -451,7 +439,7 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-100px)] overflow-x-hidden">
+      <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)] overflow-x-hidden">
         {/* Desktop: Flex container for AI tutor + tabs */}
         <div className="hidden md:flex gap-3 h-full w-full max-w-full">
           {/* AI Tutor Panel - Left side */}
