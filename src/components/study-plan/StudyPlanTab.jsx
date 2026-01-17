@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { 
   Target, CheckCircle2, BookOpen, Zap, Brain, 
-  Trophy, Play, ArrowRight, ChevronRight, Loader2
+  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -181,117 +181,173 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
-      <div className="px-3 py-6 w-full max-w-[calc(100vw-1rem)] md:max-w-lg md:mx-auto overflow-x-hidden">
+      <div className="px-3 pt-2 pb-8 w-full max-w-[calc(100vw-1rem)] md:max-w-lg md:mx-auto overflow-x-hidden overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="space-y-5"
         >
-          {/* Hero Card */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 p-6 shadow-2xl mb-6">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-400/20 rounded-full blur-2xl" />
+          {/* Hero Section - Emotional Hook */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-6 shadow-2xl">
+            {/* Animated background elements */}
+            <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl" />
             
-            <div className="relative text-center">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Target className="w-8 h-8 text-yellow-300" />
+            <div className="relative">
+              {/* Emoji hook */}
+              <div className="text-center mb-4">
+                <span className="text-5xl">😰</span>
               </div>
               
-              <h2 className="text-2xl font-black text-white mb-2">
-                Stop Guessing What to Study
+              <h2 className="text-2xl font-black text-white text-center mb-3 leading-tight">
+                "I don't know where<br/>to start studying..."
               </h2>
-              <p className="text-purple-200 text-sm max-w-xs mx-auto mb-6 leading-relaxed">
-                A 5-minute quiz tells us exactly where you need help. We'll build your perfect study plan — so you study smarter, not harder.
-              </p>
               
-              <Button 
-                onClick={() => onNavigate('exam')}
-                className="w-full bg-white hover:bg-purple-50 text-purple-700 font-bold py-4 text-base rounded-xl shadow-lg"
-              >
-                <Play className="w-5 h-5 mr-2" />
-                Take Quick Diagnostic
-              </Button>
-              <p className="text-purple-300/80 text-[11px] mt-3">Only 5 questions • Takes ~5 minutes</p>
+              <p className="text-purple-200 text-sm text-center max-w-xs mx-auto leading-relaxed">
+                Sound familiar? You're not alone. Most students waste hours studying the wrong things.
+              </p>
             </div>
           </div>
 
-          {/* Value Props */}
-          <div className="mb-5">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1 mb-3">What you'll get</p>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { emoji: "🎯", text: "Know exactly what to study" },
-                { emoji: "⏱️", text: "Save hours of study time" },
-                { emoji: "😌", text: "Less stress, more confidence" },
-                { emoji: "📈", text: "Better grades, guaranteed" }
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.1 + idx * 0.05 }}
-                  className="flex items-center gap-2 p-3 bg-gradient-to-br from-purple-50 to-white rounded-xl border border-purple-100"
-                >
-                  <span className="text-lg">{item.emoji}</span>
-                  <span className="text-xs font-semibold text-slate-700">{item.text}</span>
-                </motion.div>
-              ))}
+          {/* The Problem → Solution */}
+          <div className="space-y-3">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">❌</span>
+                <div>
+                  <h3 className="font-bold text-red-800 text-sm mb-1">The Old Way</h3>
+                  <p className="text-red-700 text-xs leading-relaxed">
+                    Re-reading everything. Highlighting randomly. Studying what you already know. Panicking before exams.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-center">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                <ArrowRight className="w-4 h-4 text-white rotate-90" />
+              </div>
+            </div>
+            
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">✨</span>
+                <div>
+                  <h3 className="font-bold text-emerald-800 text-sm mb-1">The StudyApp Way</h3>
+                  <p className="text-emerald-700 text-xs leading-relaxed">
+                    AI finds your weak spots in 5 minutes. Then gives you a personalized plan that targets exactly what you need.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* How it works - Numbered Steps */}
-          <div className="space-y-2.5">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">How it works</p>
-            {[
-              { num: "1", title: "Quick Diagnostic", desc: "5 smart questions find your strengths & gaps", highlight: true },
-              { num: "2", title: "Get Your Personalized Plan", desc: "AI creates tasks targeting YOUR weak spots" },
-              { num: "3", title: "Study with Direction", desc: "Follow the plan, skip what you already know" },
-              { num: "4", title: "See Your Grade Improve", desc: "Retake exam to unlock your next level" }
-            ].map((step, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15 + idx * 0.08 }}
-                className={`flex items-center gap-3 p-3.5 rounded-xl border shadow-sm ${
-                  step.highlight 
-                    ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200' 
-                    : 'bg-white border-slate-100'
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-base font-black ${
-                  step.highlight 
-                    ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white' 
-                    : 'bg-slate-100 text-slate-500'
-                }`}>
-                  {step.num}
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-slate-900 text-sm">{step.title}</h4>
-                  <p className="text-[11px] text-slate-500 leading-snug">{step.desc}</p>
-                </div>
-                {step.highlight && (
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                    <ChevronRight className="w-4 h-4 text-purple-600" />
-                  </div>
-                )}
-              </motion.div>
-            ))}
+          {/* Social Proof / Stats */}
+          <div className="bg-gradient-to-r from-purple-100 to-indigo-100 rounded-2xl p-4 border border-purple-200">
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-2xl font-black text-purple-700">73%</p>
+                <p className="text-[10px] text-purple-600 font-medium">study the wrong topics</p>
+              </div>
+              <div>
+                <p className="text-2xl font-black text-purple-700">2.5h</p>
+                <p className="text-[10px] text-purple-600 font-medium">saved per session</p>
+              </div>
+              <div>
+                <p className="text-2xl font-black text-purple-700">+15%</p>
+                <p className="text-[10px] text-purple-600 font-medium">avg grade boost</p>
+              </div>
+            </div>
           </div>
 
-          {/* Bottom CTA */}
+          {/* How it works - Visual Timeline */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Your journey to better grades</p>
+            
+            <div className="relative pl-6">
+              {/* Vertical line */}
+              <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gradient-to-b from-purple-400 via-indigo-400 to-emerald-400" />
+              
+              <div className="space-y-3">
+                {[
+                  { emoji: "🎯", title: "5-Min Diagnostic", desc: "AI discovers your knowledge gaps", time: "Now", active: true },
+                  { emoji: "📋", title: "Personal Study Plan", desc: "Tasks designed for YOUR weaknesses", time: "+2 min" },
+                  { emoji: "🧠", title: "Focused Practice", desc: "Flashcards, quizzes, and more", time: "+15 min" },
+                  { emoji: "🏆", title: "Grade Improvement", desc: "Watch your predicted grade climb", time: "Ongoing" }
+                ].map((step, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + idx * 0.1 }}
+                    className="relative"
+                  >
+                    {/* Timeline dot */}
+                    <div className={`absolute -left-6 top-3 w-4 h-4 rounded-full border-2 ${
+                      step.active 
+                        ? 'bg-purple-500 border-purple-300 animate-pulse' 
+                        : 'bg-white border-slate-300'
+                    }`} />
+                    
+                    <div className={`p-3 rounded-xl border ${
+                      step.active 
+                        ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-300 shadow-md' 
+                        : 'bg-white border-slate-200'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">{step.emoji}</span>
+                        <h4 className="font-bold text-slate-900 text-sm flex-1">{step.title}</h4>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                          step.active ? 'bg-purple-200 text-purple-700' : 'bg-slate-100 text-slate-500'
+                        }`}>{step.time}</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-snug pl-7">{step.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Testimonial / Trust */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-6"
+            className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
+                JM
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-slate-700 italic leading-relaxed mb-2">
+                  "I went from a C+ to an A- in just 3 weeks. The diagnostic showed me I was wasting time on stuff I already knew."
+                </p>
+                <p className="text-[10px] text-slate-500 font-medium">— Jordan M., Biology 12</p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Final CTA - Must scroll to see */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="pt-4"
           >
             <Button 
               onClick={() => onNavigate('exam')}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-4 text-base rounded-xl shadow-lg"
+              className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:via-indigo-700 hover:to-purple-800 text-white font-bold py-5 text-base rounded-2xl shadow-xl shadow-purple-500/30 relative overflow-hidden group"
             >
-              <Target className="w-5 h-5 mr-2" />
-              Start My Study Plan
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <Play className="w-5 h-5 mr-2" />
+              Start 5-Minute Diagnostic
             </Button>
+            <p className="text-center text-[10px] text-slate-400 mt-2">
+              Free • No credit card • Results in 5 minutes
+            </p>
           </motion.div>
         </motion.div>
       </div>
