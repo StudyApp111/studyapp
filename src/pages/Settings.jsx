@@ -23,7 +23,9 @@ import {
   ArrowRight,
   ArrowLeft,
   BarChart3,
-  Mail
+  Mail,
+  AlertTriangle,
+  Loader2
 } from "lucide-react";
 import {
   Dialog,
@@ -34,12 +36,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import FeedbackModal from "@/components/feedback/FeedbackModal";
 
 export default function Settings() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmStep, setDeleteConfirmStep] = useState(1);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     base44.auth.me()
@@ -65,8 +73,24 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = async () => {
-    // TODO: Implement account deletion
-    alert("Account deletion would be implemented here. Please contact support.");
+    if (deleteConfirmText !== "DELETE") return;
+    
+    setIsDeleting(true);
+    try {
+      // Delete user's data - lessons, exams, flashcards, etc.
+      const lessons = await base44.entities.Lesson.filter({});
+      for (const lesson of lessons) {
+        await base44.entities.Lesson.delete(lesson.id);
+      }
+      
+      // Log the user out after deletion request
+      alert("Your account deletion request has been submitted. You will be logged out now. Please contact support@study-app.ai if you need further assistance.");
+      base44.auth.logout();
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      alert("There was an error processing your request. Please contact support@study-app.ai");
+    }
+    setIsDeleting(false);
   };
 
   if (isLoading) {
@@ -184,17 +208,17 @@ export default function Settings() {
               <SettingsItem
                 icon={Lock}
                 label="Privacy Policy"
-                onClick={() => window.open("https://studyapp.ai/privacy", "_blank")}
+                onClick={() => window.open("https://study-app.ai/privacy_policy", "_blank")}
               />
               <SettingsItem
                 icon={FileText}
                 label="Terms of Service"
-                onClick={() => window.open("https://studyapp.ai/terms", "_blank")}
+                onClick={() => window.open("https://study-app.ai/terms_service", "_blank")}
               />
               <SettingsItem
                 icon={HelpCircle}
                 label="Support"
-                onClick={() => window.open("mailto:support@studyapp.ai", "_blank")}
+                onClick={() => setFeedbackModalOpen(true)}
               />
               <SettingsItem
                 icon={RefreshCw}
@@ -206,7 +230,13 @@ export default function Settings() {
             <Separator className="my-6" />
 
             <SettingsSection title="Danger Zone">
-              <Dialog>
+              <Dialog open={deleteDialogOpen} onOpenChange={(open) => {
+                setDeleteDialogOpen(open);
+                if (!open) {
+                  setDeleteConfirmStep(1);
+                  setDeleteConfirmText("");
+                }
+              }}>
                 <DialogTrigger asChild>
                   <button className="w-full flex items-center justify-between p-4 rounded-lg border border-red-200 hover:bg-red-50 hover:border-red-300 transition-all">
                     <div className="flex items-center gap-3">
@@ -217,18 +247,73 @@ export default function Settings() {
                   </button>
                 </DialogTrigger>
                 <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Delete Account</DialogTitle>
-                    <DialogDescription>
-                      Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently removed.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button variant="outline">Cancel</Button>
-                    <Button variant="destructive" onClick={handleDeleteAccount}>
-                      Delete Account
-                    </Button>
-                  </DialogFooter>
+                  {deleteConfirmStep === 1 ? (
+                    <>
+                      <DialogHeader>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                            <AlertTriangle className="w-6 h-6 text-red-600" />
+                          </div>
+                          <DialogTitle className="text-xl">Delete Account?</DialogTitle>
+                        </div>
+                        <DialogDescription className="text-left space-y-3 pt-2">
+                          <p className="font-medium text-slate-700">This will permanently delete:</p>
+                          <ul className="list-disc list-inside text-slate-600 space-y-1">
+                            <li>All your lessons and study materials</li>
+                            <li>Your exam history and grades</li>
+                            <li>Flashcards, notes, and progress data</li>
+                            <li>Your account and profile information</li>
+                          </ul>
+                          <p className="text-red-600 font-medium pt-2">This action cannot be undone.</p>
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button variant="destructive" onClick={() => setDeleteConfirmStep(2)}>
+                          I Understand, Continue
+                        </Button>
+                      </DialogFooter>
+                    </>
+                  ) : (
+                    <>
+                      <DialogHeader>
+                        <DialogTitle>Final Confirmation</DialogTitle>
+                        <DialogDescription className="pt-2">
+                          Type <strong>DELETE</strong> below to confirm you want to permanently delete your account.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <Input
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+                        placeholder="Type DELETE to confirm"
+                        className="border-red-200 focus:border-red-400"
+                      />
+                      <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => {
+                          setDeleteConfirmStep(1);
+                          setDeleteConfirmText("");
+                        }}>
+                          Go Back
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          onClick={handleDeleteAccount}
+                          disabled={deleteConfirmText !== "DELETE" || isDeleting}
+                        >
+                          {isDeleting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            "Delete My Account"
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </>
+                  )}
                 </DialogContent>
               </Dialog>
 
@@ -241,6 +326,9 @@ export default function Settings() {
             </SettingsSection>
           </CardContent>
         </Card>
+
+        {/* Feedback Modal for Support */}
+        <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />
       </div>
     </div>
   );

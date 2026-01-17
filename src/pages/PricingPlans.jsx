@@ -37,10 +37,10 @@ export default function PricingPlans() {
 
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            StudyApp.AI is <span className="text-purple-600">100% Free</span>
+            StudyAppAI is <span className="text-purple-600">100% Free</span>
           </h1>
           <div className="inline-block bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-full shadow-lg mb-4">
-            <p className="text-lg font-semibold">Free until December 31, 2025</p>
+            <p className="text-lg font-semibold">Free until January 31, 2026</p>
           </div>
           <p className="text-slate-600 text-lg max-w-2xl mx-auto">
             Get full access to all premium features at no cost. Experience AI-powered learning without any limitations.
@@ -65,9 +65,9 @@ export default function PricingPlans() {
             </div>
 
             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200">
-              <h3 className="text-xl font-bold text-slate-900 mb-3 text-center">What Happens After December 31, 2025?</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-3 text-center">What Happens After January 31, 2026?</h3>
               <p className="text-slate-700 text-center leading-relaxed">
-                Pricing details for 2026 will be announced later this year. Early users will receive special benefits and discounts as a thank you for being part of our journey.
+                Pricing details will be announced closer to the date. Early users will receive special benefits and discounts as a thank you for being part of our journey.
               </p>
             </div>
 
