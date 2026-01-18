@@ -88,8 +88,11 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-4"
         >
+          <div className="flex items-center justify-center gap-2">
+            <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5">Practice Quiz</Badge>
+          </div>
           <h2 className="text-xl font-bold text-slate-900">
-            Practice Exam
+            {exam.focus_description || 'Practice Quiz Results'}
           </h2>
 
           {/* Score Display */}
