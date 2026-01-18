@@ -100,6 +100,10 @@ Multiple Choice | True/False | Fill in the Blank | Short Answer
 MCQ cue phrases are FORBIDDEN in non-MCQ questions.
 If violated, auto-convert to Multiple Choice.
 
+CRITICAL ANSWER FORMAT:
+• For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
+• For True/False: correct_answer MUST be "True" or "False"
+
 ────────────────────────────
 Output Requirements
 
