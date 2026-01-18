@@ -139,15 +139,17 @@ Deno.serve(async (req) => {
             'bmp': 'image/bmp',
             'tiff': 'image/tiff',
             'heif': 'image/heif',
+            'heic': 'image/heif',
             'avif': 'image/avif',
             'pdf': 'application/pdf'
         };
         const mimeType = mimeTypes[fileExt];
         
         if (!mimeType) {
+            console.error(`File type .${fileExt} is not supported by Gemini Vision. Returning 400.`);
             return Response.json({ 
                 error: 'Unsupported file format for OCR',
-                details: `File type .${fileExt} is not supported by Gemini Vision.`
+                details: `File type .${fileExt} is not supported by Gemini Vision. For documents (DOCX, PPTX), please convert to PDF first.`
             }, { status: 400 });
         }
 
