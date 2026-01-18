@@ -102,12 +102,11 @@ export default function Layout({ children, currentPageName }) {
 
 
   const isOnboardingPage = location.pathname === createPageUrl("Onboarding");
-  const isDocumentViewerPage = currentPageName === "DocumentViewer";
+  const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname === createPageUrl("DocumentViewer");
   const showNavigation = user?.onboarding_completed || isOnboardingPage;
   const showSidebar = showNavigation && !isOnboardingPage;
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
-  const pagesWithCustomMobileHeader = ["DocumentViewer"];
-  const showMobileHeader = !pagesWithCustomMobileHeader.includes(currentPageName);
+  const showMobileHeader = !isDocumentViewerPage;
   const showMobileBottomNav = !pagesWithCustomNav.includes(currentPageName);
 
 
