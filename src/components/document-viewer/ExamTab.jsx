@@ -343,7 +343,12 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
       console.log("📏 Content length:", contentDescription.length, "characters");
 
-      // All official exams use the same core prompt structure from autoGenerateExam1
+      // Exam 1 uses autoGenerateExam1 backend function
+      // This generateExam function in ExamTab should only be called as a fallback
+      // All other exams are practice exams generated via generatePracticeExam from study plan
+      
+      console.log("⚠️ generateExam called from ExamTab - this should be rare (fallback only)");
+      
       const aiPrompt = `
 [Context]
 You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${lesson.course_name}. 
@@ -1006,28 +1011,7 @@ JSON Output (exact schema):
         })
       );
 
-      if (exam.exam_number === 1) {
-        const existingExams = await base44.entities.Exam.filter({ lesson_id: lesson.id });
-        const existingNumbers = existingExams.map(e => e.exam_number);
-        
-        for (let i = 2; i <= 6; i++) {
-          if (!existingNumbers.includes(i)) {
-            await base44.entities.Exam.create({
-              lesson_id: lesson.id,
-              exam_type: "official",
-              exam_number: i,
-              focus_description: "Adaptive assessment based on your progress",
-              status: "not_started",
-              completed: false,
-              questions: [],
-              feedback: [],
-              time_taken_seconds: 0,
-              question_time_laps: []
-            });
-          }
-        }
-      }
-
+      // Generate study plan after first exam
       try {
         await base44.functions.invoke('generateStudyPlan', {
           exam_id: exam.id,

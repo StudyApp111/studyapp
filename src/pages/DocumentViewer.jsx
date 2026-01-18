@@ -64,11 +64,10 @@ export default function DocumentViewer() {
   // Check exam completion status for red dot logic
   const completedExamCount = (exams || []).filter(e => e.completed).length;
   
-  // Red dot logic (simplified without quiz):
-  // - Exam tab: show dot if no exam completed or not all 6 completed
-  // - Grade tab: no red dot
+  // Red dot logic:
+  // - Exam tab: show dot if diagnostic (exam 1) not completed
   // - Flashcards tab: always show dot until user views it
-  const showExamDot = completedExamCount < 6;
+  const showExamDot = completedExamCount === 0;
 
   const showFlashcardsDot = true;
 
