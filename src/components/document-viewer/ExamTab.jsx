@@ -765,6 +765,42 @@ Return ONE valid JSON object. No extra text.
     }
   };
 
+  // Helper to check if answer is correct using letter-based comparison for MCQ
+  const checkAnswerCorrect = (userAnswer, correctAnswer, options, questionType) => {
+    if (!userAnswer || !correctAnswer) return false;
+    
+    const type = (questionType || '').toLowerCase();
+    const userTrimmed = userAnswer.trim();
+    const correctTrimmed = correctAnswer.trim();
+    
+    // For MCQ where correct_answer should be just a letter (A, B, C, D)
+    if (type.includes('multiple') || type.includes('choice') || type.includes('mcq')) {
+      if (/^[A-Da-d]$/i.test(correctTrimmed)) {
+        // Extract letter from user's selection
+        const letterMatch = userTrimmed.match(/^([A-Da-d])[\.\)\:\s]/i);
+        if (letterMatch) {
+          return letterMatch[1].toUpperCase() === correctTrimmed.toUpperCase();
+        }
+        // Find option index and compare
+        const optionIndex = options?.findIndex(opt => opt === userTrimmed);
+        if (optionIndex >= 0) {
+          const userLetter = String.fromCharCode(65 + optionIndex);
+          return userLetter === correctTrimmed.toUpperCase();
+        }
+      }
+      // Fallback to exact match
+      return userTrimmed.toLowerCase() === correctTrimmed.toLowerCase();
+    }
+    
+    // For True/False
+    if (type.includes('true') && type.includes('false')) {
+      return userTrimmed.toLowerCase() === correctTrimmed.toLowerCase();
+    }
+    
+    // For fill-in-blank and short answer
+    return userTrimmed.toLowerCase() === correctTrimmed.toLowerCase();
+  };
+
   const submitPracticeExam = async () => {
     setIsSubmitting(true);
     recordQuestionTime(currentQuestion);
@@ -778,16 +814,7 @@ Return ONE valid JSON object. No extra text.
 
     try {
       const questionsWithGrading = exam.questions.map((q) => {
-        const questionType = q.question_type?.toLowerCase() || '';
-        let isCorrect = false;
-        
-        if (questionType.includes("multiple_choice") || questionType.includes("multiple choice") || 
-            questionType.includes("true_false") || questionType.includes("true/false")) {
-          isCorrect = q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase();
-        } else {
-          isCorrect = q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase();
-        }
-        
+        const isCorrect = checkAnswerCorrect(q.user_answer, q.correct_answer, q.options, q.question_type);
         return { ...q, is_correct: isCorrect };
       });
 
@@ -897,17 +924,7 @@ Return ONE valid JSON object. No extra text.
       const learningProfile = profile[0] || {};
 
       const questionsWithGrading = exam.questions.map((q) => {
-        const questionType = q.question_type.toLowerCase();
-
-        if (questionType.includes("multiple choice") || 
-            questionType.includes("mcq") ||
-            (questionType.includes("true") && questionType.includes("false"))) {
-          return {
-            ...q,
-            is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
-          };
-        }
-
+        // Use AI grading for subjective questions
         if (isSubjectiveQuestion(q.question_type)) {
           if (q.ai_score_out_of_10 !== undefined) {
             return {
@@ -917,10 +934,9 @@ Return ONE valid JSON object. No extra text.
           }
         }
 
-        return {
-          ...q,
-          is_correct: q.user_answer?.trim().toLowerCase() === q.correct_answer?.trim().toLowerCase()
-        };
+        // Use letter-based comparison for objective questions
+        const isCorrect = checkAnswerCorrect(q.user_answer, q.correct_answer, q.options, q.question_type);
+        return { ...q, is_correct: isCorrect };
       });
 
       let contentDescription = lesson.compressed_content || lesson.extracted_content || lesson.description || "N/A";
