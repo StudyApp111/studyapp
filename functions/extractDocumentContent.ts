@@ -44,10 +44,11 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
-        // Determine file type
-        const fileName = file_url.split('/').pop().toLowerCase();
+        // Determine file type - strip query params first
+        const urlPath = new URL(file_url).pathname;
+        const fileName = urlPath.split('/').pop().toLowerCase();
         const fileExt = fileName.split('.').pop();
-        console.log('File type:', fileExt);
+        console.log('File name:', fileName, 'Extension:', fileExt);
 
         // Direct text extraction for .txt files
         if (fileExt === 'txt') {
