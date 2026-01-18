@@ -1154,17 +1154,9 @@ JSON Output (exact schema):
     }
     
     const allExamsForLesson = exams || [];
-    const officialExams = allExamsForLesson.filter(e => e.exam_type !== 'practice');
+    // Only exam 1 (diagnostic) is official, everything else is practice from study plan
+    const diagnosticExam = allExamsForLesson.find(e => e.exam_number === 1 && e.exam_type !== 'practice');
     const practiceExams = allExamsForLesson.filter(e => e.exam_type === 'practice');
-    
-    const examsByNumber = {};
-    officialExams.forEach(e => {
-      const existing = examsByNumber[e.exam_number];
-      if (!existing || e.completed || (!existing.completed && e.updated_date > existing.updated_date)) {
-        examsByNumber[e.exam_number] = e;
-      }
-    });
-    const sortedOfficialExams = Object.values(examsByNumber).sort((a, b) => a.exam_number - b.exam_number);
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
@@ -1244,92 +1236,73 @@ JSON Output (exact schema):
           </div>
         )}
 
-        {/* Official Exams Section */}
+        {/* Diagnostic Exam Section - Only Exam 1 */}
         <div>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
               <Trophy className="w-4 h-4 text-yellow-300" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900">Official Exams</h2>
-              <p className="text-[11px] text-slate-500">Updates your predicted grade</p>
+              <h2 className="text-lg font-black text-slate-900">Diagnostic Exam</h2>
+              <p className="text-[11px] text-slate-500">Establishes your baseline grade</p>
             </div>
           </div>
           
           <div className="space-y-2">
-            {sortedOfficialExams.length > 0 ? sortedOfficialExams.map((e) => {
-              const isCompleted = e.completed;
-              const canStart = e.exam_number === 1 || sortedOfficialExams.find(ex => ex.exam_number === e.exam_number - 1)?.completed;
-              const isFirstExam = e.exam_number === 1;
-              const isInProgress = e.status === 'in_progress' && !isCompleted;
-              
-              return (
-                <button
-                  key={e.id}
-                  onClick={() => {
-                    if (isCompleted) {
-                      setViewingCompletedExam(e);
-                    } else if (canStart) {
-                      setExam(null);
-                      setSelectedExamNumber(e.exam_number);
-                      hasAutoSelectedRef.current = true;
-                    }
-                  }}
-                  disabled={!canStart && !isCompleted}
-                  className={`group relative w-full overflow-hidden p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
-                    isCompleted
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
-                      : canStart
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600'
-                      : 'bg-slate-200 opacity-60 cursor-not-allowed'
-                  }`}
-                >
-                  <div className="relative flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                      isCompleted || canStart ? 'bg-white/20' : 'bg-white/10'
-                    }`}>
-                      {isCompleted ? (
-                        <CheckCircle2 className="w-5 h-5 text-white" />
-                      ) : canStart ? (
-                        <span className="text-lg font-black text-white">{e.exam_number}</span>
-                      ) : (
-                        <Lock className="w-4 h-4 text-white/60" />
+            {diagnosticExam ? (
+              <button
+                onClick={() => {
+                  if (diagnosticExam.completed) {
+                    setViewingCompletedExam(diagnosticExam);
+                  } else {
+                    setExam(null);
+                    setSelectedExamNumber(1);
+                    hasAutoSelectedRef.current = true;
+                  }
+                }}
+                className={`group relative w-full overflow-hidden p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
+                  diagnosticExam.completed
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
+                    : 'bg-gradient-to-r from-purple-500 to-indigo-600'
+                }`}
+              >
+                <div className="relative flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                    {diagnosticExam.completed ? (
+                      <CheckCircle2 className="w-5 h-5 text-white" />
+                    ) : (
+                      <span className="text-lg font-black text-white">1</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h3 className="font-bold text-white text-sm">Diagnostic</h3>
+                      {diagnosticExam.status === 'in_progress' && !diagnosticExam.completed && (
+                        <span className="text-[9px] bg-white/30 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">
+                          In Progress
+                        </span>
                       )}
                     </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <h3 className="font-bold text-white text-sm">
-                          {isFirstExam ? 'Diagnostic' : `Exam ${e.exam_number}`}
-                        </h3>
-                        {isInProgress && (
-                          <span className="text-[9px] bg-white/30 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">
-                            In Progress
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-white/70 truncate">
-                        {isFirstExam ? 'Baseline assessment' : 'Adaptive assessment'}
-                      </p>
-                    </div>
-                    
-                    {isCompleted && e.predicted_grade ? (
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <div className="text-right">
-                          <span className="text-xl font-black text-white">{e.predicted_grade}</span>
-                          <p className="text-[9px] text-white/70">{e.total_score}%</p>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-white/70" />
-                      </div>
-                    ) : canStart ? (
-                      <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                        <Play className="w-3 h-3 text-white" />
-                      </div>
-                    ) : null}
+                    <p className="text-[11px] text-white/70 truncate">Baseline assessment</p>
                   </div>
-                </button>
-              );
-            }) : (
+                  
+                  {diagnosticExam.completed && diagnosticExam.predicted_grade ? (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="text-right">
+                        <span className="text-xl font-black text-white">{diagnosticExam.predicted_grade}</span>
+                        <p className="text-[9px] text-white/70">{diagnosticExam.total_score}%</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-white/70" />
+                    </div>
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <Play className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </div>
+              </button>
+            ) : (
               <button
                 onClick={() => {
                   setExam(null);
