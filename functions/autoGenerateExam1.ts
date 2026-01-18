@@ -159,8 +159,13 @@ No extra text.`;
 
     // Create or update exam record
     let exam;
-    if (existingExams.length > 0) {
-      exam = await base44.entities.Exam.update(existingExams[0].id, {
+    
+    // Double-check if exam was created while we were generating (to prevent duplicates)
+    const latestExistingExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
+    
+    if (latestExistingExams.length > 0) {
+      console.log('Exam 1 created by another process during generation, updating it instead');
+      exam = await base44.entities.Exam.update(latestExistingExams[0].id, {
         questions: questionsWithPlaceholder,
         status: "not_started"
       });
