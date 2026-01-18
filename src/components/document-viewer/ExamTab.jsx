@@ -605,6 +605,7 @@ Return ONE valid JSON object. No extra text.
       } else {
         createdExam = await base44.entities.Exam.create({
           lesson_id: lesson.id,
+          exam_type: "official",
           exam_number: examNumber,
           questions: questionsWithPlaceholder,
           status: "in_progress",
