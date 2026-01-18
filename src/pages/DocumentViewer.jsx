@@ -327,34 +327,64 @@ export default function DocumentViewer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full">
-      {/* Mobile Header - Slim, modern design with safe area */}
+      {/* Mobile Header - Stunning gradient banner with adaptive safe area */}
       <div 
-        className="md:hidden bg-gradient-to-r from-purple-600 to-indigo-600 fixed top-0 left-0 right-0 z-50 w-full"
-        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        className="md:hidden fixed top-0 left-0 right-0 z-50 w-full"
+        style={{ 
+          paddingTop: 'env(safe-area-inset-top, 12px)',
+          background: 'linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #8b5cf6 100%)',
+          boxShadow: '0 4px 20px rgba(124, 58, 237, 0.3)'
+        }}
       >
-        <div className="px-3 py-2 flex items-center justify-between">
-          {/* Left: Course Name */}
-          <div className="flex-1 min-w-0 pr-2">
-            <p className="text-white/90 font-medium text-xs truncate">
+        {/* Main content container */}
+        <div className="px-4 py-3">
+          {/* Top row: StudyApp branding + Timer */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-md bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <span className="text-[10px] font-black text-white">SA</span>
+              </div>
+              <span className="text-white/90 text-[11px] font-semibold tracking-wide">StudyApp</span>
+            </div>
+            
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/15 backdrop-blur-md rounded-full border border-white/20">
+              <Clock className="w-3 h-3 text-yellow-300" />
+              <span className="text-white font-mono text-xs font-semibold">{formatStudyTime(studyTime)}</span>
+            </div>
+          </div>
+
+          {/* Middle row: Course name */}
+          <div className="mb-2">
+            <p className="text-white font-bold text-sm truncate leading-tight">
               {lesson?.course_name || 'Loading...'}
             </p>
           </div>
-          
-          {/* Center: Grade pill */}
-          <div className="flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded-full">
-            {predictedGrade ? (
-              <span className="text-yellow-300 font-bold text-xs">{predictedGrade}</span>
-            ) : (
-              <span className="text-white/50 text-[10px]">—</span>
-            )}
-          </div>
-          
-          {/* Right: Timer */}
-          <div className="flex items-center gap-1 pl-2">
-            <Clock className="w-3 h-3 text-white/60" />
-            <span className="text-white/90 font-mono text-[11px]">{formatStudyTime(studyTime)}</span>
+
+          {/* Bottom row: Predicted Grade showcase */}
+          <div className="flex items-center gap-2">
+            <span className="text-white/70 text-xs font-medium">Predicted Grade</span>
+            <div className="flex-1 flex items-center justify-center">
+              {predictedGrade ? (
+                <div className="relative">
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 bg-yellow-300 rounded-lg blur-md opacity-40" />
+                  {/* Grade display */}
+                  <div className="relative px-4 py-1.5 bg-gradient-to-br from-yellow-300 via-yellow-200 to-amber-300 rounded-lg shadow-lg">
+                    <span className="text-purple-900 font-black text-2xl tracking-tight">{predictedGrade}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="px-4 py-1.5 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                  <span className="text-white/50 text-sm font-medium">Complete exam for grade</span>
+                </div>
+              )}
+            </div>
+            <div className="w-16" /> {/* Balance layout */}
           </div>
         </div>
+
+        {/* Bottom accent line */}
+        <div className="h-1 bg-gradient-to-r from-yellow-300 via-amber-300 to-yellow-300 opacity-60" />
       </div>
       
       {/* Desktop Header - Unified Purple Banner */}
@@ -542,14 +572,14 @@ export default function DocumentViewer() {
         
         {/* Mobile: Fixed header + tabs, scrollable content */}
         <div className="md:hidden flex flex-col w-full overflow-x-hidden">
-          {/* Spacer for fixed mobile header */}
-          <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 36px)' }} />
+          {/* Spacer for fixed mobile header - accounts for dynamic content */}
+          <div style={{ height: 'calc(env(safe-area-inset-top, 12px) + 108px)' }} />
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full overflow-x-hidden flex-1">
             {/* Fixed tabs bar */}
             <div 
               className="fixed left-0 right-0 z-40 bg-white/95 backdrop-blur-sm px-2 py-1.5 border-b border-purple-100"
-              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 36px)' }}
+              style={{ top: 'calc(env(safe-area-inset-top, 12px) + 108px)' }}
             >
               <div className="w-full">
                 <TabsList className="flex w-full bg-white border border-purple-200 p-0.5 h-auto rounded-lg shadow-sm gap-0.5">
