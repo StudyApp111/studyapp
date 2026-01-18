@@ -27,12 +27,12 @@ export default function XPGainToast({ xpGained, reason, show, onComplete }) {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.9 }}
-          className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[100]"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
         >
-          <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3">
+          <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
             <motion.div
               animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1] }}
               transition={{ duration: 0.5 }}
@@ -43,11 +43,11 @@ export default function XPGainToast({ xpGained, reason, show, onComplete }) {
               <motion.p
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
-                className="text-lg font-bold"
+                className="text-xl font-bold"
               >
                 +{xpGained} XP
               </motion.p>
-              {reason && <p className="text-xs text-slate-700">{reason}</p>}
+              {reason && <p className="text-sm text-slate-700">{reason}</p>}
             </div>
           </div>
         </motion.div>

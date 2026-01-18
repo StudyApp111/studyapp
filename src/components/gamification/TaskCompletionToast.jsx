@@ -20,12 +20,12 @@ export default function TaskCompletionToast({ show, gradeIncrease = 2.5, onCompl
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.9 }}
-          className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[100]"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none"
         >
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-2xl px-6 py-4 flex items-center gap-4">
+          <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-2xl px-6 py-4 flex items-center gap-4">
             <motion.div
               initial={{ rotate: 0, scale: 1 }}
               animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.2, 1] }}
