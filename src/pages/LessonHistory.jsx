@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   BookOpen, Calendar, Clock, FileCheck, 
   ArrowRight, Trophy, Layers, ChevronRight, Sparkles,
-  GraduationCap, Target, FileText, PenLine, CheckCircle2
+  GraduationCap, Target, FileText, PenLine
 } from "lucide-react";
 import { motion } from "framer-motion";
 
