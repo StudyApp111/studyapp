@@ -82,6 +82,16 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
   if (isPracticeExam) {
     return (
       <div className="space-y-5 px-3 max-w-lg mx-auto">
+        {/* Link back to Study Plan */}
+        <Button
+          variant="ghost"
+          onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
+          className="w-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 border border-purple-200"
+        >
+          <Target className="w-4 h-4 mr-2" />
+          Back to Study Plan
+        </Button>
+
         {/* Practice Exam Hero */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -89,7 +99,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
           className="text-center space-y-4"
         >
           <div className="flex items-center justify-center gap-2">
-            <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5">Practice Quiz</Badge>
+            <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5">From Study Plan</Badge>
           </div>
           <h2 className="text-xl font-bold text-slate-900">
             {exam.focus_description || 'Practice Quiz Results'}
@@ -228,7 +238,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                     </MathText>
                                   </div>
                                   <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-100">
-                                    <p className="text-[10px] font-bold text-emerald-700 uppercase mb-1">Correct</p>
+                                    <p className="text-[10px] font-bold text-emerald-700 uppercase mb-1">Answer</p>
                                     <MathText className="text-xs text-slate-800 font-medium">
                                       {question.correct_answer}
                                     </MathText>

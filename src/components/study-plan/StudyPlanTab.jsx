@@ -6,6 +6,7 @@ import {
   Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, Layers, FileText
 } from "lucide-react";
 import { motion } from "framer-motion";
+import GradeImprovementAnimation from "./GradeImprovementAnimation";
 
 const TASK_CONFIG = {
   flashcards: { 
@@ -62,6 +63,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveProgress, setLiveProgress] = useState({});
+  const [showGradeBoost, setShowGradeBoost] = useState(false);
+  const [previousCompleted, setPreviousCompleted] = useState(0);
   const ctaRef = useRef(null);
 
   const scrollToCTA = () => {
@@ -95,7 +98,16 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
       });
       
       if (plans.length > 0) {
-        setStudyPlan(plans[0]);
+        const newPlan = plans[0];
+        const newCompletedCount = newPlan.tasks?.filter(t => t.completed).length || 0;
+        
+        // Check if task was just completed (show animation)
+        if (studyPlan && newCompletedCount > previousCompleted) {
+          setShowGradeBoost(true);
+        }
+        
+        setPreviousCompleted(newCompletedCount);
+        setStudyPlan(newPlan);
       }
       setLoading(false);
     } catch (error) {
@@ -144,16 +156,18 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   };
 
   const handleTaskClick = async (task) => {
+    const isComplete = task.completed || (task.target_count > 0 && (task.completed_count || 0) >= task.target_count);
+    
     switch (task.task_type) {
       case 'flashcards':
-        // Pass task info to flashcards tab for targeted generation
+        // Pass task info to flashcards tab for targeted generation or review
         window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
           detail: { taskType: 'flashcards', task }
         }));
         onNavigate('flashcards');
         break;
       case 'teach_it':
-        // Pass task info to teach it tab for targeted generation
+        // Pass task info to teach it tab for targeted generation or review
         window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
           detail: { taskType: 'teach_it', task }
         }));
@@ -163,16 +177,21 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         onNavigate('notes');
         break;
       case 'practice_exam':
-        // Generate and start practice exam directly
-        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
-          detail: { 
-            task,
-            focus_topics: task.focus_topics || [],
-            target_competency: task.target_competency || '',
-            misconception_addressed: task.misconception_addressed || ''
-          }
-        }));
-        onNavigate('exam');
+        if (isComplete) {
+          // If complete, just navigate to exam tab to view results
+          onNavigate('exam');
+        } else {
+          // Generate and start practice exam
+          window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
+            detail: { 
+              task,
+              focus_topics: task.focus_topics || [],
+              target_competency: task.target_competency || '',
+              misconception_addressed: task.misconception_addressed || ''
+            }
+          }));
+          onNavigate('exam');
+        }
         break;
       default:
         onNavigate('flashcards');
@@ -377,7 +396,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   }
 
   return (
-    <div className="px-3 py-5 w-full max-w-[calc(100vw-1rem)] md:max-w-lg md:mx-auto space-y-4 pb-32 overflow-x-hidden">
+    <>
+      <GradeImprovementAnimation 
+        show={showGradeBoost}
+        improvement={2.5}
+        onComplete={() => setShowGradeBoost(false)}
+      />
+      
+      <div className="px-3 py-5 w-full max-w-[calc(100vw-1rem)] md:max-w-lg md:mx-auto space-y-4 pb-32 overflow-x-hidden">
       {/* Grade + Target Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -485,8 +511,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                 }`} />
                 
                 <button
-                  onClick={() => !isComplete && handleTaskClick(task)}
-                  disabled={isComplete}
+                  onClick={() => handleTaskClick(task)}
                   className="w-full text-left ml-8 group pr-1"
                 >
                   <div className={`relative overflow-hidden rounded-xl transition-all ${
@@ -629,5 +654,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         </motion.div>
       )}
     </div>
+    </>
   );
 }

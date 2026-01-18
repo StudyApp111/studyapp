@@ -1158,9 +1158,14 @@ JSON Output (exact schema):
   }
 
   if (isGenerating) {
+    // Check if we're generating a practice exam
+    const isPracticeGeneration = practiceExamGeneratingRef.current;
+    
     return <EducationalLoader 
-      title="Creating Your Exam" 
-      description="Generating personalized exam questions based on your diagnostic results..."
+      title={isPracticeGeneration ? "Generating Practice Quiz" : "Creating Your Exam"}
+      description={isPracticeGeneration 
+        ? "Creating targeted practice questions... This will take 5-10 seconds ⏱️" 
+        : "Generating personalized exam questions based on your diagnostic results..."}
     />;
   }
 
