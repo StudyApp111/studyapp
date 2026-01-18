@@ -155,14 +155,6 @@ export default function LessonHistory() {
     const masteredFlashcards = flashcards.filter(f => f.mastered || f.review_count >= 3).length;
     const totalFlashcards = flashcards.length;
     
-    // Calculate overall progress based on study plan or exams
-    let progressPercent = 0;
-    if (totalTasks > 0) {
-      progressPercent = Math.round((completedTasks / totalTasks) * 100);
-    } else if (completedOfficialExams > 0) {
-      progressPercent = Math.min(100, completedOfficialExams * 20); // ~20% per exam as fallback
-    }
-    
     const studyTime = lesson.total_study_time_seconds || 0;
     const hasDocument = lesson.file_url || (lesson.file_urls && lesson.file_urls.length > 0);
 
@@ -174,185 +166,192 @@ export default function LessonHistory() {
       return 'text-red-500';
     };
 
-    const getGradeBg = (grade) => {
-      if (!grade) return 'from-slate-100 to-slate-50';
-      if (grade.startsWith('A')) return 'from-emerald-50 to-teal-50';
-      if (grade.startsWith('B')) return 'from-blue-50 to-indigo-50';
-      if (grade.startsWith('C')) return 'from-amber-50 to-yellow-50';
-      return 'from-red-50 to-orange-50';
+    const getGradientByGrade = (grade) => {
+      if (!grade) return 'from-slate-500 to-slate-600';
+      if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
+      if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
+      if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
+      return 'from-slate-500 to-slate-600';
     };
 
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: Math.min(index * 0.03, 0.3) }}
+        transition={{ delay: Math.min(index * 0.04, 0.2) }}
         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
         className="cursor-pointer group"
       >
-        <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden bg-white hover:scale-[1.02] active:scale-[0.98]">
-          <CardContent className="p-3 md:p-5">
-            {/* Header */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                <div className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  latestCompletedExam?.predicted_grade?.startsWith('A')
-                    ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' 
-                    : completedOfficialExams > 0 
-                    ? 'bg-gradient-to-br from-purple-500 to-purple-600'
-                    : 'bg-gradient-to-br from-slate-400 to-slate-500'
-                }`}>
-                  <BookOpen className="w-4 h-4 md:w-6 md:h-6 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-slate-900 text-xs md:text-base leading-tight mb-0.5 truncate">{lesson.course_name}</h3>
-                  <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-500">
-                    <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    <span>{formatDate(lesson.created_date)}</span>
-                    <span className="text-slate-300">•</span>
-                    {hasDocument ? (
-                      <span className="inline-flex items-center gap-0.5 text-blue-600">
-                        <FileText className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                        Doc
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-0.5 text-purple-600">
-                        <PenLine className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                        Text
-                      </span>
-                    )}
-                  </div>
+        <div className="relative bg-white rounded-2xl shadow-sm hover:shadow-lg border border-slate-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
+          {/* Accent bar at top based on grade */}
+          <div className={`h-1 w-full bg-gradient-to-r ${getGradientByGrade(latestCompletedExam?.predicted_grade)}`} />
+          
+          <div className="p-4">
+            {/* Header Row */}
+            <div className="flex items-start gap-3 mb-4">
+              {/* Icon */}
+              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${
+                latestCompletedExam?.predicted_grade 
+                  ? getGradientByGrade(latestCompletedExam.predicted_grade)
+                  : 'from-purple-500 to-indigo-600'
+              } flex items-center justify-center shadow-sm flex-shrink-0`}>
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+              
+              {/* Title & Meta */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-slate-900 text-sm leading-tight mb-1 line-clamp-2">
+                  {lesson.course_name}
+                </h3>
+                <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                  <span>{formatDate(lesson.created_date)}</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300" />
+                  {hasDocument ? (
+                    <span className="flex items-center gap-0.5 text-blue-600 font-medium">
+                      <FileText className="w-3 h-3" />
+                      Document
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-0.5 text-purple-600 font-medium">
+                      <PenLine className="w-3 h-3" />
+                      Description
+                    </span>
+                  )}
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
+              
+              {/* Grade Badge - prominent */}
+              {latestCompletedExam?.predicted_grade && (
+                <div className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${getGradientByGrade(latestCompletedExam.predicted_grade)} shadow-sm`}>
+                  <span className="text-white font-black text-lg">{latestCompletedExam.predicted_grade}</span>
+                </div>
+              )}
             </div>
-
-            {/* Stats Row - Consistent purple theme */}
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              <div className="bg-purple-50 rounded-lg p-2 text-center">
-                <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <Trophy className="w-3 h-3 text-purple-600" />
-                  <span className="text-[10px] md:text-xs text-purple-600 font-medium">Exams</span>
-                </div>
-                <p className="text-sm font-bold text-purple-700">{completedOfficialExams}</p>
+            
+            {/* Stats Grid - Compact pills */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full">
+                <Trophy className="w-3.5 h-3.5" />
+                <span className="text-xs font-semibold">{completedOfficialExams} exams</span>
               </div>
-              <div className="bg-purple-50 rounded-lg p-2 text-center">
-                <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <Clock className="w-3 h-3 text-purple-600" />
-                  <span className="text-[10px] md:text-xs text-purple-600 font-medium">Time</span>
-                </div>
-                <p className="text-sm font-bold text-purple-700">{formatTime(studyTime)}</p>
+              
+              <div className="flex items-center gap-1.5 bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="text-xs font-medium">{formatTime(studyTime)}</span>
               </div>
-              <div className="bg-purple-50 rounded-lg p-2 text-center">
-                <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <Layers className="w-3 h-3 text-purple-600" />
-                  <span className="text-[10px] md:text-xs text-purple-600 font-medium">Cards</span>
+              
+              {totalFlashcards > 0 && (
+                <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
+                  <Layers className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium">{masteredFlashcards}/{totalFlashcards} cards</span>
                 </div>
-                <p className="text-sm font-bold text-purple-700">
-                  {totalFlashcards > 0 ? `${masteredFlashcards}/${totalFlashcards}` : '—'}
-                </p>
-              </div>
+              )}
             </div>
-
-            {/* Progress Bar - Study Plan based */}
+            
+            {/* Study Plan Progress - only if exists */}
             {totalTasks > 0 && (
-              <div className="mb-3">
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-slate-500 flex items-center gap-1">
+              <div className="mt-3 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] text-slate-500 flex items-center gap-1">
                     <Target className="w-3 h-3" />
                     Study Plan
                   </span>
-                  <span className="font-medium text-slate-700">{completedTasks}/{totalTasks} tasks</span>
+                  <span className="text-[11px] font-semibold text-purple-600">{completedTasks}/{totalTasks}</span>
                 </div>
-                <Progress value={progressPercent} className="h-2" />
+                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.round((completedTasks / totalTasks) * 100)}%` }}
+                  />
+                </div>
               </div>
             )}
-
-            {/* Grade Badge */}
-            {latestCompletedExam ? (
-              <div className={`flex items-center justify-between p-2.5 bg-gradient-to-r ${getGradeBg(latestCompletedExam.predicted_grade)} rounded-lg border border-purple-100`}>
-                <div className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-purple-500" />
-                  <span className="text-xs text-slate-600">Predicted Grade</span>
-                </div>
-                <span className={`text-lg font-bold ${getGradeColor(latestCompletedExam.predicted_grade)}`}>
-                  {latestCompletedExam.predicted_grade || '-'}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-100">
-                <Sparkles className="w-4 h-4 text-purple-400" />
-                <span className="text-xs text-slate-500">Take an exam to see your grade</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            
+            {/* CTA hint on hover */}
+            <div className="mt-3 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-[11px] text-purple-600 font-medium flex items-center gap-1">
+                Continue studying
+                <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+        </div>
       </motion.div>
     );
   };
 
   const AssignmentCard = ({ assignment, index }) => {
-    const getGradeColor = (grade) => {
-      if (!grade) return 'bg-slate-100 text-slate-600';
-      if (grade.startsWith('A')) return 'bg-emerald-100 text-emerald-700';
-      if (grade.startsWith('B')) return 'bg-blue-100 text-blue-700';
-      if (grade.startsWith('C')) return 'bg-amber-100 text-amber-700';
-      return 'bg-red-100 text-red-700';
+    const getGradientByGrade = (grade) => {
+      if (!grade) return 'from-slate-500 to-slate-600';
+      if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
+      if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
+      if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
+      return 'from-slate-500 to-slate-600';
     };
+
+    const grade = assignment.grading_result?.predicted_grade;
+    const score = assignment.grading_result?.total_score;
 
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
+        transition={{ delay: Math.min(index * 0.04, 0.2) }}
         onClick={() => navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`)}
         className="cursor-pointer group"
       >
-        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden bg-white hover:scale-[1.01]">
-          <CardContent className="p-4 md:p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
-                  <FileCheck className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-slate-900 text-sm md:text-base truncate">{assignment.assignment_title}</h3>
-                  <p className="text-xs text-slate-500 truncate">{assignment.course_name}</p>
+        <div className="relative bg-white rounded-2xl shadow-sm hover:shadow-lg border border-slate-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
+          {/* Accent bar */}
+          <div className={`h-1 w-full bg-gradient-to-r ${getGradientByGrade(grade)}`} />
+          
+          <div className="p-4">
+            {/* Header */}
+            <div className="flex items-start gap-3 mb-3">
+              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex items-center justify-center shadow-sm flex-shrink-0`}>
+                <FileCheck className="w-5 h-5 text-white" />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-slate-900 text-sm leading-tight mb-1 line-clamp-2">
+                  {assignment.assignment_title}
+                </h3>
+                <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                  <span>{assignment.course_name}</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300" />
+                  <span>{formatDate(assignment.created_date)}</span>
                 </div>
               </div>
-              <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
+              
+              {/* Grade Badge */}
+              {grade && (
+                <div className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${getGradientByGrade(grade)} shadow-sm`}>
+                  <span className="text-white font-black text-lg">{grade}</span>
+                </div>
+              )}
             </div>
-
-            <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">
-              <Calendar className="w-3 h-3" />
-              {formatDate(assignment.created_date)}
-            </div>
-
+            
+            {/* Score or Status */}
             {assignment.grading_result ? (
-              <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-100">
-                <div>
-                  <p className="text-xs text-slate-500 mb-0.5">Your Grade</p>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xl font-bold ${assignment.grading_result.predicted_grade?.startsWith('A') ? 'text-emerald-600' : assignment.grading_result.predicted_grade?.startsWith('B') ? 'text-blue-600' : 'text-amber-600'}`}>
-                      {assignment.grading_result.predicted_grade || '-'}
-                    </span>
-                    <Badge className={getGradeColor(assignment.grading_result.predicted_grade)}>
-                      {assignment.grading_result.total_score ? `${Math.round(assignment.grading_result.total_score)}%` : '-'}
-                    </Badge>
-                  </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {score && (
+                    <span className="text-sm font-semibold text-slate-700">{Math.round(score)}%</span>
+                  )}
+                  <span className="text-[11px] text-slate-500">score</span>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-emerald-600 font-medium">View Feedback</p>
-                  <ArrowRight className="w-4 h-4 text-emerald-500 ml-auto" />
-                </div>
+                <span className="text-[11px] text-emerald-600 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  View feedback
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </span>
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-2 p-3 bg-slate-50 rounded-lg">
-                <span className="text-xs text-slate-500">Grading in progress...</span>
+              <div className="flex items-center gap-2 text-[11px] text-amber-600">
+                <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                <span>Grading in progress...</span>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </motion.div>
     );
   };
@@ -391,29 +390,37 @@ export default function LessonHistory() {
         )}
       </div>
 
-      {/* Summary Stats - All purple themed */}
-      <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
-        <Card className="border-0 shadow-md bg-gradient-to-br from-purple-500 to-purple-600">
-          <CardContent className="p-2.5 md:p-4 text-center">
-            <GraduationCap className="w-4 h-4 md:w-6 md:h-6 text-white/80 mx-auto mb-0.5 md:mb-1" />
-            <p className="text-base md:text-2xl font-bold text-white">{lessons.length}</p>
-            <p className="text-[10px] md:text-xs text-white/80">Lessons</p>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-md bg-gradient-to-br from-purple-600 to-indigo-600">
-          <CardContent className="p-2.5 md:p-4 text-center">
-            <Trophy className="w-4 h-4 md:w-6 md:h-6 text-white/80 mx-auto mb-0.5 md:mb-1" />
-            <p className="text-base md:text-2xl font-bold text-white">{totalCompletedExams}</p>
-            <p className="text-[10px] md:text-xs text-white/80">Exams Done</p>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-md bg-gradient-to-br from-indigo-500 to-purple-600">
-          <CardContent className="p-2.5 md:p-4 text-center">
-            <FileCheck className="w-4 h-4 md:w-6 md:h-6 text-white/80 mx-auto mb-0.5 md:mb-1" />
-            <p className="text-base md:text-2xl font-bold text-white">{gradedAssignments.length}</p>
-            <p className="text-[10px] md:text-xs text-white/80">Graded</p>
-          </CardContent>
-        </Card>
+      {/* Summary Stats - Clean minimal design */}
+      <div className="flex items-center gap-3 md:gap-6 mb-6 overflow-x-auto pb-2">
+        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-slate-100 flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+            <GraduationCap className="w-4 h-4 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-lg font-bold text-slate-900">{lessons.length}</p>
+            <p className="text-[10px] text-slate-500 -mt-0.5">Lessons</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-slate-100 flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+            <Trophy className="w-4 h-4 text-purple-600" />
+          </div>
+          <div>
+            <p className="text-lg font-bold text-slate-900">{totalCompletedExams}</p>
+            <p className="text-[10px] text-slate-500 -mt-0.5">Exams</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-slate-100 flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+            <FileCheck className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-lg font-bold text-slate-900">{gradedAssignments.length}</p>
+            <p className="text-[10px] text-slate-500 -mt-0.5">Graded</p>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
