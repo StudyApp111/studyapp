@@ -32,8 +32,7 @@ Deno.serve(async (req) => {
             generationConfig: {
                 temperature: 0.2,
                 topP: 0.95,
-                maxOutputTokens: 8192,
-                thinkingLevel: "MINIMAL"
+                maxOutputTokens: 8192
             },
             tools: [{
                 googleSearch: {}
@@ -42,7 +41,7 @@ Deno.serve(async (req) => {
 
         console.log('Calling Gemini API with Google Search grounding...');
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
