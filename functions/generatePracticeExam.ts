@@ -115,7 +115,7 @@ IMPORTANT: Create APPLICATION-BASED questions that test understanding, NOT liter
     }
 
     // Call Gemini Flash for generation (use 2.0 flash for grounding support)
-    const modelName = useGoogleSearch ? 'gemini-2.0-flash' : 'gemini-flash-lite-latest';
+    const modelName = useGoogleSearch ? 'gemini-flash-latest' : 'gemini-flash-lite-latest';
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`, {
       method: 'POST',
       headers: {
