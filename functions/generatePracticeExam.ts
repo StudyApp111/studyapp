@@ -30,6 +30,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Insufficient lesson content to generate exam' }, { status: 400 });
     }
 
+    // Determine if we need Google Search grounding (short descriptions without file uploads)
+    const isShortContent = contentForExam.length < 500;
+    const isDescriptionOnly = lesson.input_type === 'description' || (!lesson.file_url && !lesson.file_urls?.length);
+    const useGoogleSearch = isShortContent && isDescriptionOnly;
+
     // Build the prompt for practice exam generation
     const prompt = `You are an expert educator creating a focused PRACTICE QUIZ for a student.
 
@@ -58,51 +63,65 @@ QUESTION TYPE DISTRIBUTION (use this mix):
 - 2 Fill-in-the-Blank questions
 - 2 Short Answer questions (1-2 sentence responses)
 
-CRITICAL ANSWER FORMAT RULES:
-- For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
-- For True/False: correct_answer MUST be "True" or "False"
-- For Fill-in-the-Blank: correct_answer should be the exact word/phrase that fills the blank
-- For Short Answer: correct_answer should be a concise model answer`;
+CRITICAL RULES:
+1. Use EXACTLY these question_type values: "Multiple Choice", "True/False", "Fill in the Blank", "Short Answer"
+2. Use EXACTLY these difficulty_index values: "Easy", "Medium", "Hard"
+3. For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
+4. For True/False: correct_answer MUST be "True" or "False"
+5. For Fill-in-the-Blank: correct_answer should be the exact word/phrase that fills the blank
+6. For Short Answer: correct_answer should be a concise model answer
 
-    // Call Gemini Flash Lite for fast, cost-effective generation
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${API_KEY}`, {
+IMPORTANT: Create APPLICATION-BASED questions that test understanding, NOT literal recall questions like "Which section covers X?" or "What is the name of...". Ask questions that require students to APPLY concepts.`;
+
+    // Build request body - use Google Search grounding for short description-only content
+    const requestBody = {
+      contents: [{
+        parts: [{ text: prompt }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            questions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  question_number: { type: "integer" },
+                  question_type: { type: "string", enum: ["Multiple Choice", "True/False", "Fill in the Blank", "Short Answer"] },
+                  question_text: { type: "string" },
+                  options: { type: "array", items: { type: "string" } },
+                  correct_answer: { type: "string" },
+                  explanation: { type: "string" },
+                  difficulty_index: { type: "string", enum: ["Easy", "Medium", "Hard"] },
+                  assessed_competencies: { type: "array", items: { type: "string" } }
+                },
+                required: ["question_number", "question_type", "question_text", "correct_answer", "explanation", "difficulty_index"]
+              }
+            },
+            exam_focus_summary: { type: "string" }
+          },
+          required: ["questions", "exam_focus_summary"]
+        }
+      }
+    };
+
+    // Add Google Search grounding for short content to get better questions
+    if (useGoogleSearch) {
+      requestBody.tools = [{ googleSearch: {} }];
+      console.log('Using Google Search grounding for short content');
+    }
+
+    // Call Gemini Flash for generation (use 2.0 flash for grounding support)
+    const modelName = useGoogleSearch ? 'gemini-2.0-flash' : 'gemini-flash-lite-latest';
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "object",
-            properties: {
-              questions: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    question_number: { type: "integer" },
-                    question_type: { type: "string", enum: ["multiple_choice", "true_false", "fill_blank", "short_answer"] },
-                    question_text: { type: "string" },
-                    options: { type: "array", items: { type: "string" } },
-                    correct_answer: { type: "string" },
-                    explanation: { type: "string" },
-                    difficulty_index: { type: "string", enum: ["easy", "medium", "hard"] },
-                    assessed_competencies: { type: "array", items: { type: "string" } }
-                  },
-                  required: ["question_number", "question_type", "question_text", "correct_answer", "explanation", "difficulty_index"]
-                }
-              },
-              exam_focus_summary: { type: "string" }
-            },
-            required: ["questions", "exam_focus_summary"]
-          }
-        }
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {

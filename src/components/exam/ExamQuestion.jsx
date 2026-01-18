@@ -295,11 +295,14 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex gap-1 flex-wrap">
             <Badge className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0">
-              {question.question_type}
+              {(question.question_type || '')
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, c => c.toUpperCase())}
             </Badge>
             {question.difficulty_index && (
               <Badge className="bg-slate-100 text-slate-600 text-[9px] px-1.5 py-0">
-                {question.difficulty_index}
+                {(question.difficulty_index || '')
+                  .replace(/\b\w/g, c => c.toUpperCase())}
               </Badge>
             )}
           </div>

@@ -115,9 +115,10 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
   useEffect(() => {
     if (!lesson?.id || !selectedExamNumber || exams === undefined) return;
-    if (exam && exam.exam_number === selectedExamNumber) return;
+    // Don't reload if we already have this exam loaded (prevents regeneration on re-entry)
+    if (exam && exam.exam_number === selectedExamNumber && exam.questions?.length > 0) return;
     if (waitingForCompression) return;
-    
+
     loadOrGenerateExam(selectedExamNumber);
   }, [lesson?.id, selectedExamNumber, waitingForCompression, exams]);
 
@@ -1487,16 +1488,20 @@ JSON Output (exact schema):
   
   const isPracticeExam = exam.exam_type === 'practice';
   
-  const handleExitExam = () => {
-    saveExamProgress();
+  const handleExitExam = async () => {
+    await saveExamProgress();
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    // For practice exams, preserve exam state so it can be resumed
+    // For official exams, also preserve state
     setExam(null);
     setSelectedExamNumber(null);
     setCurrentQuestion(0);
     hasAutoSelectedRef.current = false;
+    // Refresh exams list to show updated progress
+    if (onExamComplete) onExamComplete();
   };
 
   return (
