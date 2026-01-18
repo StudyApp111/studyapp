@@ -343,13 +343,11 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
       console.log("📏 Content length:", contentDescription.length, "characters");
 
-      let aiPrompt;
-
-      if (examNumber === 1) {
-        aiPrompt = `
-
+      // All official exams use the same core prompt structure from autoGenerateExam1
+      const aiPrompt = `
 [Context]
-You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}. This worksheet establishes an accurate learning baseline and must stay tightly grounded in the student's materials.
+You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${lesson.course_name}. 
+This exam establishes an accurate learning baseline and must reflect how the course is ACTUALLY assessed.
 
 Do NOT rely on prior diagnostics.
 
@@ -367,17 +365,40 @@ ${contentDescription}
 Internal Rules (Do NOT Output)
 
 • Topic Lock:
-If content specifies a concrete skill/topic (e.g., "factoring", "photosynthesis"), ALL questions must stay strictly within it.
+If content specifies a concrete skill/topic (e.g., "factoring", "photosynthesis", "short story analysis"),
+ALL questions must stay strictly within it.
 Only broaden scope if the user explicitly requests review or exam prep.
 
+• TASK-FORM ENFORCEMENT (CRITICAL):
+Questions MUST require the student to PERFORM the skill, not describe it.
+
+Examples:
+- English / Humanities:
+  Use short passages, excerpts, scenarios, or claims.
+  Test analysis, interpretation, or argument by asking the student to respond TO the material.
+  DO NOT ask for definitions of literary or analytical terms.
+
+- Math / Sciences:
+  Use problems, data, equations, diagrams, or experimental setups.
+  DO NOT ask conceptual description-only questions unless the course explicitly assesses them.
+
+- Computer Science / Engineering:
+  Use code snippets, logic traces, outputs, or system behavior.
+  DO NOT ask "what is" or "explain the concept" unless required by curriculum.
+
+- Business / Economics:
+  Use case scenarios, numbers, or decisions.
+  DO NOT test abstract definitions without application.
+
 • Light Search (Minimal):
-Use Google Search ONLY to confirm terminology or common exam phrasing for this course IF Content Summary IS <200 CHARACTERS LONG.
+Use Google Search ONLY to confirm typical exam TASK TYPES for this course
+(e.g., "short story analysis", "data interpretation", "problem solving").
 Do NOT introduce new topics.
 
 • Difficulty Progression:
 Q1–2: Moderate
 Q3–4: Challenging
-Q5: Challenging → High Challenge (depth, not new content)
+Q5: Challenging → High Challenge (depth, edge cases, or precision—not new content)
 
 ────────────────────────────
 QUESTION-TYPE RULES (STRICT)
@@ -411,137 +432,6 @@ assessed_competencies, targeted_misconception
 Output Format
 Return ONE valid JSON object matching the required schema.
 No extra text.`;
-      } else {
-        let suggestedFutureSessions = null;
-        let priorPredictedScore = null;
-        let difficultyCalibration = "Moderate → Challenging";
-        
-        try {
-          const completedExams = await base44.entities.Exam.filter({ 
-            lesson_id: lesson.id,
-            completed: true
-          });
-          
-          if (completedExams && completedExams.length > 0) {
-            const sortedExams = completedExams.sort((a, b) => b.exam_number - a.exam_number);
-            const mostRecentExam = sortedExams[0];
-            
-            if (mostRecentExam.total_score !== undefined) {
-              priorPredictedScore = mostRecentExam.total_score;
-              
-              if (priorPredictedScore >= 85) {
-                difficultyCalibration = "Challenging → High Challenge (student excelling, increase rigor)";
-              } else if (priorPredictedScore >= 70) {
-                difficultyCalibration = "Moderate → Challenging (steady progress)";
-              } else {
-                difficultyCalibration = "Scaffold with Moderate, then gradually increase (needs support)";
-              }
-            }
-            
-            const exam1 = completedExams.find(e => e.exam_number === 1);
-            if (exam1?.ai_feedback?.suggested_future_sessions_plan) {
-              suggestedFutureSessions = exam1.ai_feedback.suggested_future_sessions_plan;
-            }
-          }
-        } catch (e) {
-          console.warn("Could not fetch prior exam data for adaptive difficulty:", e);
-        }
-
-        aiPrompt = `
-[Context]
-You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}, calibrated using the student's prior exam performance and targeted improvement plan.
-
-This worksheet MUST adapt based on prior results.
-Do NOT repeat Exam 1 questions or trivial variants.
-
-────────────────────────────
-Input Context
-
-Student Grade Level: ${learningProfile.grade || "N/A"}
-Course / Unit Name: ${lesson.course_name}
-School: ${learningProfile.school || "N/A"}
-Exam Number: ${examNumber} of 6
-
-Content Summary (OCR notes or user description):
-${contentDescription}
-
-Targeted Improvement Signals (from previous prediction):
-${JSON.stringify(suggestedFutureSessions, null, 2)}
-
-Prior Exam Performance:
-- Most Recent Predicted Score: ${priorPredictedScore !== null ? `${priorPredictedScore}%` : 'N/A'}
-- Adaptive Difficulty Strategy: ${difficultyCalibration}
-
-────────────────────────────
-Internal Rules (Do NOT Output)
-
-• Focus Lock:
-Use ONLY the session_name and session_focus_description relevant to this exam iteration.
-Treat these as PRIMARY scope.
-Do NOT introduce unrelated topics.
-
-• Light Search (Minimal):
-Use Google Search ONLY to validate terminology or common exam phrasing.
-Do NOT expand topic scope.
-
-• CRITICAL - Adaptive Difficulty Calibration:
-${priorPredictedScore !== null && priorPredictedScore >= 85 ? `
-STUDENT EXCELLING (${priorPredictedScore}%):
-- Q1-2: Challenging (no warm-up needed)
-- Q3-4: High Challenge (push boundaries)
-- Q5: High Challenge with multi-step reasoning
-- Minimize "Moderate" - only if essential for concept scaffolding
-` : priorPredictedScore !== null && priorPredictedScore >= 70 ? `
-STEADY PROGRESS (${priorPredictedScore}%):
-- Q1-2: Moderate
-- Q3-4: Challenging
-- Q5: High Challenge
-- Balance between consolidation and growth
-` : `
-NEEDS SUPPORT (${priorPredictedScore !== null ? priorPredictedScore + '%' : 'baseline'}):
-- Q1-2: Moderate (build confidence)
-- Q3: Moderate-to-Challenging transition
-- Q4-5: Challenging (gradual stretch)
-- Provide clear explanations and partial credit opportunities
-`}
-
-• Coverage Design:
-- 3 questions directly targeting session_focus_description
-- 1 application or edge-case question
-- 1 calibration/twin item (same concept, different reasoning demand)
-
-────────────────────────────
-QUESTION-TYPE RULES (STRICT)
-
-Choose question_type for EACH question:
-Multiple Choice | True/False | Fill in the Blank | Short Answer
-
-• Multiple Choice → EXACTLY 4 options (A–D)
-• True/False → options = ["True","False"]
-• Fill in the Blank → ONE blank written as ____ , options = []
-• Short Answer → options = []
-
-MCQ cue phrases are FORBIDDEN in non-MCQ questions.
-If violated, auto-convert to Multiple Choice.
-
-CRITICAL ANSWER FORMAT:
-• For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
-• For True/False: correct_answer MUST be "True" or "False"
-
-────────────────────────────
-Output Requirements
-
-Generate EXACTLY 5 questions.
-Each must include:
-question_type, question_text, options, difficulty_index
-
-Then include an answer key with:
-correct_answer, explanation (2–3 sentences),
-assessed_competencies, targeted_misconception
-
-Return ONE valid JSON object. No extra text.
-`;
-      }
 
       console.log("📏 Final prompt length:", aiPrompt.length, "characters");
       console.log("🚀 Calling generateExam API...");

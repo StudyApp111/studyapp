@@ -9,9 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  BookOpen, Award, Calendar, Clock, FileCheck, 
+  BookOpen, Calendar, Clock, FileCheck, 
   ArrowRight, Trophy, Layers, ChevronRight, Sparkles,
-  GraduationCap, Target, Zap, FileText, PenLine
+  GraduationCap, Target, FileText, PenLine, CheckCircle2
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -47,7 +47,6 @@ export default function LessonHistory() {
     queryKey: ['lessons-history'],
     queryFn: async () => {
       const result = await base44.entities.Lesson.list('-created_date', 50);
-      console.log('LessonHistory: Fetched lessons:', result?.length || 0);
       return result || [];
     },
     staleTime: 30 * 1000,
@@ -64,7 +63,7 @@ export default function LessonHistory() {
     gcTime: 5 * 60 * 1000,
   });
 
-  // OPTIMIZED: Only fetch exams/flashcards for visible lessons
+  // Fetch exams and flashcards for visible lessons
   const visibleLessonIds = React.useMemo(() => 
     lessons.slice(0, 20).map(l => l.id), 
     [lessons]
@@ -96,47 +95,75 @@ export default function LessonHistory() {
     staleTime: 30 * 1000,
   });
 
+  // Fetch study plans for progress tracking
+  const { data: allStudyPlans = [] } = useQuery({
+    queryKey: ['study-plans-history', visibleLessonIds],
+    queryFn: async () => {
+      if (visibleLessonIds.length === 0) return [];
+      const planPromises = visibleLessonIds.map(id =>
+        base44.entities.StudyPlan.filter({ lesson_id: id }).catch(() => [])
+      );
+      return (await Promise.all(planPromises)).flat();
+    },
+    enabled: visibleLessonIds.length > 0,
+    staleTime: 30 * 1000,
+  });
+
   const isLoading = lessonsLoading || assignmentsLoading;
 
-  // Group exams by lesson
+  // Group data by lesson
   const lessonExams = {};
   allExams.forEach(e => {
     if (!lessonExams[e.lesson_id]) lessonExams[e.lesson_id] = [];
     lessonExams[e.lesson_id].push(e);
   });
 
-  // Group flashcards by lesson
   const lessonFlashcards = {};
   allFlashcards.forEach(f => {
     if (!lessonFlashcards[f.lesson_id]) lessonFlashcards[f.lesson_id] = [];
     lessonFlashcards[f.lesson_id].push(f);
   });
 
+  const lessonStudyPlans = {};
+  allStudyPlans.forEach(p => {
+    if (!lessonStudyPlans[p.lesson_id]) lessonStudyPlans[p.lesson_id] = [];
+    lessonStudyPlans[p.lesson_id].push(p);
+  });
+
   const LessonCard = ({ lesson, index }) => {
     const exams = (lessonExams[lesson.id] || []);
     const flashcards = (lessonFlashcards[lesson.id] || []);
+    const studyPlans = (lessonStudyPlans[lesson.id] || []);
     
-    // Deduplicate exams by number
-    const examsByNumber = {};
-    exams.forEach(e => {
-      const existing = examsByNumber[e.exam_number];
-      if (!existing || e.completed || (!existing.completed && e.updated_date > existing.updated_date)) {
-        examsByNumber[e.exam_number] = e;
-      }
-    });
-    const uniqueExams = Object.values(examsByNumber);
+    // Get active study plan for this lesson
+    const activeStudyPlan = studyPlans.find(p => p.status === 'active') || studyPlans[0];
     
-    const completedExams = uniqueExams.filter(e => e.completed).length;
-    const totalExams = 6;
-    const latestCompletedExam = uniqueExams.filter(e => e.completed).sort((a, b) => b.exam_number - a.exam_number)[0];
+    // Calculate study plan task progress
+    const totalTasks = activeStudyPlan?.tasks?.length || 0;
+    const completedTasks = activeStudyPlan?.tasks?.filter(t => t.completed)?.length || 0;
     
-    const masteredFlashcards = flashcards.filter(f => f.mastery_level >= 4).length;
+    // Count completed exams (official only)
+    const officialExams = exams.filter(e => e.exam_type !== 'practice');
+    const completedOfficialExams = officialExams.filter(e => e.completed).length;
+    
+    // Get latest predicted grade from most recent completed exam
+    const latestCompletedExam = exams
+      .filter(e => e.completed && e.predicted_grade)
+      .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+    
+    // Flashcard progress - mastered cards
+    const masteredFlashcards = flashcards.filter(f => f.mastered || f.review_count >= 3).length;
     const totalFlashcards = flashcards.length;
     
-    const progress = (completedExams / totalExams) * 100;
-    const studyTime = lesson.total_study_time_seconds || 0;
+    // Calculate overall progress based on study plan or exams
+    let progressPercent = 0;
+    if (totalTasks > 0) {
+      progressPercent = Math.round((completedTasks / totalTasks) * 100);
+    } else if (completedOfficialExams > 0) {
+      progressPercent = Math.min(100, completedOfficialExams * 20); // ~20% per exam as fallback
+    }
     
-    // Determine content type
+    const studyTime = lesson.total_study_time_seconds || 0;
     const hasDocument = lesson.file_url || (lesson.file_urls && lesson.file_urls.length > 0);
 
     const getGradeColor = (grade) => {
@@ -145,6 +172,14 @@ export default function LessonHistory() {
       if (grade.startsWith('B')) return 'text-blue-600';
       if (grade.startsWith('C')) return 'text-amber-600';
       return 'text-red-500';
+    };
+
+    const getGradeBg = (grade) => {
+      if (!grade) return 'from-slate-100 to-slate-50';
+      if (grade.startsWith('A')) return 'from-emerald-50 to-teal-50';
+      if (grade.startsWith('B')) return 'from-blue-50 to-indigo-50';
+      if (grade.startsWith('C')) return 'from-amber-50 to-yellow-50';
+      return 'from-red-50 to-orange-50';
     };
 
     return (
@@ -157,19 +192,20 @@ export default function LessonHistory() {
       >
         <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-200 overflow-hidden bg-white hover:scale-[1.02] active:scale-[0.98]">
           <CardContent className="p-3 md:p-5">
-            <div className="flex items-start justify-between mb-2 md:mb-3">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
                 <div className={`w-9 h-9 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0 ${
-                  completedExams === totalExams 
+                  latestCompletedExam?.predicted_grade?.startsWith('A')
                     ? 'bg-gradient-to-br from-emerald-500 to-emerald-600' 
-                    : completedExams > 0 
+                    : completedOfficialExams > 0 
                     ? 'bg-gradient-to-br from-purple-500 to-purple-600'
                     : 'bg-gradient-to-br from-slate-400 to-slate-500'
                 }`}>
                   <BookOpen className="w-4 h-4 md:w-6 md:h-6 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-slate-900 text-xs md:text-base leading-tight mb-0.5">{lesson.course_name}</h3>
+                  <h3 className="font-bold text-slate-900 text-xs md:text-base leading-tight mb-0.5 truncate">{lesson.course_name}</h3>
                   <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-500">
                     <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
                     <span>{formatDate(lesson.created_date)}</span>
@@ -191,45 +227,52 @@ export default function LessonHistory() {
               <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
             </div>
 
-            {/* Stats Row */}
+            {/* Stats Row - Consistent purple theme */}
             <div className="grid grid-cols-3 gap-2 mb-3">
               <div className="bg-purple-50 rounded-lg p-2 text-center">
                 <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <Target className="w-3 h-3 text-purple-600" />
-                  <span className="text-xs text-purple-600 font-medium">Exams</span>
+                  <Trophy className="w-3 h-3 text-purple-600" />
+                  <span className="text-[10px] md:text-xs text-purple-600 font-medium">Exams</span>
                 </div>
-                <p className="text-sm font-bold text-purple-700">{completedExams}/{totalExams}</p>
+                <p className="text-sm font-bold text-purple-700">{completedOfficialExams}</p>
               </div>
-              <div className="bg-amber-50 rounded-lg p-2 text-center">
+              <div className="bg-purple-50 rounded-lg p-2 text-center">
                 <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <Clock className="w-3 h-3 text-amber-600" />
-                  <span className="text-xs text-amber-600 font-medium">Time</span>
+                  <Clock className="w-3 h-3 text-purple-600" />
+                  <span className="text-[10px] md:text-xs text-purple-600 font-medium">Time</span>
                 </div>
-                <p className="text-sm font-bold text-amber-700">{formatTime(studyTime)}</p>
+                <p className="text-sm font-bold text-purple-700">{formatTime(studyTime)}</p>
               </div>
-              <div className="bg-blue-50 rounded-lg p-2 text-center">
+              <div className="bg-purple-50 rounded-lg p-2 text-center">
                 <div className="flex items-center justify-center gap-1 mb-0.5">
-                  <Layers className="w-3 h-3 text-blue-600" />
-                  <span className="text-xs text-blue-600 font-medium">Cards</span>
+                  <Layers className="w-3 h-3 text-purple-600" />
+                  <span className="text-[10px] md:text-xs text-purple-600 font-medium">Cards</span>
                 </div>
-                <p className="text-sm font-bold text-blue-700">{masteredFlashcards}/{totalFlashcards || '0'}</p>
+                <p className="text-sm font-bold text-purple-700">
+                  {totalFlashcards > 0 ? `${masteredFlashcards}/${totalFlashcards}` : '—'}
+                </p>
               </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="mb-3">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-slate-500">Progress</span>
-                <span className="font-medium text-slate-700">{Math.round(progress)}%</span>
+            {/* Progress Bar - Study Plan based */}
+            {totalTasks > 0 && (
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-slate-500 flex items-center gap-1">
+                    <Target className="w-3 h-3" />
+                    Study Plan
+                  </span>
+                  <span className="font-medium text-slate-700">{completedTasks}/{totalTasks} tasks</span>
+                </div>
+                <Progress value={progressPercent} className="h-2" />
               </div>
-              <Progress value={progress} className="h-2" />
-            </div>
+            )}
 
             {/* Grade Badge */}
             {latestCompletedExam ? (
-              <div className="flex items-center justify-between p-2.5 bg-gradient-to-r from-purple-50 to-yellow-50 rounded-lg border border-purple-100">
+              <div className={`flex items-center justify-between p-2.5 bg-gradient-to-r ${getGradeBg(latestCompletedExam.predicted_grade)} rounded-lg border border-purple-100`}>
                 <div className="flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  <Trophy className="w-4 h-4 text-purple-500" />
                   <span className="text-xs text-slate-600">Predicted Grade</span>
                 </div>
                 <span className={`text-lg font-bold ${getGradeColor(latestCompletedExam.predicted_grade)}`}>
@@ -239,7 +282,7 @@ export default function LessonHistory() {
             ) : (
               <div className="flex items-center justify-center gap-2 p-2.5 bg-slate-50 rounded-lg border border-slate-100">
                 <Sparkles className="w-4 h-4 text-purple-400" />
-                <span className="text-xs text-slate-500">Complete your first exam to see predicted grade</span>
+                <span className="text-xs text-slate-500">Take an exam to see your grade</span>
               </div>
             )}
           </CardContent>
@@ -267,7 +310,6 @@ export default function LessonHistory() {
       >
         <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden bg-white hover:scale-[1.01]">
           <CardContent className="p-4 md:p-5">
-            {/* Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
@@ -281,13 +323,11 @@ export default function LessonHistory() {
               <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
             </div>
 
-            {/* Date */}
             <div className="flex items-center gap-1 text-xs text-slate-500 mb-3">
               <Calendar className="w-3 h-3" />
               {formatDate(assignment.created_date)}
             </div>
 
-            {/* Grade Result */}
             {assignment.grading_result ? (
               <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-100">
                 <div>
@@ -325,6 +365,9 @@ export default function LessonHistory() {
     );
   }
 
+  // Count total completed exams
+  const totalCompletedExams = allExams.filter(e => e.completed).length;
+
   const allItems = [
     ...lessons.map(l => ({ ...l, itemType: 'lesson', date: new Date(l.created_date) })),
     ...gradedAssignments.map(a => ({ ...a, itemType: 'assignment', date: new Date(a.created_date) }))
@@ -348,6 +391,7 @@ export default function LessonHistory() {
         )}
       </div>
 
+      {/* Summary Stats - All purple themed */}
       <div className="grid grid-cols-3 gap-2 md:gap-4 mb-4 md:mb-6">
         <Card className="border-0 shadow-md bg-gradient-to-br from-purple-500 to-purple-600">
           <CardContent className="p-2.5 md:p-4 text-center">
@@ -356,18 +400,18 @@ export default function LessonHistory() {
             <p className="text-[10px] md:text-xs text-white/80">Lessons</p>
           </CardContent>
         </Card>
-        <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-500 to-teal-600">
+        <Card className="border-0 shadow-md bg-gradient-to-br from-purple-600 to-indigo-600">
+          <CardContent className="p-2.5 md:p-4 text-center">
+            <Trophy className="w-4 h-4 md:w-6 md:h-6 text-white/80 mx-auto mb-0.5 md:mb-1" />
+            <p className="text-base md:text-2xl font-bold text-white">{totalCompletedExams}</p>
+            <p className="text-[10px] md:text-xs text-white/80">Exams Done</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-md bg-gradient-to-br from-indigo-500 to-purple-600">
           <CardContent className="p-2.5 md:p-4 text-center">
             <FileCheck className="w-4 h-4 md:w-6 md:h-6 text-white/80 mx-auto mb-0.5 md:mb-1" />
             <p className="text-base md:text-2xl font-bold text-white">{gradedAssignments.length}</p>
-            <p className="text-[10px] md:text-xs text-white/80">Assignments</p>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-md bg-gradient-to-br from-amber-500 to-orange-500">
-          <CardContent className="p-2.5 md:p-4 text-center">
-            <Zap className="w-4 h-4 md:w-6 md:h-6 text-white/80 mx-auto mb-0.5 md:mb-1" />
-            <p className="text-base md:text-2xl font-bold text-white">{allExams.filter(e => e.completed).length}</p>
-            <p className="text-[10px] md:text-xs text-white/80">Exams Done</p>
+            <p className="text-[10px] md:text-xs text-white/80">Graded</p>
           </CardContent>
         </Card>
       </div>

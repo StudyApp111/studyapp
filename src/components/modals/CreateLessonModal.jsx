@@ -172,13 +172,17 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         compressedForPrompts = extractedContent;
       }
 
+      // Enforce minimum 5 second loading time for better UX and background processing
+      const loadingStartTime = Date.now();
+      const MINIMUM_LOADING_MS = 5000;
+
       // Create lesson immediately after OCR/compression
       const learningProfile = {
         grade: userGrade,
         school: userSchool,
         city: ""
       };
-      setProcessingStep("Creating lesson...");
+      setProcessingStep("Preparing your lesson...");
 
       const lessonData = {
         course_name: courseName,
@@ -216,7 +220,14 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         })
         .catch(err => console.warn("⚠️ Exam 1 generation:", err.message));
 
-      // Close modal and navigate immediately (client-side to avoid white flash)
+      // Wait for minimum loading time before navigating
+      const elapsedMs = Date.now() - loadingStartTime;
+      if (elapsedMs < MINIMUM_LOADING_MS) {
+        setProcessingStep("Almost ready...");
+        await new Promise(resolve => setTimeout(resolve, MINIMUM_LOADING_MS - elapsedMs));
+      }
+
+      // Close modal and navigate (client-side to avoid white flash)
       onOpenChange(false);
       navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=studyplan`);
 
