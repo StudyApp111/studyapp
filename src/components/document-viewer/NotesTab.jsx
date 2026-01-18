@@ -73,6 +73,37 @@ export default function NotesTab({ lesson }) {
         });
         setNote(newNote);
         toast.success(`${currentSettings.noteType} generated!`);
+        
+        // Mark review_notes task as complete in study plan
+        try {
+          const studyPlans = await base44.entities.StudyPlan.filter({ 
+            lesson_id: lesson.id, 
+            status: 'active' 
+          });
+          if (studyPlans.length > 0) {
+            const plan = studyPlans[0];
+            const updatedTasks = plan.tasks?.map(task => {
+              if (task.task_type === 'review_notes' && !task.completed) {
+                return {
+                  ...task,
+                  completed_count: (task.completed_count || 0) + 1,
+                  completed: true,
+                  completed_date: new Date().toISOString()
+                };
+              }
+              return task;
+            });
+            
+            const allComplete = updatedTasks?.every(t => t.completed);
+            await base44.entities.StudyPlan.update(plan.id, { 
+              tasks: updatedTasks,
+              all_tasks_completed: allComplete,
+              official_exam_unlocked: allComplete
+            });
+          }
+        } catch (planError) {
+          console.error("Error updating study plan for notes:", planError);
+        }
       }
     } catch (error) {
       console.error("Error generating notes:", error);
