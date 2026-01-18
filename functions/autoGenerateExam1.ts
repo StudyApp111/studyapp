@@ -56,7 +56,8 @@ Deno.serve(async (req) => {
     // Build the exam generation prompt (same as ExamTab)
     const aiPrompt = `
 [Context]
-You are an expert assessment designer. Generate a 5-question exam-authentic worksheet for ${lesson.course_name}. This worksheet establishes an accurate learning baseline and must stay tightly grounded in the student's materials.
+You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${lesson.course_name}. 
+This exam establishes an accurate learning baseline and must reflect how the course is ACTUALLY assessed.
 
 Do NOT rely on prior diagnostics.
 
@@ -74,17 +75,40 @@ ${contentDescription}
 Internal Rules (Do NOT Output)
 
 • Topic Lock:
-If content specifies a concrete skill/topic (e.g., "factoring", "photosynthesis"), ALL questions must stay strictly within it.
+If content specifies a concrete skill/topic (e.g., "factoring", "photosynthesis", "short story analysis"),
+ALL questions must stay strictly within it.
 Only broaden scope if the user explicitly requests review or exam prep.
 
+• TASK-FORM ENFORCEMENT (CRITICAL):
+Questions MUST require the student to PERFORM the skill, not describe it.
+
+Examples:
+- English / Humanities:
+  Use short passages, excerpts, scenarios, or claims.
+  Test analysis, interpretation, or argument by asking the student to respond TO the material.
+  DO NOT ask for definitions of literary or analytical terms.
+
+- Math / Sciences:
+  Use problems, data, equations, diagrams, or experimental setups.
+  DO NOT ask conceptual description-only questions unless the course explicitly assesses them.
+
+- Computer Science / Engineering:
+  Use code snippets, logic traces, outputs, or system behavior.
+  DO NOT ask “what is” or “explain the concept” unless required by curriculum.
+
+- Business / Economics:
+  Use case scenarios, numbers, or decisions.
+  DO NOT test abstract definitions without application.
+
 • Light Search (Minimal):
-Use Google Search ONLY to confirm terminology or common exam phrasing for this course IF Content Summary IS <200 CHARACTERS LONG.
+Use Google Search ONLY to confirm typical exam TASK TYPES for this course
+(e.g., “short story analysis”, “data interpretation”, “problem solving”).
 Do NOT introduce new topics.
 
 • Difficulty Progression:
 Q1–2: Moderate
 Q3–4: Challenging
-Q5: Challenging → High Challenge (depth, not new content)
+Q5: Challenging → High Challenge (depth, edge cases, or precision—not new content)
 
 ────────────────────────────
 QUESTION-TYPE RULES (STRICT)
@@ -159,13 +183,8 @@ No extra text.`;
 
     // Create or update exam record
     let exam;
-    
-    // Double-check if exam was created while we were generating (to prevent duplicates)
-    const latestExistingExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
-    
-    if (latestExistingExams.length > 0) {
-      console.log('Exam 1 created by another process during generation, updating it instead');
-      exam = await base44.entities.Exam.update(latestExistingExams[0].id, {
+    if (existingExams.length > 0) {
+      exam = await base44.entities.Exam.update(existingExams[0].id, {
         questions: questionsWithPlaceholder,
         status: "not_started"
       });
