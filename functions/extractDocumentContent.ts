@@ -128,16 +128,27 @@ Deno.serve(async (req) => {
         const arrayBuffer = await fileBlob.arrayBuffer();
         const base64Content = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
         
-        // Determine MIME type
+        // Determine MIME type - Gemini requires specific supported types
         const mimeTypes = {
             'png': 'image/png',
             'jpg': 'image/jpeg',
             'jpeg': 'image/jpeg',
             'webp': 'image/webp',
             'gif': 'image/gif',
+            'bmp': 'image/bmp',
+            'tiff': 'image/tiff',
+            'heif': 'image/heif',
+            'avif': 'image/avif',
             'pdf': 'application/pdf'
         };
-        const mimeType = mimeTypes[fileExt] || 'application/octet-stream';
+        const mimeType = mimeTypes[fileExt];
+        
+        if (!mimeType) {
+            return Response.json({ 
+                error: 'Unsupported file format for OCR',
+                details: `File type .${fileExt} is not supported by Gemini Vision.`
+            }, { status: 400 });
+        }
 
         const geminiRequestBody = {
             contents: [{

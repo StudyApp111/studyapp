@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy, Zap, ChevronLeft, ChevronRight } from "lucide-react";
+import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy, Zap, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import ExamQuestion from "@/components/exam/ExamQuestion.jsx";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
@@ -1455,6 +1455,20 @@ JSON Output (exact schema):
   }
   
   const canProceed = currentQ.user_answer?.trim() !== "";
+  
+  const isPracticeExam = exam.exam_type === 'practice';
+  
+  const handleExitExam = () => {
+    saveExamProgress();
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setExam(null);
+    setSelectedExamNumber(null);
+    setCurrentQuestion(0);
+    hasAutoSelectedRef.current = false;
+  };
 
   return (
     <>
@@ -1492,16 +1506,33 @@ JSON Output (exact schema):
 
       <div className="flex flex-col h-full md:h-auto md:pb-4">
         <div className="flex-1 flex flex-col bg-white/95 backdrop-blur-xl md:rounded-2xl border-0 md:border border-purple-200/80 shadow-none md:shadow-sm md:mx-0 overflow-hidden">
+          {/* Exam Header with Back Button and Type Indicator */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-purple-100 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
+              <button
+                onClick={handleExitExam}
+                className="flex items-center gap-1 text-slate-500 hover:text-slate-700 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span className="text-xs font-medium hidden sm:inline">Exit</span>
+              </button>
+              <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                isPracticeExam 
+                  ? 'bg-blue-100 text-blue-700' 
+                  : 'bg-purple-100 text-purple-700'
+              }`}>
+                {isPracticeExam ? 'Practice' : 'Official'}
+              </div>
+              <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
                 {currentQuestion + 1}/{exam.questions.length}
               </span>
-              <Progress value={progress} className="h-1.5 w-20" />
             </div>
-            <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">
-              <Clock className="w-3 h-3" />
-              <span className="text-xs font-semibold tabular-nums">{formatTime(elapsedSeconds)}</span>
+            <div className="flex items-center gap-2">
+              <Progress value={progress} className="h-1.5 w-16 hidden sm:block" />
+              <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">
+                <Clock className="w-3 h-3" />
+                <span className="text-xs font-semibold tabular-nums">{formatTime(elapsedSeconds)}</span>
+              </div>
             </div>
           </div>
 
