@@ -170,13 +170,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
     }
   };
 
-  // Get latest predicted grade from exams
+  // Get latest predicted grade from exams - check both exam_type field and absence of it
   const latestOfficialExam = (exams || [])
-    .filter(e => e.exam_type !== 'practice' && e.completed && e.predicted_grade)
+    .filter(e => e.completed && e.predicted_grade && e.exam_type !== 'practice')
     .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
 
-  const currentGrade = latestOfficialExam?.predicted_grade || '—';
-  const currentScore = latestOfficialExam?.total_score;
+  const currentGrade = latestOfficialExam?.predicted_grade || studyPlan?.initial_predicted_grade || '—';
+  const currentScore = latestOfficialExam?.total_score || studyPlan?.initial_score;
 
   // Calculate overall task progress
   const completedTasks = studyPlan?.tasks?.filter(t => t.completed).length || 0;
