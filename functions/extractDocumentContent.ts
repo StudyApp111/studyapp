@@ -1,5 +1,66 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Mistral OCR fallback for unsupported file types or when Gemini fails
+async function extractWithMistralOCR(fileUrl, fileExt) {
+    const mistralApiKey = Deno.env.get("MistralDocumentAIKey");
+    if (!mistralApiKey) {
+        console.error('Mistral API key not configured');
+        return { success: false, error: 'Mistral API key not configured' };
+    }
+
+    try {
+        console.log('Calling Mistral OCR API...');
+        
+        // Determine document type for Mistral
+        const imageFormats = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff', 'heif', 'avif'];
+        const isImage = imageFormats.includes(fileExt);
+        
+        const documentType = isImage ? 'image_url' : 'document_url';
+        const documentKey = isImage ? 'image_url' : 'document_url';
+        
+        const mistralResponse = await fetch('https://api.mistral.ai/v1/ocr', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${mistralApiKey}`
+            },
+            body: JSON.stringify({
+                model: 'mistral-ocr-latest',
+                document: {
+                    type: documentType,
+                    [documentKey]: fileUrl
+                }
+            })
+        });
+
+        if (!mistralResponse.ok) {
+            const errorText = await mistralResponse.text();
+            console.error('Mistral OCR API error:', errorText);
+            return { success: false, error: errorText };
+        }
+
+        const mistralData = await mistralResponse.json();
+        
+        // Extract text from all pages
+        let fullContent = '';
+        if (mistralData.pages && Array.isArray(mistralData.pages)) {
+            fullContent = mistralData.pages
+                .map(page => page.markdown || '')
+                .join('\n\n');
+        }
+
+        if (fullContent && fullContent.trim().length > 0) {
+            console.log('Mistral OCR extraction successful, length:', fullContent.length);
+            return { success: true, content: fullContent };
+        }
+
+        return { success: false, error: 'No content extracted' };
+    } catch (error) {
+        console.error('Mistral OCR error:', error.message);
+        return { success: false, error: error.message };
+    }
+}
+
 Deno.serve(async (req) => {
     console.log('=== extractDocumentContent Function Start ===');
     
@@ -155,38 +216,19 @@ Deno.serve(async (req) => {
         };
         const mimeType = mimeTypes[fileExt];
         
-        // If not a supported Gemini mime type, go directly to Base44 extraction
+        // If not a supported Gemini mime type, go directly to Mistral OCR
         if (!mimeType) {
-            console.log(`File type .${fileExt} not supported by Gemini, using Base44 extraction...`);
+            console.log(`File type .${fileExt} not supported by Gemini, using Mistral OCR...`);
             
-            try {
-                const base44Result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-                    file_url: file_url,
-                    json_schema: {
-                        type: "object",
-                        properties: {
-                            full_text_content: {
-                                type: "string",
-                                description: "The complete extracted text content from the document"
-                            }
-                        }
-                    }
+            const mistralResult = await extractWithMistralOCR(file_url, fileExt);
+            if (mistralResult.success) {
+                return Response.json({ 
+                    extracted_content: mistralResult.content.trim(),
+                    characters: mistralResult.content.trim().length,
+                    file_size: fileSize,
+                    file_type: 'DOCUMENT',
+                    method: 'mistral_ocr'
                 });
-                
-                if (base44Result.status === 'success' && base44Result.output?.full_text_content) {
-                    const content = base44Result.output.full_text_content;
-                    console.log('Base44 extraction successful, length:', content.length);
-                    
-                    return Response.json({ 
-                        extracted_content: content.trim(),
-                        characters: content.trim().length,
-                        file_size: fileSize,
-                        file_type: 'DOCUMENT',
-                        method: 'base44_extraction'
-                    });
-                }
-            } catch (base44Error) {
-                console.error('Base44 extraction failed:', base44Error.message);
             }
             
             return Response.json({ 
@@ -229,38 +271,19 @@ Deno.serve(async (req) => {
             extractedContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
         }
 
-        // If Gemini failed or returned empty, fallback to Base44 ExtractDataFromUploadedFile
+        // If Gemini failed or returned empty, fallback to Mistral OCR
         if (!extractedContent || extractedContent.trim().length === 0) {
-            console.log('Gemini Vision failed or empty, falling back to Base44 ExtractDataFromUploadedFile...');
+            console.log('Gemini Vision failed or empty, falling back to Mistral OCR...');
             
-            try {
-                const base44Result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-                    file_url: file_url,
-                    json_schema: {
-                        type: "object",
-                        properties: {
-                            full_text_content: {
-                                type: "string",
-                                description: "The complete extracted text content from the document"
-                            }
-                        }
-                    }
+            const mistralResult = await extractWithMistralOCR(file_url, fileExt);
+            if (mistralResult.success) {
+                return Response.json({ 
+                    extracted_content: mistralResult.content.trim(),
+                    characters: mistralResult.content.trim().length,
+                    file_size: fileSize,
+                    file_type: isImage ? 'IMAGE' : 'DOCUMENT',
+                    method: 'mistral_ocr'
                 });
-                
-                if (base44Result.status === 'success' && base44Result.output?.full_text_content) {
-                    extractedContent = base44Result.output.full_text_content;
-                    console.log('Base44 extraction successful, length:', extractedContent.length);
-                    
-                    return Response.json({ 
-                        extracted_content: extractedContent.trim(),
-                        characters: extractedContent.trim().length,
-                        file_size: fileSize,
-                        file_type: isImage ? 'IMAGE' : 'DOCUMENT',
-                        method: 'base44_extraction'
-                    });
-                }
-            } catch (base44Error) {
-                console.error('Base44 extraction also failed:', base44Error.message);
             }
             
             return Response.json({ 
