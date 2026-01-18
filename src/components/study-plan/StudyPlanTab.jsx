@@ -160,8 +160,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         onNavigate('notes');
         break;
       case 'practice_exam':
-        // Navigate to exam tab - let user start the practice exam from there
-        // This avoids duplicate generation issues
+        // Generate and start practice exam directly
+        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
+          detail: { 
+            task,
+            focus_topics: task.focus_topics || [],
+            target_competency: task.target_competency || '',
+            misconception_addressed: task.misconception_addressed || ''
+          }
+        }));
         onNavigate('exam');
         break;
       default:
