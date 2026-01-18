@@ -289,8 +289,8 @@ export default function DocumentViewer() {
         console.log("🎯 Triggering Exam 1 generation from DocumentViewer (fallback)...");
         base44.functions.invoke('autoGenerateExam1', { lesson_id: lessonId })
           .then(res => {
-            if (res?.data?.success && !res?.data?.skipped) {
-              console.log("✅ Exam 1 auto-generated (fallback)");
+            if (res?.data?.success) {
+              console.log("✅ Exam 1 auto-generated (fallback, skipped=" + res?.data?.skipped + ")");
               loadLesson();
             }
           })
