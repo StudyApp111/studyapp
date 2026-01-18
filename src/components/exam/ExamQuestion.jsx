@@ -25,42 +25,44 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   const isFillBlank = questionType.includes("fill") && questionType.includes("blank") || questionType.includes("fill_blank");
   const isObjective = isMCQ || isTrueFalse;
 
-  // Normalize answer for comparison - handles "B" vs "B. Full text..." cases
-  const normalizeAnswer = (ans) => {
-    if (!ans) return '';
-    const trimmed = ans.trim().toLowerCase();
-    // Extract just the letter if answer starts with a letter followed by punctuation
-    const letterMatch = trimmed.match(/^([a-d])[\.\)\s]/i);
-    if (letterMatch) return letterMatch[1].toLowerCase();
-    // Also check if it's just a single letter
-    if (/^[a-d]$/i.test(trimmed)) return trimmed.toLowerCase();
-    return trimmed;
+  // For MCQ: extract just the letter from an option like "A. Some text" or "B) Answer"
+  const extractOptionLetter = (optionText, optionIndex) => {
+    if (!optionText) return String.fromCharCode(65 + optionIndex); // Fallback to A, B, C, D based on index
+    const letterMatch = optionText.trim().match(/^([A-Da-d])[\.\)\:\s]/i);
+    if (letterMatch) return letterMatch[1].toUpperCase();
+    // Return letter based on position in options array
+    return String.fromCharCode(65 + optionIndex);
   };
 
-  const checkIsCorrect = (userAns, correctAns) => {
+  const checkIsCorrect = (userAns, correctAns, optionIndex = -1) => {
     if (!userAns || !correctAns) return false;
     
-    // First try exact match
-    if (userAns.trim().toLowerCase() === correctAns.trim().toLowerCase()) return true;
+    const userTrimmed = userAns.trim();
+    const correctTrimmed = correctAns.trim();
     
-    // Then try normalized letter match (for MCQ)
-    const normalizedUser = normalizeAnswer(userAns);
-    const normalizedCorrect = normalizeAnswer(correctAns);
-    if (normalizedUser && normalizedCorrect && normalizedUser === normalizedCorrect) return true;
+    // For MCQ where correct_answer should be just a letter (A, B, C, D)
+    if (/^[A-Da-d]$/i.test(correctTrimmed)) {
+      // User selected an option - extract the letter from their selection
+      const userLetter = extractOptionLetter(userTrimmed, optionIndex);
+      return userLetter.toUpperCase() === correctTrimmed.toUpperCase();
+    }
     
-    // Check if user answer contains the correct answer text or vice versa
-    const userLower = userAns.trim().toLowerCase();
-    const correctLower = correctAns.trim().toLowerCase();
-    if (userLower.includes(correctLower) || correctLower.includes(userLower)) return true;
+    // For True/False
+    if (correctTrimmed.toLowerCase() === 'true' || correctTrimmed.toLowerCase() === 'false') {
+      return userTrimmed.toLowerCase() === correctTrimmed.toLowerCase();
+    }
     
-    return false;
+    // For fill-in-blank and short answer - exact match (case insensitive)
+    return userTrimmed.toLowerCase() === correctTrimmed.toLowerCase();
   };
 
   useEffect(() => {
     if (answer && isObjective) {
       setSelectedAnswer(answer);
       setHasAnswered(true);
-      const correct = checkIsCorrect(answer, question.correct_answer);
+      // Find the option index for the user's answer
+      const optionIndex = question.options?.findIndex(opt => opt === answer) ?? -1;
+      const correct = checkIsCorrect(answer, question.correct_answer, optionIndex);
       setIsCorrect(correct);
     }
   }, []);
@@ -73,7 +75,9 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
 
     if (isObjective) {
       setHasAnswered(true);
-      const correct = checkIsCorrect(value, question.correct_answer);
+      // Find the option index for the selected answer
+      const optionIndex = question.options?.findIndex(opt => opt === value) ?? -1;
+      const correct = checkIsCorrect(value, question.correct_answer, optionIndex);
       setIsCorrect(correct);
       
       if (correct) {
@@ -87,14 +91,14 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     }
   };
 
-  const getOptionStyle = (optionText) => {
+  const getOptionStyle = (optionText, optionIndex) => {
     if (!hasAnswered || !isObjective) {
       return selectedAnswer === optionText
         ? "border-purple-500 bg-purple-50"
         : "border-slate-200 hover:border-purple-300 bg-white";
     }
 
-    const isThisCorrect = checkIsCorrect(optionText, question.correct_answer);
+    const isThisCorrect = checkIsCorrect(optionText, question.correct_answer, optionIndex);
     const isThisSelected = selectedAnswer === optionText;
 
     if (isThisCorrect) {
@@ -118,14 +122,14 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
         const optionLetter = String.fromCharCode(65 + index);
         const optionText = typeof option === 'string' ? option : (option?.text || option?.label || option?.value || String(option));
         const displayText = stripLetterPrefix(optionText);
-        const isThisCorrect = checkIsCorrect(optionText, question.correct_answer);
+        const isThisCorrect = checkIsCorrect(optionText, question.correct_answer, index);
         const isThisSelected = selectedAnswer === optionText;
 
         return (
           <label
             key={index}
             htmlFor={`option-${index}`}
-            className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all cursor-pointer ${getOptionStyle(optionText)} ${hasAnswered ? 'cursor-default' : 'active:scale-[0.99]'}`}
+            className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all cursor-pointer ${getOptionStyle(optionText, index)} ${hasAnswered ? 'cursor-default' : 'active:scale-[0.99]'}`}
             onClick={(e) => {
               e.preventDefault();
               handleAnswerSelect(optionText);
@@ -152,14 +156,14 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
 
   const renderTrueFalseOptions = () => (
     <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} className="space-y-2">
-      {["True", "False"].map((option) => {
-        const isThisCorrect = checkIsCorrect(option, question.correct_answer);
+      {["True", "False"].map((option, index) => {
+        const isThisCorrect = checkIsCorrect(option, question.correct_answer, index);
         const isThisSelected = selectedAnswer === option;
 
         return (
           <div
             key={option}
-            className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all cursor-pointer ${getOptionStyle(option)} ${hasAnswered ? 'cursor-default' : ''}`}
+            className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all cursor-pointer ${getOptionStyle(option, index)} ${hasAnswered ? 'cursor-default' : ''}`}
             onClick={() => handleAnswerSelect(option)}
           >
             <RadioGroupItem value={option} id={`option-${option}`} disabled={hasAnswered} />
