@@ -978,7 +978,7 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-        <div className="px-3 py-4 w-full max-w-lg mx-auto space-y-6 pb-8">
+        <div className="px-3 py-4 w-full max-w-md mx-auto space-y-6 pb-8">
         {/* Practice Quizzes Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
           <div>
@@ -1029,7 +1029,7 @@ JSON Output (exact schema):
                       
                       <div className="flex-1 min-w-0">
                         <h3 className={`font-semibold text-sm truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
-                          {e.focus_description || 'Practice Quiz'}
+                          {e.focus_competency || 'Practice Quiz'}
                         </h3>
                         <p className={`text-[11px] ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
                           {totalQuestions} questions

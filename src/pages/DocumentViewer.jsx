@@ -517,14 +517,14 @@ export default function DocumentViewer() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full overflow-x-hidden flex-1">
             {/* Fixed tabs + info bar */}
             <div 
-              className="fixed left-0 right-0 z-40"
+              className="fixed left-0 right-0 z-40 bg-gradient-to-r from-purple-600 to-purple-700"
               style={{ 
                 top: '0px',
-                paddingTop: 'max(env(safe-area-inset-top, 0px), 20px)'
+                paddingTop: 'env(safe-area-inset-top, 0px)'
               }}
             >
               {/* Info strip - course and timer */}
-              <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-3 pb-2 pt-1 flex items-center justify-between gap-3">
+              <div className="px-3 py-2 flex items-center justify-between gap-3">
                 <span className="text-white font-semibold text-xs truncate">{lesson?.course_name || 'Loading...'}</span>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <Clock className="w-3.5 h-3.5 text-purple-200" />
@@ -587,7 +587,7 @@ export default function DocumentViewer() {
             </div>
             
             {/* Spacer for fixed tabs + info */}
-            <div style={{ height: 'calc(max(env(safe-area-inset-top, 0px), 20px) + 60px)' }} />
+            <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 80px)' }} />
 
             {/* Scrollable content area */}
             <div className="overflow-x-hidden w-full pb-28">

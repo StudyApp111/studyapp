@@ -415,7 +415,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
           <div className="relative">
             {/* Current Grade */}
             <div className="text-center mb-4">
-              <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider mb-1">Predicted Grade</p>
+              <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider mb-1">StudyApp Predicted Grade</p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className="text-5xl font-black text-white">{currentGrade}</span>
                 {currentScore && <span className="text-white/80 text-sm font-medium">{Math.round(currentScore)}%</span>}
