@@ -355,6 +355,12 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
               <p className={`text-xs font-bold ${isCorrect ? 'text-emerald-700' : 'text-amber-700'}`}>
                 {isCorrect ? "🎉 Excellent!" : "Keep learning!"}
               </p>
+              {/* Show correct answer when wrong */}
+              {!isCorrect && question.correct_answer && (
+                <p className="text-xs text-emerald-700 font-medium mt-1">
+                  Correct answer: {isMCQ ? `${question.correct_answer}` : question.correct_answer}
+                </p>
+              )}
               {question.explanation && (
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                   {question.explanation}

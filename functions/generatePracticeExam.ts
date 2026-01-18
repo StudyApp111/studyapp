@@ -30,12 +30,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Insufficient lesson content to generate exam' }, { status: 400 });
     }
 
-    // Determine if we need Google Search grounding (short descriptions without file uploads)
-    const isShortContent = contentForExam.length < 500;
-    const isDescriptionOnly = lesson.input_type === 'description' || (!lesson.file_url && !lesson.file_urls?.length);
-    const useGoogleSearch = isShortContent && isDescriptionOnly;
-
     // Build the prompt for practice exam generation
+    // Note: We don't use Google Search grounding because it's incompatible with JSON response mode
     const prompt = `You are an expert educator creating a focused PRACTICE QUIZ for a student.
 
 COURSE: ${lesson.course_name}
@@ -71,9 +67,11 @@ CRITICAL RULES:
 5. For Fill-in-the-Blank: correct_answer should be the exact word/phrase that fills the blank
 6. For Short Answer: correct_answer should be a concise model answer
 
-IMPORTANT: Create APPLICATION-BASED questions that test understanding, NOT literal recall questions like "Which section covers X?" or "What is the name of...". Ask questions that require students to APPLY concepts.`;
+IMPORTANT: Create APPLICATION-BASED questions that test understanding, NOT literal recall questions like "Which section covers X?" or "What is the name of...". Ask questions that require students to APPLY concepts.
 
-    // Build request body - use Google Search grounding for short description-only content
+CRITICAL FORMATTING RULE: Do NOT use LaTeX notation like $\\text{...}$ or $...$. Write chemical formulas and math expressions in plain text (e.g., "KCl" not "$\\text{KCl}$", "H2O" not "$H_2O$", "x^2" not "$x^2$").`;
+
+    // Build request body
     const requestBody = {
       contents: [{
         parts: [{ text: prompt }]
@@ -108,14 +106,13 @@ IMPORTANT: Create APPLICATION-BASED questions that test understanding, NOT liter
       }
     };
 
-    // Add Google Search grounding for short content to get better questions
-    if (useGoogleSearch) {
-      requestBody.tools = [{ googleSearch: {} }];
-      console.log('Using Google Search grounding for short content');
-    }
+    // Use gemini-2.0-flash-lite for fast, reliable generation
+    const modelName = 'gemini-2.0-flash-lite';
+    console.log(`📝 generatePracticeExam: Using model ${modelName}`);
+    console.log(`📝 Content length: ${contentForExam.length} chars`);
+    console.log(`📝 Focus topics: ${(focus_topics || []).join(', ') || 'None'}`);
+    console.log(`📝 Target competency: ${target_competency || 'None'}`);
 
-    // Call Gemini Flash for generation (use 2.0 flash for grounding support)
-    const modelName = useGoogleSearch ? 'gemini-flash-latest' : 'gemini-flash-lite-latest';
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`, {
       method: 'POST',
       headers: {
