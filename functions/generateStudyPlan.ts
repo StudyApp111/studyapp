@@ -195,7 +195,7 @@ Return JSON:
           contents: [{ parts: [{ text: planPrompt }] }],
           generationConfig: {
             temperature: 0.3,
-            maxOutputTokens: 4096,
+            maxOutputTokens: 16000,
             responseMimeType: "application/json",
             responseSchema: {
               type: "object",
