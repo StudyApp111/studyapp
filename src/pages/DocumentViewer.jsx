@@ -257,9 +257,18 @@ export default function DocumentViewer() {
         setExtractedContent(lessonData.extracted_content);
       }
 
-      // Load exams (needed for red dot logic)
+      // Load ALL exams including practice exams (needed for red dot logic and exam list)
       const examsData = await base44.entities.Exam.filter({ lesson_id: lessonId }).catch(() => []);
-      setExams(examsData.filter(e => e?.id));
+      // Sort by exam_number for official, then by created_date for practice
+      const sortedExams = examsData.filter(e => e?.id).sort((a, b) => {
+        if (a.exam_type === 'practice' && b.exam_type !== 'practice') return 1;
+        if (a.exam_type !== 'practice' && b.exam_type === 'practice') return -1;
+        if (a.exam_type === 'practice' && b.exam_type === 'practice') {
+          return new Date(b.created_date) - new Date(a.created_date);
+        }
+        return (a.exam_number || 0) - (b.exam_number || 0);
+      });
+      setExams(sortedExams);
       
       // Get the latest predicted grade from completed exams
       const examWithGrade = examsData
