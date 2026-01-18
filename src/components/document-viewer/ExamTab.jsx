@@ -83,12 +83,13 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         });
 
         if (data?.success && data.exam) {
-          console.log('✅ Practice exam generated:', data.exam.id);
-          setExam(data.exam);
-          setCurrentQuestion(0);
-          hasAutoSelectedRef.current = true;
-          if (onExamComplete) onExamComplete();
-        }
+              console.log('✅ Practice exam generated:', data.exam.id);
+              setExam(data.exam);
+              setCurrentQuestion(0);
+              hasAutoSelectedRef.current = true;
+              // Refresh exams list so practice exam shows in list
+              if (onExamComplete) onExamComplete();
+            }
       } catch (error) {
         console.error("Error generating practice exam:", error);
       } finally {
