@@ -81,7 +81,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
   // Practice Exam Results UI
   if (isPracticeExam) {
     return (
-      <div className="space-y-5 px-3 max-w-lg mx-auto">
+      <div className="space-y-5 px-3 max-w-lg mx-auto pb-24">
         {/* Link back to Study Plan */}
         <Button
           variant="ghost"

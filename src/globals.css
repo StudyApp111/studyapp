@@ -74,6 +74,14 @@
     max-width: 100vw;
   }
 
+  /* Mobile app optimization - single scroll context */
+  @media (max-width: 768px) {
+    html, body {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
   /* Prevent horizontal scroll on all screens */
   #root, [id^="root"], body, * {
     max-width: 100vw;

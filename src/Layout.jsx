@@ -221,7 +221,7 @@ export default function Layout({ children, currentPageName }) {
             </header>
           )}
 
-          <div className="flex-1 overflow-auto pb-24 md:pb-0">
+          <div className="flex-1 md:overflow-auto pb-0 md:pb-0">
             {children}
           </div>
 

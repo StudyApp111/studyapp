@@ -132,7 +132,7 @@ export default function Settings() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-6 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10 pb-28 md:pb-10">
       <div className="max-w-3xl mx-auto">
         <Button
           variant="ghost"

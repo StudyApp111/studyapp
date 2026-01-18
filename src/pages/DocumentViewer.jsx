@@ -432,7 +432,7 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-120px)] h-[calc(100vh-70px)] overflow-x-hidden">
+      <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-120px)] overflow-x-hidden">
         {/* Desktop: Flex container for AI tutor + tabs */}
         <div className="hidden md:flex gap-3 h-full w-full max-w-full">
           {/* AI Tutor Panel - Left side */}
@@ -544,9 +544,9 @@ export default function DocumentViewer() {
           </div>
         
         {/* Mobile: Original layout without AI tutor panel */}
-        <div className="md:hidden h-full flex flex-col w-full overflow-x-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col w-full overflow-x-hidden">
-            <div className="flex-shrink-0 pb-1.5 w-full">
+        <div className="md:hidden flex flex-col w-full overflow-x-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full overflow-x-hidden">
+            <div className="flex-shrink-0 pb-1.5 w-full sticky top-0 z-20 bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40">
               <div className="w-full px-1">
                 <TabsList className="flex w-full bg-white border border-purple-200 p-0.5 h-auto rounded-lg shadow-sm gap-0.5">
                   {hasDocument ? (
@@ -600,8 +600,8 @@ export default function DocumentViewer() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto overflow-x-hidden w-full">
-              <TabsContent value="studyplan" className="mt-0 p-0 w-full h-full overflow-x-hidden">
+            <div className="overflow-x-hidden w-full">
+              <TabsContent value="studyplan" className="mt-0 p-0 w-full overflow-x-hidden">
                 <StudyPlanTab 
                   lesson={lesson} 
                   exams={exams} 
@@ -609,7 +609,7 @@ export default function DocumentViewer() {
                 />
               </TabsContent>
 
-              <TabsContent value="doc" className="mt-0 p-0 w-full h-full overflow-x-hidden">
+              <TabsContent value="doc" className="mt-0 p-0 w-full overflow-x-hidden">
                 {!lesson ? (
                   <ParsingLoader />
                 ) : (
@@ -617,7 +617,7 @@ export default function DocumentViewer() {
                 )}
               </TabsContent>
 
-              <TabsContent value="notes" className="mt-0 p-0 w-full h-full overflow-x-hidden">
+              <TabsContent value="notes" className="mt-0 p-0 w-full overflow-x-hidden">
                 <NotesTab lesson={lesson} />
               </TabsContent>
 

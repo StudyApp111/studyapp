@@ -394,7 +394,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length === 0) {
     return (
-      <div className="h-full flex items-center justify-center p-4 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40">
+      <div className="flex items-center justify-center p-4 pb-24 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -450,9 +450,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         onComplete={() => setTaskCompletionToast(false)}
       />
 
-      <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl overflow-hidden overflow-x-hidden w-full">
+      <div className="flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl w-full pb-24">
         {/* Compact header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-3 py-2 md:px-6 md:py-4 sticky top-0 z-10 shadow-lg w-full">
+        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-3 py-2 md:px-6 md:py-4 shadow-lg w-full rounded-t-2xl">
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-8 h-8 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0">
@@ -487,8 +487,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
           </div>
         </div>
 
-        {/* Centered scrollable content */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 md:px-6 md:py-6 w-full flex items-start justify-center">
+        {/* Centered content - no nested scroll */}
+        <div className="px-3 py-4 md:px-6 md:py-6 w-full flex items-start justify-center">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentCardIndex}
@@ -655,8 +655,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
           </AnimatePresence>
         </div>
 
-        {/* Fixed navigation */}
-        <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-t border-purple-200 px-3 py-3 md:px-6 md:py-4 sticky bottom-0 w-full">
+        {/* Navigation */}
+        <div className="bg-white/95 backdrop-blur-xl border-t border-purple-200 px-3 py-3 md:px-6 md:py-4 w-full">
           <div className="flex gap-3 w-full max-w-lg mx-auto">
             <Button
               variant="outline"

@@ -379,7 +379,7 @@ export default function LessonHistory() {
     : allItems.filter(i => i.itemType === 'assignment');
 
   return (
-    <div className="p-3 md:p-10 max-w-7xl mx-auto">
+    <div className="p-3 md:p-10 max-w-7xl mx-auto pb-28 md:pb-10">
       <div className="mb-4 md:mb-8">
         <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-1">History</h1>
         {lessonsError && (

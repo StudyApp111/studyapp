@@ -197,7 +197,7 @@ export default function Home() {
 
 
   return (
-    <div className="p-4 md:p-10 max-w-7xl mx-auto">
+    <div className="p-4 md:p-10 max-w-7xl mx-auto pb-28 md:pb-10">
       {/* Hero Section with Gamification */}
       <div className="mb-5 md:mb-8">
         <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-4 md:p-8 shadow-xl md:shadow-2xl">

@@ -320,7 +320,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   // Initial state - not generated
   if (!cards && !isGenerating) {
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-2 p-6">
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-3 p-6 max-w-lg md:mx-auto mb-24">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto">
             <Sparkles className="w-8 h-8 text-white" />
@@ -360,7 +360,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   // Loading state
   if (isGenerating) {
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-2 p-6">
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-3 p-6 max-w-lg md:mx-auto mb-24">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto animate-pulse">
             <Sparkles className="w-8 h-8 text-white" />
@@ -381,7 +381,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   if (!cards || cards.length === 0) {
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-2 p-6">
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-3 p-6 max-w-lg md:mx-auto mb-24">
         <div className="text-center space-y-4">
           <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto">
             <Sparkles className="w-8 h-8 text-white" />
@@ -423,7 +423,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   return (
-    <div className="space-y-3 px-2">
+    <div className="space-y-3 px-3 pb-24 max-w-lg mx-auto">
       {/* How to use modal */}
       <AnimatePresence>
         {showHowTo && (
