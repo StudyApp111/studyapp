@@ -10,6 +10,7 @@ import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
 import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
+import GradeResults from './pages/GradeResults';
 import __Layout from './Layout.jsx';
 
 
@@ -26,6 +27,7 @@ export const PAGES = {
     "ProfileInformation": ProfileInformation,
     "Settings": Settings,
     "SmartGrader": SmartGrader,
+    "GradeResults": GradeResults,
 }
 
 export const pagesConfig = {
