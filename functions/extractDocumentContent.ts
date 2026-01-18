@@ -190,19 +190,47 @@ Deno.serve(async (req) => {
             }
         );
 
-        if (!geminiResponse.ok) {
-            const errorBody = await geminiResponse.text();
-            console.error('Gemini Vision API error:', errorBody);
-            return Response.json({ 
-                error: 'Gemini Vision API request failed',
-                details: errorBody
-            }, { status: 500 });
+        let extractedContent = null;
+        
+        if (geminiResponse.ok) {
+            const geminiData = await geminiResponse.json();
+            extractedContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
         }
 
-        const geminiData = await geminiResponse.json();
-        const extractedContent = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
-
+        // If Gemini failed or returned empty, fallback to Base44 ExtractDataFromUploadedFile
         if (!extractedContent || extractedContent.trim().length === 0) {
+            console.log('Gemini Vision failed or empty, falling back to Base44 ExtractDataFromUploadedFile...');
+            
+            try {
+                const base44Result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+                    file_url: file_url,
+                    json_schema: {
+                        type: "object",
+                        properties: {
+                            full_text_content: {
+                                type: "string",
+                                description: "The complete extracted text content from the document"
+                            }
+                        }
+                    }
+                });
+                
+                if (base44Result.status === 'success' && base44Result.output?.full_text_content) {
+                    extractedContent = base44Result.output.full_text_content;
+                    console.log('Base44 extraction successful, length:', extractedContent.length);
+                    
+                    return Response.json({ 
+                        extracted_content: extractedContent.trim(),
+                        characters: extractedContent.trim().length,
+                        file_size: fileSize,
+                        file_type: isImage ? 'IMAGE' : 'DOCUMENT',
+                        method: 'base44_extraction'
+                    });
+                }
+            } catch (base44Error) {
+                console.error('Base44 extraction also failed:', base44Error.message);
+            }
+            
             return Response.json({ 
                 error: 'No content extracted from document'
             }, { status: 500 });
