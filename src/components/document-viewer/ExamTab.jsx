@@ -891,11 +891,14 @@ Return ONE valid JSON object. No extra text.
         ...exam, 
         questions: questionsWithGrading, 
         correct_count: correctCount, 
+        total_score: Math.round((correctCount / questionsWithGrading.length) * 100),
         completed: true, 
         exam_type: 'practice',
         time_taken_seconds: finalElapsedSeconds
       };
       setExam(completedExam);
+      
+      // For practice exams, show the question review (FeedbackDisplay)
       setViewingCompletedExam(completedExam);
       
       if (onExamComplete) onExamComplete();
