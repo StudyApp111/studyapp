@@ -394,7 +394,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length === 0) {
     return (
-      <div className="flex items-center justify-center p-4 pb-24 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40">
+      <div className="flex items-center justify-center p-4 pb-8 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -450,7 +450,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         onComplete={() => setTaskCompletionToast(false)}
       />
 
-      <div className="flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl w-full pb-24">
+      <div className="flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl w-full pb-8">
         {/* Compact header */}
         <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-3 py-2 md:px-6 md:py-4 shadow-lg w-full rounded-t-2xl">
           <div className="flex items-center justify-between mb-1.5">

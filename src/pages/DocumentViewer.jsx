@@ -327,12 +327,12 @@ export default function DocumentViewer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full">
-      {/* Mobile Header - Single unified banner with safe area */}
+      {/* Mobile Header - Fixed at top with proper safe area for notch/dynamic island */}
       <div 
-        className="md:hidden bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 sticky top-0 z-50 w-full shadow-lg"
-        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        className="md:hidden bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 fixed top-0 left-0 right-0 z-50 w-full shadow-lg"
+        style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 20px)' }}
       >
-        <div className="px-4 py-2.5 flex items-center justify-between">
+        <div className="px-4 py-3 flex items-center justify-between">
           {/* Left: Course Name */}
           <div className="flex-1 min-w-0 pr-3">
             <p className="text-white font-semibold text-sm truncate">
@@ -543,11 +543,18 @@ export default function DocumentViewer() {
           </div>
           </div>
         
-        {/* Mobile: Original layout without AI tutor panel */}
+        {/* Mobile: Fixed header + tabs, scrollable content */}
         <div className="md:hidden flex flex-col w-full overflow-x-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full overflow-x-hidden">
-            <div className="flex-shrink-0 pb-1.5 w-full sticky top-0 z-20 bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40">
-              <div className="w-full px-1">
+          {/* Spacer for fixed mobile header */}
+          <div className="h-[70px]" style={{ height: 'calc(max(env(safe-area-inset-top, 0px), 20px) + 52px)' }} />
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full overflow-x-hidden flex-1">
+            {/* Fixed tabs bar */}
+            <div 
+              className="fixed left-0 right-0 z-40 bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 px-2 py-1.5 shadow-sm"
+              style={{ top: 'calc(max(env(safe-area-inset-top, 0px), 20px) + 52px)' }}
+            >
+              <div className="w-full">
                 <TabsList className="flex w-full bg-white border border-purple-200 p-0.5 h-auto rounded-lg shadow-sm gap-0.5">
                   {hasDocument ? (
                     <TabsTrigger 
@@ -599,8 +606,12 @@ export default function DocumentViewer() {
                 </TabsList>
               </div>
             </div>
+            
+            {/* Spacer for fixed tabs */}
+            <div className="h-[48px]" />
 
-            <div className="overflow-x-hidden w-full">
+            {/* Scrollable content area */}
+            <div className="overflow-x-hidden w-full pb-28">
               <TabsContent value="studyplan" className="mt-0 p-0 w-full overflow-x-hidden">
                 <StudyPlanTab 
                   lesson={lesson} 
