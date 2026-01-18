@@ -56,7 +56,13 @@ QUESTION TYPE DISTRIBUTION (use this mix):
 - 4 Multiple Choice questions
 - 2 True/False questions  
 - 2 Fill-in-the-Blank questions
-- 2 Short Answer questions (1-2 sentence responses)`;
+- 2 Short Answer questions (1-2 sentence responses)
+
+CRITICAL ANSWER FORMAT RULES:
+- For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
+- For True/False: correct_answer MUST be "True" or "False"
+- For Fill-in-the-Blank: correct_answer should be the exact word/phrase that fills the blank
+- For Short Answer: correct_answer should be a concise model answer`;
 
     // Call Gemini Flash Lite for fast, cost-effective generation
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${API_KEY}`, {
@@ -122,18 +128,46 @@ QUESTION TYPE DISTRIBUTION (use this mix):
       return Response.json({ error: 'Failed to parse exam data' }, { status: 500 });
     }
 
+    // Normalize correct answers for MCQ questions
+    const normalizedQuestions = examData.questions.map((q, idx) => {
+      const normalized = {
+        ...q,
+        question_number: idx + 1,
+        user_answer: null,
+        is_correct: null
+      };
+      
+      // For MCQ, ensure correct_answer is just the letter
+      const type = String(q.question_type || '').toLowerCase();
+      if (type.includes('multiple') || type.includes('choice')) {
+        const answer = String(q.correct_answer || '').trim();
+        const letterMatch = answer.match(/^([A-Da-d])[\.\)\:\s]/i);
+        if (letterMatch) {
+          normalized.correct_answer = letterMatch[1].toUpperCase();
+        } else if (/^[A-Da-d]$/i.test(answer)) {
+          normalized.correct_answer = answer.toUpperCase();
+        } else if (q.options && q.options.length > 0) {
+          // Find matching option and use letter
+          const matchIdx = q.options.findIndex(opt => 
+            opt.toLowerCase().includes(answer.toLowerCase()) || 
+            answer.toLowerCase().includes(opt.toLowerCase().replace(/^[a-d][\.\)\s]+/i, '').trim())
+          );
+          if (matchIdx >= 0) {
+            normalized.correct_answer = String.fromCharCode(65 + matchIdx);
+          }
+        }
+      }
+      
+      return normalized;
+    });
+
     // Create practice exam record
     const exam = await base44.entities.Exam.create({
       lesson_id,
       exam_type: 'practice',
       focus_competency: target_competency,
       focus_description: examData.exam_focus_summary || `Practice quiz on ${(focus_topics || []).slice(0, 2).join(', ')}`,
-      questions: examData.questions.map((q, idx) => ({
-        ...q,
-        question_number: idx + 1,
-        user_answer: null,
-        is_correct: null
-      })),
+      questions: normalizedQuestions,
       status: 'not_started',
       completed: false
     });
