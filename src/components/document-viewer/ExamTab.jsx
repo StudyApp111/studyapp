@@ -1252,6 +1252,81 @@ JSON Output (exact schema):
     
     return (
         <div className="px-3 py-4 w-full max-w-[calc(100vw-1rem)] md:max-w-lg md:mx-auto md:px-6 space-y-6 overflow-x-hidden">
+        {/* Practice Quizzes Section - Show first if they exist */}
+        {sortedPracticeExams.length > 0 && (
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-slate-900">Practice Quizzes</h2>
+                <p className="text-[11px] text-slate-500">Quick drills • No grade impact</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {sortedPracticeExams.slice(0, 5).map((e) => {
+                const isCompleted = e.completed;
+                const correctCount = e.correct_count || 0;
+                const totalQuestions = e.questions?.length || 0;
+                
+                return (
+                  <button
+                    key={e.id}
+                    onClick={() => {
+                      if (isCompleted) {
+                        setViewingCompletedExam(e);
+                      } else {
+                        setExam(e);
+                        setCurrentQuestion(0);
+                        hasAutoSelectedRef.current = true;
+                      }
+                    }}
+                    className={`group relative w-full overflow-hidden p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
+                      isCompleted
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-600'
+                        : 'bg-white border border-blue-200 hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="relative flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        isCompleted ? 'bg-white/20' : 'bg-blue-50'
+                      }`}>
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-5 h-5 text-white" />
+                        ) : (
+                          <Zap className="w-5 h-5 text-blue-600" />
+                        )}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`font-semibold text-sm truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
+                          {e.focus_description || 'Practice Quiz'}
+                        </h3>
+                        <p className={`text-[11px] ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
+                          {totalQuestions} questions
+                        </p>
+                      </div>
+                      
+                      {isCompleted ? (
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className="text-lg font-black text-white">{correctCount}/{totalQuestions}</span>
+                          <ChevronRight className="w-4 h-4 text-white/70" />
+                        </div>
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <Play className="w-3 h-3 text-blue-600" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Official Exams Section */}
         <div>
           <div className="flex items-center gap-3 mb-3">
@@ -1363,80 +1438,6 @@ JSON Output (exact schema):
           </div>
         </div>
 
-        {/* Practice Quizzes Section */}
-        {sortedPracticeExams.length > 0 && (
-          <div>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-black text-slate-900">Practice Quizzes</h2>
-                <p className="text-[11px] text-slate-500">Quick drills • No grade impact</p>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              {sortedPracticeExams.slice(0, 5).map((e) => {
-                const isCompleted = e.completed;
-                const correctCount = e.correct_count || 0;
-                const totalQuestions = e.questions?.length || 0;
-                
-                return (
-                  <button
-                    key={e.id}
-                    onClick={() => {
-                      if (isCompleted) {
-                        setViewingCompletedExam(e);
-                      } else {
-                        setExam(e);
-                        setCurrentQuestion(0);
-                        hasAutoSelectedRef.current = true;
-                      }
-                    }}
-                    className={`group relative w-full overflow-hidden p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
-                      isCompleted
-                        ? 'bg-gradient-to-r from-blue-500 to-cyan-600'
-                        : 'bg-white border border-blue-200 hover:border-blue-300'
-                    }`}
-                  >
-                    <div className="relative flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isCompleted ? 'bg-white/20' : 'bg-blue-50'
-                      }`}>
-                        {isCompleted ? (
-                          <CheckCircle2 className="w-5 h-5 text-white" />
-                        ) : (
-                          <Zap className="w-5 h-5 text-blue-600" />
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold text-sm truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
-                          {e.focus_description || 'Practice Quiz'}
-                        </h3>
-                        <p className={`text-[11px] ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
-                          {totalQuestions} questions
-                        </p>
-                      </div>
-                      
-                      {isCompleted ? (
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="text-lg font-black text-white">{correctCount}/{totalQuestions}</span>
-                          <ChevronRight className="w-4 h-4 text-white/70" />
-                        </div>
-                      ) : (
-                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <Play className="w-3 h-3 text-blue-600" />
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -1514,29 +1515,54 @@ JSON Output (exact schema):
         onComplete={() => setTaskCompletionToast(false)}
       />
       
-      {newBadges.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -100 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-xl shadow-2xl p-4 max-w-sm mx-4"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-6 h-6 text-yellow-500" />
-            <h3 className="text-base font-bold text-slate-900">New Badge Earned!</h3>
-          </div>
-          <div className="space-y-2">
-            {newBadges.map((badge, idx) => (
-              <div key={idx} className="flex items-center gap-2 p-2 bg-purple-50 rounded-lg">
-                <span className="text-xl">{badge.badge_icon}</span>
-                <div>
-                  <p className="font-semibold text-slate-900 text-sm">{badge.badge_name}</p>
-                  <p className="text-xs text-slate-600">{badge.badge_description}</p>
+      <AnimatePresence>
+        {newBadges.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30"
+            onClick={() => setNewBadges([])}
+          >
+            <motion.div
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              className="bg-white rounded-2xl shadow-2xl p-5 max-w-sm w-full relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                onClick={() => setNewBadges([])}
+                className="absolute top-3 right-3 p-1 rounded-full hover:bg-slate-100"
+              >
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+              <div className="text-center mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                  <Sparkles className="w-8 h-8 text-white" />
                 </div>
+                <h3 className="text-xl font-bold text-slate-900">New Badge Earned!</h3>
               </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
+              <div className="space-y-2">
+                {newBadges.map((badge, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-purple-50 rounded-xl">
+                    <span className="text-3xl">{badge.badge_icon}</span>
+                    <div>
+                      <p className="font-bold text-slate-900">{badge.badge_name}</p>
+                      <p className="text-sm text-slate-600">{badge.badge_description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button 
+                onClick={() => setNewBadges([])} 
+                className="w-full mt-4 bg-purple-600 hover:bg-purple-700"
+              >
+                Awesome!
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex flex-col h-full md:h-auto md:pb-4">
         <div className="flex-1 flex flex-col bg-white/95 backdrop-blur-xl md:rounded-2xl border-0 md:border border-purple-200/80 shadow-none md:shadow-sm md:mx-0 overflow-hidden">

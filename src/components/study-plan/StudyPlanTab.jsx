@@ -10,47 +10,43 @@ import { motion } from "framer-motion";
 const TASK_CONFIG = {
   flashcards: { 
     icon: Zap, 
-    gradient: "from-amber-500 to-orange-500",
+    gradient: "from-amber-500 to-orange-600",
     bgLight: "bg-amber-50",
     border: "border-amber-200",
     text: "text-amber-700",
     label: "Flashcards",
     action: "Master",
-    unit: "cards",
-    emoji: "⚡"
+    unit: "cards"
   },
   teach_it: { 
     icon: Brain, 
-    gradient: "from-purple-500 to-indigo-500",
+    gradient: "from-violet-500 to-purple-600",
     bgLight: "bg-purple-50",
     border: "border-purple-200",
     text: "text-purple-700",
     label: "Teach It",
     action: "Explain",
-    unit: "concepts",
-    emoji: "🧠"
+    unit: "concepts"
   },
   review_notes: { 
     icon: BookOpen, 
-    gradient: "from-emerald-500 to-teal-500",
+    gradient: "from-emerald-500 to-teal-600",
     bgLight: "bg-emerald-50",
     border: "border-emerald-200",
     text: "text-emerald-700",
     label: "Review Notes",
     action: "Read",
-    unit: "sections",
-    emoji: "📖"
+    unit: "sections"
   },
   practice_exam: { 
-    icon: Trophy, 
-    gradient: "from-blue-500 to-cyan-500",
+    icon: Target, 
+    gradient: "from-blue-500 to-indigo-600",
     bgLight: "bg-blue-50",
     border: "border-blue-200",
     text: "text-blue-700",
     label: "Practice Quiz",
     action: "Complete",
-    unit: "questions",
-    emoji: "🎯"
+    unit: "questions"
   }
 };
 
@@ -501,7 +497,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
                         {isComplete ? (
                           <CheckCircle2 className="w-5 h-5 text-white" />
                         ) : (
-                          <span className="text-xl">{config.emoji}</span>
+                          <config.icon className="w-5 h-5 text-white" />
                         )}
                       </div>
 
