@@ -451,16 +451,16 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       />
 
       <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl overflow-hidden overflow-x-hidden w-full">
-        {/* Ultra-compact mobile header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-2 py-1.5 md:px-6 md:py-4 sticky top-0 z-10 shadow-lg w-full">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <div className="w-7 h-7 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0">
-                <Lightbulb className="w-3.5 h-3.5 md:w-6 md:h-6 text-yellow-300" />
+        {/* Compact header */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-3 py-2 md:px-6 md:py-4 sticky top-0 z-10 shadow-lg w-full">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0">
+                <Lightbulb className="w-4 h-4 md:w-6 md:h-6 text-yellow-300" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-sm md:text-2xl font-bold text-white">Teach It</h2>
-                <p className="text-[9px] md:text-xs text-purple-100">
+                <h2 className="text-base md:text-2xl font-bold text-white">Teach It</h2>
+                <p className="text-[10px] md:text-xs text-purple-100">
                   {currentCardIndex + 1}/{cards.length} • {completedCount} ✓
                 </p>
               </div>
@@ -469,15 +469,15 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               variant="ghost"
               size="sm"
               onClick={handleRegenerate}
-              className="gap-1 bg-white/10 hover:bg-white/20 text-white border-white/20 h-6 px-1.5 md:h-8 md:px-3 flex-shrink-0"
+              className="gap-1 bg-white/10 hover:bg-white/20 text-white border-white/20 h-7 px-2 md:h-8 md:px-3 flex-shrink-0"
             >
-              <RefreshCw className="w-2.5 h-2.5 md:w-3.5 md:h-3.5" />
+              <RefreshCw className="w-3 h-3 md:w-3.5 md:h-3.5" />
               <span className="hidden md:inline text-xs">New</span>
             </Button>
           </div>
 
           {/* Progress Bar */}
-          <div className="h-0.5 md:h-1.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+          <div className="h-1 md:h-1.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
             <motion.div
               className="h-full bg-gradient-to-r from-yellow-400 via-pink-400 to-yellow-300 shadow-lg"
               initial={{ width: 0 }}
@@ -487,8 +487,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
           </div>
         </div>
 
-        {/* Ultra-compact scrollable content for 9:16 */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-1.5 py-1.5 md:px-6 md:py-4 w-full">
+        {/* Centered scrollable content */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 md:px-6 md:py-6 w-full flex items-start justify-center">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentCardIndex}
@@ -496,14 +496,14 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25 }}
-              className="w-full max-w-full"
+              className="w-full max-w-lg"
             >
-              <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200/50 shadow-2xl overflow-hidden w-full max-w-full">
-                {/* Ultra-compact card header */}
-                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-2 py-2 md:px-6 md:py-5 w-full">
-                  <div className="flex items-center justify-between mb-1">
-                    <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[9px] md:text-xs">
-                      <HelpCircle className="w-2 h-2 md:w-3 md:h-3 mr-0.5" />
+              <Card className="bg-white/95 backdrop-blur-xl border border-purple-200/50 shadow-xl overflow-hidden w-full">
+                {/* Card header */}
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-4 md:px-6 md:py-5 w-full">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[10px] md:text-xs">
+                      <HelpCircle className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1" />
                       Explain This
                     </Badge>
                     <div onClick={(e) => e.stopPropagation()}>
@@ -515,12 +515,12 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       />
                     </div>
                   </div>
-                  <h3 className="text-xs md:text-xl font-bold text-white leading-tight md:leading-relaxed break-words">
+                  <h3 className="text-sm md:text-xl font-bold text-white leading-snug md:leading-relaxed break-words">
                     {currentCard.question}
                   </h3>
                 </div>
 
-                <div className="p-1.5 md:p-6 w-full max-w-full overflow-x-hidden">
+                <div className="p-4 md:p-6 w-full max-w-full overflow-x-hidden">
                   {!showFeedback ? (
                     <>
                       <Textarea
@@ -655,21 +655,21 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
           </AnimatePresence>
         </div>
 
-        {/* Ultra-compact fixed navigation */}
-        <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-t border-purple-200 px-1.5 py-1.5 md:px-6 md:py-4 sticky bottom-0 w-full max-w-full">
-          <div className="flex gap-1.5 md:gap-3 w-full max-w-full">
+        {/* Fixed navigation */}
+        <div className="flex-shrink-0 bg-white/95 backdrop-blur-xl border-t border-purple-200 px-3 py-3 md:px-6 md:py-4 sticky bottom-0 w-full">
+          <div className="flex gap-3 w-full max-w-lg mx-auto">
             <Button
               variant="outline"
               onClick={handlePrevious}
               disabled={currentCardIndex === 0}
-              className="flex-1 h-8 md:h-12 rounded-xl border-2 border-purple-300 hover:bg-purple-50 disabled:opacity-30 font-semibold text-[11px] md:text-base"
+              className="flex-1 h-10 md:h-12 rounded-xl border-2 border-purple-300 hover:bg-purple-50 disabled:opacity-30 font-semibold text-sm md:text-base"
             >
               Previous
             </Button>
             <Button
               onClick={handleNext}
               disabled={currentCardIndex === cards.length - 1}
-              className="flex-1 h-8 md:h-12 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl shadow-lg disabled:opacity-30 font-semibold text-[11px] md:text-base"
+              className="flex-1 h-10 md:h-12 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl shadow-lg disabled:opacity-30 font-semibold text-sm md:text-base"
             >
               Next
             </Button>

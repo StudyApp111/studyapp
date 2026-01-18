@@ -251,16 +251,40 @@ Return JSON:
 
     // Validate and filter tasks to only allowed types
     const validTaskTypes = ['flashcards', 'teach_it', 'review_notes', 'practice_exam'];
+    
+    // Default target counts if LLM doesn't provide them
+    const defaultTargetCounts = {
+      flashcards: 10,
+      teach_it: 3,
+      review_notes: 1,
+      practice_exam: 1
+    };
+    
     const validatedTasks = (response.tasks || [])
       .filter(task => validTaskTypes.includes(task.task_type))
-      .map((task, idx) => ({
-        ...task,
-        task_id: `task_${Date.now()}_${idx}`,
-        completed_count: 0,
-        completed: false,
-        focus_topics: task.focus_topics || [],
-        misconception_addressed: task.misconception_addressed || null
-      }));
+      .map((task, idx) => {
+        // Ensure target_count is a valid positive number
+        let targetCount = parseInt(task.target_count) || defaultTargetCounts[task.task_type] || 1;
+        
+        // Clamp values to reasonable ranges
+        if (task.task_type === 'flashcards') {
+          targetCount = Math.max(5, Math.min(20, targetCount));
+        } else if (task.task_type === 'teach_it') {
+          targetCount = Math.max(2, Math.min(5, targetCount));
+        } else if (task.task_type === 'practice_exam' || task.task_type === 'review_notes') {
+          targetCount = 1;
+        }
+        
+        return {
+          ...task,
+          task_id: `task_${Date.now()}_${idx}`,
+          target_count: targetCount,
+          completed_count: 0,
+          completed: false,
+          focus_topics: task.focus_topics || [],
+          misconception_addressed: task.misconception_addressed || null
+        };
+      });
 
     // Build competency progress array
     const competencyProgress = rankedCompetencies.map(c => ({
