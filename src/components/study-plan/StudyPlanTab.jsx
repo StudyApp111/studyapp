@@ -443,22 +443,29 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
             let practiceScore = null;
             
             // Calculate actual progress from live data
-            if (task.task_type === 'flashcards' && live.mastered !== undefined) {
-              actualCount = Math.max(actualCount, live.mastered);
-              displayText = `${live.mastered} mastered (${live.reviewed} reviewed)`;
-            } else if (task.task_type === 'teach_it' && live.mastered !== undefined) {
-              actualCount = Math.max(actualCount, live.mastered);
-              displayText = `${live.mastered} mastered (${live.completed} completed)`;
-            } else if (task.task_type === 'practice_exam' && live.completed !== undefined) {
-              // For practice exams, target_count is the number of exams to complete (usually 1)
-              actualCount = Math.max(actualCount, live.completed);
+            if (task.task_type === 'flashcards') {
+              if (live.mastered !== undefined) {
+                actualCount = Math.max(actualCount, live.mastered);
+              }
+              displayText = `${actualCount} / ${task.target_count || 10} mastered`;
+            } else if (task.task_type === 'teach_it') {
+              if (live.mastered !== undefined) {
+                actualCount = Math.max(actualCount, live.mastered);
+              }
+              displayText = `${actualCount} / ${task.target_count || 3} mastered`;
+            } else if (task.task_type === 'practice_exam') {
+              if (live.completed !== undefined) {
+                actualCount = Math.max(actualCount, live.completed);
+              }
               // Show score if completed
               if (live.completed > 0 && live.totalQuestions > 0) {
                 practiceScore = `${live.correctAnswers}/${live.totalQuestions}`;
+                displayText = `Score: ${practiceScore}`;
+              } else {
+                displayText = `${actualCount} / ${task.target_count || 1} completed`;
               }
-              displayText = live.completed > 0 
-                ? `Score: ${practiceScore || '—'}` 
-                : `${live.completed} quiz${live.completed !== 1 ? 'zes' : ''} completed`;
+            } else if (task.task_type === 'review_notes') {
+              displayText = task.completed ? 'Completed' : 'Not started';
             }
             
             const isComplete = task.completed || (task.target_count > 0 && actualCount >= task.target_count);
