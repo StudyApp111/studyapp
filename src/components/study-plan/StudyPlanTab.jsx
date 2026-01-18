@@ -117,6 +117,12 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         base44.entities.Exam.filter({ lesson_id: lesson.id, exam_type: 'practice' })
       ]);
       
+      // Get only completed practice exams for score calculation
+      const completedPracticeExams = practiceExams.filter(e => e.completed);
+      const latestPracticeExam = completedPracticeExams.sort((a, b) => 
+        new Date(b.updated_date) - new Date(a.updated_date)
+      )[0];
+      
       setLiveProgress({
         flashcards: {
           total: flashcards.length,
@@ -130,9 +136,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         },
         practice_exam: {
           total: practiceExams.length,
-          completed: practiceExams.filter(e => e.completed).length,
-          totalQuestions: practiceExams.reduce((sum, e) => sum + (e.questions?.length || 0), 0),
-          correctAnswers: practiceExams.reduce((sum, e) => sum + (e.correct_count || 0), 0)
+          completed: completedPracticeExams.length,
+          // Use latest completed exam for score display
+          totalQuestions: latestPracticeExam?.questions?.length || 0,
+          correctAnswers: latestPracticeExam?.correct_count || 0
         }
       });
     } catch (error) {
