@@ -182,15 +182,49 @@ export default function Onboarding() {
   const currentQuestion = questions[currentStep];
   const isAnswered = answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== "";
 
+  // Get step-specific styling
+  const getStepStyle = () => {
+    const styles = [
+      { 
+        bg: 'from-purple-600 via-indigo-600 to-purple-700',
+        accent: 'from-yellow-400 to-amber-500',
+        icon: '🏫',
+        subtitle: "Let's personalize your learning"
+      },
+      { 
+        bg: 'from-indigo-600 via-purple-600 to-pink-600',
+        accent: 'from-pink-400 to-rose-500',
+        icon: '📚',
+        subtitle: 'Tailored to your level'
+      },
+      { 
+        bg: 'from-purple-700 via-violet-600 to-indigo-600',
+        accent: 'from-emerald-400 to-teal-500',
+        icon: '🌍',
+        subtitle: 'Almost there!'
+      }
+    ];
+    return styles[currentStep] || styles[0];
+  };
+
+  const stepStyle = getStepStyle();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl">
+    <div className={`min-h-screen bg-gradient-to-br ${stepStyle.bg} flex items-center justify-center p-4 transition-all duration-500`}>
+      {/* Decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-lg relative z-10">
         <div className="flex justify-end mb-4">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="gap-2 bg-white/90 backdrop-blur-sm shadow-lg hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+            className="gap-2 text-white/70 hover:text-white hover:bg-white/10"
           >
             <LogOut className="w-4 h-4" />
             Back to Login
@@ -200,85 +234,117 @@ export default function Onboarding() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-6"
         >
-          <div className="flex items-center justify-center mb-6">
-            <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/02b2ff5d6_StudyAppAI500x500.png"
-              alt="StudyApp.AI Logo"
-              className="w-24 h-24 rounded-2xl shadow-2xl"
-            />
+          {/* Logo with glow */}
+          <div className="relative inline-block mb-4">
+            <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-150" />
+            <motion.div
+              key={currentStep}
+              initial={{ scale: 0.8, rotate: -10 }}
+              animate={{ scale: 1, rotate: 0 }}
+              className="relative text-6xl"
+            >
+              {stepStyle.icon}
+            </motion.div>
           </div>
-          <div className="inline-flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg mb-4">
-            <Sparkles className="w-5 h-5 text-yellow-600" />
-            <span className="text-sm font-medium text-slate-700">Get Started</span>
-          </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Welcome to StudyApp</h1>
-          <p className="text-slate-600">Tell us a bit about yourself to personalize your experience</p>
+
+          <motion.div
+            key={`title-${currentStep}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h1 className="text-3xl font-black text-white mb-2">{currentQuestion.question}</h1>
+            <p className="text-white/70 text-sm">{stepStyle.subtitle}</p>
+          </motion.div>
         </motion.div>
 
-        <Card className="bg-white/90 backdrop-blur-sm shadow-2xl border-0">
-          <CardContent className="p-8">
-            {error && (
-              <Alert variant="destructive" className="mb-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+        {/* Progress dots */}
+        <div className="flex justify-center gap-2 mb-6">
+          {questions.map((_, idx) => (
+            <motion.div
+              key={idx}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                idx === currentStep 
+                  ? 'w-8 bg-white' 
+                  : idx < currentStep 
+                    ? 'w-2 bg-white/60' 
+                    : 'w-2 bg-white/30'
+              }`}
+              animate={{ scale: idx === currentStep ? 1.1 : 1 }}
+            />
+          ))}
+        </div>
 
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-sm font-medium text-slate-600">
-                  Question {currentStep + 1} of {questions.length}
-                </span>
-                <span className="text-sm font-medium text-yellow-600">{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/20"
+        >
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                <OnboardingQuestion
-                  question={currentQuestion}
-                  value={answers[currentQuestion.id]}
-                  onChange={(value) => handleAnswer(currentQuestion.id, value)}
-                />
-              </motion.div>
-            </AnimatePresence>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <OnboardingQuestion
+                question={currentQuestion}
+                value={answers[currentQuestion.id]}
+                onChange={(value) => handleAnswer(currentQuestion.id, value)}
+              />
+            </motion.div>
+          </AnimatePresence>
 
-            <div className="flex justify-between mt-8 pt-6 border-t">
-              <Button
-                variant="outline"
-                onClick={handleBack}
-                disabled={currentStep === 0 || isSubmitting}
-                className="gap-2"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Back
-              </Button>
-              <Button
-                onClick={handleNext}
-                disabled={!isAnswered || isSubmitting}
-                className="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-slate-900 font-semibold gap-2"
-              >
-                {currentStep === questions.length - 1 ? (
-                  isSubmitting ? "Saving..." : "Complete"
+          <div className="flex justify-between mt-6 pt-4 border-t border-slate-100">
+            <Button
+              variant="ghost"
+              onClick={handleBack}
+              disabled={currentStep === 0 || isSubmitting}
+              className="gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </Button>
+            <Button
+              onClick={handleNext}
+              disabled={!isAnswered || isSubmitting}
+              className={`bg-gradient-to-r ${stepStyle.accent} hover:opacity-90 text-white font-bold gap-2 px-6 shadow-lg`}
+            >
+              {currentStep === questions.length - 1 ? (
+                isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
                 ) : (
                   <>
-                    Next
-                    <ChevronRight className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4" />
+                    Let's Go!
                   </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                )
+              ) : (
+                <>
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Branding */}
+        <div className="text-center mt-6">
+          <p className="text-white/50 text-xs">Powered by StudyApp.AI</p>
+        </div>
       </div>
     </div>
   );

@@ -978,17 +978,17 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-        <div className="px-3 py-4 w-full max-w-md mx-auto space-y-6 pb-8">
-        {/* Practice Quizzes Section - Show first if they exist */}
+        <div className="px-2 py-4 w-full max-w-sm mx-auto space-y-5 pb-8">
+        {/* Practice Exams Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
           <div>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center shadow-md">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-slate-900">Practice Quizzes</h2>
-                <p className="text-[11px] text-slate-500">Quick drills • No grade impact</p>
+                <h2 className="text-base font-black text-slate-900">Practice Exams</h2>
+                <p className="text-[10px] text-slate-500">Quick drills • No grade impact</p>
               </div>
             </div>
             
@@ -1054,15 +1054,15 @@ JSON Output (exact schema):
           </div>
         )}
 
-        {/* Diagnostic Exam Section - Only Exam 1 */}
+        {/* Official Exams Section - Only Exam 1 */}
         <div>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-md">
               <Trophy className="w-4 h-4 text-yellow-300" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-slate-900">Diagnostic Exam</h2>
-              <p className="text-[11px] text-slate-500">Establishes your baseline grade</p>
+              <h2 className="text-base font-black text-slate-900">Official Exams</h2>
+              <p className="text-[10px] text-slate-500">Establishes your baseline grade</p>
             </div>
           </div>
           
