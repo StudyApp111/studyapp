@@ -145,12 +145,16 @@ Each task MUST:
 - Directly support exam performance for this course at this school
 
 AVAILABLE TASK TYPES:
-- "flashcards": For memorizing key terms, definitions, relationships. Include SPECIFIC topics to generate cards for.
-- "teach_it": For deep understanding. Include SPECIFIC concepts student must explain.
-- "review_notes": For re-reading specific sections. Include SPECIFIC sections/topics to review.
-- "practice_exam": A quick 10-question practice quiz focused on specific weak areas. Use this to test understanding after other study tasks. Include focus_topics that should be tested.
+- "flashcards": For memorizing key terms, definitions, relationships. Include SPECIFIC topics to generate cards for. target_count = number of flashcards to master (10-20).
+- "teach_it": For deep understanding. Include SPECIFIC concepts student must explain. target_count = number of concepts to explain (3-5).
+- "review_notes": For re-reading specific sections. Include SPECIFIC sections/topics to review. target_count = 1.
+- "practice_exam": A quick practice quiz focused on specific weak areas. target_count = 1 (one quiz). Use this to test understanding after other study tasks.
 
-IMPORTANT: Include at least ONE "practice_exam" task to help students test their knowledge on weak areas. Place it after related flashcard or teach_it tasks.
+IMPORTANT: 
+- Include at least ONE "practice_exam" task to help students test their knowledge on weak areas. Place it after related flashcard or teach_it tasks.
+- For flashcards, set target_count between 10-20 (the number of cards to master)
+- For practice_exam, set target_count to 1 (one quiz to complete)
+- Create 3-5 total tasks maximum
 
 CRITICAL: Each task's "focus_topics" array must contain SPECIFIC concepts from the course material that relate to the weak competency. These will be used to generate targeted content.
 
@@ -161,7 +165,7 @@ Return JSON:
       "task_type": "flashcards" | "teach_it" | "review_notes" | "practice_exam",
       "title": "Clear action title (e.g., 'Master Key Terms for X')",
       "description": "What this helps with and why",
-      "target_count": number (5-15 for flashcards/teach_it, 10 for practice_exam),
+      "target_count": number (10-20 for flashcards, 3-5 for teach_it, 1 for practice_exam/review_notes),
       "target_competency": "The specific competency being addressed",
       "focus_topics": ["specific topic 1", "specific topic 2", "specific topic 3"],
       "misconception_addressed": "The specific misconception this task addresses (if any)"
@@ -175,31 +179,74 @@ Return JSON:
     console.log(`⏱️ [generateStudyPlan] Prompt length: ${planPrompt.length} chars`);
     
     const llmStartTime = Date.now();
-    const response = await base44.integrations.Core.InvokeLLM({
-      prompt: planPrompt,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          tasks: {
-            type: "array",
-            items: {
+    
+    // Use Gemini directly for better study plan generation
+    const geminiApiKey = Deno.env.get("GEMINIAPIKEY");
+    if (!geminiApiKey) {
+      return Response.json({ error: 'Gemini API key not configured' }, { status: 500 });
+    }
+
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: planPrompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 4096,
+            responseMimeType: "application/json",
+            responseSchema: {
               type: "object",
               properties: {
-                task_type: { type: "string" },
-                title: { type: "string" },
-                description: { type: "string" },
-                target_count: { type: "integer" },
-                target_competency: { type: "string" },
-                focus_topics: { type: "array", items: { type: "string" } },
-                misconception_addressed: { type: "string" }
-              }
+                tasks: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      task_type: { type: "string" },
+                      title: { type: "string" },
+                      description: { type: "string" },
+                      target_count: { type: "integer" },
+                      target_competency: { type: "string" },
+                      focus_topics: { type: "array", items: { type: "string" } },
+                      misconception_addressed: { type: "string" }
+                    },
+                    required: ["task_type", "title", "target_count"]
+                  }
+                },
+                plan_rationale: { type: "string" },
+                priority_focus: { type: "string" }
+              },
+              required: ["tasks", "plan_rationale", "priority_focus"]
             }
-          },
-          plan_rationale: { type: "string" },
-          priority_focus: { type: "string" }
-        }
+          }
+        })
       }
-    });
+    );
+
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
+      console.error('Gemini API error:', errorText);
+      return Response.json({ error: 'Failed to generate study plan' }, { status: 500 });
+    }
+
+    const geminiData = await geminiResponse.json();
+    const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!responseText) {
+      return Response.json({ error: 'No response from AI' }, { status: 500 });
+    }
+
+    let response;
+    try {
+      response = JSON.parse(responseText);
+    } catch (e) {
+      console.error('Failed to parse Gemini response:', responseText);
+      return Response.json({ error: 'Invalid AI response' }, { status: 500 });
+    }
+    
     console.log(`⏱️ [generateStudyPlan] LLM call: ${Date.now() - llmStartTime}ms`);
 
     // Validate and filter tasks to only allowed types

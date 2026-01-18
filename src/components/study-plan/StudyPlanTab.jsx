@@ -3,13 +3,13 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { 
   Target, CheckCircle2, BookOpen, Zap, Brain, 
-  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles
+  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, Layers, FileText
 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const TASK_CONFIG = {
   flashcards: { 
-    icon: Zap, 
+    icon: Layers, 
     gradient: "from-amber-500 to-orange-600",
     bgLight: "bg-amber-50",
     border: "border-amber-200",
@@ -29,7 +29,7 @@ const TASK_CONFIG = {
     unit: "concepts"
   },
   review_notes: { 
-    icon: BookOpen, 
+    icon: FileText, 
     gradient: "from-emerald-500 to-teal-600",
     bgLight: "bg-emerald-50",
     border: "border-emerald-200",
@@ -39,14 +39,14 @@ const TASK_CONFIG = {
     unit: "sections"
   },
   practice_exam: { 
-    icon: Target, 
+    icon: Zap, 
     gradient: "from-blue-500 to-indigo-600",
     bgLight: "bg-blue-50",
     border: "border-blue-200",
     text: "text-blue-700",
     label: "Practice Quiz",
     action: "Complete",
-    unit: "questions"
+    unit: "quizzes"
   }
 };
 

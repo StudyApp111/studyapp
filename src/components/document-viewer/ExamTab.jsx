@@ -1230,9 +1230,8 @@ JSON Output (exact schema):
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
       
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
-      }, 500);
+      // Navigate to study plan tab immediately
+      window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
     } catch (error) {
       console.error("Error submitting exam:", error);
       await logError('exam_submission', error, { lesson_id: lesson?.id, exam_id: exam?.id });
