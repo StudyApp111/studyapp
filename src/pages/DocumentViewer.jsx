@@ -518,19 +518,17 @@ export default function DocumentViewer() {
             {/* Fixed tabs + info bar */}
             <div 
               className="fixed left-0 right-0 z-40"
-              style={{ top: 'env(safe-area-inset-top, 0px)' }}
+              style={{ 
+                top: '0px',
+                paddingTop: 'max(env(safe-area-inset-top, 0px), 20px)'
+              }}
             >
-              {/* Info strip - course, grade, timer */}
-              <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-3 py-1.5 flex items-center gap-2">
-                <span className="text-white/90 text-xs font-medium truncate flex-1">{lesson?.course_name || 'Loading...'}</span>
-                {predictedGrade && (
-                  <div className="px-2 py-0.5 bg-yellow-300 rounded">
-                    <span className="text-purple-900 font-black text-sm">{predictedGrade}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-purple-200" />
-                  <span className="text-white text-[10px] font-mono">{formatStudyTime(studyTime)}</span>
+              {/* Info strip - course and timer */}
+              <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-3 pb-2 pt-1 flex items-center justify-between gap-3">
+                <span className="text-white font-semibold text-xs truncate">{lesson?.course_name || 'Loading...'}</span>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <Clock className="w-3.5 h-3.5 text-purple-200" />
+                  <span className="text-white text-xs font-mono">{formatStudyTime(studyTime)}</span>
                 </div>
               </div>
               
@@ -589,7 +587,7 @@ export default function DocumentViewer() {
             </div>
             
             {/* Spacer for fixed tabs + info */}
-            <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 74px)' }} />
+            <div style={{ height: 'calc(max(env(safe-area-inset-top, 0px), 20px) + 60px)' }} />
 
             {/* Scrollable content area */}
             <div className="overflow-x-hidden w-full pb-28">
