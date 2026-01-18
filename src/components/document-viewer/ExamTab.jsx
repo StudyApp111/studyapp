@@ -823,10 +823,54 @@ Return ONE valid JSON object. No extra text.
     }
 
     try {
-      const questionsWithGrading = exam.questions.map((q) => {
+      // Grade any subjective questions that haven't been graded yet
+      const user = await base44.auth.me();
+      const profile = await base44.entities.LearningProfile.filter({ 
+        id: user.learning_profile_id 
+      });
+      const learningProfile = profile[0] || {};
+
+      const questionsWithGrading = await Promise.all(exam.questions.map(async (q) => {
+        // For subjective questions, use AI grading if not already graded
+        if (isSubjectiveQuestion(q.question_type)) {
+          if (q.ai_score_out_of_10 === undefined && q.user_answer?.trim()) {
+            try {
+              const { data: gradingResult } = await base44.functions.invoke('gradeShortAnswer', {
+                question_text: q.question_text,
+                question_type: q.question_type,
+                difficulty_index: q.difficulty_index,
+                correct_answer: q.correct_answer,
+                explanation: q.explanation,
+                assessed_competencies: q.assessed_competencies,
+                targeted_misconception: q.targeted_misconception,
+                student_answer: q.user_answer,
+                student_grade_level: learningProfile.grade || "N/A",
+                course_name: lesson.course_name
+              });
+              
+              return {
+                ...q,
+                ai_score_out_of_10: gradingResult.score_out_of_10,
+                ai_verdict: gradingResult.verdict,
+                ai_rationale_short: gradingResult.rationale_short,
+                ai_keypoints_hit: gradingResult.keypoints_hit,
+                ai_keypoints_missed: gradingResult.keypoints_missed,
+                ai_misconception_detected: gradingResult.misconception_detected,
+                is_correct: gradingResult.score_out_of_10 >= 7.5
+              };
+            } catch (gradingError) {
+              console.error('Error grading subjective question:', gradingError);
+              return { ...q, is_correct: false };
+            }
+          }
+          // Already graded
+          return { ...q, is_correct: q.ai_score_out_of_10 >= 7.5 };
+        }
+        
+        // For objective questions, use letter-based comparison
         const isCorrect = checkAnswerCorrect(q.user_answer, q.correct_answer, q.options, q.question_type);
         return { ...q, is_correct: isCorrect };
-      });
+      }));
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
 
