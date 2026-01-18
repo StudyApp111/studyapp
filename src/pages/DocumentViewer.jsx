@@ -327,39 +327,7 @@ export default function DocumentViewer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full">
-      {/* Mobile Header - Single line dynamic banner */}
-      <div 
-        className="md:hidden fixed top-0 left-0 right-0 z-50 w-full bg-gradient-to-r from-purple-600 via-purple-700 to-purple-600 shadow-lg"
-        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
-      >
-        <div className="px-3 py-2.5 flex items-center gap-2">
-          {/* StudyApp + Course */}
-          <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
-            <span className="text-purple-200 text-[10px] font-bold whitespace-nowrap">StudyApp</span>
-            <span className="text-white font-semibold text-xs truncate">{lesson?.course_name || 'Loading...'}</span>
-          </div>
-          
-          {/* Predicted Grade - eye-catching */}
-          {predictedGrade ? (
-            <div className="relative flex-shrink-0">
-              <div className="absolute inset-0 bg-yellow-300 rounded-md blur-sm opacity-50" />
-              <div className="relative px-2.5 py-0.5 bg-gradient-to-br from-yellow-300 to-yellow-400 rounded-md">
-                <span className="text-purple-900 font-black text-base">{predictedGrade}</span>
-              </div>
-            </div>
-          ) : (
-            <div className="px-2 py-0.5 bg-white/10 rounded-md flex-shrink-0">
-              <span className="text-white/40 text-[10px]">No grade</span>
-            </div>
-          )}
-          
-          {/* Timer */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <Clock className="w-3 h-3 text-purple-200" />
-            <span className="text-white font-mono text-[11px]">{formatStudyTime(studyTime)}</span>
-          </div>
-        </div>
-      </div>
+
       
       {/* Desktop Header - Unified Purple Banner */}
       <div className="hidden md:block sticky top-0 z-10 w-full">
@@ -544,18 +512,30 @@ export default function DocumentViewer() {
           </div>
           </div>
         
-        {/* Mobile: Fixed header + tabs, scrollable content */}
+        {/* Mobile: Tabs + info bar at top */}
         <div className="md:hidden flex flex-col w-full overflow-x-hidden">
-          {/* Spacer for fixed mobile header */}
-          <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 40px)' }} />
-          
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full overflow-x-hidden flex-1">
-            {/* Fixed tabs bar */}
+            {/* Fixed tabs + info bar */}
             <div 
-              className="fixed left-0 right-0 z-40 bg-white/95 backdrop-blur-sm px-2 py-1.5 border-b border-purple-100"
-              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 40px)' }}
+              className="fixed left-0 right-0 z-40"
+              style={{ top: 'env(safe-area-inset-top, 0px)' }}
             >
-              <div className="w-full">
+              {/* Info strip - course, grade, timer */}
+              <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-3 py-1.5 flex items-center gap-2">
+                <span className="text-white/90 text-xs font-medium truncate flex-1">{lesson?.course_name || 'Loading...'}</span>
+                {predictedGrade && (
+                  <div className="px-2 py-0.5 bg-yellow-300 rounded">
+                    <span className="text-purple-900 font-black text-sm">{predictedGrade}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-purple-200" />
+                  <span className="text-white text-[10px] font-mono">{formatStudyTime(studyTime)}</span>
+                </div>
+              </div>
+              
+              {/* Tabs bar */}
+              <div className="bg-white/95 backdrop-blur-sm px-2 py-1.5 border-b border-purple-100">
                 <TabsList className="flex w-full bg-white border border-purple-200 p-0.5 h-auto rounded-lg shadow-sm gap-0.5">
                   {hasDocument ? (
                     <TabsTrigger 
@@ -608,8 +588,8 @@ export default function DocumentViewer() {
               </div>
             </div>
             
-            {/* Spacer for fixed tabs */}
-            <div className="h-[44px]" />
+            {/* Spacer for fixed tabs + info */}
+            <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 74px)' }} />
 
             {/* Scrollable content area */}
             <div className="overflow-x-hidden w-full pb-28">
