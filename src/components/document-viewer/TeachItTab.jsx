@@ -520,29 +520,29 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                   </h3>
                 </div>
 
-                <div className="p-4 md:p-6 w-full max-w-full overflow-x-hidden">
+                <div className="p-4 md:p-6 w-full">
                   {!showFeedback ? (
                     <>
                       <Textarea
                         value={userAnswer}
                         onChange={(e) => setUserAnswer(e.target.value)}
                         placeholder="Type your explanation..."
-                        className="min-h-[120px] md:min-h-[200px] mb-1.5 text-[11px] md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none w-full max-w-full"
+                        className="min-h-[140px] md:min-h-[200px] mb-3 text-sm md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none w-full"
                         disabled={isGrading}
                       />
                       <Button
                         onClick={gradeAnswer}
                         disabled={!userAnswer.trim() || isGrading}
-                        className="w-full max-w-full h-9 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-semibold rounded-xl shadow-lg text-[11px] md:text-lg"
+                        className="w-full h-11 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-semibold rounded-xl shadow-lg text-sm md:text-lg"
                       >
                         {isGrading ? (
                           <>
-                            <Loader2 className="w-3 h-3 md:w-5 md:h-5 mr-1 animate-spin" />
+                            <Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-2 animate-spin" />
                             Grading...
                           </>
                         ) : (
                           <>
-                            <CheckCircle2 className="w-3 h-3 md:w-5 md:h-5 mr-1" />
+                            <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                             Submit
                           </>
                         )}
