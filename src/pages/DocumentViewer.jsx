@@ -278,23 +278,8 @@ export default function DocumentViewer() {
         setPredictedGrade(examWithGrade.predicted_grade);
       }
 
-      // Check if Exam 1 needs generation (fallback if CreateLessonModal didn't trigger it)
-      const validExams = examsData.filter(e => e?.id);
-      const hasExam1WithQuestions = validExams.some(e => e.exam_number === 1 && e.questions?.length > 0);
-      const exam1InProgress = validExams.some(e => e.exam_number === 1 && e.questions?.length === 0);
-      
-      // Only trigger if no exam 1 exists at all AND content is ready
-      if (!hasExam1WithQuestions && !exam1InProgress && lessonData.compressed_content) {
-        console.log("🎯 Triggering Exam 1 generation from DocumentViewer (fallback)...");
-        base44.functions.invoke('autoGenerateExam1', { lesson_id: lessonId })
-          .then(res => {
-            if (res?.data?.success) {
-              console.log("✅ Exam 1 auto-generated (fallback, skipped=" + res?.data?.skipped + ")");
-              loadLesson();
-            }
-          })
-          .catch(err => console.log("Exam 1 generation deferred:", err.message));
-      }
+      // NOTE: Exam 1 generation is handled ONLY by autoGenerateExam1 function
+      // Called from CreateLessonModal. Do NOT duplicate calls here.
 
       setLoading(false);
     } catch (error) {

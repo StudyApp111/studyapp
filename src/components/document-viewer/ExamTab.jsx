@@ -267,52 +267,78 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       return;
     }
 
-    if (generationTriggeredRef.current.has(examNumber)) {
-      console.log(`⚠️ Generation already in progress for Exam ${examNumber}, skipping duplicate call.`);
+    // Only exam 1 (diagnostic) should be generated here, and ONLY via autoGenerateExam1
+    // Practice exams come from study plan via generatePracticeExam
+    if (examNumber !== 1) {
+      console.log(`⚠️ ExamTab only handles exam 1 (diagnostic). Exam ${examNumber} should be practice exam from study plan.`);
       return;
     }
 
     try {
-      const existingExams = (exams || []).filter(e => e.exam_number === examNumber);
-      console.log(`📋 Looking for Exam ${examNumber} in loaded exams:`, existingExams.length > 0 ? 'FOUND' : 'NOT FOUND');
+      // Look for existing exam 1 in the loaded exams
+      const existingExams = (exams || []).filter(e => e.exam_number === 1 && e.exam_type !== 'practice');
+      console.log(`📋 Looking for Exam 1 in loaded exams:`, existingExams.length > 0 ? 'FOUND' : 'NOT FOUND');
 
       if (existingExams?.length > 0) {
         const loadedExam = existingExams[0];
-        
+
         if (loadedExam.completed) {
           setExam(loadedExam);
           return;
         }
-        
+
         if (loadedExam.questions?.length > 0) {
+          // Exam exists with questions - load it
           setExam(loadedExam);
           const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer?.trim());
           setCurrentQuestion(firstUnanswered >= 0 ? firstUnanswered : loadedExam.questions.length - 1);
         } else {
-          generationTriggeredRef.current.add(examNumber);
+          // Exam exists but no questions yet - autoGenerateExam1 is still processing
+          // Show loading state and wait for it
+          console.log('⏳ Exam 1 exists but questions not ready - waiting for autoGenerateExam1...');
           setIsGenerating(true);
-          try {
-            await generateExam(loadedExam.id, examNumber);
-          } finally {
+
+          // Poll for questions to appear (autoGenerateExam1 is running)
+          const pollForQuestions = async () => {
+            for (let i = 0; i < 30; i++) { // Max 30 seconds
+              await new Promise(r => setTimeout(r, 1000));
+              const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+              if (refreshed[0]?.questions?.length > 0) {
+                setExam(refreshed[0]);
+                setIsGenerating(false);
+                return;
+              }
+            }
+            // Timeout - something went wrong
+            console.error('Timeout waiting for exam questions');
             setIsGenerating(false);
-            generationTriggeredRef.current.delete(examNumber);
-          }
+          };
+          pollForQuestions();
         }
       } else {
-        generationTriggeredRef.current.add(examNumber);
+        // No exam 1 exists at all - trigger autoGenerateExam1
+        console.log('🎯 No Exam 1 found, triggering autoGenerateExam1...');
         setIsGenerating(true);
+
         try {
-          await generateExam(null, examNumber);
+          const { data } = await base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id });
+          if (data?.success && data?.exam_id) {
+            // Load the created exam
+            const createdExams = await base44.entities.Exam.filter({ id: data.exam_id });
+            if (createdExams[0]) {
+              setExam(createdExams[0]);
+            }
+          }
+        } catch (err) {
+          console.error('Error generating exam 1:', err);
         } finally {
           setIsGenerating(false);
-          generationTriggeredRef.current.delete(examNumber);
         }
       }
     } catch (error) {
       console.error("Error loading exam:", error);
       await logError('exam_loading', error, { lesson_id: lesson?.id, examNumber });
       setIsGenerating(false);
-      generationTriggeredRef.current.delete(examNumber);
     }
   };
 
