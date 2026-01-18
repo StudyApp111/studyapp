@@ -25,11 +25,42 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   const isFillBlank = questionType.includes("fill") && questionType.includes("blank") || questionType.includes("fill_blank");
   const isObjective = isMCQ || isTrueFalse;
 
+  // Normalize answer for comparison - handles "B" vs "B. Full text..." cases
+  const normalizeAnswer = (ans) => {
+    if (!ans) return '';
+    const trimmed = ans.trim().toLowerCase();
+    // Extract just the letter if answer starts with a letter followed by punctuation
+    const letterMatch = trimmed.match(/^([a-d])[\.\)\s]/i);
+    if (letterMatch) return letterMatch[1].toLowerCase();
+    // Also check if it's just a single letter
+    if (/^[a-d]$/i.test(trimmed)) return trimmed.toLowerCase();
+    return trimmed;
+  };
+
+  const checkIsCorrect = (userAns, correctAns) => {
+    if (!userAns || !correctAns) return false;
+    
+    // First try exact match
+    if (userAns.trim().toLowerCase() === correctAns.trim().toLowerCase()) return true;
+    
+    // Then try normalized letter match (for MCQ)
+    const normalizedUser = normalizeAnswer(userAns);
+    const normalizedCorrect = normalizeAnswer(correctAns);
+    if (normalizedUser && normalizedCorrect && normalizedUser === normalizedCorrect) return true;
+    
+    // Check if user answer contains the correct answer text or vice versa
+    const userLower = userAns.trim().toLowerCase();
+    const correctLower = correctAns.trim().toLowerCase();
+    if (userLower.includes(correctLower) || correctLower.includes(userLower)) return true;
+    
+    return false;
+  };
+
   useEffect(() => {
     if (answer && isObjective) {
       setSelectedAnswer(answer);
       setHasAnswered(true);
-      const correct = answer?.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase();
+      const correct = checkIsCorrect(answer, question.correct_answer);
       setIsCorrect(correct);
     }
   }, []);
@@ -42,7 +73,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
 
     if (isObjective) {
       setHasAnswered(true);
-      const correct = value?.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase();
+      const correct = checkIsCorrect(value, question.correct_answer);
       setIsCorrect(correct);
       
       if (correct) {
@@ -63,7 +94,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
         : "border-slate-200 hover:border-purple-300 bg-white";
     }
 
-    const isThisCorrect = optionText?.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase();
+    const isThisCorrect = checkIsCorrect(optionText, question.correct_answer);
     const isThisSelected = selectedAnswer === optionText;
 
     if (isThisCorrect) {
@@ -87,7 +118,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
         const optionLetter = String.fromCharCode(65 + index);
         const optionText = typeof option === 'string' ? option : (option?.text || option?.label || option?.value || String(option));
         const displayText = stripLetterPrefix(optionText);
-        const isThisCorrect = optionText?.trim().toLowerCase() === question.correct_answer?.trim().toLowerCase();
+        const isThisCorrect = checkIsCorrect(optionText, question.correct_answer);
         const isThisSelected = selectedAnswer === optionText;
 
         return (
@@ -122,7 +153,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   const renderTrueFalseOptions = () => (
     <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} className="space-y-2">
       {["True", "False"].map((option) => {
-        const isThisCorrect = option?.toLowerCase() === question.correct_answer?.trim().toLowerCase();
+        const isThisCorrect = checkIsCorrect(option, question.correct_answer);
         const isThisSelected = selectedAnswer === option;
 
         return (
