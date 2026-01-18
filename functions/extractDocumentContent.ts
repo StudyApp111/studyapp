@@ -155,11 +155,43 @@ Deno.serve(async (req) => {
         };
         const mimeType = mimeTypes[fileExt];
         
+        // If not a supported Gemini mime type, go directly to Base44 extraction
         if (!mimeType) {
-            console.error(`File type .${fileExt} is not supported by Gemini Vision. Returning 400.`);
+            console.log(`File type .${fileExt} not supported by Gemini, using Base44 extraction...`);
+            
+            try {
+                const base44Result = await base44.integrations.Core.ExtractDataFromUploadedFile({
+                    file_url: file_url,
+                    json_schema: {
+                        type: "object",
+                        properties: {
+                            full_text_content: {
+                                type: "string",
+                                description: "The complete extracted text content from the document"
+                            }
+                        }
+                    }
+                });
+                
+                if (base44Result.status === 'success' && base44Result.output?.full_text_content) {
+                    const content = base44Result.output.full_text_content;
+                    console.log('Base44 extraction successful, length:', content.length);
+                    
+                    return Response.json({ 
+                        extracted_content: content.trim(),
+                        characters: content.trim().length,
+                        file_size: fileSize,
+                        file_type: 'DOCUMENT',
+                        method: 'base44_extraction'
+                    });
+                }
+            } catch (base44Error) {
+                console.error('Base44 extraction failed:', base44Error.message);
+            }
+            
             return Response.json({ 
                 error: 'Unsupported file format for OCR',
-                details: `File type .${fileExt} is not supported by Gemini Vision. For documents (DOCX, PPTX), please convert to PDF first.`
+                details: `File type .${fileExt} could not be processed.`
             }, { status: 400 });
         }
 
