@@ -57,7 +57,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const examIdRef = useRef(null);
   const autoSaveTimeoutRef = useRef(null);
   const lastSavedQuestionsRef = useRef(null);
-  const generationTriggeredRef = useRef(new Set());
 
   const practiceExamGeneratingRef = useRef(false);
 
