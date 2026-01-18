@@ -32,10 +32,7 @@ Deno.serve(async (req) => {
             generationConfig: {
                 temperature: 0.2,
                 topP: 0.95,
-                maxOutputTokens: 8192,
-                thinkingConfig: {
-                    thinkingLevel: "LOW"
-                }
+                maxOutputTokens: 8192
             },
             tools: [{
                 googleSearch: {}
