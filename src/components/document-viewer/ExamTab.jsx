@@ -1457,7 +1457,7 @@ JSON Output (exact schema):
       <div className="flex flex-col h-full md:h-auto md:pb-4">
         <div className="flex-1 flex flex-col bg-white/95 backdrop-blur-xl md:rounded-2xl border-0 md:border border-purple-200/80 shadow-none md:shadow-sm md:mx-0 overflow-hidden">
           {/* Exam Header with Back Button and Type Indicator */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-purple-100 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shrink-0">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-purple-100 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shrink-0 relative">
             <div className="flex items-center gap-2">
                   <button
                     onClick={handleExitExam}
