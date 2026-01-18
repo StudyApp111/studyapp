@@ -74,6 +74,13 @@
     max-width: 100vw;
   }
 
+  /* Prevent auto-zoom on input focus for iOS */
+  @media screen and (-webkit-min-device-pixel-ratio: 0) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+  }
+
   /* Mobile app optimization - single scroll context */
   @media (max-width: 768px) {
     html, body {

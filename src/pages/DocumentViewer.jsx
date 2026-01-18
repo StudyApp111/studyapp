@@ -327,35 +327,32 @@ export default function DocumentViewer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full">
-      {/* Mobile Header - Fixed at top with proper safe area for notch/dynamic island */}
+      {/* Mobile Header - Slim, modern design with safe area */}
       <div 
-        className="md:hidden bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 fixed top-0 left-0 right-0 z-50 w-full shadow-lg"
-        style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 20px)' }}
+        className="md:hidden bg-gradient-to-r from-purple-600 to-indigo-600 fixed top-0 left-0 right-0 z-50 w-full"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="px-4 py-3 flex items-center justify-between">
+        <div className="px-3 py-2 flex items-center justify-between">
           {/* Left: Course Name */}
-          <div className="flex-1 min-w-0 pr-3">
-            <p className="text-white font-semibold text-sm truncate">
+          <div className="flex-1 min-w-0 pr-2">
+            <p className="text-white/90 font-medium text-xs truncate">
               {lesson?.course_name || 'Loading...'}
             </p>
           </div>
           
-          {/* Center: Predicted Grade */}
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full">
+          {/* Center: Grade pill */}
+          <div className="flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded-full">
             {predictedGrade ? (
-              <>
-                <span className="text-white/80 text-[10px] font-medium">Grade:</span>
-                <span className="text-yellow-300 font-black text-sm">{predictedGrade}</span>
-              </>
+              <span className="text-yellow-300 font-bold text-xs">{predictedGrade}</span>
             ) : (
-              <span className="text-white/60 text-[10px]">No grade yet</span>
+              <span className="text-white/50 text-[10px]">—</span>
             )}
           </div>
           
           {/* Right: Timer */}
-          <div className="flex items-center gap-1.5 pl-3">
-            <Clock className="w-3.5 h-3.5 text-white/70" />
-            <span className="text-white font-mono text-xs font-medium">{formatStudyTime(studyTime)}</span>
+          <div className="flex items-center gap-1 pl-2">
+            <Clock className="w-3 h-3 text-white/60" />
+            <span className="text-white/90 font-mono text-[11px]">{formatStudyTime(studyTime)}</span>
           </div>
         </div>
       </div>
@@ -546,13 +543,13 @@ export default function DocumentViewer() {
         {/* Mobile: Fixed header + tabs, scrollable content */}
         <div className="md:hidden flex flex-col w-full overflow-x-hidden">
           {/* Spacer for fixed mobile header */}
-          <div className="h-[70px]" style={{ height: 'calc(max(env(safe-area-inset-top, 0px), 20px) + 52px)' }} />
+          <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 36px)' }} />
           
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full overflow-x-hidden flex-1">
             {/* Fixed tabs bar */}
             <div 
-              className="fixed left-0 right-0 z-40 bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 px-2 py-1.5 shadow-sm"
-              style={{ top: 'calc(max(env(safe-area-inset-top, 0px), 20px) + 52px)' }}
+              className="fixed left-0 right-0 z-40 bg-white/95 backdrop-blur-sm px-2 py-1.5 border-b border-purple-100"
+              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 36px)' }}
             >
               <div className="w-full">
                 <TabsList className="flex w-full bg-white border border-purple-200 p-0.5 h-auto rounded-lg shadow-sm gap-0.5">
@@ -608,7 +605,7 @@ export default function DocumentViewer() {
             </div>
             
             {/* Spacer for fixed tabs */}
-            <div className="h-[48px]" />
+            <div className="h-[44px]" />
 
             {/* Scrollable content area */}
             <div className="overflow-x-hidden w-full pb-28">
