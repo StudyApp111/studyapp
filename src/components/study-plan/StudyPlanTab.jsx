@@ -423,6 +423,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
             const live = liveProgress[task.task_type] || {};
             let actualCount = task.completed_count || 0;
             let displayText = '';
+            let practiceScore = null;
             
             // Calculate actual progress from live data
             if (task.task_type === 'flashcards' && live.mastered !== undefined) {
@@ -434,7 +435,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
             } else if (task.task_type === 'practice_exam' && live.completed !== undefined) {
               // For practice exams, target_count is the number of exams to complete (usually 1)
               actualCount = Math.max(actualCount, live.completed);
-              displayText = `${live.completed} quiz${live.completed !== 1 ? 'zes' : ''} completed`;
+              // Show score if completed
+              if (live.completed > 0 && live.totalQuestions > 0) {
+                practiceScore = `${live.correctAnswers}/${live.totalQuestions}`;
+              }
+              displayText = live.completed > 0 
+                ? `Score: ${practiceScore || '—'}` 
+                : `${live.completed} quiz${live.completed !== 1 ? 'zes' : ''} completed`;
             }
             
             const isComplete = task.completed || (task.target_count > 0 && actualCount >= task.target_count);
