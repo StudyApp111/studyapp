@@ -31,6 +31,8 @@ Deno.serve(async (req) => {
       'Always return ONLY valid JSON. No markdown, no commentary.',
       'Output must be a JSON object with an "exam_questions" array where each item contains:',
       '{ question_number, question_type, difficulty_index, question_text, options, correct_answer, explanation, assessed_competencies, targeted_misconception }',
+      'CRITICAL: For Multiple Choice questions, correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text.',
+      'CRITICAL: For True/False questions, correct_answer MUST be "True" or "False".',
     ].join(' ');
 
     let fullPrompt = prompt;
@@ -105,6 +107,27 @@ Deno.serve(async (req) => {
           q.options = [];
         }
         if (typeof q.question_number !== 'number') q.question_number = idx + 1;
+        
+        // Normalize correct_answer for MCQ - extract just the letter if full text was provided
+        if (type.includes('multiple') || type.includes('choice') || type.includes('mcq')) {
+          const answer = String(q.correct_answer || '').trim();
+          // If answer starts with a letter followed by punctuation, extract just the letter
+          const letterMatch = answer.match(/^([A-Da-d])[\.\)\:\s]/i);
+          if (letterMatch) {
+            q.correct_answer = letterMatch[1].toUpperCase();
+          } else if (/^[A-Da-d]$/i.test(answer)) {
+            q.correct_answer = answer.toUpperCase();
+          } else if (q.options && q.options.length > 0) {
+            // If answer is full text, find which option it matches and use that letter
+            const matchIdx = q.options.findIndex(opt => 
+              opt.toLowerCase().includes(answer.toLowerCase()) || 
+              answer.toLowerCase().includes(opt.toLowerCase().replace(/^[a-d][\.\)\s]+/i, '').trim())
+            );
+            if (matchIdx >= 0) {
+              q.correct_answer = String.fromCharCode(65 + matchIdx); // A, B, C, D
+            }
+          }
+        }
         return q;
       });
     }
