@@ -386,12 +386,19 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
           <div className="relative">
             {/* Current Grade */}
             <div className="text-center mb-4">
-              <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider mb-1">Current Grade</p>
+              <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider mb-1">Predicted Grade</p>
               <div className="flex items-baseline justify-center gap-2">
                 <span className="text-5xl font-black text-white">{currentGrade}</span>
                 {currentScore && <span className="text-white/80 text-sm font-medium">{Math.round(currentScore)}%</span>}
               </div>
             </div>
+            
+            {/* Practice tasks disclaimer */}
+            {!latestOfficialExam && studyPlan?.initial_predicted_grade && (
+              <p className="text-white/60 text-[10px] text-center mb-3 italic">
+                Based on diagnostic • Complete tasks to improve
+              </p>
+            )}
             
             {/* Arrow + Target */}
             <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
