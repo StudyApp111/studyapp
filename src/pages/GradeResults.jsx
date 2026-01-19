@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   ArrowLeft, CheckCircle2, TrendingUp, 
-  ChevronDown, ChevronUp, Loader2, AlertTriangle, Sparkles, Award
+  ChevronDown, Loader2, AlertTriangle, Sparkles, Award
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -204,22 +204,44 @@ export default function GradeResults() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <h3 className="font-bold text-slate-900 mb-3">Rubric Breakdown</h3>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                  <Award className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="font-bold text-slate-900">Rubric Breakdown</h3>
+              </div>
               <div className="space-y-3">
-                {result.rubric_breakdown.map((item, idx) => (
-                  <div key={idx} className="bg-slate-50 rounded-xl p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-slate-900 text-sm">{item.criterion}</span>
-                      <span className="text-sm font-bold text-purple-600">
-                        {item.score}/{item.max_score}
-                      </span>
+                {result.rubric_breakdown.map((item, idx) => {
+                  const percentage = (item.score / item.max_score) * 100;
+                  const getScoreColor = () => {
+                    if (percentage >= 80) return 'from-emerald-500 to-teal-500';
+                    if (percentage >= 60) return 'from-blue-500 to-indigo-500';
+                    if (percentage >= 40) return 'from-amber-500 to-orange-500';
+                    return 'from-red-500 to-rose-500';
+                  };
+                  
+                  return (
+                    <div key={idx} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-slate-900 text-sm mb-1">{item.criterion}</h4>
+                          {item.comments && (
+                            <p className="text-xs text-slate-500 leading-relaxed">{item.comments}</p>
+                          )}
+                        </div>
+                        <div className={`ml-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${getScoreColor()} flex-shrink-0`}>
+                          <span className="text-sm font-black text-white">{item.score}/{item.max_score}</span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full bg-gradient-to-r ${getScoreColor()} rounded-full transition-all`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
                     </div>
-                    <Progress value={(item.score / item.max_score) * 100} className="h-2" />
-                    {item.comments && (
-                      <p className="text-xs text-slate-500 mt-2">{item.comments}</p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </motion.div>
           )}
@@ -231,51 +253,76 @@ export default function GradeResults() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <h3 className="font-bold text-slate-900 mb-3">Section Feedback</h3>
-              <div className="space-y-2">
-                {result.detailed_feedback_by_section.map((section, idx) => (
-                  <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
-                    <button
-                      onClick={() => toggleSection(idx)}
-                      className="w-full flex items-center justify-between p-3 hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-slate-900 text-sm">{section.section_name}</span>
-                        <Badge variant="outline" className="text-[10px]">
-                          {section.points_earned}/{section.points_possible}
-                        </Badge>
-                      </div>
-                      {expandedSections[idx] ? (
-                        <ChevronUp className="w-4 h-4 text-slate-400" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
-                      )}
-                    </button>
-                    <AnimatePresence>
-                      {expandedSections[idx] && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="border-t border-slate-200"
-                        >
-                          <div className="p-3 bg-slate-50">
-                            <p className="text-sm text-slate-700 mb-2">{section.feedback}</p>
-                            {section.competencies_assessed?.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {section.competencies_assessed.map((comp, cidx) => (
-                                  <Badge key={cidx} variant="secondary" className="text-[10px]">
-                                    {comp}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="font-bold text-slate-900">Section Feedback</h3>
+              </div>
+              <div className="space-y-3">
+                {result.detailed_feedback_by_section.map((section, idx) => {
+                  const isExpanded = expandedSections[idx];
+                  const percentage = section.points_possible > 0 
+                    ? (section.points_earned / section.points_possible) * 100 
+                    : 0;
+                  
+                  return (
+                    <div key={idx} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                      <button
+                        onClick={() => toggleSection(idx)}
+                        className="w-full p-4 text-left hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                              percentage >= 70 
+                                ? 'bg-emerald-100 text-emerald-600' 
+                                : percentage >= 50 
+                                  ? 'bg-amber-100 text-amber-600'
+                                  : 'bg-red-100 text-red-600'
+                            }`}>
+                              <span className="text-sm font-black">{Math.round(percentage)}%</span>
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-semibold text-slate-900 text-sm truncate">{section.section_name}</h4>
+                              <p className="text-[11px] text-slate-500">
+                                {section.points_earned}/{section.points_possible} points
+                              </p>
+                            </div>
                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ))}
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-transform ${
+                            isExpanded ? 'bg-purple-100 rotate-180' : 'bg-slate-100'
+                          }`}>
+                            <ChevronDown className={`w-4 h-4 ${isExpanded ? 'text-purple-600' : 'text-slate-400'}`} />
+                          </div>
+                        </div>
+                      </button>
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="border-t border-slate-100"
+                          >
+                            <div className="p-4 bg-gradient-to-b from-slate-50 to-white">
+                              <p className="text-sm text-slate-700 leading-relaxed mb-3">{section.feedback}</p>
+                              {section.competencies_assessed?.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5">
+                                  {section.competencies_assessed.map((comp, cidx) => (
+                                    <span key={cidx} className="text-[10px] font-medium bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                      {comp}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
           )}

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, CheckCircle2, Code2, Calculator, Microscope, FileEdit } from "lucide-react";
+import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, CheckCircle2, Microscope, FileEdit } from "lucide-react";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
@@ -373,22 +373,18 @@ Output valid JSON matching the expected schema.`;
           {/* What Can Be Graded */}
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-100 text-center">
             <p className="text-sm font-semibold text-slate-700 mb-3">StudyApp can grade:</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 justify-items-center">
+            <div className="flex justify-center gap-6">
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <FileEdit className="w-4 h-4 text-purple-600" />
                 <span>Essays</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Calculator className="w-4 h-4 text-purple-600" />
-                <span>Math Work</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Code2 className="w-4 h-4 text-purple-600" />
-                <span>Coding</span>
+                <FileText className="w-4 h-4 text-purple-600" />
+                <span>Assignments</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-600">
                 <Microscope className="w-4 h-4 text-purple-600" />
-                <span>Lab Reports</span>
+                <span>Projects</span>
               </div>
             </div>
           </div>
@@ -409,8 +405,8 @@ Output valid JSON matching the expected schema.`;
 
               {processingStep && (
                 <Alert className="bg-purple-50 border-purple-200">
-                  <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                  <AlertDescription className="text-purple-900 ml-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-purple-600 flex-shrink-0" />
+                  <AlertDescription className="text-purple-900 ml-2 text-sm break-words">
                     {processingStep}
                   </AlertDescription>
                 </Alert>

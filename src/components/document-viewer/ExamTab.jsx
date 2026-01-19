@@ -978,7 +978,7 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-        <div className="px-2 py-4 w-full max-w-sm mx-auto space-y-5 pb-8">
+        <div className="px-3 py-4 w-full max-w-[320px] mx-auto space-y-4 pb-8">
         {/* Practice Exams Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
           <div>
@@ -1010,40 +1010,40 @@ JSON Output (exact schema):
                         hasAutoSelectedRef.current = true;
                       }
                     }}
-                    className={`group relative w-full overflow-hidden p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
+                    className={`group relative w-full overflow-hidden p-2.5 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
                       isCompleted
                         ? 'bg-gradient-to-r from-blue-500 to-cyan-600'
                         : 'bg-white border border-blue-200 hover:border-blue-300'
                     }`}
                   >
-                    <div className="relative flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    <div className="relative flex items-center gap-2">
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
                         isCompleted ? 'bg-white/20' : 'bg-blue-50'
                       }`}>
                         {isCompleted ? (
-                          <CheckCircle2 className="w-5 h-5 text-white" />
+                          <CheckCircle2 className="w-4 h-4 text-white" />
                         ) : (
-                          <Zap className="w-5 h-5 text-blue-600" />
+                          <Zap className="w-4 h-4 text-blue-600" />
                         )}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold text-sm truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
-                          {e.focus_competency || 'Practice Quiz'}
+                        <h3 className={`font-semibold text-xs truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
+                          {e.focus_description || e.focus_competency || 'Practice Quiz'}
                         </h3>
-                        <p className={`text-[11px] ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
+                        <p className={`text-[10px] ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
                           {totalQuestions} questions
                         </p>
                       </div>
                       
                       {isCompleted ? (
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="text-lg font-black text-white">{correctCount}/{totalQuestions}</span>
-                          <ChevronRight className="w-4 h-4 text-white/70" />
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <span className="text-base font-black text-white">{correctCount}/{totalQuestions}</span>
+                          <ChevronRight className="w-3 h-3 text-white/70" />
                         </div>
                       ) : (
-                        <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <Play className="w-3 h-3 text-blue-600" />
+                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <Play className="w-2.5 h-2.5 text-blue-600" />
                         </div>
                       )}
                     </div>
@@ -1078,44 +1078,44 @@ JSON Output (exact schema):
                     hasAutoSelectedRef.current = true;
                   }
                 }}
-                className={`group relative w-full overflow-hidden p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
+                className={`group relative w-full overflow-hidden p-2.5 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
                   diagnosticExam.completed
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-600'
                     : 'bg-gradient-to-r from-purple-500 to-indigo-600'
                 }`}
               >
-                <div className="relative flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                <div className="relative flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
                     {diagnosticExam.completed ? (
-                      <CheckCircle2 className="w-5 h-5 text-white" />
+                      <CheckCircle2 className="w-4 h-4 text-white" />
                     ) : (
-                      <span className="text-lg font-black text-white">1</span>
+                      <span className="text-base font-black text-white">1</span>
                     )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-bold text-white text-sm">Diagnostic</h3>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <h3 className="font-bold text-white text-xs">Diagnostic</h3>
                       {diagnosticExam.status === 'in_progress' && !diagnosticExam.completed && (
-                        <span className="text-[9px] bg-white/30 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">
+                        <span className="text-[8px] bg-white/30 text-white px-1.5 py-0.5 rounded-full font-bold uppercase">
                           In Progress
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-white/70 truncate">Baseline assessment</p>
+                    <p className="text-[10px] text-white/70 truncate">Baseline assessment</p>
                   </div>
                   
                   {diagnosticExam.completed && diagnosticExam.predicted_grade ? (
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       <div className="text-right">
-                        <span className="text-xl font-black text-white">{diagnosticExam.predicted_grade}</span>
-                        <p className="text-[9px] text-white/70">{diagnosticExam.total_score}%</p>
+                        <span className="text-lg font-black text-white">{diagnosticExam.predicted_grade}</span>
+                        <p className="text-[8px] text-white/70">{diagnosticExam.total_score}%</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-white/70" />
+                      <ChevronRight className="w-3 h-3 text-white/70" />
                     </div>
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                      <Play className="w-3 h-3 text-white" />
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <Play className="w-2.5 h-2.5 text-white" />
                     </div>
                   )}
                 </div>
@@ -1127,18 +1127,18 @@ JSON Output (exact schema):
                   setSelectedExamNumber(1);
                   hasAutoSelectedRef.current = true;
                 }}
-                className="group relative w-full overflow-hidden p-3 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 shadow-sm hover:shadow-md transition-all text-left"
+                className="group relative w-full overflow-hidden p-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 shadow-sm hover:shadow-md transition-all text-left"
               >
-                <div className="relative flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg font-black text-white">1</span>
+                <div className="relative flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <span className="text-base font-black text-white">1</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white text-sm">Diagnostic</h3>
-                    <p className="text-[11px] text-white/70">Baseline assessment</p>
+                    <h3 className="font-bold text-white text-xs">Diagnostic</h3>
+                    <p className="text-[10px] text-white/70">Baseline assessment</p>
                   </div>
-                  <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                    <Play className="w-3 h-3 text-white" />
+                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <Play className="w-2.5 h-2.5 text-white" />
                   </div>
                 </div>
               </button>
