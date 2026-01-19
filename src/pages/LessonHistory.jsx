@@ -5,12 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   BookOpen, Calendar, Clock, FileCheck, 
-  ArrowRight, Trophy, Layers, ChevronRight, Sparkles,
+  ChevronRight, Trophy, Layers,
   GraduationCap, Target, FileText, PenLine
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -43,136 +41,55 @@ export default function LessonHistory() {
     base44.auth.me().then(setUser).catch(console.error);
   }, []);
 
+  // Single query for lessons
   const { data: lessons = [], isLoading: lessonsLoading, error: lessonsError } = useQuery({
     queryKey: ['lessons-history'],
-    queryFn: async () => {
-      const result = await base44.entities.Lesson.list('-created_date', 50);
-      return result || [];
-    },
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
+    queryFn: () => base44.entities.Lesson.list('-created_date', 50),
+    staleTime: 60 * 1000,
   });
 
+  // Single query for graded assignments
   const { data: gradedAssignments = [], isLoading: assignmentsLoading } = useQuery({
     queryKey: ['graded-assignments-history'],
-    queryFn: async () => {
-      const result = await base44.entities.GradedAssignment.list('-created_date', 50);
-      return result || [];
-    },
-    staleTime: 30 * 1000,
-    gcTime: 5 * 60 * 1000,
+    queryFn: () => base44.entities.GradedAssignment.list('-created_date', 50),
+    staleTime: 60 * 1000,
   });
 
-  // Fetch exams and flashcards for visible lessons
-  const visibleLessonIds = React.useMemo(() => 
-    lessons.slice(0, 20).map(l => l.id), 
-    [lessons]
-  );
-
+  // Single bulk query for ALL exams (not per-lesson)
   const { data: allExams = [] } = useQuery({
-    queryKey: ['exams-history', visibleLessonIds],
-    queryFn: async () => {
-      if (visibleLessonIds.length === 0) return [];
-      const examPromises = visibleLessonIds.map(id =>
-        base44.entities.Exam.filter({ lesson_id: id }).catch(() => [])
-      );
-      return (await Promise.all(examPromises)).flat();
-    },
-    enabled: visibleLessonIds.length > 0,
-    staleTime: 30 * 1000,
-  });
-
-  const { data: allFlashcards = [] } = useQuery({
-    queryKey: ['flashcards-history', visibleLessonIds],
-    queryFn: async () => {
-      if (visibleLessonIds.length === 0) return [];
-      const flashcardPromises = visibleLessonIds.map(id =>
-        base44.entities.Flashcard.filter({ lesson_id: id }).catch(() => [])
-      );
-      return (await Promise.all(flashcardPromises)).flat();
-    },
-    enabled: visibleLessonIds.length > 0,
-    staleTime: 30 * 1000,
-  });
-
-  // Fetch study plans for progress tracking
-  const { data: allStudyPlans = [] } = useQuery({
-    queryKey: ['study-plans-history', visibleLessonIds],
-    queryFn: async () => {
-      if (visibleLessonIds.length === 0) return [];
-      const planPromises = visibleLessonIds.map(id =>
-        base44.entities.StudyPlan.filter({ lesson_id: id }).catch(() => [])
-      );
-      return (await Promise.all(planPromises)).flat();
-    },
-    enabled: visibleLessonIds.length > 0,
-    staleTime: 30 * 1000,
+    queryKey: ['all-exams-history'],
+    queryFn: () => base44.entities.Exam.list('-created_date', 200),
+    staleTime: 60 * 1000,
   });
 
   const isLoading = lessonsLoading || assignmentsLoading;
 
-  // Group data by lesson
+  // Group exams by lesson_id
   const lessonExams = {};
   allExams.forEach(e => {
     if (!lessonExams[e.lesson_id]) lessonExams[e.lesson_id] = [];
     lessonExams[e.lesson_id].push(e);
   });
 
-  const lessonFlashcards = {};
-  allFlashcards.forEach(f => {
-    if (!lessonFlashcards[f.lesson_id]) lessonFlashcards[f.lesson_id] = [];
-    lessonFlashcards[f.lesson_id].push(f);
-  });
-
-  const lessonStudyPlans = {};
-  allStudyPlans.forEach(p => {
-    if (!lessonStudyPlans[p.lesson_id]) lessonStudyPlans[p.lesson_id] = [];
-    lessonStudyPlans[p.lesson_id].push(p);
-  });
+  const getGradientByGrade = (grade) => {
+    if (!grade) return 'from-slate-500 to-slate-600';
+    if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
+    if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
+    if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
+    return 'from-slate-500 to-slate-600';
+  };
 
   const LessonCard = ({ lesson, index }) => {
-    const exams = (lessonExams[lesson.id] || []);
-    const flashcards = (lessonFlashcards[lesson.id] || []);
-    const studyPlans = (lessonStudyPlans[lesson.id] || []);
-    
-    // Get active study plan for this lesson
-    const activeStudyPlan = studyPlans.find(p => p.status === 'active') || studyPlans[0];
-    
-    // Calculate study plan task progress
-    const totalTasks = activeStudyPlan?.tasks?.length || 0;
-    const completedTasks = activeStudyPlan?.tasks?.filter(t => t.completed)?.length || 0;
-    
-    // Count completed exams (official only)
+    const exams = lessonExams[lesson.id] || [];
     const officialExams = exams.filter(e => e.exam_type !== 'practice');
     const completedOfficialExams = officialExams.filter(e => e.completed).length;
     
-    // Get latest predicted grade from most recent completed exam
     const latestCompletedExam = exams
       .filter(e => e.completed && e.predicted_grade)
       .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
     
-    // Flashcard progress - mastered cards
-    const masteredFlashcards = flashcards.filter(f => f.mastered || f.review_count >= 3).length;
-    const totalFlashcards = flashcards.length;
-    
     const studyTime = lesson.total_study_time_seconds || 0;
     const hasDocument = lesson.file_url || (lesson.file_urls && lesson.file_urls.length > 0);
-
-    const getGradeColor = (grade) => {
-      if (!grade) return 'text-slate-400';
-      if (grade.startsWith('A')) return 'text-emerald-600';
-      if (grade.startsWith('B')) return 'text-blue-600';
-      if (grade.startsWith('C')) return 'text-amber-600';
-      return 'text-red-500';
-    };
-
-    const getGradientByGrade = (grade) => {
-      if (!grade) return 'from-slate-500 to-slate-600';
-      if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
-      if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
-      if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
-      return 'from-slate-500 to-slate-600';
-    };
 
     return (
       <motion.div
@@ -183,13 +100,10 @@ export default function LessonHistory() {
         className="cursor-pointer group"
       >
         <div className="relative bg-white rounded-2xl shadow-sm hover:shadow-lg border border-slate-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
-          {/* Accent bar at top based on grade */}
           <div className={`h-1 w-full bg-gradient-to-r ${getGradientByGrade(latestCompletedExam?.predicted_grade)}`} />
           
           <div className="p-4">
-            {/* Header Row */}
             <div className="flex items-start gap-3 mb-4">
-              {/* Icon */}
               <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${
                 latestCompletedExam?.predicted_grade 
                   ? getGradientByGrade(latestCompletedExam.predicted_grade)
@@ -198,7 +112,6 @@ export default function LessonHistory() {
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
               
-              {/* Title & Meta */}
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-slate-900 text-sm leading-tight mb-1 line-clamp-2">
                   {lesson.course_name}
@@ -220,7 +133,6 @@ export default function LessonHistory() {
                 </div>
               </div>
               
-              {/* Grade Badge - prominent */}
               {latestCompletedExam?.predicted_grade && (
                 <div className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${getGradientByGrade(latestCompletedExam.predicted_grade)} shadow-sm`}>
                   <span className="text-white font-black text-lg">{latestCompletedExam.predicted_grade}</span>
@@ -228,7 +140,6 @@ export default function LessonHistory() {
               )}
             </div>
             
-            {/* Stats Grid - Compact pills */}
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex items-center gap-1.5 bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full">
                 <Trophy className="w-3.5 h-3.5" />
@@ -239,35 +150,8 @@ export default function LessonHistory() {
                 <Clock className="w-3.5 h-3.5" />
                 <span className="text-xs font-medium">{formatTime(studyTime)}</span>
               </div>
-              
-              {totalFlashcards > 0 && (
-                <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
-                  <Layers className="w-3.5 h-3.5" />
-                  <span className="text-xs font-medium">{masteredFlashcards}/{totalFlashcards} cards</span>
-                </div>
-              )}
             </div>
             
-            {/* Study Plan Progress - only if exists */}
-            {totalTasks > 0 && (
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                    <Target className="w-3 h-3" />
-                    Study Plan
-                  </span>
-                  <span className="text-[11px] font-semibold text-purple-600">{completedTasks}/{totalTasks}</span>
-                </div>
-                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.round((completedTasks / totalTasks) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
-            
-            {/* CTA hint on hover */}
             <div className="mt-3 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
               <span className="text-[11px] text-purple-600 font-medium flex items-center gap-1">
                 Continue studying
@@ -281,14 +165,6 @@ export default function LessonHistory() {
   };
 
   const AssignmentCard = ({ assignment, index }) => {
-    const getGradientByGrade = (grade) => {
-      if (!grade) return 'from-slate-500 to-slate-600';
-      if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
-      if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
-      if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
-      return 'from-slate-500 to-slate-600';
-    };
-
     const grade = assignment.grading_result?.predicted_grade;
     const score = assignment.grading_result?.total_score;
 
@@ -301,11 +177,9 @@ export default function LessonHistory() {
         className="cursor-pointer group"
       >
         <div className="relative bg-white rounded-2xl shadow-sm hover:shadow-lg border border-slate-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
-          {/* Accent bar */}
           <div className={`h-1 w-full bg-gradient-to-r ${getGradientByGrade(grade)}`} />
           
           <div className="p-4">
-            {/* Header */}
             <div className="flex items-start gap-3 mb-3">
               <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex items-center justify-center shadow-sm flex-shrink-0`}>
                 <FileCheck className="w-5 h-5 text-white" />
@@ -322,7 +196,6 @@ export default function LessonHistory() {
                 </div>
               </div>
               
-              {/* Grade Badge */}
               {grade && (
                 <div className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${getGradientByGrade(grade)} shadow-sm`}>
                   <span className="text-white font-black text-lg">{grade}</span>
@@ -330,7 +203,6 @@ export default function LessonHistory() {
               )}
             </div>
             
-            {/* Score or Status */}
             {assignment.grading_result ? (
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -364,7 +236,6 @@ export default function LessonHistory() {
     );
   }
 
-  // Count total completed exams
   const totalCompletedExams = allExams.filter(e => e.completed).length;
 
   const allItems = [
@@ -385,12 +256,8 @@ export default function LessonHistory() {
         {lessonsError && (
           <p className="text-xs text-red-600">Error loading lessons. Please refresh.</p>
         )}
-        {!isLoading && lessons.length === 0 && !lessonsError && (
-          <p className="text-xs text-slate-500">No lessons found. Upload your first lesson to get started!</p>
-        )}
       </div>
 
-      {/* Summary Stats - Clean minimal design */}
       <div className="flex items-center gap-3 md:gap-6 mb-6 overflow-x-auto pb-2">
         <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-slate-100 flex-shrink-0">
           <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
@@ -423,7 +290,6 @@ export default function LessonHistory() {
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
         <TabsList className="bg-white shadow-sm border w-full justify-start">
           <TabsTrigger value="all" className="flex-1 md:flex-none">All</TabsTrigger>
@@ -432,7 +298,6 @@ export default function LessonHistory() {
         </TabsList>
       </Tabs>
 
-      {/* Content */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (

@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, Loader2 } from "lucide-react";
+import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, Loader2, Download } from "lucide-react";
 import NotesTab from "./NotesTab";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
@@ -22,8 +22,22 @@ export default function DocumentViewerTabs({ lesson }) {
   const extractedContent = lesson?.extracted_content || "";
   const hasExtractedContent = !!extractedContent;
   
+  // Determine file type
+  const getFileType = (url) => {
+    if (!url) return 'unknown';
+    const lower = url.toLowerCase();
+    if (lower.includes('.pdf')) return 'pdf';
+    if (lower.includes('.doc')) return 'word';
+    if (lower.includes('.ppt')) return 'powerpoint';
+    if (lower.includes('.xls')) return 'excel';
+    if (/\.(jpg|jpeg|png|gif|webp)/.test(lower)) return 'image';
+    return 'unknown';
+  };
+  
+  const fileType = getFileType(fileUrl);
+  
   // State
-  const [viewMode, setViewMode] = useState("document");
+  const [viewMode, setViewMode] = useState(hasFile ? "document" : "transcript");
   const [searchQuery, setSearchQuery] = useState("");
   const [annotations, setAnnotations] = useState([]);
   const [annotationsLoaded, setAnnotationsLoaded] = useState(false);
@@ -101,7 +115,6 @@ export default function DocumentViewerTabs({ lesson }) {
       closeToolbar();
       toast.success("Highlighted!");
     } catch (error) {
-      console.error("Error adding highlight:", error);
       toast.error("Failed to save highlight");
     }
   };
@@ -126,7 +139,6 @@ export default function DocumentViewerTabs({ lesson }) {
       closeToolbar();
       toast.success("Note saved!");
     } catch (error) {
-      console.error("Error adding note:", error);
       toast.error("Failed to save note");
     }
   };
@@ -156,7 +168,6 @@ export default function DocumentViewerTabs({ lesson }) {
       setActiveAnnotation(null);
       toast.success("Annotation deleted");
     } catch (error) {
-      console.error("Error deleting annotation:", error);
       toast.error("Failed to delete annotation");
     }
   };
@@ -172,7 +183,7 @@ export default function DocumentViewerTabs({ lesson }) {
   const renderTranscript = () => {
     if (!extractedContent) {
       return (
-        <div className="flex items-center justify-center h-full">
+        <div className="flex items-center justify-center h-full min-h-[300px]">
           <div className="text-center py-12">
             <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300" />
             <p className="text-sm font-medium text-slate-600">No transcript available yet</p>
@@ -203,19 +214,16 @@ export default function DocumentViewerTabs({ lesson }) {
             )}
           </>
         );
-      } catch (e) {
-        // Invalid regex
-      }
+      } catch (e) {}
     }
 
     // Annotation highlighting
     const annotationsWithPositions = annotations.map(a => {
-      const textToFind = a.highlight_text;
-      const idx = extractedContent.indexOf(textToFind);
+      const idx = extractedContent.indexOf(a.highlight_text);
       return {
         ...a,
         resolvedStart: idx >= 0 ? idx : (a.position?.start ?? -1),
-        resolvedEnd: idx >= 0 ? idx + textToFind.length : (a.position?.end ?? -1)
+        resolvedEnd: idx >= 0 ? idx + a.highlight_text.length : (a.position?.end ?? -1)
       };
     }).filter(a => a.resolvedStart >= 0);
 
@@ -268,12 +276,89 @@ export default function DocumentViewerTabs({ lesson }) {
     return <>{elements}</>;
   };
 
+  // Render document view
+  const renderDocumentView = () => {
+    if (!hasFile) {
+      return (
+        <div className="flex items-center justify-center h-full min-h-[400px]">
+          <div className="text-center">
+            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-sm text-slate-600">No document uploaded</p>
+            <p className="text-xs text-slate-400 mt-1">Switch to Transcript tab to view content</p>
+          </div>
+        </div>
+      );
+    }
+
+    // For images - display directly
+    if (fileType === 'image') {
+      return (
+        <div className="w-full h-full flex items-center justify-center p-4 bg-slate-50">
+          <img 
+            src={fileUrl} 
+            alt="Document" 
+            className="max-w-full max-h-full object-contain shadow-lg rounded-lg"
+          />
+        </div>
+      );
+    }
+
+    // For PDFs - use embed tag which works better than iframe for PDFs
+    if (fileType === 'pdf') {
+      return (
+        <div className="w-full h-full bg-slate-100">
+          <embed
+            src={fileUrl}
+            type="application/pdf"
+            className="w-full h-full"
+          />
+        </div>
+      );
+    }
+
+    // For Office files and others - show download/open option with transcript suggestion
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px] bg-slate-50">
+        <div className="text-center max-w-md p-6">
+          <div className="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-10 h-10 text-purple-600" />
+          </div>
+          <h3 className="font-semibold text-slate-800 mb-2">
+            {fileType === 'word' && 'Word Document'}
+            {fileType === 'powerpoint' && 'PowerPoint Presentation'}
+            {fileType === 'excel' && 'Excel Spreadsheet'}
+            {fileType === 'unknown' && 'Document'}
+          </h3>
+          <p className="text-sm text-slate-500 mb-4">
+            {hasExtractedContent 
+              ? "The text content has been extracted. View it in the Transcript tab or download the original file."
+              : "Download the file to view it in its native application."}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            {hasExtractedContent && (
+              <Button onClick={() => setViewMode("transcript")} className="bg-purple-600 hover:bg-purple-700">
+                <Highlighter className="w-4 h-4 mr-2" />
+                View Transcript
+              </Button>
+            )}
+            <Button variant="outline" asChild>
+              <a href={fileUrl} target="_blank" rel="noopener noreferrer" download>
+                <Download className="w-4 h-4 mr-2" />
+                Download File
+              </a>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="h-full">
       <Card className="h-full bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
         <div className="h-full flex flex-col">
           {/* Header */}
-          <div className="border-b border-purple-200 px-3 py-2">
+          <div className="border-b border-purple-200 px-3 py-2 flex-shrink-0">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
                 {hasFile && (
@@ -315,10 +400,10 @@ export default function DocumentViewerTabs({ lesson }) {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search..."
-                      className="pl-7 h-7 text-xs w-32 md:w-48"
+                      className="pl-7 h-7 text-xs w-28 md:w-40"
                     />
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleCopyTranscript} className="h-7 text-xs">
+                  <Button variant="outline" size="sm" onClick={handleCopyTranscript} className="h-7 text-xs px-2">
                     <Copy className="w-3 h-3" />
                   </Button>
                 </div>
@@ -334,7 +419,7 @@ export default function DocumentViewerTabs({ lesson }) {
               )}
             </div>
 
-            {viewMode === "transcript" && (
+            {viewMode === "transcript" && hasExtractedContent && (
               <p className="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1">
                 <Highlighter className="w-3 h-3" />
                 Select text to highlight, add notes, or ask AI
@@ -344,24 +429,10 @@ export default function DocumentViewerTabs({ lesson }) {
 
           {/* Content Area */}
           <div className="flex-1 overflow-hidden relative">
-            {/* Document View - Direct iframe embed */}
+            {/* Document View */}
             {viewMode === "document" && (
-              <div className="absolute inset-0">
-                {hasFile ? (
-                  <iframe
-                    src={fileUrl}
-                    className="w-full h-full border-0"
-                    title="Document Viewer"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                      <p className="text-sm text-slate-600">No document uploaded</p>
-                      <p className="text-xs text-slate-400 mt-1">Switch to Transcript tab to view content</p>
-                    </div>
-                  </div>
-                )}
+              <div className="absolute inset-0 overflow-auto">
+                {renderDocumentView()}
               </div>
             )}
 
@@ -370,10 +441,10 @@ export default function DocumentViewerTabs({ lesson }) {
               <div className="absolute inset-0 flex">
                 <div 
                   ref={contentRef}
-                  className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
+                  className={`flex-1 overflow-auto p-3 md:p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
                   onMouseUp={handleTextSelection}
                 >
-                  <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-full px-2 md:px-4 md:max-w-3xl mx-auto">
+                  <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-full md:max-w-2xl mx-auto">
                     {renderTranscript()}
                   </div>
                 </div>
