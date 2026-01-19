@@ -247,7 +247,9 @@ export default function NotesTab({ lesson }) {
             
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 tracking-tight">Note Generator</h2>
             <p className="text-slate-600 text-sm md:text-base mb-6 leading-relaxed px-2">
-              Transform your lesson content into structured study materials in seconds.
+              {lesson?.extracted_content || lesson?.compressed_content || lesson?.description
+                ? "Transform your lesson content into structured study materials in seconds."
+                : "Your document is being processed. Notes will be available once extraction completes."}
             </p>
             
             <div className="grid grid-cols-2 gap-2 mb-6">
@@ -268,10 +270,13 @@ export default function NotesTab({ lesson }) {
             <div className="flex flex-col gap-2 w-full">
               <Button 
                 onClick={() => generateNotes(settings)}
-                className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200 font-semibold"
+                disabled={!lesson?.extracted_content && !lesson?.compressed_content && !lesson?.description}
+                className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Generate Notes
+                {lesson?.extracted_content || lesson?.compressed_content || lesson?.description
+                  ? "Generate Notes"
+                  : "Waiting for content..."}
               </Button>
               <Button 
                 variant="outline" 

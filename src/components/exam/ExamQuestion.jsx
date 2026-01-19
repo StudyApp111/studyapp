@@ -42,9 +42,17 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     
     // For MCQ where correct_answer should be just a letter (A, B, C, D)
     if (/^[A-Da-d]$/i.test(correctTrimmed)) {
-      // User selected an option - extract the letter from their selection
-      const userLetter = extractOptionLetter(userTrimmed, optionIndex);
-      return userLetter.toUpperCase() === correctTrimmed.toUpperCase();
+      // The optionIndex tells us which option the user selected (0=A, 1=B, 2=C, 3=D)
+      if (optionIndex >= 0) {
+        const userLetter = String.fromCharCode(65 + optionIndex); // 0->A, 1->B, etc.
+        return userLetter === correctTrimmed.toUpperCase();
+      }
+      // Fallback: try to extract letter from user's answer text
+      const letterMatch = userTrimmed.match(/^([A-Da-d])[\.\)\:\s]/i);
+      if (letterMatch) {
+        return letterMatch[1].toUpperCase() === correctTrimmed.toUpperCase();
+      }
+      return false;
     }
     
     // For True/False

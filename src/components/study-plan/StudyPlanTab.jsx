@@ -108,11 +108,22 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
 
         setPreviousCompleted(newCompletedCount);
         setStudyPlan(newPlan);
+        setLoading(false);
 
         // Only load live progress after study plan is confirmed to exist
         loadLiveProgress();
+      } else {
+        // No study plan yet - check if we should keep polling (exam just submitted)
+        // Check if there's a completed exam that would trigger study plan generation
+        const completedExams = (exams || []).filter(e => e.completed && e.exam_type !== 'practice');
+        if (completedExams.length > 0) {
+          // Study plan should be generating - poll for it
+          console.log('⏳ Waiting for study plan generation...');
+          setTimeout(loadStudyPlan, 2000);
+        } else {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     } catch (error) {
       console.error("Error loading study plan:", error);
       setLoading(false);
@@ -396,8 +407,58 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full" />
+      <div className="px-3 pt-1 w-full max-w-[320px] mx-auto space-y-3 pb-8">
+        {/* Loading Placeholder for Grade Card */}
+        <div className="space-y-2">
+          <div className="h-4 w-48 mx-auto bg-slate-200 rounded animate-pulse" />
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-400 to-slate-500 p-5 shadow-xl">
+            <div className="text-center mb-4">
+              <div className="h-3 w-32 mx-auto bg-white/30 rounded animate-pulse mb-2" />
+              <div className="h-12 w-16 mx-auto bg-white/30 rounded animate-pulse" />
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
+              <div className="h-4 w-24 bg-white/30 rounded animate-pulse" />
+              <div className="h-8 w-16 bg-white/30 rounded-full animate-pulse" />
+            </div>
+          </div>
+        </div>
+        
+        {/* Loading Placeholder for Tasks */}
+        <div className="relative">
+          <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200" />
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 pl-1">
+              <div className="w-9 h-9 rounded-full bg-slate-300 animate-pulse z-10" />
+              <div>
+                <div className="h-4 w-24 bg-slate-200 rounded animate-pulse mb-1" />
+                <div className="h-3 w-16 bg-slate-200 rounded animate-pulse" />
+              </div>
+            </div>
+            
+            {/* Task placeholders */}
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="relative pl-1">
+                <div className="absolute left-[14px] top-4 w-3 h-3 rounded-full bg-slate-200 z-10" />
+                <div className="ml-8 pr-1">
+                  <div className="bg-white border border-slate-200 rounded-xl p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-slate-200 animate-pulse" />
+                      <div className="flex-1">
+                        <div className="h-3 w-16 bg-slate-200 rounded animate-pulse mb-2" />
+                        <div className="h-4 w-32 bg-slate-200 rounded animate-pulse mb-2" />
+                        <div className="h-2 w-full bg-slate-100 rounded-full animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <p className="text-center text-xs text-slate-400 animate-pulse">
+          Generating your personalized study plan...
+        </p>
       </div>
     );
   }

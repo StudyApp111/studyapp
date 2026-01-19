@@ -19,6 +19,8 @@ const HIGHLIGHT_COLORS = {
 
 export default function DocumentViewerTabs({ lesson }) {
   const hasFile = !!lesson?.file_url;
+  const hasExtractedContent = !!lesson?.extracted_content;
+  // Default to PDF if file exists, otherwise transcript (even if no content yet)
   const [viewMode, setViewMode] = useState(hasFile ? "pdf" : "transcript");
   const [searchQuery, setSearchQuery] = useState("");
   const [annotations, setAnnotations] = useState([]);
@@ -189,8 +191,11 @@ export default function DocumentViewerTabs({ lesson }) {
       return (
         <div className="text-center py-12 text-slate-500">
           <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="text-sm">No transcript available</p>
-          <p className="text-xs mt-1">Content is being processed...</p>
+          <p className="text-sm font-medium">No transcript available yet</p>
+          <p className="text-xs mt-1 text-slate-400">Content is being extracted from your document...</p>
+          <div className="mt-4">
+            <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto" />
+          </div>
         </div>
       );
     }
