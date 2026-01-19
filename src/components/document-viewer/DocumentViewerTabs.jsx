@@ -317,9 +317,9 @@ export default function DocumentViewerTabs({ lesson }) {
   };
 
   return (
-    <div className="h-full min-h-[400px] md:min-h-0">
-      <Card className="h-full bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
-        <div className="h-full flex flex-col min-h-[350px] md:min-h-0">
+    <div className="w-full">
+      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden mx-2 md:mx-0 md:h-full">
+        <div className="flex flex-col">
           {/* Header with Controls */}
           <div className="border-b border-purple-200 px-3 py-2">
             <div className="flex items-center justify-between gap-2">
@@ -386,19 +386,11 @@ export default function DocumentViewerTabs({ lesson }) {
             )}
           </div>
 
-          {/* Content Area */}
-          <div className="flex-1 overflow-hidden relative min-h-[280px]">
-            {/* PDF View - Always mounted, controlled via opacity */}
-            {hasFile && (
-              <div 
-                className="absolute inset-0 bg-slate-50"
-                style={{ 
-                  opacity: viewMode === "pdf" ? 1 : 0,
-                  pointerEvents: viewMode === "pdf" ? "auto" : "none",
-                  zIndex: viewMode === "pdf" ? 10 : 0,
-                  visibility: viewMode === "pdf" ? "visible" : "hidden"
-                }}
-              >
+          {/* Content Area - Dynamic height on mobile, flex on desktop */}
+          <div className="relative md:flex-1 md:overflow-hidden" style={{ minHeight: '60vh' }}
+            {/* PDF View */}
+            {hasFile && viewMode === "pdf" && (
+              <div className="w-full h-full min-h-[60vh] bg-slate-50">
                 {isPDF || isOfficeDoc ? (
                   <>
                     {!pdfLoaded && !pdfError && (
@@ -465,43 +457,30 @@ export default function DocumentViewerTabs({ lesson }) {
             )}
             
             {/* Notes View */}
-            <div 
-              className="absolute inset-0"
-              style={{ 
-                opacity: viewMode === "notes" ? 1 : 0,
-                pointerEvents: viewMode === "notes" ? "auto" : "none",
-                zIndex: viewMode === "notes" ? 10 : 0,
-                visibility: viewMode === "notes" ? "visible" : "hidden"
-              }}
-            >
-              <NotesTab lesson={lesson} />
-            </div>
-
-            {/* Transcript View - Always mounted, controlled via opacity */}
-            <div 
-              className="absolute inset-0 flex"
-              style={{ 
-                opacity: viewMode === "transcript" ? 1 : 0,
-                pointerEvents: viewMode === "transcript" ? "auto" : "none",
-                zIndex: viewMode === "transcript" ? 10 : 0,
-                visibility: viewMode === "transcript" ? "visible" : "hidden"
-              }}
-            >
-              <div 
-                ref={contentRef}
-                className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
-                onMouseUp={handleTextSelection}
-              >
-                <div 
-                  className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-none prose prose-sm"
-                  style={{ wordBreak: 'break-word' }}
-                >
-                  {renderHighlightedContent()}
-                </div>
+            {viewMode === "notes" && (
+              <div className="w-full min-h-[60vh]">
+                <NotesTab lesson={lesson} />
               </div>
+            )}
+
+            {/* Transcript/Annotate View */}
+            {viewMode === "transcript" && (
+              <div className="w-full min-h-[60vh] flex flex-col md:flex-row">
+                <div 
+                  ref={contentRef}
+                  className={`flex-1 p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
+                  onMouseUp={handleTextSelection}
+                >
+                  <div 
+                    className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-full prose prose-sm"
+                    style={{ wordBreak: 'break-word' }}
+                  >
+                    {renderHighlightedContent()}
+                  </div>
+                </div>
               
               {activeAnnotation && (
-                <div className="hidden md:block w-1/3 border-l border-purple-200 bg-white p-4 overflow-auto">
+                <div className="hidden md:block w-1/3 border-l border-purple-200 bg-white p-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h3 className="font-semibold text-sm text-slate-900">Annotation</h3>
@@ -563,6 +542,7 @@ export default function DocumentViewerTabs({ lesson }) {
                 </div>
               )}
             </div>
+            )}
           </div>
         </div>
       </Card>

@@ -959,12 +959,20 @@ JSON Output (exact schema):
     );
   }
 
+  // Show loading when exam is selected but not yet loaded (generating in background)
+  const isWaitingForExam = selectedExamNumber && !exam && !isGenerating;
+  
   if (!exam && !isGenerating) {
-    if (exams === undefined) {
+    if (exams === undefined || isWaitingForExam) {
       return (
-        <div className="flex items-center justify-center p-8">
-          <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
-          <span className="ml-2 text-slate-600">Loading exams...</span>
+        <div className="flex flex-col items-center justify-center p-8 min-h-[300px]">
+          <Loader2 className="w-10 h-10 animate-spin text-purple-600 mb-3" />
+          <span className="text-slate-700 font-medium">
+            {isWaitingForExam ? 'Generating your diagnostic exam...' : 'Loading exams...'}
+          </span>
+          {isWaitingForExam && (
+            <span className="text-slate-500 text-sm mt-1">This takes about 10-15 seconds</span>
+          )}
         </div>
       );
     }

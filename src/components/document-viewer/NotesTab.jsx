@@ -143,7 +143,7 @@ export default function NotesTab({ lesson }) {
   }
 
   return (
-    <div className="h-full flex flex-col relative bg-slate-50/50">
+    <div className="min-h-[60vh] flex flex-col relative bg-slate-50/50">
       <NoteSettingsModal 
         open={settingsOpen} 
         onOpenChange={setSettingsOpen} 
