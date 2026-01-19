@@ -223,68 +223,14 @@ export default function DocumentViewerTabs({ lesson }) {
       );
     }
 
-    // PDF files - use native PDF viewer with fallback
-    if (fileType === 'pdf') {
+    // PDF and Office files - use Google Docs Viewer (works for PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX)
+    if (fileType === 'pdf' || fileType === 'word' || fileType === 'powerpoint' || fileType === 'excel') {
       return (
-        <object
-          data={fileUrl}
-          type="application/pdf"
-          className="w-full h-full"
-        >
-          <div className="flex items-center justify-center h-full bg-slate-50 p-6">
-            <div className="text-center max-w-sm">
-              <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-sm font-medium text-slate-700 mb-3">PDF viewer not supported</p>
-              <div className="flex gap-2 justify-center flex-wrap">
-                {hasExtractedContent && (
-                  <Button size="sm" onClick={() => setViewMode("transcript")}>
-                    View Transcript
-                  </Button>
-                )}
-                <Button size="sm" asChild variant="outline">
-                  <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-3 h-3 mr-1" />
-                    Open PDF
-                  </a>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </object>
-      );
-    }
-
-    // Office files (Word, PowerPoint, Excel) - direct download/open
-    if (fileType === 'word' || fileType === 'powerpoint' || fileType === 'excel') {
-      return (
-        <div className="flex items-center justify-center h-full bg-slate-50">
-          <div className="text-center max-w-sm p-6">
-            <FileText className="w-16 h-16 text-purple-200 mx-auto mb-4" />
-            <p className="text-sm font-medium text-slate-700 mb-2">
-              {fileType === 'word' && 'Word Document'}
-              {fileType === 'powerpoint' && 'PowerPoint Presentation'}
-              {fileType === 'excel' && 'Excel Spreadsheet'}
-            </p>
-            <p className="text-xs text-slate-500 mb-4">
-              {hasExtractedContent 
-                ? "View the extracted content in the Transcript tab or download the file" 
-                : "Download to view this file"}
-            </p>
-            <div className="flex gap-2 justify-center flex-wrap">
-              {hasExtractedContent && (
-                <Button size="sm" onClick={() => setViewMode("transcript")}>
-                  View Transcript
-                </Button>
-              )}
-              <Button size="sm" asChild variant="outline">
-                <a href={fileUrl} download target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                  Download File
-                </a>
-              </Button>
-            </div>
-          </div>
-        </div>
+        <iframe
+          src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
+          className="w-full h-full border-0"
+          title="Document Viewer"
+        />
       );
     }
 
