@@ -21,13 +21,17 @@ export default function DocumentViewerTabs({ lesson }) {
   const hasFile = !!lesson?.file_url;
   const hasExtractedContent = !!lesson?.extracted_content;
   const fileUrl = lesson?.file_url || '';
-  // Check if it's a file type that Google Docs viewer can't reliably preview
-  const isProblematicFileType = /\.(docx?|pptx?|txt|md|csv)($|\?)/i.test(fileUrl) ||
-                                (fileUrl.includes('supabase') && /docx?|pptx?/i.test(fileUrl));
-  // Default to transcript for problematic file types if we have extracted content
+  
+  // Check file type - be aggressive about what we consider "problematic" for Google viewer
+  const isPDF = /\.pdf($|\?)/i.test(fileUrl);
+  const isOfficeDoc = /\.(docx?|pptx?|xlsx?)($|\?)/i.test(fileUrl) || 
+                      (fileUrl.includes('supabase') && /docx|pptx|doc|ppt|xlsx?/i.test(fileUrl));
+  
+  // For DOCX/PPTX files, ALWAYS default to transcript (Annotate) if we have extracted content
+  // Google Docs viewer is unreliable for Office files from Supabase storage
   const [viewMode, setViewMode] = useState(
-    hasFile && !isProblematicFileType ? "pdf" : 
-    hasExtractedContent ? "transcript" : 
+    isPDF ? "pdf" : 
+    (isOfficeDoc && hasExtractedContent) ? "transcript" :
     hasFile ? "pdf" : "transcript"
   );
   const [searchQuery, setSearchQuery] = useState("");
