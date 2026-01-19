@@ -477,7 +477,8 @@ export default function DocumentViewer() {
                   <StudyPlanTab 
                     lesson={lesson} 
                     exams={exams} 
-                    onNavigate={handleStudyPlanNavigate} 
+                    onNavigate={handleStudyPlanNavigate}
+                    isVisible={activeTab === 'studyplan'}
                   />
                 </TabsContent>
 
@@ -500,11 +501,11 @@ export default function DocumentViewer() {
 
 
                 <TabsContent value="flashcards" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+                  <FlashcardsTab lesson={lesson} extractedContent={extractedContent} isVisible={activeTab === 'flashcards'} />
                 </TabsContent>
 
                 <TabsContent value="teachit" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  <TeachItTab lesson={lesson} />
+                  <TeachItTab lesson={lesson} isVisible={activeTab === 'teachit'} />
                 </TabsContent>
 
               </div>
@@ -595,7 +596,8 @@ export default function DocumentViewer() {
                 <StudyPlanTab 
                   lesson={lesson} 
                   exams={exams} 
-                  onNavigate={handleStudyPlanNavigate} 
+                  onNavigate={handleStudyPlanNavigate}
+                  isVisible={activeTab === 'studyplan'}
                 />
               </TabsContent>
 
@@ -618,11 +620,11 @@ export default function DocumentViewer() {
 
 
               <TabsContent value="flashcards" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+                <FlashcardsTab lesson={lesson} extractedContent={extractedContent} isVisible={activeTab === 'flashcards'} />
               </TabsContent>
 
               <TabsContent value="teachit" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                <TeachItTab lesson={lesson} />
+                <TeachItTab lesson={lesson} isVisible={activeTab === 'teachit'} />
               </TabsContent>
 
             </div>

@@ -59,7 +59,7 @@ const getGradeColor = (grade) => {
   return 'from-red-500 to-rose-600';
 };
 
-export default function StudyPlanTab({ lesson, exams, onNavigate }) {
+export default function StudyPlanTab({ lesson, exams, onNavigate, isVisible = false }) {
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveProgress, setLiveProgress] = useState({});
@@ -71,12 +71,16 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
     ctaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  // Track if data has been loaded to prevent duplicate fetches
+  const hasLoadedRef = useRef(false);
+  
+  // Only load when tab becomes visible AND lesson is available
   useEffect(() => {
-    if (lesson?.id) {
+    if (isVisible && lesson?.id && !hasLoadedRef.current) {
+      hasLoadedRef.current = true;
       loadStudyPlan();
     }
-    // Don't load live progress on mount - only after study plan loads
-  }, [lesson?.id]);
+  }, [isVisible, lesson?.id]);
 
   // Refresh live progress when tab becomes visible - only if study plan exists
   useEffect(() => {
