@@ -304,9 +304,14 @@ export default function DocumentViewerTabs({ lesson }) {
   }, [showToolbar, showNoteInput]);
 
   const extractedContent = lesson?.extracted_content || "";
-  const isPDF = lesson?.file_url?.toLowerCase().includes('.pdf');
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(lesson?.file_url || '');
-  const isOfficeDoc = /\.(docx?|pptx?|xlsx?)$/i.test(lesson?.file_url || '');
+  const fileUrl = lesson?.file_url || '';
+  const isPDF = fileUrl.toLowerCase().includes('.pdf');
+  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileUrl);
+  // Check for Office docs - handle both direct file extensions and Supabase storage URLs
+  const isOfficeDoc = /\.(docx?|pptx?|xlsx?)($|\?)/i.test(fileUrl) || 
+                      (fileUrl.includes('supabase') && /docx?|pptx?|xlsx?/i.test(fileUrl));
+  // Check if it's a text file
+  const isTextFile = /\.(txt|md|csv)($|\?)/i.test(fileUrl);
 
   const handlePdfLoad = () => {
     setPdfLoaded(true);
@@ -410,7 +415,7 @@ export default function DocumentViewerTabs({ lesson }) {
                       <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-30">
                         <div className="text-center">
                           <div className="w-10 h-10 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" />
-                          <p className="text-sm font-medium text-slate-700">Loading PDF...</p>
+                          <p className="text-sm font-medium text-slate-700">Loading document...</p>
                           <p className="text-xs text-slate-500 mt-1">This may take a few seconds</p>
                         </div>
                       </div>
@@ -419,16 +424,19 @@ export default function DocumentViewerTabs({ lesson }) {
                       <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-30">
                         <div className="text-center max-w-sm p-6">
                           <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                          <p className="text-sm font-medium text-slate-700 mb-2">Failed to load PDF</p>
-                          <p className="text-xs text-slate-500 mb-4">The viewer took too long to respond</p>
-                          <div className="flex gap-2 justify-center">
+                          <p className="text-sm font-medium text-slate-700 mb-2">Document preview unavailable</p>
+                          <p className="text-xs text-slate-500 mb-4">Switch to Annotate tab to view the extracted content</p>
+                          <div className="flex gap-2 justify-center flex-wrap">
                             <Button size="sm" onClick={handlePdfRetry} variant="outline">
                               Try Again
+                            </Button>
+                            <Button size="sm" onClick={() => setViewMode("transcript")} variant="outline">
+                              View Transcript
                             </Button>
                             <Button size="sm" asChild>
                               <a href={lesson.file_url} target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="w-3 h-3 mr-1" />
-                                Open Direct
+                                Download
                               </a>
                             </Button>
                           </div>
@@ -441,9 +449,17 @@ export default function DocumentViewerTabs({ lesson }) {
                       className="w-full h-full border-0"
                       title="Course Document"
                       onLoad={handlePdfLoad}
+                      onError={() => setPdfError(true)}
                       style={{ visibility: pdfLoaded ? 'visible' : 'hidden' }}
                     />
                   </>
+                ) : isTextFile ? (
+                  // For text files, show the extracted content directly
+                  <div className="w-full h-full overflow-auto p-4 bg-white">
+                    <pre className="text-sm text-slate-700 whitespace-pre-wrap font-mono">
+                      {extractedContent || "Content is being extracted..."}
+                    </pre>
+                  </div>
                 ) : isImage ? (
                   <div className="w-full h-full flex items-center justify-center p-8">
                     <img 
