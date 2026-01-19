@@ -317,11 +317,7 @@ export default function DocumentViewerTabs({ lesson }) {
   }, [showToolbar, showNoteInput]);
 
   const extractedContent = lesson?.extracted_content || "";
-  const isPDF = fileUrl.toLowerCase().includes('.pdf');
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileUrl);
-  // Check for Office docs - handle both direct file extensions and Supabase storage URLs
-  const isOfficeDoc = /\.(docx?|pptx?|xlsx?)($|\?)/i.test(fileUrl) || 
-                      (fileUrl.includes('supabase') && /docx?|pptx?|xlsx?/i.test(fileUrl));
   // Check if it's a text file
   const isTextFile = /\.(txt|md|csv)($|\?)/i.test(fileUrl);
 
