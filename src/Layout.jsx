@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText, MessageCircle, ChevronDown, ChevronRight, Upload } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText, Mail, ChevronDown, ChevronRight, Upload } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -230,7 +230,10 @@ export default function Layout({ children, currentPageName }) {
           {showNavigation && !isOnboardingPage && showMobileBottomNav && (
             <nav 
               className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-[9999]"
-              style={{ paddingBottom: 'env(safe-area-inset-bottom, 8px)' }}
+              style={{ 
+                paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
+                minHeight: '60px'
+              }}
             >
               <div className="flex items-center justify-between max-w-lg mx-auto relative px-6 py-3">
                 <Link
@@ -262,7 +265,7 @@ export default function Layout({ children, currentPageName }) {
                   onClick={() => setFeedbackModalOpen(true)}
                   className="flex items-center justify-center p-2.5 rounded-xl transition-all text-slate-500 hover:text-purple-600 hover:bg-purple-50"
                 >
-                  <MessageCircle className="w-6 h-6" />
+                  <Mail className="w-6 h-6" />
                 </button>
 
                 <Link

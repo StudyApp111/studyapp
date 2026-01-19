@@ -5,7 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, LogOut, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
@@ -210,14 +210,7 @@ export default function Onboarding() {
   const stepStyle = getStepStyle();
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${stepStyle.bg} flex items-center justify-center p-4 transition-all duration-500`}>
-      {/* Decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl" />
-      </div>
-
+    <div className={`min-h-screen bg-gradient-to-br ${stepStyle.bg} flex items-center justify-center p-4 transition-colors duration-300`}>
       <div className="w-full max-w-lg relative z-10">
         <div className="flex justify-end mb-4">
           <Button
@@ -231,56 +224,29 @@ export default function Onboarding() {
           </Button>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-6"
-        >
-          {/* Logo with glow */}
-          <div className="relative inline-block mb-4">
-            <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-150" />
-            <motion.div
-              key={currentStep}
-              initial={{ scale: 0.8, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              className="relative text-6xl"
-            >
-              {stepStyle.icon}
-            </motion.div>
-          </div>
-
-          <motion.div
-            key={`title-${currentStep}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <h1 className="text-3xl font-black text-white mb-2">{currentQuestion.question}</h1>
-            <p className="text-white/70 text-sm">{stepStyle.subtitle}</p>
-          </motion.div>
-        </motion.div>
+        <div className="text-center mb-6">
+          <div className="text-5xl mb-3">{stepStyle.icon}</div>
+          <h1 className="text-2xl font-bold text-white mb-1">{currentQuestion.question}</h1>
+          <p className="text-white/70 text-sm">{stepStyle.subtitle}</p>
+        </div>
 
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-6">
           {questions.map((_, idx) => (
-            <motion.div
+            <div
               key={idx}
-              className={`h-2 rounded-full transition-all duration-300 ${
+              className={`h-2 rounded-full transition-all duration-200 ${
                 idx === currentStep 
                   ? 'w-8 bg-white' 
                   : idx < currentStep 
                     ? 'w-2 bg-white/60' 
                     : 'w-2 bg-white/30'
               }`}
-              animate={{ scale: idx === currentStep ? 1.1 : 1 }}
             />
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/20"
-        >
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-5 border border-white/20">
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -289,19 +255,16 @@ export default function Onboarding() {
           )}
 
           <AnimatePresence mode="wait">
-            <motion.div
+            <div
               key={currentStep}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
+              className="animate-in fade-in slide-in-from-right-4 duration-200"
             >
               <OnboardingQuestion
                 question={currentQuestion}
                 value={answers[currentQuestion.id]}
                 onChange={(value) => handleAnswer(currentQuestion.id, value)}
               />
-            </motion.div>
+            </div>
           </AnimatePresence>
 
           <div className="flex justify-between mt-6 pt-4 border-t border-slate-100">
@@ -339,9 +302,8 @@ export default function Onboarding() {
               )}
             </Button>
           </div>
-        </motion.div>
+        </div>
 
-        {/* Branding */}
         <div className="text-center mt-6">
           <p className="text-white/50 text-xs">Powered by StudyApp.AI</p>
         </div>
