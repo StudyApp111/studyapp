@@ -387,10 +387,10 @@ export default function DocumentViewerTabs({ lesson }) {
           </div>
 
           {/* Content Area - Dynamic height on mobile, flex on desktop */}
-          <div className="relative md:flex-1 md:overflow-hidden" style={{ minHeight: '60vh' }}>
+          <div className="relative md:flex-1 md:overflow-hidden" style={{ minHeight: '70vh' }}>
             {/* PDF View */}
             {hasFile && viewMode === "pdf" && (
-              <div className="w-full h-full min-h-[60vh] bg-slate-50">
+              <div className="w-full bg-slate-50" style={{ height: '70vh' }}
                 {isPDF || isOfficeDoc ? (
                   <>
                     {!pdfLoaded && !pdfError && (
@@ -425,10 +425,10 @@ export default function DocumentViewerTabs({ lesson }) {
                     <iframe
                       ref={iframeRef}
                       src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
-                      className="w-full h-full border-0"
+                      className="w-full border-0"
+                      style={{ height: '70vh', visibility: pdfLoaded ? 'visible' : 'hidden' }}
                       title="Course Document"
                       onLoad={handlePdfLoad}
-                      style={{ visibility: pdfLoaded ? 'visible' : 'hidden' }}
                     />
                   </>
                 ) : isImage ? (
@@ -458,22 +458,23 @@ export default function DocumentViewerTabs({ lesson }) {
             
             {/* Notes View */}
             {viewMode === "notes" && (
-              <div className="w-full min-h-[60vh]">
+              <div className="w-full" style={{ minHeight: '70vh' }}>
                 <NotesTab lesson={lesson} />
               </div>
             )}
 
             {/* Transcript/Annotate View */}
             {viewMode === "transcript" && (
-              <div className="w-full min-h-[60vh] flex flex-col md:flex-row">
+              <div className="w-full min-h-[70vh] flex flex-col md:flex-row overflow-hidden">
                 <div 
                   ref={contentRef}
-                  className={`flex-1 p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
+                  className={`flex-1 p-4 bg-slate-50 overflow-y-auto ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
+                  style={{ maxHeight: '70vh' }}
                   onMouseUp={handleTextSelection}
                 >
                   <div 
-                    className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-full prose prose-sm"
-                    style={{ wordBreak: 'break-word' }}
+                    className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words prose prose-sm"
+                    style={{ wordBreak: 'break-word', maxWidth: '100%', overflowWrap: 'anywhere' }}
                   >
                     {renderHighlightedContent()}
                   </div>

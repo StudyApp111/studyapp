@@ -59,7 +59,7 @@ const getGradeColor = (grade) => {
   return 'from-red-500 to-rose-600';
 };
 
-export default function StudyPlanTab({ lesson, exams, onNavigate }) {
+export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPlan = false }) {
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveProgress, setLiveProgress] = useState({});
@@ -214,6 +214,60 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   const completedTasks = studyPlan?.tasks?.filter(t => t.completed).length || 0;
   const totalTasks = studyPlan?.tasks?.length || 0;
   const allComplete = completedTasks === totalTasks && totalTasks > 0;
+
+  // Show placeholder while generating study plan
+  if (isGeneratingPlan) {
+    return (
+      <div className="px-3 pb-8 w-full max-w-[320px] mx-auto">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="space-y-4"
+        >
+          {/* Grade Card Skeleton */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-300 to-slate-400 p-5 shadow-xl animate-pulse">
+            <div className="text-center mb-4">
+              <div className="h-3 w-32 bg-white/30 rounded mx-auto mb-2" />
+              <div className="h-12 w-20 bg-white/40 rounded-lg mx-auto" />
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
+              <div className="h-4 w-40 bg-white/30 rounded" />
+            </div>
+          </div>
+
+          {/* Loading Message */}
+          <div className="text-center py-4">
+            <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
+            <p className="text-slate-700 font-medium">Generating your study plan...</p>
+            <p className="text-slate-500 text-sm mt-1">Analyzing your diagnostic results</p>
+          </div>
+
+          {/* Task Skeletons */}
+          <div className="relative">
+            <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200" />
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="relative pl-1">
+                  <div className="absolute left-[14px] top-4 w-3 h-3 rounded-full bg-slate-200" />
+                  <div className="ml-8 pr-1">
+                    <div className="bg-slate-100 rounded-xl p-3 animate-pulse">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-slate-200" />
+                        <div className="flex-1">
+                          <div className="h-3 w-16 bg-slate-200 rounded mb-2" />
+                          <div className="h-4 w-32 bg-slate-200 rounded" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
