@@ -74,8 +74,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   useEffect(() => {
     if (lesson?.id) {
       loadStudyPlan();
-      loadLiveProgress();
     }
+    // Don't load live progress on mount - only after study plan loads
   }, [lesson?.id]);
 
   // Refresh live progress when tab becomes visible
@@ -100,14 +100,17 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
       if (plans.length > 0) {
         const newPlan = plans[0];
         const newCompletedCount = newPlan.tasks?.filter(t => t.completed).length || 0;
-        
+
         // Check if task was just completed (show animation)
         if (studyPlan && newCompletedCount > previousCompleted) {
           setShowGradeBoost(true);
         }
-        
+
         setPreviousCompleted(newCompletedCount);
         setStudyPlan(newPlan);
+
+        // Only load live progress after study plan is confirmed to exist
+        loadLiveProgress();
       }
       setLoading(false);
     } catch (error) {
@@ -409,9 +412,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
+        {/* Intro text */}
+        <p className="text-center text-slate-600 text-sm mb-2 px-2">
+          If your <span className="font-semibold text-slate-800">{lesson?.course_name || 'course'}</span> exam was today, you would score:
+        </p>
+
         <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-5 shadow-xl`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
-          
+
           <div className="relative">
             {/* Current Grade */}
             <div className="text-center mb-4">

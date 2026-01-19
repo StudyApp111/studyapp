@@ -210,15 +210,17 @@ export default function ProfileInformation() {
             </CardContent>
           </Card>
 
-          {/* Save Button */}
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="w-full h-12 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
+          {/* Save Button - Fixed at bottom on mobile */}
+          <div className="pb-28 md:pb-4">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="w-full h-12 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

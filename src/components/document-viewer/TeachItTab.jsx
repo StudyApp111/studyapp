@@ -30,8 +30,8 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   useEffect(() => {
     if (lesson?.id) {
       loadCards();
-      loadStudyPlanTopics();
     }
+    // Don't load study plan topics on mount - only when needed for generation
   }, [lesson?.id]);
 
   // Listen for study task generation requests - auto-generate when navigating from study plan
@@ -61,6 +61,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   }, [lesson?.id]);
   
   const loadStudyPlanTopics = async () => {
+    if (!lesson?.id) return;
     try {
       const plans = await base44.entities.StudyPlan.filter({ 
         lesson_id: lesson.id,
