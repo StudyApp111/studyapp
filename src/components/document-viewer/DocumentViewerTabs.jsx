@@ -37,11 +37,12 @@ export default function DocumentViewerTabs({ lesson }) {
   const toolbarRef = useRef(null);
   const loadTimeoutRef = useRef(null);
 
+  // Load annotations only when transcript tab is active (to reduce rate limiting)
   useEffect(() => {
-    if (lesson?.id) {
+    if (lesson?.id && viewMode === "transcript") {
       loadAnnotations();
     }
-  }, [lesson?.id]);
+  }, [lesson?.id, viewMode]);
 
   // PDF loading with timeout and retry
   useEffect(() => {

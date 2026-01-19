@@ -26,11 +26,15 @@ export default function NotesTab({ lesson }) {
   });
   const [copied, setCopied] = useState(false);
 
+  const [hasLoaded, setHasLoaded] = useState(false);
+  
+  // Only load notes when component becomes visible (deferred loading)
   useEffect(() => {
-    if (lesson?.id) {
+    if (lesson?.id && !hasLoaded) {
       loadNotes();
+      setHasLoaded(true);
     }
-  }, [lesson?.id]);
+  }, [lesson?.id, hasLoaded]);
 
   const loadNotes = async () => {
     try {

@@ -915,14 +915,15 @@ JSON Output (exact schema):
         setNewBadges(earnedNow);
       }
 
+      // Navigate to study plan tab immediately - don't wait for study plan generation
+      setIsSubmitting(false);
       setExam(null);
       setSelectedExamNumber(null);
       hasAutoSelectedRef.current = false;
       
       if (onExamComplete) onExamComplete();
-      setIsSubmitting(false);
       
-      // Navigate to study plan tab immediately
+      // Switch to study plan tab (generation happens in background)
       window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
     } catch (error) {
       console.error("Error submitting exam:", error);

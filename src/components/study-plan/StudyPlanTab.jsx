@@ -120,13 +120,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   };
 
   // Load live progress from actual entities (flashcards, teachit cards, practice exams)
+  // Only called after study plan exists
   const loadLiveProgress = async () => {
+    if (!lesson?.id || !studyPlan) return;
+    
     try {
-      const [flashcards, teachItCards, practiceExams] = await Promise.all([
-        base44.entities.Flashcard.filter({ lesson_id: lesson.id }),
-        base44.entities.TeachItCard.filter({ lesson_id: lesson.id }),
-        base44.entities.Exam.filter({ lesson_id: lesson.id, exam_type: 'practice' })
-      ]);
+      // Stagger requests to avoid rate limiting
+      const flashcards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
+      const teachItCards = await base44.entities.TeachItCard.filter({ lesson_id: lesson.id });
+      const practiceExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_type: 'practice' });
       
       // Get only completed practice exams for score calculation
       const completedPracticeExams = practiceExams.filter(e => e.completed);

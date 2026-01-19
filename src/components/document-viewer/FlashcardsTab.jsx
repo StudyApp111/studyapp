@@ -176,26 +176,20 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       : 0; // Reset on miss
     
     const isMastered = newReviewCount >= 3;
+    const wasMastered = currentCard.mastered;
     const newStatus = isMastered ? 'mastered' : newReviewCount >= 1 ? 'learning' : 'new';
     
-    // Update streak and award XP
+    // Update streak
     if (knew) {
       const newStreak = streakCount + 1;
       setStreakCount(newStreak);
       
-      // Award XP based on streak
-      let xpAmount = 2; // Base XP per correct card
-      let reason = 'Flashcard correct!';
-      
-      if (newStreak >= 5 && newStreak % 5 === 0) {
-        xpAmount = 10;
-        reason = `${newStreak} card streak! 🔥`;
-      } else if (isMastered && !currentCard.mastered) {
-        xpAmount = 5;
-        reason = 'Card mastered! ⭐';
+      // Award XP only when newly mastered (not already mastered)
+      if (isMastered && !wasMastered) {
+        awardXP(5, 'Card mastered! ⭐');
+      } else if (newStreak >= 5 && newStreak % 5 === 0) {
+        awardXP(10, `${newStreak} card streak! 🔥`);
       }
-      
-      awardXP(xpAmount, reason);
     } else {
       setStreakCount(0);
     }
@@ -217,14 +211,17 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       };
       setCards(updatedCards);
       
+      // Session stats: only count once per card flip (not every rating)
       setSessionStats(prev => ({
         reviewed: prev.reviewed + 1,
         correct: knew ? prev.correct + 1 : prev.correct
       }));
 
-      // Update study plan with total mastered count
-      const totalMastered = updatedCards.filter(c => c.mastered).length;
-      updateStudyPlanProgress('flashcards', totalMastered);
+      // Update study plan with total mastered count (only if newly mastered)
+      if (isMastered && !wasMastered) {
+        const totalMastered = updatedCards.filter(c => c.mastered).length;
+        updateStudyPlanProgress('flashcards', totalMastered);
+      }
     } catch (error) {
       console.error("Error updating flashcard:", error);
     }
@@ -426,7 +423,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   return (
-    <div className="space-y-3 px-3 pb-8 max-w-lg mx-auto">
+    <div className="space-y-3 px-3 pt-2 pb-8 max-w-lg mx-auto">
       {/* How to use modal */}
       <AnimatePresence>
         {showHowTo && (
