@@ -42,17 +42,9 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     
     // For MCQ where correct_answer should be just a letter (A, B, C, D)
     if (/^[A-Da-d]$/i.test(correctTrimmed)) {
-      // The optionIndex tells us which option the user selected (0=A, 1=B, 2=C, 3=D)
-      if (optionIndex >= 0) {
-        const userLetter = String.fromCharCode(65 + optionIndex); // 0->A, 1->B, etc.
-        return userLetter === correctTrimmed.toUpperCase();
-      }
-      // Fallback: try to extract letter from user's answer text
-      const letterMatch = userTrimmed.match(/^([A-Da-d])[\.\)\:\s]/i);
-      if (letterMatch) {
-        return letterMatch[1].toUpperCase() === correctTrimmed.toUpperCase();
-      }
-      return false;
+      // User selected an option - extract the letter from their selection
+      const userLetter = extractOptionLetter(userTrimmed, optionIndex);
+      return userLetter.toUpperCase() === correctTrimmed.toUpperCase();
     }
     
     // For True/False
@@ -86,13 +78,6 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       // Find the option index for the selected answer
       const optionIndex = question.options?.findIndex(opt => opt === value) ?? -1;
       const correct = checkIsCorrect(value, question.correct_answer, optionIndex);
-      console.log('📝 Answer check:', { 
-        selectedOption: value, 
-        optionIndex, 
-        correctAnswer: question.correct_answer,
-        userLetter: optionIndex >= 0 ? String.fromCharCode(65 + optionIndex) : 'N/A',
-        isCorrect: correct 
-      });
       setIsCorrect(correct);
       
       if (correct) {
@@ -106,26 +91,6 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     }
   };
 
-  // Check if this option index is the correct answer
-  const isOptionCorrect = (optionIndex) => {
-    const correctAns = question.correct_answer?.trim();
-    if (!correctAns) return false;
-    
-    // For letter-based answers (A, B, C, D)
-    if (/^[A-Da-d]$/i.test(correctAns)) {
-      const correctIndex = correctAns.toUpperCase().charCodeAt(0) - 65; // A=0, B=1, C=2, D=3
-      return optionIndex === correctIndex;
-    }
-    
-    // For True/False where correct is stored as "True" or "False"
-    if (correctAns.toLowerCase() === 'true' || correctAns.toLowerCase() === 'false') {
-      const tfOptions = ["True", "False"];
-      return tfOptions[optionIndex]?.toLowerCase() === correctAns.toLowerCase();
-    }
-    
-    return false;
-  };
-
   const getOptionStyle = (optionText, optionIndex) => {
     if (!hasAnswered || !isObjective) {
       return selectedAnswer === optionText
@@ -133,13 +98,13 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
         : "border-slate-200 hover:border-purple-300 bg-white";
     }
 
-    const isThisTheCorrectOption = isOptionCorrect(optionIndex);
+    const isThisCorrect = checkIsCorrect(optionText, question.correct_answer, optionIndex);
     const isThisSelected = selectedAnswer === optionText;
 
-    if (isThisTheCorrectOption) {
+    if (isThisCorrect) {
       return "border-emerald-500 bg-emerald-50";
     }
-    if (isThisSelected && !isThisTheCorrectOption) {
+    if (isThisSelected && !isThisCorrect) {
       return "border-red-400 bg-red-50";
     }
     return "border-slate-200 bg-slate-50 opacity-60";
@@ -157,7 +122,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
         const optionLetter = String.fromCharCode(65 + index);
         const optionText = typeof option === 'string' ? option : (option?.text || option?.label || option?.value || String(option));
         const displayText = stripLetterPrefix(optionText);
-        const isThisTheCorrectOption = isOptionCorrect(index);
+        const isThisCorrect = checkIsCorrect(optionText, question.correct_answer, index);
         const isThisSelected = selectedAnswer === optionText;
 
         return (
@@ -177,10 +142,10 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
                 <MathText inline className="text-slate-700 text-xs leading-snug break-words">{displayText}</MathText>
               </div>
             </div>
-            {hasAnswered && isThisTheCorrectOption && (
+            {hasAnswered && isThisCorrect && (
               <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
             )}
-            {hasAnswered && isThisSelected && !isThisTheCorrectOption && (
+            {hasAnswered && isThisSelected && !isThisCorrect && (
               <XCircle className="w-4 h-4 text-red-500 shrink-0" />
             )}
           </label>
@@ -189,38 +154,33 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     </RadioGroup>
   );
 
-  const renderTrueFalseOptions = () => {
-    // For True/False, check correct answer directly against option text
-    const correctAns = question.correct_answer?.trim()?.toLowerCase();
-    
-    return (
-      <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} className="space-y-2">
-        {["True", "False"].map((option, index) => {
-          const isThisTheCorrectOption = option.toLowerCase() === correctAns;
-          const isThisSelected = selectedAnswer === option;
+  const renderTrueFalseOptions = () => (
+    <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} className="space-y-2">
+      {["True", "False"].map((option, index) => {
+        const isThisCorrect = checkIsCorrect(option, question.correct_answer, index);
+        const isThisSelected = selectedAnswer === option;
 
-          return (
-            <div
-              key={option}
-              className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all cursor-pointer ${getOptionStyle(option, index)} ${hasAnswered ? 'cursor-default' : ''}`}
-              onClick={() => handleAnswerSelect(option)}
-            >
-              <RadioGroupItem value={option} id={`option-${option}`} disabled={hasAnswered} />
-              <Label htmlFor={`option-${option}`} className="flex-1 cursor-pointer text-xs">
-                {option}
-              </Label>
-              {hasAnswered && isThisTheCorrectOption && (
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-              )}
-              {hasAnswered && isThisSelected && !isThisTheCorrectOption && (
-                <XCircle className="w-4 h-4 text-red-500 shrink-0" />
-              )}
-            </div>
-          );
-        })}
-      </RadioGroup>
-    );
-  };
+        return (
+          <div
+            key={option}
+            className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all cursor-pointer ${getOptionStyle(option, index)} ${hasAnswered ? 'cursor-default' : ''}`}
+            onClick={() => handleAnswerSelect(option)}
+          >
+            <RadioGroupItem value={option} id={`option-${option}`} disabled={hasAnswered} />
+            <Label htmlFor={`option-${option}`} className="flex-1 cursor-pointer text-xs">
+              {option}
+            </Label>
+            {hasAnswered && isThisCorrect && (
+              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+            )}
+            {hasAnswered && isThisSelected && !isThisCorrect && (
+              <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+            )}
+          </div>
+        );
+      })}
+    </RadioGroup>
+  );
 
   const renderSubjectiveInput = () => (
     <Textarea

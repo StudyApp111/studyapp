@@ -26,23 +26,11 @@ export default function NotesTab({ lesson }) {
   });
   const [copied, setCopied] = useState(false);
 
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
-  
-  // Track visibility - only load when actually visible
   useEffect(() => {
-    // Component is mounted, wait a tick to check if actually in view
-    const timer = setTimeout(() => setIsVisible(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Only load notes when visible and not already loaded
-  useEffect(() => {
-    if (lesson?.id && !hasLoaded && isVisible) {
+    if (lesson?.id) {
       loadNotes();
-      setHasLoaded(true);
     }
-  }, [lesson?.id, hasLoaded, isVisible]);
+  }, [lesson?.id]);
 
   const loadNotes = async () => {
     try {
@@ -247,9 +235,7 @@ export default function NotesTab({ lesson }) {
             
             <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 tracking-tight">Note Generator</h2>
             <p className="text-slate-600 text-sm md:text-base mb-6 leading-relaxed px-2">
-              {lesson?.extracted_content || lesson?.compressed_content || lesson?.description
-                ? "Transform your lesson content into structured study materials in seconds."
-                : "Your document is being processed. Notes will be available once extraction completes."}
+              Transform your lesson content into structured study materials in seconds.
             </p>
             
             <div className="grid grid-cols-2 gap-2 mb-6">
@@ -270,13 +256,10 @@ export default function NotesTab({ lesson }) {
             <div className="flex flex-col gap-2 w-full">
               <Button 
                 onClick={() => generateNotes(settings)}
-                disabled={!lesson?.extracted_content && !lesson?.compressed_content && !lesson?.description}
-                className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200 font-semibold"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                {lesson?.extracted_content || lesson?.compressed_content || lesson?.description
-                  ? "Generate Notes"
-                  : "Waiting for content..."}
+                Generate Notes
               </Button>
               <Button 
                 variant="outline" 

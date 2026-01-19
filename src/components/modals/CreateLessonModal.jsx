@@ -125,9 +125,37 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           );
           const uploadResults = await Promise.all(uploadPromises);
           fileUrls = uploadResults.map(result => result.file_url);
+
+          // Extract content - wait for completion (OCR can take 15-20s for large PDFs)
+          setProcessingStep("Analyzing document...");
           
-          // Don't wait for OCR - it happens in background after lesson creation
-          // User navigates to document viewer immediately where they can see the file
+          const extractionResults = await Promise.allSettled(
+            fileUrls.map(fileUrl =>
+              base44.functions.invoke('extractDocumentContent', { file_url: fileUrl })
+            )
+          );
+          
+          const extractedParts = extractionResults
+            .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
+            .map(r => r.value.data.extracted_content);
+          
+          fullExtractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
+          extractedContent = fullExtractedContent;
+          
+          console.log("📄 Extracted content length:", fullExtractedContent.length, "chars");
+          
+          // Compress if content is large
+          if (fullExtractedContent.length > 5000) {
+            setProcessingStep("Optimizing content...");
+            try {
+              const compResult = await base44.functions.invoke('compressDocument', { content: fullExtractedContent });
+              compressedForPrompts = compResult?.data?.compressed_content || fullExtractedContent;
+            } catch {
+              compressedForPrompts = fullExtractedContent;
+            }
+          } else {
+            compressedForPrompts = fullExtractedContent;
+          }
           
         } catch (fileError) {
           console.error("Error processing files:", fileError);
@@ -144,16 +172,17 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         compressedForPrompts = extractedContent;
       }
 
-      // Enforce minimum 5 second loading time for better UX
+      // Enforce minimum 5 second loading time for better UX and background processing
       const loadingStartTime = Date.now();
       const MINIMUM_LOADING_MS = 5000;
 
+      // Create lesson immediately after OCR/compression
       const learningProfile = {
         grade: userGrade,
         school: userSchool,
         city: ""
       };
-      setProcessingStep("Creating your lesson...");
+      setProcessingStep("Preparing your lesson...");
 
       const lessonData = {
         course_name: courseName,
@@ -164,17 +193,17 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       if (inputType === "description") {
         lessonData.description = description.trim();
         lessonData.extracted_content = description.trim();
-        lessonData.compressed_content = description.trim();
+        lessonData.compressed_content = compressedForPrompts;
       } else if (inputType === "file") {
         lessonData.file_url = fileUrls.length > 0 ? fileUrls[0] : "";
         lessonData.file_urls = fileUrls;
-        // Content will be extracted in background - leave empty for now
-        lessonData.extracted_content = "";
-        lessonData.compressed_content = "";
+        lessonData.extracted_content = fullExtractedContent;
+        lessonData.compressed_content = compressedForPrompts;
       }
 
+      setProcessingStep("Creating lesson...");
       const lesson = await base44.entities.Lesson.create(lessonData);
-      console.log("✅ Lesson created:", lesson.id);
+      console.log("✅ Lesson created with content - extracted:", fullExtractedContent.length, "chars, compressed:", compressedForPrompts.length, "chars");
       sessionStorage.setItem('currentLessonId', lesson.id);
 
       if (!lesson || !lesson.id) {
@@ -183,73 +212,28 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       console.log("✅ Lesson created:", lesson.id);
 
+      // Auto-generate Exam 1 immediately (only needs compressed content, not curriculum)
+      console.log("🎯 Starting Exam 1 auto-generation...");
+      base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+        .then(res => {
+          if (res?.data?.success) console.log("✅ Exam 1 auto-generated");
+        })
+        .catch(err => console.warn("⚠️ Exam 1 generation:", err.message));
+
       // Wait for minimum loading time before navigating
       const elapsedMs = Date.now() - loadingStartTime;
       if (elapsedMs < MINIMUM_LOADING_MS) {
-        setProcessingStep("Preparing your lesson...");
+        setProcessingStep("Almost ready...");
         await new Promise(resolve => setTimeout(resolve, MINIMUM_LOADING_MS - elapsedMs));
       }
 
-      // Close modal and navigate - user sees document viewer immediately
+      // Close modal and navigate (client-side to avoid white flash)
       onOpenChange(false);
-      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`);
+      navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=studyplan`);
 
-      // === BACKGROUND TASKS: OCR extraction, compression, curriculum mapping, exam generation ===
+      // === BACKGROUND TASKS (curriculum mapping only; extraction/compression handled above) ===
       (async () => {
         try {
-          let extractedContent = "";
-          let compressedContent = "";
-          
-          // For file uploads, extract content in background
-          if (inputType === "file" && fileUrls.length > 0) {
-            console.log("🔄 Starting background OCR extraction...");
-            
-            const extractionResults = await Promise.allSettled(
-              fileUrls.map(fileUrl =>
-                base44.functions.invoke('extractDocumentContent', { file_url: fileUrl })
-              )
-            );
-            
-            const extractedParts = extractionResults
-              .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
-              .map(r => r.value.data.extracted_content);
-            
-            extractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
-            console.log("📄 Extracted content length:", extractedContent.length, "chars");
-            
-            // Compress if content is large
-            if (extractedContent.length > 5000) {
-              try {
-                const compResult = await base44.functions.invoke('compressDocument', { content: extractedContent });
-                compressedContent = compResult?.data?.compressed_content || extractedContent;
-              } catch {
-                compressedContent = extractedContent;
-              }
-            } else {
-              compressedContent = extractedContent;
-            }
-            
-            // Update lesson with extracted content
-            await base44.entities.Lesson.update(lesson.id, {
-              extracted_content: extractedContent,
-              compressed_content: compressedContent
-            });
-            console.log("✅ Lesson updated with extracted content");
-          } else {
-            extractedContent = description.trim();
-            compressedContent = description.trim();
-          }
-          
-          // Auto-generate Exam 1 (needs extracted/compressed content)
-          if (extractedContent || compressedContent) {
-            console.log("🎯 Starting Exam 1 auto-generation...");
-            base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-              .then(res => {
-                if (res?.data?.success) console.log("✅ Exam 1 auto-generated");
-              })
-              .catch(err => console.warn("⚠️ Exam 1 generation:", err.message));
-          }
-          
           console.log("🔄 Starting background curriculum mapping...");
           const curriculumPrompt = `Educational Curriculum Analysis Request
 
@@ -262,7 +246,7 @@ Input Context:
 - School: ${learningProfile.school || "N/A"}
 - Location: ${learningProfile.city || "N/A"}
 - Student-Provided Content:
-${compressedContent || extractedContent}
+${compressedForPrompts || extractedContent}
 
 Analysis Priority (STRICT ORDER):
 1. Use the student-provided content as the PRIMARY source of truth.

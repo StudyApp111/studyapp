@@ -59,7 +59,7 @@ const getGradeColor = (grade) => {
   return 'from-red-500 to-rose-600';
 };
 
-export default function StudyPlanTab({ lesson, exams, onNavigate, isVisible = false }) {
+export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveProgress, setLiveProgress] = useState({});
@@ -71,28 +71,24 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isVisible = fa
     ctaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
-  // Track if data has been loaded to prevent duplicate fetches
-  const hasLoadedRef = useRef(false);
-  
-  // Only load when tab becomes visible AND lesson is available
   useEffect(() => {
-    if (isVisible && lesson?.id && !hasLoadedRef.current) {
-      hasLoadedRef.current = true;
+    if (lesson?.id) {
       loadStudyPlan();
     }
-  }, [isVisible, lesson?.id]);
+    // Don't load live progress on mount - only after study plan loads
+  }, [lesson?.id]);
 
-  // Refresh live progress when tab becomes visible - only if study plan exists
+  // Refresh live progress when tab becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && lesson?.id && studyPlan) {
+      if (document.visibilityState === 'visible' && lesson?.id) {
         loadLiveProgress();
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [lesson?.id, studyPlan]);
+  }, [lesson?.id]);
 
   const loadStudyPlan = async () => {
     try {
@@ -112,22 +108,11 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isVisible = fa
 
         setPreviousCompleted(newCompletedCount);
         setStudyPlan(newPlan);
-        setLoading(false);
 
         // Only load live progress after study plan is confirmed to exist
         loadLiveProgress();
-      } else {
-        // No study plan yet - check if we should keep polling (exam just submitted)
-        // Check if there's a completed exam that would trigger study plan generation
-        const completedExams = (exams || []).filter(e => e.completed && e.exam_type !== 'practice');
-        if (completedExams.length > 0) {
-          // Study plan should be generating - poll for it
-          console.log('⏳ Waiting for study plan generation...');
-          setTimeout(loadStudyPlan, 2000);
-        } else {
-          setLoading(false);
-        }
       }
+      setLoading(false);
     } catch (error) {
       console.error("Error loading study plan:", error);
       setLoading(false);
@@ -135,15 +120,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isVisible = fa
   };
 
   // Load live progress from actual entities (flashcards, teachit cards, practice exams)
-  // Only called after study plan exists
   const loadLiveProgress = async () => {
-    if (!lesson?.id || !studyPlan) return;
-    
     try {
-      // Stagger requests to avoid rate limiting
-      const flashcards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
-      const teachItCards = await base44.entities.TeachItCard.filter({ lesson_id: lesson.id });
-      const practiceExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_type: 'practice' });
+      const [flashcards, teachItCards, practiceExams] = await Promise.all([
+        base44.entities.Flashcard.filter({ lesson_id: lesson.id }),
+        base44.entities.TeachItCard.filter({ lesson_id: lesson.id }),
+        base44.entities.Exam.filter({ lesson_id: lesson.id, exam_type: 'practice' })
+      ]);
       
       // Get only completed practice exams for score calculation
       const completedPracticeExams = practiceExams.filter(e => e.completed);
@@ -231,8 +214,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isVisible = fa
   const completedTasks = studyPlan?.tasks?.filter(t => t.completed).length || 0;
   const totalTasks = studyPlan?.tasks?.length || 0;
   const allComplete = completedTasks === totalTasks && totalTasks > 0;
-  // Unlock official exam after completing at least 1 task
-  const officialExamUnlocked = completedTasks >= 1;
 
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
@@ -411,58 +392,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isVisible = fa
 
   if (loading) {
     return (
-      <div className="px-3 pt-1 w-full max-w-[320px] mx-auto space-y-3 pb-8">
-        {/* Loading Placeholder for Grade Card */}
-        <div className="space-y-2">
-          <div className="h-4 w-48 mx-auto bg-slate-200 rounded animate-pulse" />
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-400 to-slate-500 p-5 shadow-xl">
-            <div className="text-center mb-4">
-              <div className="h-3 w-32 mx-auto bg-white/30 rounded animate-pulse mb-2" />
-              <div className="h-12 w-16 mx-auto bg-white/30 rounded animate-pulse" />
-            </div>
-            <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
-              <div className="h-4 w-24 bg-white/30 rounded animate-pulse" />
-              <div className="h-8 w-16 bg-white/30 rounded-full animate-pulse" />
-            </div>
-          </div>
-        </div>
-        
-        {/* Loading Placeholder for Tasks */}
-        <div className="relative">
-          <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200" />
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 pl-1">
-              <div className="w-9 h-9 rounded-full bg-slate-300 animate-pulse z-10" />
-              <div>
-                <div className="h-4 w-24 bg-slate-200 rounded animate-pulse mb-1" />
-                <div className="h-3 w-16 bg-slate-200 rounded animate-pulse" />
-              </div>
-            </div>
-            
-            {/* Task placeholders */}
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="relative pl-1">
-                <div className="absolute left-[14px] top-4 w-3 h-3 rounded-full bg-slate-200 z-10" />
-                <div className="ml-8 pr-1">
-                  <div className="bg-white border border-slate-200 rounded-xl p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-slate-200 animate-pulse" />
-                      <div className="flex-1">
-                        <div className="h-3 w-16 bg-slate-200 rounded animate-pulse mb-2" />
-                        <div className="h-4 w-32 bg-slate-200 rounded animate-pulse mb-2" />
-                        <div className="h-2 w-full bg-slate-100 rounded-full animate-pulse" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <p className="text-center text-xs text-slate-400 animate-pulse">
-          Generating your personalized study plan...
-        </p>
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -666,47 +597,46 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isVisible = fa
           >
             {/* Timeline end dot */}
             <div className={`absolute left-[11px] top-6 w-5 h-5 rounded-full z-10 flex items-center justify-center ${
-              officialExamUnlocked ? 'bg-emerald-500' : 'bg-slate-200'
+              allComplete ? 'bg-emerald-500' : 'bg-slate-200'
             }`}>
-              <Trophy className={`w-3 h-3 ${officialExamUnlocked ? 'text-white' : 'text-slate-400'}`} />
+              <Trophy className={`w-3 h-3 ${allComplete ? 'text-white' : 'text-slate-400'}`} />
             </div>
             
             <button
-              onClick={() => officialExamUnlocked && onNavigate('exam')}
-              disabled={!officialExamUnlocked}
-              className={`w-full ml-8 group pr-1 ${!officialExamUnlocked ? 'cursor-not-allowed' : ''}`}
+              onClick={() => onNavigate('exam')}
+              className="w-full ml-8 group pr-1"
             >
               <div className={`relative overflow-hidden rounded-xl p-4 transition-all ${
-                officialExamUnlocked 
+                allComplete 
                   ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg hover:shadow-xl' 
-                  : 'bg-slate-100 border border-slate-200 opacity-60'
+                  : 'bg-slate-100 border border-slate-200'
               }`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${
-                    officialExamUnlocked ? 'bg-white/20' : 'bg-white'
-                  } ${officialExamUnlocked ? 'group-hover:scale-105' : ''} transition-transform`}>
-                    <Trophy className={`w-6 h-6 ${officialExamUnlocked ? 'text-yellow-300' : 'text-slate-400'}`} />
+                    allComplete ? 'bg-white/20' : 'bg-white'
+                  } group-hover:scale-105 transition-transform`}>
+                    <Trophy className={`w-6 h-6 ${allComplete ? 'text-yellow-300' : 'text-slate-400'}`} />
                   </div>
                   <div className="flex-1 text-left">
                     <p className={`text-[10px] font-bold uppercase tracking-wide ${
-                      officialExamUnlocked ? 'text-emerald-100' : 'text-slate-400'
+                      allComplete ? 'text-emerald-100' : 'text-slate-400'
                     }`}>
-                      {officialExamUnlocked ? (allComplete ? 'All tasks done!' : 'Unlocked!') : 'Complete 1 task to unlock'}
+                      {allComplete ? 'Ready!' : 'Complete tasks first'}
                     </p>
                     <p className={`font-bold text-base ${
-                      officialExamUnlocked ? 'text-white' : 'text-slate-500'
+                      allComplete ? 'text-white' : 'text-slate-500'
                     }`}>
                       Take Official Exam
                     </p>
                   </div>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    officialExamUnlocked ? 'bg-white/20' : 'bg-slate-200'
-                  } ${officialExamUnlocked ? 'group-hover:translate-x-1' : ''} transition-transform`}>
-                    <ArrowRight className={`w-5 h-5 ${officialExamUnlocked ? 'text-white' : 'text-slate-400'}`} />
+                    allComplete ? 'bg-white/20' : 'bg-slate-200'
+                  } group-hover:translate-x-1 transition-transform`}>
+                    <ArrowRight className={`w-5 h-5 ${allComplete ? 'text-white' : 'text-slate-400'}`} />
                   </div>
                 </div>
                 
-                {officialExamUnlocked && (
+                {allComplete && (
                   <p className="text-emerald-100 text-[11px] mt-2 pl-15">
                     Retaking the exam will generate a new study plan
                   </p>
