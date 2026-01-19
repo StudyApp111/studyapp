@@ -20,8 +20,16 @@ const HIGHLIGHT_COLORS = {
 export default function DocumentViewerTabs({ lesson }) {
   const hasFile = !!lesson?.file_url;
   const hasExtractedContent = !!lesson?.extracted_content;
-  // Default to PDF if file exists, otherwise transcript (even if no content yet)
-  const [viewMode, setViewMode] = useState(hasFile ? "pdf" : "transcript");
+  const fileUrl = lesson?.file_url || '';
+  // Check if it's a file type that Google Docs viewer can't reliably preview
+  const isProblematicFileType = /\.(docx?|pptx?|txt|md|csv)($|\?)/i.test(fileUrl) ||
+                                (fileUrl.includes('supabase') && /docx?|pptx?/i.test(fileUrl));
+  // Default to transcript for problematic file types if we have extracted content
+  const [viewMode, setViewMode] = useState(
+    hasFile && !isProblematicFileType ? "pdf" : 
+    hasExtractedContent ? "transcript" : 
+    hasFile ? "pdf" : "transcript"
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [annotations, setAnnotations] = useState([]);
   const [selectedText, setSelectedText] = useState("");
@@ -55,12 +63,13 @@ export default function DocumentViewerTabs({ lesson }) {
       setPdfLoaded(false);
       setPdfError(false);
       
-      // Timeout after 10s
+      // Timeout after 15s for Google Docs viewer
       loadTimeoutRef.current = setTimeout(() => {
         if (!pdfLoaded) {
+          console.log('PDF viewer timeout - showing error state');
           setPdfError(true);
         }
-      }, 10000);
+      }, 15000);
       
       return () => {
         if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
