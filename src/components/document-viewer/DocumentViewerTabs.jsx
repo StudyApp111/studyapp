@@ -3,8 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, MessageCircle, NotebookPen } from "lucide-react";
+import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, Loader2 } from "lucide-react";
 import NotesTab from "./NotesTab";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
@@ -17,25 +16,30 @@ const HIGHLIGHT_COLORS = {
   purple: { bg: '#e9d5ff', border: '#d8b4fe', name: 'Purple' }
 };
 
+// Helper to determine file type from URL
+const getFileType = (url) => {
+  if (!url) return 'unknown';
+  const lowerUrl = url.toLowerCase();
+  if (/\.pdf($|\?)/i.test(lowerUrl)) return 'pdf';
+  if (/\.(docx?|doc)($|\?)/i.test(lowerUrl)) return 'word';
+  if (/\.(pptx?|ppt)($|\?)/i.test(lowerUrl)) return 'powerpoint';
+  if (/\.(xlsx?|xls)($|\?)/i.test(lowerUrl)) return 'excel';
+  if (/\.(jpg|jpeg|png|gif|webp|bmp|tiff)($|\?)/i.test(lowerUrl)) return 'image';
+  if (/\.(txt|md|csv)($|\?)/i.test(lowerUrl)) return 'text';
+  return 'unknown';
+};
+
 export default function DocumentViewerTabs({ lesson }) {
-  const hasFile = !!lesson?.file_url;
-  const hasExtractedContent = !!lesson?.extracted_content;
   const fileUrl = lesson?.file_url || '';
+  const hasFile = !!fileUrl;
+  const hasExtractedContent = !!lesson?.extracted_content;
+  const fileType = getFileType(fileUrl);
   
-  // Check file type - be aggressive about what we consider "problematic" for Google viewer
-  const isPDF = /\.pdf($|\?)/i.test(fileUrl);
-  const isOfficeDoc = /\.(docx?|pptx?|xlsx?)($|\?)/i.test(fileUrl) || 
-                      (fileUrl.includes('supabase') && /docx|pptx|doc|ppt|xlsx?/i.test(fileUrl));
-  
-  // For DOCX/PPTX files, ALWAYS default to transcript (Annotate) if we have extracted content
-  // Google Docs viewer is unreliable for Office files from Supabase storage
-  const [viewMode, setViewMode] = useState(
-    isPDF ? "pdf" : 
-    (isOfficeDoc && hasExtractedContent) ? "transcript" :
-    hasFile ? "pdf" : "transcript"
-  );
+  // State
+  const [viewMode, setViewMode] = useState("document"); // document, transcript, notes
   const [searchQuery, setSearchQuery] = useState("");
   const [annotations, setAnnotations] = useState([]);
+  const [annotationsLoaded, setAnnotationsLoaded] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [selectionRange, setSelectionRange] = useState(null);
   const [showToolbar, setShowToolbar] = useState(false);
@@ -44,16 +48,19 @@ export default function DocumentViewerTabs({ lesson }) {
   const [noteText, setNoteText] = useState("");
   const [pendingHighlightColor, setPendingHighlightColor] = useState(null);
   const [activeAnnotation, setActiveAnnotation] = useState(null);
-  const [pdfLoaded, setPdfLoaded] = useState(false);
-  const [pdfError, setPdfError] = useState(false);
+  
+  // Document viewer state
+  const [docLoading, setDocLoading] = useState(true);
+  const [docError, setDocError] = useState(false);
+  
   const iframeRef = useRef(null);
   const contentRef = useRef(null);
   const toolbarRef = useRef(null);
   const loadTimeoutRef = useRef(null);
 
-  const [annotationsLoaded, setAnnotationsLoaded] = useState(false);
-  
-  // Load annotations only when transcript tab is active AND not already loaded
+  const extractedContent = lesson?.extracted_content || "";
+
+  // Load annotations when transcript tab is active
   useEffect(() => {
     if (lesson?.id && viewMode === "transcript" && !annotationsLoaded) {
       loadAnnotations();
@@ -61,17 +68,17 @@ export default function DocumentViewerTabs({ lesson }) {
     }
   }, [lesson?.id, viewMode, annotationsLoaded]);
 
-  // PDF loading with timeout and retry
+  // Document loading timeout
   useEffect(() => {
-    if (hasFile && viewMode === "pdf") {
-      setPdfLoaded(false);
-      setPdfError(false);
+    if (hasFile && viewMode === "document") {
+      setDocLoading(true);
+      setDocError(false);
       
-      // Timeout after 15s for Google Docs viewer
       loadTimeoutRef.current = setTimeout(() => {
-        if (!pdfLoaded) {
-          console.log('PDF viewer timeout - showing error state');
-          setPdfError(true);
+        if (docLoading) {
+          console.log('Document viewer timeout');
+          setDocError(true);
+          setDocLoading(false);
         }
       }, 15000);
       
@@ -80,6 +87,19 @@ export default function DocumentViewerTabs({ lesson }) {
       };
     }
   }, [lesson?.file_url, viewMode, hasFile]);
+
+  // Click outside to close toolbar
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (toolbarRef.current && !toolbarRef.current.contains(e.target)) {
+        if (showToolbar && !showNoteInput) {
+          closeToolbar();
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showToolbar, showNoteInput]);
 
   const loadAnnotations = async () => {
     try {
@@ -90,23 +110,37 @@ export default function DocumentViewerTabs({ lesson }) {
     }
   };
 
+  const handleDocumentLoad = () => {
+    setDocLoading(false);
+    setDocError(false);
+    if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
+  };
+
+  const handleDocumentError = () => {
+    setDocLoading(false);
+    setDocError(true);
+  };
+
+  const handleRetry = () => {
+    setDocLoading(true);
+    setDocError(false);
+    if (iframeRef.current) {
+      iframeRef.current.src = iframeRef.current.src;
+    }
+  };
+
   const handleTextSelection = () => {
     if (showNoteInput) return;
-    
     const selection = window.getSelection();
     const text = selection.toString().trim();
     
-    if (text && text.length > 0) {
+    if (text && text.length > 0 && extractedContent) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      
       const start = extractedContent.indexOf(text);
       const end = start + text.length;
       
-      setToolbarPosition({ 
-        x: rect.left + rect.width / 2, 
-        y: rect.top - 10 
-      });
+      setToolbarPosition({ x: rect.left + rect.width / 2, y: rect.top - 10 });
       setSelectedText(text);
       setSelectionRange({ start, end });
       setShowToolbar(true);
@@ -115,7 +149,6 @@ export default function DocumentViewerTabs({ lesson }) {
 
   const handleHighlight = async (color) => {
     if (!selectedText || !selectionRange) return;
-    
     try {
       await base44.entities.Annotation.create({
         lesson_id: lesson.id,
@@ -124,7 +157,6 @@ export default function DocumentViewerTabs({ lesson }) {
         color: color,
         position: selectionRange
       });
-      
       await loadAnnotations();
       closeToolbar();
       toast.success("Highlighted!");
@@ -142,7 +174,6 @@ export default function DocumentViewerTabs({ lesson }) {
 
   const handleSaveNote = async () => {
     if (!selectedText || !selectionRange) return;
-    
     try {
       await base44.entities.Annotation.create({
         lesson_id: lesson.id,
@@ -151,7 +182,6 @@ export default function DocumentViewerTabs({ lesson }) {
         color: pendingHighlightColor || 'yellow',
         position: selectionRange
       });
-      
       await loadAnnotations();
       closeToolbar();
       toast.success("Note saved!");
@@ -162,7 +192,6 @@ export default function DocumentViewerTabs({ lesson }) {
   };
 
   const handleAskAI = () => {
-    // Dispatch event to AI tutor with selected text
     window.dispatchEvent(new CustomEvent('askAIFromContext', { 
       detail: { initialPrompt: `Explain this: "${selectedText}"` }
     }));
@@ -195,24 +224,130 @@ export default function DocumentViewerTabs({ lesson }) {
   const handleCopyTranscript = () => {
     if (extractedContent) {
       navigator.clipboard.writeText(extractedContent);
-      toast.success("Transcript copied to clipboard");
+      toast.success("Copied to clipboard");
     }
   };
 
-  const renderHighlightedContent = () => {
-    if (!extractedContent) {
+  // Render document based on file type
+  const renderDocument = () => {
+    if (!hasFile) {
       return (
-        <div className="text-center py-12 text-slate-500">
-          <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p className="text-sm font-medium">No transcript available yet</p>
-          <p className="text-xs mt-1 text-slate-400">Content is being extracted from your document...</p>
-          <div className="mt-4">
-            <div className="w-8 h-8 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto" />
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-sm text-slate-600">No document uploaded</p>
+            <p className="text-xs text-slate-400 mt-1">Switch to Transcript tab to view content</p>
           </div>
         </div>
       );
     }
+
+    // Loading state
+    if (docLoading && !docError) {
+      return (
+        <div className="flex items-center justify-center h-full bg-slate-50">
+          <div className="text-center">
+            <Loader2 className="w-10 h-10 text-purple-600 animate-spin mx-auto mb-3" />
+            <p className="text-sm font-medium text-slate-700">Loading document...</p>
+            <p className="text-xs text-slate-500 mt-1">This may take a few seconds</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Error state
+    if (docError) {
+      return (
+        <div className="flex items-center justify-center h-full bg-slate-50">
+          <div className="text-center max-w-sm p-6">
+            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-sm font-medium text-slate-700 mb-2">Document preview unavailable</p>
+            <p className="text-xs text-slate-500 mb-4">
+              {hasExtractedContent 
+                ? "Switch to Transcript tab to view the extracted content" 
+                : "Try downloading the file directly"}
+            </p>
+            <div className="flex gap-2 justify-center flex-wrap">
+              <Button size="sm" onClick={handleRetry} variant="outline">
+                Try Again
+              </Button>
+              {hasExtractedContent && (
+                <Button size="sm" onClick={() => setViewMode("transcript")} variant="outline">
+                  View Transcript
+                </Button>
+              )}
+              <Button size="sm" asChild>
+                <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  Download
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Image files - direct display
+    if (fileType === 'image') {
+      return (
+        <div className="w-full h-full flex items-center justify-center p-4 bg-slate-100">
+          <img 
+            src={fileUrl} 
+            alt="Document" 
+            className="max-w-full max-h-full object-contain shadow-lg rounded-lg"
+            onLoad={handleDocumentLoad}
+            onError={handleDocumentError}
+          />
+        </div>
+      );
+    }
+
+    // Text files - show as pre-formatted text
+    if (fileType === 'text') {
+      return (
+        <div className="w-full h-full overflow-auto p-4 bg-white">
+          <pre className="text-sm text-slate-700 whitespace-pre-wrap font-mono">
+            {extractedContent || "Loading content..."}
+          </pre>
+        </div>
+      );
+    }
+
+    // PDF, Word, PowerPoint, Excel - use Google Docs Viewer
+    // Note: Google Docs Viewer works best with public URLs
+    const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
     
+    return (
+      <iframe
+        ref={iframeRef}
+        src={viewerUrl}
+        className="w-full h-full border-0"
+        title="Document Viewer"
+        onLoad={handleDocumentLoad}
+        onError={handleDocumentError}
+      />
+    );
+  };
+
+  // Render transcript with highlights
+  const renderTranscript = () => {
+    if (!extractedContent) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center py-12">
+            <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+            <p className="text-sm font-medium text-slate-600">No transcript available yet</p>
+            <p className="text-xs mt-1 text-slate-400">Content is being extracted from your document...</p>
+            <div className="mt-4">
+              <Loader2 className="w-6 h-6 text-purple-600 animate-spin mx-auto" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Search highlighting
     if (searchQuery && searchQuery.length > 0) {
       try {
         const escapedQuery = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -231,10 +366,11 @@ export default function DocumentViewerTabs({ lesson }) {
           </>
         );
       } catch (e) {
-        // Invalid regex, just show content
+        // Invalid regex
       }
     }
-    
+
+    // Annotation highlighting
     const annotationsWithPositions = annotations.map(a => {
       const textToFind = a.highlight_text;
       const idx = extractedContent.indexOf(textToFind);
@@ -244,28 +380,24 @@ export default function DocumentViewerTabs({ lesson }) {
         resolvedEnd: idx >= 0 ? idx + textToFind.length : (a.position?.end ?? -1)
       };
     }).filter(a => a.resolvedStart >= 0);
-    
+
     const sortedAnnotations = annotationsWithPositions.sort((a, b) => a.resolvedStart - b.resolvedStart);
-    
+
     if (sortedAnnotations.length === 0) {
       return <>{extractedContent}</>;
     }
-    
+
     const elements = [];
     let lastIndex = 0;
-    
+
     sortedAnnotations.forEach((annotation, idx) => {
       const start = annotation.resolvedStart;
       const end = annotation.resolvedEnd;
       
-      // Skip if overlapping with previous
-      if (start < lastIndex) return;
+      if (start < lastIndex) return; // Skip overlapping
       
       if (start > lastIndex) {
-        const beforeText = extractedContent.substring(lastIndex, start);
-        elements.push(
-          <span key={`text-${idx}`}>{beforeText}</span>
-        );
+        elements.push(<span key={`text-${idx}`}>{extractedContent.substring(lastIndex, start)}</span>);
       }
       
       const highlightedText = extractedContent.substring(start, end);
@@ -284,73 +416,37 @@ export default function DocumentViewerTabs({ lesson }) {
           }}
         >
           {highlightedText}
-          {annotation.note && (
-            <StickyNote className="inline w-3 h-3 ml-0.5 text-slate-500" />
-          )}
+          {annotation.note && <StickyNote className="inline w-3 h-3 ml-0.5 text-slate-500" />}
         </span>
       );
       
       lastIndex = end;
     });
-    
+
     if (lastIndex < extractedContent.length) {
-      elements.push(
-        <span key="text-end">{extractedContent.substring(lastIndex)}</span>
-      );
+      elements.push(<span key="text-end">{extractedContent.substring(lastIndex)}</span>);
     }
-    
+
     return <>{elements}</>;
-  };
-
-  // Click outside to close toolbar
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (toolbarRef.current && !toolbarRef.current.contains(e.target)) {
-        if (showToolbar && !showNoteInput) {
-          closeToolbar();
-        }
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showToolbar, showNoteInput]);
-
-  const extractedContent = lesson?.extracted_content || "";
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileUrl);
-  // Check if it's a text file
-  const isTextFile = /\.(txt|md|csv)($|\?)/i.test(fileUrl);
-
-  const handlePdfLoad = () => {
-    setPdfLoaded(true);
-    if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
-  };
-
-  const handlePdfRetry = () => {
-    setPdfError(false);
-    setPdfLoaded(false);
-    if (iframeRef.current) {
-      iframeRef.current.src = iframeRef.current.src;
-    }
   };
 
   return (
     <div className="h-full">
       <Card className="h-full bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
         <div className="h-full flex flex-col">
-          {/* Header with Controls */}
+          {/* Header */}
           <div className="border-b border-purple-200 px-3 py-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
                 {hasFile && (
                   <Button
-                    variant={viewMode === "pdf" ? "default" : "ghost"}
+                    variant={viewMode === "document" ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => setViewMode("pdf")}
-                    className={`text-xs h-7 px-3 ${viewMode === "pdf" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+                    onClick={() => setViewMode("document")}
+                    className={`text-xs h-7 px-3 ${viewMode === "document" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
                   >
                     <FileText className="w-3 h-3 mr-1" />
-                    PDF
+                    Document
                   </Button>
                 )}
                 <Button
@@ -360,7 +456,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   className={`text-xs h-7 px-3 ${viewMode === "transcript" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
                 >
                   <Highlighter className="w-3 h-3 mr-1" />
-                  Annotate
+                  Transcript
                 </Button>
                 <Button
                   variant={viewMode === "notes" ? "default" : "ghost"}
@@ -371,8 +467,8 @@ export default function DocumentViewerTabs({ lesson }) {
                   <StickyNote className="w-3 h-3 mr-1" />
                   Notes
                 </Button>
-                </div>
-              
+              </div>
+
               {viewMode === "transcript" && (
                 <div className="flex items-center gap-2">
                   <div className="relative">
@@ -384,18 +480,13 @@ export default function DocumentViewerTabs({ lesson }) {
                       className="pl-7 h-7 text-xs w-32 md:w-48"
                     />
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyTranscript}
-                    className="h-7 text-xs"
-                  >
+                  <Button variant="outline" size="sm" onClick={handleCopyTranscript} className="h-7 text-xs">
                     <Copy className="w-3 h-3" />
                   </Button>
                 </div>
               )}
             </div>
-            
+
             {viewMode === "transcript" && (
               <p className="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1">
                 <Highlighter className="w-3 h-3" />
@@ -406,210 +497,110 @@ export default function DocumentViewerTabs({ lesson }) {
 
           {/* Content Area */}
           <div className="flex-1 overflow-hidden relative">
-            {/* PDF View - Always mounted, controlled via opacity */}
-            {hasFile && (
-              <div 
-                className="absolute inset-0 bg-slate-50"
-                style={{ 
-                  opacity: viewMode === "pdf" ? 1 : 0,
-                  pointerEvents: viewMode === "pdf" ? "auto" : "none",
-                  zIndex: viewMode === "pdf" ? 10 : 0,
-                  visibility: viewMode === "pdf" ? "visible" : "hidden"
-                }}
-              >
-                {isPDF || isOfficeDoc ? (
-                  <>
-                    {!pdfLoaded && !pdfError && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-30">
-                        <div className="text-center">
-                          <div className="w-10 h-10 border-3 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-3" />
-                          <p className="text-sm font-medium text-slate-700">Loading document...</p>
-                          <p className="text-xs text-slate-500 mt-1">This may take a few seconds</p>
-                        </div>
-                      </div>
-                    )}
-                    {pdfError && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-50 z-30">
-                        <div className="text-center max-w-sm p-6">
-                          <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                          <p className="text-sm font-medium text-slate-700 mb-2">Document preview unavailable</p>
-                          <p className="text-xs text-slate-500 mb-4">Switch to Annotate tab to view the extracted content</p>
-                          <div className="flex gap-2 justify-center flex-wrap">
-                            <Button size="sm" onClick={handlePdfRetry} variant="outline">
-                              Try Again
-                            </Button>
-                            <Button size="sm" onClick={() => setViewMode("transcript")} variant="outline">
-                              View Transcript
-                            </Button>
-                            <Button size="sm" asChild>
-                              <a href={lesson.file_url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="w-3 h-3 mr-1" />
-                                Download
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <iframe
-                      ref={iframeRef}
-                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
-                      className="w-full h-full border-0"
-                      title="Course Document"
-                      onLoad={handlePdfLoad}
-                      onError={() => setPdfError(true)}
-                      style={{ visibility: pdfLoaded ? 'visible' : 'hidden' }}
-                    />
-                  </>
-                ) : isTextFile ? (
-                  // For text files, show the extracted content directly
-                  <div className="w-full h-full overflow-auto p-4 bg-white">
-                    <pre className="text-sm text-slate-700 whitespace-pre-wrap font-mono">
-                      {extractedContent || "Content is being extracted..."}
-                    </pre>
+            {/* Document View */}
+            {viewMode === "document" && (
+              <div className="absolute inset-0">
+                {renderDocument()}
+              </div>
+            )}
+
+            {/* Transcript View */}
+            {viewMode === "transcript" && (
+              <div className="absolute inset-0 flex">
+                <div 
+                  ref={contentRef}
+                  className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
+                  onMouseUp={handleTextSelection}
+                >
+                  <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-none prose prose-sm">
+                    {renderTranscript()}
                   </div>
-                ) : isImage ? (
-                  <div className="w-full h-full flex items-center justify-center p-8">
-                    <img 
-                      src={lesson.file_url} 
-                      alt="Course Material" 
-                      className="max-w-full max-h-full object-contain shadow-lg"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                      <p className="text-slate-600 mb-3">Preview not available</p>
-                      <Button variant="outline" asChild className="border-purple-200">
-                        <a href={lesson.file_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Open File
-                        </a>
-                      </Button>
+                </div>
+
+                {/* Annotation Sidebar */}
+                {activeAnnotation && (
+                  <div className="hidden md:block w-1/3 border-l border-purple-200 bg-white p-4 overflow-auto">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-sm text-slate-900">Annotation</h3>
+                        <Button variant="ghost" size="sm" onClick={() => setActiveAnnotation(null)} className="h-6 w-6 p-0">
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      <div 
+                        className="p-2 rounded-lg text-xs"
+                        style={{ 
+                          backgroundColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.bg,
+                          borderColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.border,
+                          borderWidth: 1
+                        }}
+                      >
+                        "{activeAnnotation.highlight_text.substring(0, 200)}{activeAnnotation.highlight_text.length > 200 ? '...' : ''}"
+                      </div>
+                      
+                      {activeAnnotation.note ? (
+                        <div className="bg-slate-50 p-2 rounded-lg">
+                          <p className="text-xs font-medium text-slate-600 mb-1">Note:</p>
+                          <p className="text-sm text-slate-700">{activeAnnotation.note}</p>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400 italic">No note added</p>
+                      )}
+                      
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent('askAIFromContext', { 
+                              detail: { initialPrompt: `Explain this: "${activeAnnotation.highlight_text}"` }
+                            }));
+                            toast.success("Sent to AI Tutor!");
+                          }}
+                          className="flex-1 text-xs h-8"
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Ask AI
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteAnnotation(activeAnnotation.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             )}
-            
-            {/* Notes View */}
-            <div 
-              className="absolute inset-0"
-              style={{ 
-                opacity: viewMode === "notes" ? 1 : 0,
-                pointerEvents: viewMode === "notes" ? "auto" : "none",
-                zIndex: viewMode === "notes" ? 10 : 0,
-                visibility: viewMode === "notes" ? "visible" : "hidden"
-              }}
-            >
-              <NotesTab lesson={lesson} />
-            </div>
 
-            {/* Transcript View - Always mounted, controlled via opacity */}
-            <div 
-              className="absolute inset-0 flex"
-              style={{ 
-                opacity: viewMode === "transcript" ? 1 : 0,
-                pointerEvents: viewMode === "transcript" ? "auto" : "none",
-                zIndex: viewMode === "transcript" ? 10 : 0,
-                visibility: viewMode === "transcript" ? "visible" : "hidden"
-              }}
-            >
-              <div 
-                ref={contentRef}
-                className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
-                onMouseUp={handleTextSelection}
-              >
-                <div 
-                  className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-none prose prose-sm"
-                  style={{ wordBreak: 'break-word' }}
-                >
-                  {renderHighlightedContent()}
-                </div>
+            {/* Notes View */}
+            {viewMode === "notes" && (
+              <div className="absolute inset-0">
+                <NotesTab lesson={lesson} />
               </div>
-              
-              {activeAnnotation && (
-                <div className="hidden md:block w-1/3 border-l border-purple-200 bg-white p-4 overflow-auto">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-sm text-slate-900">Annotation</h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setActiveAnnotation(null)}
-                        className="h-6 w-6 p-0"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    
-                    <div 
-                      className="p-2 rounded-lg text-xs"
-                      style={{ 
-                        backgroundColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.bg,
-                        borderColor: HIGHLIGHT_COLORS[activeAnnotation.color]?.border,
-                        borderWidth: 1
-                      }}
-                    >
-                      "{activeAnnotation.highlight_text.substring(0, 200)}{activeAnnotation.highlight_text.length > 200 ? '...' : ''}"
-                    </div>
-                    
-                    {activeAnnotation.note ? (
-                      <div className="bg-slate-50 p-2 rounded-lg">
-                        <p className="text-xs font-medium text-slate-600 mb-1">Note:</p>
-                        <p className="text-sm text-slate-700">{activeAnnotation.note}</p>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-400 italic">No note added</p>
-                    )}
-                    
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent('askAIFromContext', { 
-                            detail: { initialPrompt: `Explain this: "${activeAnnotation.highlight_text}"` }
-                          }));
-                          toast.success("Sent to AI Tutor!");
-                        }}
-                        className="flex-1 text-xs h-8"
-                      >
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        Ask AI
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteAnnotation(activeAnnotation.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs h-8"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </Card>
 
       {/* Floating Selection Toolbar */}
       {showToolbar && selectedText && (
-      <div 
-      ref={toolbarRef}
-      className="fixed z-50 animate-in fade-in zoom-in duration-150 max-w-[90vw]"
-      style={{ 
-      left: `${Math.min(toolbarPosition.x, window.innerWidth - 200)}px`, 
-      top: `${toolbarPosition.y}px`,
-      transform: 'translate(-50%, -100%)'
-      }}
-      >
+        <div 
+          ref={toolbarRef}
+          className="fixed z-50 animate-in fade-in zoom-in duration-150 max-w-[90vw]"
+          style={{ 
+            left: `${Math.min(toolbarPosition.x, window.innerWidth - 200)}px`, 
+            top: `${toolbarPosition.y}px`,
+            transform: 'translate(-50%, -100%)'
+          }}
+        >
           {!showNoteInput ? (
             <div className="bg-slate-900 rounded-lg shadow-2xl p-1.5 flex items-center gap-1">
-              {/* Color buttons */}
               {Object.entries(HIGHLIGHT_COLORS).map(([color, config]) => (
                 <button
                   key={color}
@@ -619,24 +610,11 @@ export default function DocumentViewerTabs({ lesson }) {
                   title={`Highlight ${config.name}`}
                 />
               ))}
-              
               <div className="w-px h-5 bg-slate-700 mx-1" />
-              
-              {/* Add Note */}
-              <button
-                onClick={handleAddNote}
-                className="p-1.5 rounded hover:bg-slate-800 text-white transition-colors"
-                title="Add Note"
-              >
+              <button onClick={handleAddNote} className="p-1.5 rounded hover:bg-slate-800 text-white transition-colors" title="Add Note">
                 <StickyNote className="w-4 h-4" />
               </button>
-              
-              {/* Ask AI */}
-              <button
-                onClick={handleAskAI}
-                className="p-1.5 rounded hover:bg-slate-800 text-purple-400 transition-colors"
-                title="Ask AI"
-              >
+              <button onClick={handleAskAI} className="p-1.5 rounded hover:bg-slate-800 text-purple-400 transition-colors" title="Ask AI">
                 <Sparkles className="w-4 h-4" />
               </button>
             </div>
@@ -649,11 +627,9 @@ export default function DocumentViewerTabs({ lesson }) {
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                
                 <p className="text-[10px] text-slate-500 bg-slate-50 p-1.5 rounded truncate">
                   "{selectedText.substring(0, 50)}{selectedText.length > 50 ? '...' : ''}"
                 </p>
-                
                 <div className="flex gap-1">
                   {Object.entries(HIGHLIGHT_COLORS).map(([color, config]) => (
                     <button
@@ -666,7 +642,6 @@ export default function DocumentViewerTabs({ lesson }) {
                     />
                   ))}
                 </div>
-                
                 <Textarea
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
@@ -674,7 +649,6 @@ export default function DocumentViewerTabs({ lesson }) {
                   className="min-h-[60px] text-sm resize-none"
                   autoFocus
                 />
-                
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={closeToolbar} className="flex-1 h-8 text-xs">
                     Cancel
