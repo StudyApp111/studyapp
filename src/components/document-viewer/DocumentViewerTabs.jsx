@@ -49,14 +49,8 @@ export default function DocumentViewerTabs({ lesson }) {
   const [pendingHighlightColor, setPendingHighlightColor] = useState(null);
   const [activeAnnotation, setActiveAnnotation] = useState(null);
   
-  // Document viewer state
-  const [docLoading, setDocLoading] = useState(true);
-  const [docError, setDocError] = useState(false);
-  
-  const iframeRef = useRef(null);
   const contentRef = useRef(null);
   const toolbarRef = useRef(null);
-  const loadTimeoutRef = useRef(null);
 
   const extractedContent = lesson?.extracted_content || "";
 
@@ -68,25 +62,7 @@ export default function DocumentViewerTabs({ lesson }) {
     }
   }, [lesson?.id, viewMode, annotationsLoaded]);
 
-  // Document loading timeout
-  useEffect(() => {
-    if (hasFile && viewMode === "document") {
-      setDocLoading(true);
-      setDocError(false);
-      
-      loadTimeoutRef.current = setTimeout(() => {
-        if (docLoading) {
-          console.log('Document viewer timeout');
-          setDocError(true);
-          setDocLoading(false);
-        }
-      }, 15000);
-      
-      return () => {
-        if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
-      };
-    }
-  }, [lesson?.file_url, viewMode, hasFile]);
+
 
   // Click outside to close toolbar
   useEffect(() => {
@@ -107,25 +83,6 @@ export default function DocumentViewerTabs({ lesson }) {
       setAnnotations(annots);
     } catch (error) {
       console.error("Error loading annotations:", error);
-    }
-  };
-
-  const handleDocumentLoad = () => {
-    setDocLoading(false);
-    setDocError(false);
-    if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
-  };
-
-  const handleDocumentError = () => {
-    setDocLoading(false);
-    setDocError(true);
-  };
-
-  const handleRetry = () => {
-    setDocLoading(true);
-    setDocError(false);
-    if (iframeRef.current) {
-      iframeRef.current.src = iframeRef.current.src;
     }
   };
 
@@ -242,52 +199,6 @@ export default function DocumentViewerTabs({ lesson }) {
       );
     }
 
-    // Loading state
-    if (docLoading && !docError) {
-      return (
-        <div className="flex items-center justify-center h-full bg-slate-50">
-          <div className="text-center">
-            <Loader2 className="w-10 h-10 text-purple-600 animate-spin mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-700">Loading document...</p>
-            <p className="text-xs text-slate-500 mt-1">This may take a few seconds</p>
-          </div>
-        </div>
-      );
-    }
-
-    // Error state
-    if (docError) {
-      return (
-        <div className="flex items-center justify-center h-full bg-slate-50">
-          <div className="text-center max-w-sm p-6">
-            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-sm font-medium text-slate-700 mb-2">Document preview unavailable</p>
-            <p className="text-xs text-slate-500 mb-4">
-              {hasExtractedContent 
-                ? "Switch to Transcript tab to view the extracted content" 
-                : "Try downloading the file directly"}
-            </p>
-            <div className="flex gap-2 justify-center flex-wrap">
-              <Button size="sm" onClick={handleRetry} variant="outline">
-                Try Again
-              </Button>
-              {hasExtractedContent && (
-                <Button size="sm" onClick={() => setViewMode("transcript")} variant="outline">
-                  View Transcript
-                </Button>
-              )}
-              <Button size="sm" asChild>
-                <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-3 h-3 mr-1" />
-                  Download
-                </a>
-              </Button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     // Image files - direct display
     if (fileType === 'image') {
       return (
@@ -296,8 +207,6 @@ export default function DocumentViewerTabs({ lesson }) {
             src={fileUrl} 
             alt="Document" 
             className="max-w-full max-h-full object-contain shadow-lg rounded-lg"
-            onLoad={handleDocumentLoad}
-            onError={handleDocumentError}
           />
         </div>
       );
@@ -314,19 +223,85 @@ export default function DocumentViewerTabs({ lesson }) {
       );
     }
 
-    // PDF, Word, PowerPoint, Excel - use Google Docs Viewer
-    // Note: Google Docs Viewer works best with public URLs
-    const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
-    
+    // PDF files - use native PDF viewer with fallback
+    if (fileType === 'pdf') {
+      return (
+        <object
+          data={fileUrl}
+          type="application/pdf"
+          className="w-full h-full"
+        >
+          <div className="flex items-center justify-center h-full bg-slate-50 p-6">
+            <div className="text-center max-w-sm">
+              <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-sm font-medium text-slate-700 mb-3">PDF viewer not supported</p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                {hasExtractedContent && (
+                  <Button size="sm" onClick={() => setViewMode("transcript")}>
+                    View Transcript
+                  </Button>
+                )}
+                <Button size="sm" asChild variant="outline">
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    Open PDF
+                  </a>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </object>
+      );
+    }
+
+    // Office files (Word, PowerPoint, Excel) - direct download/open
+    if (fileType === 'word' || fileType === 'powerpoint' || fileType === 'excel') {
+      return (
+        <div className="flex items-center justify-center h-full bg-slate-50">
+          <div className="text-center max-w-sm p-6">
+            <FileText className="w-16 h-16 text-purple-200 mx-auto mb-4" />
+            <p className="text-sm font-medium text-slate-700 mb-2">
+              {fileType === 'word' && 'Word Document'}
+              {fileType === 'powerpoint' && 'PowerPoint Presentation'}
+              {fileType === 'excel' && 'Excel Spreadsheet'}
+            </p>
+            <p className="text-xs text-slate-500 mb-4">
+              {hasExtractedContent 
+                ? "View the extracted content in the Transcript tab or download the file" 
+                : "Download to view this file"}
+            </p>
+            <div className="flex gap-2 justify-center flex-wrap">
+              {hasExtractedContent && (
+                <Button size="sm" onClick={() => setViewMode("transcript")}>
+                  View Transcript
+                </Button>
+              )}
+              <Button size="sm" asChild variant="outline">
+                <a href={fileUrl} download target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-3 h-3 mr-1" />
+                  Download File
+                </a>
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Unknown file type
     return (
-      <iframe
-        ref={iframeRef}
-        src={viewerUrl}
-        className="w-full h-full border-0"
-        title="Document Viewer"
-        onLoad={handleDocumentLoad}
-        onError={handleDocumentError}
-      />
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <p className="text-slate-600 mb-3">Preview not available</p>
+          <Button variant="outline" asChild className="border-purple-200">
+            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Open File
+            </a>
+          </Button>
+        </div>
+      </div>
     );
   };
 
@@ -512,7 +487,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
                   onMouseUp={handleTextSelection}
                 >
-                  <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-none prose prose-sm">
+                  <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-full md:max-w-3xl mx-auto prose prose-sm">
                     {renderTranscript()}
                   </div>
                 </div>
