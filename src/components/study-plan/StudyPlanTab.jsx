@@ -78,17 +78,17 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
     // Don't load live progress on mount - only after study plan loads
   }, [lesson?.id]);
 
-  // Refresh live progress when tab becomes visible
+  // Refresh live progress when tab becomes visible - only if study plan exists
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && lesson?.id) {
+      if (document.visibilityState === 'visible' && lesson?.id && studyPlan) {
         loadLiveProgress();
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [lesson?.id]);
+  }, [lesson?.id, studyPlan]);
 
   const loadStudyPlan = async () => {
     try {
@@ -216,6 +216,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
   const completedTasks = studyPlan?.tasks?.filter(t => t.completed).length || 0;
   const totalTasks = studyPlan?.tasks?.length || 0;
   const allComplete = completedTasks === totalTasks && totalTasks > 0;
+  // Unlock official exam after completing at least 1 task
+  const officialExamUnlocked = completedTasks >= 1;
 
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
@@ -599,46 +601,47 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
           >
             {/* Timeline end dot */}
             <div className={`absolute left-[11px] top-6 w-5 h-5 rounded-full z-10 flex items-center justify-center ${
-              allComplete ? 'bg-emerald-500' : 'bg-slate-200'
+              officialExamUnlocked ? 'bg-emerald-500' : 'bg-slate-200'
             }`}>
-              <Trophy className={`w-3 h-3 ${allComplete ? 'text-white' : 'text-slate-400'}`} />
+              <Trophy className={`w-3 h-3 ${officialExamUnlocked ? 'text-white' : 'text-slate-400'}`} />
             </div>
             
             <button
-              onClick={() => onNavigate('exam')}
-              className="w-full ml-8 group pr-1"
+              onClick={() => officialExamUnlocked && onNavigate('exam')}
+              disabled={!officialExamUnlocked}
+              className={`w-full ml-8 group pr-1 ${!officialExamUnlocked ? 'cursor-not-allowed' : ''}`}
             >
               <div className={`relative overflow-hidden rounded-xl p-4 transition-all ${
-                allComplete 
+                officialExamUnlocked 
                   ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg hover:shadow-xl' 
-                  : 'bg-slate-100 border border-slate-200'
+                  : 'bg-slate-100 border border-slate-200 opacity-60'
               }`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${
-                    allComplete ? 'bg-white/20' : 'bg-white'
-                  } group-hover:scale-105 transition-transform`}>
-                    <Trophy className={`w-6 h-6 ${allComplete ? 'text-yellow-300' : 'text-slate-400'}`} />
+                    officialExamUnlocked ? 'bg-white/20' : 'bg-white'
+                  } ${officialExamUnlocked ? 'group-hover:scale-105' : ''} transition-transform`}>
+                    <Trophy className={`w-6 h-6 ${officialExamUnlocked ? 'text-yellow-300' : 'text-slate-400'}`} />
                   </div>
                   <div className="flex-1 text-left">
                     <p className={`text-[10px] font-bold uppercase tracking-wide ${
-                      allComplete ? 'text-emerald-100' : 'text-slate-400'
+                      officialExamUnlocked ? 'text-emerald-100' : 'text-slate-400'
                     }`}>
-                      {allComplete ? 'Ready!' : 'Complete tasks first'}
+                      {officialExamUnlocked ? (allComplete ? 'All tasks done!' : 'Unlocked!') : 'Complete 1 task to unlock'}
                     </p>
                     <p className={`font-bold text-base ${
-                      allComplete ? 'text-white' : 'text-slate-500'
+                      officialExamUnlocked ? 'text-white' : 'text-slate-500'
                     }`}>
                       Take Official Exam
                     </p>
                   </div>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    allComplete ? 'bg-white/20' : 'bg-slate-200'
-                  } group-hover:translate-x-1 transition-transform`}>
-                    <ArrowRight className={`w-5 h-5 ${allComplete ? 'text-white' : 'text-slate-400'}`} />
+                    officialExamUnlocked ? 'bg-white/20' : 'bg-slate-200'
+                  } ${officialExamUnlocked ? 'group-hover:translate-x-1' : ''} transition-transform`}>
+                    <ArrowRight className={`w-5 h-5 ${officialExamUnlocked ? 'text-white' : 'text-slate-400'}`} />
                   </div>
                 </div>
                 
-                {allComplete && (
+                {officialExamUnlocked && (
                   <p className="text-emerald-100 text-[11px] mt-2 pl-15">
                     Retaking the exam will generate a new study plan
                   </p>

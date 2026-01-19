@@ -27,14 +27,22 @@ export default function NotesTab({ lesson }) {
   const [copied, setCopied] = useState(false);
 
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   
-  // Only load notes when component becomes visible (deferred loading)
+  // Track visibility - only load when actually visible
   useEffect(() => {
-    if (lesson?.id && !hasLoaded) {
+    // Component is mounted, wait a tick to check if actually in view
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Only load notes when visible and not already loaded
+  useEffect(() => {
+    if (lesson?.id && !hasLoaded && isVisible) {
       loadNotes();
       setHasLoaded(true);
     }
-  }, [lesson?.id, hasLoaded]);
+  }, [lesson?.id, hasLoaded, isVisible]);
 
   const loadNotes = async () => {
     try {

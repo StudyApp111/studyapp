@@ -829,15 +829,11 @@ JSON Output (exact schema):
         })
       );
 
-      // Generate study plan after first exam
-      try {
-        await base44.functions.invoke('generateStudyPlan', {
-          exam_id: exam.id,
-          lesson_id: lesson.id
-        });
-      } catch (planError) {
-        console.error("Error generating study plan:", planError);
-      }
+      // Generate study plan in background (don't await)
+      base44.functions.invoke('generateStudyPlan', {
+        exam_id: exam.id,
+        lesson_id: lesson.id
+      }).catch(planError => console.error("Error generating study plan:", planError));
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
 
@@ -845,77 +841,82 @@ JSON Output (exact schema):
       if (correctCount >= 8) examXP += 25;
       if (correctCount === questionsWithGrading.length) examXP += 50;
 
-      try {
-        const xpResult = await awardDailyXP(examXP, 'Exam completed!');
+      // Fire and forget XP and user updates
+      (async () => {
+        try {
+          const xpResult = await awardDailyXP(examXP, 'Exam completed!');
+          
+          const currentUserXP = await base44.auth.me();
+          await base44.auth.updateMe({
+            total_exams_completed: (currentUserXP.total_exams_completed || 0) + 1
+          });
+
+          let xpReason = 'Exam completed!';
+          if (correctCount === questionsWithGrading.length) xpReason = 'Perfect exam! 🌟';
+          else if (correctCount >= 8) xpReason = 'Great score! 🎯';
+
+          if (xpResult.success) {
+            setXpToast({ show: true, xp: examXP, reason: xpReason });
+          }
+        } catch (xpError) {
+          console.error("Error awarding exam XP:", xpError);
+        }
+
+        let pointsEarned = 50;
         
-        const currentUserXP = await base44.auth.me();
-        await base44.auth.updateMe({
-          total_exams_completed: (currentUserXP.total_exams_completed || 0) + 1
+        questionsWithGrading.forEach(q => {
+          if (isSubjectiveQuestion(q.question_type) && q.ai_score_out_of_10 !== undefined) {
+            pointsEarned += Math.round(q.ai_score_out_of_10 * 2.5);
+          } else if (q.is_correct) {
+            pointsEarned += 15;
+          }
         });
 
-        let xpReason = 'Exam completed!';
-        if (correctCount === questionsWithGrading.length) xpReason = 'Perfect exam! 🌟';
-        else if (correctCount >= 8) xpReason = 'Great score! 🎯';
-
-        if (xpResult.success) {
-          setXpToast({ show: true, xp: examXP, reason: xpReason });
+        if (correctCount === questionsWithGrading.length) {
+          pointsEarned += 100;
         }
-      } catch (xpError) {
-        console.error("Error awarding exam XP:", xpError);
-      }
 
-      let pointsEarned = 50;
+        if (letterGrade.startsWith('A')) {
+          pointsEarned += 50;
+        }
+
+        const earnedBadges = [...(user.badges || [])];
+        const badgeIds = earnedBadges.map(b => b.badge_id);
+        const earnedNow = [];
+
+        if (!badgeIds.includes('first_exam')) {
+          earnedBadges.push({
+            badge_id: 'first_exam',
+            badge_name: 'First Exam',
+            badge_description: 'Completed your first exam!',
+            badge_icon: '📝',
+            earned_date: new Date().toISOString()
+          });
+          earnedNow.push(earnedBadges[earnedBadges.length - 1]);
+        }
+
+        const newTotalPoints = (user.total_points || 0) + pointsEarned;
+        const newLevel = Math.floor(newTotalPoints / 100) + 1;
+
+        await retryOperation(() => 
+          base44.auth.updateMe({
+            questions_completed: (user.questions_completed || 0) + questionsWithGrading.length,
+            time_spent_seconds: (user.time_spent_seconds || 0) + elapsedSeconds,
+            total_points: newTotalPoints,
+            level: newLevel,
+            badges: earnedBadges
+          })
+        );
+
+        if (earnedNow.length > 0 || correctCount >= 8) {
+          setShowConfetti(true);
+          setNewBadges(earnedNow);
+        }
+      })();
+
+      // Show loading for exactly 5 seconds, then redirect to study plan
+      await new Promise(resolve => setTimeout(resolve, 5000));
       
-      questionsWithGrading.forEach(q => {
-        if (isSubjectiveQuestion(q.question_type) && q.ai_score_out_of_10 !== undefined) {
-          pointsEarned += Math.round(q.ai_score_out_of_10 * 2.5);
-        } else if (q.is_correct) {
-          pointsEarned += 15;
-        }
-      });
-
-      if (correctCount === questionsWithGrading.length) {
-        pointsEarned += 100;
-      }
-
-      if (letterGrade.startsWith('A')) {
-        pointsEarned += 50;
-      }
-
-      const earnedBadges = [...(user.badges || [])];
-      const badgeIds = earnedBadges.map(b => b.badge_id);
-      const earnedNow = [];
-
-      if (!badgeIds.includes('first_exam')) {
-        earnedBadges.push({
-          badge_id: 'first_exam',
-          badge_name: 'First Exam',
-          badge_description: 'Completed your first exam!',
-          badge_icon: '📝',
-          earned_date: new Date().toISOString()
-        });
-        earnedNow.push(earnedBadges[earnedBadges.length - 1]);
-      }
-
-      const newTotalPoints = (user.total_points || 0) + pointsEarned;
-      const newLevel = Math.floor(newTotalPoints / 100) + 1;
-
-      await retryOperation(() => 
-        base44.auth.updateMe({
-          questions_completed: (user.questions_completed || 0) + questionsWithGrading.length,
-          time_spent_seconds: (user.time_spent_seconds || 0) + elapsedSeconds,
-          total_points: newTotalPoints,
-          level: newLevel,
-          badges: earnedBadges
-        })
-      );
-
-      if (earnedNow.length > 0 || correctCount >= 8) {
-        setShowConfetti(true);
-        setNewBadges(earnedNow);
-      }
-
-      // Navigate to study plan tab immediately - don't wait for study plan generation
       setIsSubmitting(false);
       setExam(null);
       setSelectedExamNumber(null);
