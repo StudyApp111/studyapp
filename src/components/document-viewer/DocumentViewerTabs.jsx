@@ -390,7 +390,7 @@ export default function DocumentViewerTabs({ lesson }) {
           <div className="relative md:flex-1 md:overflow-hidden" style={{ minHeight: '70vh' }}>
             {/* PDF View */}
             {hasFile && viewMode === "pdf" && (
-              <div className="w-full bg-slate-50" style={{ height: '70vh' }}
+              <div className="w-full bg-slate-50" style={{ height: '70vh' }}>
                 {isPDF || isOfficeDoc ? (
                   <>
                     {!pdfLoaded && !pdfError && (
