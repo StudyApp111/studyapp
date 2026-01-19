@@ -78,17 +78,17 @@ export default function StudyPlanTab({ lesson, exams, onNavigate }) {
     // Don't load live progress on mount - only after study plan loads
   }, [lesson?.id]);
 
-  // Refresh live progress when tab becomes visible
+  // Refresh live progress when tab becomes visible - but only if study plan exists
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && lesson?.id) {
+      if (document.visibilityState === 'visible' && lesson?.id && studyPlan) {
         loadLiveProgress();
       }
     };
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [lesson?.id]);
+  }, [lesson?.id, studyPlan]);
 
   const loadStudyPlan = async () => {
     try {

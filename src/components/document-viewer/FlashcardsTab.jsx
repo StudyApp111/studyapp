@@ -176,6 +176,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       : 0; // Reset on miss
     
     const isMastered = newReviewCount >= 3;
+    const wasMastered = currentCard.mastered;
     const newStatus = isMastered ? 'mastered' : newReviewCount >= 1 ? 'learning' : 'new';
     
     // Update streak and award XP
@@ -183,19 +184,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       const newStreak = streakCount + 1;
       setStreakCount(newStreak);
       
-      // Award XP based on streak
-      let xpAmount = 2; // Base XP per correct card
-      let reason = 'Flashcard correct!';
-      
-      if (newStreak >= 5 && newStreak % 5 === 0) {
-        xpAmount = 10;
-        reason = `${newStreak} card streak! 🔥`;
-      } else if (isMastered && !currentCard.mastered) {
-        xpAmount = 5;
-        reason = 'Card mastered! ⭐';
+      // Award XP based on streak - only on mastery milestone or streak milestones
+      if (isMastered && !wasMastered) {
+        awardXP(5, 'Card mastered! ⭐');
+      } else if (newStreak >= 5 && newStreak % 5 === 0) {
+        awardXP(10, `${newStreak} card streak! 🔥`);
       }
-      
-      awardXP(xpAmount, reason);
+      // No XP for regular correct answers to reduce API calls
     } else {
       setStreakCount(0);
     }
@@ -217,14 +212,17 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       };
       setCards(updatedCards);
       
+      // Update session stats - only count as reviewed when answered
       setSessionStats(prev => ({
         reviewed: prev.reviewed + 1,
         correct: knew ? prev.correct + 1 : prev.correct
       }));
 
-      // Update study plan with total mastered count
-      const totalMastered = updatedCards.filter(c => c.mastered).length;
-      updateStudyPlanProgress('flashcards', totalMastered);
+      // Update study plan only when mastery changes (not every card)
+      if (isMastered && !wasMastered) {
+        const totalMastered = updatedCards.filter(c => c.mastered).length;
+        updateStudyPlanProgress('flashcards', totalMastered);
+      }
     } catch (error) {
       console.error("Error updating flashcard:", error);
     }
@@ -426,7 +424,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   return (
-    <div className="space-y-3 px-3 pb-8 max-w-lg mx-auto">
+    <div className="space-y-3 px-3 pt-2 pb-8 max-w-lg mx-auto">
       {/* How to use modal */}
       <AnimatePresence>
         {showHowTo && (
@@ -522,7 +520,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       {/* Session stats - always show */}
       <div className="flex justify-center items-center gap-3 text-xs">
         <span className="text-slate-500 bg-slate-50 px-2 py-1 rounded-lg">
-          Session: <span className="font-semibold text-slate-700">{sessionStats.correct}/{sessionStats.reviewed}</span>
+          Session: <span className="font-semibold text-slate-700">{sessionStats.correct}/{sessionStats.reviewed}</span> correct
         </span>
         {streakCount >= 2 && (
           <motion.span 
@@ -533,9 +531,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
             🔥 {streakCount} streak!
           </motion.span>
         )}
-        <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg font-medium">
-          +{sessionStats.correct * 2} XP
-        </span>
       </div>
 
       {/* Flashcard */}

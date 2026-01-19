@@ -829,15 +829,13 @@ JSON Output (exact schema):
         })
       );
 
-      // Generate study plan after first exam
-      try {
-        await base44.functions.invoke('generateStudyPlan', {
-          exam_id: exam.id,
-          lesson_id: lesson.id
-        });
-      } catch (planError) {
+      // Generate study plan in background - don't wait for it
+      base44.functions.invoke('generateStudyPlan', {
+        exam_id: exam.id,
+        lesson_id: lesson.id
+      }).catch(planError => {
         console.error("Error generating study plan:", planError);
-      }
+      });
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
 
@@ -922,7 +920,7 @@ JSON Output (exact schema):
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
       
-      // Navigate to study plan tab immediately
+      // Navigate to study plan tab immediately - study plan generation happens in background
       window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
     } catch (error) {
       console.error("Error submitting exam:", error);

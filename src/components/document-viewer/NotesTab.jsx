@@ -26,11 +26,15 @@ export default function NotesTab({ lesson }) {
   });
   const [copied, setCopied] = useState(false);
 
+  // Track if notes have been loaded to prevent redundant calls
+  const [notesLoaded, setNotesLoaded] = useState(false);
+  
   useEffect(() => {
-    if (lesson?.id) {
+    if (lesson?.id && !notesLoaded) {
       loadNotes();
+      setNotesLoaded(true);
     }
-  }, [lesson?.id]);
+  }, [lesson?.id, notesLoaded]);
 
   const loadNotes = async () => {
     try {
