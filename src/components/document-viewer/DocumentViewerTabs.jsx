@@ -313,7 +313,6 @@ export default function DocumentViewerTabs({ lesson }) {
   }, [showToolbar, showNoteInput]);
 
   const extractedContent = lesson?.extracted_content || "";
-  const fileUrl = lesson?.file_url || '';
   const isPDF = fileUrl.toLowerCase().includes('.pdf');
   const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileUrl);
   // Check for Office docs - handle both direct file extensions and Supabase storage URLs
