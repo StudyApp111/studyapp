@@ -317,9 +317,9 @@ export default function DocumentViewerTabs({ lesson }) {
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full min-h-[400px] md:min-h-0">
       <Card className="h-full bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden">
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col min-h-[350px] md:min-h-0">
           {/* Header with Controls */}
           <div className="border-b border-purple-200 px-3 py-2">
             <div className="flex items-center justify-between gap-2">
@@ -387,7 +387,7 @@ export default function DocumentViewerTabs({ lesson }) {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-hidden relative">
+          <div className="flex-1 overflow-hidden relative min-h-[280px]">
             {/* PDF View - Always mounted, controlled via opacity */}
             {hasFile && (
               <div 
