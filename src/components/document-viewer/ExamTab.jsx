@@ -829,12 +829,20 @@ JSON Output (exact schema):
         })
       );
 
+      // Dispatch event to show study plan loading state
+      window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
+      
       // Generate study plan in background - don't wait for it
       base44.functions.invoke('generateStudyPlan', {
         exam_id: exam.id,
         lesson_id: lesson.id
+      }).then(() => {
+        // Study plan generated - stop showing loading state
+        window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
+        window.dispatchEvent(new Event('reloadLesson'));
       }).catch(planError => {
         console.error("Error generating study plan:", planError);
+        window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
       });
 
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
