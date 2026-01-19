@@ -48,6 +48,7 @@ export default function DocumentViewer() {
   const [userStreak, setUserStreak] = useState(0);
   const [userDailyXP, setUserDailyXP] = useState(0);
   const [studyPlan, setStudyPlan] = useState(null);
+  const [isGeneratingStudyPlan, setIsGeneratingStudyPlan] = useState(false);
   
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
@@ -82,12 +83,21 @@ export default function DocumentViewer() {
     const handleSwitchToStudyPlan = () => setActiveTab('studyplan');
     const handleSwitchToExam = () => setActiveTab('exam');
     
+    const handleStudyPlanGenerating = (e) => {
+      setIsGeneratingStudyPlan(e.detail?.generating ?? true);
+      if (e.detail?.generating) {
+        setActiveTab('studyplan');
+      }
+    };
+    
     window.addEventListener('switchToStudyPlanTab', handleSwitchToStudyPlan);
     window.addEventListener('switchToExamTab', handleSwitchToExam);
+    window.addEventListener('studyPlanGenerating', handleStudyPlanGenerating);
     
     return () => {
       window.removeEventListener('switchToStudyPlanTab', handleSwitchToStudyPlan);
       window.removeEventListener('switchToExamTab', handleSwitchToExam);
+      window.removeEventListener('studyPlanGenerating', handleStudyPlanGenerating);
     };
   }, []);
 
@@ -477,7 +487,8 @@ export default function DocumentViewer() {
                   <StudyPlanTab 
                     lesson={lesson} 
                     exams={exams} 
-                    onNavigate={handleStudyPlanNavigate} 
+                    onNavigate={handleStudyPlanNavigate}
+                    isGeneratingPlan={isGeneratingStudyPlan}
                   />
                 </TabsContent>
 
@@ -595,7 +606,8 @@ export default function DocumentViewer() {
                 <StudyPlanTab 
                   lesson={lesson} 
                   exams={exams} 
-                  onNavigate={handleStudyPlanNavigate} 
+                  onNavigate={handleStudyPlanNavigate}
+                  isGeneratingPlan={isGeneratingStudyPlan}
                 />
               </TabsContent>
 
