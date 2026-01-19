@@ -86,6 +86,13 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       // Find the option index for the selected answer
       const optionIndex = question.options?.findIndex(opt => opt === value) ?? -1;
       const correct = checkIsCorrect(value, question.correct_answer, optionIndex);
+      console.log('📝 Answer check:', { 
+        selectedOption: value, 
+        optionIndex, 
+        correctAnswer: question.correct_answer,
+        userLetter: optionIndex >= 0 ? String.fromCharCode(65 + optionIndex) : 'N/A',
+        isCorrect: correct 
+      });
       setIsCorrect(correct);
       
       if (correct) {
