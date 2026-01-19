@@ -16,27 +16,14 @@ const HIGHLIGHT_COLORS = {
   purple: { bg: '#e9d5ff', border: '#d8b4fe', name: 'Purple' }
 };
 
-// Helper to determine file type from URL
-const getFileType = (url) => {
-  if (!url) return 'unknown';
-  const lowerUrl = url.toLowerCase();
-  if (/\.pdf($|\?)/i.test(lowerUrl)) return 'pdf';
-  if (/\.(docx?|doc)($|\?)/i.test(lowerUrl)) return 'word';
-  if (/\.(pptx?|ppt)($|\?)/i.test(lowerUrl)) return 'powerpoint';
-  if (/\.(xlsx?|xls)($|\?)/i.test(lowerUrl)) return 'excel';
-  if (/\.(jpg|jpeg|png|gif|webp|bmp|tiff)($|\?)/i.test(lowerUrl)) return 'image';
-  if (/\.(txt|md|csv)($|\?)/i.test(lowerUrl)) return 'text';
-  return 'unknown';
-};
-
 export default function DocumentViewerTabs({ lesson }) {
   const fileUrl = lesson?.file_url || '';
   const hasFile = !!fileUrl;
-  const hasExtractedContent = !!lesson?.extracted_content;
-  const fileType = getFileType(fileUrl);
+  const extractedContent = lesson?.extracted_content || "";
+  const hasExtractedContent = !!extractedContent;
   
   // State
-  const [viewMode, setViewMode] = useState("document"); // document, transcript, notes
+  const [viewMode, setViewMode] = useState("document");
   const [searchQuery, setSearchQuery] = useState("");
   const [annotations, setAnnotations] = useState([]);
   const [annotationsLoaded, setAnnotationsLoaded] = useState(false);
@@ -52,8 +39,6 @@ export default function DocumentViewerTabs({ lesson }) {
   const contentRef = useRef(null);
   const toolbarRef = useRef(null);
 
-  const extractedContent = lesson?.extracted_content || "";
-
   // Load annotations when transcript tab is active
   useEffect(() => {
     if (lesson?.id && viewMode === "transcript" && !annotationsLoaded) {
@@ -61,8 +46,6 @@ export default function DocumentViewerTabs({ lesson }) {
       setAnnotationsLoaded(true);
     }
   }, [lesson?.id, viewMode, annotationsLoaded]);
-
-
 
   // Click outside to close toolbar
   useEffect(() => {
@@ -185,72 +168,6 @@ export default function DocumentViewerTabs({ lesson }) {
     }
   };
 
-  // Render document based on file type
-  const renderDocument = () => {
-    if (!hasFile) {
-      return (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-sm text-slate-600">No document uploaded</p>
-            <p className="text-xs text-slate-400 mt-1">Switch to Transcript tab to view content</p>
-          </div>
-        </div>
-      );
-    }
-
-    // Image files - direct display
-    if (fileType === 'image') {
-      return (
-        <div className="w-full h-full flex items-center justify-center p-4 bg-slate-100">
-          <img 
-            src={fileUrl} 
-            alt="Document" 
-            className="max-w-full max-h-full object-contain shadow-lg rounded-lg"
-          />
-        </div>
-      );
-    }
-
-    // Text files - show as pre-formatted text
-    if (fileType === 'text') {
-      return (
-        <div className="w-full h-full overflow-auto p-4 bg-white">
-          <pre className="text-sm text-slate-700 whitespace-pre-wrap font-mono">
-            {extractedContent || "Loading content..."}
-          </pre>
-        </div>
-      );
-    }
-
-    // PDF and Office files - use Google Docs Viewer (works for PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX)
-    if (fileType === 'pdf' || fileType === 'word' || fileType === 'powerpoint' || fileType === 'excel') {
-      return (
-        <iframe
-          src={`https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`}
-          className="w-full h-full border-0"
-          title="Document Viewer"
-        />
-      );
-    }
-
-    // Unknown file type
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-          <p className="text-slate-600 mb-3">Preview not available</p>
-          <Button variant="outline" asChild className="border-purple-200">
-            <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Open File
-            </a>
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
   // Render transcript with highlights
   const renderTranscript = () => {
     if (!extractedContent) {
@@ -315,7 +232,7 @@ export default function DocumentViewerTabs({ lesson }) {
       const start = annotation.resolvedStart;
       const end = annotation.resolvedEnd;
       
-      if (start < lastIndex) return; // Skip overlapping
+      if (start < lastIndex) return;
       
       if (start > lastIndex) {
         elements.push(<span key={`text-${idx}`}>{extractedContent.substring(lastIndex, start)}</span>);
@@ -406,6 +323,15 @@ export default function DocumentViewerTabs({ lesson }) {
                   </Button>
                 </div>
               )}
+
+              {viewMode === "document" && hasFile && (
+                <Button variant="outline" size="sm" asChild className="h-7 text-xs">
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    Open
+                  </a>
+                </Button>
+              )}
             </div>
 
             {viewMode === "transcript" && (
@@ -418,10 +344,24 @@ export default function DocumentViewerTabs({ lesson }) {
 
           {/* Content Area */}
           <div className="flex-1 overflow-hidden relative">
-            {/* Document View */}
+            {/* Document View - Direct iframe embed */}
             {viewMode === "document" && (
               <div className="absolute inset-0">
-                {renderDocument()}
+                {hasFile ? (
+                  <iframe
+                    src={fileUrl}
+                    className="w-full h-full border-0"
+                    title="Document Viewer"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                      <p className="text-sm text-slate-600">No document uploaded</p>
+                      <p className="text-xs text-slate-400 mt-1">Switch to Transcript tab to view content</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -433,7 +373,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   className={`flex-1 overflow-auto p-4 bg-slate-50 ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
                   onMouseUp={handleTextSelection}
                 >
-                  <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-full md:max-w-3xl mx-auto prose prose-sm">
+                  <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words max-w-full px-2 md:px-4 md:max-w-3xl mx-auto">
                     {renderTranscript()}
                   </div>
                 </div>
@@ -501,7 +441,7 @@ export default function DocumentViewerTabs({ lesson }) {
 
             {/* Notes View */}
             {viewMode === "notes" && (
-              <div className="absolute inset-0">
+              <div className="absolute inset-0 overflow-auto">
                 <NotesTab lesson={lesson} />
               </div>
             )}
