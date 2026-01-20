@@ -212,15 +212,21 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       console.log("✅ Lesson created:", lesson.id);
 
-      // Auto-generate Exam 1 immediately (only needs compressed content, not curriculum)
+      // Auto-generate Exam 1 immediately and WAIT for it
       console.log("🎯 Starting Exam 1 auto-generation...");
-      base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-        .then(res => {
-          if (res?.data?.success) console.log("✅ Exam 1 auto-generated");
-        })
-        .catch(err => console.warn("⚠️ Exam 1 generation:", err.message));
+      setProcessingStep("Generating diagnostic exam...");
+      
+      try {
+        const examResult = await base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id });
+        if (examResult?.data?.success) {
+          console.log("✅ Exam 1 auto-generated:", examResult.data.exam_id);
+        }
+      } catch (examErr) {
+        console.warn("⚠️ Exam 1 generation warning:", examErr.message);
+        // Continue anyway - ExamTab will retry if needed
+      }
 
-      // Wait for minimum loading time before navigating
+      // Check if we still need to wait for minimum loading time
       const elapsedMs = Date.now() - loadingStartTime;
       if (elapsedMs < MINIMUM_LOADING_MS) {
         setProcessingStep("Almost ready...");

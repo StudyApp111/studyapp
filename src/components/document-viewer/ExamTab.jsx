@@ -1043,7 +1043,7 @@ JSON Output (exact schema):
                       
                       <div className="flex-1 min-w-0">
                         <h3 className={`font-semibold text-xs truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
-                          {e.focus_description || e.focus_competency || 'Practice Quiz'}
+                          {e.focus_description || 'Practice Quiz'}
                         </h3>
                         <p className={`text-[10px] ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
                           {totalQuestions} questions

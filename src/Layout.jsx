@@ -181,6 +181,15 @@ export default function Layout({ children, currentPageName }) {
                   </Link>
                 );
               })}
+
+              {/* Feedback/Email icon */}
+              <button
+                onClick={() => setFeedbackModalOpen(true)}
+                className="relative w-full aspect-square rounded-xl flex items-center justify-center transition-all text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                title="Send Feedback"
+              >
+                <Mail className="w-5 h-5" />
+              </button>
             </nav>
 
             {/* Bottom: Profile */}
