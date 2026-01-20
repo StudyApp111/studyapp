@@ -138,7 +138,7 @@ Each task MUST:
   • a listed misconception OR
   • a bottom-ranked competency
 - Reference SPECIFIC course concepts, terms, theories, formulas, or methods
-  that appear in the Course Content Summary (no generic skills or study advice)
+  that appear in the Course Content Summary (no generic skills or study advice like Comprehensive Assessment of Core Weaknesses)
 - Address the underlying *reason* the student lost marks
   (e.g., concept confusion, misapplication, incomplete reasoning)
 - Be actionable and measurable (clear output, count, or completion signal)
@@ -151,7 +151,7 @@ AVAILABLE TASK TYPES:
 - "practice_exam": A quick practice quiz focused on specific weak areas. target_count = 1 (one quiz). Use this to test understanding after other study tasks.
 
 IMPORTANT: 
-- Include at least ONE "practice_exam" task to help students test their knowledge on weak areas. Place it after related flashcard or teach_it tasks.
+- Include at least ONE "practice_exam" task to help students test their knowledge on weak areas. This should be the FIRST STUDY TASK, always.
 - For flashcards, set target_count between 10-20 (the number of cards to master)
 - For practice_exam, set target_count to 1 (one quiz to complete)
 - Create 3-5 total tasks maximum
@@ -194,7 +194,7 @@ Return JSON:
         body: JSON.stringify({
           contents: [{ parts: [{ text: planPrompt }] }],
           generationConfig: {
-            temperature: 0.3,
+            temperature: 0.75,
             maxOutputTokens: 16000,
             responseMimeType: "application/json",
             responseSchema: {
