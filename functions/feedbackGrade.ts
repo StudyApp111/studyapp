@@ -96,7 +96,7 @@ JSON Output (exact schema):
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: prompt
+                    text: finalPrompt
                 }]
             }],
             generationConfig: {
@@ -116,9 +116,6 @@ JSON Output (exact schema):
             requestBody.generationConfig.responseMimeType = "application/json";
             requestBody.generationConfig.responseSchema = response_json_schema;
         }
-
-        // Use finalPrompt for the API call
-        requestBody.contents[0].parts[0].text = finalPrompt;
 
         console.log('⏳ Calling Gemini API for feedback grading...');
         const response = await fetch(
