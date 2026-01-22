@@ -788,18 +788,23 @@ JSON Output (exact schema):
 - feedback_session_title: "Exam ${exam.exam_number} Performance & Grade Prediction"
 - predicted_exam_score_percentage: "%"|"Not Calculable"`;
 
-      const { data: feedbackData } = await retryOperation(() => 
-        base44.functions.invoke('feedbackGrade', {
-          prompt: feedbackPrompt,
-          response_json_schema: {
-            type: "object",
-            properties: {
-              feedback_session_title: { type: "string" },
-              predicted_exam_score_percentage: { type: "string" }
-            }
-          }
-        })
-      );
+      // Calculate score locally first (don't wait for AI feedback)
+      const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
+      const totalQuestions = questionsWithGrading.length;
+      const rawScore = Math.round((correctCount / totalQuestions) * 100);
+      
+      // Simple grade calculation based on raw score
+      let letterGrade = "F";
+      if (rawScore >= 90) letterGrade = "A+";
+      else if (rawScore >= 85) letterGrade = "A";
+      else if (rawScore >= 80) letterGrade = "A-";
+      else if (rawScore >= 77) letterGrade = "B+";
+      else if (rawScore >= 73) letterGrade = "B";
+      else if (rawScore >= 70) letterGrade = "B-";
+      else if (rawScore >= 67) letterGrade = "C+";
+      else if (rawScore >= 63) letterGrade = "C";
+      else if (rawScore >= 60) letterGrade = "C-";
+      else if (rawScore >= 50) letterGrade = "D";
 
       const questionFeedback = questionsWithGrading.map((q, idx) => {
         let feedback = "";
@@ -826,34 +831,54 @@ JSON Output (exact schema):
         };
       });
 
-      const scoreNum = parseInt(feedbackData.predicted_exam_score_percentage);
-      let letterGrade = "F";
-      if (!isNaN(scoreNum)) {
-        if (scoreNum >= 90) letterGrade = "A+";
-        else if (scoreNum >= 85) letterGrade = "A";
-        else if (scoreNum >= 80) letterGrade = "A-";
-        else if (scoreNum >= 77) letterGrade = "B+";
-        else if (scoreNum >= 73) letterGrade = "B";
-        else if (scoreNum >= 70) letterGrade = "B-";
-        else if (scoreNum >= 67) letterGrade = "C+";
-        else if (scoreNum >= 63) letterGrade = "C";
-        else if (scoreNum >= 60) letterGrade = "C-";
-        else if (scoreNum >= 50) letterGrade = "D";
-      }
-
+      // Save exam immediately with local score
       await retryOperation(() => 
         base44.entities.Exam.update(exam.id, {
           questions: questionsWithGrading,
           feedback: questionFeedback,
-          total_score: isNaN(scoreNum) ? 0 : scoreNum,
+          total_score: rawScore,
           predicted_grade: letterGrade,
-          ai_feedback: feedbackData,
           time_taken_seconds: elapsedSeconds,
           question_time_laps: questionTimeLaps,
           status: "completed",
           completed: true
         })
       );
+
+      // Fire-and-forget: Get AI feedback in background and update exam
+      base44.functions.invoke('feedbackGrade', {
+        prompt: feedbackPrompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            feedback_session_title: { type: "string" },
+            predicted_exam_score_percentage: { type: "string" }
+          }
+        }
+      }).then(async ({ data: feedbackData }) => {
+        if (feedbackData?.predicted_exam_score_percentage) {
+          const aiScore = parseInt(feedbackData.predicted_exam_score_percentage);
+          if (!isNaN(aiScore)) {
+            let aiGrade = "F";
+            if (aiScore >= 90) aiGrade = "A+";
+            else if (aiScore >= 85) aiGrade = "A";
+            else if (aiScore >= 80) aiGrade = "A-";
+            else if (aiScore >= 77) aiGrade = "B+";
+            else if (aiScore >= 73) aiGrade = "B";
+            else if (aiScore >= 70) aiGrade = "B-";
+            else if (aiScore >= 67) aiGrade = "C+";
+            else if (aiScore >= 63) aiGrade = "C";
+            else if (aiScore >= 60) aiGrade = "C-";
+            else if (aiScore >= 50) aiGrade = "D";
+            
+            await base44.entities.Exam.update(exam.id, {
+              total_score: aiScore,
+              predicted_grade: aiGrade,
+              ai_feedback: feedbackData
+            });
+          }
+        }
+      }).catch(err => console.warn("Background AI feedback error:", err.message));
 
       // Dispatch event to show study plan loading state
       window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
@@ -870,8 +895,6 @@ JSON Output (exact schema):
         console.error("Error generating study plan:", planError);
         window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
       });
-
-      const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
 
       let examXP = 25;
       if (correctCount >= 8) examXP += 25;
