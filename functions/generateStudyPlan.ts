@@ -124,10 +124,6 @@ ${i + 1}. Question: "${q.question}"
 IDENTIFIED MISCONCEPTIONS:
 ${misconceptions.length > 0 ? misconceptions.join('\n- ') : 'None explicitly identified'}
 
-AI FEEDBACK SUMMARY:
-- Areas to improve: ${weakAreas.join(', ')}
-- Strengths to build on: ${strengths.join(', ')}
-
 COURSE CONTENT OVERVIEW:
 ${contentSummary.substring(0, 2000)}
 
@@ -194,7 +190,7 @@ Return JSON:
         body: JSON.stringify({
           contents: [{ parts: [{ text: planPrompt }] }],
           generationConfig: {
-            temperature: 0.75,
+            temperature: 0.2,
             maxOutputTokens: 16000,
             responseMimeType: "application/json",
             responseSchema: {
