@@ -4,7 +4,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 // Requires API_KEY environment variable (Google AI API key)
 
 Deno.serve(async (req) => {
-  console.log('=== generateExam (Gemini 2.0 Flash Thinking) Start ===');
+  console.log('=== generateExam (Gemini 3.0 Flash Thinking) Start ===');
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
