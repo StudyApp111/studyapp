@@ -140,6 +140,18 @@ CRITICAL ANSWER FORMAT:
 • For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
 • For True/False: correct_answer MUST be "True" or "False"
 
+CRITICAL FORMATTING RULES (MUST FOLLOW):
+• Write ALL math/science using UNICODE symbols, NOT LaTeX
+• Exponents: Use superscript notation like "10⁻³⁴" or write as "10^-34" (will be rendered)
+• Subscripts: Write as "H₂O" or "H_2O" (will be rendered)
+• Greek letters: Use actual Unicode (α, β, γ, λ, ν, etc.), NOT \\alpha or \\beta
+• Multiplication: Use "×" symbol, NOT \\times
+• Arrows: Use "→" symbol, NOT \\rightarrow
+• Isotopes: Write as "²³⁴₉₀Th" or "^234_90Th" (mass as superscript, atomic number as subscript)
+• Antiparticles: Write ν̄ (nu with overbar) directly
+• Scientific notation: Write as "6.626 × 10⁻³⁴" or "6.626 × 10^-34"
+• DO NOT wrap anything in $...$ or use \\text{}
+
 ────────────────────────────
 Output Requirements
 

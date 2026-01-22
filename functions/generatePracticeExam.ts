@@ -69,7 +69,16 @@ CRITICAL RULES:
 
 IMPORTANT: Create APPLICATION-BASED questions that test understanding, NOT literal recall questions like "Which section covers X?" or "What is the name of...". Ask questions that require students to APPLY concepts.
 
-CRITICAL FORMATTING RULE: Do NOT use LaTeX notation like $\\text{...}$ or $...$. Write chemical formulas and math expressions in plain text (e.g., "KCl" not "$\\text{KCl}$", "H2O" not "$H_2O$", "x^2" not "$x^2$").`;
+CRITICAL FORMATTING RULES (MUST FOLLOW):
+• Write ALL math/science using UNICODE symbols, NOT LaTeX
+• Exponents: Write as "10⁻³⁴" or "10^-34" 
+• Subscripts: Write as "H₂O" or "H_2O"
+• Greek letters: Use Unicode (α, β, γ, λ, ν), NOT \\alpha
+• Multiplication: Use "×" symbol
+• Arrows: Use "→" symbol
+• Isotopes: Write as "²³⁴₉₀Th" or "^234_90Th"
+• Scientific notation: "6.626 × 10⁻³⁴" or "6.626 × 10^-34"
+• DO NOT use $...$ delimiters or \\text{}`;
 
     // Build request body
     const requestBody = {

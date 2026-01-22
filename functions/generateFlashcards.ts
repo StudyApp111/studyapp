@@ -34,6 +34,14 @@ Create flashcards that:
 4. Include topic tags for categorization
 5. Vary in difficulty (mark as easy, medium, or hard)
 
+CRITICAL FORMATTING: Use UNICODE for math/science, NOT LaTeX.
+• Exponents: "10⁻³⁴" or "10^-34"
+• Subscripts: "H₂O" or "H_2O"  
+• Greek: α, β, γ, λ, ν (actual symbols)
+• Multiply: × (not \\times)
+• Arrows: → (not \\rightarrow)
+• NO $...$ delimiters or \\text{}
+
 Return a JSON object with a "flashcards" array containing objects with: question, answer, topics (array), difficulty (easy/medium/hard)`;
 
     const apiKey = Deno.env.get("GEMINIAPIKEY");
