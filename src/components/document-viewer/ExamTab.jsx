@@ -370,16 +370,32 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
            type.includes("structured response");
   };
 
+  // Cache learning profile to avoid rate limits
+  const learningProfileRef = useRef(null);
+  
+  const getLearningProfile = async () => {
+    if (learningProfileRef.current) return learningProfileRef.current;
+    try {
+      const user = await base44.auth.me();
+      if (user.learning_profile_id) {
+        const profile = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
+        learningProfileRef.current = profile[0] || {};
+      } else {
+        learningProfileRef.current = {};
+      }
+    } catch {
+      learningProfileRef.current = {};
+    }
+    return learningProfileRef.current;
+  };
+
   const gradeSubjectiveQuestion = async (question, questionIndex) => {
     if (!question.user_answer || question.user_answer.trim() === "") return;
 
     try {
       setGradingInProgress(prev => ({ ...prev, [questionIndex]: true }));
 
-      const profile = await base44.entities.LearningProfile.filter({ 
-        id: (await base44.auth.me()).learning_profile_id 
-      });
-      const learningProfile = profile[0] || {};
+      const learningProfile = await getLearningProfile();
 
       const { data: gradingResult } = await base44.functions.invoke('gradeShortAnswer', {
         question_text: question.question_text,
@@ -554,11 +570,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
     try {
       // Grade any subjective questions that haven't been graded yet
-      const user = await base44.auth.me();
-      const profile = await base44.entities.LearningProfile.filter({ 
-        id: user.learning_profile_id 
-      });
-      const learningProfile = profile[0] || {};
+      const learningProfile = await getLearningProfile();
 
       const questionsWithGrading = await Promise.all(exam.questions.map(async (q) => {
         // For subjective questions, use AI grading if not already graded
@@ -705,10 +717,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
     try {
       const user = await base44.auth.me();
-      const profile = await base44.entities.LearningProfile.filter({ 
-        id: user.learning_profile_id 
-      });
-      const learningProfile = profile[0] || {};
+      const learningProfile = await getLearningProfile();
 
       const questionsWithGrading = exam.questions.map((q) => {
         // Use AI grading for subjective questions
