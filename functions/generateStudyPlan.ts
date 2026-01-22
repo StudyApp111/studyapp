@@ -124,6 +124,10 @@ ${i + 1}. Question: "${q.question}"
 IDENTIFIED MISCONCEPTIONS:
 ${misconceptions.length > 0 ? misconceptions.join('\n- ') : 'None explicitly identified'}
 
+AI FEEDBACK SUMMARY:
+- Areas to improve: ${weakAreas.join(', ')}
+- Strengths to build on: ${strengths.join(', ')}
+
 COURSE CONTENT OVERVIEW:
 ${contentSummary.substring(0, 2000)}
 
@@ -160,7 +164,7 @@ Return JSON:
     {
       "task_type": "flashcards" | "teach_it" | "review_notes" | "practice_exam",
       "title": "Clear action title (e.g., 'Master Key Terms for X')",
-      "description": "What this helps with and why. 2 SENTENCES MAX",
+      "description": "What this helps with and why",
       "target_count": number (10-20 for flashcards, 3-5 for teach_it, 1 for practice_exam/review_notes),
       "target_competency": "The specific competency being addressed",
       "focus_topics": ["specific topic 1", "specific topic 2", "specific topic 3"],
@@ -190,7 +194,7 @@ Return JSON:
         body: JSON.stringify({
           contents: [{ parts: [{ text: planPrompt }] }],
           generationConfig: {
-            temperature: 0.2,
+            temperature: 0.75,
             maxOutputTokens: 16000,
             responseMimeType: "application/json",
             responseSchema: {

@@ -65,7 +65,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const [liveProgress, setLiveProgress] = useState({});
   const [showGradeBoost, setShowGradeBoost] = useState(false);
   const [previousCompleted, setPreviousCompleted] = useState(0);
-  const [tasksLoading, setTasksLoading] = useState(true); // New: separate loading state for tasks
   const ctaRef = useRef(null);
 
   const scrollToCTA = () => {
@@ -214,26 +213,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const canTakeOfficialExam = completedTasks >= 1;
   const allComplete = completedTasks === totalTasks && totalTasks > 0;
 
-  // Listen for study plan generation events from ExamTab
-  useEffect(() => {
-    const handleStudyPlanGenerating = (e) => {
-      setTasksLoading(e.detail?.generating ?? false);
-    };
-    
-    window.addEventListener('studyPlanGenerating', handleStudyPlanGenerating);
-    return () => window.removeEventListener('studyPlanGenerating', handleStudyPlanGenerating);
-  }, []);
-
   // Show placeholder while generating study plan
-  if (isGeneratingPlan || (tasksLoading && !studyPlan)) {
-    // Get grade from latest completed exam to show immediately
-    const latestExam = (exams || [])
-      .filter(e => e.completed && e.predicted_grade && e.exam_type !== 'practice')
-      .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
-    
-    const displayGrade = latestExam?.predicted_grade;
-    const displayScore = latestExam?.total_score;
-    
+  if (isGeneratingPlan) {
     return (
       <div className="px-3 pb-8 w-full max-w-[320px] mx-auto">
         <motion.div
@@ -241,47 +222,22 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           animate={{ opacity: 1 }}
           className="space-y-4"
         >
-          {/* Grade Card - Show real grade if available */}
-          {displayGrade ? (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <p className="text-center text-slate-600 text-sm mb-2 px-2">
-                If your <span className="font-semibold text-slate-800">{lesson?.course_name || 'course'}</span> exam was today, you would score:
-              </p>
-              <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(displayGrade)} p-5 shadow-xl`}>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
-                <div className="relative text-center mb-4">
-                  <p className="text-white/70 text-[10px] font-bold uppercase tracking-wider mb-1">StudyApp Predicted Grade</p>
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-5xl font-black text-white">{displayGrade}</span>
-                    {displayScore && <span className="text-white/80 text-sm font-medium">{Math.round(displayScore)}%</span>}
-                  </div>
-                </div>
-                <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
-                  <span className="text-white/60 text-xs font-medium">Complete tasks to reach</span>
-                  <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
-                    <ArrowRight className="w-4 h-4 text-yellow-300" />
-                    <span className="text-2xl font-black text-yellow-300">A+</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ) : (
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-300 to-slate-400 p-5 shadow-xl animate-pulse">
-              <div className="text-center mb-4">
-                <div className="h-3 w-32 bg-white/30 rounded mx-auto mb-2" />
-                <div className="h-12 w-20 bg-white/40 rounded-lg mx-auto" />
-              </div>
-              <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
-                <div className="h-4 w-40 bg-white/30 rounded" />
-              </div>
+          {/* Grade Card Skeleton */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-300 to-slate-400 p-5 shadow-xl animate-pulse">
+            <div className="text-center mb-4">
+              <div className="h-3 w-32 bg-white/30 rounded mx-auto mb-2" />
+              <div className="h-12 w-20 bg-white/40 rounded-lg mx-auto" />
             </div>
-          )}
+            <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
+              <div className="h-4 w-40 bg-white/30 rounded" />
+            </div>
+          </div>
 
           {/* Loading Message */}
           <div className="text-center py-4">
             <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
-            <p className="text-slate-700 font-medium">Building your study plan...</p>
-            <p className="text-slate-500 text-sm mt-1">Creating personalized tasks</p>
+            <p className="text-slate-700 font-medium">Generating your study plan...</p>
+            <p className="text-slate-500 text-sm mt-1">Analyzing your diagnostic results</p>
           </div>
 
           {/* Task Skeletons */}
@@ -290,7 +246,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="relative pl-1">
-                  <div className="absolute left-[14px] top-4 w-3 h-3 rounded-full bg-slate-200 animate-pulse" />
+                  <div className="absolute left-[14px] top-4 w-3 h-3 rounded-full bg-slate-200" />
                   <div className="ml-8 pr-1">
                     <div className="bg-slate-100 rounded-xl p-3 animate-pulse">
                       <div className="flex items-center gap-3">

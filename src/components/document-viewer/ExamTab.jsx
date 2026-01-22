@@ -831,18 +831,6 @@ JSON Output (exact schema):
         };
       });
 
-      // Fire off feedbackGrade immediately (runs in parallel with save)
-      const feedbackPromise = base44.functions.invoke('feedbackGrade', {
-        prompt: feedbackPrompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            feedback_session_title: { type: "string" },
-            predicted_exam_score_percentage: { type: "string" }
-          }
-        }
-      });
-
       // Save exam immediately with local score
       await retryOperation(() => 
         base44.entities.Exam.update(exam.id, {
@@ -857,13 +845,17 @@ JSON Output (exact schema):
         })
       );
 
-      // Wait for feedbackGrade (typically ~1s) to get accurate grade before navigating
-      try {
-        const { data: feedbackData } = await Promise.race([
-          feedbackPromise,
-          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
-        ]);
-        
+      // Fire-and-forget: Get AI feedback in background and update exam
+      base44.functions.invoke('feedbackGrade', {
+        prompt: feedbackPrompt,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            feedback_session_title: { type: "string" },
+            predicted_exam_score_percentage: { type: "string" }
+          }
+        }
+      }).then(async ({ data: feedbackData }) => {
         if (feedbackData?.predicted_exam_score_percentage) {
           const aiScore = parseInt(feedbackData.predicted_exam_score_percentage);
           if (!isNaN(aiScore)) {
@@ -886,9 +878,7 @@ JSON Output (exact schema):
             });
           }
         }
-      } catch (err) {
-        console.warn("feedbackGrade timeout/error, using local score:", err.message);
-      }
+      }).catch(err => console.warn("Background AI feedback error:", err.message));
 
       // Dispatch event to show study plan loading state
       window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));

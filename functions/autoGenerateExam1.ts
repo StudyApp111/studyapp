@@ -18,26 +18,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
     }
 
-    // Check if exam 1 already exists
+    // Check if exam 1 already exists with questions
     const existingExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
-    
-    // If exam exists with questions, skip
     if (existingExams.length > 0 && existingExams[0].questions?.length > 0) {
       console.log('Exam 1 already has questions, skipping generation');
       return Response.json({ success: true, skipped: true, exam_id: existingExams[0].id });
-    }
-    
-    // If exam exists but is being generated (created recently without questions), wait
-    if (existingExams.length > 0 && !existingExams[0].questions?.length) {
-      const createdAt = new Date(existingExams[0].created_date);
-      const now = new Date();
-      const ageSeconds = (now - createdAt) / 1000;
-      
-      // If created less than 60 seconds ago, another process is generating - don't duplicate
-      if (ageSeconds < 60) {
-        console.log('Exam 1 generation already in progress (age:', Math.round(ageSeconds), 's), skipping');
-        return Response.json({ success: true, in_progress: true, exam_id: existingExams[0].id });
-      }
     }
 
     // Get lesson data

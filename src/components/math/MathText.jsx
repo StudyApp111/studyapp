@@ -29,27 +29,11 @@ const renderLatexContent = (text) => {
   
   let result = text;
   
-  // Handle common LaTeX commands (with or without backslash)
-  result = result.replace(/\\?rightarrow/g, '→');
-  result = result.replace(/\\?leftarrow/g, '←');
-  result = result.replace(/\\?leftrightarrow/g, '↔');
-  result = result.replace(/\\?bar\{([^}]+)\}/g, '$1̄'); // combining overline
-  result = result.replace(/\\?bar\{?(\w+)\}?/g, '$1̄');
-  result = result.replace(/\\?nu\b/g, 'ν');
+  // Handle \times (multiplication)
   result = result.replace(/\\times/g, '×');
   
-  // Handle isotope notation: A/Z X or ^A_Z X (e.g., 32/15 P → ³²₁₅P)
-  result = result.replace(/(\d+)\/(\d+)\s*([A-Za-z]+)/g, (match, mass, atomic, symbol) => {
-    return `<sup>${mass}</sup><sub>${atomic}</sub>${symbol}`;
-  });
-  
-  // Handle nuclear notation: ^{A}_{Z}X or ^A_ZX
-  result = result.replace(/\^?\{?(\d+)\}?_?\{?(\d+)\}?\s*([A-Za-z]{1,2})\b/g, (match, mass, atomic, symbol) => {
-    return `<sup>${mass}</sup><sub>${atomic}</sub>${symbol}`;
-  });
-  
   // Handle scientific notation: number \times 10^{exp} or number × 10^exp
-  result = result.replace(/(\d+(?:\.\d+)?)\s*[×x]\s*10\^?\{?(-?\d+)\}?/gi, (match, num, exp) => {
+  result = result.replace(/(\d+(?:\.\d+)?)\s*[×x\\times]\s*10\^?\{?(-?\d+)\}?/gi, (match, num, exp) => {
     return `${num} × 10<sup>${exp}</sup>`;
   });
   
@@ -68,11 +52,14 @@ const renderLatexContent = (text) => {
   // Handle _{sub} subscripts (with braces)
   result = result.replace(/_\{([^}]+)\}/g, '<sub>$1</sub>');
   
-  // Handle _sub subscripts (without braces, numbers)
-  result = result.replace(/_(-?\d+)/g, '<sub>$1</sub>');
+  // Handle _sub subscripts (without braces)
+  result = result.replace(/_(\d+)/g, '<sub>$1</sub>');
   
   // Handle \text{...}
   result = result.replace(/\\text\{([^}]+)\}/g, '$1');
+  
+  // Remove remaining backslashes from LaTeX commands we don't handle
+  result = result.replace(/\\([a-zA-Z]+)/g, '$1');
   
   // Handle square roots: sqrt(x) or √(x)
   result = result.replace(/sqrt\(([^)]+)\)/gi, '√$1');
@@ -90,9 +77,9 @@ const renderLatexContent = (text) => {
   result = result.replace(/\(([^)]+)\)\^(-?\d+)/g, '($1)<sup>$2</sup>');
   
   // Handle subscripts: H_2O, x_1
-  result = result.replace(/([a-zA-Z])_(\d+)/g, '$1<sub>$2</sub>');
+  result = result.replace(/([a-zA-Z])(_)(\d+)/g, '$1<sub>$3</sub>');
   
-  // Greek letters (handle both with and without backslash)
+  // Greek letters
   const greekLetters = {
     'alpha': 'α', 'beta': 'β', 'gamma': 'γ', 'delta': 'δ', 
     'epsilon': 'ε', 'theta': 'θ', 'lambda': 'λ', 'mu': 'μ',
@@ -101,8 +88,8 @@ const renderLatexContent = (text) => {
   };
   
   Object.entries(greekLetters).forEach(([name, symbol]) => {
-    result = result.replace(new RegExp(`\\\\${name}\\b`, 'g'), symbol);
-    result = result.replace(new RegExp(`\\b${name}\\b`, 'g'), symbol);
+    const regex = new RegExp(`\\b${name}\\b`, 'g');
+    result = result.replace(regex, symbol);
   });
   
   // Math operators
