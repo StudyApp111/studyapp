@@ -143,32 +143,78 @@ Output Format
 Return ONE valid JSON object matching the required schema.
 No extra text.`;
 
-    // Call the generateExam function
-    const { data: examData } = await base44.functions.invoke('generateExam', {
-      prompt: aiPrompt,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          exam_questions: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                question_number: { type: "integer" },
-                question_type: { type: "string" },
-                difficulty_index: { type: "string" },
-                question_text: { type: "string" },
-                options: { type: "array", items: { type: "string" } },
-                correct_answer: { type: "string" },
-                explanation: { type: "string" },
-                assessed_competencies: { type: "array", items: { type: "string" } },
-                targeted_misconception: { type: "string" }
-              }
+    // Call Gemini directly with gemini-flash-latest
+    const apiKey = Deno.env.get('GEMINIAPIKEY');
+    if (!apiKey) {
+      return Response.json({ error: 'Service configuration error' }, { status: 500 });
+    }
+
+    const responseSchema = {
+      type: "object",
+      properties: {
+        exam_questions: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              question_number: { type: "integer" },
+              question_type: { type: "string" },
+              difficulty_index: { type: "string" },
+              question_text: { type: "string" },
+              options: { type: "array", items: { type: "string" } },
+              correct_answer: { type: "string" },
+              explanation: { type: "string" },
+              assessed_competencies: { type: "array", items: { type: "string" } },
+              targeted_misconception: { type: "string" }
             }
           }
         }
       }
-    });
+    };
+
+    const payload = {
+      contents: [{
+        parts: [{ text: aiPrompt }]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 16000,
+        responseMimeType: "application/json",
+        responseSchema: responseSchema
+      }
+    };
+
+    console.log('Calling Gemini Flash Latest for exam generation...');
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      console.error('Gemini error:', resp.status, errText);
+      return Response.json({ error: 'Failed to generate exam', details: errText }, { status: 500 });
+    }
+
+    const data = await resp.json();
+    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!content) {
+      console.error('No content from Gemini');
+      return Response.json({ error: 'No content generated' }, { status: 500 });
+    }
+
+    let examData;
+    try {
+      examData = JSON.parse(content);
+    } catch (e) {
+      console.error('JSON parse failed:', e?.message);
+      return Response.json({ error: 'Failed to parse exam response' }, { status: 500 });
+    }
 
     const examQuestions = examData?.exam_questions || [];
     if (!Array.isArray(examQuestions) || examQuestions.length === 0) {

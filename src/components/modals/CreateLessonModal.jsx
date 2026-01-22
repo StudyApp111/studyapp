@@ -144,8 +144,8 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           
           console.log("📄 Extracted content length:", fullExtractedContent.length, "chars");
           
-          // Compress if content is large
-          if (fullExtractedContent.length > 5000) {
+          // Compress only if content exceeds 2500 characters
+          if (fullExtractedContent.length > 2500) {
             setProcessingStep("Optimizing content...");
             try {
               const compResult = await base44.functions.invoke('compressDocument', { content: fullExtractedContent });
@@ -172,9 +172,9 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         compressedForPrompts = extractedContent;
       }
 
-      // Enforce minimum 5 second loading time for better UX and background processing
+      // Navigate immediately after lesson creation - max 5s total loading time
       const loadingStartTime = Date.now();
-      const MINIMUM_LOADING_MS = 5000;
+      const MAX_LOADING_MS = 5000;
 
       // Create lesson immediately after OCR/compression
       const learningProfile = {
@@ -212,52 +212,26 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       console.log("✅ Lesson created:", lesson.id);
 
-      // Auto-generate Exam 1 with timeout and retry handling
-      console.log("🎯 Starting Exam 1 auto-generation...");
-      setProcessingStep("Generating diagnostic exam...");
-      
-      const generateExamWithRetry = async (retries = 2) => {
-        for (let attempt = 0; attempt <= retries; attempt++) {
-          try {
-            const examResult = await Promise.race([
-              base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id }),
-              new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Exam generation timeout')), 55000)
-              )
-            ]);
-            
-            if (examResult?.data?.success) {
-              console.log("✅ Exam 1 auto-generated:", examResult.data.exam_id);
-              return true;
-            }
-          } catch (examErr) {
-            const is502 = examErr.response?.status === 502 || examErr.message?.includes('502');
-            const isTimeout = examErr.message?.includes('timeout') || is502;
-            
-            if (isTimeout && attempt < retries) {
-              console.log(`⚠️ Exam generation timeout, retrying (${attempt + 1}/${retries})...`);
-              await new Promise(r => setTimeout(r, 2000));
-              continue;
-            }
-            
-            console.warn("⚠️ Exam 1 generation warning:", examErr.message);
-            // Log error for monitoring
-            if (is502) {
-              console.error('502 Error during exam generation - function timeout');
-            }
-            return false;
+      // Fire-and-forget exam generation - don't block navigation
+      console.log("🎯 Starting Exam 1 auto-generation (background)...");
+      base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+        .then(result => {
+          if (result?.data?.success) {
+            console.log("✅ Exam 1 auto-generated:", result.data.exam_id);
+            window.dispatchEvent(new Event('reloadLesson'));
           }
-        }
-        return false;
-      };
-      
-      await generateExamWithRetry();
+        })
+        .catch(err => console.warn("⚠️ Background exam generation:", err.message));
 
-      // Check if we still need to wait for minimum loading time
+      // Ensure minimum 2s loading for UX, but cap at 5s total
       const elapsedMs = Date.now() - loadingStartTime;
-      if (elapsedMs < MINIMUM_LOADING_MS) {
+      const minWait = Math.max(0, 2000 - elapsedMs);
+      const maxWait = Math.max(0, MAX_LOADING_MS - elapsedMs);
+      const waitTime = Math.min(minWait, maxWait);
+      
+      if (waitTime > 0) {
         setProcessingStep("Almost ready...");
-        await new Promise(resolve => setTimeout(resolve, MINIMUM_LOADING_MS - elapsedMs));
+        await new Promise(resolve => setTimeout(resolve, waitTime));
       }
 
       // Close modal and navigate (client-side to avoid white flash)

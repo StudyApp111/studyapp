@@ -22,26 +22,67 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        // Single call with Google Search grounding, temp 0.2
+        // Define the expected response schema for structured output
+        const curriculumSchema = {
+            type: "object",
+            properties: {
+                core_competencies: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            name: { type: "string" },
+                            description: { type: "string" }
+                        },
+                        required: ["name", "description"]
+                    }
+                },
+                competency_weightings: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            competency_name: { type: "string" },
+                            weight_percentage: { type: "string" }
+                        },
+                        required: ["competency_name", "weight_percentage"]
+                    }
+                },
+                question_formats: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            type: { type: "string" },
+                            frequency: { type: "string" },
+                            examples: { type: "array", items: { type: "string" } }
+                        },
+                        required: ["type", "frequency", "examples"]
+                    }
+                },
+                high_yield_focal_points: { type: "array", items: { type: "string" } },
+                common_misconceptions: { type: "array", items: { type: "string" } }
+            },
+            required: ["core_competencies", "competency_weightings", "question_formats", "high_yield_focal_points", "common_misconceptions"]
+        };
+
         const requestBody = {
             contents: [{
                 parts: [{
-                    text: prompt + "\n\nIMPORTANT: Return ONLY a valid JSON object with no markdown formatting, no code blocks, no extra text."
+                    text: prompt
                 }]
             }],
             generationConfig: {
                 temperature: 0.2,
-                topP: 0.95,
-                maxOutputTokens: 8192
-            },
-            tools: [{
-                googleSearch: {}
-            }]
+                maxOutputTokens: 8192,
+                responseMimeType: "application/json",
+                responseSchema: curriculumSchema
+            }
         };
 
-        console.log('Calling Gemini API with Google Search grounding...');
+        console.log('Calling Gemini Flash Latest for curriculum mapping...');
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
