@@ -8,6 +8,9 @@ import { detectDeviceInfo } from "@/components/utils/userTracking";
  * @param {object} context - Additional context (page, function name, parameters, etc.)
  */
 export async function logError(errorType, error, context = {}) {
+  // Always log to console immediately
+  console.error(`[ErrorLog] ${errorType}:`, error?.message || error, context);
+  
   try {
     const errorMessage = error?.message || String(error);
     const errorStack = error?.stack || null;
@@ -33,30 +36,33 @@ export async function logError(errorType, error, context = {}) {
 
     const errorCode = (error && error.response && error.response.data && error.response.data.code) || error?.code || null;
 
-    await base44.entities.ErrorLog.create({
-      error_type: errorType,
-      error_message: errorMessage,
-      error_stack: errorStack,
-      context: { ...enrichedContext, error_code: errorCode },
-      user_email: userEmail,
-      resolved: false
-    });
-
-    // Fire-and-forget support email via backend function
+    // Try entity creation with better error handling
     try {
-      await base44.functions.invoke('reportError', {
+      await base44.entities.ErrorLog.create({
+        error_type: errorType,
+        error_message: errorMessage,
+        error_stack: errorStack,
+        context: { ...enrichedContext, error_code: errorCode },
+        user_email: userEmail,
+        resolved: false
+      });
+    } catch (entityErr) {
+      console.error('[ErrorLog] Failed to create ErrorLog entity:', entityErr.message);
+    }
+
+    // Fire-and-forget support email with timeout
+    Promise.race([
+      base44.functions.invoke('reportError', {
         subject: `${errorType.toUpperCase()} - ${errorMessage.substring(0, 140)}`,
         body: errorStack || errorMessage,
         severity: 'error',
         context: { ...enrichedContext, error_code: errorCode },
-      });
-    } catch (e) {
-      // swallow email errors
-      console.warn('[ErrorLog] Failed to notify support:', e?.message || e);
-    }
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Email timeout')), 5000))
+    ]).catch(emailErr => {
+      console.warn('[ErrorLog] Failed to notify support:', emailErr?.message || emailErr);
+    });
 
-    // Also log to console for development
-    console.error(`[ErrorLog] ${errorType}:`, errorMessage, context);
   } catch (logError) {
     // Don't let logging errors break the app
     console.error('[ErrorLog] Failed to log error:', logError);
