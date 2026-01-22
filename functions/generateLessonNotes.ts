@@ -51,9 +51,9 @@ Deno.serve(async (req) => {
             }
         };
 
-        // Using gemini-2.0-flash-lite-preview-02-05 as requested (closest match to 2.5 lite)
+        // Using global endpoint for better availability
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
