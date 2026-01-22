@@ -435,7 +435,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                       className={`rounded-xl border-2 overflow-hidden transition-all ${
                         feedback.is_correct 
                           ? 'border-emerald-200 bg-white' 
-                          : 'border-amber-200 bg-white'
+                          : 'border-red-200 bg-white'
                       }`}
                     >
                       {/* Question Header - Always visible */}
@@ -450,7 +450,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                             feedback.is_correct 
                               ? 'bg-emerald-500 text-white' 
-                              : 'bg-amber-500 text-white'
+                              : 'bg-red-500 text-white'
                           }`}>
                             {feedback.is_correct ? (
                               <CheckCircle className="w-4 h-4" />
@@ -466,7 +466,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                 Question {question.question_number}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className={`text-sm font-bold ${feedback.is_correct ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                <span className={`text-sm font-bold ${feedback.is_correct ? 'text-emerald-600' : 'text-red-600'}`}>
                                   {feedback.points_earned}/10
                                 </span>
                                 <div className="text-slate-400">
@@ -576,10 +576,10 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
 
                               {/* Feedback */}
                               <div className={`p-3 md:p-4 rounded-xl ${
-                                feedback.is_correct ? 'bg-emerald-50 border border-emerald-100' : 'bg-amber-50 border border-amber-100'
+                                feedback.is_correct ? 'bg-emerald-50 border border-emerald-100' : 'bg-red-50 border border-red-100'
                               }`}>
                                 <div className="flex items-start gap-2">
-                                  {feedback.is_correct ? <Sparkles className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" /> : <Zap className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />}
+                                  {feedback.is_correct ? <Sparkles className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" /> : <Zap className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />}
                                   <MathText className="text-xs md:text-sm text-slate-700 leading-relaxed">
                                     {feedback.feedback}
                                   </MathText>
