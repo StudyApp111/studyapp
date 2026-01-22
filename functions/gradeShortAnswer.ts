@@ -1,5 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Retry helper with exponential backoff
+async function fetchWithRetry(url, options, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const response = await fetch(url, options);
+        if (response.ok) return response;
+        
+        if (response.status === 429 && attempt < maxRetries) {
+            const waitTime = Math.pow(2, attempt) * 1000;
+            console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+            await new Promise(r => setTimeout(r, waitTime));
+            continue;
+        }
+        return response;
+    }
+}
+
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
@@ -159,23 +175,18 @@ CONSTRAINTS
             ]
         };
 
-        // Use AbortController for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 25000);
-        
-        const response = await fetch(
+        // Use retry logic for rate limit handling
+        const response = await fetchWithRetry(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(requestBody),
-                signal: controller.signal
-            }
+                body: JSON.stringify(requestBody)
+            },
+            3
         );
-        
-        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -207,18 +218,6 @@ CONSTRAINTS
         }
 
     } catch (error) {
-        // Handle timeout specifically
-        if (error.name === 'AbortError') {
-            console.error('gradeShortAnswer timeout');
-            return Response.json({ 
-                score_out_of_10: 5,
-                verdict: "Partially Correct",
-                rationale_short: "Grading timed out - partial credit given",
-                keypoints_hit: [],
-                keypoints_missed: [],
-                misconception_detected: false
-            });
-        }
         console.error('gradeShortAnswer error:', error.message);
         return Response.json({ 
             error: 'Internal server error',

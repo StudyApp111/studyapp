@@ -1,5 +1,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Retry helper with exponential backoff
+async function fetchWithRetry(url, options, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const response = await fetch(url, options);
+        if (response.ok) return response;
+        
+        if (response.status === 429 && attempt < maxRetries) {
+            const waitTime = Math.pow(2, attempt) * 1000;
+            console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+            await new Promise(r => setTimeout(r, waitTime));
+            continue;
+        }
+        return response;
+    }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -117,8 +133,8 @@ RULES:
       });
     }
 
-    // Call Gemini API (global endpoint for better availability)
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
+    // Call Gemini API with retry logic
+    const response = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -133,7 +149,7 @@ RULES:
           maxOutputTokens: 1024,
         }
       })
-    });
+    }, 3);
 
     if (!response.ok) {
       const errorText = await response.text();

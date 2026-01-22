@@ -1,6 +1,22 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Uses Gemini 3 Flash Preview with minimal thinking for exam generation
+// Retry helper with exponential backoff
+async function fetchWithRetry(url, options, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const response = await fetch(url, options);
+        if (response.ok) return response;
+        
+        if (response.status === 429 && attempt < maxRetries) {
+            const waitTime = Math.pow(2, attempt) * 1000;
+            console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+            await new Promise(r => setTimeout(r, waitTime));
+            continue;
+        }
+        return response;
+    }
+}
+
+// Uses Gemini 2.0 Flash for exam generation
 // Requires API_KEY environment variable (Google AI API key)
 
 Deno.serve(async (req) => {
@@ -64,16 +80,16 @@ Deno.serve(async (req) => {
       ]
     };
 
-    console.log('Calling Gemini 3 Flash Preview with minimal thinking and Google Search...');
+    console.log('Calling Gemini 2.0 Flash with retry logic...');
 
-    // Using global endpoint for better availability
-    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
+    // Using retry logic for rate limit handling
+    const resp = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
-    });
+    }, 3);
 
     if (!resp.ok) {
       const errText = await resp.text();
