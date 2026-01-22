@@ -845,6 +845,9 @@ JSON Output (exact schema):
         })
       );
 
+      // Show 3s loading on submit button, then switch to study plan tab
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
       // Fire-and-forget: Get AI feedback in background and update exam
       base44.functions.invoke('feedbackGrade', {
         prompt: feedbackPrompt,
@@ -970,15 +973,15 @@ JSON Output (exact schema):
         setNewBadges(earnedNow);
       }
 
+      // Navigate to study plan tab FIRST (while still showing submit loading)
+      window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
+      
       setExam(null);
       setSelectedExamNumber(null);
       hasAutoSelectedRef.current = false;
       
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
-      
-      // Navigate to study plan tab immediately - study plan generation happens in background
-      window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
     } catch (error) {
       console.error("Error submitting exam:", error);
       await logError('exam_submission', error, { lesson_id: lesson?.id, exam_id: exam?.id });

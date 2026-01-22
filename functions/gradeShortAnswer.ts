@@ -159,16 +159,23 @@ CONSTRAINTS
             ]
         };
 
+        // Use AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+        
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(requestBody)
+                body: JSON.stringify(requestBody),
+                signal: controller.signal
             }
         );
+        
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -200,7 +207,19 @@ CONSTRAINTS
         }
 
     } catch (error) {
-        console.error('gradeShortAnswer error:', error.message, error.stack);
+        // Handle timeout specifically
+        if (error.name === 'AbortError') {
+            console.error('gradeShortAnswer timeout');
+            return Response.json({ 
+                score_out_of_10: 5,
+                verdict: "Partially Correct",
+                rationale_short: "Grading timed out - partial credit given",
+                keypoints_hit: [],
+                keypoints_missed: [],
+                misconception_detected: false
+            });
+        }
+        console.error('gradeShortAnswer error:', error.message);
         return Response.json({ 
             error: 'Internal server error',
             details: error.message

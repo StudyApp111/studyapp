@@ -29,11 +29,30 @@ const renderLatexContent = (text) => {
   
   let result = text;
   
-  // Handle \times (multiplication)
+  // Handle common LaTeX commands WITHOUT backslash (from raw AI output)
+  result = result.replace(/\brightarrow\b/g, '→');
+  result = result.replace(/\bleftarrow\b/g, '←');
+  result = result.replace(/\bbar\{([^}]+)\}/g, '$1̄'); // combining macron
+  result = result.replace(/\bnu\b/g, 'ν');
+  result = result.replace(/\bbeta\b/g, 'β');
+  result = result.replace(/\balpha\b/g, 'α');
+  result = result.replace(/\bgamma\b/g, 'γ');
+  
+  // Handle \times and times (multiplication)
   result = result.replace(/\\times/g, '×');
+  result = result.replace(/\btimes\b/g, '×');
+  
+  // Handle \rightarrow and \leftarrow WITH backslash
+  result = result.replace(/\\rightarrow/g, '→');
+  result = result.replace(/\\leftarrow/g, '←');
+  result = result.replace(/\\bar\{([^}]+)\}/g, '$1̄');
+  result = result.replace(/\\nu\b/g, 'ν');
+  result = result.replace(/\\beta\b/g, 'β');
+  result = result.replace(/\\alpha\b/g, 'α');
+  result = result.replace(/\\gamma\b/g, 'γ');
   
   // Handle scientific notation: number \times 10^{exp} or number × 10^exp
-  result = result.replace(/(\d+(?:\.\d+)?)\s*[×x\\times]\s*10\^?\{?(-?\d+)\}?/gi, (match, num, exp) => {
+  result = result.replace(/(\d+(?:\.\d+)?)\s*[×x]\s*10\^?\{?(-?\d+)\}?/gi, (match, num, exp) => {
     return `${num} × 10<sup>${exp}</sup>`;
   });
   
