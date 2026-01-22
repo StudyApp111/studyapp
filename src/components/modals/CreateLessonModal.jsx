@@ -212,19 +212,46 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       console.log("✅ Lesson created:", lesson.id);
 
-      // Auto-generate Exam 1 immediately and WAIT for it
+      // Auto-generate Exam 1 with timeout and retry handling
       console.log("🎯 Starting Exam 1 auto-generation...");
       setProcessingStep("Generating diagnostic exam...");
       
-      try {
-        const examResult = await base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id });
-        if (examResult?.data?.success) {
-          console.log("✅ Exam 1 auto-generated:", examResult.data.exam_id);
+      const generateExamWithRetry = async (retries = 2) => {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          try {
+            const examResult = await Promise.race([
+              base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id }),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Exam generation timeout')), 55000)
+              )
+            ]);
+            
+            if (examResult?.data?.success) {
+              console.log("✅ Exam 1 auto-generated:", examResult.data.exam_id);
+              return true;
+            }
+          } catch (examErr) {
+            const is502 = examErr.response?.status === 502 || examErr.message?.includes('502');
+            const isTimeout = examErr.message?.includes('timeout') || is502;
+            
+            if (isTimeout && attempt < retries) {
+              console.log(`⚠️ Exam generation timeout, retrying (${attempt + 1}/${retries})...`);
+              await new Promise(r => setTimeout(r, 2000));
+              continue;
+            }
+            
+            console.warn("⚠️ Exam 1 generation warning:", examErr.message);
+            // Log error for monitoring
+            if (is502) {
+              console.error('502 Error during exam generation - function timeout');
+            }
+            return false;
+          }
         }
-      } catch (examErr) {
-        console.warn("⚠️ Exam 1 generation warning:", examErr.message);
-        // Continue anyway - ExamTab will retry if needed
-      }
+        return false;
+      };
+      
+      await generateExamWithRetry();
 
       // Check if we still need to wait for minimum loading time
       const elapsedMs = Date.now() - loadingStartTime;

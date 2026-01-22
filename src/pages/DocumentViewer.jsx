@@ -47,7 +47,6 @@ export default function DocumentViewer() {
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [userStreak, setUserStreak] = useState(0);
   const [userDailyXP, setUserDailyXP] = useState(0);
-  const [studyPlan, setStudyPlan] = useState(null);
   const [isGeneratingStudyPlan, setIsGeneratingStudyPlan] = useState(false);
   
   // Check if lesson has a document
@@ -84,9 +83,13 @@ export default function DocumentViewer() {
     const handleSwitchToExam = () => setActiveTab('exam');
     
     const handleStudyPlanGenerating = (e) => {
-      setIsGeneratingStudyPlan(e.detail?.generating ?? true);
-      if (e.detail?.generating) {
+      const isGenerating = e.detail?.generating ?? true;
+      setIsGeneratingStudyPlan(isGenerating);
+      if (isGenerating) {
         setActiveTab('studyplan');
+      } else {
+        // When generation completes, reload lesson to get study plan
+        loadLesson();
       }
     };
     

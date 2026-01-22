@@ -72,11 +72,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   };
 
   useEffect(() => {
-    if (lesson?.id) {
+    if (lesson?.id && !isGeneratingPlan) {
       loadStudyPlan();
     }
-    // Don't load live progress on mount - only after study plan loads
-  }, [lesson?.id]);
+  }, [lesson?.id, isGeneratingPlan]);
 
   // Refresh live progress when tab becomes visible - but only if study plan exists
   useEffect(() => {

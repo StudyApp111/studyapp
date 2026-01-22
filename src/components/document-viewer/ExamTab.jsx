@@ -48,6 +48,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const [correctStreak, setCorrectStreak] = useState(0);
   const hasAutoSelectedRef = useRef(false);
   const [viewingCompletedExam, setViewingCompletedExam] = useState(null);
+  const [error, setError] = useState(null);
   
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const timerRef = useRef(null);
@@ -315,21 +316,37 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           pollForQuestions();
         }
       } else {
-        // No exam 1 exists at all - trigger autoGenerateExam1
+        // No exam 1 exists at all - trigger autoGenerateExam1 with timeout handling
         console.log('🎯 No Exam 1 found, triggering autoGenerateExam1...');
         setIsGenerating(true);
 
         try {
-          const { data } = await base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id });
-          if (data?.success && data?.exam_id) {
-            // Load the created exam
-            const createdExams = await base44.entities.Exam.filter({ id: data.exam_id });
+          const result = await Promise.race([
+            base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id }),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Exam generation timeout - taking longer than expected')), 55000)
+            )
+          ]);
+          
+          if (result?.data?.success && result?.data?.exam_id) {
+            const createdExams = await base44.entities.Exam.filter({ id: result.data.exam_id });
             if (createdExams[0]) {
               setExam(createdExams[0]);
             }
           }
         } catch (err) {
-          console.error('Error generating exam 1:', err);
+          const is502 = err.response?.status === 502;
+          const isTimeout = err.message?.includes('timeout') || is502;
+          
+          if (isTimeout) {
+            console.error('⚠️ Exam generation timeout - the AI is taking longer than usual. Please refresh and try again.');
+            setError('Exam generation is taking longer than expected. Please refresh the page to try again.');
+          } else {
+            console.error('Error generating exam 1:', err);
+            setError('Failed to generate exam. Please try again.');
+          }
+          
+          await logError('exam_generation_timeout', err, { lesson_id: lesson?.id, is502, isTimeout });
         } finally {
           setIsGenerating(false);
         }
@@ -937,6 +954,27 @@ JSON Output (exact schema):
       setIsSubmitting(false);
     }
   };
+
+  if (error) {
+    return (
+      <div className="px-3 py-8 w-full max-w-[320px] mx-auto">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+          <div className="text-3xl mb-2">⚠️</div>
+          <p className="text-red-800 font-medium mb-3">{error}</p>
+          <Button 
+            onClick={() => {
+              setError(null);
+              setIsGenerating(false);
+              if (onExamComplete) onExamComplete();
+            }}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (viewingCompletedExam) {
     return (
