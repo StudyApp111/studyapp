@@ -115,8 +115,8 @@ CRITICAL FORMATTING RULES (MUST FOLLOW):
       }
     };
 
-    // Use gemini-2.0-flash-lite for fast, reliable generation
-    const modelName = 'gemini-2.0-flash-lite';
+    // Use gemini-2.0-flash for reliable generation
+    const modelName = 'gemini-2.0-flash';
     console.log(`📝 generatePracticeExam: Using model ${modelName}`);
     console.log(`📝 Content length: ${contentForExam.length} chars`);
     console.log(`📝 Focus topics: ${(focus_topics || []).join(', ') || 'None'}`);

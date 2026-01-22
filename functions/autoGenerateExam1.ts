@@ -208,9 +208,9 @@ No extra text.`;
       }
     };
 
-    console.log('Calling Gemini Flash Latest for exam generation...');
+    console.log('Calling Gemini 2.0 Flash for exam generation...');
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
