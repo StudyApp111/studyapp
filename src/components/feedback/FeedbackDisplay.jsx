@@ -240,7 +240,18 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                   <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-100">
                                     <p className="text-[10px] font-bold text-emerald-700 uppercase mb-1">Answer</p>
                                     <MathText className="text-xs text-slate-800 font-medium">
-                                      {question.correct_answer}
+                                      {(() => {
+                                        const ca = question.correct_answer;
+                                        if (/^[A-Da-d]$/i.test(ca?.trim())) {
+                                          const letter = ca.trim().toUpperCase();
+                                          const idx = letter.charCodeAt(0) - 65;
+                                          const opt = question.options?.[idx];
+                                          const optText = typeof opt === 'string' ? opt : (opt?.text || opt?.label || '');
+                                          const clean = optText.replace(/^[A-Da-d][\).\s]+\s*/g, '').trim();
+                                          return `${letter}. ${clean}`;
+                                        }
+                                        return ca;
+                                      })()}
                                     </MathText>
                                   </div>
                                 </div>
@@ -547,7 +558,18 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                 <div className="bg-emerald-50 p-2 md:p-3 rounded-xl border border-emerald-100">
                                   <p className="text-[10px] md:text-xs font-bold text-emerald-700 uppercase mb-1">Correct</p>
                                   <MathText className="text-xs md:text-sm text-slate-800 font-medium">
-                                    {question.correct_answer}
+                                    {(() => {
+                                      const ca = question.correct_answer;
+                                      if (/^[A-Da-d]$/i.test(ca?.trim())) {
+                                        const letter = ca.trim().toUpperCase();
+                                        const idx = letter.charCodeAt(0) - 65;
+                                        const opt = question.options?.[idx];
+                                        const optText = typeof opt === 'string' ? opt : (opt?.text || opt?.label || '');
+                                        const clean = optText.replace(/^[A-Da-d][\).\s]+\s*/g, '').trim();
+                                        return `${letter}. ${clean}`;
+                                      }
+                                      return ca;
+                                    })()}
                                   </MathText>
                                 </div>
                               </div>

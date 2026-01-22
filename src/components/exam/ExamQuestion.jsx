@@ -358,7 +358,15 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
               {/* Show correct answer when wrong */}
               {!isCorrect && question.correct_answer && (
                 <p className="text-xs text-emerald-700 font-medium mt-1">
-                  Correct answer: {isMCQ ? `${question.correct_answer}` : question.correct_answer}
+                  Correct answer: {isMCQ && /^[A-Da-d]$/i.test(question.correct_answer.trim()) 
+                    ? (() => {
+                        const letter = question.correct_answer.trim().toUpperCase();
+                        const idx = letter.charCodeAt(0) - 65;
+                        const optText = question.options?.[idx];
+                        const cleanText = optText ? stripLetterPrefix(optText) : '';
+                        return `${letter}. ${cleanText}`;
+                      })()
+                    : question.correct_answer}
                 </p>
               )}
               {question.explanation && (
