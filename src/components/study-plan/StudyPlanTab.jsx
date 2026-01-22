@@ -179,21 +179,18 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         onNavigate('notes');
         break;
       case 'practice_exam':
-        if (isComplete) {
-          // If complete, just navigate to exam tab to view results
-          onNavigate('exam');
-        } else {
-          // Generate and start practice exam
-          window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
-            detail: { 
-              task,
-              focus_topics: task.focus_topics || [],
-              target_competency: task.target_competency || '',
-              misconception_addressed: task.misconception_addressed || ''
-            }
-          }));
-          onNavigate('exam');
-        }
+        // Always generate/start practice exam first, THEN navigate
+        // This ensures user lands in the quiz, not the exam list
+        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
+          detail: { 
+            task,
+            focus_topics: task.focus_topics || [],
+            target_competency: task.target_competency || '',
+            misconception_addressed: task.misconception_addressed || ''
+          }
+        }));
+        // Small delay to ensure event is processed before tab switch
+        setTimeout(() => onNavigate('exam'), 50);
         break;
       default:
         onNavigate('flashcards');
@@ -212,6 +209,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   // Calculate overall task progress
   const completedTasks = studyPlan?.tasks?.filter(t => t.completed).length || 0;
   const totalTasks = studyPlan?.tasks?.length || 0;
+  // Unlock official exam after completing at least 1 task (not all tasks)
+  const canTakeOfficialExam = completedTasks >= 1;
   const allComplete = completedTasks === totalTasks && totalTasks > 0;
 
   // Show placeholder while generating study plan
@@ -650,46 +649,47 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           >
             {/* Timeline end dot */}
             <div className={`absolute left-[11px] top-6 w-5 h-5 rounded-full z-10 flex items-center justify-center ${
-              allComplete ? 'bg-emerald-500' : 'bg-slate-200'
+              canTakeOfficialExam ? 'bg-emerald-500' : 'bg-slate-200'
             }`}>
-              <Trophy className={`w-3 h-3 ${allComplete ? 'text-white' : 'text-slate-400'}`} />
+              <Trophy className={`w-3 h-3 ${canTakeOfficialExam ? 'text-white' : 'text-slate-400'}`} />
             </div>
             
             <button
-              onClick={() => onNavigate('exam')}
-              className="w-full ml-8 group pr-1"
+              onClick={() => canTakeOfficialExam && onNavigate('exam')}
+              disabled={!canTakeOfficialExam}
+              className={`w-full ml-8 group pr-1 ${!canTakeOfficialExam ? 'cursor-not-allowed opacity-60' : ''}`}
             >
               <div className={`relative overflow-hidden rounded-xl p-4 transition-all ${
-                allComplete 
+                canTakeOfficialExam 
                   ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg hover:shadow-xl' 
                   : 'bg-slate-100 border border-slate-200'
               }`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${
-                    allComplete ? 'bg-white/20' : 'bg-white'
+                    canTakeOfficialExam ? 'bg-white/20' : 'bg-white'
                   } group-hover:scale-105 transition-transform`}>
-                    <Trophy className={`w-6 h-6 ${allComplete ? 'text-yellow-300' : 'text-slate-400'}`} />
+                    <Trophy className={`w-6 h-6 ${canTakeOfficialExam ? 'text-yellow-300' : 'text-slate-400'}`} />
                   </div>
                   <div className="flex-1 text-left">
                     <p className={`text-[10px] font-bold uppercase tracking-wide ${
-                      allComplete ? 'text-emerald-100' : 'text-slate-400'
+                      canTakeOfficialExam ? 'text-emerald-100' : 'text-slate-400'
                     }`}>
-                      {allComplete ? 'Ready!' : 'Complete tasks first'}
+                      {canTakeOfficialExam ? (allComplete ? 'All tasks done!' : 'Unlocked!') : 'Complete 1 task first'}
                     </p>
                     <p className={`font-bold text-base ${
-                      allComplete ? 'text-white' : 'text-slate-500'
+                      canTakeOfficialExam ? 'text-white' : 'text-slate-500'
                     }`}>
                       Take Official Exam
                     </p>
                   </div>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    allComplete ? 'bg-white/20' : 'bg-slate-200'
+                    canTakeOfficialExam ? 'bg-white/20' : 'bg-slate-200'
                   } group-hover:translate-x-1 transition-transform`}>
-                    <ArrowRight className={`w-5 h-5 ${allComplete ? 'text-white' : 'text-slate-400'}`} />
+                    <ArrowRight className={`w-5 h-5 ${canTakeOfficialExam ? 'text-white' : 'text-slate-400'}`} />
                   </div>
                 </div>
                 
-                {allComplete && (
+                {canTakeOfficialExam && (
                   <p className="text-emerald-100 text-[11px] mt-2 pl-15">
                     Retaking the exam will generate a new study plan
                   </p>
