@@ -171,8 +171,11 @@ CONSTRAINTS
         );
 
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Gemini API error:', response.status, errorText);
             return Response.json({ 
-                error: 'Failed to grade answer' 
+                error: 'Failed to grade answer',
+                details: errorText.substring(0, 200)
             }, { status: 500 });
         }
 
@@ -180,8 +183,10 @@ CONSTRAINTS
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
+            console.error('No text generated from Gemini:', JSON.stringify(data));
             return Response.json({ 
-                error: 'No grading result generated' 
+                error: 'No grading result generated',
+                details: data.candidates?.[0]?.finishReason || 'unknown'
             }, { status: 500 });
         }
 
@@ -195,8 +200,10 @@ CONSTRAINTS
         }
 
     } catch (error) {
+        console.error('gradeShortAnswer error:', error.message, error.stack);
         return Response.json({ 
-            error: 'Internal server error' 
+            error: 'Internal server error',
+            details: error.message
         }, { status: 500 });
     }
 });
