@@ -66,8 +66,8 @@ Deno.serve(async (req) => {
 
     console.log('Calling Gemini 3 Flash Preview with minimal thinking and Google Search...');
 
-    // Using beta endpoint for preview models
-    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=' + apiKey, {
+    // Using global endpoint for better availability
+    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

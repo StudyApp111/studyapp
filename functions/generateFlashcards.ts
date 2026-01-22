@@ -38,7 +38,7 @@ Return a JSON object with a "flashcards" array containing objects with: question
 
     const apiKey = Deno.env.get("GEMINIAPIKEY");
     
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=" + apiKey, {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

@@ -106,9 +106,9 @@ CRITICAL FORMATTING RULE: Do NOT use LaTeX notation like $\\text{...}$ or $...$.
       }
     };
 
-    // Use gemini-2.0-flash-lite for fast, reliable generation
-    const modelName = 'gemini-2.0-flash-lite';
-    console.log(`📝 generatePracticeExam: Using model ${modelName}`);
+    // Use gemini-2.0-flash with global endpoint for better availability
+    const modelName = 'gemini-2.0-flash';
+    console.log(`📝 generatePracticeExam: Using model ${modelName} (global endpoint)`);
     console.log(`📝 Content length: ${contentForExam.length} chars`);
     console.log(`📝 Focus topics: ${(focus_topics || []).join(', ') || 'None'}`);
     console.log(`📝 Target competency: ${target_competency || 'None'}`);
