@@ -18,20 +18,42 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     scrollToBottom();
   }, [messages]);
 
-  // Add welcome message on mount or when lesson changes
+  // Add welcome message on mount or when lesson changes, including Polly prediction if available
   useEffect(() => {
-    if (lesson) {
-      const courseName = lesson.course_name || "your course";
-      const hasDoc = lesson.extracted_content || lesson.file_url;
-      const contentPreview = hasDoc 
-        ? `I've loaded your **${courseName}** materials and I'm ready to help!` 
-        : `I'm ready to help you with **${courseName}**!`;
-      
-      setMessages([{
-        role: "assistant",
-        content: `👋 Hey! I'm **Polly**, your AI tutor.\n\n${contentPreview}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something you don't understand`
-      }]);
-    }
+    const loadWelcomeMessage = async () => {
+      if (lesson) {
+        const courseName = lesson.course_name || "your course";
+        const hasDoc = lesson.extracted_content || lesson.file_url;
+        const contentPreview = hasDoc 
+          ? `I've loaded your **${courseName}** materials and I'm ready to help!` 
+          : `I'm ready to help you with **${courseName}**!`;
+        
+        // Check for Polly prediction data
+        let pollyInsight = '';
+        try {
+          const user = await base44.auth.me();
+          if (user.polly_predicted_grade && user.polly_confidence) {
+            const velocityEmoji = user.polly_velocity === 'Accelerating' ? '📈' : 
+                                   user.polly_velocity === 'Declining' ? '📉' : '➡️';
+            pollyInsight = `\n\n🔮 **Your Current Prediction:** ${user.polly_predicted_grade} (${user.polly_confidence}% confidence) ${velocityEmoji}`;
+            if (user.polly_mastery_gap) {
+              pollyInsight += `\n💡 Focus area: ${user.polly_mastery_gap}`;
+            }
+            if (user.polly_next_action?.action_title) {
+              pollyInsight += `\n✨ Suggested: ${user.polly_next_action.action_title}`;
+            }
+          }
+        } catch (err) {
+          // Silent fail - just don't show Polly insight
+        }
+        
+        setMessages([{
+          role: "assistant",
+          content: `👋 Hey! I'm **Polly**, your AI tutor and prediction engine.${pollyInsight}\n\n${contentPreview}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something you don't understand\n• Check your grade prediction`
+        }]);
+      }
+    };
+    loadWelcomeMessage();
   }, [lesson?.id]);
 
   // Listen for "Ask AI" button clicks from exam/flashcard components
@@ -121,6 +143,7 @@ Respond as Polly:`;
     { label: "Give me an example", icon: FileText, prompt: "Give me a real-world example of the main concept" },
     { label: "Why is this important?", icon: HelpCircle, prompt: "Why is this material important? When would I use it?" },
     { label: "Quiz Me", icon: List, prompt: "Quiz me with 3 questions on this material" },
+    { label: "🔮 Grade Prediction", icon: Sparkles, prompt: "What's my current predicted grade and what should I focus on to improve?" },
   ];
 
   const hasDocument = lesson?.extracted_content || lesson?.file_url;
