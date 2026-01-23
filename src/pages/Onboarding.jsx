@@ -182,7 +182,7 @@ export default function Onboarding() {
         await base44.auth.updateMe({ learning_profile_id: profile.id });
       }
 
-      // 2. Create the lesson with proper content extraction
+      // 2. Create the lesson - handle file extraction inline for reliability
       const lessonData = {
         course_name: answers.course_name,
         status: "created"
@@ -198,27 +198,33 @@ export default function Onboarding() {
         lessonData.input_type = "file";
         
         // Extract content from files BEFORE creating lesson
-        console.log("📄 Extracting content from uploaded files...");
+        console.log("📄 Extracting content from", materialData.files.length, "file(s)...");
         try {
           const extractionResults = await Promise.allSettled(
-            materialData.files.map(f =>
-              base44.functions.invoke('extractDocumentContent', { file_url: f.url })
-            )
+            materialData.files.map(f => {
+              console.log("📤 Calling extractDocumentContent for:", f.url);
+              return base44.functions.invoke('extractDocumentContent', { file_url: f.url });
+            })
           );
+          
+          console.log("📥 Extraction results:", extractionResults.map(r => r.status));
           
           const extractedParts = extractionResults
             .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
             .map(r => r.value.data.extracted_content);
           
           extractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
-          console.log("✅ Extracted content length:", extractedContent.length);
+          console.log("✅ Extracted content length:", extractedContent.length, "chars");
           
           // Compress if needed
           if (extractedContent.length > 2500) {
+            console.log("📦 Compressing content...");
             try {
               const compResult = await base44.functions.invoke('compressDocument', { content: extractedContent });
               compressedContent = compResult?.data?.compressed_content || extractedContent;
-            } catch {
+              console.log("✅ Compressed to:", compressedContent.length, "chars");
+            } catch (compErr) {
+              console.warn("⚠️ Compression failed, using raw:", compErr);
               compressedContent = extractedContent;
             }
           } else {
@@ -228,7 +234,7 @@ export default function Onboarding() {
           lessonData.extracted_content = extractedContent;
           lessonData.compressed_content = compressedContent;
         } catch (err) {
-          console.warn("⚠️ Content extraction error:", err);
+          console.error("❌ Content extraction error:", err);
         }
       } else if (materialData?.type === "notes") {
         lessonData.description = materialData.content;
@@ -246,18 +252,28 @@ export default function Onboarding() {
         compressedContent = materialData.content;
       }
 
+      console.log("📝 Creating lesson with content:", {
+        hasExtracted: !!lessonData.extracted_content,
+        extractedLen: lessonData.extracted_content?.length || 0,
+        hasCompressed: !!lessonData.compressed_content,
+        compressedLen: lessonData.compressed_content?.length || 0
+      });
+
       const lesson = await base44.entities.Lesson.create(lessonData);
       setCreatedLessonId(lesson.id);
-      console.log("✅ Lesson created:", lesson.id, "with content:", extractedContent.length, "chars");
+      console.log("✅ Lesson created:", lesson.id);
 
-      // 3. Fire-and-forget: Generate exam in background
+      // 3. Fire-and-forget: Generate exam in background (content is already in lesson)
+      console.log("🎯 Starting background exam generation...");
       base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
         .then(result => {
           if (result?.data?.success) {
             console.log("✅ Exam 1 auto-generated:", result.data.exam_id);
+          } else {
+            console.warn("⚠️ Exam generation response:", result?.data);
           }
         })
-        .catch(err => console.warn("⚠️ Background exam generation:", err.message));
+        .catch(err => console.error("❌ Background exam generation error:", err.message));
 
       // 4. Fire-and-forget: Curriculum mapping in background
       const curriculumPrompt = `Educational Curriculum Analysis Request
@@ -268,6 +284,7 @@ Content: ${compressedContent || extractedContent || "N/A"}
 
 Output JSON with: core_competencies, competency_weightings, question_formats, high_yield_focal_points, common_misconceptions.`;
 
+      console.log("🗺️ Starting background curriculum mapping...");
       base44.functions.invoke('curriculumMapping', { prompt: curriculumPrompt })
         .then(async (result) => {
           if (result?.data) {
