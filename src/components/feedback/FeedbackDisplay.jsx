@@ -19,7 +19,7 @@ const formatTime = (seconds) => {
 
 export default function FeedbackDisplay({ exam, lesson, allExams = [], courseName }) {
   const isPracticeExam = exam?.exam_type === 'practice';
-  const { openTutor } = useAITutor();
+  const { openWithContext } = useAITutor();
   
   const handleAskAI = (question, userAnswer, correctAnswer, isCorrect) => {
     const prompt = `I need help understanding this question from my exam:
@@ -33,7 +33,7 @@ ${question.options?.length > 0 ? `\n**Options:**\n${question.options.map((o, i) 
 
 Please explain why ${isCorrect ? 'this answer is correct and what concept it tests' : 'my answer was wrong and help me understand the correct answer'}. Break it down step by step.`;
     
-    openTutor(prompt);
+    openWithContext({ initialPrompt: prompt });
   };
 
   // Helper to get score color based on value
