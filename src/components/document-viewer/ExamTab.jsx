@@ -122,7 +122,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     loadOrGenerateExam(selectedExamNumber);
   }, [lesson?.id, selectedExamNumber, waitingForCompression, exams]);
 
-  // Wait for lesson content to be ready using realtime subscriptions instead of polling
+  // Wait for lesson content to be ready - but only briefly, then proceed anyway
   useEffect(() => {
     if (!lesson?.id) return;
     
@@ -135,19 +135,29 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       setWaitingForCompression(true);
       console.log('⏳ Waiting for content extraction and compression to complete...');
       
+      // Set a max wait time of 10 seconds, then proceed anyway
+      const maxWaitTimeout = setTimeout(() => {
+        console.log('⚠️ Max wait time reached, proceeding without full content');
+        setWaitingForCompression(false);
+      }, 10000);
+      
       // Subscribe to lesson updates
       const unsubscribe = base44.entities.Lesson.subscribe((event) => {
         if (event.id === lesson.id && event.type === 'update') {
           const updated = event.data;
           if (updated?.extracted_content?.length > 0 && updated?.compressed_content?.length > 0) {
             console.log('✅ Content ready via realtime update!');
+            clearTimeout(maxWaitTimeout);
             setWaitingForCompression(false);
             window.dispatchEvent(new Event('reloadLesson'));
           }
         }
       });
       
-      return () => unsubscribe();
+      return () => {
+        clearTimeout(maxWaitTimeout);
+        unsubscribe();
+      };
     } else {
       setWaitingForCompression(false);
     }

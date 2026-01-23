@@ -12,7 +12,6 @@ Deno.serve(async (req) => {
     const { searchQuery } = await req.json();
 
     // Get user's approximate location from IP
-    // Extract client IP from request headers (works in production)
     const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
       || req.headers.get('cf-connecting-ip') 
       || req.headers.get('x-real-ip')
@@ -23,10 +22,15 @@ Deno.serve(async (req) => {
     let userLat = null;
     let userLon = null;
 
+    // Quick geo lookup with 3s timeout
     try {
-      // Use ipapi.co (free tier: 1000/day, supports HTTPS)
       const geoUrl = clientIP ? `https://ipapi.co/${clientIP}/json/` : 'https://ipapi.co/json/';
-      const geoResponse = await fetch(geoUrl);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const geoResponse = await fetch(geoUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      
       if (geoResponse.ok) {
         const geoData = await geoResponse.json();
         if (!geoData.error) {
@@ -37,51 +41,42 @@ Deno.serve(async (req) => {
         }
       }
     } catch (geoError) {
-      console.log('Geo lookup failed, will use search only:', geoError.message);
+      console.log('Geo lookup failed:', geoError.message);
     }
 
-    // Count users per school from our database for "classmates" feature
-    const allUsers = await base44.asServiceRole.entities.User.list();
-    const schoolCounts = {};
-    for (const u of allUsers) {
-      if (u.learning_profile_id) {
-        try {
-          const profiles = await base44.asServiceRole.entities.LearningProfile.filter({ id: u.learning_profile_id });
-          if (profiles[0]?.school) {
-            const school = profiles[0].school.toLowerCase().trim();
-            schoolCounts[school] = (schoolCounts[school] || 0) + 1;
-          }
-        } catch {}
-      }
-    }
-
-    // Use Overpass API (OpenStreetMap) to find nearby universities/colleges
     let nearbySchools = [];
     
     if (userLat && userLon) {
       try {
-        // Search for universities and colleges within 50km radius
+        // Search for universities, colleges AND high schools within 30km radius
+        // Use a simpler, faster query
         const overpassQuery = `
-          [out:json][timeout:10];
+          [out:json][timeout:5];
           (
-            node["amenity"="university"](around:50000,${userLat},${userLon});
-            way["amenity"="university"](around:50000,${userLat},${userLon});
-            node["amenity"="college"](around:50000,${userLat},${userLon});
-            way["amenity"="college"](around:50000,${userLat},${userLon});
+            node["amenity"="university"](around:30000,${userLat},${userLon});
+            node["amenity"="college"](around:30000,${userLat},${userLon});
+            node["amenity"="school"]["school:level"="secondary"](around:30000,${userLat},${userLon});
+            node["amenity"="school"]["isced:level"~"3"](around:30000,${userLat},${userLon});
+            way["amenity"="university"](around:30000,${userLat},${userLon});
+            way["amenity"="college"](around:30000,${userLat},${userLon});
           );
-          out center tags;
+          out center tags 20;
         `;
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         
         const overpassResponse = await fetch('https://overpass-api.de/api/interpreter', {
           method: 'POST',
-          body: overpassQuery
+          body: overpassQuery,
+          signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (overpassResponse.ok) {
           const overpassData = await overpassResponse.json();
           const elements = overpassData.elements || [];
           
-          // Process and deduplicate results
           const seenNames = new Set();
           
           for (const el of elements) {
@@ -89,13 +84,12 @@ Deno.serve(async (req) => {
             if (!name || seenNames.has(name.toLowerCase())) continue;
             seenNames.add(name.toLowerCase());
             
-            // Calculate distance
             const lat = el.lat || el.center?.lat;
             const lon = el.lon || el.center?.lon;
             let distance = null;
             
             if (lat && lon) {
-              const R = 6371; // km
+              const R = 6371;
               const dLat = (lat - userLat) * Math.PI / 180;
               const dLon = (lon - userLon) * Math.PI / 180;
               const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -105,29 +99,22 @@ Deno.serve(async (req) => {
               distance = R * c;
             }
 
-            // Get address info
-            const address = el.tags?.['addr:street'] || el.tags?.['addr:city'] || userCity || '';
-            
-            // Get classmates count
-            const lowerName = name.toLowerCase().trim();
-            const classmates = schoolCounts[lowerName] || 0;
+            const amenity = el.tags?.amenity;
+            let type = 'school';
+            if (amenity === 'university') type = 'university';
+            else if (amenity === 'college') type = 'college';
+            else type = 'high_school';
 
             nearbySchools.push({
               name,
-              address: address ? `${address}, ${userCity || ''}`.replace(/, $/, '') : userCity || '',
-              classmates,
+              address: userCity || '',
+              classmates: 0,
               distance,
-              type: el.tags?.amenity === 'university' ? 'university' : 'college'
+              type
             });
           }
 
-          // Sort by distance then by classmates
           nearbySchools.sort((a, b) => {
-            // Prioritize schools with classmates
-            if (a.classmates > 0 && b.classmates === 0) return -1;
-            if (b.classmates > 0 && a.classmates === 0) return 1;
-            if (a.classmates !== b.classmates) return b.classmates - a.classmates;
-            // Then by distance
             if (a.distance && b.distance) return a.distance - b.distance;
             return 0;
           });
@@ -137,7 +124,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If user is searching, filter results
+    // Filter by search query
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       nearbySchools = nearbySchools.filter(s => 
@@ -145,8 +132,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Limit to top 10 results
-    nearbySchools = nearbySchools.slice(0, 10);
+    nearbySchools = nearbySchools.slice(0, 15);
 
     return Response.json({
       success: true,

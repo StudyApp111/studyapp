@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Loader2 } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
-const EXAMPLE_COURSES = [
+const DEFAULT_COURSES = [
   "ECON 203",
   "POLI 418",
   "MATH 101",
@@ -11,7 +12,34 @@ const EXAMPLE_COURSES = [
   "CHEM 351"
 ];
 
-export default function CourseNameInput({ value, onChange }) {
+export default function CourseNameInput({ value, onChange, school, year }) {
+  const [suggestions, setSuggestions] = useState(DEFAULT_COURSES);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Fetch school-specific course codes if school is provided
+    if (school) {
+      fetchCourseCodes();
+    }
+  }, [school]);
+
+  const fetchCourseCodes = async () => {
+    setLoading(true);
+    try {
+      const result = await base44.functions.invoke('generateCourseCodes', { 
+        school, 
+        year 
+      });
+      if (result?.data?.codes?.length > 0) {
+        setSuggestions(result.data.codes);
+      }
+    } catch (err) {
+      console.warn("Could not fetch course codes:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="relative">
@@ -29,16 +57,23 @@ export default function CourseNameInput({ value, onChange }) {
       {/* Example course codes */}
       {!value && (
         <div className="flex flex-wrap justify-center gap-2">
-          {EXAMPLE_COURSES.map((course) => (
-            <button
-              key={course}
-              type="button"
-              onClick={() => onChange(course)}
-              className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full transition-colors border border-purple-200"
-            >
-              {course}
-            </button>
-          ))}
+          {loading ? (
+            <div className="flex items-center gap-2 text-purple-600">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-xs">Loading courses...</span>
+            </div>
+          ) : (
+            suggestions.map((course) => (
+              <button
+                key={course}
+                type="button"
+                onClick={() => onChange(course)}
+                className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full transition-colors border border-purple-200"
+              >
+                {course}
+              </button>
+            ))
+          )}
         </div>
       )}
       
