@@ -196,63 +196,8 @@ export default function OnboardingQuestion({ question, value, onChange }) {
       return (
         <div className="space-y-4">
           <RadioGroup value={value} onValueChange={onChange}>
-            {/* Mobile: stacked rows */}
+            {/* Mobile: stacked sections with grid layout */}
             <div className="md:hidden space-y-3">
-              {gradeGroups.map((group, groupIdx) => {
-                const colors = colorClasses[group.color];
-                const Icon = group.icon;
-                
-                return (
-                  <div 
-                    key={groupIdx} 
-                    className={`rounded-xl p-3 ${colors.bg} border-2 ${colors.border}`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon className={`w-4 h-4 ${colors.icon}`} />
-                      <h3 className={`text-sm font-bold ${colors.title}`}>
-                        {group.title}
-                      </h3>
-                    </div>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {group.options.map((option, index) => {
-                        const isSelected = value === option;
-                        const shortLabel = option
-                          .replace('Grade ', '')
-                          .replace('1st Year University', '1st Year')
-                          .replace('2nd Year University', '2nd Year')
-                          .replace('3rd Year University', '3rd Year')
-                          .replace('4th Year University', '4th Year')
-                          .replace('Post Graduate', 'Post Grad');
-                        
-                        return (
-                          <label
-                            key={index}
-                            htmlFor={`mobile-option-${groupIdx}-${index}`}
-                            className={`flex items-center justify-center gap-1.5 p-2 rounded-lg border-2 transition-all cursor-pointer text-center ${
-                              isSelected 
-                                ? `${colors.selectedBorder} ${colors.selectedBg}` 
-                                : `border-white/60 bg-white/80 ${colors.hoverBorder}`
-                            }`}
-                          >
-                            <RadioGroupItem 
-                              value={option} 
-                              id={`mobile-option-${groupIdx}-${index}`}
-                              className="shrink-0 w-3.5 h-3.5"
-                            />
-                            <span className={`text-xs font-medium ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
-                              {shortLabel}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Desktop: 3 columns side by side */}
-            <div className="hidden md:grid md:grid-cols-3 gap-4">
               {gradeGroups.map((group, groupIdx) => {
                 const colors = colorClasses[group.color];
                 const Icon = group.icon;
@@ -264,11 +209,68 @@ export default function OnboardingQuestion({ question, value, onChange }) {
                   >
                     <div className="flex items-center gap-2 mb-3">
                       <Icon className={`w-5 h-5 ${colors.icon}`} />
-                      <h3 className={`text-sm font-bold ${colors.title}`}>
+                      <h3 className={`text-base font-bold ${colors.title}`}>
                         {group.title}
                       </h3>
                     </div>
-                    <div className="space-y-2">
+                    <div className={`grid gap-2 ${
+                      group.title === 'University' ? 'grid-cols-2' : 'grid-cols-3'
+                    }`}>
+                      {group.options.map((option, index) => {
+                        const isSelected = value === option;
+                        const mobileLabel = option
+                          .replace('Grade ', '')
+                          .replace('1st Year University', '1st Year')
+                          .replace('2nd Year University', '2nd Year')
+                          .replace('3rd Year University', '3rd Year')
+                          .replace('4th Year University', '4th Year')
+                          .replace('Post Graduate', 'Post Grad');
+                        
+                        return (
+                          <label
+                            key={index}
+                            htmlFor={`mobile-option-${groupIdx}-${index}`}
+                            className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                              isSelected 
+                                ? `${colors.selectedBorder} ${colors.selectedBg}` 
+                                : `border-white/60 bg-white/80 ${colors.hoverBorder}`
+                            }`}
+                          >
+                            <RadioGroupItem 
+                              value={option} 
+                              id={`mobile-option-${groupIdx}-${index}`}
+                              className="shrink-0"
+                            />
+                            <span className={`text-sm font-medium ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
+                              {mobileLabel}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop: 3 columns with better spacing */}
+            <div className="hidden md:grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+              {gradeGroups.map((group, groupIdx) => {
+                const colors = colorClasses[group.color];
+                const Icon = group.icon;
+                
+                return (
+                  <div 
+                    key={groupIdx} 
+                    className={`rounded-2xl p-5 ${colors.bg} border-2 ${colors.border}`}
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <Icon className={`w-5 h-5 ${colors.icon}`} />
+                      <h3 className={`text-base font-bold ${colors.title}`}>
+                        {group.title}
+                      </h3>
+                    </div>
+                    <div className="space-y-2.5">
                       {group.options.map((option, index) => {
                         const isSelected = value === option;
                         
@@ -276,7 +278,7 @@ export default function OnboardingQuestion({ question, value, onChange }) {
                           <label
                             key={index}
                             htmlFor={`desktop-option-${groupIdx}-${index}`}
-                            className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                            className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
                               isSelected 
                                 ? `${colors.selectedBorder} ${colors.selectedBg}` 
                                 : `border-white/60 bg-white/80 ${colors.hoverBorder}`
@@ -287,7 +289,7 @@ export default function OnboardingQuestion({ question, value, onChange }) {
                               id={`desktop-option-${groupIdx}-${index}`}
                               className="shrink-0"
                             />
-                            <span className={`text-sm font-medium whitespace-nowrap ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
+                            <span className={`text-sm font-medium ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
                               {option}
                             </span>
                           </label>
