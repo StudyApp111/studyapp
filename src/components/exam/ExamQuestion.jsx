@@ -120,7 +120,14 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} className="space-y-2">
       {question.options?.map((option, index) => {
         const optionLetter = String.fromCharCode(65 + index);
-        const optionText = typeof option === 'string' ? option : (option?.text || option?.label || option?.value || String(option));
+        // Robust option text extraction - handle objects
+        let optionText = '';
+        if (typeof option === 'string') {
+          optionText = option;
+        } else if (option && typeof option === 'object') {
+          optionText = option.text || option.label || option.value || option.content || '';
+          // Last resort: don't stringify objects, just use empty string
+        }
         const displayText = stripLetterPrefix(optionText);
         const isThisCorrect = checkIsCorrect(optionText, question.correct_answer, index);
         const isThisSelected = selectedAnswer === optionText;

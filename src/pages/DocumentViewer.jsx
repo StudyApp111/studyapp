@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, Trophy, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target, StickyNote } from "lucide-react";
+import { FileText, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target, StickyNote, Brain } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 
@@ -463,8 +463,8 @@ export default function DocumentViewer() {
                     value="teachit"
                     className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
-                    <Lightbulb className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Practice</span>
+                    <Brain className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Teach It</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
@@ -479,8 +479,8 @@ export default function DocumentViewer() {
                     className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
                     {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                    <Trophy className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Exam</span>
+                    <Zap className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Practice</span>
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -577,8 +577,8 @@ export default function DocumentViewer() {
                     value="teachit"
                     className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
                   >
-                    <Lightbulb className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-semibold">Practice</span>
+                    <Brain className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-semibold">Teach</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
@@ -593,8 +593,8 @@ export default function DocumentViewer() {
                     className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
                   >
                     {showExamDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <Trophy className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-semibold">Exam</span>
+                    <Zap className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-semibold">Practice</span>
                   </TabsTrigger>
                 </TabsList>
               </div>

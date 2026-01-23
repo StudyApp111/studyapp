@@ -318,43 +318,54 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
 
 
-  // Initial state - not generated
+  // Initial state - not generated - styled like TeachItTab
   if (!cards && !isGenerating) {
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-3 p-6 max-w-lg md:mx-auto mb-8">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">AI-Powered Flashcards</h3>
-            <p className="text-sm text-slate-600 mb-1">
-              Generate smart flashcards from your notes.
-            </p>
-            <p className="text-xs text-slate-500">
-              Think of the answer, then reveal to check yourself!
-            </p>
-          </div>
-          
-          {/* XP incentive */}
-          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-3 border border-yellow-200">
-            <div className="flex items-center justify-center gap-2">
-              <Zap className="w-4 h-4 text-yellow-600" />
-              <span className="text-xs font-medium text-yellow-800">
-                Earn <span className="font-bold">+2-10 XP</span> per card mastered!
-              </span>
+      <div className="flex items-center justify-center p-4 pb-8 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200 shadow-2xl overflow-hidden max-w-md">
+            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-6 py-8 text-center">
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-4 drop-shadow-lg" />
+              </motion.div>
+              <h3 className="text-2xl md:text-3xl font-black text-white mb-2">AI-Powered Flashcards</h3>
+              <p className="text-purple-100 text-sm">
+                Master concepts through active recall
+              </p>
             </div>
-          </div>
-          
-          <Button
-            onClick={handleGenerate}
-            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white w-full"
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Generate Flashcards
-          </Button>
-        </div>
-      </Card>
+            <div className="p-6 text-center">
+              <p className="text-slate-600 mb-4 leading-relaxed">
+                Generate smart flashcards from your notes. Think of the answer, then reveal to check yourself!
+              </p>
+              
+              {/* XP incentive */}
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-3 border border-yellow-200 mb-6">
+                <div className="flex items-center justify-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-600" />
+                  <span className="text-xs font-medium text-yellow-800">
+                    Earn <span className="font-bold">+2-10 XP</span> per card mastered!
+                  </span>
+                </div>
+              </div>
+              
+              <Button
+                onClick={handleGenerate}
+                className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-bold text-lg rounded-xl shadow-xl"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Generate Flashcards
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
+      </div>
     );
   }
 
@@ -382,26 +393,35 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   if (!cards || cards.length === 0) {
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-3 p-6 max-w-lg md:mx-auto mb-8">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">AI-Powered Flashcards</h3>
-            <p className="text-sm text-slate-600">
-              Generate intelligent flashcards from your notes.
-            </p>
-          </div>
-          <Button
-            onClick={handleGenerate}
-            className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white w-full"
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Generate Flashcards
-          </Button>
-        </div>
-      </Card>
+      <div className="flex items-center justify-center p-4 pb-8 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200 shadow-2xl overflow-hidden max-w-md">
+            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-6 py-8 text-center">
+              <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-4 drop-shadow-lg" />
+              <h3 className="text-2xl md:text-3xl font-black text-white mb-2">AI-Powered Flashcards</h3>
+              <p className="text-purple-100 text-sm">
+                Master concepts through active recall
+              </p>
+            </div>
+            <div className="p-6 text-center">
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                Generate intelligent flashcards from your notes.
+              </p>
+              <Button
+                onClick={handleGenerate}
+                className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-bold text-lg rounded-xl shadow-xl"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Generate Flashcards
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
+      </div>
     );
   }
 
