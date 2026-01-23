@@ -698,6 +698,13 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       
       // For practice exams, show the question review (FeedbackDisplay)
       setViewingCompletedExam(completedExam);
+
+      // Trigger Polly engine to update predictions after practice exam
+      base44.functions.invoke('runPollyEngine', {
+        trigger_event: 'practice_exam_completed',
+        lesson_id: lesson.id,
+        exam_id: exam.id
+      }).catch(err => console.warn('Polly engine trigger failed:', err.message));
       
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
