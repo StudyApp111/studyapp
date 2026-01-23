@@ -499,8 +499,9 @@ export default function DocumentViewer() {
                   )}
                   <TabsTrigger 
                     value="studyplan"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
+                    {showStudyPlanDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Target className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Plan</span>
                   </TabsTrigger>
@@ -508,6 +509,7 @@ export default function DocumentViewer() {
                     value="teachit"
                     className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
+                    {showTeachItDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Brain className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Teach It</span>
                   </TabsTrigger>
