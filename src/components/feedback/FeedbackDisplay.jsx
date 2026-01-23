@@ -74,8 +74,9 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
   const totalWorksheets = allExams.length || 6;
 
   // For practice exams, calculate correct count from questions
+  // Note: is_correct is set during submission based on proper answer comparison
   const correctCount = isPracticeExam 
-    ? (exam.correct_count || exam.questions?.filter(q => q.is_correct).length || 0)
+    ? (exam.correct_count ?? exam.questions?.filter(q => q.is_correct === true).length ?? 0)
     : (exam.feedback?.filter(f => f.is_correct).length || 0);
   const totalQuestions = exam.questions?.length || 0;
 
@@ -103,7 +104,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
             <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5">From Study Plan</Badge>
           </div>
           <h2 className="text-xl font-bold text-slate-900">
-            {exam.focus_description || 'Practice Quiz Results'}
+            {exam.title || 'Practice Quiz Results'}
           </h2>
 
           {/* Score Display */}
@@ -154,7 +155,8 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
               <CardContent className="px-3 pb-3">
                 <div className="space-y-2">
                   {exam.questions.map((question, idx) => {
-                    const isCorrect = question.is_correct;
+                    // Use the stored is_correct value from submission grading
+                    const isCorrect = question.is_correct === true;
                     const isExpanded = expandedQuestions[idx];
                     
                     return (
@@ -173,9 +175,9 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              isCorrect ? 'bg-emerald-500' : 'bg-red-500'
+                              isCorrect === true ? 'bg-emerald-500' : 'bg-red-500'
                             } text-white`}>
-                              {isCorrect ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                              {isCorrect === true ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
                             </div>
                             
                             <div className="flex-1 min-w-0">

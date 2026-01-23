@@ -1097,7 +1097,7 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-        <div className="px-3 py-4 w-full max-w-[320px] mx-auto space-y-4 pb-8">
+        <div className="px-3 md:px-6 py-4 w-full max-w-[320px] md:max-w-2xl lg:max-w-3xl mx-auto space-y-4 md:space-y-6 pb-8">
         {/* Practice Exams Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
           <div>
@@ -1106,16 +1106,18 @@ JSON Output (exact schema):
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h2 className="text-base font-black text-slate-900">Practice Exams</h2>
-                <p className="text-[10px] text-slate-500">Quick drills • No grade impact</p>
+                <h2 className="text-base md:text-lg font-black text-slate-900">Practice Exams</h2>
+                <p className="text-[10px] md:text-xs text-slate-500">Quick drills • No grade impact</p>
               </div>
             </div>
             
-            <div className="space-y-2">
-              {sortedPracticeExams.slice(0, 5).map((e) => {
+            <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+              {sortedPracticeExams.slice(0, 6).map((e) => {
                 const isCompleted = e.completed;
                 const correctCount = e.correct_count || 0;
                 const totalQuestions = e.questions?.length || 0;
+                // Use title if available, otherwise fall back to a generic name
+                const displayTitle = e.title || `Practice Quiz`;
                 
                 return (
                   <button
@@ -1129,40 +1131,40 @@ JSON Output (exact schema):
                         hasAutoSelectedRef.current = true;
                       }
                     }}
-                    className={`group relative w-full overflow-hidden p-2.5 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
+                    className={`group relative w-full overflow-hidden p-2.5 md:p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
                       isCompleted
                         ? 'bg-gradient-to-r from-blue-500 to-cyan-600'
                         : 'bg-white border border-blue-200 hover:border-blue-300'
                     }`}
                   >
-                    <div className="relative flex items-center gap-2">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    <div className="relative flex items-center gap-2 md:gap-3">
+                      <div className={`w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                         isCompleted ? 'bg-white/20' : 'bg-blue-50'
                       }`}>
                         {isCompleted ? (
-                          <CheckCircle2 className="w-4 h-4 text-white" />
+                          <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-white" />
                         ) : (
-                          <Zap className="w-4 h-4 text-blue-600" />
+                          <Zap className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                         )}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold text-xs truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
-                          {e.focus_description || 'Practice Quiz'}
+                        <h3 className={`font-semibold text-xs md:text-sm truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
+                          {displayTitle}
                         </h3>
-                        <p className={`text-[10px] ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
+                        <p className={`text-[10px] md:text-xs ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
                           {totalQuestions} questions
                         </p>
                       </div>
                       
                       {isCompleted ? (
                         <div className="flex items-center gap-1.5 flex-shrink-0">
-                          <span className="text-base font-black text-white">{correctCount}/{totalQuestions}</span>
-                          <ChevronRight className="w-3 h-3 text-white/70" />
+                          <span className="text-base md:text-lg font-black text-white">{correctCount}/{totalQuestions}</span>
+                          <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-white/70" />
                         </div>
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <Play className="w-2.5 h-2.5 text-blue-600" />
+                        <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <Play className="w-2.5 h-2.5 md:w-3 md:h-3 text-blue-600" />
                         </div>
                       )}
                     </div>

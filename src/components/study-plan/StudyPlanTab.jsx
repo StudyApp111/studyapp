@@ -166,14 +166,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       case 'flashcards':
         // Pass task info to flashcards tab for targeted generation or review
         window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
-          detail: { taskType: 'flashcards', task }
+          detail: { taskType: 'flashcards', task, isComplete }
         }));
         onNavigate('flashcards');
         break;
       case 'teach_it':
         // Pass task info to teach it tab for targeted generation or review
         window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
-          detail: { taskType: 'teach_it', task }
+          detail: { taskType: 'teach_it', task, isComplete }
         }));
         onNavigate('teachit');
         break;
@@ -181,18 +181,22 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         onNavigate('notes');
         break;
       case 'practice_exam':
-        // Always generate/start practice exam first, THEN navigate
-        // This ensures user lands in the quiz, not the exam list
-        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
-          detail: { 
-            task,
-            focus_topics: task.focus_topics || [],
-            target_competency: task.target_competency || '',
-            misconception_addressed: task.misconception_addressed || ''
-          }
-        }));
-        // Small delay to ensure event is processed before tab switch
-        setTimeout(() => onNavigate('exam'), 50);
+        // If task is complete, just navigate to exam tab (shows completed exams list)
+        // Do NOT regenerate another practice exam
+        if (isComplete) {
+          onNavigate('exam');
+        } else {
+          // Only generate new practice exam if task is NOT complete
+          window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
+            detail: { 
+              task,
+              focus_topics: task.focus_topics || [],
+              target_competency: task.target_competency || '',
+              misconception_addressed: task.misconception_addressed || ''
+            }
+          }));
+          setTimeout(() => onNavigate('exam'), 50);
+        }
         break;
       default:
         onNavigate('flashcards');
