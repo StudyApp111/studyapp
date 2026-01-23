@@ -97,13 +97,28 @@ Calculate a 'prediction_confidence_percentage' [0-100] using these 3 pillars:
 3. Consistency (20% weight): If student gets 'High Difficulty' correct but 'Moderate' incorrect, reduce consistency by 0.5 (indicates guessing/anomaly).
 Final Confidence = (Volume * 0.4 + Coverage * 0.4 + Consistency * 0.2) * 100.
 
+[CONFIDENCE LEVEL THRESHOLDS]
+- Low: 0-40%
+- Medium: 41-70%
+- High: 71-100%
+
+[MASTERY GAP IDENTIFICATION]
+Identify the single weakest competency based on:
+1. Lowest score among assessed competencies
+2. Highest weight in curriculum (if scores are similar)
+3. Most misconceptions detected
+
 [JSON OUTPUT SCHEMA]
 {
   "feedback_session_title": "Exam ${examNumber} Performance & Grade Prediction",
   "predicted_exam_score_percentage": "XX%",
   "prediction_confidence_percentage": "XX%",
   "confidence_level": "Low" | "Medium" | "High",
-  "mastery_gap": "The #1 competency the user needs to practice to increase both grade and confidence."
+  "mastery_gap": "The specific competency name the user needs to practice to increase both grade and confidence.",
+  "overall_performance_summary_text": "2-3 sentence summary of performance",
+  "identified_strengths_list": ["strength1", "strength2"],
+  "key_areas_for_improvement_list": ["area1", "area2"],
+  "suggested_future_sessions_plan": [{"session_number": 1, "session_name": "name", "session_focus_description": "desc"}]
 }`;
         }
 

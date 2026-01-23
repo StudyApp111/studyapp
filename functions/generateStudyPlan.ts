@@ -224,9 +224,10 @@ Return JSON:
                       target_count: { type: "integer" },
                       target_competency: { type: "string" },
                       focus_topics: { type: "array", items: { type: "string" } },
-                      misconception_addressed: { type: "string" }
+                      misconception_addressed: { type: "string" },
+                      is_focus_factor: { type: "boolean" }
                     },
-                    required: ["task_type", "title", "target_count"]
+                    required: ["task_type", "title", "target_count", "is_focus_factor"]
                   }
                 },
                 plan_rationale: { type: "string" },
@@ -296,7 +297,8 @@ Return JSON:
           completed_count: 0,
           completed: false,
           focus_topics: task.focus_topics || [],
-          misconception_addressed: task.misconception_addressed || null
+          misconception_addressed: task.misconception_addressed || null,
+          is_focus_factor: task.is_focus_factor || false
         };
       });
 
@@ -326,6 +328,10 @@ Return JSON:
 
     console.log(`⏱️ [generateStudyPlan] Pre-create: ${Date.now() - startTime}ms`);
     
+    // Get confidence data from exam's AI feedback
+    const predictionConfidence = parseInt(exam.ai_feedback?.prediction_confidence_percentage) || 35;
+    const confidenceLevel = exam.ai_feedback?.confidence_level || "Low";
+
     // Create new study plan with enriched data
     const studyPlan = await base44.entities.StudyPlan.create({
       lesson_id,
@@ -335,13 +341,17 @@ Return JSON:
       initial_score: exam.total_score,
       target_grade: "A+",
       weak_competencies: weakestCompetencies.map(c => c.name),
+      mastery_gap: mastery_gap_topic,
+      prediction_confidence: predictionConfidence,
+      confidence_level: confidenceLevel,
       tasks: validatedTasks,
       competency_progress: competencyProgress,
       grade_history: [{
         date: new Date().toISOString(),
         exam_id: exam_id,
         predicted_grade: exam.predicted_grade,
-        score: exam.total_score
+        score: exam.total_score,
+        confidence: predictionConfidence
       }],
       plan_rationale: response.plan_rationale,
       priority_focus: response.priority_focus,
