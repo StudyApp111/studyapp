@@ -131,7 +131,7 @@ Final Confidence = (Volume * 0.4 + Coverage * 0.4 + Consistency * 0.2) * 100.
 
         console.log('Calling Gemini API with retry logic...');
         const response = await fetchWithRetry(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
