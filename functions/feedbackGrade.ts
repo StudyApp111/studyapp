@@ -72,11 +72,21 @@ Deno.serve(async (req) => {
             const curriculumJson = JSON.stringify(lesson.curriculum_map || {}, null, 2);
             const performanceJson = JSON.stringify(examPerformanceData, null, 2);
 
+            // Count data points for confidence calculation
+            const totalQuestions = examPerformanceData.length;
+            const answeredQuestions = examPerformanceData.filter(q => q.student_answer && q.student_answer !== "No answer provided").length;
+            const competenciesCovered = new Set(examPerformanceData.flatMap(q => q.assessed_competencies || [])).size;
+            const totalCompetencies = (lesson.curriculum_map?.core_competencies || []).length || 1;
+            
             finalPrompt = `Expert educator for ${courseName} (grade ${grade}). Analyze exam performance using curriculum map to predict grade as if you were a teacher at this school teaching this course.
 
 Input: Grade ${grade}, ${courseName}, Exam ${examNumber}/6
 Curriculum: ${curriculumJson}
 Performance: ${performanceJson}
+
+Data Points Available:
+- Questions answered: ${answeredQuestions}/${totalQuestions}
+- Competencies assessed: ${competenciesCovered}/${totalCompetencies}
 
 Fields: question_number, question_type, difficulty_index, question_text, options, student_answer, correct_answer, explanation, assessed_competencies[], targeted_misconception, is_correct, ai_grading{score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[]}.
 
@@ -88,9 +98,22 @@ Prediction Algorithm:
 5) Coverage: competency weight≥25% & <2 items→-2 each (max -4); ≥80% assessed→+1 to +2. Cap [-8,+4].
 6) Final: round(aggregate+modifier) [0,100]+"%". If 0/10→"Not Calculable".
 
+Confidence Calculation:
+- Base confidence = (questions_answered/total_questions * 40) + (competencies_covered/total_competencies * 40) + 20
+- Adjust: If exam_number=1 (diagnostic only), cap at 65%. Each completed study task adds ~5-10% confidence.
+- confidence_level: "Low" (<50%), "Medium" (50-75%), "High" (>75%)
+
+Mastery Gap Analysis:
+- Identify the SINGLE weakest competency based on question performance
+- This is the "mastery_gap" - the biggest barrier to grade improvement
+
 JSON Output (exact schema):
 - feedback_session_title: "Exam ${examNumber} Performance & Grade Prediction"
-- predicted_exam_score_percentage: "%"|"Not Calculable"`;
+- predicted_exam_score_percentage: "%"|"Not Calculable"
+- prediction_confidence_percentage: number (0-100)
+- confidence_level: "Low"|"Medium"|"High"
+- mastery_gap: string (the single weakest competency name)
+- mastery_gap_description: string (why this is the biggest weakness)`;
         }
 
         if (!finalPrompt) {
