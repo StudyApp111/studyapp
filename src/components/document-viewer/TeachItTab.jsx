@@ -292,6 +292,14 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       const totalMastered = updatedCards.filter(c => c.mastered).length;
       updateStudyPlanProgress(totalMastered);
 
+      // Trigger Polly engine on mastery milestones (every 2 cards mastered)
+      if (isMastered && totalMastered % 2 === 0) {
+        base44.functions.invoke('runPollyEngine', {
+          trigger_event: 'teachit_milestone',
+          lesson_id: lesson.id
+        }).catch(err => console.warn('Polly trigger failed:', err.message));
+      }
+
       // Award XP
       const xpAmount = gradingResult.score >= 90 ? 20 : gradingResult.score >= 75 ? 15 : 10;
       await awardDailyXP(xpAmount, "Taught a concept!");
