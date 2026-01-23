@@ -90,10 +90,37 @@ Break this down clearly and explain any technical terms or concepts.`;
       }
     }
 
+    // Check for pending Polly intervention message
+    let pollyIntervention = null;
+    if (user.polly_pending_message) {
+      pollyIntervention = {
+        message: user.polly_pending_message,
+        type: user.polly_intervention_type
+      };
+      // Clear the pending message after reading
+      await base44.auth.updateMe({
+        polly_pending_message: null,
+        polly_intervention_type: null
+      });
+    }
+
+    // Build Polly context from user data
+    const pollyContext = user.polly_predicted_grade ? `
+POLLY'S CURRENT ANALYSIS:
+- Predicted Grade: ${user.polly_predicted_grade} (${user.polly_predicted_score}%)
+- Confidence: ${user.polly_confidence}%
+- Learning Velocity: ${user.polly_velocity || 'Unknown'}
+- Mastery Gap: ${user.polly_mastery_gap || 'Not identified'}
+${user.polly_next_action ? `- Recommended Action: ${user.polly_next_action.action_title}` : ''}
+` : '';
+
     // Build system prompt with lesson context
-    const systemPrompt = `You are Polly, an expert AI study tutor in StudyApp. Keep responses SHORT and concise (2-4 sentences unless explaining something complex).
+    const systemPrompt = `You are Polly, the Oracle - an expert AI study tutor and prediction engine in StudyApp. You maintain a "Living State" of the student's knowledge and can predict their exam outcomes.
+
+Keep responses SHORT and concise (2-4 sentences unless explaining something complex).
 
 ${lessonContext?.course_name ? `Course: ${lessonContext.course_name}` : ''}
+${pollyContext}
 ${specificContextSection}
 
 ${hasDocument ? `
@@ -163,7 +190,10 @@ RULES:
       throw new Error('No response from Gemini');
     }
 
-    return Response.json({ reply });
+    return Response.json({ 
+      reply,
+      polly_intervention: pollyIntervention
+    });
 
   } catch (error) {
     console.error('AI Tutor error:', error);
