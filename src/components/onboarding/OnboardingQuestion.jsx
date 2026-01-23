@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { School, GraduationCap, BookOpen, Search, Loader2, Users, MapPin } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-export default function OnboardingQuestion({ question, value, onChange }) {
+export default function OnboardingQuestion({ question, value, onChange, prefetchedData }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [nearbySchools, setNearbySchools] = useState([]);
   const [isLoadingSchools, setIsLoadingSchools] = useState(false);
@@ -15,9 +15,16 @@ export default function OnboardingQuestion({ question, value, onChange }) {
   // Load nearby schools when school-search question is shown
   useEffect(() => {
     if (question.type === "school-search" && !hasLoadedInitial) {
-      loadNearbySchools();
+      // Use prefetched data if available
+      if (prefetchedData?.schools) {
+        setNearbySchools(prefetchedData.schools);
+        setUserLocation(prefetchedData.location);
+        setHasLoadedInitial(true);
+      } else {
+        loadNearbySchools();
+      }
     }
-  }, [question.type, hasLoadedInitial]);
+  }, [question.type, hasLoadedInitial, prefetchedData]);
 
   const loadNearbySchools = async (query = "") => {
     setIsLoadingSchools(true);

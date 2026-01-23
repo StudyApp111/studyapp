@@ -1,17 +1,46 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileText, Type, Loader2, File, X, CheckCircle } from "lucide-react";
+import { Upload, FileText, Type, Loader2, File, X, CheckCircle, Lightbulb } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-export default function MaterialUploader({ courseName, onMaterialReady }) {
+export default function MaterialUploader({ courseName, school, onMaterialReady }) {
   const [activeTab, setActiveTab] = useState("upload");
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [pastedNotes, setPastedNotes] = useState("");
   const [topicDescription, setTopicDescription] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Generate suggestions when switching to topic tab
+  useEffect(() => {
+    if (activeTab === "topic" && courseName && suggestions.length === 0 && !loadingSuggestions) {
+      generateSuggestions();
+    }
+  }, [activeTab, courseName]);
+
+  const generateSuggestions = async () => {
+    if (!courseName?.trim() || loadingSuggestions) return;
+    
+    setLoadingSuggestions(true);
+    try {
+      const result = await base44.functions.invoke('generateSuggestions', {
+        courseName: courseName.trim(),
+        school: school || '',
+        grade: ''
+      });
+      
+      const topics = result?.data?.topics || [];
+      setSuggestions(topics.slice(0, 4));
+    } catch (err) {
+      console.error("Error generating suggestions:", err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
 
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
@@ -176,14 +205,60 @@ export default function MaterialUploader({ courseName, onMaterialReady }) {
           </p>
         </TabsContent>
 
-        <TabsContent value="topic" className="mt-4">
+        <TabsContent value="topic" className="mt-4 space-y-3">
           <Textarea
             value={topicDescription}
             onChange={handleTopicChange}
             placeholder={`Describe what you want to learn about ${courseName}...\n\nExample: "I want to learn about photosynthesis, including the light and dark reactions, and how plants convert CO2 into glucose."`}
-            className="min-h-[200px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4"
+            className="min-h-[140px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4"
           />
-          <p className="text-xs text-slate-500 mt-2 text-center">
+          
+          {/* AI Suggestions */}
+          {courseName && (
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="w-4 h-4 text-purple-600" />
+                  <span className="text-xs font-semibold text-purple-800">Topic Ideas</span>
+                </div>
+                {loadingSuggestions && <Loader2 className="w-3 h-3 animate-spin text-purple-600" />}
+              </div>
+              
+              {loadingSuggestions && suggestions.length === 0 && (
+                <p className="text-[11px] text-purple-600">Finding topics...</p>
+              )}
+              
+              {suggestions.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.map((suggestion, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setTopicDescription(suggestion);
+                        onMaterialReady({ type: "topic", content: suggestion });
+                      }}
+                      className="text-[11px] text-slate-700 bg-white hover:bg-purple-100 border border-purple-100 rounded-full px-3 py-1.5 transition-all shadow-sm hover:shadow"
+                    >
+                      {suggestion.length > 50 ? suggestion.substring(0, 50) + '...' : suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {!loadingSuggestions && suggestions.length === 0 && (
+                <button
+                  type="button"
+                  onClick={generateSuggestions}
+                  className="w-full text-[11px] bg-purple-600 hover:bg-purple-700 text-white font-medium px-3 py-2 rounded-lg transition-colors"
+                >
+                  Generate Topic Ideas
+                </button>
+              )}
+            </div>
+          )}
+          
+          <p className="text-xs text-slate-500 text-center">
             Be specific about the topics you want to cover
           </p>
         </TabsContent>

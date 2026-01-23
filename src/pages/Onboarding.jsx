@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -15,6 +15,8 @@ import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
 import CourseNameInput from "../components/onboarding/CourseNameInput";
 import MaterialUploader from "../components/onboarding/MaterialUploader";
 import OnboardingLoader from "../components/onboarding/OnboardingLoader";
+
+const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
 // Question definitions
 const baseQuestions = [
@@ -69,10 +71,29 @@ export default function Onboarding() {
   const [loaderComplete, setLoaderComplete] = useState(false);
   const [createdLessonId, setCreatedLessonId] = useState(null);
   const [error, setError] = useState("");
+  
+  // Prefetch schools data on mount
+  const prefetchedSchoolsRef = useRef(null);
 
   useEffect(() => {
     checkExistingProfile();
+    // Prefetch nearby schools immediately on page load
+    prefetchNearbySchools();
   }, []);
+
+  const prefetchNearbySchools = async () => {
+    try {
+      const result = await base44.functions.invoke('getNearbySchools', { searchQuery: '' });
+      if (result?.data?.success) {
+        prefetchedSchoolsRef.current = {
+          schools: result.data.schools || [],
+          location: result.data.location
+        };
+      }
+    } catch (error) {
+      console.warn("Prefetch schools error:", error);
+    }
+  };
 
   const checkExistingProfile = async () => {
     try {
@@ -298,6 +319,7 @@ export default function Onboarding() {
             question={currentQuestion}
             value={answers.school}
             onChange={(val) => handleAnswer("school", val)}
+            prefetchedData={prefetchedSchoolsRef.current}
           />
         );
       
@@ -313,6 +335,7 @@ export default function Onboarding() {
         return (
           <MaterialUploader
             courseName={answers.course_name}
+            school={answers.school}
             onMaterialReady={handleMaterialReady}
           />
         );
@@ -324,7 +347,7 @@ export default function Onboarding() {
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${stepStyle.bg} flex items-center justify-center p-4 transition-colors duration-300`}>
-      <div className="w-full max-w-lg relative z-10">
+      <div className="w-full max-w-lg md:max-w-2xl relative z-10">
         <div className="flex justify-end mb-4">
           <Button
             variant="ghost"
@@ -337,8 +360,18 @@ export default function Onboarding() {
           </Button>
         </div>
 
+        {/* Logo */}
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-sm border-2 border-white/20 shadow-xl">
+            <img 
+              src={LOGO_URL} 
+              alt="StudyApp" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+
         <div className="text-center mb-4 md:mb-6">
-          <div className="text-4xl md:text-5xl mb-2 md:mb-3">{currentQuestion?.icon}</div>
           <h1 className="text-xl md:text-2xl font-bold text-white mb-1">{currentQuestion?.question}</h1>
           <p className="text-white/70 text-xs md:text-sm">{currentQuestion?.subtitle}</p>
         </div>

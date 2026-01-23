@@ -114,7 +114,7 @@ const colorClasses = {
 
 export default function StudyTypeSelector({ value, onChange }) {
   return (
-    <div className="grid grid-cols-1 gap-2.5 max-h-[400px] md:max-h-none overflow-y-auto px-1">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-[400px] md:max-h-none overflow-y-auto px-1">
       {studyTypes.map((type) => {
         const isSelected = value === type.id;
         const colors = colorClasses[type.color];
