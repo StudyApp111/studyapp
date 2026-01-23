@@ -61,15 +61,60 @@ export default function DocumentViewer() {
     // Could pass practice mode options to ExamTab via state if needed
   };
   
-  // Check exam completion status for red dot logic
-  const completedExamCount = (exams || []).filter(e => e.completed).length;
+  // Dynamic notification dot logic based on actual task completion
+  const [flashcards, setFlashcards] = useState([]);
+  const [teachItCards, setTeachItCards] = useState([]);
+  const [activePlan, setActivePlan] = useState(null);
   
-  // Red dot logic:
-  // - Exam tab: show dot if diagnostic (exam 1) not completed
-  // - Flashcards tab: always show dot until user views it
-  const showExamDot = completedExamCount === 0;
-
-  const showFlashcardsDot = true;
+  // Load micro-interaction data for notification dots
+  useEffect(() => {
+    const loadNotificationData = async () => {
+      if (!lesson?.id) return;
+      try {
+        const [fc, tic, plans] = await Promise.all([
+          base44.entities.Flashcard.filter({ lesson_id: lesson.id }),
+          base44.entities.TeachItCard.filter({ lesson_id: lesson.id }),
+          base44.entities.StudyPlan.filter({ lesson_id: lesson.id, status: 'active' })
+        ]);
+        setFlashcards(fc || []);
+        setTeachItCards(tic || []);
+        setActivePlan(plans?.[0] || null);
+      } catch (err) {
+        console.error('Error loading notification data:', err);
+      }
+    };
+    loadNotificationData();
+  }, [lesson?.id]);
+  
+  // Check exam completion status
+  const completedExamCount = (exams || []).filter(e => e.completed).length;
+  const diagnosticCompleted = (exams || []).some(e => e.exam_number === 1 && e.completed);
+  
+  // Red dot logic based on Study Plan tasks
+  const getTaskStatus = (taskType) => {
+    if (!activePlan?.tasks) return { needsAction: false };
+    const task = activePlan.tasks.find(t => t.task_type === taskType);
+    if (!task) return { needsAction: false };
+    return { 
+      needsAction: !task.completed,
+      progress: `${task.completed_count || 0}/${task.target_count}`
+    };
+  };
+  
+  // Exam tab: show dot if diagnostic not completed OR if practice_exam task pending
+  const practiceExamTask = getTaskStatus('practice_exam');
+  const showExamDot = !diagnosticCompleted || practiceExamTask.needsAction;
+  
+  // Flashcards tab: show dot if flashcard task not completed in study plan
+  const flashcardTask = getTaskStatus('flashcards');
+  const showFlashcardsDot = flashcardTask.needsAction;
+  
+  // TeachIt tab: show dot if teach_it task not completed in study plan  
+  const teachItTask = getTaskStatus('teach_it');
+  const showTeachItDot = teachItTask.needsAction;
+  
+  // Study Plan tab: show dot if plan exists but has incomplete tasks
+  const showStudyPlanDot = activePlan && !activePlan.all_tasks_completed;
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
