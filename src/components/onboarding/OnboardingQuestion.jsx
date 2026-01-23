@@ -194,10 +194,9 @@ export default function OnboardingQuestion({ question, value, onChange }) {
       };
 
       return (
-        <div className="space-y-5">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 text-center">{question.question}</h2>
+        <div className="space-y-4">
           <RadioGroup value={value} onValueChange={onChange}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3 md:gap-4">
               {gradeGroups.map((group, groupIdx) => {
                 const colors = colorClasses[group.color];
                 const Icon = group.icon;
@@ -205,22 +204,31 @@ export default function OnboardingQuestion({ question, value, onChange }) {
                 return (
                   <div 
                     key={groupIdx} 
-                    className={`rounded-2xl p-4 ${colors.bg} border-2 ${colors.border}`}
+                    className={`rounded-xl md:rounded-2xl p-3 md:p-4 ${colors.bg} border-2 ${colors.border}`}
                   >
-                    <div className="flex items-center gap-2 mb-3">
-                      <Icon className={`w-5 h-5 ${colors.icon}`} />
-                      <h3 className={`text-sm font-bold ${colors.title}`}>
+                    <div className="flex items-center justify-center gap-1.5 md:gap-2 mb-2 md:mb-3">
+                      <Icon className={`w-4 h-4 md:w-5 md:h-5 ${colors.icon}`} />
+                      <h3 className={`text-xs md:text-sm font-bold ${colors.title} whitespace-nowrap`}>
                         {group.title}
                       </h3>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5 md:space-y-2">
                       {group.options.map((option, index) => {
                         const isSelected = value === option;
+                        // Shorten labels for mobile
+                        const shortLabel = option
+                          .replace('Grade ', 'G')
+                          .replace('1st Year University', '1st Year')
+                          .replace('2nd Year University', '2nd Year')
+                          .replace('3rd Year University', '3rd Year')
+                          .replace('4th Year University', '4th Year')
+                          .replace('Post Graduate', 'Post Grad');
+                        
                         return (
                           <label
                             key={index}
                             htmlFor={`option-${groupIdx}-${index}`}
-                            className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                            className={`flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg md:rounded-xl border-2 transition-all cursor-pointer ${
                               isSelected 
                                 ? `${colors.selectedBorder} ${colors.selectedBg}` 
                                 : `border-white/60 bg-white/80 ${colors.hoverBorder}`
@@ -229,10 +237,11 @@ export default function OnboardingQuestion({ question, value, onChange }) {
                             <RadioGroupItem 
                               value={option} 
                               id={`option-${groupIdx}-${index}`}
-                              className="shrink-0"
+                              className="shrink-0 w-4 h-4"
                             />
-                            <span className={`text-sm font-medium ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
-                              {option}
+                            <span className={`text-xs md:text-sm font-medium ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
+                              <span className="md:hidden">{shortLabel}</span>
+                              <span className="hidden md:inline">{option}</span>
                             </span>
                           </label>
                         );

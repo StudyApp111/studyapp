@@ -224,10 +224,10 @@ export default function Onboarding() {
           </Button>
         </div>
 
-        <div className="text-center mb-6">
-          <div className="text-5xl mb-3">{stepStyle.icon}</div>
-          <h1 className="text-2xl font-bold text-white mb-1">{currentQuestion.question}</h1>
-          <p className="text-white/70 text-sm">{stepStyle.subtitle}</p>
+        <div className="text-center mb-4 md:mb-6">
+          <div className="text-4xl md:text-5xl mb-2 md:mb-3">{stepStyle.icon}</div>
+          <h1 className="text-xl md:text-2xl font-bold text-white mb-1">{currentQuestion.question}</h1>
+          <p className="text-white/70 text-xs md:text-sm">{stepStyle.subtitle}</p>
         </div>
 
         {/* Progress dots */}
@@ -246,7 +246,7 @@ export default function Onboarding() {
           ))}
         </div>
 
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-5 border border-white/20">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border border-white/20">
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />

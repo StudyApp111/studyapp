@@ -973,6 +973,18 @@ JSON Output (exact schema):
         setNewBadges(earnedNow);
       }
 
+      // Track lesson completion (first exam = diagnostic complete)
+      base44.analytics.track({
+        eventName: "lesson_diagnostic_completed",
+        properties: {
+          lesson_id: lesson.id,
+          course_name: lesson.course_name,
+          predicted_grade: letterGrade,
+          score_percentage: rawScore,
+          time_taken_seconds: elapsedSeconds
+        }
+      });
+
       // Navigate to study plan tab FIRST (while still showing submit loading)
       window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
       
