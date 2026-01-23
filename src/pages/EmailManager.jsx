@@ -78,7 +78,7 @@ export default function EmailManager() {
     try {
       const currentUser = await base44.auth.me();
       
-      if (currentUser.email !== 'kartikeya2159@gmail.com') {
+      if (currentUser.role !== 'admin') {
         navigate(createPageUrl("Home"));
         return;
       }

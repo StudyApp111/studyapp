@@ -127,9 +127,9 @@ export default function Layout({ children, currentPageName }) {
           }
         `}</style>
         
-        {/* Desktop Sidebar - White theme */}
+        {/* Desktop Sidebar - White theme, fixed to viewport */}
         {showSidebar && (
-          <div className="hidden md:flex flex-col w-16 bg-white border-r border-slate-200 shadow-sm">
+          <div className="hidden md:flex flex-col w-16 bg-white border-r border-slate-200 shadow-sm fixed top-0 left-0 h-screen z-40">
             {/* Logo */}
             <div className="p-3 flex justify-center">
               <Link to={createPageUrl("Home")} className="hover:opacity-80 transition-opacity">
@@ -223,7 +223,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
         )}
 
-        <main className="flex-1 flex flex-col">
+        <main className="flex-1 flex flex-col md:ml-16">
           {/* Mobile Header - Hidden during onboarding and on DocumentViewer */}
           {showNavigation && !isOnboardingPage && showMobileHeader && (
             <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-3 py-2 md:hidden">
