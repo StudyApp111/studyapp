@@ -372,6 +372,18 @@ Return JSON:
     });
 
     console.log(`⏱️ [generateStudyPlan] COMPLETE: ${Date.now() - startTime}ms total`);
+
+    // ========== TRIGGER POLLY ENGINE ==========
+    // Fire-and-forget: Run Polly to update predictions after study plan is generated
+    base44.functions.invoke('runPollyEngine', {
+      trigger_event: 'study_plan_generated',
+      lesson_id: lesson_id,
+      exam_id: exam_id
+    }).then(() => {
+      console.log('🔮 Polly engine triggered successfully');
+    }).catch(err => {
+      console.warn('🔮 Polly engine trigger failed (non-blocking):', err.message);
+    });
     
     return Response.json({ 
       success: true, 
