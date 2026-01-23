@@ -1049,6 +1049,7 @@ JSON Output (exact schema):
         <div className="px-3 py-2">
           <Button 
             variant="ghost" 
+            size="sm"
             onClick={() => {
               setViewingCompletedExam(null);
               setExam(null);
@@ -1056,10 +1057,10 @@ JSON Output (exact schema):
               setCurrentQuestion(0);
               hasAutoSelectedRef.current = false;
             }}
-            className="mb-3 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 h-8 px-3"
           >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back to Exams
+            <ChevronLeft className="w-3.5 h-3.5 mr-1" />
+            <span className="text-xs">All Exams</span>
           </Button>
         </div>
         <FeedbackDisplay 

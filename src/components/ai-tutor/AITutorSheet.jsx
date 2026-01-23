@@ -186,26 +186,32 @@ export default function AITutorSheet() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick follow-ups */}
-            {hasUsedInitialPrompt && !isLoading && messages.length > 2 && (
+            {/* Quick Actions - Same as desktop panel */}
+            {!isLoading && (
               <div className="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide">
                 <button
-                  onClick={() => handleSend("Can you give me an example?")}
+                  onClick={() => handleSend("Explain this material like I'm 5 years old - super simple!")}
                   className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
                 >
-                  Give example
+                  Explain like I'm 5
                 </button>
                 <button
-                  onClick={() => handleSend("Explain it more simply")}
+                  onClick={() => handleSend("Give me a real-world example of the main concept")}
                   className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
                 >
-                  Simpler please
+                  Give me an example
                 </button>
                 <button
-                  onClick={() => handleSend("Why is this important to know?")}
+                  onClick={() => handleSend("Why is this material important? When would I use it?")}
                   className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
                 >
-                  Why important?
+                  Why is this important?
+                </button>
+                <button
+                  onClick={() => handleSend("Quiz me with 3 questions on this material")}
+                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
+                >
+                  Quiz Me
                 </button>
               </div>
             )}

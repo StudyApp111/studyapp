@@ -395,32 +395,33 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length === 0) {
     return (
-      <div className="flex items-center justify-center p-4 pb-8 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40">
+      <div className="flex items-center justify-center p-4 pb-8 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 min-h-[400px]">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
+          className="w-full max-w-md md:max-w-xl"
         >
-          <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200 shadow-2xl overflow-hidden max-w-md">
-            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-6 py-8 text-center">
+          <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200 shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-6 py-6 md:py-8 text-center">
               <motion.div
                 animate={{ rotate: [0, -10, 10, -10, 0] }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <Lightbulb className="w-20 h-20 text-yellow-300 mx-auto mb-4 drop-shadow-lg" />
+                <Lightbulb className="w-16 h-16 md:w-20 md:h-20 text-yellow-300 mx-auto mb-3 drop-shadow-lg" />
               </motion.div>
-              <h3 className="text-2xl md:text-3xl font-black text-white mb-2">Teach It to Master It</h3>
-              <p className="text-purple-100 text-sm">
+              <h3 className="text-xl md:text-2xl font-black text-white mb-1">Teach It to Master It</h3>
+              <p className="text-purple-100 text-xs md:text-sm">
                 The best way to learn is to teach
               </p>
             </div>
-            <div className="p-6 text-center">
-              <p className="text-slate-600 mb-6 leading-relaxed">
+            <div className="p-5 md:p-6 text-center">
+              <p className="text-slate-600 mb-5 leading-relaxed text-sm md:text-base">
                 Explain concepts in your own words and get instant AI feedback on your understanding.
               </p>
               <Button
                 onClick={generateCards}
-                className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-bold text-lg rounded-xl shadow-xl"
+                className="w-full h-12 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-bold text-base md:text-lg rounded-xl shadow-xl"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
                 Generate 5 Cards
@@ -452,43 +453,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       />
 
       <div className="flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl w-full pb-8">
-        {/* Compact header */}
-        <div className="flex-shrink-0 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-3 py-2 md:px-6 md:py-4 shadow-lg w-full rounded-t-2xl">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 md:w-12 md:h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0">
-                <Lightbulb className="w-4 h-4 md:w-6 md:h-6 text-yellow-300" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-base md:text-2xl font-bold text-white">Teach It</h2>
-                <p className="text-[10px] md:text-xs text-purple-100">
-                  {currentCardIndex + 1}/{cards.length} • {completedCount} ✓
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleRegenerate}
-              className="gap-1 bg-white/10 hover:bg-white/20 text-white border-white/20 h-7 px-2 md:h-8 md:px-3 flex-shrink-0"
-            >
-              <RefreshCw className="w-3 h-3 md:w-3.5 md:h-3.5" />
-              <span className="hidden md:inline text-xs">New</span>
-            </Button>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="h-1 md:h-1.5 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
-            <motion.div
-              className="h-full bg-gradient-to-r from-yellow-400 via-pink-400 to-yellow-300 shadow-lg"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            />
-          </div>
-        </div>
-
-        {/* Centered content - no nested scroll */}
+        {/* Centered content */}
         <div className="px-3 py-4 md:px-6 md:py-6 w-full flex items-start justify-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -497,28 +462,61 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25 }}
-              className="w-full max-w-lg"
+              className="w-full max-w-md md:max-w-2xl lg:max-w-3xl"
             >
               <Card className="bg-white/95 backdrop-blur-xl border border-purple-200/50 shadow-xl overflow-hidden w-full">
-                {/* Card header */}
-                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-4 md:px-6 md:py-5 w-full">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[10px] md:text-xs">
-                      <HelpCircle className="w-2.5 h-2.5 md:w-3 md:h-3 mr-1" />
-                      Explain This
-                    </Badge>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <AskAIButton 
-                        type="teachit" 
-                        data={{ question: currentCard.question, model_answer: currentCard.model_answer }} 
-                        lesson={lesson} 
-                        size="sm" 
-                      />
+                {/* Integrated Card Header with Progress */}
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 md:px-6 md:py-4 w-full">
+                  {/* Top row: Progress info + Actions */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/90 text-xs font-medium">
+                        {currentCardIndex + 1}/{cards.length}
+                      </span>
+                      <span className="text-white/60 text-xs">•</span>
+                      <span className="text-white/70 text-xs">{completedCount} mastered</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <AskAIButton 
+                          type="teachit" 
+                          data={{ question: currentCard.question, model_answer: currentCard.model_answer }} 
+                          lesson={lesson} 
+                          size="sm" 
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRegenerate}
+                        className="gap-1 bg-white/10 hover:bg-white/20 text-white border-white/20 h-7 px-2"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        <span className="hidden sm:inline text-xs">New</span>
+                      </Button>
                     </div>
                   </div>
-                  <h3 className="text-sm md:text-xl font-bold text-white leading-snug md:leading-relaxed break-words">
-                    {currentCard.question}
-                  </h3>
+                  
+                  {/* Progress Bar */}
+                  <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mb-4">
+                    <motion.div
+                      className="h-full bg-gradient-to-r from-yellow-400 via-pink-400 to-yellow-300"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    />
+                  </div>
+                  
+                  {/* Question */}
+                  <div className="flex items-start gap-2">
+                    <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[10px] flex-shrink-0 mt-0.5">
+                      <HelpCircle className="w-2.5 h-2.5 mr-1" />
+                      Explain
+                    </Badge>
+                    <h3 className="text-sm md:text-lg font-bold text-white leading-snug break-words flex-1">
+                      {currentCard.question}
+                    </h3>
+                  </div>
                 </div>
 
                 <div className="p-4 md:p-6 w-full">

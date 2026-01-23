@@ -115,15 +115,20 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
   if (isPracticeExam) {
     return (
       <div className="space-y-5 px-3 md:px-6 max-w-lg md:max-w-3xl lg:max-w-4xl mx-auto pb-8">
-        {/* Link back to Study Plan */}
-        <Button
-          variant="ghost"
-          onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
-          className="w-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 border border-purple-200"
-        >
-          <Target className="w-4 h-4 mr-2" />
-          Back to Study Plan
-        </Button>
+        {/* Compact Header Row */}
+        <div className="flex items-center justify-between gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
+            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 h-8 px-3"
+          >
+            <Target className="w-3.5 h-3.5 mr-1.5" />
+            <span className="text-xs">Study Plan</span>
+          </Button>
+          
+          <Badge className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5">Practice Quiz</Badge>
+        </div>
 
         {/* Practice Exam Hero */}
         <motion.div
@@ -131,9 +136,6 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-4"
         >
-          <div className="flex items-center justify-center gap-2">
-            <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5">From Study Plan</Badge>
-          </div>
           <h2 className="text-xl font-bold text-slate-900">
             {exam.title || 'Practice Quiz Results'}
           </h2>
