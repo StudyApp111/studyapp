@@ -117,10 +117,10 @@ Respond as Polly:`;
   };
 
   const quickActions = [
-    { label: "Summarize", icon: FileText, prompt: "Give me a concise summary of this document" },
-    { label: "Key Points", icon: List, prompt: "What are the main key points and concepts?" },
-    { label: "Quiz Me", icon: HelpCircle, prompt: "Quiz me with 3 questions on this material" },
-    { label: "Explain", icon: Lightbulb, prompt: "Explain the most important concept in simple terms" },
+    { label: "Explain like I'm 5", icon: Lightbulb, prompt: "Explain this material like I'm 5 years old - super simple!" },
+    { label: "Give me an example", icon: FileText, prompt: "Give me a real-world example of the main concept" },
+    { label: "Why is this important?", icon: HelpCircle, prompt: "Why is this material important? When would I use it?" },
+    { label: "Quiz Me", icon: List, prompt: "Quiz me with 3 questions on this material" },
   ];
 
   const hasDocument = lesson?.extracted_content || lesson?.file_url;
@@ -138,24 +138,7 @@ Respond as Polly:`;
         </div>
       </div>
 
-      {/* Quick Actions */}
-      {showQuickActions && hasDocument && messages.length <= 1 && (
-        <div className="px-3 py-2 bg-purple-50/50 border-b border-purple-100 flex-shrink-0">
-          <div className="grid grid-cols-4 gap-1.5">
-            {quickActions.map((action) => (
-              <button
-                key={action.label}
-                onClick={() => handleSend(action.prompt)}
-                disabled={isLoading}
-                className="flex flex-col items-center gap-1 p-2 rounded-lg bg-white border border-purple-200 hover:bg-purple-50 hover:border-purple-300 transition-all text-center"
-              >
-                <action.icon className="w-4 h-4 text-purple-600" />
-                <span className="text-[10px] font-medium text-slate-700">{action.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Quick Actions - Always visible above input as pills */}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-gradient-to-b from-purple-50/30 to-white">
@@ -214,8 +197,25 @@ Respond as Polly:`;
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-3 bg-white border-t border-slate-200 rounded-b-xl flex-shrink-0">
+      {/* Input with Quick Action Pills */}
+      <div className="p-3 bg-white border-t border-slate-200 rounded-b-xl flex-shrink-0 space-y-2">
+        {/* Quick Actions Pills - Always visible */}
+        {hasDocument && (
+          <div className="flex flex-wrap gap-1.5">
+            {quickActions.map((action) => (
+              <button
+                key={action.label}
+                onClick={() => handleSend(action.prompt)}
+                disabled={isLoading}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 border border-purple-200 hover:bg-purple-100 hover:border-purple-300 transition-all text-[10px] font-medium text-purple-700 whitespace-nowrap"
+              >
+                <action.icon className="w-3 h-3" />
+                {action.label}
+              </button>
+            ))}
+          </div>
+        )}
+        
         <div className="flex gap-2">
           <Input
             value={input}

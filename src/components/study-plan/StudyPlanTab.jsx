@@ -460,8 +460,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         onComplete={() => setShowGradeBoost(false)}
       />
       
-      {/* Responsive container - mobile narrow, desktop wide */}
-      <div className="px-3 md:px-6 pt-1 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 pb-8">
+      {/* Responsive container - mobile narrow, desktop wide, prevent horizontal scroll */}
+      <div className="px-3 md:px-6 pt-1 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 pb-8 overflow-x-hidden">
       {/* Grade + Confidence Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}

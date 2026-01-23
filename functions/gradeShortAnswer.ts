@@ -35,7 +35,9 @@ Deno.serve(async (req) => {
             targeted_misconception,
             student_answer,
             student_grade_level,
-            course_name
+            course_name,
+            school_name,
+            city_name
         } = await req.json();
 
         if (!question_text || !student_answer || !explanation) {
@@ -49,7 +51,11 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        const systemPrompt = `You are a master educator at ${school_name} in ${city_name}, teaching ${course_name} at a ${student_grade_level} level.
+        const schoolContext = school_name ? `at ${school_name}` : '';
+        const cityContext = city_name ? `in ${city_name}` : '';
+        const locationContext = [schoolContext, cityContext].filter(Boolean).join(' ') || '';
+        
+        const systemPrompt = `You are a master educator${locationContext ? ` ${locationContext}` : ''}, teaching ${course_name || 'this subject'} at a ${student_grade_level || 'university'} level.
 
 Grade fairly and proportionally using:
 - the exemplar explanation (authoritative intent),
