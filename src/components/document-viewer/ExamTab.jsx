@@ -877,6 +877,9 @@ JSON Output (exact schema):
             await base44.entities.Exam.update(exam.id, {
               total_score: aiScore,
               predicted_grade: aiGrade,
+              prediction_confidence: feedbackData.prediction_confidence_percentage || 45,
+              confidence_level: feedbackData.confidence_level || 'Low',
+              mastery_gap: feedbackData.mastery_gap || null,
               ai_feedback: feedbackData
             });
           }
