@@ -51,25 +51,29 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
 
     for (const file of files) {
       try {
+        console.log("📤 Uploading file:", file.name);
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        console.log("✅ File uploaded:", file_url);
         newFiles.push({
           name: file.name,
           url: file_url,
           size: file.size
         });
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error("❌ Error uploading file:", error);
       }
     }
 
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    const allFiles = [...uploadedFiles, ...newFiles];
+    setUploadedFiles(allFiles);
     setIsUploading(false);
     
-    // Notify parent
-    if (newFiles.length > 0) {
+    // Notify parent with all files
+    if (allFiles.length > 0) {
+      console.log("📦 Material ready with", allFiles.length, "file(s):", allFiles.map(f => f.url));
       onMaterialReady({
         type: "file",
-        files: [...uploadedFiles, ...newFiles]
+        files: allFiles
       });
     }
   };
