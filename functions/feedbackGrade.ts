@@ -72,25 +72,40 @@ Deno.serve(async (req) => {
             const curriculumJson = JSON.stringify(lesson.curriculum_map || {}, null, 2);
             const performanceJson = JSON.stringify(examPerformanceData, null, 2);
 
-            finalPrompt = `Expert educator for ${courseName} (grade ${grade}). Analyze exam performance using curriculum map to predict grade as if you were a teacher at this school teaching this course.
+            finalPrompt = `Act as an Expert Psychometrician and Educator for ${courseName} (grade ${grade}). Your goal is to provide a high-fidelity grade prediction and a defensible "Prediction Confidence Score" based on the statistical rigor of the input data.
 
+[CONTEXT]
 Input: Grade ${grade}, ${courseName}, Exam ${examNumber}/6
 Curriculum: ${curriculumJson}
 Performance: ${performanceJson}
 
-Fields: question_number, question_type, difficulty_index, question_text, options, student_answer, correct_answer, explanation, assessed_competencies[], targeted_misconception, is_correct, ai_grading{score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[]}.
+[PREDICTION ALGORITHM]
+1) Per-item Analysis: base=0.90(correct) or 0.20. Blend w/ai_grading partial=(score/10). 
+   - Multipliers: Correct→High×1.05(cap 0.98), Challenging×1.02(cap 0.96), Moderate×1.01(cap 0.92).
+   - Multipliers: Incorrect→High×0.90(floor 0.10), Challenging×0.80(floor 0.08), Moderate×0.70(floor 0.05).
+   - Misconception penalty: -0.05/-0.07/-0.09. Clamp [0.05,0.98].
+2) Competency Mastery: Mean scores per competency from curriculum_map.core_competencies; if none→0.50.
+3) Weighted Aggregate: Σ(mastery×normalized_weight)×100.
+4) Adjustment Factors: 
+   - Question-type: AvgTypeScore vs frequency. Penalty [-8, +4].
+   - Coverage: Competency weight ≥25% & <2 items → -2 each (max -4).
 
-Prediction Algorithm:
-1) Per-item: base=0.90(correct) or 0.20. Blend w/ai_grading partial=(score/10). Apply difficulty multipliers: Correct→High×1.05(cap 0.98), Challenging×1.02(cap 0.96), Moderate×1.01(cap 0.92); Incorrect→High×0.90(floor 0.10), Challenging×0.80(floor 0.08), Moderate×0.70(floor 0.05). Misconception penalty -0.05/-0.07/-0.09. Clamp [0.05,0.98].
-2) Competency mastery: mean scores per competency from curriculum_map.core_competencies; if none→0.50.
-3) Weighted aggregate: parse competency_weightings ("30%"→0.30), normalize, Σ(mastery×weight)×100.
-4) Question-type adjust: AvgTypeScore vs curriculum_map.question_formats frequency. If <0.40 & ≥30%→-3 to -6; if ≥0.80 & ≥30%→+0 to +2. Cap [-8,+4].
-5) Coverage: competency weight≥25% & <2 items→-2 each (max -4); ≥80% assessed→+1 to +2. Cap [-8,+4].
-6) Final: round(aggregate+modifier) [0,100]+"%". If 0/10→"Not Calculable".
+[CONFIDENCE SCORE ALGORITHM (Defensibility Layer)]
+Calculate a 'prediction_confidence_percentage' [0-100] using these 3 pillars:
+1. Volume (40% weight): score = (items_assessed / 20). Cap at 1.0. (Few items = low confidence).
+2. Coverage (40% weight): score = (% of curriculum competencies assessed).
+3. Consistency (20% weight): If student gets 'High Difficulty' correct but 'Moderate' incorrect, reduce consistency by 0.5 (indicates guessing/anomaly).
+Final Confidence = (Volume * 0.4 + Coverage * 0.4 + Consistency * 0.2) * 100.
 
-JSON Output (exact schema):
-- feedback_session_title: "Exam ${examNumber} Performance & Grade Prediction"
-- predicted_exam_score_percentage: "%"|"Not Calculable"`;
+[JSON OUTPUT SCHEMA]
+{
+  "feedback_session_title": "Exam ${examNumber} Performance & Grade Prediction",
+  "predicted_exam_score_percentage": "XX%",
+  "prediction_confidence_percentage": "XX%",
+  "confidence_level": "Low" | "Medium" | "High",
+  "confidence_rationale": "Concise 1-sentence explanation of why the confidence is at this level (e.g., 'Limited question volume in core competencies').",
+  "mastery_gap": "The #1 competency the user needs to practice to increase both grade and confidence."
+}`;
         }
 
         if (!finalPrompt) {
