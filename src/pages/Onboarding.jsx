@@ -2,47 +2,59 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { AnimatePresence } from "framer-motion";
 import { ChevronRight, ChevronLeft, Sparkles, AlertCircle, LogOut, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
-// AddToHomeScreen removed - tracking kept via userTracking
 import { trackUserSession } from "../components/utils/userTracking";
 
-const questions = [
+// Import onboarding components
+import StudyTypeSelector from "../components/onboarding/StudyTypeSelector";
+import UniversityYearSelector from "../components/onboarding/UniversityYearSelector";
+import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
+import CourseNameInput from "../components/onboarding/CourseNameInput";
+import MaterialUploader from "../components/onboarding/MaterialUploader";
+import OnboardingLoader from "../components/onboarding/OnboardingLoader";
+
+// Question definitions
+const baseQuestions = [
+  {
+    id: "study_type",
+    question: "What are you studying for?",
+    type: "study-type",
+    icon: "🎯",
+    subtitle: "Select your learning path"
+  },
+  {
+    id: "university_year",
+    question: "What year are you in?",
+    type: "university-year",
+    icon: "📅",
+    subtitle: "Tell us where you are in your journey",
+    showIf: (answers) => answers.study_type === "university"
+  },
   {
     id: "school",
     question: "What School Do You Go To?",
     type: "school-search",
-    placeholder: "Search for your school..."
+    placeholder: "Search for your school...",
+    icon: "🏫",
+    subtitle: "Let's personalize your learning",
+    showIf: (answers) => ["university", "grad_school", "high_school", "med_school"].includes(answers.study_type)
   },
   {
-    id: "grade",
-    question: "What Grade Are You In?",
-    type: "single",
-    options: [
-      "Grade 6",
-      "Grade 7", 
-      "Grade 8",
-      "Grade 9",
-      "Grade 10",
-      "Grade 11",
-      "Grade 12",
-      "1st Year University",
-      "2nd Year University",
-      "3rd Year University",
-      "4th Year University",
-      "Post Graduate"
-    ]
+    id: "course_name",
+    question: "What course would you like to study?",
+    type: "course-name",
+    icon: "📚",
+    subtitle: "We'll create your first lesson"
   },
   {
-    id: "city",
-    question: "What City Do You Live In?",
-    type: "text",
-    placeholder: "e.g., New York City, Toronto, London"
+    id: "materials",
+    question: "StudyApp will predict your grade and help you study.",
+    type: "materials",
+    icon: "✨",
+    subtitle: "Upload your materials to get started"
   }
 ];
 
@@ -50,41 +62,61 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [materialData, setMaterialData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLoader, setShowLoader] = useState(false);
+  const [loaderComplete, setLoaderComplete] = useState(false);
+  const [createdLessonId, setCreatedLessonId] = useState(null);
   const [error, setError] = useState("");
+
   useEffect(() => {
-    loadExistingProfile();
+    checkExistingProfile();
   }, []);
 
-  const loadExistingProfile = async () => {
+  const checkExistingProfile = async () => {
     try {
       const user = await base44.auth.me();
-      
-      if (user.learning_profile_id) {
-        const profiles = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
-        const profile = profiles[0];
-        if (profile) {
-          setAnswers({
-            school: profile.school || "",
-            grade: profile.grade || "",
-            city: profile.city || ""
-          });
-        }
+      if (user.onboarding_completed) {
+        navigate(createPageUrl("Home"), { replace: true });
+        return;
       }
     } catch {}
     setIsLoading(false);
   };
 
-  const progress = ((currentStep + 1) / questions.length) * 100;
+  // Get visible questions based on answers
+  const getVisibleQuestions = () => {
+    return baseQuestions.filter(q => !q.showIf || q.showIf(answers));
+  };
+
+  const visibleQuestions = getVisibleQuestions();
+  const currentQuestion = visibleQuestions[currentStep];
+  const totalSteps = visibleQuestions.length;
+  const progress = ((currentStep + 1) / totalSteps) * 100;
 
   const handleAnswer = (questionId, answer) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
     setError("");
   };
 
+  const handleMaterialReady = (data) => {
+    setMaterialData(data);
+  };
+
+  const isCurrentAnswered = () => {
+    if (!currentQuestion) return false;
+    
+    if (currentQuestion.id === "materials") {
+      return materialData !== null;
+    }
+    
+    const answer = answers[currentQuestion.id];
+    return answer !== undefined && answer !== "";
+  };
+
   const handleNext = () => {
-    if (currentStep < questions.length - 1) {
+    if (currentStep < visibleQuestions.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
       handleSubmit();
@@ -109,63 +141,84 @@ export default function Onboarding() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError("");
-    
-    try {
-      if (!answers.school || !answers.grade || !answers.city) {
-        throw new Error("Please answer all questions before completing onboarding");
-      }
+    setShowLoader(true);
 
+    try {
+      const user = await base44.auth.me();
+
+      // 1. Create/update learning profile
       const profileData = {
-        school: answers.school.trim(),
-        grade: answers.grade.trim(),
-        city: answers.city.trim()
+        school: answers.school || "",
+        grade: answers.university_year || answers.study_type || "",
+        study_type: answers.study_type
       };
 
-      const user = await base44.auth.me();
-      
       let profile;
       if (user.learning_profile_id) {
-        const existingProfiles = await base44.entities.LearningProfile.filter({ 
-          id: user.learning_profile_id 
-        });
-        
-        if (existingProfiles.length > 0) {
-          profile = await base44.entities.LearningProfile.update(user.learning_profile_id, profileData);
-        } else {
-          profile = await base44.entities.LearningProfile.create(profileData);
-          await base44.auth.updateMe({
-            learning_profile_id: profile.id
-          });
-        }
+        profile = await base44.entities.LearningProfile.update(user.learning_profile_id, profileData);
       } else {
         profile = await base44.entities.LearningProfile.create(profileData);
-        await base44.auth.updateMe({
-          learning_profile_id: profile.id
-        });
+        await base44.auth.updateMe({ learning_profile_id: profile.id });
       }
 
-      await base44.auth.updateMe({
-        onboarding_completed: true
-      });
+      // 2. Create the lesson
+      const lessonData = {
+        course_name: answers.course_name,
+        status: "created"
+      };
 
-      // Track user session after onboarding
+      // Handle different material types
+      if (materialData?.type === "file" && materialData.files?.length > 0) {
+        lessonData.file_url = materialData.files[0].url;
+        lessonData.file_urls = materialData.files.map(f => f.url);
+        lessonData.input_type = "file";
+      } else if (materialData?.type === "notes") {
+        lessonData.description = materialData.content;
+        lessonData.input_type = "description";
+      } else if (materialData?.type === "topic") {
+        lessonData.description = materialData.content;
+        lessonData.input_type = "description";
+      }
+
+      const lesson = await base44.entities.Lesson.create(lessonData);
+      setCreatedLessonId(lesson.id);
+
+      // 3. Trigger curriculum mapping in background
+      base44.functions.invoke('curriculumMapping', {
+        lesson_id: lesson.id
+      }).catch(err => console.warn("Curriculum mapping error:", err));
+
+      // 4. Mark onboarding complete
+      await base44.auth.updateMe({ onboarding_completed: true });
+
+      // Track session
       await trackUserSession();
 
-      // Trigger welcome email (fire and forget, don't block)
+      // Trigger welcome email
       base44.functions.invoke('triggerAutomaticEmails', {
         trigger_type: 'onboarding_completed',
         user_email: user.email
-      }).catch(emailError => {
-        console.error('Error triggering welcome email:', emailError);
-      });
+      }).catch(() => {});
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for loader animation then mark complete
+      setTimeout(() => {
+        setLoaderComplete(true);
+      }, 5000);
 
-      navigate(createPageUrl("Home"), { replace: true });
     } catch (error) {
-      console.error("Error saving profile:", error);
+      console.error("Error completing onboarding:", error);
       setError(error.message || "Failed to complete onboarding. Please try again.");
       setIsSubmitting(false);
+      setShowLoader(false);
+    }
+  };
+
+  const handleLoaderComplete = () => {
+    // Navigate to the created lesson
+    if (createdLessonId) {
+      navigate(createPageUrl("DocumentViewer") + `?lessonId=${createdLessonId}`, { replace: true });
+    } else {
+      navigate(createPageUrl("Home"), { replace: true });
     }
   };
 
@@ -177,37 +230,97 @@ export default function Onboarding() {
     );
   }
 
-
-
-  const currentQuestion = questions[currentStep];
-  const isAnswered = answers[currentQuestion.id] !== undefined && answers[currentQuestion.id] !== "";
+  // Show loader when processing
+  if (showLoader) {
+    const fileName = materialData?.type === "file" && materialData.files?.[0]?.name;
+    return (
+      <OnboardingLoader 
+        fileName={fileName}
+        isComplete={loaderComplete}
+        onAnimationComplete={handleLoaderComplete}
+      />
+    );
+  }
 
   // Get step-specific styling
   const getStepStyle = () => {
-    const styles = [
-      { 
+    const styles = {
+      "study_type": { 
         bg: 'from-purple-600 via-indigo-600 to-purple-700',
-        accent: 'from-yellow-400 to-amber-500',
-        icon: '🏫',
-        subtitle: "Let's personalize your learning"
+        accent: 'from-yellow-400 to-amber-500'
       },
-      { 
+      "university_year": { 
         bg: 'from-indigo-600 via-purple-600 to-pink-600',
-        accent: 'from-pink-400 to-rose-500',
-        icon: '📚',
-        subtitle: 'Tailored to your level'
+        accent: 'from-pink-400 to-rose-500'
       },
-      { 
+      "school": { 
+        bg: 'from-purple-600 via-violet-600 to-indigo-600',
+        accent: 'from-emerald-400 to-teal-500'
+      },
+      "course_name": { 
+        bg: 'from-indigo-700 via-purple-600 to-violet-600',
+        accent: 'from-cyan-400 to-blue-500'
+      },
+      "materials": { 
         bg: 'from-purple-700 via-violet-600 to-indigo-600',
-        accent: 'from-emerald-400 to-teal-500',
-        icon: '🌍',
-        subtitle: 'Almost there!'
+        accent: 'from-amber-400 to-orange-500'
       }
-    ];
-    return styles[currentStep] || styles[0];
+    };
+    return styles[currentQuestion?.id] || styles["study_type"];
   };
 
   const stepStyle = getStepStyle();
+
+  // Render current question content
+  const renderQuestionContent = () => {
+    if (!currentQuestion) return null;
+
+    switch (currentQuestion.type) {
+      case "study-type":
+        return (
+          <StudyTypeSelector
+            value={answers.study_type}
+            onChange={(val) => handleAnswer("study_type", val)}
+          />
+        );
+      
+      case "university-year":
+        return (
+          <UniversityYearSelector
+            value={answers.university_year}
+            onChange={(val) => handleAnswer("university_year", val)}
+          />
+        );
+      
+      case "school-search":
+        return (
+          <OnboardingQuestion
+            question={currentQuestion}
+            value={answers.school}
+            onChange={(val) => handleAnswer("school", val)}
+          />
+        );
+      
+      case "course-name":
+        return (
+          <CourseNameInput
+            value={answers.course_name}
+            onChange={(val) => handleAnswer("course_name", val)}
+          />
+        );
+      
+      case "materials":
+        return (
+          <MaterialUploader
+            courseName={answers.course_name}
+            onMaterialReady={handleMaterialReady}
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${stepStyle.bg} flex items-center justify-center p-4 transition-colors duration-300`}>
@@ -225,14 +338,14 @@ export default function Onboarding() {
         </div>
 
         <div className="text-center mb-4 md:mb-6">
-          <div className="text-4xl md:text-5xl mb-2 md:mb-3">{stepStyle.icon}</div>
-          <h1 className="text-xl md:text-2xl font-bold text-white mb-1">{currentQuestion.question}</h1>
-          <p className="text-white/70 text-xs md:text-sm">{stepStyle.subtitle}</p>
+          <div className="text-4xl md:text-5xl mb-2 md:mb-3">{currentQuestion?.icon}</div>
+          <h1 className="text-xl md:text-2xl font-bold text-white mb-1">{currentQuestion?.question}</h1>
+          <p className="text-white/70 text-xs md:text-sm">{currentQuestion?.subtitle}</p>
         </div>
 
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mb-6">
-          {questions.map((_, idx) => (
+          {visibleQuestions.map((_, idx) => (
             <div
               key={idx}
               className={`h-2 rounded-full transition-all duration-200 ${
@@ -259,11 +372,7 @@ export default function Onboarding() {
               key={currentStep}
               className="animate-in fade-in slide-in-from-right-4 duration-200"
             >
-              <OnboardingQuestion
-                question={currentQuestion}
-                value={answers[currentQuestion.id]}
-                onChange={(value) => handleAnswer(currentQuestion.id, value)}
-              />
+              {renderQuestionContent()}
             </div>
           </AnimatePresence>
 
@@ -279,14 +388,14 @@ export default function Onboarding() {
             </Button>
             <Button
               onClick={handleNext}
-              disabled={!isAnswered || isSubmitting}
+              disabled={!isCurrentAnswered() || isSubmitting}
               className={`bg-gradient-to-r ${stepStyle.accent} hover:opacity-90 text-white font-bold gap-2 px-6 shadow-lg`}
             >
-              {currentStep === questions.length - 1 ? (
+              {currentStep === visibleQuestions.length - 1 ? (
                 isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving...
+                    Creating...
                   </>
                 ) : (
                   <>
