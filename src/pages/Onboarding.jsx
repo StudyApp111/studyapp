@@ -328,6 +328,8 @@ export default function Onboarding() {
           <CourseNameInput
             value={answers.course_name}
             onChange={(val) => handleAnswer("course_name", val)}
+            school={answers.school}
+            year={answers.university_year}
           />
         );
       

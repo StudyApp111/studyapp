@@ -130,7 +130,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
             ref={fileInputRef}
             type="file"
             multiple
-            accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.png,.jpg,.jpeg"
+            accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
             onChange={handleFileChange}
             className="hidden"
           />
@@ -153,8 +153,9 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
                     <Upload className="w-8 h-8 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-purple-700 font-semibold text-lg">Upload your materials</p>
-                    <p className="text-slate-500 text-sm mt-1">PDF, Word, PowerPoint, Images</p>
+                    <p className="text-purple-700 font-semibold text-lg">Upload Your Materials</p>
+                    <p className="text-slate-500 text-sm mt-1">PDF, Word, PowerPoint, TXT, PNG, JPG, WEBP, GIF, BMP, TIFF</p>
+                    <p className="text-slate-400 text-xs mt-1">Max 15MB per file</p>
                   </div>
                 </div>
               )}
