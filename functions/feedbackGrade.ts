@@ -103,7 +103,6 @@ Final Confidence = (Volume * 0.4 + Coverage * 0.4 + Consistency * 0.2) * 100.
   "predicted_exam_score_percentage": "XX%",
   "prediction_confidence_percentage": "XX%",
   "confidence_level": "Low" | "Medium" | "High",
-  "confidence_rationale": "Concise 1-sentence explanation of why the confidence is at this level (e.g., 'Limited question volume in core competencies').",
   "mastery_gap": "The #1 competency the user needs to practice to increase both grade and confidence."
 }`;
         }
