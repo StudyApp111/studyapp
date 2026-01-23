@@ -113,15 +113,22 @@ RULES:
 
 Respond as Polly:`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            reply: { type: "string" }
-          }
-        }
+      // Use the aiTutorChat function for richer context including Polly data
+      const { data: response } = await base44.functions.invoke('aiTutorChat', {
+        messages: [...messages, { role: 'user', content: messageToSend }],
+        lessonContext: lesson,
+        documentContent: docContent
       });
+
+      // Check if Polly has a pending intervention message
+      if (response.polly_intervention?.message) {
+        setMessages((prev) => [...prev, {
+          role: "assistant",
+          content: response.polly_intervention.message,
+          isPollyIntervention: true,
+          interventionType: response.polly_intervention.type
+        }]);
+      }
 
       setMessages((prev) => [...prev, {
         role: "assistant",
