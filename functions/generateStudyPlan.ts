@@ -125,7 +125,6 @@ STUDENT PERFORMANCE DATA:
 - Course: ${lesson.course_name}
 - Exam Score: ${exam.total_score}%
 - Predicted Grade: ${exam.predicted_grade}
-- Mastery Gap Topic: ${mastery_gap_topic}
 
 COMPETENCY BREAKDOWN (ranked by weakness):
 ${rankedCompetencies.map(c => `- ${c.name}: ${c.score}% (${c.correct}/${c.total} correct)`).join('\n')}
@@ -148,25 +147,30 @@ AI FEEDBACK SUMMARY:
 COURSE CONTENT OVERVIEW:
 ${contentSummary.substring(0, 2000)}
 
-[TASK CONSTRAINTS]
-- Target ONE weak competency OR misconception per task.
-- Directly traceable to missed questions or bottom-ranked competencies.
-- Reference SPECIFIC course concepts/formulas from the Overview (No generic advice).
-- Address the *reason* for marks lost (reasoning gaps, etc.).
-- Create 4-5 total tasks MAXIMUM.
+Each task MUST:
+- Target ONE weak competency OR one explicitly identified misconception
+- Be grounded in the Course Content Summary AND directly traceable to:
+  • at least one missed question OR
+  • a listed misconception OR
+  • a bottom-ranked competency
+- Reference SPECIFIC course concepts, terms, theories, formulas, or methods
+  that appear in the Course Content Summary (no generic skills or study advice like Comprehensive Assessment of Core Weaknesses)
+- Address the underlying *reason* the student lost marks
+  (e.g., concept confusion, misapplication, incomplete reasoning)
+- Be actionable and measurable (clear output, count, or completion signal)
+- Directly support exam performance for this course at this school
 
-[AVAILABLE TASK TYPES]
-- "flashcards": (10-20 cards). Include SPECIFIC topics.
-- "teach_it": (3-5 concepts). Include SPECIFIC concepts.
-- "review_notes": (target_count: 1).
-- "practice_exam": (target_count: 1). Use this to test understanding.
+AVAILABLE TASK TYPES:
+- "flashcards": For memorizing key terms, definitions, relationships. Include SPECIFIC topics to generate cards for. target_count = number of flashcards to master (10-20).
+- "teach_it": For deep understanding. Include SPECIFIC concepts student must explain. target_count = number of concepts to explain (3-5).
+- "review_notes": For re-reading specific sections. Include SPECIFIC sections/topics to review. target_count = 1.
+- "practice_exam": A quick practice quiz focused on specific weak areas. target_count = 1 (one quiz). Use this to test understanding after other study tasks.
 
-[CRITICAL INSTRUCTIONS FOR JSON]
-1. Task #1 MUST be a "practice_exam" targeting the [Mastery Gap Topic]: ${mastery_gap_topic}.
-2. For Task #1, set "is_focus_factor": true in the JSON.
-3. For all other tasks, set "is_focus_factor": false.
-4. For flashcards, set target_count between 10-20 (the number of cards to master)
-5. For practice_exam, set target_count to 1 (one quiz to complete)
+IMPORTANT: 
+- Include at least ONE "practice_exam" task to help students test their knowledge on weak areas. This should be the FIRST STUDY TASK, always.
+- For flashcards, set target_count between 10-20 (the number of cards to master)
+- For practice_exam, set target_count to 1 (one quiz to complete)
+- Create 3-5 total tasks maximum
 
 CRITICAL: Each task's "focus_topics" array must contain SPECIFIC concepts from the course material that relate to the weak competency. These will be used to generate targeted content.
 
@@ -176,7 +180,6 @@ Return JSON:
     {
       "task_type": "flashcards" | "teach_it" | "review_notes" | "practice_exam",
       "title": "Clear action title (e.g., 'Master Key Terms for X')",
-      "is_focus_factor": boolean,
       "description": "What this helps with and why",
       "target_count": number (10-20 for flashcards, 3-5 for teach_it, 1 for practice_exam/review_notes),
       "target_competency": "The specific competency being addressed",
@@ -224,10 +227,9 @@ Return JSON:
                       target_count: { type: "integer" },
                       target_competency: { type: "string" },
                       focus_topics: { type: "array", items: { type: "string" } },
-                      misconception_addressed: { type: "string" },
-                      is_focus_factor: { type: "boolean" }
+                      misconception_addressed: { type: "string" }
                     },
-                    required: ["task_type", "title", "target_count", "is_focus_factor"]
+                    required: ["task_type", "title", "target_count"]
                   }
                 },
                 plan_rationale: { type: "string" },
@@ -297,8 +299,7 @@ Return JSON:
           completed_count: 0,
           completed: false,
           focus_topics: task.focus_topics || [],
-          misconception_addressed: task.misconception_addressed || null,
-          is_focus_factor: task.is_focus_factor || false
+          misconception_addressed: task.misconception_addressed || null
         };
       });
 
@@ -328,10 +329,6 @@ Return JSON:
 
     console.log(`⏱️ [generateStudyPlan] Pre-create: ${Date.now() - startTime}ms`);
     
-    // Get confidence data from exam's AI feedback
-    const predictionConfidence = parseInt(exam.ai_feedback?.prediction_confidence_percentage) || 35;
-    const confidenceLevel = exam.ai_feedback?.confidence_level || "Low";
-
     // Create new study plan with enriched data
     const studyPlan = await base44.entities.StudyPlan.create({
       lesson_id,
@@ -341,17 +338,13 @@ Return JSON:
       initial_score: exam.total_score,
       target_grade: "A+",
       weak_competencies: weakestCompetencies.map(c => c.name),
-      mastery_gap: mastery_gap_topic,
-      prediction_confidence: predictionConfidence,
-      confidence_level: confidenceLevel,
       tasks: validatedTasks,
       competency_progress: competencyProgress,
       grade_history: [{
         date: new Date().toISOString(),
         exam_id: exam_id,
         predicted_grade: exam.predicted_grade,
-        score: exam.total_score,
-        confidence: predictionConfidence
+        score: exam.total_score
       }],
       plan_rationale: response.plan_rationale,
       priority_focus: response.priority_focus,
