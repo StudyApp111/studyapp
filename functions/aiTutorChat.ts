@@ -134,7 +134,7 @@ RULES:
     }
 
     // Call Gemini API with retry logic
-    const response = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite-preview-06-17:generateContent?key=' + apiKey, {
+    const response = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

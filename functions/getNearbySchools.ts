@@ -11,22 +11,29 @@ Deno.serve(async (req) => {
 
     const { searchQuery } = await req.json();
 
-    // Get user's approximate location from IP using a free geo-IP service
+    // Get user's approximate location from IP
+    // Extract client IP from request headers (works in production)
+    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+      || req.headers.get('cf-connecting-ip') 
+      || req.headers.get('x-real-ip')
+      || null;
+
     let userCity = null;
     let userCountry = null;
     let userLat = null;
     let userLon = null;
 
     try {
-      // Use ip-api.com (free, no key needed, 45 requests/minute)
-      const geoResponse = await fetch('http://ip-api.com/json/?fields=status,city,country,lat,lon');
+      // Use ipapi.co (free tier: 1000/day, supports HTTPS)
+      const geoUrl = clientIP ? `https://ipapi.co/${clientIP}/json/` : 'https://ipapi.co/json/';
+      const geoResponse = await fetch(geoUrl);
       if (geoResponse.ok) {
         const geoData = await geoResponse.json();
-        if (geoData.status === 'success') {
+        if (!geoData.error) {
           userCity = geoData.city;
-          userCountry = geoData.country;
-          userLat = geoData.lat;
-          userLon = geoData.lon;
+          userCountry = geoData.country_name;
+          userLat = geoData.latitude;
+          userLon = geoData.longitude;
         }
       }
     } catch (geoError) {
