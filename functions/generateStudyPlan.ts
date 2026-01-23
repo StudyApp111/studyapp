@@ -107,6 +107,16 @@ Deno.serve(async (req) => {
     // Get top 3 weakest competencies
     const weakestCompetencies = rankedCompetencies.slice(0, 3);
     
+    // Extract mastery_gap from AI feedback (or use weakest competency)
+    const masteryGap = exam.ai_feedback?.mastery_gap || 
+                       (weakestCompetencies[0]?.name) || 
+                       'General Understanding';
+    
+    // Get confidence from exam
+    const initialConfidence = exam.prediction_confidence || 
+                              exam.ai_feedback?.prediction_confidence_percentage || 
+                              45; // Default low confidence for diagnostic
+    
     // Extract weak areas and strengths from AI feedback
     const weakAreas = exam.ai_feedback?.key_areas_for_improvement_list || [];
     const strengths = exam.ai_feedback?.identified_strengths_list || [];
@@ -174,6 +184,8 @@ IMPORTANT:
 
 CRITICAL: Each task's "focus_topics" array must contain SPECIFIC concepts from the course material that relate to the weak competency. These will be used to generate targeted content.
 
+MASTERY GAP: The student's biggest weakness is "${masteryGap}". At least ONE task MUST directly address this competency - mark it with is_focus_factor=true. This task gets special "Grade Booster" highlighting.
+
 Return JSON:
 {
   "tasks": [
@@ -184,7 +196,8 @@ Return JSON:
       "target_count": number (10-20 for flashcards, 3-5 for teach_it, 1 for practice_exam/review_notes),
       "target_competency": "The specific competency being addressed",
       "focus_topics": ["specific topic 1", "specific topic 2", "specific topic 3"],
-      "misconception_addressed": "The specific misconception this task addresses (if any)"
+      "misconception_addressed": "The specific misconception this task addresses (if any)",
+      "is_focus_factor": boolean (true if this task directly addresses the mastery_gap "${masteryGap}")
     }
   ],
   "plan_rationale": "2-3 sentences explaining why this plan was designed this way",
@@ -227,7 +240,8 @@ Return JSON:
                       target_count: { type: "integer" },
                       target_competency: { type: "string" },
                       focus_topics: { type: "array", items: { type: "string" } },
-                      misconception_addressed: { type: "string" }
+                      misconception_addressed: { type: "string" },
+                      is_focus_factor: { type: "boolean" }
                     },
                     required: ["task_type", "title", "target_count"]
                   }
@@ -299,7 +313,8 @@ Return JSON:
           completed_count: 0,
           completed: false,
           focus_topics: task.focus_topics || [],
-          misconception_addressed: task.misconception_addressed || null
+          misconception_addressed: task.misconception_addressed || null,
+          is_focus_factor: task.is_focus_factor || false
         };
       });
 
@@ -336,6 +351,8 @@ Return JSON:
       cycle_number: cycleNumber,
       initial_predicted_grade: exam.predicted_grade,
       initial_score: exam.total_score,
+      initial_confidence: initialConfidence,
+      mastery_gap: masteryGap,
       target_grade: "A+",
       weak_competencies: weakestCompetencies.map(c => c.name),
       tasks: validatedTasks,
@@ -344,7 +361,8 @@ Return JSON:
         date: new Date().toISOString(),
         exam_id: exam_id,
         predicted_grade: exam.predicted_grade,
-        score: exam.total_score
+        score: exam.total_score,
+        confidence: initialConfidence
       }],
       plan_rationale: response.plan_rationale,
       priority_focus: response.priority_focus,
