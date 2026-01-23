@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
         
         // Verify admin access
         const user = await base44.auth.me();
-        if (!user || user.email !== 'kartikeya2159@gmail.com') {
+        if (!user || user.role !== 'admin') {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
