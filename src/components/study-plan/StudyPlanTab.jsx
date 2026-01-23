@@ -218,7 +218,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   // Show placeholder while generating study plan
   if (isGeneratingPlan) {
     return (
-      <div className="px-3 pb-8 w-full max-w-[320px] mx-auto">
+      <div className="px-3 md:px-6 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -272,7 +272,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
-      <div className="px-3 pb-8 w-full max-w-[320px] mx-auto">
+      <div className="px-3 md:px-6 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -460,8 +460,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         onComplete={() => setShowGradeBoost(false)}
       />
       
-      {/* Wider container for desktop - 1200px max */}
-      <div className="px-3 pt-1 w-full max-w-[320px] md:max-w-5xl mx-auto space-y-4 pb-8">
+      {/* Responsive container - mobile narrow, desktop wide */}
+      <div className="px-3 md:px-6 pt-1 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 pb-8">
       {/* Grade + Confidence Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}

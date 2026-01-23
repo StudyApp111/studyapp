@@ -136,7 +136,7 @@ export default function StudyTypeSelector({ value, onChange }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-slate-900 text-base">{type.header}</p>
-              <p className="text-sm text-slate-500 truncate">{type.sub}</p>
+              <p className="text-sm text-slate-500 leading-snug">{type.sub}</p>
             </div>
             {isSelected && (
               <div className={`w-6 h-6 rounded-full ${colors.selectedBorder.replace('border-', 'bg-')} flex items-center justify-center`}>
