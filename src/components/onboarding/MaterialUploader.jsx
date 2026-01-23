@@ -1,0 +1,193 @@
+import React, { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Upload, FileText, Type, Loader2, File, X, CheckCircle } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+
+export default function MaterialUploader({ courseName, onMaterialReady }) {
+  const [activeTab, setActiveTab] = useState("upload");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [pastedNotes, setPastedNotes] = useState("");
+  const [topicDescription, setTopicDescription] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    const newFiles = [];
+
+    for (const file of files) {
+      try {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        newFiles.push({
+          name: file.name,
+          url: file_url,
+          size: file.size
+        });
+      } catch (error) {
+        console.error("Error uploading file:", error);
+      }
+    }
+
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+    setIsUploading(false);
+    
+    // Notify parent
+    if (newFiles.length > 0) {
+      onMaterialReady({
+        type: "file",
+        files: [...uploadedFiles, ...newFiles]
+      });
+    }
+  };
+
+  const removeFile = (index) => {
+    const updated = uploadedFiles.filter((_, i) => i !== index);
+    setUploadedFiles(updated);
+    onMaterialReady(updated.length > 0 ? { type: "file", files: updated } : null);
+  };
+
+  const handleNotesChange = (e) => {
+    const text = e.target.value;
+    setPastedNotes(text);
+    onMaterialReady(text.trim() ? { type: "notes", content: text } : null);
+  };
+
+  const handleTopicChange = (e) => {
+    const text = e.target.value;
+    setTopicDescription(text);
+    onMaterialReady(text.trim() ? { type: "topic", content: text } : null);
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  return (
+    <div className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-xl">
+          <TabsTrigger 
+            value="upload" 
+            className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Upload
+          </TabsTrigger>
+          <TabsTrigger 
+            value="paste"
+            className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Paste
+          </TabsTrigger>
+          <TabsTrigger 
+            value="topic"
+            className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <Type className="w-4 h-4 mr-2" />
+            Topic
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="upload" className="mt-4">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.png,.jpg,.jpeg"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          
+          {uploadedFiles.length === 0 ? (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="w-full border-2 border-dashed border-purple-300 hover:border-purple-400 bg-purple-50/50 hover:bg-purple-50 rounded-2xl p-8 transition-all"
+            >
+              {isUploading ? (
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
+                  <p className="text-purple-700 font-medium">Uploading...</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center">
+                    <Upload className="w-8 h-8 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-purple-700 font-semibold text-lg">Upload your materials</p>
+                    <p className="text-slate-500 text-sm mt-1">PDF, Word, PowerPoint, Images</p>
+                  </div>
+                </div>
+              )}
+            </button>
+          ) : (
+            <div className="space-y-3">
+              {uploadedFiles.map((file, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-900 truncate">{file.name}</p>
+                    <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(idx)}
+                    className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors"
+                  >
+                    <X className="w-4 h-4 text-slate-500" />
+                  </button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="w-full"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Add more files
+              </Button>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="paste" className="mt-4">
+          <Textarea
+            value={pastedNotes}
+            onChange={handleNotesChange}
+            placeholder="Paste your lecture notes, textbook excerpts, or any study material here..."
+            className="min-h-[200px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4"
+          />
+          <p className="text-xs text-slate-500 mt-2 text-center">
+            Paste any text content you want to study
+          </p>
+        </TabsContent>
+
+        <TabsContent value="topic" className="mt-4">
+          <Textarea
+            value={topicDescription}
+            onChange={handleTopicChange}
+            placeholder={`Describe what you want to learn about ${courseName}...\n\nExample: "I want to learn about photosynthesis, including the light and dark reactions, and how plants convert CO2 into glucose."`}
+            className="min-h-[200px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4"
+          />
+          <p className="text-xs text-slate-500 mt-2 text-center">
+            Be specific about the topics you want to cover
+          </p>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
