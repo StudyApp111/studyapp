@@ -89,6 +89,19 @@ export default function AITutorSheet() {
     return null;
   };
 
+  // Only show on mobile
+  const [isMobile, setIsMobile] = React.useState(false);
+  
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Don't render on desktop - use the side panel instead
+  if (!isMobile) return null;
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -99,16 +112,16 @@ export default function AITutorSheet() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={close}
-            className="fixed inset-0 z-50 bg-black/40"
+            className="fixed inset-0 z-50 bg-black/40 md:hidden"
           />
           
-          {/* Sheet */}
+          {/* Sheet - Mobile only */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            className="fixed left-0 right-0 bottom-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
+            className="fixed left-0 right-0 bottom-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl md:hidden"
             style={{ height: '75vh', maxHeight: 'calc(100vh - 60px)' }}
           >
             {/* Header */}

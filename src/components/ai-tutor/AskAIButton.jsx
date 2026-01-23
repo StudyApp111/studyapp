@@ -76,11 +76,11 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
     }
 
     // On mobile: open the modal sheet
-    // On desktop: send to the AI tutor panel (no modal)
+    // On desktop: send to the AI tutor panel (no modal) - don't open popup
     if (isMobile) {
       openWithContext(contextData);
     } else {
-      // Dispatch event for the desktop AI panel to pick up
+      // Desktop: Just dispatch event for the side panel to pick up, no modal
       window.dispatchEvent(new CustomEvent('askAIFromContext', { detail: contextData }));
     }
   };
