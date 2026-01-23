@@ -222,6 +222,14 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       if (isMastered && !wasMastered) {
         const totalMastered = updatedCards.filter(c => c.mastered).length;
         updateStudyPlanProgress('flashcards', totalMastered);
+        
+        // Trigger Polly engine on mastery milestones (every 5 cards)
+        if (totalMastered % 5 === 0) {
+          base44.functions.invoke('runPollyEngine', {
+            trigger_event: 'flashcard_milestone',
+            lesson_id: lesson.id
+          }).catch(err => console.warn('Polly trigger failed:', err.message));
+        }
       }
     } catch (error) {
       console.error("Error updating flashcard:", error);
