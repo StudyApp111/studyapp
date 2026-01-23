@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
+import * as ReactDOM from "react-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Send, X, Sparkles, Loader2, ChevronDown } from "lucide-react";
