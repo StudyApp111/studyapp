@@ -615,15 +615,17 @@ export default function DocumentViewer() {
                   )}
                   <TabsTrigger 
                     value="studyplan"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
                   >
+                    {showStudyPlanDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Target className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-semibold">Plan</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="teachit"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
                   >
+                    {showTeachItDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Brain className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-semibold">Teach</span>
                   </TabsTrigger>
