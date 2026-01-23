@@ -223,7 +223,10 @@ export default function Settings() {
               <SettingsItem
                 icon={RefreshCw}
                 label="Onboarding"
-                onClick={() => navigate(createPageUrl("Onboarding"))}
+                onClick={async () => {
+                  await base44.auth.updateMe({ onboarding_completed: false });
+                  navigate(createPageUrl("Onboarding"));
+                }}
               />
             </SettingsSection>
 
