@@ -193,10 +193,18 @@ CRITICAL FORMATTING RULE: Do NOT use LaTeX notation like $\\text{...}$ or $...$.
       return normalized;
     });
 
-    // Create practice exam record
+    // Create title based on target competency or focus topics
+    const examTitle = target_competency 
+      ? `${target_competency} Practice Quiz`
+      : (focus_topics && focus_topics.length > 0)
+        ? `${focus_topics[0]} Practice Quiz`
+        : 'Practice Quiz';
+
+    // Create practice exam record with proper title
     const exam = await base44.entities.Exam.create({
       lesson_id,
       exam_type: 'practice',
+      title: examTitle,
       focus_competency: target_competency,
       focus_description: examData.exam_focus_summary || `Practice quiz on ${(focus_topics || []).slice(0, 2).join(', ')}`,
       questions: normalizedQuestions,
