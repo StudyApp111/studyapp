@@ -499,38 +499,58 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                     <span className="text-white/90 text-xs font-bold uppercase tracking-wide">AI Confidence</span>
                   </div>
                   
-                  {/* Confidence Progress Bar */}
-                  <div className="mb-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-white font-bold text-lg md:text-xl">
-                        {studyPlan.initial_confidence || 45}%
-                      </span>
-                      <Badge className={`text-[10px] px-2 py-0.5 ${
-                        (studyPlan.initial_confidence || 45) >= 75 ? 'bg-emerald-500/80 text-white' :
-                        (studyPlan.initial_confidence || 45) >= 50 ? 'bg-amber-500/80 text-white' :
-                        'bg-red-500/80 text-white'
-                      }`}>
-                        {(studyPlan.initial_confidence || 45) >= 75 ? 'High' :
-                         (studyPlan.initial_confidence || 45) >= 50 ? 'Medium' : 'Low'} Data
-                      </Badge>
-                    </div>
-                    <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${studyPlan.initial_confidence || 45}%` }}
-                        transition={{ duration: 1, delay: 0.3 }}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* The Nudge */}
-                  <div className="flex items-start gap-1.5 bg-white/10 rounded-lg p-2">
-                    <AlertCircle className="w-3.5 h-3.5 text-yellow-300 mt-0.5 flex-shrink-0" />
-                    <p className="text-white/80 text-[10px] md:text-xs leading-tight">
-                      Complete at least one task to raise confidence to <span className="font-bold text-yellow-300">{Math.min(95, (studyPlan.initial_confidence || 45) + 15)}%</span>
-                    </p>
-                  </div>
+                  {/* Confidence Progress Bar - Dynamic based on completed tasks */}
+                  {(() => {
+                    const baseConfidence = studyPlan.initial_confidence || 45;
+                    const completedTasksCount = studyPlan.tasks?.filter(t => t.completed).length || 0;
+                    const dynamicConfidence = Math.min(95, baseConfidence + (completedTasksCount * 15));
+                    const confidenceLevel = dynamicConfidence >= 75 ? 'High' : dynamicConfidence >= 50 ? 'Medium' : 'Low';
+                    
+                    return (
+                      <>
+                        <div className="mb-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-white font-bold text-lg md:text-xl">
+                              {dynamicConfidence}%
+                            </span>
+                            <Badge className={`text-[10px] px-2 py-0.5 ${
+                              confidenceLevel === 'High' ? 'bg-emerald-500/80 text-white' :
+                              confidenceLevel === 'Medium' ? 'bg-amber-500/80 text-white' :
+                              'bg-red-500/80 text-white'
+                            }`}>
+                              {confidenceLevel} Data
+                            </Badge>
+                          </div>
+                          <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
+                            <motion.div 
+                              className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${dynamicConfidence}%` }}
+                              transition={{ duration: 1, delay: 0.3 }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* The Nudge */}
+                        {dynamicConfidence < 95 && (
+                          <div className="flex items-start gap-1.5 bg-white/10 rounded-lg p-2">
+                            <AlertCircle className="w-3.5 h-3.5 text-yellow-300 mt-0.5 flex-shrink-0" />
+                            <p className="text-white/80 text-[10px] md:text-xs leading-tight">
+                              Complete a task to raise confidence to <span className="font-bold text-yellow-300">{Math.min(95, dynamicConfidence + 15)}%</span>
+                            </p>
+                          </div>
+                        )}
+                        {dynamicConfidence >= 95 && (
+                          <div className="flex items-start gap-1.5 bg-emerald-500/20 rounded-lg p-2">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300 mt-0.5 flex-shrink-0" />
+                            <p className="text-white/90 text-[10px] md:text-xs leading-tight font-medium">
+                              Maximum confidence reached! Take the official exam now.
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>
