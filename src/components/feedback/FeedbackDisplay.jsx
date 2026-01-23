@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, Target, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, Rocket, Star, AlertCircle } from "lucide-react";
+import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, Target, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, Rocket, Star, AlertCircle, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MathText from "../math/MathText";
+import { useAITutor } from "../ai-tutor/AITutorContext";
 
 const formatTime = (seconds) => {
   if (!seconds) return '0s';
@@ -18,7 +19,37 @@ const formatTime = (seconds) => {
 
 export default function FeedbackDisplay({ exam, lesson, allExams = [], courseName }) {
   const isPracticeExam = exam?.exam_type === 'practice';
+  const { openTutor } = useAITutor();
   
+  const handleAskAI = (question, userAnswer, correctAnswer, isCorrect) => {
+    const prompt = `I need help understanding this question from my exam:
+
+**Question:** ${question.question_text}
+${question.options?.length > 0 ? `\n**Options:**\n${question.options.map((o, i) => `${String.fromCharCode(65 + i)}. ${typeof o === 'string' ? o : o?.text || o?.label || ''}`).join('\n')}` : ''}
+
+**My Answer:** ${userAnswer || 'No answer provided'}
+**Correct Answer:** ${correctAnswer}
+**Result:** ${isCorrect ? 'Correct ✓' : 'Incorrect ✗'}
+
+Please explain why ${isCorrect ? 'this answer is correct and what concept it tests' : 'my answer was wrong and help me understand the correct answer'}. Break it down step by step.`;
+    
+    openTutor(prompt);
+  };
+
+  // Helper to get score color based on value
+  const getScoreColor = (score) => {
+    if (score >= 8) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+    if (score >= 4.5) return 'text-amber-600 bg-amber-50 border-amber-200';
+    return 'text-red-600 bg-red-50 border-red-200';
+  };
+
+  // Helper to get border color based on score
+  const getBorderByScore = (score) => {
+    if (score >= 8) return 'border-emerald-400 shadow-emerald-100';
+    if (score >= 4.5) return 'border-amber-400 shadow-amber-100';
+    return 'border-red-400 shadow-red-100';
+  };
+
   const [sectionsExpanded, setSectionsExpanded] = useState({
     strengths: false,
     weaknesses: false,
@@ -83,7 +114,7 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
   // Practice Exam Results UI
   if (isPracticeExam) {
     return (
-      <div className="space-y-5 px-3 max-w-lg mx-auto pb-8">
+      <div className="space-y-5 px-3 md:px-6 max-w-lg md:max-w-3xl lg:max-w-4xl mx-auto pb-8">
         {/* Link back to Study Plan */}
         <Button
           variant="ghost"
@@ -152,12 +183,19 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                 </CardTitle>
               </CardHeader>
               
-              <CardContent className="px-3 pb-3">
-                <div className="space-y-2">
+              <CardContent className="px-3 md:px-4 pb-3">
+                <div className="space-y-3 md:grid md:grid-cols-1 lg:grid-cols-2 md:gap-4 md:space-y-0">
                   {exam.questions.map((question, idx) => {
                     // Use the stored is_correct value from submission grading
                     const isCorrect = question.is_correct === true;
                     const isExpanded = expandedQuestions[idx];
+                    const aiScore = question.ai_score_out_of_10;
+                    const hasAIScore = typeof aiScore === 'number';
+                    
+                    // Determine border color - use AI score if available, otherwise is_correct
+                    const borderClass = hasAIScore 
+                      ? getBorderByScore(aiScore)
+                      : (isCorrect ? 'border-emerald-400 shadow-emerald-100' : 'border-red-400 shadow-red-100');
                     
                     return (
                       <motion.div
@@ -165,29 +203,35 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.03 }}
-                        className={`rounded-xl border-2 overflow-hidden transition-all ${
-                          isCorrect ? 'border-emerald-200' : 'border-red-200'
-                        }`}
+                        className={`rounded-xl border-[3px] overflow-hidden transition-all shadow-md ${borderClass}`}
                       >
                         <div 
-                          className={`p-3 cursor-pointer hover:bg-slate-50 transition-colors ${isExpanded ? 'border-b border-slate-100' : ''}`}
+                          className={`p-3 md:p-4 cursor-pointer hover:bg-slate-50 transition-colors ${isExpanded ? 'border-b border-slate-100' : ''}`}
                           onClick={() => toggleQuestion(idx)}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              isCorrect === true ? 'bg-emerald-500' : 'bg-red-500'
+                            <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              hasAIScore 
+                                ? (aiScore >= 8 ? 'bg-emerald-500' : aiScore >= 4.5 ? 'bg-amber-500' : 'bg-red-500')
+                                : (isCorrect ? 'bg-emerald-500' : 'bg-red-500')
                             } text-white`}>
-                              {isCorrect === true ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                              {hasAIScore 
+                                ? <span className="text-xs md:text-sm font-bold">{aiScore}</span>
+                                : (isCorrect ? <CheckCircle className="w-4 h-4 md:w-5 md:h-5" /> : <XCircle className="w-4 h-4 md:w-5 md:h-5" />)
+                              }
                             </div>
                             
                             <div className="flex-1 min-w-0">
-                              <span className="font-bold text-slate-900 text-sm">Q{idx + 1}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-900 text-sm md:text-base">Q{idx + 1}</span>
+                                {hasAIScore && (
+                                  <Badge className={`text-[10px] md:text-xs px-1.5 py-0 border ${getScoreColor(aiScore)}`}>
+                                    {aiScore}/10
+                                  </Badge>
+                                )}
+                              </div>
                               {question.difficulty_index && (
-                                <Badge variant="outline" className={`ml-2 text-[10px] px-1.5 py-0 ${
-                                  question.difficulty_index.toLowerCase() === 'hard' ? 'text-red-600 border-red-200' :
-                                  question.difficulty_index.toLowerCase() === 'medium' ? 'text-amber-600 border-amber-200' :
-                                  'text-green-600 border-green-200'
-                                }`}>
+                                <Badge variant="outline" className="mt-1 text-[10px] px-1.5 py-0 text-purple-600 border-purple-200 bg-purple-50">
                                   {question.difficulty_index}
                                 </Badge>
                               )}
@@ -260,16 +304,39 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                 </div>
 
                                 {question.explanation && (
-                                  <div className="bg-purple-50 p-2.5 rounded-xl border border-purple-100">
+                                  <div className="bg-purple-50 p-2.5 md:p-3 rounded-xl border border-purple-100">
                                     <div className="flex items-center gap-1.5 mb-1">
                                       <Brain className="w-3 h-3 text-purple-600" />
-                                      <p className="text-[10px] font-bold text-purple-700 uppercase">Explanation</p>
+                                      <p className="text-[10px] md:text-xs font-bold text-purple-700 uppercase">Explanation</p>
                                     </div>
-                                    <MathText className="text-xs text-slate-700 leading-relaxed">
+                                    <MathText className="text-xs md:text-sm text-slate-700 leading-relaxed">
                                       {question.explanation}
                                     </MathText>
                                   </div>
                                 )}
+
+                                {/* Ask AI Button */}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const ca = question.correct_answer;
+                                    let correctAnswerDisplay = ca;
+                                    if (/^[A-Da-d]$/i.test(ca?.trim())) {
+                                      const letter = ca.trim().toUpperCase();
+                                      const optIdx = letter.charCodeAt(0) - 65;
+                                      const opt = question.options?.[optIdx];
+                                      const optText = typeof opt === 'string' ? opt : (opt?.text || opt?.label || '');
+                                      correctAnswerDisplay = `${letter}. ${optText.replace(/^[A-Da-d][\).\s]+\s*/g, '').trim()}`;
+                                    }
+                                    handleAskAI(question, question.user_answer, correctAnswerDisplay, isCorrect);
+                                  }}
+                                  className="w-full bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border-purple-200 text-purple-700 font-semibold"
+                                >
+                                  <MessageSquare className="w-4 h-4 mr-2" />
+                                  Ask AI to Explain
+                                </Button>
                               </div>
                             </motion.div>
                           )}
@@ -474,12 +541,19 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
               <p className="text-slate-500 text-xs mt-1">Tap any question to see details</p>
             </CardHeader>
             
-            <CardContent className="px-3 pb-3">
-              <div className="space-y-2">
+            <CardContent className="px-3 md:px-4 pb-3">
+              <div className="space-y-3 md:grid md:grid-cols-1 lg:grid-cols-2 md:gap-4 md:space-y-0">
                 {exam.feedback.map((feedback, idx) => {
                   const question = exam.questions[feedback.question_index];
                   const questionTime = getQuestionTime(feedback.question_index);
                   const isExpanded = expandedQuestions[idx];
+                  const aiScore = question?.ai_score_out_of_10;
+                  const hasAIScore = typeof aiScore === 'number';
+                  
+                  // Determine border color - use AI score if available, otherwise is_correct
+                  const borderClass = hasAIScore 
+                    ? getBorderByScore(aiScore)
+                    : (feedback.is_correct ? 'border-emerald-400 shadow-emerald-100' : 'border-red-400 shadow-red-100');
                   
                   return (
                     <motion.div
@@ -487,43 +561,47 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className={`rounded-xl border-2 overflow-hidden transition-all ${
-                        feedback.is_correct 
-                          ? 'border-emerald-200 bg-white' 
-                          : 'border-red-200 bg-white'
-                      }`}
+                      className={`rounded-xl border-[3px] overflow-hidden transition-all shadow-md bg-white ${borderClass}`}
                     >
                       {/* Question Header - Always visible */}
                       <div 
-                        className={`p-3 cursor-pointer hover:bg-slate-50 transition-colors ${
+                        className={`p-3 md:p-4 cursor-pointer hover:bg-slate-50 transition-colors ${
                           isExpanded ? 'border-b border-slate-100' : ''
                         }`}
                         onClick={() => toggleQuestion(idx)}
                       >
                         <div className="flex items-start gap-3">
-                          {/* Status Icon */}
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            feedback.is_correct 
-                              ? 'bg-emerald-500 text-white' 
-                              : 'bg-red-500 text-white'
-                          }`}>
-                            {feedback.is_correct ? (
-                              <CheckCircle className="w-4 h-4" />
+                          {/* Status Icon - Show score if available */}
+                          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            hasAIScore 
+                              ? (aiScore >= 8 ? 'bg-emerald-500' : aiScore >= 4.5 ? 'bg-amber-500' : 'bg-red-500')
+                              : (feedback.is_correct ? 'bg-emerald-500' : 'bg-red-500')
+                          } text-white`}>
+                            {hasAIScore ? (
+                              <span className="text-sm md:text-base font-bold">{aiScore}</span>
+                            ) : feedback.is_correct ? (
+                              <CheckCircle className="w-5 h-5 md:w-6 md:h-6" />
                             ) : (
-                              <XCircle className="w-4 h-4" />
+                              <XCircle className="w-5 h-5 md:w-6 md:h-6" />
                             )}
                           </div>
                           
                           <div className="flex-1 min-w-0">
                             {/* Question Number & Score Row */}
                             <div className="flex items-center justify-between mb-1">
-                              <span className="font-bold text-slate-900 text-sm">
+                              <span className="font-bold text-slate-900 text-sm md:text-base">
                                 Question {question.question_number}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className={`text-sm font-bold ${feedback.is_correct ? 'text-emerald-600' : 'text-red-600'}`}>
-                                  {feedback.points_earned}/10
-                                </span>
+                                {hasAIScore ? (
+                                  <Badge className={`text-xs md:text-sm font-bold px-2 py-0.5 border ${getScoreColor(aiScore)}`}>
+                                    {aiScore}/10
+                                  </Badge>
+                                ) : (
+                                  <span className={`text-sm md:text-base font-bold ${feedback.is_correct ? 'text-emerald-600' : 'text-red-600'}`}>
+                                    {feedback.points_earned}/10
+                                  </span>
+                                )}
                                 <div className="text-slate-400">
                                   {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                                 </div>
@@ -538,16 +616,12 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                 </Badge>
                               )}
                               {question.difficulty_index && (
-                                <Badge variant="outline" className={`text-xs px-2 py-0.5 ${
-                                  question.difficulty_index.toLowerCase() === 'hard' ? 'bg-red-50 text-red-600 border-red-200' :
-                                  question.difficulty_index.toLowerCase() === 'medium' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                  'bg-green-50 text-green-600 border-green-200'
-                                }`}>
+                                <Badge variant="outline" className="text-xs px-2 py-0.5 bg-purple-50 text-purple-600 border-purple-200">
                                   {question.difficulty_index}
                                 </Badge>
                               )}
                               {questionTime > 0 && (
-                                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-purple-50 text-purple-700">
+                                <Badge variant="secondary" className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600">
                                   <Clock className="w-3 h-3 mr-1" />
                                   {formatTime(questionTime)}
                                 </Badge>
@@ -651,6 +725,29 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
                                   {question.explanation}
                                 </MathText>
                               </div>
+
+                              {/* Ask AI Button */}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const ca = question.correct_answer;
+                                  let correctAnswerDisplay = ca;
+                                  if (/^[A-Da-d]$/i.test(ca?.trim())) {
+                                    const letter = ca.trim().toUpperCase();
+                                    const optIdx = letter.charCodeAt(0) - 65;
+                                    const opt = question.options?.[optIdx];
+                                    const optText = typeof opt === 'string' ? opt : (opt?.text || opt?.label || '');
+                                    correctAnswerDisplay = `${letter}. ${optText.replace(/^[A-Da-d][\).\s]+\s*/g, '').trim()}`;
+                                  }
+                                  handleAskAI(question, question.user_answer, correctAnswerDisplay, feedback.is_correct);
+                                }}
+                                className="w-full bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border-purple-200 text-purple-700 font-semibold"
+                              >
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Ask AI to Explain
+                              </Button>
                             </div>
                           </motion.div>
                         )}
