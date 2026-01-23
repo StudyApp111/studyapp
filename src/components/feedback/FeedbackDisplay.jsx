@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, Target, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, Rocket, Star } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, Target, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, Rocket, Star, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MathText from "../math/MathText";
@@ -283,9 +284,14 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
     );
   }
 
+  // Get confidence data
+  const confidencePercent = exam.prediction_confidence || exam.ai_feedback?.prediction_confidence_percentage || 45;
+  const confidenceLevel = exam.confidence_level || exam.ai_feedback?.confidence_level || 'Low';
+  const masteryGap = exam.mastery_gap || exam.ai_feedback?.mastery_gap;
+
   // Official Exam Results UI (existing)
   return (
-    <div className="space-y-6 px-3 max-w-4xl mx-auto">
+    <div className="space-y-6 px-3 max-w-5xl mx-auto">
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -333,6 +339,53 @@ export default function FeedbackDisplay({ exam, lesson, allExams = [], courseNam
             <span className="font-bold text-slate-900">{exam.feedback?.filter(f => f.is_correct).length || 0}/{exam.questions?.length || 0}</span>
           </div>
         </div>
+
+        {/* Confidence Meter Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-4 border border-slate-200 max-w-md mx-auto"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-slate-600" />
+              <span className="text-sm font-bold text-slate-700">AI Prediction Confidence</span>
+            </div>
+            <Badge className={`text-[10px] ${
+              confidenceLevel === 'High' ? 'bg-emerald-100 text-emerald-700' :
+              confidenceLevel === 'Medium' ? 'bg-amber-100 text-amber-700' :
+              'bg-red-100 text-red-700'
+            }`}>
+              {confidenceLevel} Data
+            </Badge>
+          </div>
+          
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-2xl font-black text-slate-900">{confidencePercent}%</span>
+            </div>
+            <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+              <motion.div 
+                className={`h-full rounded-full ${
+                  confidenceLevel === 'High' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
+                  confidenceLevel === 'Medium' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+                  'bg-gradient-to-r from-red-500 to-rose-500'
+                }`}
+                initial={{ width: 0 }}
+                animate={{ width: `${confidencePercent}%` }}
+                transition={{ duration: 1, delay: 0.3 }}
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2 bg-white/80 rounded-xl p-2.5 border border-slate-200">
+            <AlertCircle className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-slate-600 leading-tight">
+              Complete study tasks to increase confidence to <span className="font-bold text-purple-700">{Math.min(95, confidencePercent + 15)}%</span> and get a more accurate grade prediction.
+            </p>
+          </div>
+        </motion.div>
 
         {/* Summary - max 1 sentence */}
         {exam.ai_feedback?.overall_performance_summary_text && (
