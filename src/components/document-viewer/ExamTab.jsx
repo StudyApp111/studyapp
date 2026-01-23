@@ -855,7 +855,14 @@ JSON Output (exact schema):
           type: "object",
           properties: {
             feedback_session_title: { type: "string" },
-            predicted_exam_score_percentage: { type: "string" }
+            predicted_exam_score_percentage: { type: "string" },
+            prediction_confidence_percentage: { type: "number" },
+            confidence_level: { type: "string" },
+            mastery_gap: { type: "string" },
+            mastery_gap_description: { type: "string" },
+            overall_performance_summary_text: { type: "string" },
+            identified_strengths_list: { type: "array", items: { type: "string" } },
+            key_areas_for_improvement_list: { type: "array", items: { type: "string" } }
           }
         }
       }).then(async ({ data: feedbackData }) => {
