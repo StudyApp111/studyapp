@@ -72,10 +72,10 @@ Deno.serve(async (req) => {
             const curriculumJson = JSON.stringify(lesson.curriculum_map || {}, null, 2);
             const performanceJson = JSON.stringify(examPerformanceData, null, 2);
 
-            finalPrompt = `Act as an Expert Psychometrician and Educator for ${courseName} (grade ${grade}). Your goal is to provide a high-fidelity grade prediction and a defensible "Prediction Confidence Score" based on the statistical rigor of the input data.
+            finalPrompt = `Act as an Expert Psychometrician and Educator for ${courseName} (grade ${grade}) at ${learningProfile.school || "N/A"}. Your goal is to provide a high-fidelity grade prediction and a defensible "Prediction Confidence Score" based on the statistical rigor of the input data.
 
 [CONTEXT]
-Input: Grade ${grade}, ${courseName}, Exam ${examNumber}/6
+Input: Grade ${grade}, ${courseName}, Exam ${examNumber}, School: ${learningProfile.school || "N/A"}
 Curriculum: ${curriculumJson}
 Performance: ${performanceJson}
 
