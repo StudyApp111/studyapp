@@ -122,8 +122,8 @@ CRITICAL FORMATTING RULE: Do NOT use LaTeX notation like $\\text{...}$ or $...$.
       }
     };
 
-    // Use gemini-2.0-flash with global endpoint for better availability
-    const modelName = 'gemini-2.0-flash';
+    // Use gemini-2.5-flash-preview-05-20 with global endpoint for better availability
+    const modelName = 'gemini-2.5-flash-preview-05-20';
     console.log(`📝 generatePracticeExam: Using model ${modelName} (global endpoint)`);
     console.log(`📝 Content length: ${contentForExam.length} chars`);
     console.log(`📝 Focus topics: ${(focus_topics || []).join(', ') || 'None'}`);
