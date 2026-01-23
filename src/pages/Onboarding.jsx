@@ -16,8 +16,8 @@ const questions = [
   {
     id: "school",
     question: "What School Do You Go To?",
-    type: "text",
-    placeholder: "e.g., Lincoln High School, University of Toronto"
+    type: "school-search",
+    placeholder: "Search for your school..."
   },
   {
     id: "grade",
