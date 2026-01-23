@@ -47,11 +47,6 @@ const navigationItems = [
           url: createPageUrl("LessonHistory"),
           icon: History,
         },
-        {
-          title: "Settings",
-          url: createPageUrl("Settings"),
-          icon: Settings,
-        },
       ];
 
 const formatTime = (seconds) => {
@@ -159,9 +154,12 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Navigation Icons */}
             <nav className="flex-1 flex flex-col items-center gap-1 px-2 py-2">
-              {navigationItems.map((item, index) => {
-                const isActive = location.pathname === item.url;
-                const isLessonHistory = item.title === "Lesson History";
+              {navigationItems.map((item) => {
+                // More robust active check - compare pathname without trailing slashes
+                const currentPath = location.pathname.replace(/\/$/, '');
+                const itemPath = item.url.replace(/\/$/, '');
+                const isActive = currentPath === itemPath || 
+                  (item.title === "Home" && (currentPath === '' || currentPath === '/'));
 
                 return (
                   <Link
@@ -192,8 +190,22 @@ export default function Layout({ children, currentPageName }) {
               </button>
             </nav>
 
-            {/* Bottom: Profile */}
-            <div className="p-2 space-y-2">
+            {/* Bottom: Settings + Profile */}
+            <div className="p-2 space-y-1">
+              {/* Settings Icon */}
+              <Link
+                to={createPageUrl("Settings")}
+                className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                  location.pathname.replace(/\/$/, '') === createPageUrl("Settings").replace(/\/$/, '')
+                    ? 'bg-purple-100 text-purple-700 shadow-sm' 
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                }`}
+                title="Settings"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
+              
+              {/* Profile Avatar */}
               {user && (
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}
