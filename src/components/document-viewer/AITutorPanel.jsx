@@ -18,15 +18,11 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     scrollToBottom();
   }, [messages]);
 
-  // Add welcome message on mount or when lesson changes, including Polly prediction if available
+  // Add welcome message on mount or when lesson changes, with Polly's signature humor
   useEffect(() => {
     const loadWelcomeMessage = async () => {
       if (lesson) {
         const courseName = lesson.course_name || "your course";
-        const hasDoc = lesson.extracted_content || lesson.file_url;
-        const contentPreview = hasDoc 
-          ? `I've loaded your **${courseName}** materials and I'm ready to help!` 
-          : `I'm ready to help you with **${courseName}**!`;
         
         // Check for Polly prediction data
         let pollyInsight = '';
@@ -35,12 +31,9 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
           if (user.polly_predicted_grade && user.polly_confidence) {
             const velocityEmoji = user.polly_velocity === 'Accelerating' ? '📈' : 
                                    user.polly_velocity === 'Declining' ? '📉' : '➡️';
-            pollyInsight = `\n\n🔮 **Your Current Prediction:** ${user.polly_predicted_grade} (${user.polly_confidence}% confidence) ${velocityEmoji}`;
+            pollyInsight = `\n\n🔮 **Current Prediction:** ${user.polly_predicted_grade} (${user.polly_confidence}% confidence) ${velocityEmoji}`;
             if (user.polly_mastery_gap) {
-              pollyInsight += `\n💡 Focus area: ${user.polly_mastery_gap}`;
-            }
-            if (user.polly_next_action?.action_title) {
-              pollyInsight += `\n✨ Suggested: ${user.polly_next_action.action_title}`;
+              pollyInsight += `\n💡 Focus area: *${user.polly_mastery_gap}*`;
             }
           }
         } catch (err) {
@@ -49,7 +42,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
         
         setMessages([{
           role: "assistant",
-          content: `👋 Hey! I'm **Polly**, your AI tutor and prediction engine.${pollyInsight}\n\n${contentPreview}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something you don't understand\n• Check your grade prediction`
+          content: `👋 Hey! I'm Polly. I've memorized this entire **${courseName}** lesson in 0.4 seconds. Since I don't have hands to take the test for you, I guess it's your turn. I'll wait (and judge your study breaks).${pollyInsight}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something confusing\n• Roast your study habits (just kidding... unless?)`
         }]);
       }
     };
