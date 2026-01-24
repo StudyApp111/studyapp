@@ -289,8 +289,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       setCards(updatedCards);
       setShowFeedback(true);
 
-      // Update study plan with total mastered count
+      // Update study plan with total mastered count (score >= 70)
       const totalMastered = updatedCards.filter(c => c.mastered).length;
+      console.log(`🧠 TeachIt: ${totalMastered} cards mastered out of ${updatedCards.length}`);
       updateStudyPlanProgress(totalMastered);
 
       // Trigger Polly engine when task completes OR on mastery milestones

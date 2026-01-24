@@ -115,7 +115,8 @@ export default function DocumentViewer() {
   const showTeachItDot = teachItTask.needsAction;
   
   // Study Plan tab: show dot if plan exists but has incomplete tasks
-  const showStudyPlanDot = activePlan && !activePlan.all_tasks_completed;
+  const hasIncompleteTasks = activePlan?.tasks?.some(t => !t.completed);
+  const showStudyPlanDot = activePlan && hasIncompleteTasks;
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
