@@ -64,8 +64,10 @@ export default function LearningTrajectory({ studyPlans, lessons }) {
             <p className="text-[10px] text-white/80">{lessonsWithGrades.length} courses tracked</p>
           </div>
         </div>
-        <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-white/20`}>
-          <TrendIcon className="w-3.5 h-3.5 text-white" />
+        <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/20">
+          {trend === 'up' && <TrendingUp className="w-3.5 h-3.5 text-white" />}
+          {trend === 'down' && <TrendingDown className="w-3.5 h-3.5 text-white" />}
+          {trend === 'stable' && <Minus className="w-3.5 h-3.5 text-white" />}
           <span className="text-xs font-medium text-white">{trendText}</span>
         </div>
       </div>
