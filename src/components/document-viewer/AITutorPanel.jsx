@@ -18,7 +18,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     scrollToBottom();
   }, [messages]);
 
-  // Add welcome message on mount or when lesson changes, with Polly's signature humor
+  // Add welcome message on mount or when lesson changes
   useEffect(() => {
     const loadWelcomeMessage = async () => {
       if (lesson) {
@@ -42,7 +42,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
         
         setMessages([{
           role: "assistant",
-          content: `👋 Hey! I'm Polly. I've memorized this entire **${courseName}** lesson in 0.4 seconds. Since I don't have hands to take the test for you, I guess it's your turn. I'll wait (and judge your study breaks).${pollyInsight}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something confusing\n• Roast your study habits (just kidding... unless?)`
+          content: `👋 Hi! I'm Polly, your AI study assistant. I've loaded your **${courseName}** materials and I'm ready to help!${pollyInsight}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something you don't understand\n• Check your grade prediction`
         }]);
       }
     };
