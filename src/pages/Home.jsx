@@ -169,7 +169,7 @@ export default function Home() {
                   </p>
                 )}
               </div>
-              
+
               {/* Stats Row - School, Year, Streak, XP */}
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
                 {learningProfile?.school && (
@@ -193,57 +193,31 @@ export default function Home() {
                   <span className="text-sm font-bold text-white">{dailyXP}/50 XP</span>
                 </div>
               </div>
+
+              {/* CTA Buttons - Right in the hero */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md mt-2">
+                <button
+                  onClick={() => setCreateLessonModalOpen(true)}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white text-purple-700 font-bold rounded-2xl shadow-xl hover:bg-purple-50 transition-all hover:scale-[1.02]"
+                >
+                  <Upload className="w-5 h-5" />
+                  Upload Notes
+                </button>
+                <button
+                  onClick={() => navigate(createPageUrl("SmartGrader"))}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white/20 text-white font-bold rounded-2xl border border-white/30 hover:bg-white/30 transition-all hover:scale-[1.02]"
+                >
+                  <FileCheck className="w-5 h-5" />
+                  Grade Essay
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+          </div>
+          </div>
 
       <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
-        {/* CTA Cards - Centered, larger with proper spacing */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={() => setCreateLessonModalOpen(true)}
-            className="cursor-pointer group"
-          >
-            <Card className="border-0 shadow-2xl hover:shadow-3xl transition-all bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 hover:scale-[1.03]">
-              <CardContent className="p-6 md:p-8">
-                <div className="flex items-center gap-5">
-                  <div className="flex-1">
-                    <h3 className="text-xl md:text-2xl font-black text-white mb-1">Upload Notes</h3>
-                    <p className="text-white/80 text-sm md:text-base">Predict Your Grade</p>
-                  </div>
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
-                    <Upload className="w-8 h-8 md:w-10 md:h-10 text-white" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            onClick={() => navigate(createPageUrl("SmartGrader"))}
-            className="cursor-pointer group"
-          >
-            <Card className="border-0 shadow-2xl hover:shadow-3xl transition-all bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:scale-[1.03]">
-              <CardContent className="p-6 md:p-8">
-                <div className="flex items-center gap-5">
-                  <div className="flex-1">
-                    <h3 className="text-xl md:text-2xl font-black text-white mb-1">Grade My Essay</h3>
-                    <p className="text-white/80 text-sm md:text-base">Get instant AI feedback</p>
-                  </div>
-                  <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
-                    <FileCheck className="w-8 h-8 md:w-10 md:h-10 text-white" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
