@@ -68,7 +68,8 @@ export default function Home() {
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons'],
     queryFn: () => base44.entities.Lesson.list('-created_date', 100),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   const { data: allExams = [] } = useQuery({
@@ -138,20 +139,20 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-600 via-purple-200 via-30% to-slate-50">
       {/* Hero Section */}
-      <div className="relative overflow-hidden px-4 py-8 md:px-8 md:py-12">
+      <div className="relative overflow-hidden px-4 pt-10 pb-8 md:px-8 md:pt-14 md:pb-12">
         {/* Subtle gradient blobs */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl" />
 
         <div className="max-w-6xl mx-auto relative">
           {/* Logo + App Name - Above Pill */}
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-2.5 mb-10 md:mb-14">
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/6afa508f0_LogoOnly.png"
               alt="StudyApp Logo"
-              className="w-8 h-8 md:w-10 md:h-10"
+              className="w-10 h-10 md:w-12 md:h-12"
             />
-            <span className="text-xl md:text-2xl font-black text-slate-900">StudyApp</span>
+            <span className="text-2xl md:text-3xl font-black text-white">StudyApp</span>
           </div>
 
           {/* Hero Pill - Full Width */}
