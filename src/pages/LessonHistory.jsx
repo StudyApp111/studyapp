@@ -135,145 +135,81 @@ export default function LessonHistory() {
     const flashcards = (lessonFlashcards[lesson.id] || []);
     const studyPlans = (lessonStudyPlans[lesson.id] || []);
     
-    // Get active study plan for this lesson
     const activeStudyPlan = studyPlans.find(p => p.status === 'active') || studyPlans[0];
-    
-    // Calculate study plan task progress
     const totalTasks = activeStudyPlan?.tasks?.length || 0;
     const completedTasks = activeStudyPlan?.tasks?.filter(t => t.completed)?.length || 0;
+    const currentGrade = activeStudyPlan?.current_predicted_grade || activeStudyPlan?.initial_predicted_grade;
     
-    // Count completed exams (official only)
-    const officialExams = exams.filter(e => e.exam_type !== 'practice');
-    const completedOfficialExams = officialExams.filter(e => e.completed).length;
-    
-    // Get latest predicted grade from most recent completed exam
     const latestCompletedExam = exams
       .filter(e => e.completed && e.predicted_grade)
       .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
     
-    // Flashcard progress - mastered cards
-    const masteredFlashcards = flashcards.filter(f => f.mastered || f.review_count >= 3).length;
-    const totalFlashcards = flashcards.length;
-    
+    const grade = currentGrade || latestCompletedExam?.predicted_grade;
     const studyTime = lesson.total_study_time_seconds || 0;
-    const hasDocument = lesson.file_url || (lesson.file_urls && lesson.file_urls.length > 0);
 
-    const getGradeColor = (grade) => {
-      if (!grade) return 'text-slate-400';
-      if (grade.startsWith('A')) return 'text-emerald-600';
-      if (grade.startsWith('B')) return 'text-blue-600';
-      if (grade.startsWith('C')) return 'text-amber-600';
-      return 'text-red-500';
-    };
-
-    const getGradientByGrade = (grade) => {
-      if (!grade) return 'from-slate-500 to-slate-600';
-      if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
-      if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
-      if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
-      return 'from-slate-500 to-slate-600';
+    const getGradientByGrade = (g) => {
+      if (!g) return 'from-slate-400 to-slate-500';
+      if (g.startsWith('A')) return 'from-emerald-500 to-teal-600';
+      if (g.startsWith('B')) return 'from-blue-500 to-indigo-600';
+      if (g.startsWith('C')) return 'from-amber-500 to-orange-600';
+      return 'from-red-500 to-rose-600';
     };
 
     return (
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: Math.min(index * 0.04, 0.2) }}
+        transition={{ delay: Math.min(index * 0.03, 0.15) }}
         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
         className="cursor-pointer group"
       >
-        <div className="relative bg-white rounded-2xl shadow-sm hover:shadow-lg border border-slate-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
-          {/* Accent bar at top based on grade */}
-          <div className={`h-1 w-full bg-gradient-to-r ${getGradientByGrade(latestCompletedExam?.predicted_grade)}`} />
-          
-          <div className="p-4">
-            {/* Header Row */}
-            <div className="flex items-start gap-3 mb-4">
-              {/* Icon */}
-              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${
-                latestCompletedExam?.predicted_grade 
-                  ? getGradientByGrade(latestCompletedExam.predicted_grade)
-                  : 'from-purple-500 to-indigo-600'
-              } flex items-center justify-center shadow-sm flex-shrink-0`}>
+        <div className="bg-white rounded-xl border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all p-3">
+          <div className="flex items-center gap-3">
+            {/* Grade indicator */}
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex items-center justify-center shadow-sm flex-shrink-0`}>
+              {grade ? (
+                <span className="text-white font-black text-sm">{grade}</span>
+              ) : (
                 <BookOpen className="w-5 h-5 text-white" />
-              </div>
-              
-              {/* Title & Meta */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-slate-900 text-sm leading-tight mb-1 line-clamp-2">
-                  {lesson.course_name}
-                </h3>
-                <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                  <span>{formatDate(lesson.created_date)}</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-300" />
-                  {hasDocument ? (
-                    <span className="flex items-center gap-0.5 text-blue-600 font-medium">
-                      <FileText className="w-3 h-3" />
-                      Document
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-0.5 text-purple-600 font-medium">
-                      <PenLine className="w-3 h-3" />
-                      Description
-                    </span>
-                  )}
-                </div>
-              </div>
-              
-              {/* Grade Badge - prominent */}
-              {latestCompletedExam?.predicted_grade && (
-                <div className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${getGradientByGrade(latestCompletedExam.predicted_grade)} shadow-sm`}>
-                  <span className="text-white font-black text-lg">{latestCompletedExam.predicted_grade}</span>
-                </div>
               )}
             </div>
-            
-            {/* Stats Grid - Compact pills */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full">
-                <Trophy className="w-3.5 h-3.5" />
-                <span className="text-xs font-semibold">{completedOfficialExams} exams</span>
-              </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-slate-900 text-sm truncate group-hover:text-purple-700 transition-colors">
+                {lesson.course_name}
+              </h3>
               
-              <div className="flex items-center gap-1.5 bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
-                <Clock className="w-3.5 h-3.5" />
-                <span className="text-xs font-medium">{formatTime(studyTime)}</span>
+              <div className="flex items-center gap-3 mt-1">
+                {totalTasks > 0 ? (
+                  <>
+                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[80px]">
+                      <div 
+                        className="h-full bg-purple-500 rounded-full"
+                        style={{ width: `${(completedTasks / totalTasks) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-500">
+                      {totalTasks - completedTasks > 0 ? `${totalTasks - completedTasks} left` : '✓'}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[10px] text-purple-600">Start diagnostic →</span>
+                )}
+                
+                {studyTime > 0 && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
+                      <Clock className="w-3 h-3" />
+                      {formatTime(studyTime)}
+                    </span>
+                  </>
+                )}
               </div>
-              
-              {totalFlashcards > 0 && (
-                <div className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
-                  <Layers className="w-3.5 h-3.5" />
-                  <span className="text-xs font-medium">{masteredFlashcards}/{totalFlashcards} cards</span>
-                </div>
-              )}
             </div>
-            
-            {/* Study Plan Progress - only if exists */}
-            {totalTasks > 0 && (
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                    <Target className="w-3 h-3" />
-                    Study Plan
-                  </span>
-                  <span className="text-[11px] font-semibold text-purple-600">{completedTasks}/{totalTasks}</span>
-                </div>
-                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.round((completedTasks / totalTasks) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            )}
-            
-            {/* CTA hint on hover */}
-            <div className="mt-3 flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-[11px] text-purple-600 font-medium flex items-center gap-1">
-                Continue studying
-                <ChevronRight className="w-3.5 h-3.5" />
-              </span>
-            </div>
+
+            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-purple-500 transition-colors flex-shrink-0" />
           </div>
         </div>
       </motion.div>
@@ -281,12 +217,12 @@ export default function LessonHistory() {
   };
 
   const AssignmentCard = ({ assignment, index }) => {
-    const getGradientByGrade = (grade) => {
-      if (!grade) return 'from-slate-500 to-slate-600';
-      if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
-      if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
-      if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
-      return 'from-slate-500 to-slate-600';
+    const getGradientByGrade = (g) => {
+      if (!g) return 'from-slate-400 to-slate-500';
+      if (g.startsWith('A')) return 'from-emerald-500 to-teal-600';
+      if (g.startsWith('B')) return 'from-blue-500 to-indigo-600';
+      if (g.startsWith('C')) return 'from-amber-500 to-orange-600';
+      return 'from-red-500 to-rose-600';
     };
 
     const grade = assignment.grading_result?.predicted_grade;
@@ -296,60 +232,38 @@ export default function LessonHistory() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: Math.min(index * 0.04, 0.2) }}
+        transition={{ delay: Math.min(index * 0.03, 0.15) }}
         onClick={() => navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`)}
         className="cursor-pointer group"
       >
-        <div className="relative bg-white rounded-2xl shadow-sm hover:shadow-lg border border-slate-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
-          {/* Accent bar */}
-          <div className={`h-1 w-full bg-gradient-to-r ${getGradientByGrade(grade)}`} />
-          
-          <div className="p-4">
-            {/* Header */}
-            <div className="flex items-start gap-3 mb-3">
-              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex items-center justify-center shadow-sm flex-shrink-0`}>
+        <div className="bg-white rounded-xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all p-3">
+          <div className="flex items-center gap-3">
+            {/* Grade indicator */}
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex items-center justify-center shadow-sm flex-shrink-0`}>
+              {grade ? (
+                <span className="text-white font-black text-sm">{grade}</span>
+              ) : (
                 <FileCheck className="w-5 h-5 text-white" />
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-slate-900 text-sm leading-tight mb-1 line-clamp-2">
-                  {assignment.assignment_title}
-                </h3>
-                <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                  <span>{assignment.course_name}</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-300" />
-                  <span>{formatDate(assignment.created_date)}</span>
-                </div>
-              </div>
-              
-              {/* Grade Badge */}
-              {grade && (
-                <div className={`px-3 py-1.5 rounded-lg bg-gradient-to-r ${getGradientByGrade(grade)} shadow-sm`}>
-                  <span className="text-white font-black text-lg">{grade}</span>
-                </div>
               )}
             </div>
-            
-            {/* Score or Status */}
-            {assignment.grading_result ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {score && (
-                    <span className="text-sm font-semibold text-slate-700">{Math.round(score)}%</span>
-                  )}
-                  <span className="text-[11px] text-slate-500">score</span>
-                </div>
-                <span className="text-[11px] text-emerald-600 font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  View feedback
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </span>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-slate-900 text-sm truncate group-hover:text-emerald-700 transition-colors">
+                {assignment.assignment_title}
+              </h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] text-slate-500 truncate">{assignment.course_name}</span>
+                {score && (
+                  <>
+                    <span className="text-slate-300">•</span>
+                    <span className="text-[10px] text-slate-500">{Math.round(score)}%</span>
+                  </>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center gap-2 text-[11px] text-amber-600">
-                <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-                <span>Grading in progress...</span>
-              </div>
-            )}
+            </div>
+
+            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors flex-shrink-0" />
           </div>
         </div>
       </motion.div>
@@ -379,88 +293,58 @@ export default function LessonHistory() {
     : allItems.filter(i => i.itemType === 'assignment');
 
   return (
-    <div className="p-3 md:p-10 max-w-7xl mx-auto pb-28 md:pb-10">
-      <div className="mb-4 md:mb-8">
-        <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-1">History</h1>
-        {lessonsError && (
-          <p className="text-xs text-red-600">Error loading lessons. Please refresh.</p>
-        )}
-        {!isLoading && lessons.length === 0 && !lessonsError && (
-          <p className="text-xs text-slate-500">No lessons found. Upload your first lesson to get started!</p>
-        )}
-      </div>
-
-      {/* Summary Stats - Clean minimal design */}
-      <div className="flex items-center gap-3 md:gap-6 mb-6 overflow-x-auto pb-2">
-        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-slate-100 flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-            <GraduationCap className="w-4 h-4 text-purple-600" />
-          </div>
-          <div>
-            <p className="text-lg font-bold text-slate-900">{lessons.length}</p>
-            <p className="text-[10px] text-slate-500 -mt-0.5">Lessons</p>
-          </div>
+    <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
+      {/* Header with Stats */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">History</h1>
+          <p className="text-sm text-slate-500">{lessons.length} courses • {gradedAssignments.length} assignments</p>
         </div>
-        
-        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-slate-100 flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 rounded-xl">
             <Trophy className="w-4 h-4 text-purple-600" />
-          </div>
-          <div>
-            <p className="text-lg font-bold text-slate-900">{totalCompletedExams}</p>
-            <p className="text-[10px] text-slate-500 -mt-0.5">Exams</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-slate-100 flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-            <FileCheck className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-lg font-bold text-slate-900">{gradedAssignments.length}</p>
-            <p className="text-[10px] text-slate-500 -mt-0.5">Graded</p>
+            <span className="text-sm font-bold text-purple-700">{totalCompletedExams}</span>
+            <span className="text-xs text-purple-500">exams</span>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList className="bg-white shadow-sm border w-full justify-start">
-          <TabsTrigger value="all" className="flex-1 md:flex-none">All</TabsTrigger>
-          <TabsTrigger value="lessons" className="flex-1 md:flex-none">Lessons</TabsTrigger>
-          <TabsTrigger value="assignments" className="flex-1 md:flex-none">Assignments</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+        <TabsList className="bg-slate-100 p-1 rounded-lg">
+          <TabsTrigger value="all" className="rounded-md text-xs">All</TabsTrigger>
+          <TabsTrigger value="lessons" className="rounded-md text-xs">Courses</TabsTrigger>
+          <TabsTrigger value="assignments" className="rounded-md text-xs">Graded</TabsTrigger>
         </TabsList>
       </Tabs>
 
       {/* Content */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => (
-            <Card key={i} className="h-52 animate-pulse bg-slate-100 border-0" />
+        <div className="space-y-2">
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : filteredItems.length === 0 ? (
-        <Card className="text-center py-12 md:py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-0 shadow-lg">
-          <CardContent>
-            <BookOpen className="w-12 h-12 md:w-16 md:h-16 mx-auto text-purple-400 mb-4" />
-            <h3 className="text-lg md:text-xl font-semibold text-slate-700 mb-2">
-              {activeTab === 'all' ? 'Nothing here yet' : activeTab === 'lessons' ? 'No lessons yet' : 'No assignments yet'}
-            </h3>
-            <p className="text-sm text-slate-500 mb-6">
-              {activeTab === 'assignments' 
-                ? 'Grade your first assignment to see it here'
-                : 'Upload your first lesson to get started'}
-            </p>
-            <Button
-              onClick={() => navigate(createPageUrl("Home"))}
-              className="bg-gradient-to-r from-purple-600 to-purple-800"
-            >
-              Get Started
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+          <BookOpen className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+          <h3 className="text-base font-semibold text-slate-700 mb-1">
+            {activeTab === 'all' ? 'Nothing here yet' : activeTab === 'lessons' ? 'No courses yet' : 'No assignments yet'}
+          </h3>
+          <p className="text-sm text-slate-500 mb-4">
+            {activeTab === 'assignments' 
+              ? 'Grade your first assignment to see it here'
+              : 'Upload your first lesson to get started'}
+          </p>
+          <Button
+            onClick={() => navigate(createPageUrl("Home"))}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            Get Started
+          </Button>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        <div className="space-y-2">
           {filteredItems.map((item, idx) => (
             item.itemType === 'lesson' 
               ? <LessonCard key={`lesson-${item.id}`} lesson={item} index={idx} />
