@@ -185,8 +185,6 @@ D. GUESSING DETECTION
     "predicted_grade_letter": "String (A+, A, A-, B+, B, B-, C+, C, C-, D, F)",
     "predicted_score_percent": Number (0-100),
     "prediction_confidence_percent": Number (0-100),
-    "confidence_rationale": "String explaining calculation based on data patterns",
-    "current_mastery_gap": "String (matches a core_competency or specific topic)",
     "learning_velocity": "Accelerating" | "Stagnating" | "Declining"
   },
   "behavioral_insights": {
@@ -194,22 +192,22 @@ D. GUESSING DETECTION
     "is_inefficient_studying": boolean,
     "recommended_focus": "String (Specific topic from content)",
     "estimated_hours_to_target": Number (hours needed to reach A grade)
-  },
-  "chat_intervention": {
-    "trigger_message": boolean,
-    "message_content": "String (Personalized message. If trigger is false, set to null)",
-    "intervention_type": "encouragement" | "warning" | "strategy_shift" | "celebration" | null
-  },
-  "next_best_action": {
-    "action_type": "flashcards" | "teach_it" | "practice_exam" | "review_notes" | "take_break",
-    "action_title": "String (e.g., 'Master Key Terms for X')",
-    "action_rationale": "String (Why this action will help)"
-  },
-  "suggested_topics": [
+},
+  suggested_customization_topics": [
     {
-      "topic_name": "String (specific topic from curriculum)",
-      "topic_description": "String (brief description)",
-      "topic_reason": "String (why student should study this)"
+      "topic_name": "Name of the Mastery Gap Topic",
+      "topic_description": "Detailed prompt-ready description focusing on specific sub-concepts and reasoning depth.",
+      "reason": "User-facing reason: 'This appeared as a gap in your last quiz.'"
+    },
+    {
+      "topic_name": "Name of the Misconception Topic",
+      "topic_description": "Detailed prompt-ready description for content generation.",
+      "reason": "User-facing reason: 'This is a common pitfall in this course.'"
+    },
+    {
+      "topic_name": "Name of the High-Yield Topic",
+      "topic_description": "Detailed prompt-ready description for content generation.",
+      "reason": "User-facing reason: 'Reviewing this will protect your current grade.'"
     }
   ]
 }`;
