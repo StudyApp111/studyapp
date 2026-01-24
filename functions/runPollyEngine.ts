@@ -188,25 +188,33 @@ Daily XP: ${user.daily_xp || 0}
 
 [COGNITIVE PROCESSING RULES]
 
-A. VELOCITY ANALYSIS (Trend Detection)
-- Compare 'initial_score' in StudyPlan vs. latest 'total_score' in Exam or 'score' in TeachIt.
-- If improvement > 10% in < 48h -> "Accelerating".
-- If time_spent_seconds increasing but competency_progress scores flat -> "Stagnating" + "Inefficient Studying".
-- If scores declining -> "Declining".
+A. PREDICTION LOGIC (The "Current Mastery" Calculation)
+   - **Scope:** Calculate grade based on **Assessed Content ONLY**. Do NOT penalize the grade for topics not yet studied (e.g., if a student has only studied 1 unit but aced it, they have an 'A', not an 'F').
+   - **Weighting:** - Recent Micro-Interactions (Last 5 Teach-It/Flashcards): 50% weight (High recency bias).
+     - Exams/Diagnostics: 50% weight.
+   - **The "Sanity Check" Guardrail:**
+     - IF average of last 3 tasks > 80%:
+       - Predicted Score CANNOT be < 75%.
+       - Velocity CANNOT be "Declining" (It is "Stabilizing" or "High Performance").
 
-B. CONFIDENCE CALIBRATION (The Defensibility Layer)
-- Base Confidence = (questions_completed / 50) * 100 (Cap at 80% without Exam data).
-- Modifiers:
-  - Consistency: If Flashcard ease_factor consistently < 1.5 -> Decrease Confidence (-10%).
-  - Time Laps: If question_time_laps shows < 5s on difficulty: High questions -> Decrease Confidence (-15% Guessing Penalty).
-  - Coverage: If competency_progress covers < 50% of core_competencies -> Max Confidence = 60%.
+B. VELOCITY ANALYSIS (Trend Detection)
+   - Compare 'initial_score' vs. 'current_running_average'.
+   - If current > 85% consistently -> "Cruising Altitude" (High Performance).
+   - If improvement > 10% in < 48h -> "Accelerating".
+   - If score drops > 15% across 3 consecutive tasks -> "Declining".
+   - **Correction:** A drop from 100% (Diagnostic) to 87% (Teach-It) is NOT "Declining"—it is "Normalizing". Treat this as "Stable".
 
-C. MASTERY GAP TRIANGULATION
-- Identify intersection of: Exam questions where is_correct is false, TeachIt gaps, Flashcards where mastered = false AND ease_factor < 2.0.
-- The intersection is the TRUE mastery_gap.
+C. CONFIDENCE CALIBRATION (Defensibility vs. Data Volume)
+   - **Base Confidence:** (questions_completed / 50) * 100.
+   - **Coverage Impact:** If competency_progress covers < 50% of the map:
+     - Cap **Confidence** at 60%. (Do NOT lower the Grade, only the Confidence).
+   - **Guessing Penalty:** Only apply -15% confidence penalty if "question_time_laps" < 3s on High Difficulty items.
 
-D. GUESSING DETECTION
-- If question_time_laps shows < 5 seconds on Medium or High difficulty questions AND is_correct varies randomly -> Guessing detected.
+D. TOPIC RECOMMENDATION
+   - Identify 3 distinct topics:
+     1. **Mastery Gap:** The weakest *attempted* topic.
+     2. **Next Logical Step:** The next topic in "competency_weightings" that has 0% progress.
+     3. **Review:** A high-score topic to boost ego/retention.
 
 [STRICT JSON OUTPUT - Return ONLY this JSON]`;
 
