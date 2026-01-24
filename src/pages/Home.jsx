@@ -146,30 +146,39 @@ export default function Home() {
         <div className="absolute top-1/2 left-0 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-yellow-400/15 rounded-full blur-3xl" />
         
-        <div className="relative px-4 py-6 md:px-8 md:py-8">
+        <div className="relative px-4 py-8 md:px-8 md:py-12">
           <div className="max-w-6xl mx-auto">
-            {/* Hero Pill - Centered */}
-            <div className="flex flex-col items-center text-center">
-              <div className="bg-white/15 backdrop-blur-md rounded-full px-6 py-4 md:px-8 md:py-5 border border-white/20 shadow-xl">
-                <h1 className="text-lg md:text-2xl font-bold text-white leading-tight">
-                  Hey {firstName}, are you ready to lock in?
-                </h1>
-                {subtitle && (
-                  <p className="text-white/70 text-xs md:text-sm mt-1">
-                    {subtitle}
-                  </p>
-                )}
-              </div>
-              
-              {/* Stats badges below pill */}
-              <div className="flex items-center gap-2 mt-4">
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/30' : 'bg-white/10'}`}>
-                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : 'text-white/50'}`} />
-                  <span className="text-sm font-bold text-white">{user?.current_streak || 0}</span>
+            {/* Hero Pill - Full Width */}
+            <div className="bg-white/15 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border border-white/20 shadow-2xl">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+                {/* Left: Title */}
+                <div className="text-center md:text-left">
+                  <h1 className="text-xl md:text-3xl font-black text-white leading-tight mb-1">
+                    Hey {firstName}, are you ready to lock in?
+                  </h1>
+                  {subtitle && (
+                    <p className="text-white/70 text-sm md:text-base">
+                      {subtitle}
+                    </p>
+                  )}
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-400/30 backdrop-blur-sm">
-                  <Zap className="w-4 h-4 text-yellow-300" />
-                  <span className="text-sm font-bold text-white">{dailyXP}/50 XP</span>
+                
+                {/* Right: Stats */}
+                <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40 border-orange-400/50' : 'bg-white/10 border-white/20'}`}>
+                    <Flame className={`w-5 h-5 ${(user?.current_streak || 0) > 0 ? 'text-orange-200' : 'text-white/50'}`} />
+                    <div>
+                      <div className="text-xs text-white/70 leading-none mb-0.5">Streak</div>
+                      <div className="text-lg font-black text-white leading-none">{user?.current_streak || 0}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-yellow-400/40 backdrop-blur-sm border border-yellow-300/50">
+                    <Zap className="w-5 h-5 text-yellow-200" />
+                    <div>
+                      <div className="text-xs text-white/70 leading-none mb-0.5">Daily XP</div>
+                      <div className="text-lg font-black text-white leading-none">{dailyXP}/50</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -178,23 +187,23 @@ export default function Home() {
       </div>
 
       <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
-        {/* CTA Cards - Centered, larger */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 -mt-6">
+        {/* CTA Cards - Centered, larger with more spacing */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 -mt-8 md:-mt-10 max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={() => setCreateLessonModalOpen(true)}
-            className="cursor-pointer group w-full sm:w-auto"
+            className="cursor-pointer group"
           >
-            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 hover:scale-[1.02]">
-              <CardContent className="p-5 md:p-6">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <h3 className="text-lg md:text-xl font-bold text-white">Upload Notes</h3>
-                    <p className="text-white/70 text-sm mt-0.5">Get AI study materials</p>
+            <Card className="border-0 shadow-2xl hover:shadow-3xl transition-all bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 hover:scale-[1.03]">
+              <CardContent className="p-6 md:p-8">
+                <div className="flex items-center gap-5">
+                  <div className="flex-1">
+                    <h3 className="text-xl md:text-2xl font-black text-white mb-1">Upload Notes</h3>
+                    <p className="text-white/80 text-sm md:text-base">Get AI study materials</p>
                   </div>
-                  <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ml-auto">
-                    <Upload className="w-7 h-7 md:w-8 md:h-8 text-white" />
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                    <Upload className="w-8 h-8 md:w-10 md:h-10 text-white" />
                   </div>
                 </div>
               </CardContent>
@@ -206,17 +215,17 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
             onClick={() => navigate(createPageUrl("SmartGrader"))}
-            className="cursor-pointer group w-full sm:w-auto"
+            className="cursor-pointer group"
           >
-            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:scale-[1.02]">
-              <CardContent className="p-5 md:p-6">
-                <div className="flex items-center gap-4">
-                  <div>
-                    <h3 className="text-lg md:text-xl font-bold text-white">Grade My Essay</h3>
-                    <p className="text-white/70 text-sm mt-0.5">Get instant AI feedback</p>
+            <Card className="border-0 shadow-2xl hover:shadow-3xl transition-all bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:scale-[1.03]">
+              <CardContent className="p-6 md:p-8">
+                <div className="flex items-center gap-5">
+                  <div className="flex-1">
+                    <h3 className="text-xl md:text-2xl font-black text-white mb-1">Grade My Essay</h3>
+                    <p className="text-white/80 text-sm md:text-base">Get instant AI feedback</p>
                   </div>
-                  <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ml-auto">
-                    <FileCheck className="w-7 h-7 md:w-8 md:h-8 text-white" />
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                    <FileCheck className="w-8 h-8 md:w-10 md:h-10 text-white" />
                   </div>
                 </div>
               </CardContent>
@@ -230,12 +239,12 @@ export default function Home() {
           {/* Left Column - Courses */}
           <div className="lg:col-span-2 space-y-4">
             {/* Your Courses */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b border-slate-100">
-                <h2 className="font-bold text-slate-900">Your Courses</h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600">
+                <h2 className="font-bold text-white">Your Courses</h2>
                 <button 
                   onClick={() => navigate(createPageUrl("LessonHistory"))}
-                  className="text-xs text-purple-600 font-medium hover:text-purple-700 flex items-center gap-0.5"
+                  className="text-xs text-white/90 font-medium hover:text-white flex items-center gap-0.5 bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-colors"
                 >
                   View all <ChevronRight className="w-3 h-3" />
                 </button>
