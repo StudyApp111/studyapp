@@ -144,69 +144,69 @@ export default function LessonHistory() {
         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
         className="cursor-pointer group"
       >
-        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-4 ${getGradeBgColor(grade)}`}>
-          <div className="flex items-start gap-4">
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 md:p-4 ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-3 md:gap-4">
+            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
                 <>
-                  <span className="text-white font-black text-xl leading-none">{grade}</span>
-                  {confidence && <span className="text-white/70 text-[8px] mt-0.5">{Math.round(confidence)}%</span>}
+                  <span className="text-white font-black text-lg md:text-xl leading-none">{grade}</span>
+                  {confidence && <span className="text-white/70 text-[7px] md:text-[8px] mt-0.5">{Math.round(confidence)}%</span>}
                 </>
               ) : (
                 <>
-                  <Target className="w-6 h-6 text-white" />
-                  <span className="text-white/70 text-[8px] mt-0.5">start</span>
+                  <Target className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                  <span className="text-white/70 text-[7px] md:text-[8px] mt-0.5">start</span>
                 </>
               )}
             </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-slate-900 text-base truncate group-hover:text-purple-700 transition-colors mb-2">
+              <h3 className="font-bold text-slate-900 text-sm md:text-base truncate group-hover:text-purple-700 transition-colors mb-1.5 md:mb-2">
                 {lesson.course_name}
               </h3>
               
-              <div className="flex flex-wrap items-center gap-2 mb-2">
+              <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1.5 md:mb-2">
                 {completedExamsCount > 0 && (
-                  <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg border border-slate-100">
-                    <Trophy className="w-3 h-3 text-amber-500" />
-                    <span className="text-[10px] font-medium text-slate-600">{completedExamsCount} exam{completedExamsCount > 1 ? 's' : ''}</span>
+                  <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/80 rounded-lg border border-slate-100">
+                    <Trophy className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-500" />
+                    <span className="text-[9px] md:text-[10px] font-medium text-slate-600">{completedExamsCount}</span>
                   </div>
                 )}
                 {flashcards.length > 0 && (
-                  <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg border border-slate-100">
-                    <Copy className="w-3 h-3 text-purple-500" />
-                    <span className="text-[10px] font-medium text-slate-600">{masteredFlashcards}/{flashcards.length}</span>
+                  <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/80 rounded-lg border border-slate-100">
+                    <Copy className="w-2.5 h-2.5 md:w-3 md:h-3 text-purple-500" />
+                    <span className="text-[9px] md:text-[10px] font-medium text-slate-600">{masteredFlashcards}/{flashcards.length}</span>
                   </div>
                 )}
                 {studyTime > 0 && (
-                  <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg border border-slate-100">
-                    <Clock className="w-3 h-3 text-blue-500" />
-                    <span className="text-[10px] font-medium text-slate-600">{formatTime(studyTime)}</span>
+                  <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/80 rounded-lg border border-slate-100">
+                    <Clock className="w-2.5 h-2.5 md:w-3 md:h-3 text-blue-500" />
+                    <span className="text-[9px] md:text-[10px] font-medium text-slate-600">{formatTime(studyTime)}</span>
                   </div>
                 )}
               </div>
               
               {totalTasks > 0 ? (
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-white/80 rounded-full overflow-hidden max-w-[150px]">
+                  <div className="flex-1 h-1.5 md:h-2 bg-white/80 rounded-full overflow-hidden max-w-[100px] md:max-w-[150px]">
                     <div 
                       className={`h-full rounded-full ${completedTasks === totalTasks ? 'bg-emerald-500' : 'bg-purple-500'}`}
                       style={{ width: `${(completedTasks / totalTasks) * 100}%` }}
                     />
                   </div>
-                  <span className={`text-xs font-medium ${completedTasks === totalTasks ? 'text-emerald-600' : 'text-slate-500'}`}>
-                    {completedTasks === totalTasks ? '✓ Complete' : `${totalTasks - completedTasks} tasks left`}
+                  <span className={`text-[10px] md:text-xs font-medium ${completedTasks === totalTasks ? 'text-emerald-600' : 'text-slate-500'}`}>
+                    {completedTasks === totalTasks ? '✓' : `${totalTasks - completedTasks} left`}
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 text-purple-600">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span className="text-xs font-medium">Take diagnostic →</span>
+                <div className="flex items-center gap-1 text-purple-600">
+                  <Sparkles className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                  <span className="text-[10px] md:text-xs font-medium">Diagnostic →</span>
                 </div>
               )}
             </div>
 
-            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-purple-500 flex-shrink-0 mt-5" />
+            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-300 group-hover:text-purple-500 flex-shrink-0 mt-3 md:mt-5" />
           </div>
         </div>
       </motion.div>
@@ -227,50 +227,50 @@ export default function LessonHistory() {
         onClick={() => navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`)}
         className="cursor-pointer group"
       >
-        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-4 ${getGradeBgColor(grade)}`}>
-          <div className="flex items-start gap-4">
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 md:p-4 ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-3 md:gap-4">
+            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
                 <>
-                  <span className="text-white font-black text-xl leading-none">{grade}</span>
-                  {score && <span className="text-white/70 text-[8px] mt-0.5">{Math.round(score)}%</span>}
+                  <span className="text-white font-black text-lg md:text-xl leading-none">{grade}</span>
+                  {score && <span className="text-white/70 text-[7px] md:text-[8px] mt-0.5">{Math.round(score)}%</span>}
                 </>
               ) : (
                 <>
-                  <FileCheck className="w-6 h-6 text-white" />
-                  <span className="text-white/70 text-[8px] mt-0.5">grading</span>
+                  <FileCheck className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                  <span className="text-white/70 text-[7px] md:text-[8px] mt-0.5">grading</span>
                 </>
               )}
             </div>
 
             <div className="flex-1 min-w-0">
-              <Badge variant="outline" className="bg-white/80 text-emerald-700 border-emerald-200 text-[10px] mb-1">
-                <FileCheck className="w-2.5 h-2.5 mr-1" /> Assignment
+              <Badge variant="outline" className="bg-white/80 text-emerald-700 border-emerald-200 text-[9px] md:text-[10px] mb-1 px-1.5 py-0">
+                <FileCheck className="w-2 h-2 md:w-2.5 md:h-2.5 mr-0.5 md:mr-1" /> Assignment
               </Badge>
-              <h3 className="font-bold text-slate-900 text-base truncate group-hover:text-emerald-700 transition-colors mb-1">
+              <h3 className="font-bold text-slate-900 text-sm md:text-base truncate group-hover:text-emerald-700 transition-colors mb-0.5 md:mb-1">
                 {assignment.assignment_title}
               </h3>
-              <p className="text-xs text-slate-500 truncate mb-2">{assignment.course_name}</p>
+              <p className="text-[10px] md:text-xs text-slate-500 truncate mb-1.5 md:mb-2">{assignment.course_name}</p>
               
               {grade && (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
                   {strengths > 0 && (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg border border-slate-100">
-                      <TrendingUp className="w-3 h-3 text-emerald-500" />
-                      <span className="text-[10px] font-medium text-slate-600">{strengths} strengths</span>
+                    <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/80 rounded-lg border border-slate-100">
+                      <TrendingUp className="w-2.5 h-2.5 md:w-3 md:h-3 text-emerald-500" />
+                      <span className="text-[9px] md:text-[10px] font-medium text-slate-600">{strengths}</span>
                     </div>
                   )}
                   {improvements > 0 && (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg border border-slate-100">
-                      <Target className="w-3 h-3 text-amber-500" />
-                      <span className="text-[10px] font-medium text-slate-600">{improvements} to improve</span>
+                    <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/80 rounded-lg border border-slate-100">
+                      <Target className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-500" />
+                      <span className="text-[9px] md:text-[10px] font-medium text-slate-600">{improvements}</span>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 flex-shrink-0 mt-5" />
+            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-300 group-hover:text-emerald-500 flex-shrink-0 mt-3 md:mt-5" />
           </div>
         </div>
       </motion.div>
@@ -306,41 +306,41 @@ export default function LessonHistory() {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 mb-4">Your Learning Journey</h1>
           
-          {/* Stats Row */}
-          <div className="grid grid-cols-4 gap-3">
-            <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-3 text-white">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-white/80" />
-                <div>
-                  <p className="text-xl font-bold">{lessons.length}</p>
-                  <p className="text-[10px] text-white/70">Courses</p>
+          {/* Stats Row - Mobile optimized */}
+          <div className="grid grid-cols-4 gap-2 md:gap-3">
+            <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-2 md:p-3 text-white">
+              <div className="flex flex-col md:flex-row items-center md:gap-2">
+                <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-white/80 mb-1 md:mb-0" />
+                <div className="text-center md:text-left">
+                  <p className="text-lg md:text-xl font-bold leading-none">{lessons.length}</p>
+                  <p className="text-[8px] md:text-[10px] text-white/70">Courses</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-3 text-white">
-              <div className="flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-white/80" />
-                <div>
-                  <p className="text-xl font-bold">{gradedAssignments.length}</p>
-                  <p className="text-[10px] text-white/70">Graded</p>
+            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl p-2 md:p-3 text-white">
+              <div className="flex flex-col md:flex-row items-center md:gap-2">
+                <FileCheck className="w-4 h-4 md:w-5 md:h-5 text-white/80 mb-1 md:mb-0" />
+                <div className="text-center md:text-left">
+                  <p className="text-lg md:text-xl font-bold leading-none">{gradedAssignments.length}</p>
+                  <p className="text-[8px] md:text-[10px] text-white/70">Graded</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-3 text-white">
-              <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-white/80" />
-                <div>
-                  <p className="text-xl font-bold">{totalCompletedExams}</p>
-                  <p className="text-[10px] text-white/70">Exams</p>
+            <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-2 md:p-3 text-white">
+              <div className="flex flex-col md:flex-row items-center md:gap-2">
+                <Trophy className="w-4 h-4 md:w-5 md:h-5 text-white/80 mb-1 md:mb-0" />
+                <div className="text-center md:text-left">
+                  <p className="text-lg md:text-xl font-bold leading-none">{totalCompletedExams}</p>
+                  <p className="text-[8px] md:text-[10px] text-white/70">Exams</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl p-3 text-white">
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-white/80" />
-                <div>
-                  <p className="text-xl font-bold">{formatTime(totalStudyTime)}</p>
-                  <p className="text-[10px] text-white/70">Studied</p>
+            <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl p-2 md:p-3 text-white">
+              <div className="flex flex-col md:flex-row items-center md:gap-2">
+                <Clock className="w-4 h-4 md:w-5 md:h-5 text-white/80 mb-1 md:mb-0" />
+                <div className="text-center md:text-left">
+                  <p className="text-lg md:text-xl font-bold leading-none">{formatTime(totalStudyTime)}</p>
+                  <p className="text-[8px] md:text-[10px] text-white/70">Studied</p>
                 </div>
               </div>
             </div>

@@ -142,8 +142,18 @@ export default function Home() {
         {/* Subtle gradient blobs */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl" />
-        
+
         <div className="max-w-6xl mx-auto relative">
+          {/* Logo + App Name - Above Pill */}
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/6afa508f0_LogoOnly.png"
+              alt="StudyApp Logo"
+              className="w-8 h-8 md:w-10 md:h-10"
+            />
+            <span className="text-xl md:text-2xl font-black text-slate-900">StudyApp</span>
+          </div>
+
           {/* Hero Pill - Full Width */}
           <div className="bg-white/15 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border border-white/20 shadow-2xl">
             <div className="flex flex-col items-center text-center gap-4">
