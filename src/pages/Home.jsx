@@ -153,7 +153,6 @@ export default function Home() {
     });
   }, [lessons, studyPlansByLesson]);
 
-  // Early return AFTER all hooks
   const getGradeColor = (grade) => {
     if (!grade) return 'from-slate-400 to-slate-500';
     if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
@@ -168,6 +167,15 @@ export default function Home() {
     practice_exam: Zap,
     review_notes: BookOpen
   };
+
+  // Early return AFTER all hooks
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
