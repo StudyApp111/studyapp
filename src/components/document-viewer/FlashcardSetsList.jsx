@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Play, ChevronRight, RotateCcw, Copy } from "lucide-react";
+import { CheckCircle2, Play, ChevronRight, RotateCcw, Copy, Layers } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew }) {
