@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import XPGainToast from "@/components/gamification/XPGainToast";
-import TaskCompletionToast from "@/components/gamification/TaskCompletionToast";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 
@@ -19,7 +18,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const [showHowTo, setShowHowTo] = useState(false);
   const [sessionStats, setSessionStats] = useState({ reviewed: 0, correct: 0 });
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
-  const [taskCompletionToast, setTaskCompletionToast] = useState(false);
   const [streakCount, setStreakCount] = useState(0);
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
 
@@ -300,10 +298,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         official_exam_unlocked: allComplete
       });
       
-      // Show task completion toast
-      if (taskJustCompleted) {
-        setTaskCompletionToast(true);
-      }
+      // Task completed - no toast needed since we use confidence as progress indicator
     } catch (error) {
       console.error("Error updating study plan:", error);
     }
@@ -727,13 +722,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         reason={xpToast.reason}
         show={xpToast.show}
         onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
-      />
-      
-      {/* Task Completion Toast */}
-      <TaskCompletionToast 
-        show={taskCompletionToast}
-        gradeIncrease={2.5}
-        onComplete={() => setTaskCompletionToast(false)}
       />
     </div>
   );

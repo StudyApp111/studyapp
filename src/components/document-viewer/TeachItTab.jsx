@@ -10,7 +10,6 @@ import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
-import TaskCompletionToast from "@/components/gamification/TaskCompletionToast";
 
 export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [cards, setCards] = useState([]);
@@ -20,7 +19,6 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [isGrading, setIsGrading] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
-  const [taskCompletionToast, setTaskCompletionToast] = useState(false);
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
 
   // Track generation to prevent duplicates
@@ -383,10 +381,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         official_exam_unlocked: allComplete
       });
       
-      // Show task completion toast
-      if (taskJustCompleted) {
-        setTaskCompletionToast(true);
-      }
+      // Task completed - no toast needed since we use confidence as progress indicator
     } catch (error) {
       console.error("Error updating study plan:", error);
     }
@@ -452,12 +447,6 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         reason={xpToast.reason}
         show={xpToast.show}
         onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
-      />
-      
-      <TaskCompletionToast 
-        show={taskCompletionToast}
-        gradeIncrease={2.5}
-        onComplete={() => setTaskCompletionToast(false)}
       />
 
       <div className="flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl w-full pb-8">
