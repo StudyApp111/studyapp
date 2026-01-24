@@ -136,7 +136,7 @@ export default function Home() {
   const subtitle = subtitleParts.join(' • ');
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-600 via-purple-100 to-slate-50">
+    <div className="min-h-screen bg-gradient-to-b from-purple-600 via-purple-200 via-30% to-slate-50">
       {/* Hero Section */}
       <div className="relative overflow-hidden px-4 py-8 md:px-8 md:py-12">
         {/* Subtle gradient blobs */}
@@ -146,34 +146,40 @@ export default function Home() {
         <div className="max-w-6xl mx-auto relative">
           {/* Hero Pill - Full Width */}
           <div className="bg-white/15 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border border-white/20 shadow-2xl">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-              {/* Left: Title */}
-              <div className="text-center md:text-left">
-                <h1 className="text-xl md:text-3xl font-black text-white leading-tight mb-1">
+            <div className="flex flex-col items-center text-center gap-4">
+              {/* Title - Centered and Large */}
+              <div>
+                <h1 className="text-2xl md:text-4xl font-black text-white leading-tight">
                   Hey {firstName}, are you ready to lock in?
                 </h1>
                 {subtitle && (
-                  <p className="text-white/70 text-sm md:text-base">
+                  <p className="text-white/70 text-sm md:text-base mt-2">
                     {subtitle}
                   </p>
                 )}
               </div>
               
-              {/* Right: Stats */}
-              <div className="flex items-center gap-3">
-                <div className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40 border-orange-400/50' : 'bg-white/10 border-white/20'}`}>
-                  <Flame className={`w-5 h-5 ${(user?.current_streak || 0) > 0 ? 'text-orange-200' : 'text-white/50'}`} />
-                  <div>
-                    <div className="text-xs text-white/70 leading-none mb-0.5">Streak</div>
-                    <div className="text-lg font-black text-white leading-none">{user?.current_streak || 0}</div>
+              {/* Stats Row - School, Year, Streak, XP */}
+              <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                {learningProfile?.school && (
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+                    <BookOpen className="w-4 h-4 text-white/70" />
+                    <span className="text-sm font-medium text-white">{learningProfile.school}</span>
                   </div>
+                )}
+                {learningProfile?.grade && (
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
+                    <GraduationCap className="w-4 h-4 text-white/70" />
+                    <span className="text-sm font-medium text-white">{learningProfile.grade}</span>
+                  </div>
+                )}
+                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40 border-orange-400/50' : 'bg-white/10 border-white/20'}`}>
+                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-orange-200' : 'text-white/50'}`} />
+                  <span className="text-sm font-bold text-white">{user?.current_streak || 0} day streak</span>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-yellow-400/40 backdrop-blur-sm border border-yellow-300/50">
-                  <Zap className="w-5 h-5 text-yellow-200" />
-                  <div>
-                    <div className="text-xs text-white/70 leading-none mb-0.5">Daily XP</div>
-                    <div className="text-lg font-black text-white leading-none">{dailyXP}/50</div>
-                  </div>
+                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-400/40 backdrop-blur-sm border border-yellow-300/50">
+                  <Zap className="w-4 h-4 text-yellow-200" />
+                  <span className="text-sm font-bold text-white">{dailyXP}/50 XP</span>
                 </div>
               </div>
             </div>
