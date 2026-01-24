@@ -6,6 +6,7 @@ import { Send, X, Sparkles, Loader2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useAITutor } from "./AITutorContext";
+import { renderMathText } from "@/components/math/MathText";
 
 export default function AITutorSheet() {
   const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
@@ -166,7 +167,20 @@ export default function AITutorSheet() {
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <ReactMarkdown className="text-[11px] leading-relaxed prose prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-[11px] [&>ol]:my-1 [&>ol]:ml-3">
+                      <ReactMarkdown 
+                        className="text-[11px] leading-relaxed prose prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-[11px] [&>ol]:my-1 [&>ol]:ml-3"
+                        components={{
+                          p: ({ children }) => (
+                            <p dangerouslySetInnerHTML={{ __html: renderMathText(String(children)) }} />
+                          ),
+                          li: ({ children }) => (
+                            <li dangerouslySetInnerHTML={{ __html: renderMathText(String(children)) }} />
+                          ),
+                          code: ({ children }) => (
+                            <code dangerouslySetInnerHTML={{ __html: renderMathText(String(children)) }} />
+                          ),
+                        }}
+                      >
                         {msg.content}
                       </ReactMarkdown>
                     ) : (
