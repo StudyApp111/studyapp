@@ -5,13 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, Clock, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Layers, Brain } from "lucide-react";
+import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Layers, Brain } from "lucide-react";
 import { motion } from "framer-motion";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
-import PollyChatBox from "@/components/home/PollyChatBox";
 import LearningTrajectory from "@/components/home/LearningTrajectory";
 
 export default function Home() {
@@ -125,35 +124,46 @@ export default function Home() {
   }
 
   const firstName = user?.full_name?.split(' ')[0] || 'there';
-  const schoolInfo = learningProfile?.school || learningProfile?.grade || '';
+  const schoolName = learningProfile?.school || '';
+  const yearInfo = learningProfile?.grade || '';
+  
+  // Build subtitle: "University of X • Year 2" or just school or just year
+  const subtitleParts = [];
+  if (schoolName) subtitleParts.push(schoolName);
+  if (yearInfo && !['professional_cert', 'standardized_tests', 'other'].includes(yearInfo)) {
+    subtitleParts.push(yearInfo);
+  }
+  const subtitle = subtitleParts.join(' • ');
 
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 px-4 py-6 md:px-8 md:py-8 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 px-4 py-5 md:px-8 md:py-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-3xl -ml-24 -mb-24" />
         
         <div className="max-w-6xl mx-auto relative">
           {/* Hero Pill */}
-          <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-5 md:p-6 border border-white/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
-                  Hey {firstName}! 👋
+          <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-4 py-4 md:px-6 md:py-5 border border-white/20">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg md:text-2xl font-bold text-white leading-tight">
+                  Hey {firstName}, are you ready to lock in?
                 </h1>
-                <p className="text-white/80 text-sm md:text-base">
-                  {schoolInfo ? `${schoolInfo} • ` : ''}Are you ready to lock in?
-                </p>
+                {subtitle && (
+                  <p className="text-white/70 text-xs md:text-sm mt-0.5 truncate">
+                    {subtitle}
+                  </p>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40' : 'bg-white/10'}`}>
-                  <Flame className={`w-5 h-5 ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : 'text-white/50'}`} />
-                  <span className="text-sm font-bold text-white">{user?.current_streak || 0}</span>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className={`flex items-center gap-1 px-2 py-1.5 rounded-lg ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40' : 'bg-white/10'}`}>
+                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : 'text-white/50'}`} />
+                  <span className="text-xs font-bold text-white">{user?.current_streak || 0}</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-400/40">
-                  <Zap className="w-5 h-5 text-yellow-300" />
-                  <span className="text-sm font-bold text-white">{dailyXP}/50</span>
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-yellow-400/40">
+                  <Zap className="w-4 h-4 text-yellow-300" />
+                  <span className="text-xs font-bold text-white">{dailyXP}/50</span>
                 </div>
               </div>
             </div>
@@ -163,7 +173,7 @@ export default function Home() {
 
       <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
         {/* CTA Cards - Right after hero */}
-        <div className="grid grid-cols-2 gap-3 mb-6 -mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 -mt-4">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -171,15 +181,16 @@ export default function Home() {
             className="cursor-pointer group"
           >
             <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-purple-600 to-indigo-700 hover:scale-[1.02]">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Upload className="w-5 h-5 text-white" />
+              <CardContent className="p-4 md:p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base md:text-lg font-bold text-white">Upload Notes</h3>
+                    <p className="text-white/70 text-xs md:text-sm mt-0.5">Get AI study materials</p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-white/70 group-hover:translate-x-1 transition-transform" />
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Upload className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-white">Upload Notes</h3>
-                <p className="text-white/70 text-xs mt-0.5">Get AI study materials</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -192,15 +203,16 @@ export default function Home() {
             className="cursor-pointer group"
           >
             <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-emerald-500 to-teal-600 hover:scale-[1.02]">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                    <FileCheck className="w-5 h-5 text-white" />
+              <CardContent className="p-4 md:p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base md:text-lg font-bold text-white">Grade My Essay</h3>
+                    <p className="text-white/70 text-xs md:text-sm mt-0.5">Get instant AI feedback</p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-white/70 group-hover:translate-x-1 transition-transform" />
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <FileCheck className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-white">Grade My Work</h3>
-                <p className="text-white/70 text-xs mt-0.5">Get instant AI feedback</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -240,7 +252,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100">
-                  {lessons.slice(0, 5).map((lesson, idx) => {
+                  {lessons.slice(0, 3).map((lesson, idx) => {
                     const plan = studyPlansByLesson[lesson.id];
                     const totalTasks = plan?.tasks?.length || 0;
                     const completedTasks = plan?.tasks?.filter(t => t.completed)?.length || 0;
@@ -331,14 +343,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Column - Polly & Goals */}
+          {/* Right Column - Goals */}
           <div className="space-y-4">
-            <PollyChatBox 
-              lessons={lessons}
-              studyPlans={studyPlans}
-              user={user}
-            />
-
             <LearningTrajectory studyPlans={studyPlans} lessons={lessons} />
             
             <DailyChallenge 
