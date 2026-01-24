@@ -75,8 +75,12 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
       contextData.initialPrompt = `Explain this section from my notes:\n\n"${data.selectedText}"\n\nBreak it down in simple terms.`;
     }
 
-    // Open the AI tutor modal/sheet with context on both mobile and desktop
-    openWithContext(contextData);
+    // Desktop: send to panel, Mobile: open sheet modal
+    if (isMobile) {
+      openWithContext(contextData);
+    } else {
+      sendToPanel(contextData);
+    }
   };
 
   const sizeClasses = size === "sm" 
