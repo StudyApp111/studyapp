@@ -56,11 +56,11 @@ export default function AITutorSheet() {
     setHasUsedInitialPrompt(true);
 
     try {
-      const response = await base44.functions.invoke('aiTutorChat', {
+      const response = await base44.functions.invoke('pollyChat', {
         messages: [...messages, { role: "user", content: messageToSend }],
         lessonContext: context?.lesson || {},
         documentContent: context?.lesson?.extracted_content || null,
-        specificContext: context // Pass the specific question/flashcard/text context
+        specificContext: context
       });
 
       if (response.data.error) {
