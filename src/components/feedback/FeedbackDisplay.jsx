@@ -212,14 +212,14 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                           onClick={() => toggleQuestion(idx)}
                         >
                           <div className="flex items-center gap-2">
-                            {/* Score/Status Icon */}
+                            {/* Score/Status Icon - always show score if available */}
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                               hasAIScore 
-                                ? (aiScore >= 8 ? 'bg-emerald-500' : aiScore >= 4.5 ? 'bg-amber-500' : 'bg-red-500')
+                                ? (aiScore >= 7 ? 'bg-emerald-500' : aiScore >= 4 ? 'bg-amber-500' : 'bg-red-500')
                                 : (isCorrect ? 'bg-emerald-500' : 'bg-red-500')
                             } text-white`}>
                               {hasAIScore 
-                                ? <span className="text-xs font-bold">{aiScore}</span>
+                                ? <span className="text-xs font-bold">{Math.round(aiScore)}</span>
                                 : (isCorrect ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />)
                               }
                             </div>
@@ -227,12 +227,10 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                             {/* Question Number */}
                             <span className="font-bold text-slate-900 text-sm">Q{idx + 1}</span>
                             
-                            {/* Score Badge */}
-                            {hasAIScore && (
-                              <Badge className={`text-[10px] px-1.5 py-0 border ${getScoreColor(aiScore)}`}>
-                                {aiScore}/10
-                              </Badge>
-                            )}
+                            {/* Score Badge - always show for practice exams */}
+                            <Badge className={`text-[10px] px-1.5 py-0 border ${hasAIScore ? getScoreColor(aiScore) : (isCorrect ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-red-600 bg-red-50 border-red-200')}`}>
+                              {hasAIScore ? `${Math.round(aiScore)}/10` : (isCorrect ? '10/10' : '0/10')}
+                            </Badge>
                             
                             {/* Difficulty Badge */}
                             {question.difficulty_index && (
