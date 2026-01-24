@@ -24,16 +24,20 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
       if (lesson) {
         const courseName = lesson.course_name || "your course";
         
-        // Check for Polly prediction data
+        // Check for lesson-specific Polly prediction data from StudyPlan (not user profile)
         let pollyInsight = '';
         try {
-          const user = await base44.auth.me();
-          if (user.polly_predicted_grade && user.polly_confidence) {
-            const velocityEmoji = user.polly_velocity === 'Accelerating' ? '📈' : 
-                                   user.polly_velocity === 'Declining' ? '📉' : '➡️';
-            pollyInsight = `\n\n🔮 **Current Prediction:** ${user.polly_predicted_grade} (${user.polly_confidence}% confidence) ${velocityEmoji}`;
-            if (user.polly_mastery_gap) {
-              pollyInsight += `\n💡 Focus area: *${user.polly_mastery_gap}*`;
+          const plans = await base44.entities.StudyPlan.filter({ 
+            lesson_id: lesson.id, 
+            status: 'active' 
+          });
+          if (plans.length > 0 && plans[0].current_predicted_grade) {
+            const plan = plans[0];
+            const velocityEmoji = plan.learning_velocity === 'Accelerating' ? '📈' : 
+                                   plan.learning_velocity === 'Declining' ? '📉' : '➡️';
+            pollyInsight = `\n\n🔮 **Current Prediction:** ${plan.current_predicted_grade} (${plan.current_confidence || 45}% confidence) ${velocityEmoji}`;
+            if (plan.mastery_gap) {
+              pollyInsight += `\n💡 Focus area: *${plan.mastery_gap}*`;
             }
           }
         } catch (err) {

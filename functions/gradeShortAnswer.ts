@@ -176,9 +176,9 @@ CONSTRAINTS
             ]
         };
 
-        // Use retry logic for rate limit handling
+        // Use retry logic for rate limit handling - use gemini-2.0-flash (non-thinking model)
         const response = await fetchWithRetry(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: {
