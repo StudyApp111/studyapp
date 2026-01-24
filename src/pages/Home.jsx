@@ -136,48 +136,43 @@ export default function Home() {
   const subtitle = subtitleParts.join(' • ');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50/50 via-slate-50 to-indigo-50/30">
-      {/* Hero Section - Organic gradient background */}
-      <div className="relative overflow-hidden">
-        {/* Layered gradient blobs for organic feel */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/40 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-600/30 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-0 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-yellow-400/15 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-gradient-to-b from-purple-600 via-purple-100 to-slate-50">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden px-4 py-8 md:px-8 md:py-12">
+        {/* Subtle gradient blobs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl" />
         
-        <div className="relative px-4 py-8 md:px-8 md:py-12">
-          <div className="max-w-6xl mx-auto">
-            {/* Hero Pill - Full Width */}
-            <div className="bg-white/15 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border border-white/20 shadow-2xl">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-                {/* Left: Title */}
-                <div className="text-center md:text-left">
-                  <h1 className="text-xl md:text-3xl font-black text-white leading-tight mb-1">
-                    Hey {firstName}, are you ready to lock in?
-                  </h1>
-                  {subtitle && (
-                    <p className="text-white/70 text-sm md:text-base">
-                      {subtitle}
-                    </p>
-                  )}
-                </div>
-                
-                {/* Right: Stats */}
-                <div className="flex items-center gap-3">
-                  <div className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40 border-orange-400/50' : 'bg-white/10 border-white/20'}`}>
-                    <Flame className={`w-5 h-5 ${(user?.current_streak || 0) > 0 ? 'text-orange-200' : 'text-white/50'}`} />
-                    <div>
-                      <div className="text-xs text-white/70 leading-none mb-0.5">Streak</div>
-                      <div className="text-lg font-black text-white leading-none">{user?.current_streak || 0}</div>
-                    </div>
+        <div className="max-w-6xl mx-auto relative">
+          {/* Hero Pill - Full Width */}
+          <div className="bg-white/15 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border border-white/20 shadow-2xl">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+              {/* Left: Title */}
+              <div className="text-center md:text-left">
+                <h1 className="text-xl md:text-3xl font-black text-white leading-tight mb-1">
+                  Hey {firstName}, are you ready to lock in?
+                </h1>
+                {subtitle && (
+                  <p className="text-white/70 text-sm md:text-base">
+                    {subtitle}
+                  </p>
+                )}
+              </div>
+              
+              {/* Right: Stats */}
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40 border-orange-400/50' : 'bg-white/10 border-white/20'}`}>
+                  <Flame className={`w-5 h-5 ${(user?.current_streak || 0) > 0 ? 'text-orange-200' : 'text-white/50'}`} />
+                  <div>
+                    <div className="text-xs text-white/70 leading-none mb-0.5">Streak</div>
+                    <div className="text-lg font-black text-white leading-none">{user?.current_streak || 0}</div>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-yellow-400/40 backdrop-blur-sm border border-yellow-300/50">
-                    <Zap className="w-5 h-5 text-yellow-200" />
-                    <div>
-                      <div className="text-xs text-white/70 leading-none mb-0.5">Daily XP</div>
-                      <div className="text-lg font-black text-white leading-none">{dailyXP}/50</div>
-                    </div>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-yellow-400/40 backdrop-blur-sm border border-yellow-300/50">
+                  <Zap className="w-5 h-5 text-yellow-200" />
+                  <div>
+                    <div className="text-xs text-white/70 leading-none mb-0.5">Daily XP</div>
+                    <div className="text-lg font-black text-white leading-none">{dailyXP}/50</div>
                   </div>
                 </div>
               </div>
@@ -187,8 +182,8 @@ export default function Home() {
       </div>
 
       <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
-        {/* CTA Cards - Centered, larger with more spacing */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 -mt-8 md:-mt-10 max-w-4xl mx-auto">
+        {/* CTA Cards - Centered, larger with proper spacing */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -200,7 +195,7 @@ export default function Home() {
                 <div className="flex items-center gap-5">
                   <div className="flex-1">
                     <h3 className="text-xl md:text-2xl font-black text-white mb-1">Upload Notes</h3>
-                    <p className="text-white/80 text-sm md:text-base">Get AI study materials</p>
+                    <p className="text-white/80 text-sm md:text-base">Predict Your Grade</p>
                   </div>
                   <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
                     <Upload className="w-8 h-8 md:w-10 md:h-10 text-white" />
