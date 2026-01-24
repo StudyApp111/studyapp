@@ -93,10 +93,11 @@ export default function DocumentViewer() {
   // Red dot logic based on Study Plan tasks
   const getTaskStatus = (taskType) => {
     if (!activePlan?.tasks) return { needsAction: false };
-    const task = activePlan.tasks.find(t => t.task_type === taskType);
+    const task = activePlan.tasks.find(t => t.task_type === taskType && !t.completed);
     if (!task) return { needsAction: false };
+    // Task exists and is not completed = needs action
     return { 
-      needsAction: !task.completed,
+      needsAction: true,
       progress: `${task.completed_count || 0}/${task.target_count}`
     };
   };
@@ -459,7 +460,7 @@ export default function DocumentViewer() {
         </div>
       </div>
 
-      <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-120px)] overflow-x-hidden">
+      <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-56px)] overflow-x-hidden">
         {/* Desktop: Flex container for AI tutor + tabs */}
         <div className="hidden md:flex gap-3 h-full w-full max-w-full">
           {/* AI Tutor Panel - Left side */}

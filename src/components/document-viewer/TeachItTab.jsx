@@ -376,14 +376,18 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       
       const updatedTasks = plan.tasks.map(task => {
         if (task.task_type === 'teach_it') {
+          // Use mastered count (score >= 70) as the completed_count
           const newCount = masteredCount;
           const wasComplete = task.completed;
-          const isComplete = newCount >= task.target_count;
+          const targetCount = task.target_count || 3;
+          const isComplete = newCount >= targetCount;
           
           // Check if task just became complete
           if (isComplete && !wasComplete) {
             taskJustCompleted = true;
           }
+          
+          console.log(`📊 TeachIt task update: ${newCount}/${targetCount} mastered, complete: ${isComplete}`);
           
           return {
             ...task,
@@ -403,7 +407,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         official_exam_unlocked: allComplete
       });
       
-      // Task completed - no toast needed since we use confidence as progress indicator
+      console.log(`✅ Study plan updated - all complete: ${allComplete}`);
     } catch (error) {
       console.error("Error updating study plan:", error);
     }

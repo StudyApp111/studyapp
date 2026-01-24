@@ -105,8 +105,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     { label: "Explain like I'm 5", icon: Lightbulb, prompt: "Explain this material like I'm 5 years old - super simple!" },
     { label: "Give me an example", icon: FileText, prompt: "Give me a real-world example of the main concept" },
     { label: "Why is this important?", icon: HelpCircle, prompt: "Why is this material important? When would I use it?" },
-    { label: "Quiz Me", icon: List, prompt: "Quiz me with 3 questions on this material" },
-    { label: "🔮 Grade Prediction", icon: Sparkles, prompt: "What's my current predicted grade and what should I focus on to improve?" },
+    { label: "🧩 Riddle Me", icon: Sparkles, prompt: "Give me a clever, challenging riddle that's loosely based on the concepts I'm learning. Make it tricky but solvable - I want to think!" },
   ];
 
   const hasDocument = lesson?.extracted_content || lesson?.file_url;

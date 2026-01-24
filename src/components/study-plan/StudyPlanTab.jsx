@@ -553,8 +553,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               <Target className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-sm">Your Study Tasks</h3>
-              <p className="text-[11px] text-slate-500">{completedTasks.length} of {totalTasks} complete</p>
+              <h3 className="font-bold text-slate-900 text-base">Complete these tasks to improve your grade</h3>
+              <p className="text-xs text-slate-500">{completedTasks.length} of {totalTasks} complete • Each task boosts your prediction</p>
             </div>
           </div>
 
@@ -569,8 +569,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               actualCount = Math.max(actualCount, live.mastered);
               displayText = `${actualCount} / ${task.target_count || 10} mastered`;
             } else if (task.task_type === 'teach_it' && live.mastered !== undefined) {
+              // TeachIt tracks mastered cards (score >= 70)
               actualCount = Math.max(actualCount, live.mastered);
-              displayText = `${actualCount} / ${task.target_count || 3} mastered`;
+              const targetCount = task.target_count || 3;
+              displayText = `${actualCount} / ${targetCount} mastered`;
             } else if (task.task_type === 'practice_exam') {
               if (live.completed > 0 && live.totalQuestions > 0) {
                 displayText = `Score: ${live.correctAnswers}/${live.totalQuestions}`;

@@ -75,11 +75,12 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
       contextData.initialPrompt = `Explain this section from my notes:\n\n"${data.selectedText}"\n\nBreak it down in simple terms.`;
     }
 
-    // Desktop: send to panel, Mobile: open sheet modal
+    // Desktop: dispatch event for AITutorPanel, Mobile: open sheet modal
     if (isMobile) {
       openWithContext(contextData);
     } else {
-      sendToPanel(contextData);
+      // Dispatch event that AITutorPanel listens to
+      window.dispatchEvent(new CustomEvent('askAIFromContext', { detail: contextData }));
     }
   };
 
