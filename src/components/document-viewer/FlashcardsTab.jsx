@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X, Zap } from "lucide-react";
+import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X, Zap, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,6 +20,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [streakCount, setStreakCount] = useState(0);
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
+  const [showSetsList, setShowSetsList] = useState(false);
 
   // Track if we're generating to prevent duplicate calls
   const isGeneratingRef = useRef(false);
@@ -232,12 +233,12 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       // Update study plan only when mastery changes (not every card)
       if (isMastered && !wasMastered) {
         const totalMastered = updatedCards.filter(c => c.mastered).length;
-        updateStudyPlanProgress('flashcards', totalMastered);
+        const taskCompleted = await updateStudyPlanProgress('flashcards', totalMastered);
         
-        // Trigger Polly engine on mastery milestones (every 5 cards)
-        if (totalMastered % 5 === 0) {
+        // Trigger Polly engine when task completes OR on mastery milestones (every 5 cards)
+        if (taskCompleted || totalMastered % 5 === 0) {
           base44.functions.invoke('runPollyEngine', {
-            trigger_event: 'flashcard_milestone',
+            trigger_event: taskCompleted ? 'task_completed' : 'flashcard_milestone',
             lesson_id: lesson.id
           }).catch(err => console.warn('Polly trigger failed:', err.message));
         }
@@ -259,12 +260,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   const updateStudyPlanProgress = async (taskType, masteredCount) => {
     // Update study plan with total mastered count (not increments)
+    // Returns true if task just completed
     try {
       const plans = await base44.entities.StudyPlan.filter({ 
         lesson_id: lesson.id,
         status: 'active'
       });
-      if (plans.length === 0) return;
+      if (plans.length === 0) return false;
       
       const plan = plans[0];
       let taskJustCompleted = false;
@@ -298,9 +300,10 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         official_exam_unlocked: allComplete
       });
       
-      // Task completed - no toast needed since we use confidence as progress indicator
+      return taskJustCompleted;
     } catch (error) {
       console.error("Error updating study plan:", error);
+      return false;
     }
   };
 
@@ -531,8 +534,15 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         )}
       </AnimatePresence>
 
-      {/* Header with help button */}
+      {/* Header with All Sets and help button */}
       <div className="flex items-center justify-between">
+        <button
+          onClick={() => setShowSetsList(true)}
+          className="flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-700 font-medium bg-purple-50 hover:bg-purple-100 px-2.5 py-1.5 rounded-lg transition-colors"
+        >
+          <Layers className="w-3.5 h-3.5" />
+          All Sets
+        </button>
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-slate-600">
             {currentIndex + 1} / {cards.length}
@@ -550,6 +560,92 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           How to use
         </button>
       </div>
+
+      {/* Sets List Modal */}
+      <AnimatePresence>
+        {showSetsList && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowSetsList(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl max-h-[70vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-900">Flashcard Sets</h3>
+                <button onClick={() => setShowSetsList(false)} className="p-1 hover:bg-slate-100 rounded-full">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              
+              {/* Group cards by topic */}
+              {(() => {
+                const setMap = new Map();
+                cards.forEach(card => {
+                  const topic = card.topics?.[0] || 'General';
+                  if (!setMap.has(topic)) {
+                    setMap.set(topic, { topic, cards: [], mastered: 0 });
+                  }
+                  const set = setMap.get(topic);
+                  set.cards.push(card);
+                  if (card.mastered) set.mastered++;
+                });
+                const sets = Array.from(setMap.values());
+                
+                return (
+                  <div className="space-y-2">
+                    {sets.map((set, idx) => {
+                      const progress = (set.mastered / set.cards.length) * 100;
+                      return (
+                        <button
+                          key={set.topic}
+                          onClick={() => {
+                            // Jump to first card of this topic
+                            const firstIdx = cards.findIndex(c => (c.topics?.[0] || 'General') === set.topic);
+                            if (firstIdx >= 0) {
+                              setCurrentIndex(firstIdx);
+                              setIsFlipped(false);
+                            }
+                            setShowSetsList(false);
+                          }}
+                          className="w-full p-3 bg-slate-50 hover:bg-purple-50 rounded-xl border border-slate-200 hover:border-purple-300 transition-all text-left"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold text-sm text-slate-900">{set.topic}</span>
+                            <span className="text-xs text-slate-500">{set.mastered}/{set.cards.length}</span>
+                          </div>
+                          <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+              
+              <Button 
+                onClick={handleRegenerate}
+                variant="outline"
+                className="w-full mt-4"
+              >
+                <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                Generate New Set
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Progress value={progress} className="h-1.5" />
 

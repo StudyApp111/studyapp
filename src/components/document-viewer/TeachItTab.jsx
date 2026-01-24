@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, PenLine, HelpCircle } from "lucide-react";
+import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, PenLine, HelpCircle, Brain, X } from "lucide-react";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { awardDailyXP } from "@/components/utils/dailyReset";
@@ -20,6 +20,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
+  const [showSetsList, setShowSetsList] = useState(false);
 
   // Track generation to prevent duplicates
   const isGeneratingRef = useRef(false);
@@ -290,10 +291,11 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       const totalMastered = updatedCards.filter(c => c.mastered).length;
       updateStudyPlanProgress(totalMastered);
 
-      // Trigger Polly engine on mastery milestones (every 2 cards mastered)
-      if (isMastered && totalMastered % 2 === 0) {
+      // Trigger Polly engine when task completes OR on mastery milestones
+      const taskCompleted = await checkIfTaskCompleted('teach_it', totalMastered);
+      if (taskCompleted || (isMastered && totalMastered % 2 === 0)) {
         base44.functions.invoke('runPollyEngine', {
-          trigger_event: 'teachit_milestone',
+          trigger_event: taskCompleted ? 'task_completed' : 'teachit_milestone',
           lesson_id: lesson.id
         }).catch(err => console.warn('Polly trigger failed:', err.message));
       }
@@ -338,6 +340,24 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       } catch (error) {
         console.error("Error regenerating cards:", error);
       }
+    }
+  };
+
+  const checkIfTaskCompleted = async (taskType, masteredCount) => {
+    try {
+      const plans = await base44.entities.StudyPlan.filter({ 
+        lesson_id: lesson.id,
+        status: 'active'
+      });
+      if (plans.length === 0) return false;
+      
+      const plan = plans[0];
+      const task = plan.tasks?.find(t => t.task_type === taskType);
+      if (!task || task.completed) return false;
+      
+      return masteredCount >= (task.target_count || 3);
+    } catch {
+      return false;
     }
   };
 
@@ -449,6 +469,96 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
       />
 
+      {/* Sets List Modal */}
+      <AnimatePresence>
+        {showSetsList && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowSetsList(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl max-h-[70vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-900">Teach It Sets</h3>
+                <button onClick={() => setShowSetsList(false)} className="p-1 hover:bg-slate-100 rounded-full">
+                  <X className="w-5 h-5 text-slate-500" />
+                </button>
+              </div>
+              
+              {/* Group cards by topic */}
+              {(() => {
+                const setMap = new Map();
+                cards.forEach(card => {
+                  const topic = card.topic || 'General Concepts';
+                  if (!setMap.has(topic)) {
+                    setMap.set(topic, { topic, cards: [], mastered: 0 });
+                  }
+                  const set = setMap.get(topic);
+                  set.cards.push(card);
+                  if (card.mastered) set.mastered++;
+                });
+                const sets = Array.from(setMap.values());
+                
+                return (
+                  <div className="space-y-2">
+                    {sets.map((set, idx) => {
+                      const progress = (set.mastered / set.cards.length) * 100;
+                      return (
+                        <button
+                          key={set.topic}
+                          onClick={() => {
+                            // Jump to first card of this topic
+                            const firstIdx = cards.findIndex(c => (c.topic || 'General Concepts') === set.topic);
+                            if (firstIdx >= 0) {
+                              setCurrentCardIndex(firstIdx);
+                              setUserAnswer(cards[firstIdx].user_answer || "");
+                              setShowFeedback(cards[firstIdx].completed);
+                            }
+                            setShowSetsList(false);
+                          }}
+                          className="w-full p-3 bg-slate-50 hover:bg-purple-50 rounded-xl border border-slate-200 hover:border-purple-300 transition-all text-left"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-semibold text-sm text-slate-900">{set.topic}</span>
+                            <span className="text-xs text-slate-500">{set.mastered}/{set.cards.length}</span>
+                          </div>
+                          <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-violet-500 to-purple-600 rounded-full"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+              
+              <Button 
+                onClick={() => {
+                  setShowSetsList(false);
+                  handleRegenerate();
+                }}
+                variant="outline"
+                className="w-full mt-4"
+              >
+                <RefreshCw className="w-3.5 h-3.5 mr-2" />
+                Generate New Set
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl w-full pb-8">
         {/* Centered content */}
         <div className="px-3 py-4 md:px-6 md:py-6 w-full flex items-start justify-center">
@@ -466,6 +576,13 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                 <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 md:px-6 md:py-4 w-full">
                   {/* Top row: Progress info + Actions */}
                   <div className="flex items-center justify-between mb-3">
+                    <button
+                      onClick={() => setShowSetsList(true)}
+                      className="flex items-center gap-1.5 text-xs text-white/90 hover:text-white font-medium bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                    >
+                      <Brain className="w-3.5 h-3.5" />
+                      All Sets
+                    </button>
                     <div className="flex items-center gap-2">
                       <span className="text-white/90 text-xs font-medium">
                         {currentCardIndex + 1}/{cards.length}
