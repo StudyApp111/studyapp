@@ -71,6 +71,11 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       const { task, focus_topics, target_competency, misconception_addressed } = e.detail;
       console.log('🎯 Received practice exam generation request from study plan');
 
+      // Clear any existing exam view state FIRST before generating
+      setViewingCompletedExam(null);
+      setExam(null);
+      setCurrentQuestion(0);
+
       practiceExamGeneratingRef.current = true;
       setIsGenerating(true);
 
@@ -373,10 +378,12 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   // Practice exams are generated via generatePracticeExam from the study plan
 
   const isSubjectiveQuestion = (questionType) => {
-    const type = questionType.toLowerCase();
+    const type = (questionType || '').toLowerCase();
     return type.includes("short answer") || 
            type.includes("long answer") || 
            type.includes("fill-in-the-blank") ||
+           type.includes("fill in the blank") ||
+           type.includes("fill_in_the_blank") ||
            type.includes("structured response");
   };
 

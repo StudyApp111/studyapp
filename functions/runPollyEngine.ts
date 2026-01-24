@@ -79,8 +79,50 @@ Deno.serve(async (req) => {
 
     // ========== BUILD THE ORACLE PROMPT ==========
     
+    // Build exam performance data for detailed analysis
+    const examPerformanceData = completedExams.map(exam => ({
+      exam_id: exam.id,
+      exam_type: exam.exam_type,
+      exam_number: exam.exam_number,
+      total_score: exam.total_score,
+      predicted_grade: exam.predicted_grade,
+      time_taken_seconds: exam.time_taken_seconds,
+      completed_date: exam.updated_date || exam.created_date,
+      question_count: exam.questions?.length || 0,
+      questions_performance: (exam.questions || []).map((q, i) => ({
+        q_num: i + 1,
+        is_correct: q.is_correct,
+        difficulty: q.difficulty_index,
+        type: q.question_type,
+        competencies: q.assessed_competencies || [],
+        time_seconds: exam.question_time_laps?.find(t => t.question_index === i)?.total_seconds || 0,
+        ai_score: q.ai_score_out_of_10,
+        misconception: q.targeted_misconception
+      }))
+    }));
+
+    // Build flashcard performance data
+    const flashcardData = flashcards.map(f => ({
+      topic: f.topics?.[0] || 'general',
+      mastered: f.mastered,
+      review_count: f.review_count || 0,
+      ease_factor: f.ease_factor || 2.5,
+      status: f.status,
+      difficulty: f.difficulty
+    }));
+
+    // Build teachit performance data
+    const teachItData = teachItCards.map(t => ({
+      topic: t.topic,
+      completed: t.completed,
+      mastered: t.mastered,
+      score: t.score,
+      gaps: t.gaps || [],
+      strengths: t.strengths || []
+    }));
+
     const oraclePrompt = `[SYSTEM ROLE]
-You are Polly, The Oracle, the central intelligence engine for StudyAppAI. You are NOT just a chatbot; you are the backend brain managing the student's entire learning lifecycle.
+You are Polly, The Oracle, the central intelligence engine for StudyAppAI. You are the backend brain managing the student's entire learning lifecycle.
 
 Your Goal: Maintain a "Living State" of the user's knowledge, predict their exam outcomes with high defensibility, and determine if intervention via Chat is necessary to alter their trajectory.
 
@@ -91,64 +133,60 @@ Your Goal: Maintain a "Living State" of the user's knowledge, predict their exam
 [DATA INGESTION MODULE]
 
 1. USER LEARNING PROFILE:
-${JSON.stringify(learningProfile, null, 2)}
+School: ${learningProfile.school || 'Unknown'}
+Grade: ${learningProfile.grade || 'Unknown'}
+City: ${learningProfile.city || 'Unknown'}
+Country: ${learningProfile.country || 'Unknown'}
+Study Type: ${learningProfile.study_type || 'academics'}
 
 2. LESSON CONTEXT:
-- Course: ${lesson.course_name}
-- Total Study Time: ${Math.round((lesson.total_study_time_seconds || 0) / 60)} minutes
-- Curriculum Map Core Competencies: ${JSON.stringify(lesson.curriculum_map?.core_competencies?.map(c => c.name) || [])}
-- Competency Weightings: ${JSON.stringify(lesson.curriculum_map?.competency_weightings || [])}
-- High Yield Focal Points: ${JSON.stringify(lesson.curriculum_map?.high_yield_focal_points || [])}
-- Common Misconceptions: ${JSON.stringify(lesson.curriculum_map?.common_misconceptions || [])}
+Course: ${lesson.course_name}
+Total Study Time: ${Math.round((lesson.total_study_time_seconds || 0) / 60)} minutes
+Core Competencies: ${JSON.stringify(lesson.curriculum_map?.core_competencies?.map(c => c.name) || [])}
+Competency Weightings: ${JSON.stringify(lesson.curriculum_map?.competency_weightings || [])}
+High Yield Focal Points: ${JSON.stringify(lesson.curriculum_map?.high_yield_focal_points || [])}
+Common Misconceptions: ${JSON.stringify(lesson.curriculum_map?.common_misconceptions || [])}
 
-3. EXAM FORENSICS (${completedExams.length} completed exams):
-${latestExam ? `
-Latest Exam:
-- Type: ${latestExam.exam_type}
-- Score: ${latestExam.total_score}%
-- Predicted Grade: ${latestExam.predicted_grade}
-- Time Taken: ${Math.round((latestExam.time_taken_seconds || 0) / 60)} minutes
-- Confidence: ${latestExam.prediction_confidence || 'N/A'}%
-- Mastery Gap: ${latestExam.mastery_gap || 'Not identified'}
-- Question Performance:
-${(latestExam.questions || []).map((q, i) => `  Q${i + 1}: ${q.is_correct ? '✓' : '✗'} | Time: ${latestExam.question_time_laps?.find(t => t.question_index === i)?.total_seconds || 'N/A'}s | Difficulty: ${q.difficulty_index} | Competencies: ${(q.assessed_competencies || []).join(', ')}`).join('\n')}
-` : 'No completed exams yet.'}
+3. EXAM PERFORMANCE DATA (${completedExams.length} completed exams):
+${JSON.stringify(examPerformanceData, null, 2)}
 
 4. STUDY PLAN STATE:
-${studyPlan ? `
-- Initial Grade: ${studyPlan.initial_predicted_grade} (${studyPlan.initial_score}%)
-- Initial Confidence: ${studyPlan.initial_confidence}%
-- Mastery Gap: ${studyPlan.mastery_gap}
-- Weak Competencies: ${(studyPlan.weak_competencies || []).join(', ')}
-- Task Progress:
-${(studyPlan.tasks || []).map(t => `  - ${t.title}: ${t.completed_count || 0}/${t.target_count} ${t.completed ? '✓' : ''}`).join('\n')}
-- Competency Progress:
-${(studyPlan.competency_progress || []).map(c => `  - ${c.competency_name}: ${c.initial_score}% → ${c.current_score}%`).join('\n')}
-- Grade History: ${JSON.stringify(studyPlan.grade_history || [])}
-` : 'No active study plan.'}
+${studyPlan ? JSON.stringify({
+  initial_predicted_grade: studyPlan.initial_predicted_grade,
+  initial_score: studyPlan.initial_score,
+  initial_confidence: studyPlan.initial_confidence,
+  mastery_gap: studyPlan.mastery_gap,
+  weak_competencies: studyPlan.weak_competencies,
+  tasks: (studyPlan.tasks || []).map(t => ({
+    title: t.title,
+    type: t.task_type,
+    progress: `${t.completed_count || 0}/${t.target_count}`,
+    completed: t.completed
+  })),
+  competency_progress: studyPlan.competency_progress,
+  grade_history: studyPlan.grade_history
+}, null, 2) : 'No active study plan.'}
 
-5. MICRO-INTERACTIONS:
-Flashcards (${flashcards.length} cards):
-- Mastered: ${flashcards.filter(f => f.mastered).length}
-- Learning: ${flashcards.filter(f => f.status === 'learning').length}
-- New: ${flashcards.filter(f => f.status === 'new').length}
-- Avg Ease Factor: ${flashcards.length > 0 ? (flashcards.reduce((sum, f) => sum + (f.ease_factor || 2.5), 0) / flashcards.length).toFixed(2) : 'N/A'}
-- Low Ease (<1.5) Cards: ${flashcards.filter(f => (f.ease_factor || 2.5) < 1.5).length}
+5. FLASHCARD PERFORMANCE (${flashcards.length} cards):
+Summary: Mastered=${flashcards.filter(f => f.mastered).length}, Learning=${flashcards.filter(f => f.status === 'learning').length}, New=${flashcards.filter(f => f.status === 'new').length}
+Avg Ease Factor: ${flashcards.length > 0 ? (flashcards.reduce((sum, f) => sum + (f.ease_factor || 2.5), 0) / flashcards.length).toFixed(2) : 'N/A'}
+Low Ease Cards (<1.5): ${flashcards.filter(f => (f.ease_factor || 2.5) < 1.5).length}
+${flashcards.length > 0 ? `Details: ${JSON.stringify(flashcardData.slice(0, 20))}` : ''}
 
-TeachIt Cards (${teachItCards.length} cards):
-- Completed: ${teachItCards.filter(t => t.completed).length}
-- Mastered (score >= 70): ${teachItCards.filter(t => t.mastered).length}
-- Avg Score: ${teachItCards.length > 0 ? Math.round(teachItCards.filter(t => t.score).reduce((sum, t) => sum + t.score, 0) / teachItCards.filter(t => t.score).length) : 'N/A'}%
-- Common Gaps: ${[...new Set(teachItCards.flatMap(t => t.gaps || []))].slice(0, 5).join(', ') || 'None'}
+6. TEACH-IT PERFORMANCE (${teachItCards.length} cards):
+Summary: Completed=${teachItCards.filter(t => t.completed).length}, Mastered=${teachItCards.filter(t => t.mastered).length}
+Avg Score: ${teachItCards.filter(t => t.score).length > 0 ? Math.round(teachItCards.filter(t => t.score).reduce((sum, t) => sum + t.score, 0) / teachItCards.filter(t => t.score).length) : 'N/A'}%
+${teachItCards.length > 0 ? `Details: ${JSON.stringify(teachItData)}` : ''}
 
-6. BEHAVIORAL METRICS:
-- Total XP: ${user.xp || 0}
-- Level: ${user.level || 1}
-- Streak: ${user.streak || 0} days
-- Questions Completed: ${user.questions_completed || 0}
-- Total Time in App: ${Math.round((user.time_spent_seconds || 0) / 60)} minutes
+7. BEHAVIORAL METRICS:
+Total XP: ${user.xp || 0}
+Level: ${user.level || 1}
+Streak: ${user.streak || 0} days
+Questions Completed: ${user.questions_completed || 0}
+Total Time in App: ${Math.round((user.time_spent_seconds || 0) / 60)} minutes
+Daily XP: ${user.daily_xp || 0}
 
-[COGNITIVE PROCESSING RULES (The "Brain")]
+[COGNITIVE PROCESSING RULES]
 
 A. VELOCITY ANALYSIS (Trend Detection)
 - Compare 'initial_score' in StudyPlan vs. latest 'total_score' in Exam or 'score' in TeachIt.
@@ -160,57 +198,17 @@ B. CONFIDENCE CALIBRATION (The Defensibility Layer)
 - Base Confidence = (questions_completed / 50) * 100 (Cap at 80% without Exam data).
 - Modifiers:
   - Consistency: If Flashcard ease_factor consistently < 1.5 -> Decrease Confidence (-10%).
-  - Time Laps: If question_time_laps shows < 5s on difficulty_index: High questions -> Decrease Confidence (-15% Guessing Penalty).
+  - Time Laps: If question_time_laps shows < 5s on difficulty: High questions -> Decrease Confidence (-15% Guessing Penalty).
   - Coverage: If competency_progress covers < 50% of core_competencies -> Max Confidence = 60%.
 
 C. MASTERY GAP TRIANGULATION
-- Identify the intersection of:
-  1. Exam questions where is_correct is false (look at targeted_misconception).
-  2. TeachIt gaps (explicitly identified gaps).
-  3. Flashcards where mastered = false AND ease_factor < 2.0.
+- Identify intersection of: Exam questions where is_correct is false, TeachIt gaps, Flashcards where mastered = false AND ease_factor < 2.0.
 - The intersection is the TRUE mastery_gap.
 
 D. GUESSING DETECTION
 - If question_time_laps shows < 5 seconds on Medium or High difficulty questions AND is_correct varies randomly -> Guessing detected.
 
-[ACTION GENERATION MODULE]
-
-1. PREDICT: Calculate predicted_grade and prediction_confidence based on the Rules above.
-2. PRESCRIBE: Select the single highest-yield action the student should take next.
-3. COMMUNICATE: If behavioral insights warrant it, draft a message for Chat intervention.
-
-[STRICT JSON OUTPUT SCHEMA - Return ONLY this JSON]
-{
-  "engine_state": {
-    "predicted_grade_letter": "String (A+, A, A-, B+, B, B-, C+, C, C-, D, F)",
-    "predicted_score_percent": Number (0-100),
-    "prediction_confidence_percent": Number (0-100),
-    "learning_velocity": "Accelerating" | "Stagnating" | "Declining"
-  },
-  "behavioral_insights": {
-    "is_guessing_detected": boolean,
-    "is_inefficient_studying": boolean,
-    "recommended_focus": "String (Specific topic from content)",
-    "estimated_hours_to_target": Number (hours needed to reach A grade)
-},
-  suggested_customization_topics": [
-    {
-      "topic_name": "Name of the Mastery Gap Topic",
-      "topic_description": "Detailed prompt-ready description focusing on specific sub-concepts and reasoning depth.",
-      "reason": "User-facing reason: 'This appeared as a gap in your last quiz.'"
-    },
-    {
-      "topic_name": "Name of the Misconception Topic",
-      "topic_description": "Detailed prompt-ready description for content generation.",
-      "reason": "User-facing reason: 'This is a common pitfall in this course.'"
-    },
-    {
-      "topic_name": "Name of the High-Yield Topic",
-      "topic_description": "Detailed prompt-ready description for content generation.",
-      "reason": "User-facing reason: 'Reviewing this will protect your current grade.'"
-    }
-  ]
-}`;
+[STRICT JSON OUTPUT - Return ONLY this JSON]`;
 
     // ========== CALL GEMINI 2.5 PRO ==========
     

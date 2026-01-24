@@ -85,7 +85,15 @@ CRITICAL RULES:
 
 IMPORTANT: Create APPLICATION-BASED questions that test understanding, NOT literal recall questions like "Which section covers X?" or "What is the name of...". Ask questions that require students to APPLY concepts.
 
-CRITICAL FORMATTING RULE: Do NOT use LaTeX notation like $\\text{...}$ or $...$. Write chemical formulas and math expressions in plain text (e.g., "KCl" not "$\\text{KCl}$", "H2O" not "$H_2O$", "x^2" not "$x^2$").`;
+CRITICAL FORMATTING RULE: Do NOT use LaTeX notation like $\\text{...}$ or $...$. Write chemical formulas and math expressions in plain text:
+- Chemical formulas: "KCl" not "$\\text{KCl}$", "H2O" not "$H_2O$"
+- Math expressions: "x^2" not "$x^2$", "sqrt(x)" not "$\\sqrt{x}$"
+- Nuclear notation: Write as "I-131 → Xe-131 + e- + antineutrino" NOT "53131I \\rightarrow..."
+- Subscripts/superscripts: Use plain numbers like "CO2" or "H2SO4"
+- Arrows: Use "→" or "->" NOT "\\rightarrow"
+- Greek letters: Write the word "beta" or "α" NOT "$\\beta$"
+- Fractions: Write "1/2" NOT "$\\frac{1}{2}$"
+ALL question text and answers MUST be readable as plain text without any LaTeX rendering.`;
 
     // Build request body
     const requestBody = {
