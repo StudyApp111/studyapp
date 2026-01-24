@@ -597,31 +597,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             );
           })}
 
-          {/* Completed Tasks - Collapsed */}
-          {completedTasks.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="relative pl-1"
-            >
-              <div className="absolute left-[14px] top-3 w-3 h-3 rounded-full z-10 bg-emerald-500" />
-              <div className="ml-8 pr-1">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-2">
-                  Completed ({completedTasks.length})
-                </p>
-                <div className="space-y-1.5">
-                  {completedTasks.map((task) => (
-                    <CompletedTaskItem 
-                      key={task.task_id} 
-                      task={task} 
-                      onClick={() => handleTaskClick(task)} 
-                    />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
           {/* Add Custom Task Button */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -636,26 +611,29 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             <div className="ml-8 pr-1">
               <button
                 onClick={() => setShowCreateTask(!showCreateTask)}
-                className={`w-full text-left p-3 rounded-xl border-2 border-dashed transition-all ${
+                className={`w-full text-left p-4 rounded-xl border-2 border-dashed transition-all group ${
                   showCreateTask 
-                    ? 'border-purple-400 bg-purple-50' 
-                    : 'border-slate-300 hover:border-purple-400 hover:bg-slate-50'
+                    ? 'border-purple-500 bg-gradient-to-r from-purple-50 to-indigo-50' 
+                    : 'border-purple-300 hover:border-purple-500 hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-indigo-50/50'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    showCreateTask ? 'bg-purple-600' : 'bg-slate-100'
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${
+                    showCreateTask 
+                      ? 'bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg' 
+                      : 'bg-gradient-to-br from-purple-100 to-indigo-100 group-hover:from-purple-200 group-hover:to-indigo-200'
                   }`}>
-                    <Plus className={`w-5 h-5 ${showCreateTask ? 'text-white' : 'text-slate-500'}`} />
+                    <Plus className={`w-5 h-5 transition-transform ${showCreateTask ? 'text-white rotate-45' : 'text-purple-600 group-hover:scale-110'}`} />
                   </div>
-                  <div>
-                    <p className={`font-semibold text-sm ${showCreateTask ? 'text-purple-700' : 'text-slate-700'}`}>
+                  <div className="flex-1">
+                    <p className={`font-bold text-sm ${showCreateTask ? 'text-purple-700' : 'text-purple-600 group-hover:text-purple-700'}`}>
                       Add Custom Task
                     </p>
                     <p className="text-[10px] text-slate-500">
-                      Choose any topic and learning format
+                      Choose any topic • Pick your format
                     </p>
                   </div>
+                  <Sparkles className={`w-4 h-4 transition-all ${showCreateTask ? 'text-purple-500' : 'text-purple-300 group-hover:text-purple-500'}`} />
                 </div>
               </button>
 
@@ -672,6 +650,31 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               </AnimatePresence>
             </div>
           </motion.div>
+
+          {/* Completed Tasks - Below Custom Task */}
+          {completedTasks.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="relative pl-1 pt-2"
+            >
+              <div className="absolute left-[14px] top-6 w-3 h-3 rounded-full z-10 bg-emerald-500" />
+              <div className="ml-8 pr-1">
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-2">
+                  Completed ({completedTasks.length})
+                </p>
+                <div className="space-y-1.5">
+                  {completedTasks.map((task) => (
+                    <CompletedTaskItem 
+                      key={task.task_id} 
+                      task={task} 
+                      onClick={() => handleTaskClick(task)} 
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 

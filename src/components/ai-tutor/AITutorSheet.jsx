@@ -19,21 +19,20 @@ export default function AITutorSheet() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // When opened with new context, set up initial message with Polly's humor
+  // When opened with new context, set up initial message
   useEffect(() => {
     if (isOpen && context && messages.length === 0) {
       setHasUsedInitialPrompt(false);
       
-      // Create welcome message based on context type with Polly's signature humor
-      let welcomeMessage = "👋 Hey! I'm Polly. I've memorized your entire lesson in 0.4 seconds. What's taking you so long?";
+      // Create welcome message based on context type
+      let welcomeMessage = "👋 Hi! I'm Polly, your AI study assistant. How can I help?";
       
       if (context.type === "question") {
-        const questionType = context.question?.type || 'question';
-        welcomeMessage = `👋 Ah, this ${questionType}. I solved it in 0.003 seconds, but I'll pretend it's tricky so you don't feel bad.\n\nLet me break it down for you.`;
+        welcomeMessage = `👋 I see you need help with this question. Let me break it down for you.`;
       } else if (context.type === "flashcard") {
-        welcomeMessage = `👋 A flashcard? These are my favorite - bite-sized knowledge I can judge you on.\n\nLet me explain this one properly.`;
+        welcomeMessage = `👋 Let me help you understand this flashcard better.`;
       } else if (context.type === "document") {
-        welcomeMessage = `👋 Interesting text selection. I've already cross-referenced it with 47 academic papers. You're welcome.\n\nLet me break it down.`;
+        welcomeMessage = `👋 I'll help explain this section from your notes.`;
       }
       
       setMessages([{ role: "assistant", content: welcomeMessage }]);

@@ -18,7 +18,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     scrollToBottom();
   }, [messages]);
 
-  // Add welcome message on mount or when lesson changes, with Polly's signature humor
+  // Add welcome message on mount or when lesson changes
   useEffect(() => {
     const loadWelcomeMessage = async () => {
       if (lesson) {
@@ -42,7 +42,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
         
         setMessages([{
           role: "assistant",
-          content: `👋 Hey! I'm Polly. I've memorized this entire **${courseName}** lesson in 0.4 seconds. Since I don't have hands to take the test for you, I guess it's your turn. I'll wait (and judge your study breaks).${pollyInsight}\n\nTry asking me to:\n• Summarize key concepts\n• Quiz you on the material\n• Explain something confusing\n• Roast your study habits (just kidding... unless?)`
+          content: `👋 Hi! I'm Polly, your AI study assistant for **${courseName}**.${pollyInsight}\n\nI can help you:\n• Summarize key concepts\n• Quiz you on the material\n• Explain confusing topics\n• Check your progress`
         }]);
       }
     };
@@ -74,54 +74,13 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
 
     try {
       const docContent = lesson?.extracted_content || '';
-      const hasDocument = docContent && docContent.length > 50;
       
-      const conversationHistory = messages
-        .filter(m => m.role === 'user' || m.role === 'assistant')
-        .map(m => `${m.role === 'user' ? 'Student' : 'Polly'}: ${m.content}`)
-        .join('\n\n');
-
-      const prompt = `You are Polly, an expert AI study tutor. Keep responses SHORT and concise (2-4 sentences unless explaining something complex).
-
-${lesson?.course_name ? `Course: ${lesson.course_name}` : ''}
-
-${hasDocument ? `
-DOCUMENT CONTENT (use this to answer questions):
----
-${docContent.substring(0, 10000)}
----
-Reference specific content from the document when answering.
-` : 'No document uploaded - provide general help.'}
-
-CONVERSATION SO FAR:
-${conversationHistory}
-
-Student: ${messageToSend}
-
-RULES:
-- Be concise - students have limited attention
-- Use bullet points for lists
-- Be encouraging and supportive
-- Give practical examples when helpful
-
-Respond as Polly:`;
-
-      // Use the aiTutorChat function for richer context including Polly data
-      const { data: response } = await base44.functions.invoke('aiTutorChat', {
+      // Use pollyChat function - single source of truth
+      const { data: response } = await base44.functions.invoke('pollyChat', {
         messages: [...messages, { role: 'user', content: messageToSend }],
         lessonContext: lesson,
         documentContent: docContent
       });
-
-      // Check if Polly has a pending intervention message
-      if (response.polly_intervention?.message) {
-        setMessages((prev) => [...prev, {
-          role: "assistant",
-          content: response.polly_intervention.message,
-          isPollyIntervention: true,
-          interventionType: response.polly_intervention.type
-        }]);
-      }
 
       setMessages((prev) => [...prev, {
         role: "assistant",
