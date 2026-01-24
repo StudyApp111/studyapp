@@ -5,7 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, GraduationCap } from "lucide-react";
+import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, GraduationCap, Crown } from "lucide-react";
+import { UpgradeButton } from "@/components/subscription/UpgradeBadge";
 import { motion } from "framer-motion";
 // CreateLessonModal replaced with CreateLesson page
 import DailyChallenge from "@/components/gamification/DailyChallenge";
@@ -145,15 +146,16 @@ export default function Home() {
         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl" />
 
         <div className="max-w-6xl mx-auto relative">
-          {/* Logo + App Name - Above Pill */}
-          <div className="flex items-center justify-center gap-3 mb-8 md:mb-10">
-            <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/6afa508f0_LogoOnly.png"
-              alt="StudyApp Logo"
-              className="w-14 h-14 md:w-16 md:h-16"
-            />
-            <span className="text-4xl md:text-5xl font-black text-white">StudyApp</span>
-          </div>
+        {/* Logo + App Name + Upgrade - Above Pill */}
+        <div className="flex items-center justify-center gap-3 mb-8 md:mb-10">
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/6afa508f0_LogoOnly.png"
+            alt="StudyApp Logo"
+            className="w-14 h-14 md:w-16 md:h-16"
+          />
+          <span className="text-4xl md:text-5xl font-black text-white">StudyApp</span>
+          <UpgradeButton compact />
+        </div>
 
           {/* Hero Pill - Full Width */}
           <div className="bg-white/15 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border border-white/20 shadow-2xl">

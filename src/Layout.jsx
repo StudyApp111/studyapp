@@ -29,6 +29,10 @@ import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton.jsx
 
 import { AITutorProvider } from "@/components/ai-tutor/AITutorContext";
 import AITutorSheet from "@/components/ai-tutor/AITutorSheet";
+import { SubscriptionProvider } from "@/components/subscription/SubscriptionContext";
+import { UpgradeNavBadge } from "@/components/subscription/UpgradeBadge";
+import UpgradeModal from "@/components/subscription/UpgradeModal";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 const navigationItems = [
         {
@@ -107,6 +111,7 @@ export default function Layout({ children, currentPageName }) {
 
 
   return (
+    <SubscriptionProvider>
     <AITutorProvider>
     <SidebarProvider>
       <BrowserCompatibilityBanner />
@@ -188,7 +193,10 @@ export default function Layout({ children, currentPageName }) {
               >
                 <Mail className="w-5 h-5" />
               </button>
-            </nav>
+
+              {/* Upgrade Badge */}
+              <UpgradeNavBadge />
+              </nav>
 
             {/* Bottom: Settings + Profile */}
             <div className="p-2 space-y-1">
@@ -338,5 +346,6 @@ export default function Layout({ children, currentPageName }) {
         </div>
         </SidebarProvider>
         </AITutorProvider>
+        </SubscriptionProvider>
         );
         }

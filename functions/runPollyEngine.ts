@@ -31,6 +31,16 @@ Deno.serve(async (req) => {
     const { trigger_event, lesson_id, exam_id } = await req.json();
     console.log(`🔮 [runPollyEngine] Trigger: ${trigger_event}, Lesson: ${lesson_id}`);
 
+    // Check if user is on free tier - skip advanced Polly analysis
+    if (user.subscription_tier !== 'pro' || user.subscription_status !== 'active') {
+      console.log(`🔮 [runPollyEngine] User is on free tier, skipping advanced analysis`);
+      return Response.json({
+        success: false,
+        reason: 'free_tier',
+        message: 'Advanced grade prediction requires Locked In subscription'
+      });
+    }
+
     // ========== DATA INGESTION MODULE ==========
     
     // 1. Get Learning Profile
