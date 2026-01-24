@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy } from "lucide-react";
+import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -17,6 +17,8 @@ import XPProgressBar from "@/components/gamification/XPProgressBar";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
+import NextActionCard from "@/components/home/NextActionCard";
+import LessonProgressCard from "@/components/home/LessonProgressCard";
 
 export default function Home() {
     const navigate = useNavigate();
@@ -113,6 +115,24 @@ export default function Home() {
     refetchOnMount: false,
   });
 
+  // Fetch study plans for all lessons
+  const { data: studyPlans = [] } = useQuery({
+    queryKey: ['studyPlans'],
+    queryFn: () => base44.entities.StudyPlan.filter({ status: 'active' }),
+    initialData: [],
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  // Map study plans by lesson_id
+  const studyPlansByLesson = React.useMemo(() => {
+    const map = {};
+    studyPlans.forEach(sp => {
+      if (sp.lesson_id) map[sp.lesson_id] = sp;
+    });
+    return map;
+  }, [studyPlans]);
+
   // Group exams by lesson
   const lessonExams = {};
   allExams.forEach(e => {
@@ -121,6 +141,31 @@ export default function Home() {
     }
     lessonExams[e.lesson_id].push(e);
   });
+
+  // Find the lesson with most urgent action needed
+  const nextActionLesson = React.useMemo(() => {
+    if (lessons.length === 0) return null;
+    
+    // Priority: 1) Lessons with incomplete tasks, 2) Lessons without study plan
+    for (const lesson of lessons) {
+      const plan = studyPlansByLesson[lesson.id];
+      if (plan) {
+        const incompleteTasks = plan.tasks?.filter(t => !t.completed) || [];
+        if (incompleteTasks.length > 0) {
+          return { lesson, plan, tasksRemaining: incompleteTasks.length };
+        }
+      }
+    }
+    
+    // Find lesson without study plan (needs diagnostic)
+    for (const lesson of lessons) {
+      if (!studyPlansByLesson[lesson.id]) {
+        return { lesson, plan: null, tasksRemaining: 0 };
+      }
+    }
+    
+    return lessons[0] ? { lesson: lessons[0], plan: studyPlansByLesson[lessons[0].id], tasksRemaining: 0 } : null;
+  }, [lessons, studyPlansByLesson]);
 
   // Calculate stats
   const completedExams = allExams.filter(e => e.completed).length;
@@ -245,6 +290,21 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Next Action - What to do NOW */}
+      {nextActionLesson && (
+        <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-purple-600" />
+            <h2 className="text-sm md:text-base font-bold text-slate-900">Continue where you left off</h2>
+          </div>
+          <NextActionCard 
+            lesson={nextActionLesson.lesson}
+            studyPlan={nextActionLesson.plan}
+            tasksRemaining={nextActionLesson.tasksRemaining}
+          />
+        </div>
+      )}
+
       {/* Daily Challenges - Both Mobile and Desktop */}
       <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
         <DailyChallenge 
@@ -253,6 +313,31 @@ export default function Home() {
           flashcardsReviewed={flashcardsToday}
         />
       </div>
+
+      {/* All Lessons Progress */}
+      {!isLoading && lessons.length > 0 && (
+        <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm md:text-base font-bold text-slate-900">Your Courses</h2>
+            <button 
+              onClick={() => navigate(createPageUrl("LessonHistory"))}
+              className="text-xs text-purple-600 font-medium hover:text-purple-700 flex items-center gap-0.5"
+            >
+              View all <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
+            {lessons.slice(0, 6).map((lesson, idx) => (
+              <LessonProgressCard 
+                key={lesson.id}
+                lesson={lesson}
+                studyPlan={studyPlansByLesson[lesson.id]}
+                index={idx}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* CTA Cards - Full and descriptive */}
       <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
@@ -321,35 +406,26 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Recent Activity - Now visible without scrolling on mobile */}
-      {!isLoading && recentItems.length > 0 && (
+      {/* Recent Graded Assignments */}
+      {!isLoading && gradedAssignments.length > 0 && (
         <div className="mb-8 max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-3 md:mb-6">
-            <h2 className="text-base md:text-2xl font-bold text-slate-900">Continue Learning</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm md:text-base font-bold text-slate-900">Recent Graded Work</h2>
             <button 
-              onClick={() => navigate(createPageUrl("LessonHistory"))}
-              className="text-xs md:text-sm text-purple-600 font-medium hover:text-purple-700"
+              onClick={() => navigate(createPageUrl("AssignmentHistory"))}
+              className="text-xs text-purple-600 font-medium hover:text-purple-700 flex items-center gap-0.5"
             >
-              View all
+              View all <ChevronRight className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-            {recentItems.slice(0, 3).map((item, idx) => (
-              item.type === 'lesson' ? (
-                <LessonActivityCard 
-                  key={`lesson-${item.id}`} 
-                  lesson={item} 
-                  exams={lessonExams[item.id] || []}
-                  index={idx}
-                />
-              ) : (
-                <AssignmentActivityCard 
-                  key={`assignment-${item.id}`} 
-                  assignment={item}
-                  index={idx}
-                />
-              )
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
+            {gradedAssignments.slice(0, 3).map((assignment, idx) => (
+              <AssignmentActivityCard 
+                key={`assignment-${assignment.id}`} 
+                assignment={assignment}
+                index={idx}
+              />
             ))}
           </div>
         </div>

@@ -6,6 +6,7 @@ import { Send, X, Sparkles, Loader2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useAITutor } from "./AITutorContext";
+import MathText from "../math/MathText";
 
 export default function AITutorSheet() {
   const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
@@ -166,11 +167,18 @@ export default function AITutorSheet() {
                     }`}
                   >
                     {msg.role === "assistant" ? (
-                      <ReactMarkdown className="text-[11px] leading-relaxed prose prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-[11px] [&>ol]:my-1 [&>ol]:ml-3">
+                      <ReactMarkdown 
+                        className="text-[11px] leading-relaxed prose prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-[11px] [&>ol]:my-1 [&>ol]:ml-3"
+                        components={{
+                          p: ({ children }) => <MathText className="my-1">{children}</MathText>,
+                          li: ({ children }) => <li><MathText inline>{children}</MathText></li>,
+                          code: ({ inline, children }) => inline ? <code className="bg-slate-200 px-1 rounded text-[10px]">{children}</code> : <pre className="bg-slate-200 p-2 rounded text-[10px] overflow-x-auto"><code>{children}</code></pre>
+                        }}
+                      >
                         {msg.content}
                       </ReactMarkdown>
                     ) : (
-                      <p className="text-[11px]">{msg.content}</p>
+                      <MathText className="text-[11px]">{msg.content}</MathText>
                     )}
                   </div>
                 </motion.div>
