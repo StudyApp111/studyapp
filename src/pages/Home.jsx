@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
-import CreateLessonModal from "@/components/modals/CreateLessonModal";
+// CreateLessonModal replaced with CreateLesson page
 import DailyChallenge from "@/components/gamification/DailyChallenge";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
@@ -16,7 +16,7 @@ import LearningTrajectory from "@/components/home/LearningTrajectory";
 export default function Home() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [createLessonModalOpen, setCreateLessonModalOpen] = useState(false);
+  // CreateLessonModal removed - using CreateLesson page instead
   const [dailyXP, setDailyXP] = useState(0);
   const [studyMinutesToday, setStudyMinutesToday] = useState(0);
   const [questionsToday, setQuestionsToday] = useState(0);
@@ -358,10 +358,7 @@ export default function Home() {
         </div>
       </div>
 
-      <CreateLessonModal 
-        open={createLessonModalOpen} 
-        onOpenChange={setCreateLessonModalOpen} 
-      />
+      {/* CreateLessonModal removed - using CreateLesson page instead */}
 
       <FirstSessionWelcome 
         open={showWelcome}
