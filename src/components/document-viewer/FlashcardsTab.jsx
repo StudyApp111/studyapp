@@ -2,13 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X, Zap, Layers } from "lucide-react";
+import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X, Zap, Layers, CheckCircle2, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
+import FlashcardSetsList from "./FlashcardSetsList";
 
 export default function FlashcardsTab({ lesson, extractedContent, focusTopics }) {
   const [cards, setCards] = useState(null);
@@ -20,7 +21,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [streakCount, setStreakCount] = useState(0);
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
-  const [showSetsList, setShowSetsList] = useState(false);
+  const [showSetsList, setShowSetsList] = useState(true); // Start with list view
 
   // Track if we're generating to prevent duplicate calls
   const isGeneratingRef = useRef(false);
@@ -96,6 +97,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       const existingCards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
       if (existingCards.length > 0) {
         setCards(existingCards);
+        setShowSetsList(true); // Show list view when cards exist
       }
     } catch (error) {
       console.error("Error loading flashcards:", error);
@@ -337,6 +339,21 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
 
 
+  // Show list view when cards exist and showSetsList is true
+  if (cards && cards.length > 0 && showSetsList) {
+    return (
+      <FlashcardSetsList 
+        cards={cards}
+        onSelectSet={(idx) => {
+          setCurrentIndex(idx);
+          setIsFlipped(false);
+          setShowSetsList(false);
+        }}
+        onGenerateNew={handleRegenerate}
+      />
+    );
+  }
+
   // Initial state - not generated - styled like TeachItTab
   if (!cards && !isGenerating) {
     return (
@@ -538,9 +555,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       <div className="flex items-center justify-between">
         <button
           onClick={() => setShowSetsList(true)}
-          className="flex items-center gap-1.5 text-xs text-purple-600 hover:text-purple-700 font-medium bg-purple-50 hover:bg-purple-100 px-2.5 py-1.5 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700 font-medium bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg transition-colors"
         >
-          <Layers className="w-3.5 h-3.5" />
+          <ChevronLeft className="w-3.5 h-3.5" />
           All Sets
         </button>
         <div className="flex items-center gap-2">

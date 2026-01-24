@@ -406,7 +406,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   }
 
   return (
-    <div className="px-3 md:px-6 pt-1 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 pb-8 overflow-x-hidden">
+    <div className="px-3 md:px-6 pt-1 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 pb-8 overflow-x-hidden box-border">
       {/* Grade + Confidence Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -497,7 +497,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </div>
       </motion.div>
 
-      {/* Behavioral Insights - Above Tasks */}
+      {/* Behavioral Insights - Centered */}
       {behavioralInsights && (behavioralInsights.is_guessing_detected || behavioralInsights.is_inefficient_studying || behavioralInsights.recommended_focus || behavioralInsights.estimated_hours_to_target) && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -505,8 +505,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           transition={{ delay: 0.15 }}
           className="space-y-2"
         >
-          {/* Warning badges */}
-          <div className="flex flex-wrap gap-2">
+          {/* Warning badges - Centered */}
+          <div className="flex flex-wrap justify-center gap-2">
             {behavioralInsights.is_guessing_detected && (
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
                 <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
@@ -529,14 +529,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             )}
           </div>
           
-          {/* Recommended focus */}
+          {/* Recommended focus - Centered */}
           {behavioralInsights.recommended_focus && (
-            <div className="flex items-start gap-2 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
-              <Lightbulb className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
-              <div>
+            <div className="flex flex-col items-center text-center p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Lightbulb className="w-4 h-4 text-indigo-600" />
                 <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-wide">AI Recommendation</p>
-                <p className="text-xs text-slate-700 leading-relaxed mt-0.5">{behavioralInsights.recommended_focus}</p>
               </div>
+              <p className="text-xs text-slate-700 leading-relaxed max-w-md">{behavioralInsights.recommended_focus}</p>
             </div>
           )}
         </motion.div>
@@ -598,7 +598,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 
                 <button
                   onClick={() => handleTaskClick(task)}
-                  className="w-full text-left ml-8 group pr-1"
+                  className="w-full text-left ml-8 group pr-1 max-w-full"
                 >
                   <div className={`relative overflow-hidden rounded-xl transition-all ${
                     isFocusFactor 

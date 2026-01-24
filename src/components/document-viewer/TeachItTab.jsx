@@ -10,6 +10,7 @@ import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
+import TeachItSetsList from "./TeachItSetsList";
 
 export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [cards, setCards] = useState([]);
@@ -20,7 +21,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
-  const [showSetsList, setShowSetsList] = useState(false);
+  const [showSetsList, setShowSetsList] = useState(true); // Start with list view
 
   // Track generation to prevent duplicates
   const isGeneratingRef = useRef(false);
@@ -85,6 +86,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
       
       if (existingCards?.length > 0) {
         setCards(existingCards);
+        setShowSetsList(true); // Show list view when cards exist
         // Find first incomplete card
         const incompleteIndex = existingCards.findIndex(c => !c.completed);
         setCurrentCardIndex(incompleteIndex >= 0 ? incompleteIndex : 0);
@@ -416,6 +418,22 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
     );
   }
 
+  // Show list view when cards exist and showSetsList is true
+  if (cards.length > 0 && showSetsList) {
+    return (
+      <TeachItSetsList 
+        cards={cards}
+        onSelectCard={(idx) => {
+          setCurrentCardIndex(idx);
+          setUserAnswer(cards[idx].user_answer || "");
+          setShowFeedback(cards[idx].completed);
+          setShowSetsList(false);
+        }}
+        onGenerateNew={handleRegenerate}
+      />
+    );
+  }
+
   if (cards.length === 0) {
     return (
       <div className="flex items-center justify-center p-4 pb-8 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 min-h-[400px]">
@@ -580,8 +598,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       onClick={() => setShowSetsList(true)}
                       className="flex items-center gap-1.5 text-xs text-white/90 hover:text-white font-medium bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-colors"
                     >
-                      <Brain className="w-3.5 h-3.5" />
-                      All Sets
+                      <X className="w-3.5 h-3.5" />
+                      Back
                     </button>
                     <div className="flex items-center gap-2">
                       <span className="text-white/90 text-xs font-medium">

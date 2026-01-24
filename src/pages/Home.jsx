@@ -136,34 +136,40 @@ export default function Home() {
   const subtitle = subtitleParts.join(' • ');
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 px-4 py-5 md:px-8 md:py-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-3xl -ml-24 -mb-24" />
+    <div className="min-h-screen bg-gradient-to-br from-purple-50/50 via-slate-50 to-indigo-50/30">
+      {/* Hero Section - Organic gradient background */}
+      <div className="relative overflow-hidden">
+        {/* Layered gradient blobs for organic feel */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/40 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-600/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-0 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-yellow-400/15 rounded-full blur-3xl" />
         
-        <div className="max-w-6xl mx-auto relative">
-          {/* Hero Pill */}
-          <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-4 py-4 md:px-6 md:py-5 border border-white/20">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
+        <div className="relative px-4 py-6 md:px-8 md:py-8">
+          <div className="max-w-6xl mx-auto">
+            {/* Hero Pill - Centered */}
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-white/15 backdrop-blur-md rounded-full px-6 py-4 md:px-8 md:py-5 border border-white/20 shadow-xl">
                 <h1 className="text-lg md:text-2xl font-bold text-white leading-tight">
                   Hey {firstName}, are you ready to lock in?
                 </h1>
                 {subtitle && (
-                  <p className="text-white/70 text-xs md:text-sm mt-0.5 truncate">
+                  <p className="text-white/70 text-xs md:text-sm mt-1">
                     {subtitle}
                   </p>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <div className={`flex items-center gap-1 px-2 py-1.5 rounded-lg ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40' : 'bg-white/10'}`}>
+              
+              {/* Stats badges below pill */}
+              <div className="flex items-center gap-2 mt-4">
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/30' : 'bg-white/10'}`}>
                   <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : 'text-white/50'}`} />
-                  <span className="text-xs font-bold text-white">{user?.current_streak || 0}</span>
+                  <span className="text-sm font-bold text-white">{user?.current_streak || 0}</span>
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-yellow-400/40">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-400/30 backdrop-blur-sm">
                   <Zap className="w-4 h-4 text-yellow-300" />
-                  <span className="text-xs font-bold text-white">{dailyXP}/50</span>
+                  <span className="text-sm font-bold text-white">{dailyXP}/50 XP</span>
                 </div>
               </div>
             </div>
@@ -172,23 +178,23 @@ export default function Home() {
       </div>
 
       <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
-        {/* CTA Cards - Right after hero */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 -mt-4">
+        {/* CTA Cards - Centered, larger */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 -mt-6">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={() => setCreateLessonModalOpen(true)}
-            className="cursor-pointer group"
+            className="cursor-pointer group w-full sm:w-auto"
           >
-            <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-purple-600 to-indigo-700 hover:scale-[1.02]">
-              <CardContent className="p-4 md:p-5">
-                <div className="flex items-center justify-between">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 hover:scale-[1.02]">
+              <CardContent className="p-5 md:p-6">
+                <div className="flex items-center gap-4">
                   <div>
-                    <h3 className="text-base md:text-lg font-bold text-white">Upload Notes</h3>
-                    <p className="text-white/70 text-xs md:text-sm mt-0.5">Get AI study materials</p>
+                    <h3 className="text-lg md:text-xl font-bold text-white">Upload Notes</h3>
+                    <p className="text-white/70 text-sm mt-0.5">Get AI study materials</p>
                   </div>
-                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Upload className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                  <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ml-auto">
+                    <Upload className="w-7 h-7 md:w-8 md:h-8 text-white" />
                   </div>
                 </div>
               </CardContent>
@@ -200,17 +206,17 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.05 }}
             onClick={() => navigate(createPageUrl("SmartGrader"))}
-            className="cursor-pointer group"
+            className="cursor-pointer group w-full sm:w-auto"
           >
-            <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-emerald-500 to-teal-600 hover:scale-[1.02]">
-              <CardContent className="p-4 md:p-5">
-                <div className="flex items-center justify-between">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-all bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:scale-[1.02]">
+              <CardContent className="p-5 md:p-6">
+                <div className="flex items-center gap-4">
                   <div>
-                    <h3 className="text-base md:text-lg font-bold text-white">Grade My Essay</h3>
-                    <p className="text-white/70 text-xs md:text-sm mt-0.5">Get instant AI feedback</p>
+                    <h3 className="text-lg md:text-xl font-bold text-white">Grade My Essay</h3>
+                    <p className="text-white/70 text-sm mt-0.5">Get instant AI feedback</p>
                   </div>
-                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <FileCheck className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                  <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform ml-auto">
+                    <FileCheck className="w-7 h-7 md:w-8 md:h-8 text-white" />
                   </div>
                 </div>
               </CardContent>
