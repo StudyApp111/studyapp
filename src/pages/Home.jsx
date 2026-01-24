@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, TrendingUp, ChevronRight } from "lucide-react";
+import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -17,7 +17,6 @@ import XPProgressBar from "@/components/gamification/XPProgressBar";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
-import NextActionCard from "@/components/home/NextActionCard";
 
 export default function Home() {
     const navigate = useNavigate();
@@ -114,22 +113,6 @@ export default function Home() {
     refetchOnMount: false,
   });
 
-  // Fetch study plans for active lessons
-  const { data: studyPlans = [] } = useQuery({
-    queryKey: ['studyPlans'],
-    queryFn: () => base44.entities.StudyPlan.filter({ status: 'active' }),
-    initialData: [],
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-  });
-
-  // Map study plans by lesson_id
-  const studyPlansByLesson = {};
-  studyPlans.forEach(sp => {
-    studyPlansByLesson[sp.lesson_id] = sp;
-  });
-
   // Group exams by lesson
   const lessonExams = {};
   allExams.forEach(e => {
@@ -146,29 +129,6 @@ export default function Home() {
   const avgScore = totalExams > 0
     ? Math.round(allExams.filter(e => e.completed).reduce((sum, e) => sum + (e.total_score || 0), 0) / totalExams)
     : 0;
-
-  // Find the most recent lesson with incomplete tasks or no study plan
-  const activeLesson = React.useMemo(() => {
-    if (!lessons.length) return null;
-    
-    // Sort by most recent activity
-    const sortedLessons = [...lessons].sort((a, b) => {
-      const aPlan = studyPlansByLesson[a.id];
-      const bPlan = studyPlansByLesson[b.id];
-      
-      // Prioritize lessons with incomplete tasks
-      const aIncomplete = aPlan?.tasks?.filter(t => !t.completed)?.length || 0;
-      const bIncomplete = bPlan?.tasks?.filter(t => !t.completed)?.length || 0;
-      
-      if (aIncomplete > 0 && bIncomplete === 0) return -1;
-      if (bIncomplete > 0 && aIncomplete === 0) return 1;
-      
-      // Then by most recent
-      return new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date);
-    });
-    
-    return sortedLessons[0];
-  }, [lessons, studyPlansByLesson]);
 
   if (!user) {
     return (
@@ -285,21 +245,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* YOUR NEXT STEP - Primary CTA */}
-      {activeLesson && (
-        <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
-          <h2 className="text-sm md:text-base font-bold text-slate-900 mb-2 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-purple-600" />
-            Your Next Step
-          </h2>
-          <NextActionCard 
-            lesson={activeLesson}
-            studyPlan={studyPlansByLesson[activeLesson.id]}
-          />
-        </div>
-      )}
-
-      {/* Daily Challenges */}
+      {/* Daily Challenges - Both Mobile and Desktop */}
       <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
         <DailyChallenge 
           studyMinutes={studyMinutesToday}
@@ -308,7 +254,7 @@ export default function Home() {
         />
       </div>
 
-      {/* CTA Cards */}
+      {/* CTA Cards - Full and descriptive */}
       <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {/* Upload Notes Card */}
@@ -375,11 +321,11 @@ export default function Home() {
         </div>
       </div>
 
-      {/* All Lessons with Progress */}
-      {!isLoading && lessons.length > 0 && (
+      {/* Recent Activity - Now visible without scrolling on mobile */}
+      {!isLoading && recentItems.length > 0 && (
         <div className="mb-8 max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <h2 className="text-base md:text-lg font-bold text-slate-900">Your Lessons</h2>
+          <div className="flex items-center justify-between mb-3 md:mb-6">
+            <h2 className="text-base md:text-2xl font-bold text-slate-900">Continue Learning</h2>
             <button 
               onClick={() => navigate(createPageUrl("LessonHistory"))}
               className="text-xs md:text-sm text-purple-600 font-medium hover:text-purple-700"
@@ -388,88 +334,22 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="space-y-2">
-            {lessons.slice(0, 5).map((lesson, idx) => {
-              const plan = studyPlansByLesson[lesson.id];
-              const tasks = plan?.tasks || [];
-              const completedTasks = tasks.filter(t => t.completed).length;
-              const totalTasks = tasks.length;
-              const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-              const grade = plan?.current_predicted_grade || plan?.initial_predicted_grade;
-              
-              return (
-                <motion.button
-                  key={lesson.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  onClick={() => navigate(createPageUrl("DocumentViewer") + `?id=${lesson.id}`)}
-                  className="w-full text-left bg-white rounded-xl border border-slate-200 p-3 md:p-4 hover:border-purple-300 hover:shadow-md transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Icon */}
-                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      grade ? 'bg-gradient-to-br from-purple-500 to-indigo-600' : 'bg-slate-100'
-                    }`}>
-                      {grade ? (
-                        <span className="text-white font-black text-sm md:text-base">{grade}</span>
-                      ) : (
-                        <BookOpen className="w-5 h-5 text-slate-400" />
-                      )}
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-slate-900 text-sm md:text-base truncate">
-                        {lesson.course_name}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        {totalTasks > 0 ? (
-                          <>
-                            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[120px]">
-                              <div 
-                                className={`h-full rounded-full transition-all ${
-                                  progress === 100 ? 'bg-emerald-500' : 'bg-purple-500'
-                                }`}
-                                style={{ width: `${progress}%` }}
-                              />
-                            </div>
-                            <span className="text-[10px] md:text-xs text-slate-500">
-                              {completedTasks}/{totalTasks} tasks
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-[10px] md:text-xs text-slate-400">
-                            Take diagnostic to start
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Arrow */}
-                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
-                  </div>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Recent Assignments */}
-      {!isLoading && gradedAssignments.length > 0 && (
-        <div className="mb-8 max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <h2 className="text-base md:text-lg font-bold text-slate-900">Recent Assignments</h2>
-          </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-            {gradedAssignments.slice(0, 3).map((assignment, idx) => (
-              <AssignmentActivityCard 
-                key={`assignment-${assignment.id}`} 
-                assignment={assignment}
-                index={idx}
-              />
+            {recentItems.slice(0, 3).map((item, idx) => (
+              item.type === 'lesson' ? (
+                <LessonActivityCard 
+                  key={`lesson-${item.id}`} 
+                  lesson={item} 
+                  exams={lessonExams[item.id] || []}
+                  index={idx}
+                />
+              ) : (
+                <AssignmentActivityCard 
+                  key={`assignment-${item.id}`} 
+                  assignment={item}
+                  index={idx}
+                />
+              )
             ))}
           </div>
         </div>

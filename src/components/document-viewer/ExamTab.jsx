@@ -1115,16 +1115,7 @@ JSON Output (exact schema):
     // Only exam 1 (diagnostic) is official, everything else is practice from study plan
     const diagnosticExam = allExamsForLesson.find(e => e.exam_number === 1 && e.exam_type !== 'practice');
     const practiceExams = allExamsForLesson.filter(e => e.exam_type === 'practice');
-    
-    // Deduplicate practice exams by title - keep most recent of each title
-    const practiceExamsByTitle = {};
-    practiceExams.forEach(e => {
-      const title = e.title || 'Practice Quiz';
-      if (!practiceExamsByTitle[title] || new Date(e.created_date) > new Date(practiceExamsByTitle[title].created_date)) {
-        practiceExamsByTitle[title] = e;
-      }
-    });
-    const sortedPracticeExams = Object.values(practiceExamsByTitle).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
         <div className="px-3 md:px-6 py-4 w-full max-w-[320px] md:max-w-2xl lg:max-w-3xl mx-auto space-y-4 md:space-y-6 pb-8">
