@@ -173,23 +173,23 @@ export default function Home() {
               {/* Stats Row - School, Year, Streak, XP */}
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
                 {learningProfile?.school && (
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-                    <BookOpen className="w-4 h-4 text-white/70" />
-                    <span className="text-sm font-medium text-white">{learningProfile.school}</span>
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg">
+                    <BookOpen className="w-4 h-4 text-white" />
+                    <span className="text-sm font-bold text-white">{learningProfile.school}</span>
                   </div>
                 )}
                 {learningProfile?.grade && (
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20">
-                    <GraduationCap className="w-4 h-4 text-white/70" />
-                    <span className="text-sm font-medium text-white">{learningProfile.grade}</span>
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg">
+                    <GraduationCap className="w-4 h-4 text-white" />
+                    <span className="text-sm font-bold text-white">{learningProfile.grade}</span>
                   </div>
                 )}
-                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40 border-orange-400/50' : 'bg-white/10 border-white/20'}`}>
-                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-orange-200' : 'text-white/50'}`} />
+                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border shadow-lg ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/50 border-orange-400/60' : 'bg-white/20 border-white/30'}`}>
+                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-orange-100' : 'text-white'}`} />
                   <span className="text-sm font-bold text-white">{user?.current_streak || 0} day streak</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-400/40 backdrop-blur-sm border border-yellow-300/50">
-                  <Zap className="w-4 h-4 text-yellow-200" />
+                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-500/50 backdrop-blur-sm border border-yellow-400/60 shadow-lg">
+                  <Zap className="w-4 h-4 text-yellow-100" />
                   <span className="text-sm font-bold text-white">{dailyXP}/50 XP</span>
                 </div>
               </div>
@@ -197,15 +197,15 @@ export default function Home() {
               {/* CTA Buttons - Right in the hero */}
               <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md mt-2">
                 <button
-                  onClick={() => setCreateLessonModalOpen(true)}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white text-purple-700 font-bold rounded-2xl shadow-xl hover:bg-purple-50 transition-all hover:scale-[1.02]"
+                  onClick={() => navigate(createPageUrl("CreateLesson"))}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:from-purple-600 hover:to-indigo-700 transition-all hover:scale-[1.02] border-2 border-white/30"
                 >
                   <Upload className="w-5 h-5" />
                   Upload Notes
                 </button>
                 <button
                   onClick={() => navigate(createPageUrl("SmartGrader"))}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white/20 text-white font-bold rounded-2xl border border-white/30 hover:bg-white/30 transition-all hover:scale-[1.02]"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:from-emerald-600 hover:to-teal-700 transition-all hover:scale-[1.02] border-2 border-white/30"
                 >
                   <FileCheck className="w-5 h-5" />
                   Grade Essay
