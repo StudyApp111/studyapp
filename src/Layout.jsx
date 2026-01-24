@@ -21,7 +21,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
-import CreateLessonModal from "@/components/modals/CreateLessonModal";
+// CreateLessonModal replaced with CreateLesson page for better UX
 
 import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
 import FeedbackModal from "@/components/feedback/FeedbackModal.jsx";
@@ -65,7 +65,7 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
-  const [createLessonModalOpen, setCreateLessonModalOpen] = React.useState(false);
+  // CreateLessonModal replaced with CreateLesson page
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -143,13 +143,13 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Upload Button */}
             <div className="px-2 py-3">
-              <button
-                onClick={() => setCreateLessonModalOpen(true)}
+              <Link
+                to={createPageUrl("CreateLesson")}
                 className="w-full aspect-square rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30 transition-all hover:scale-105"
                 title="Upload Now"
               >
                 <Plus className="w-5 h-5 text-white" />
-              </button>
+              </Link>
             </div>
 
             {/* Navigation Icons */}
@@ -301,8 +301,8 @@ export default function Layout({ children, currentPageName }) {
                 </Link>
 
                 {/* Upload CTA Button */}
-                <button
-                  onClick={() => setCreateLessonModalOpen(true)}
+                <Link
+                  to={createPageUrl("CreateLesson")}
                   className="absolute left-1/2 -translate-x-1/2 -top-5 group"
                 >
                   <div className="relative">
@@ -314,7 +314,7 @@ export default function Layout({ children, currentPageName }) {
                       <Upload className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
                   </div>
-                </button>
+                </Link>
               </div>
             </nav>
           )}
@@ -322,16 +322,12 @@ export default function Layout({ children, currentPageName }) {
 
 
 
-        {/* Create Lesson Modal */}
-        <CreateLessonModal 
-          open={createLessonModalOpen} 
-          onOpenChange={setCreateLessonModalOpen} 
-        />
+        {/* CreateLessonModal removed - using CreateLesson page instead */}
 
 
 
         {/* Floating AI Tutor Button */}
-        {showNavigation && !isOnboardingPage && <AITutorFloatingButton hidden={createLessonModalOpen} />}
+        {showNavigation && !isOnboardingPage && <AITutorFloatingButton hidden={false} />}
 
         {/* Feedback Modal */}
         <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />
