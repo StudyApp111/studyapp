@@ -36,29 +36,42 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   }, [lesson?.id]);
 
   // Listen for study task generation requests - auto-generate when navigating from study plan
+  // Use a ref to track if we've already handled this event to prevent duplicates
+  const hasHandledStudyTaskRef = useRef(false);
+  
+  useEffect(() => {
+    hasHandledStudyTaskRef.current = false; // Reset when lesson changes
+  }, [lesson?.id]);
+  
   useEffect(() => {
     const handleStudyTask = async (e) => {
       if (e.detail.taskType === 'flashcards') {
+        // Prevent duplicate handling
+        if (hasHandledStudyTaskRef.current || isGeneratingRef.current) {
+          console.log('🎯 Flashcard event already handled or generating, skipping');
+          return;
+        }
+        hasHandledStudyTaskRef.current = true;
+        
         console.log('🎯 Received flashcard generation request from study plan');
         pendingStudyTaskRef.current = e.detail.task;
         
-        // Load cards first to check if they exist
-        const existingCards = await base44.entities.Flashcard.filter({ lesson_id: lesson?.id });
+        // Use already loaded cards if available, otherwise check DB
+        if (cards && cards.length > 0) {
+          console.log('🎯 Cards already loaded, skipping generation');
+          return;
+        }
         
-        // If no cards exist, auto-generate
-        if (!existingCards || existingCards.length === 0) {
-          if (!isGeneratingRef.current) {
-            handleGenerate();
-          }
-        } else {
-          setCards(existingCards);
+        // Auto-generate if no cards exist
+        if (!isGeneratingRef.current) {
+          handleGenerate();
         }
       }
     };
     
     window.addEventListener('generateFromStudyTask', handleStudyTask);
     return () => window.removeEventListener('generateFromStudyTask', handleStudyTask);
-  }, [lesson?.id]);
+  }, [lesson?.id, cards]);
   
   const loadStudyPlanTopics = async () => {
     if (!lesson?.id) return;
