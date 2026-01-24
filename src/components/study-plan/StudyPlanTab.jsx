@@ -115,8 +115,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               newScore: newScore
             });
             setGradeJustUpdated(true);
-            // Keep showing for 8 seconds so user has time to see it
-            setTimeout(() => setGradeJustUpdated(false), 8000);
+            // Keep showing for 3 seconds
+            setTimeout(() => setGradeJustUpdated(false), 3000);
           }
         }
         setStudyPlan(event.data);
@@ -144,7 +144,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         newScore: studyPlan.current_score || studyPlan.initial_score
       });
       localStorage.setItem(`polly_seen_${studyPlan.id}`, lastUpdate.toString());
-      setTimeout(() => setGradeJustUpdated(false), 8000);
+      setTimeout(() => setGradeJustUpdated(false), 3000);
     }
   }, [studyPlan?.last_polly_update, studyPlan?.id]);
 
