@@ -11,9 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   BookOpen, Calendar, Clock, FileCheck, 
   ArrowRight, Trophy, Layers, ChevronRight, Sparkles,
-  GraduationCap, Target, FileText, PenLine
+  GraduationCap, Target, FileText, PenLine, Brain, Zap, 
+  TrendingUp, Flame, Upload
 } from "lucide-react";
 import { motion } from "framer-motion";
+import CreateLessonModal from "@/components/modals/CreateLessonModal";
 
 const formatTime = (seconds) => {
   if (!seconds || seconds === 0) return '0m';
@@ -38,6 +40,7 @@ export default function LessonHistory() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [createLessonModalOpen, setCreateLessonModalOpen] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(console.error);
@@ -139,6 +142,7 @@ export default function LessonHistory() {
     const totalTasks = activeStudyPlan?.tasks?.length || 0;
     const completedTasks = activeStudyPlan?.tasks?.filter(t => t.completed)?.length || 0;
     const currentGrade = activeStudyPlan?.current_predicted_grade || activeStudyPlan?.initial_predicted_grade;
+    const confidence = activeStudyPlan?.current_confidence || activeStudyPlan?.initial_confidence;
     
     const latestCompletedExam = exams
       .filter(e => e.completed && e.predicted_grade)
@@ -146,6 +150,8 @@ export default function LessonHistory() {
     
     const grade = currentGrade || latestCompletedExam?.predicted_grade;
     const studyTime = lesson.total_study_time_seconds || 0;
+    const completedExamsCount = exams.filter(e => e.completed).length;
+    const masteredFlashcards = flashcards.filter(f => f.mastered).length;
 
     const getGradientByGrade = (g) => {
       if (!g) return 'from-slate-400 to-slate-500';
@@ -153,6 +159,14 @@ export default function LessonHistory() {
       if (g.startsWith('B')) return 'from-blue-500 to-indigo-600';
       if (g.startsWith('C')) return 'from-amber-500 to-orange-600';
       return 'from-red-500 to-rose-600';
+    };
+
+    const getGradeBgColor = (g) => {
+      if (!g) return 'bg-slate-50 border-slate-200';
+      if (g.startsWith('A')) return 'bg-emerald-50 border-emerald-200';
+      if (g.startsWith('B')) return 'bg-blue-50 border-blue-200';
+      if (g.startsWith('C')) return 'bg-amber-50 border-amber-200';
+      return 'bg-red-50 border-red-200';
     };
 
     return (
@@ -163,53 +177,75 @@ export default function LessonHistory() {
         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
         className="cursor-pointer group"
       >
-        <div className="bg-white rounded-xl border border-slate-200 hover:border-purple-300 hover:shadow-md transition-all p-3">
-          <div className="flex items-center gap-3">
-            {/* Grade indicator */}
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex items-center justify-center shadow-sm flex-shrink-0`}>
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-4 ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-4">
+            {/* Grade indicator - larger and more prominent */}
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
-                <span className="text-white font-black text-sm">{grade}</span>
+                <>
+                  <span className="text-white font-black text-xl leading-none">{grade}</span>
+                  {confidence && <span className="text-white/70 text-[8px] mt-0.5">{Math.round(confidence)}% conf</span>}
+                </>
               ) : (
-                <BookOpen className="w-5 h-5 text-white" />
+                <>
+                  <Target className="w-6 h-6 text-white" />
+                  <span className="text-white/70 text-[8px] mt-0.5">start</span>
+                </>
               )}
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-slate-900 text-sm truncate group-hover:text-purple-700 transition-colors">
+              <h3 className="font-bold text-slate-900 text-base truncate group-hover:text-purple-700 transition-colors mb-2">
                 {lesson.course_name}
               </h3>
               
-              <div className="flex items-center gap-3 mt-1">
-                {totalTasks > 0 ? (
-                  <>
-                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[80px]">
-                      <div 
-                        className="h-full bg-purple-500 rounded-full"
-                        style={{ width: `${(completedTasks / totalTasks) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-slate-500">
-                      {totalTasks - completedTasks > 0 ? `${totalTasks - completedTasks} left` : '✓'}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[10px] text-purple-600">Start diagnostic →</span>
+              {/* Stats row */}
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                {completedExamsCount > 0 && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg">
+                    <Trophy className="w-3 h-3 text-amber-500" />
+                    <span className="text-[10px] font-medium text-slate-600">{completedExamsCount} exam{completedExamsCount > 1 ? 's' : ''}</span>
+                  </div>
                 )}
-                
+                {flashcards.length > 0 && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg">
+                    <Layers className="w-3 h-3 text-purple-500" />
+                    <span className="text-[10px] font-medium text-slate-600">{masteredFlashcards}/{flashcards.length} cards</span>
+                  </div>
+                )}
                 {studyTime > 0 && (
-                  <>
-                    <span className="text-slate-300">•</span>
-                    <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
-                      <Clock className="w-3 h-3" />
-                      {formatTime(studyTime)}
-                    </span>
-                  </>
+                  <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg">
+                    <Clock className="w-3 h-3 text-blue-500" />
+                    <span className="text-[10px] font-medium text-slate-600">{formatTime(studyTime)}</span>
+                  </div>
                 )}
               </div>
+              
+              {/* Progress bar */}
+              {totalTasks > 0 ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-2 bg-white/80 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all ${
+                        completedTasks === totalTasks ? 'bg-emerald-500' : 'bg-purple-500'
+                      }`}
+                      style={{ width: `${(completedTasks / totalTasks) * 100}%` }}
+                    />
+                  </div>
+                  <span className={`text-xs font-medium ${completedTasks === totalTasks ? 'text-emerald-600' : 'text-slate-500'}`}>
+                    {completedTasks === totalTasks ? '✓ Complete' : `${totalTasks - completedTasks} tasks left`}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-purple-600">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium">Take diagnostic to get your grade prediction →</span>
+                </div>
+              )}
             </div>
 
-            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-purple-500 transition-colors flex-shrink-0" />
+            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-purple-500 transition-colors flex-shrink-0 mt-5" />
           </div>
         </div>
       </motion.div>
@@ -225,8 +261,18 @@ export default function LessonHistory() {
       return 'from-red-500 to-rose-600';
     };
 
+    const getGradeBgColor = (g) => {
+      if (!g) return 'bg-slate-50 border-slate-200';
+      if (g.startsWith('A')) return 'bg-emerald-50 border-emerald-200';
+      if (g.startsWith('B')) return 'bg-blue-50 border-blue-200';
+      if (g.startsWith('C')) return 'bg-amber-50 border-amber-200';
+      return 'bg-red-50 border-red-200';
+    };
+
     const grade = assignment.grading_result?.predicted_grade;
     const score = assignment.grading_result?.total_score;
+    const strengths = assignment.grading_result?.identified_strengths?.length || 0;
+    const improvements = assignment.grading_result?.areas_for_improvement?.length || 0;
 
     return (
       <motion.div
@@ -236,34 +282,55 @@ export default function LessonHistory() {
         onClick={() => navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`)}
         className="cursor-pointer group"
       >
-        <div className="bg-white rounded-xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all p-3">
-          <div className="flex items-center gap-3">
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-4 ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-4">
             {/* Grade indicator */}
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex items-center justify-center shadow-sm flex-shrink-0`}>
+            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
-                <span className="text-white font-black text-sm">{grade}</span>
+                <>
+                  <span className="text-white font-black text-xl leading-none">{grade}</span>
+                  {score && <span className="text-white/70 text-[8px] mt-0.5">{Math.round(score)}%</span>}
+                </>
               ) : (
-                <FileCheck className="w-5 h-5 text-white" />
+                <>
+                  <FileCheck className="w-6 h-6 text-white" />
+                  <span className="text-white/70 text-[8px] mt-0.5">grading</span>
+                </>
               )}
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-slate-900 text-sm truncate group-hover:text-emerald-700 transition-colors">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="outline" className="bg-white/80 text-emerald-700 border-emerald-200 text-[10px]">
+                  <FileCheck className="w-2.5 h-2.5 mr-1" /> Assignment
+                </Badge>
+              </div>
+              <h3 className="font-bold text-slate-900 text-base truncate group-hover:text-emerald-700 transition-colors mb-1">
                 {assignment.assignment_title}
               </h3>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] text-slate-500 truncate">{assignment.course_name}</span>
-                {score && (
-                  <>
-                    <span className="text-slate-300">•</span>
-                    <span className="text-[10px] text-slate-500">{Math.round(score)}%</span>
-                  </>
-                )}
-              </div>
+              <p className="text-xs text-slate-500 truncate mb-2">{assignment.course_name}</p>
+              
+              {/* Feedback stats */}
+              {grade && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {strengths > 0 && (
+                    <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg">
+                      <TrendingUp className="w-3 h-3 text-emerald-500" />
+                      <span className="text-[10px] font-medium text-slate-600">{strengths} strengths</span>
+                    </div>
+                  )}
+                  {improvements > 0 && (
+                    <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg">
+                      <Target className="w-3 h-3 text-amber-500" />
+                      <span className="text-[10px] font-medium text-slate-600">{improvements} to improve</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-500 transition-colors flex-shrink-0" />
+            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-emerald-500 transition-colors flex-shrink-0 mt-5" />
           </div>
         </div>
       </motion.div>
@@ -292,66 +359,125 @@ export default function LessonHistory() {
     ? allItems.filter(i => i.itemType === 'lesson')
     : allItems.filter(i => i.itemType === 'assignment');
 
+  // Calculate total study time across all lessons
+  const totalStudyTime = lessons.reduce((acc, l) => acc + (l.total_study_time_seconds || 0), 0);
+
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
-      {/* Header with Stats */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">History</h1>
-          <p className="text-sm text-slate-500">{lessons.length} courses • {gradedAssignments.length} assignments</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 rounded-xl">
-            <Trophy className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-bold text-purple-700">{totalCompletedExams}</span>
-            <span className="text-xs text-purple-500">exams</span>
+    <div className="min-h-screen">
+      {/* Hero Header with Purple Gradient */}
+      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 px-4 pt-6 pb-8 md:px-8 md:pt-8 md:pb-12 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-3xl -ml-24 -mb-24" />
+        
+        <div className="max-w-6xl mx-auto relative">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Your Learning Journey</h1>
+          <p className="text-white/70 text-sm mb-6">Track your progress across all courses</p>
+          
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-purple-500/30 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{lessons.length}</p>
+                  <p className="text-[10px] text-white/60">Courses</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-emerald-500/30 rounded-lg flex items-center justify-center">
+                  <FileCheck className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{gradedAssignments.length}</p>
+                  <p className="text-[10px] text-white/60">Assignments</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-amber-500/30 rounded-lg flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{totalCompletedExams}</p>
+                  <p className="text-[10px] text-white/60">Exams Done</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-blue-500/30 rounded-lg flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white">{formatTime(totalStudyTime)}</p>
+                  <p className="text-[10px] text-white/60">Study Time</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-        <TabsList className="bg-slate-100 p-1 rounded-lg">
-          <TabsTrigger value="all" className="rounded-md text-xs">All</TabsTrigger>
-          <TabsTrigger value="lessons" className="rounded-md text-xs">Courses</TabsTrigger>
-          <TabsTrigger value="assignments" className="rounded-md text-xs">Graded</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10 -mt-4">
+        {/* Tabs */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-2 mb-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-slate-100 p-1 rounded-xl w-full grid grid-cols-3">
+              <TabsTrigger value="all" className="rounded-lg text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">All</TabsTrigger>
+              <TabsTrigger value="lessons" className="rounded-lg text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">Courses</TabsTrigger>
+              <TabsTrigger value="assignments" className="rounded-lg text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm">Graded</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />
-          ))}
-        </div>
-      ) : filteredItems.length === 0 ? (
-        <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-          <BookOpen className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-          <h3 className="text-base font-semibold text-slate-700 mb-1">
-            {activeTab === 'all' ? 'Nothing here yet' : activeTab === 'lessons' ? 'No courses yet' : 'No assignments yet'}
-          </h3>
-          <p className="text-sm text-slate-500 mb-4">
-            {activeTab === 'assignments' 
-              ? 'Grade your first assignment to see it here'
-              : 'Upload your first lesson to get started'}
-          </p>
-          <Button
-            onClick={() => navigate(createPageUrl("Home"))}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            Get Started
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filteredItems.map((item, idx) => (
-            item.itemType === 'lesson' 
-              ? <LessonCard key={`lesson-${item.id}`} lesson={item} index={idx} />
-              : <AssignmentCard key={`assignment-${item.id}`} assignment={item} index={idx} />
-          ))}
-        </div>
-      )}
+        {/* Content */}
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="h-24 bg-slate-100 rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="text-center py-16 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border-2 border-dashed border-purple-200">
+            <div className="w-20 h-20 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="w-10 h-10 text-purple-500" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">
+              {activeTab === 'all' ? 'Start Your Learning Journey' : activeTab === 'lessons' ? 'No courses yet' : 'No assignments yet'}
+            </h3>
+            <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+              {activeTab === 'assignments' 
+                ? 'Grade your first assignment to see it here'
+                : 'Upload your lecture notes or textbook chapters to get AI-powered study plans'}
+            </p>
+            <Button
+              onClick={() => setCreateLessonModalOpen(true)}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg"
+            >
+              <Upload className="w-4 h-4 mr-2" /> Upload Notes
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredItems.map((item, idx) => (
+              item.itemType === 'lesson' 
+                ? <LessonCard key={`lesson-${item.id}`} lesson={item} index={idx} />
+                : <AssignmentCard key={`assignment-${item.id}`} assignment={item} index={idx} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <CreateLessonModal 
+        open={createLessonModalOpen} 
+        onOpenChange={setCreateLessonModalOpen} 
+      />
     </div>
   );
 }
