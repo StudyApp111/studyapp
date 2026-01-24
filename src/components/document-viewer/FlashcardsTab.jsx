@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X, Zap, Layers, CheckCircle2, Play } from "lucide-react";
+import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X, Zap, CheckCircle2, Play, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
@@ -557,7 +557,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           onClick={() => setShowSetsList(true)}
           className="flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700 font-medium bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg transition-colors"
         >
-          <ChevronLeft className="w-3.5 h-3.5" />
+          <Copy className="w-3.5 h-3.5" />
           All Sets
         </button>
         <div className="flex items-center gap-2">

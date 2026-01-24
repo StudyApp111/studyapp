@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Target, CheckCircle2, BookOpen, Zap, Brain, 
-  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, Layers, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock
+  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock, Copy
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CreateTaskPanel from "./CreateTaskPanel";
@@ -13,7 +13,7 @@ import CompletedTaskItem from "./CompletedTaskItem";
 
 const TASK_CONFIG = {
   flashcards: { 
-    icon: Layers, 
+    icon: Copy, 
     gradient: "from-amber-500 to-orange-600",
     bgLight: "bg-amber-50",
     border: "border-amber-200",

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Layers, Brain } from "lucide-react";
+import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy } from "lucide-react";
 import { motion } from "framer-motion";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
@@ -109,7 +109,7 @@ export default function Home() {
   };
 
   const TASK_ICONS = {
-    flashcards: Layers,
+    flashcards: Copy,
     teach_it: Brain,
     practice_exam: Zap,
     review_notes: BookOpen

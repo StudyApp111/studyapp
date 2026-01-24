@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Layers, CheckCircle2, Play, ChevronRight, RotateCcw } from "lucide-react";
+import { CheckCircle2, Play, ChevronRight, RotateCcw, Copy } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew }) {
@@ -24,7 +24,7 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md">
-          <Layers className="w-4 h-4 text-white" />
+          <Copy className="w-4 h-4 text-white" />
         </div>
         <div>
           <h2 className="text-base md:text-lg font-black text-slate-900">Flashcard Sets</h2>
