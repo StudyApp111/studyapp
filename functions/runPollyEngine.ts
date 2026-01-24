@@ -204,7 +204,14 @@ D. GUESSING DETECTION
     "action_type": "flashcards" | "teach_it" | "practice_exam" | "review_notes" | "take_break",
     "action_title": "String (e.g., 'Master Key Terms for X')",
     "action_rationale": "String (Why this action will help)"
-  }
+  },
+  "suggested_topics": [
+    {
+      "topic_name": "String (specific topic from curriculum)",
+      "topic_description": "String (brief description)",
+      "topic_reason": "String (why student should study this)"
+    }
+  ]
 }`;
 
     // ========== CALL GEMINI 2.5 PRO ==========
@@ -267,9 +274,20 @@ D. GUESSING DETECTION
                     action_title: { type: "string" },
                     action_rationale: { type: "string" }
                   }
+                },
+                suggested_topics: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      topic_name: { type: "string" },
+                      topic_description: { type: "string" },
+                      topic_reason: { type: "string" }
+                    }
+                  }
                 }
               },
-              required: ["engine_state", "behavioral_insights", "chat_intervention", "next_best_action"]
+              required: ["engine_state", "behavioral_insights", "chat_intervention", "next_best_action", "suggested_topics"]
             }
           }
         })
@@ -285,6 +303,14 @@ D. GUESSING DETECTION
 
     const geminiData = await geminiResponse.json();
     const responseText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    // Extract token usage for cost tracking
+    const usageMetadata = geminiData.usageMetadata || {};
+    const inputTokens = usageMetadata.promptTokenCount || 0;
+    const outputTokens = usageMetadata.candidatesTokenCount || 0;
+    const totalTokens = usageMetadata.totalTokenCount || inputTokens + outputTokens;
+    
+    console.log(`🔮 [runPollyEngine] Token usage - Input: ${inputTokens}, Output: ${outputTokens}, Total: ${totalTokens}`);
     
     if (!responseText) {
       return Response.json({ error: 'No response from Polly' }, { status: 500 });
@@ -342,11 +368,17 @@ D. GUESSING DETECTION
 
       const updatedHistory = [...(studyPlan.grade_history || []), newGradeEntry];
       
+      // Update study plan with all Polly data
       await base44.entities.StudyPlan.update(studyPlan.id, {
         grade_history: updatedHistory,
-        mastery_gap: pollyResponse.engine_state.current_mastery_gap
+        current_predicted_grade: pollyResponse.engine_state.predicted_grade_letter,
+        current_confidence: pollyResponse.engine_state.prediction_confidence_percent,
+        learning_velocity: pollyResponse.engine_state.learning_velocity,
+        mastery_gap: pollyResponse.engine_state.current_mastery_gap,
+        suggested_topics: pollyResponse.suggested_topics || [],
+        behavioral_insights: pollyResponse.behavioral_insights || {}
       });
-      console.log(`🔮 [runPollyEngine] StudyPlan updated: ${Date.now() - startTime}ms`);
+      console.log(`🔮 [runPollyEngine] StudyPlan updated with grade=${pollyResponse.engine_state.predicted_grade_letter}, confidence=${pollyResponse.engine_state.prediction_confidence_percent}%, velocity=${pollyResponse.engine_state.learning_velocity}: ${Date.now() - startTime}ms`);
     }
 
     console.log(`🔮 [runPollyEngine] COMPLETE: ${Date.now() - startTime}ms total`);
@@ -355,7 +387,12 @@ D. GUESSING DETECTION
       success: true,
       polly_response: pollyResponse,
       chat_intervention_created: chatMessageCreated,
-      timing_ms: Date.now() - startTime
+      timing_ms: Date.now() - startTime,
+      token_usage: {
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        total_tokens: totalTokens
+      }
     });
 
   } catch (error) {
