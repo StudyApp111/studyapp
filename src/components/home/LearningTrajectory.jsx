@@ -52,42 +52,45 @@ export default function LearningTrajectory({ studyPlans, lessons }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm"
+      className="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-            <Target className="w-4 h-4 text-purple-600" />
+          <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+            <Target className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900 text-sm">Learning Trajectory</h3>
-            <p className="text-[10px] text-slate-500">{lessonsWithGrades.length} courses tracked</p>
+            <h3 className="font-bold text-white text-sm">Learning Trajectory</h3>
+            <p className="text-[10px] text-white/80">{lessonsWithGrades.length} courses tracked</p>
           </div>
         </div>
-        <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${trendBg}`}>
-          <TrendIcon className={`w-3.5 h-3.5 ${trendColor}`} />
-          <span className={`text-xs font-medium ${trendColor}`}>{trendText}</span>
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-white/20`}>
+          <TrendIcon className="w-3.5 h-3.5 text-white" />
+          <span className="text-xs font-medium text-white">{trendText}</span>
         </div>
       </div>
+      
+      <div className="p-4">
 
-      {/* Grade bars */}
-      <div className="space-y-2">
-        {lessonsWithGrades.map(({ lesson, grade }, idx) => (
-          <div key={lesson.id} className="flex items-center gap-2">
-            <div className="w-16 truncate">
-              <span className="text-[10px] text-slate-500 truncate block">{lesson.course_name.split(' ').slice(0, 2).join(' ')}</span>
+        {/* Grade bars */}
+        <div className="space-y-2">
+          {lessonsWithGrades.map(({ lesson, grade }, idx) => (
+            <div key={lesson.id} className="flex items-center gap-2">
+              <div className="w-16 truncate">
+                <span className="text-[10px] text-slate-500 truncate block">{lesson.course_name.split(' ').slice(0, 2).join(' ')}</span>
+              </div>
+              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${getGradeValue(grade)}%` }}
+                  transition={{ delay: idx * 0.1, duration: 0.5 }}
+                  className={`h-full rounded-full ${getGradeColor(grade)}`}
+                />
+              </div>
+              <span className="text-xs font-bold text-slate-700 w-8 text-right">{grade}</span>
             </div>
-            <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${getGradeValue(grade)}%` }}
-                transition={{ delay: idx * 0.1, duration: 0.5 }}
-                className={`h-full rounded-full ${getGradeColor(grade)}`}
-              />
-            </div>
-            <span className="text-xs font-bold text-slate-700 w-8 text-right">{grade}</span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </motion.div>
   );
