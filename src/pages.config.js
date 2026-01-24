@@ -1,5 +1,6 @@
 import AssignmentHistory from './pages/AssignmentHistory';
 import ChangePassword from './pages/ChangePassword';
+import CreateLesson from './pages/CreateLesson';
 import DocumentViewer from './pages/DocumentViewer';
 import EmailManager from './pages/EmailManager';
 import Feedback from './pages/Feedback';
@@ -11,13 +12,13 @@ import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
 import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
-import CreateLesson from './pages/CreateLesson';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AssignmentHistory": AssignmentHistory,
     "ChangePassword": ChangePassword,
+    "CreateLesson": CreateLesson,
     "DocumentViewer": DocumentViewer,
     "EmailManager": EmailManager,
     "Feedback": Feedback,
@@ -29,7 +30,6 @@ export const PAGES = {
     "ProfileInformation": ProfileInformation,
     "Settings": Settings,
     "SmartGrader": SmartGrader,
-    "CreateLesson": CreateLesson,
 }
 
 export const pagesConfig = {

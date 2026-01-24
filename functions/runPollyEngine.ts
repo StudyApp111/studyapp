@@ -240,7 +240,6 @@ D. GUESSING DETECTION
                     predicted_grade_letter: { type: "string" },
                     predicted_score_percent: { type: "number" },
                     prediction_confidence_percent: { type: "number" },
-                    confidence_rationale: { type: "string" },
                     current_mastery_gap: { type: "string" },
                     learning_velocity: { type: "string" }
                   },
@@ -255,22 +254,6 @@ D. GUESSING DETECTION
                     estimated_hours_to_target: { type: "number" }
                   }
                 },
-                chat_intervention: {
-                  type: "object",
-                  properties: {
-                    trigger_message: { type: "boolean" },
-                    message_content: { type: "string" },
-                    intervention_type: { type: "string" }
-                  }
-                },
-                next_best_action: {
-                  type: "object",
-                  properties: {
-                    action_type: { type: "string" },
-                    action_title: { type: "string" },
-                    action_rationale: { type: "string" }
-                  }
-                },
                 suggested_topics: {
                   type: "array",
                   items: {
@@ -283,7 +266,7 @@ D. GUESSING DETECTION
                   }
                 }
               },
-              required: ["engine_state", "behavioral_insights", "chat_intervention", "next_best_action", "suggested_topics"]
+              required: ["engine_state", "behavioral_insights", "suggested_topics"]
             }
           }
         })
@@ -337,19 +320,6 @@ D. GUESSING DETECTION
     await base44.auth.updateMe(updateData);
     console.log(`🔮 [runPollyEngine] User updated: ${Date.now() - startTime}ms`);
 
-    // ========== HANDLE CHAT INTERVENTION ==========
-    
-    let chatMessageCreated = false;
-    if (pollyResponse.chat_intervention?.trigger_message && pollyResponse.chat_intervention?.message_content) {
-      // Store the intervention message for the AI tutor to pick up
-      await base44.auth.updateMe({
-        polly_pending_message: pollyResponse.chat_intervention.message_content,
-        polly_intervention_type: pollyResponse.chat_intervention.intervention_type
-      });
-      chatMessageCreated = true;
-      console.log(`🔮 [runPollyEngine] Chat intervention stored: ${pollyResponse.chat_intervention.intervention_type}`);
-    }
-
     // ========== UPDATE STUDY PLAN WITH NEW PREDICTION ==========
     
     if (studyPlan) {
@@ -382,7 +352,9 @@ D. GUESSING DETECTION
     return Response.json({
       success: true,
       polly_response: pollyResponse,
-      chat_intervention_created: chatMessageCreated,
+      grade_updated: true,
+      new_grade: pollyResponse.engine_state.predicted_grade_letter,
+      new_confidence: pollyResponse.engine_state.prediction_confidence_percent,
       timing_ms: Date.now() - startTime,
       token_usage: {
         input_tokens: inputTokens,

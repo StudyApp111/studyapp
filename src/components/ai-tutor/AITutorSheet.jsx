@@ -6,7 +6,23 @@ import { Send, X, Sparkles, Loader2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useAITutor } from "./AITutorContext";
-import MathText from "../math/MathText";
+
+// Simple LaTeX renderer for inline and block math
+const renderMathContent = (text) => {
+  if (!text || typeof text !== 'string') return text;
+  
+  // Replace block math $$...$$ with styled div
+  let result = text.replace(/\$\$(.*?)\$\$/gs, (match, math) => {
+    return `<div class="my-2 p-2 bg-slate-100 rounded text-center font-mono text-sm">${math}</div>`;
+  });
+  
+  // Replace inline math $...$ with styled span
+  result = result.replace(/\$([^$]+)\$/g, (match, math) => {
+    return `<span class="font-mono bg-slate-100 px-1 rounded text-sm">${math}</span>`;
+  });
+  
+  return result;
+};
 
 export default function AITutorSheet() {
   const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
@@ -170,15 +186,29 @@ export default function AITutorSheet() {
                       <ReactMarkdown 
                         className="text-[11px] leading-relaxed prose prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-[11px] [&>ol]:my-1 [&>ol]:ml-3"
                         components={{
-                          p: ({ children }) => <MathText className="my-1">{children}</MathText>,
-                          li: ({ children }) => <li><MathText inline>{children}</MathText></li>,
+                          p: ({ children }) => {
+                            const text = typeof children === 'string' ? children : 
+                              (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                            if (text.includes('$')) {
+                              return <p className="my-1" dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
+                            }
+                            return <p className="my-1">{children}</p>;
+                          },
+                          li: ({ children }) => {
+                            const text = typeof children === 'string' ? children : 
+                              (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                            if (text.includes('$')) {
+                              return <li dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
+                            }
+                            return <li>{children}</li>;
+                          },
                           code: ({ inline, children }) => inline ? <code className="bg-slate-200 px-1 rounded text-[10px]">{children}</code> : <pre className="bg-slate-200 p-2 rounded text-[10px] overflow-x-auto"><code>{children}</code></pre>
                         }}
                       >
                         {msg.content}
                       </ReactMarkdown>
                     ) : (
-                      <MathText className="text-[11px]">{msg.content}</MathText>
+                      <p className="text-[11px]">{msg.content}</p>
                     )}
                   </div>
                 </motion.div>

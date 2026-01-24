@@ -78,6 +78,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const [loading, setLoading] = useState(true);
   const [liveProgress, setLiveProgress] = useState({});
   const [showCreateTask, setShowCreateTask] = useState(false);
+  const [gradeJustUpdated, setGradeJustUpdated] = useState(false);
   const ctaRef = useRef(null);
 
   const scrollToCTA = () => {
@@ -89,6 +90,26 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       loadStudyPlan();
     }
   }, [lesson?.id, isGeneratingPlan]);
+
+  // Subscribe to study plan updates for real-time grade changes
+  useEffect(() => {
+    if (!lesson?.id) return;
+    
+    const unsubscribe = base44.entities.StudyPlan.subscribe((event) => {
+      if (event.data?.lesson_id === lesson.id && event.data?.status === 'active') {
+        // Grade was updated by Polly engine
+        if (event.type === 'update' && studyPlan && 
+            event.data.current_predicted_grade !== studyPlan.current_predicted_grade) {
+          setGradeJustUpdated(true);
+          setTimeout(() => setGradeJustUpdated(false), 3000);
+        }
+        setStudyPlan(event.data);
+        loadLiveProgress();
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [lesson?.id, studyPlan?.current_predicted_grade]);
 
   // Refresh live progress when tab becomes visible
   useEffect(() => {
@@ -416,8 +437,25 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           If your <span className="font-semibold text-slate-800">{lesson?.course_name || 'course'}</span> exam was today:
         </p>
 
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-5 md:p-6 shadow-xl`}>
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-5 md:p-6 shadow-xl transition-all duration-500 ${gradeJustUpdated ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
+          
+          {/* Grade Updated Indicator */}
+          <AnimatePresence>
+            {gradeJustUpdated && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-2 left-1/2 -translate-x-1/2 z-10"
+              >
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400 text-yellow-900 rounded-full shadow-lg">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold">Grade Updated!</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="relative">
             <div className="md:flex md:items-center md:justify-between md:gap-8">

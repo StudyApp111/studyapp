@@ -146,13 +146,13 @@ export default function Home() {
 
         <div className="max-w-6xl mx-auto relative">
           {/* Logo + App Name - Above Pill */}
-          <div className="flex items-center justify-center gap-2.5 mb-10 md:mb-14">
+          <div className="flex items-center justify-center gap-3 mb-8 md:mb-10">
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/6afa508f0_LogoOnly.png"
               alt="StudyApp Logo"
-              className="w-10 h-10 md:w-12 md:h-12"
+              className="w-14 h-14 md:w-16 md:h-16"
             />
-            <span className="text-2xl md:text-3xl font-black text-white">StudyApp</span>
+            <span className="text-4xl md:text-5xl font-black text-white">StudyApp</span>
           </div>
 
           {/* Hero Pill - Full Width */}
@@ -181,7 +181,7 @@ export default function Home() {
                 {learningProfile?.grade && (
                   <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg">
                     <GraduationCap className="w-4 h-4 text-white" />
-                    <span className="text-sm font-bold text-white">{learningProfile.grade}</span>
+                    <span className="text-sm font-bold text-white">{learningProfile.grade.replace(/_/g, ' ')}</span>
                   </div>
                 )}
                 <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border shadow-lg ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/50 border-orange-400/60' : 'bg-white/20 border-white/30'}`}>
