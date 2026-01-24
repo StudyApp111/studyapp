@@ -1,114 +1,120 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Sparkles, X, ChevronDown, ArrowRight } from "lucide-react";
+import { Send, ChevronDown, ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReactMarkdown from "react-markdown";
 
-// Quick starter prompts
 const QUICK_PROMPTS = [
   "What should I study next?",
   "Give me a study tip",
-  "How am I doing?",
+  "How does this app work?",
 ];
 
-// Fun opening messages Polly can use
-const POLLY_GREETINGS = [
-  { message: "Ready to crush some studying today? I've got recommendations based on your progress! 📚", type: "greeting" },
-  { message: "Fun fact: Spaced repetition can boost retention by 200%! That's why flashcards work so well. Want to try some?", type: "fact" },
-  { message: "Did you know teaching others helps you retain 90% of what you learn? Try the Teach It feature!", type: "fact" },
-  { message: "Your brain forms stronger connections during short study bursts. 25-minute sessions are perfect!", type: "tip" },
-  { message: "I noticed you've been making great progress! Let's keep that momentum going 🚀", type: "encouragement" },
-];
+const STORAGE_KEY = 'polly_home_chat_history';
 
-export default function PollyChatBox({ lessons = [], studyPlans = [], user, onActionClick }) {
+export default function PollyChatBox({ lessons = [], studyPlans = [], user }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Generate smart recommendation based on user data
+  // Load chat history from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setMessages(parsed);
+    } else {
+      // Initialize with welcome message
+      const welcomeMessage = getWelcomeMessage();
+      setMessages([{ role: "assistant", content: welcomeMessage }]);
+    }
+  }, []);
+
+  // Save chat history whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Keep only last 20 messages to avoid bloating localStorage
+      const toSave = messages.slice(-20);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    }
+  }, [messages]);
+
+  const getWelcomeMessage = () => {
+    if (lessons.length === 0) {
+      return "Hey! I'm Polly 🦜 Upload your first lecture notes and I'll help you create a personalized study plan!";
+    }
+    
+    // Find a lesson needing work
+    const lessonNeedingDiagnostic = lessons.find(l => {
+      const plan = studyPlans.find(sp => sp.lesson_id === l.id);
+      return !plan;
+    });
+    
+    if (lessonNeedingDiagnostic) {
+      return `Ready to see your predicted grade for ${lessonNeedingDiagnostic.course_name}? Take the diagnostic - it only takes 5 minutes! 📊`;
+    }
+    
+    // Find lesson with tasks
+    for (const lesson of lessons) {
+      const plan = studyPlans.find(sp => sp.lesson_id === lesson.id && sp.status === 'active');
+      if (plan) {
+        const incompleteTasks = plan.tasks?.filter(t => !t.completed)?.length || 0;
+        if (incompleteTasks > 0) {
+          return `You have ${incompleteTasks} tasks left in ${lesson.course_name}. Let's knock one out! 💪`;
+        }
+      }
+    }
+    
+    return "You're crushing it! All tasks done. Upload more notes or review what you've learned! 🎉";
+  };
+
   const getSmartRecommendation = () => {
     if (!lessons || lessons.length === 0) {
-      return {
-        text: "Upload your first lesson and I'll create a personalized study plan!",
-        action: null,
-        actionLabel: null
-      };
+      return { text: "Upload your first lesson to get started!", action: null };
     }
 
-    // Find lessons needing diagnostic
-    const lessonsNeedingDiagnostic = lessons.filter(l => {
+    const lessonNeedingDiagnostic = lessons.find(l => {
       const plan = studyPlans.find(sp => sp.lesson_id === l.id);
       return !plan;
     });
 
-    if (lessonsNeedingDiagnostic.length > 0) {
-      const lesson = lessonsNeedingDiagnostic[0];
+    if (lessonNeedingDiagnostic) {
       return {
-        text: `Take the ${lesson.course_name} diagnostic to get your grade prediction!`,
-        action: `${createPageUrl("DocumentViewer")}?id=${lesson.id}`,
-        actionLabel: "Start Diagnostic"
+        text: `Take ${lessonNeedingDiagnostic.course_name} diagnostic`,
+        action: `${createPageUrl("DocumentViewer")}?id=${lessonNeedingDiagnostic.id}`,
+        actionLabel: "Start"
       };
     }
 
-    // Find lessons with incomplete tasks
     for (const lesson of lessons) {
       const plan = studyPlans.find(sp => sp.lesson_id === lesson.id && sp.status === 'active');
       if (plan) {
         const incompleteTasks = plan.tasks?.filter(t => !t.completed) || [];
         if (incompleteTasks.length > 0) {
-          const nextTask = incompleteTasks[0];
-          const taskLabel = nextTask.task_type === 'flashcards' ? 'flashcard session' :
-                           nextTask.task_type === 'teach_it' ? 'Teach It challenge' :
-                           nextTask.task_type === 'practice_exam' ? 'practice quiz' : 'review';
           return {
-            text: `Your ${lesson.course_name} ${taskLabel} is waiting! ${incompleteTasks.length} tasks left to boost your grade.`,
+            text: `Continue ${lesson.course_name}`,
             action: `${createPageUrl("DocumentViewer")}?id=${lesson.id}`,
-            actionLabel: "Let's Go"
+            actionLabel: "Go"
           };
         }
       }
     }
 
-    return {
-      text: "You're all caught up! 🎉 Great job staying on top of your studies.",
-      action: null,
-      actionLabel: null
-    };
+    return { text: "All caught up! 🎉", action: null };
   };
-
-  // Initialize with a greeting
-  useEffect(() => {
-    const recommendation = getSmartRecommendation();
-    const greeting = POLLY_GREETINGS[Math.floor(Math.random() * POLLY_GREETINGS.length)];
-    
-    // Personalize greeting with user data
-    let personalizedMessage = greeting.message;
-    if (user?.current_streak > 0) {
-      personalizedMessage = `🔥 ${user.current_streak}-day streak! ${greeting.message}`;
-    }
-
-    setMessages([
-      {
-        role: "assistant",
-        content: personalizedMessage,
-        recommendation
-      }
-    ]);
-  }, [lessons, studyPlans, user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isExpanded) scrollToBottom();
+  }, [messages, isExpanded]);
 
   const handleSend = async (text = inputValue) => {
     if (!text.trim() || isLoading) return;
@@ -119,66 +125,40 @@ export default function PollyChatBox({ lessons = [], studyPlans = [], user, onAc
     setIsLoading(true);
 
     try {
-      let convId = conversationId;
-      
-      // Create conversation if needed
-      if (!convId) {
-        const conv = await base44.agents.createConversation({
-          agent_name: "polly_home",
-          metadata: { name: "Polly Chat", user_id: user?.id }
-        });
-        convId = conv.id;
-        setConversationId(convId);
-      }
-
-      // Get conversation and send message
-      const conversation = await base44.agents.getConversation(convId);
-      
-      // Add context about user's current state
-      const contextMessage = `[Context: User has ${lessons.length} courses, ${studyPlans.filter(sp => sp.status === 'active').length} active study plans. Current streak: ${user?.current_streak || 0} days. Daily XP: ${user?.daily_xp || 0}]\n\nUser says: ${text}`;
-      
-      await base44.agents.addMessage(conversation, {
-        role: "user",
-        content: contextMessage
-      });
-
-      // Subscribe to get the response
-      const unsubscribe = base44.agents.subscribeToConversation(convId, (data) => {
-        const lastMessage = data.messages?.[data.messages.length - 1];
-        if (lastMessage && lastMessage.role === "assistant") {
-          setMessages(prev => {
-            const withoutLoading = prev.filter(m => !m.isLoading);
-            const existingAssistant = withoutLoading.find(m => m.id === lastMessage.id);
-            if (existingAssistant) {
-              return withoutLoading.map(m => m.id === lastMessage.id ? { ...lastMessage, recommendation: getSmartRecommendation() } : m);
-            }
-            return [...withoutLoading, { ...lastMessage, recommendation: getSmartRecommendation() }];
-          });
-          setIsLoading(false);
+      const response = await base44.functions.invoke('pollyChat', {
+        messages: [...messages, userMessage].slice(-10), // Last 10 for context
+        homeContext: {
+          lessons: lessons.map(l => ({ id: l.id, course_name: l.course_name })),
+          studyPlans: studyPlans.map(sp => ({
+            lesson_id: sp.lesson_id,
+            status: sp.status,
+            current_predicted_grade: sp.current_predicted_grade,
+            initial_predicted_grade: sp.initial_predicted_grade,
+            tasks: sp.tasks?.map(t => ({ completed: t.completed, task_type: t.task_type }))
+          })),
+          userName: user?.full_name?.split(' ')[0],
+          streak: user?.current_streak || 0
         }
       });
 
-      // Cleanup after 30 seconds
-      setTimeout(() => {
-        unsubscribe();
-        setIsLoading(false);
-      }, 30000);
-
+      const reply = response.data?.reply || "I'm here to help! What would you like to know?";
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch (error) {
-      console.error("Polly chat error:", error);
-      setMessages(prev => [...prev, {
-        role: "assistant",
-        content: "Oops! I had a little hiccup. Let me try again - what would you like help with?",
-        recommendation: getSmartRecommendation()
+      console.error("Polly error:", error);
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: "Oops, had a little hiccup! What would you like help with?" 
       }]);
+    } finally {
       setIsLoading(false);
     }
   };
 
   const recommendation = getSmartRecommendation();
+  const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
       {/* Header */}
       <div 
         className="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 cursor-pointer"
@@ -186,25 +166,22 @@ export default function PollyChatBox({ lessons = [], studyPlans = [], user, onAc
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <span className="text-2xl">🦜</span>
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-purple-600" />
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <span className="text-xl">🦜</span>
             </div>
             <div>
-              <h3 className="text-white font-bold text-lg">Polly</h3>
-              <p className="text-white/70 text-xs">Your AI Study Buddy</p>
+              <h3 className="text-white font-bold">Polly</h3>
+              <p className="text-white/70 text-xs">Your Study Buddy</p>
             </div>
           </div>
           <ChevronDown className={`w-5 h-5 text-white/70 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
         </div>
       </div>
 
-      {/* Collapsed view - show recommendation */}
+      {/* Collapsed view */}
       {!isExpanded && (
         <div className="p-4">
-          <p className="text-slate-700 text-sm mb-3">{recommendation.text}</p>
+          <p className="text-slate-700 text-sm mb-3">{lastAssistantMessage?.content || getWelcomeMessage()}</p>
           {recommendation.action && (
             <Link to={recommendation.action}>
               <Button size="sm" className="bg-purple-600 hover:bg-purple-700 w-full">
@@ -215,39 +192,28 @@ export default function PollyChatBox({ lessons = [], studyPlans = [], user, onAc
         </div>
       )}
 
-      {/* Expanded chat view */}
+      {/* Expanded chat */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
           >
-            {/* Messages */}
-            <div className="h-64 overflow-y-auto p-4 space-y-3 bg-slate-50">
+            <div className="h-56 overflow-y-auto p-3 space-y-2 bg-slate-50">
               {messages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-2 ${
+                  <div className={`max-w-[85%] rounded-2xl px-3 py-2 ${
                     msg.role === 'user' 
                       ? 'bg-purple-600 text-white' 
                       : 'bg-white border border-slate-200 text-slate-700'
                   }`}>
                     {msg.role === 'assistant' ? (
-                      <ReactMarkdown className="text-sm prose prose-sm max-w-none">
+                      <ReactMarkdown className="text-sm prose prose-sm max-w-none [&>p]:m-0">
                         {msg.content}
                       </ReactMarkdown>
                     ) : (
                       <p className="text-sm">{msg.content}</p>
-                    )}
-                    
-                    {/* Show recommendation action button for assistant messages */}
-                    {msg.role === 'assistant' && msg.recommendation?.action && (
-                      <Link to={msg.recommendation.action} className="block mt-2">
-                        <Button size="sm" variant="outline" className="w-full text-xs border-purple-200 text-purple-700 hover:bg-purple-50">
-                          {msg.recommendation.actionLabel} <ArrowRight className="w-3 h-3 ml-1" />
-                        </Button>
-                      </Link>
                     )}
                   </div>
                 </div>
@@ -255,7 +221,7 @@ export default function PollyChatBox({ lessons = [], studyPlans = [], user, onAc
               
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3">
+                  <div className="bg-white border border-slate-200 rounded-2xl px-4 py-2">
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -268,12 +234,12 @@ export default function PollyChatBox({ lessons = [], studyPlans = [], user, onAc
             </div>
 
             {/* Quick prompts */}
-            <div className="px-4 py-2 border-t border-slate-100 flex gap-2 overflow-x-auto">
+            <div className="px-3 py-2 border-t border-slate-100 flex gap-2 overflow-x-auto">
               {QUICK_PROMPTS.map((prompt, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSend(prompt)}
-                  className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-xs font-medium whitespace-nowrap hover:bg-purple-100 transition-colors"
+                  className="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-medium whitespace-nowrap hover:bg-purple-100"
                 >
                   {prompt}
                 </button>
@@ -288,14 +254,14 @@ export default function PollyChatBox({ lessons = [], studyPlans = [], user, onAc
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask Polly anything..."
-                  className="flex-1 px-4 py-2 bg-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Ask Polly..."
+                  className="flex-1 px-3 py-2 bg-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 <Button 
                   size="icon" 
                   onClick={() => handleSend()}
                   disabled={!inputValue.trim() || isLoading}
-                  className="bg-purple-600 hover:bg-purple-700 rounded-xl"
+                  className="bg-purple-600 hover:bg-purple-700 rounded-xl h-9 w-9"
                 >
                   <Send className="w-4 h-4" />
                 </Button>

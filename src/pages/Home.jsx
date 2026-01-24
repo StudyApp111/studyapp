@@ -124,78 +124,93 @@ export default function Home() {
     );
   }
 
-  const completedExamsCount = allExams.filter(e => e.completed).length;
+  const firstName = user?.full_name?.split(' ')[0] || 'there';
+  const schoolInfo = learningProfile?.school || learningProfile?.grade || '';
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Compact Header Bar */}
-      <div className="bg-white border-b border-slate-200 px-4 py-3 md:px-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-lg md:text-xl font-bold text-slate-900">
-              Hey {user?.full_name?.split(' ')[0] || 'there'}! 👋
-            </h1>
-            <p className="text-xs text-slate-500">
-              {learningProfile?.school || "Ready to study?"}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${(user?.current_streak || 0) > 0 ? 'bg-orange-100' : 'bg-slate-100'}`}>
-              <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
-              <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-orange-600' : 'text-slate-500'}`}>{user?.current_streak || 0}</span>
-            </div>
-            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-purple-100">
-              <Zap className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-bold text-purple-700">{dailyXP}/50</span>
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 px-4 py-6 md:px-8 md:py-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-3xl -ml-24 -mb-24" />
+        
+        <div className="max-w-6xl mx-auto relative">
+          {/* Hero Pill */}
+          <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-5 md:p-6 border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
+                  Hey {firstName}! 👋
+                </h1>
+                <p className="text-white/80 text-sm md:text-base">
+                  {schoolInfo ? `${schoolInfo} • ` : ''}Are you ready to lock in?
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/40' : 'bg-white/10'}`}>
+                  <Flame className={`w-5 h-5 ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : 'text-white/50'}`} />
+                  <span className="text-sm font-bold text-white">{user?.current_streak || 0}</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-400/40">
+                  <Zap className="w-5 h-5 text-yellow-300" />
+                  <span className="text-sm font-bold text-white">{dailyXP}/50</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
+        {/* CTA Cards - Right after hero */}
+        <div className="grid grid-cols-2 gap-3 mb-6 -mt-4">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => setCreateLessonModalOpen(true)}
+            className="cursor-pointer group"
+          >
+            <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-purple-600 to-indigo-700 hover:scale-[1.02]">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Upload className="w-5 h-5 text-white" />
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-white/70 group-hover:translate-x-1 transition-transform" />
+                </div>
+                <h3 className="text-base font-bold text-white">Upload Notes</h3>
+                <p className="text-white/70 text-xs mt-0.5">Get AI study materials</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            onClick={() => navigate(createPageUrl("SmartGrader"))}
+            className="cursor-pointer group"
+          >
+            <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-emerald-500 to-teal-600 hover:scale-[1.02]">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                    <FileCheck className="w-5 h-5 text-white" />
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-white/70 group-hover:translate-x-1 transition-transform" />
+                </div>
+                <h3 className="text-base font-bold text-white">Grade My Work</h3>
+                <p className="text-white/70 text-xs mt-0.5">Get instant AI feedback</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                    <BookOpen className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">{lessons.length}</p>
-                    <p className="text-xs text-slate-500">Courses</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md">
-                    <Trophy className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">{completedExamsCount}</p>
-                    <p className="text-xs text-slate-500">Exams</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-md">
-                    <Clock className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">{Math.round(studyMinutesToday)}</p>
-                    <p className="text-xs text-slate-500">Min today</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+          {/* Left Column - Courses */}
+          <div className="lg:col-span-2 space-y-4">
             {/* Your Courses */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
               <div className="flex items-center justify-between p-4 border-b border-slate-100">
@@ -314,69 +329,18 @@ export default function Home() {
                 </div>
               )}
             </div>
-
-            {/* CTA Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                onClick={() => setCreateLessonModalOpen(true)}
-                className="cursor-pointer group"
-              >
-                <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 hover:scale-[1.02]">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                        <Upload className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform">
-                        <ArrowRight className="w-4 h-4 text-slate-900" />
-                      </div>
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-1">Upload Notes</h3>
-                    <p className="text-white/80 text-sm">Get AI quizzes, flashcards & grade predictions</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                onClick={() => navigate(createPageUrl("SmartGrader"))}
-                className="cursor-pointer group"
-              >
-                <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 hover:scale-[1.02]">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                        <FileCheck className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center group-hover:translate-x-1 transition-transform">
-                        <ArrowRight className="w-4 h-4 text-slate-900" />
-                      </div>
-                    </div>
-                    <h3 className="text-lg font-bold text-white mb-1">Grade My Work</h3>
-                    <p className="text-white/80 text-sm">Get instant AI feedback & improvements</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
           </div>
 
           {/* Right Column - Polly & Goals */}
           <div className="space-y-4">
-            {/* Polly Chat Box */}
             <PollyChatBox 
               lessons={lessons}
               studyPlans={studyPlans}
               user={user}
             />
 
-            {/* Learning Trajectory */}
             <LearningTrajectory studyPlans={studyPlans} lessons={lessons} />
             
-            {/* Daily Goals */}
             <DailyChallenge 
               studyMinutes={studyMinutesToday}
               questionsAnswered={questionsToday}
