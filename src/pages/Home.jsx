@@ -132,112 +132,14 @@ export default function Home() {
   }, [studyPlans]);
 
   // Group exams by lesson
-  const lessonExams = {};
-  allExams.forEach(e => {
-    if (!lessonExams[e.lesson_id]) {
-      lessonExams[e.lesson_id] = [];
-    }
-    lessonExams[e.lesson_id].push(e);
-  });
-
-  // Find the lesson with most urgent action needed
-  const nextActionLesson = React.useMemo(() => {
-    if (lessons.length === 0) return null;
-    
-    // Priority: 1) Lessons with incomplete tasks, 2) Lessons without study plan
-    for (const lesson of lessons) {
-      const plan = studyPlansByLesson[lesson.id];
-      if (plan) {
-        const incompleteTasks = plan.tasks?.filter(t => !t.completed) || [];
-        if (incompleteTasks.length > 0) {
-          return { lesson, plan, tasksRemaining: incompleteTasks.length };
-        }
-      }
-    }
-    
-    // Find lesson without study plan (needs diagnostic)
-    for (const lesson of lessons) {
-      if (!studyPlansByLesson[lesson.id]) {
-        return { lesson, plan: null, tasksRemaining: 0 };
-      }
-    }
-    
-    return lessons[0] ? { lesson: lessons[0], plan: studyPlansByLesson[lessons[0].id], tasksRemaining: 0 } : null;
-  }, [lessons, studyPlansByLesson]);
-
-  // Calculate stats
-  const completedExams = allExams.filter(e => e.completed).length;
-  const inProgressExams = allExams.filter(e => e.status === "in_progress").length;
-  const totalExams = allExams.filter(e => e.completed).length;
-  const avgScore = totalExams > 0
-    ? Math.round(allExams.filter(e => e.completed).reduce((sum, e) => sum + (e.total_score || 0), 0) / totalExams)
-    : 0;
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
-      </div>
-    );
-  }
-
-  const formatTime = (seconds) => {
-    if (!seconds || seconds === 0) return '0m';
-    
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    
-    if (hours > 0) {
-      return `${hours}h`;
-    }
-    return `${minutes}m`;
-  };
-
-  const getSubjectIcon = (courseName) => {
-    const name = courseName.toLowerCase();
-    
-    // Math & Calculus
-    if (name.includes('math') || name.includes('calculus') || name.includes('algebra') || name.includes('geometry') || name.includes('trigonometry') || name.includes('statistics')) {
-      return Calculator;
-    }
-    // Science subjects
-    if (name.includes('physics') || name.includes('chemistry') || name.includes('biology') || name.includes('science')) {
-      return Beaker;
-    }
-    // Geography
-    if (name.includes('geography') || name.includes('geo')) {
-      return Globe;
-    }
-    // Humanities (History, Philosophy, etc)
-    if (name.includes('history') || name.includes('humanities') || name.includes('philosophy') || name.includes('literature') || name.includes('english')) {
-      return BookText;
-    }
-    // Languages
-    if (name.includes('language') || name.includes('french') || name.includes('spanish') || name.includes('german') || name.includes('chinese')) {
-      return Languages;
-    }
-    // Computer Science
-    if (name.includes('computer') || name.includes('coding') || name.includes('programming') || name.includes('cs')) {
-      return Code;
-    }
-    // Art
-    if (name.includes('art') || name.includes('design')) {
-      return Palette;
-    }
-    // Music
-    if (name.includes('music')) {
-      return Music;
-    }
-    // Business/Economics
-    if (name.includes('business') || name.includes('economics') || name.includes('econ') || name.includes('finance') || name.includes('accounting')) {
-      return Briefcase;
-    }
-    
-    // Default
-    return BookOpen;
-  };
-
-
+  const lessonExams = React.useMemo(() => {
+    const map = {};
+    allExams.forEach(e => {
+      if (!map[e.lesson_id]) map[e.lesson_id] = [];
+      map[e.lesson_id].push(e);
+    });
+    return map;
+  }, [allExams]);
 
   // Calculate tasks remaining per lesson for display
   const lessonsWithTasks = React.useMemo(() => {
@@ -250,6 +152,15 @@ export default function Home() {
       return { lesson, plan, tasksRemaining, totalTasks, completedTasks, currentGrade };
     });
   }, [lessons, studyPlansByLesson]);
+
+  // Early return AFTER all hooks
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
+      </div>
+    );
+  }
 
   const getGradeColor = (grade) => {
     if (!grade) return 'from-slate-400 to-slate-500';
