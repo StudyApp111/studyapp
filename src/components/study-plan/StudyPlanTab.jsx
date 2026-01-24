@@ -79,6 +79,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const [liveProgress, setLiveProgress] = useState({});
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [gradeJustUpdated, setGradeJustUpdated] = useState(false);
+  const [previousGrade, setPreviousGrade] = useState(null);
+  const [gradeChange, setGradeChange] = useState(null); // { from, to, scoreDiff }
   const ctaRef = useRef(null);
 
   const scrollToCTA = () => {
@@ -97,11 +99,25 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     
     const unsubscribe = base44.entities.StudyPlan.subscribe((event) => {
       if (event.data?.lesson_id === lesson.id && event.data?.status === 'active') {
-        // Grade was updated by Polly engine
-        if (event.type === 'update' && studyPlan && 
-            event.data.current_predicted_grade !== studyPlan.current_predicted_grade) {
-          setGradeJustUpdated(true);
-          setTimeout(() => setGradeJustUpdated(false), 3000);
+        // Grade was updated by Polly engine - check for meaningful change
+        if (event.type === 'update' && studyPlan) {
+          const oldScore = studyPlan.current_score || studyPlan.initial_score;
+          const newScore = event.data.current_score || event.data.initial_score;
+          const oldGrade = studyPlan.current_predicted_grade || studyPlan.initial_predicted_grade;
+          const newGrade = event.data.current_predicted_grade || event.data.initial_predicted_grade;
+          
+          // Only show update if score or grade actually changed
+          if (newScore !== oldScore || newGrade !== oldGrade) {
+            setGradeChange({
+              from: oldGrade,
+              to: newGrade,
+              scoreDiff: newScore && oldScore ? Math.round(newScore - oldScore) : null,
+              newScore: newScore
+            });
+            setGradeJustUpdated(true);
+            // Keep showing for 8 seconds so user has time to see it
+            setTimeout(() => setGradeJustUpdated(false), 8000);
+          }
         }
         setStudyPlan(event.data);
         loadLiveProgress();
@@ -109,7 +125,28 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     });
     
     return () => unsubscribe();
-  }, [lesson?.id, studyPlan?.current_predicted_grade]);
+  }, [lesson?.id, studyPlan?.current_score, studyPlan?.current_predicted_grade]);
+
+  // Also check for updates when tab is revisited (async scenario)
+  useEffect(() => {
+    if (!studyPlan?.last_polly_update) return;
+    
+    const lastSeen = localStorage.getItem(`polly_seen_${studyPlan.id}`);
+    const lastUpdate = new Date(studyPlan.last_polly_update).getTime();
+    
+    if (!lastSeen || parseInt(lastSeen) < lastUpdate) {
+      // There's a new update the user hasn't seen
+      setGradeJustUpdated(true);
+      setGradeChange({
+        from: null,
+        to: studyPlan.current_predicted_grade || studyPlan.initial_predicted_grade,
+        scoreDiff: null,
+        newScore: studyPlan.current_score || studyPlan.initial_score
+      });
+      localStorage.setItem(`polly_seen_${studyPlan.id}`, lastUpdate.toString());
+      setTimeout(() => setGradeJustUpdated(false), 8000);
+    }
+  }, [studyPlan?.last_polly_update, studyPlan?.id]);
 
   // Refresh live progress when tab becomes visible or when studyPlan tasks change
   useEffect(() => {
@@ -278,6 +315,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
 
   const currentGrade = studyPlan?.current_predicted_grade || latestOfficialExam?.predicted_grade || studyPlan?.initial_predicted_grade || '—';
+  const currentScore = studyPlan?.current_score || studyPlan?.initial_score || null;
   const currentConfidence = studyPlan?.current_confidence || studyPlan?.initial_confidence || 45;
   const learningVelocity = studyPlan?.learning_velocity;
   const velocityConfig = getVelocityConfig(learningVelocity);
@@ -444,37 +482,56 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           If your <span className="font-semibold text-slate-800">{lesson?.course_name || 'course'}</span> exam was today:
         </p>
 
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-5 md:p-6 shadow-xl transition-all duration-500 ${gradeJustUpdated ? 'ring-4 ring-yellow-400 ring-offset-2' : ''}`}>
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-5 md:p-6 shadow-xl transition-all duration-500 ${gradeJustUpdated ? 'ring-4 ring-yellow-400 ring-offset-2 animate-pulse' : ''}`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
           
-          {/* Grade Updated Indicator */}
+          {/* Grade Updated Banner - More Prominent */}
           <AnimatePresence>
             {gradeJustUpdated && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-2 left-1/2 -translate-x-1/2 z-10"
+                initial={{ opacity: 0, scale: 0.9, y: -20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                className="absolute -top-2 left-1/2 -translate-x-1/2 z-20"
               >
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-400 text-yellow-900 rounded-full shadow-lg">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span className="text-xs font-bold">Grade Updated!</span>
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-amber-400 text-yellow-900 rounded-full shadow-xl border-2 border-yellow-300">
+                    <Sparkles className="w-4 h-4 animate-spin" style={{ animationDuration: '2s' }} />
+                    <span className="text-sm font-black">Grade Updated!</span>
+                    {gradeChange?.scoreDiff !== null && gradeChange?.scoreDiff !== 0 && (
+                      <span className={`text-sm font-bold ${gradeChange.scoreDiff > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                        {gradeChange.scoreDiff > 0 ? '+' : ''}{gradeChange.scoreDiff}%
+                      </span>
+                    )}
+                  </div>
+                  {/* Arrow pointing down */}
+                  <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-yellow-400" />
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <div className="relative">
+          <div className={`relative ${gradeJustUpdated ? 'pt-6' : ''}`}>
             <div className="md:flex md:items-center md:justify-between md:gap-8">
               {/* Current Grade + Score + Velocity */}
               <div className="text-center md:text-left mb-4 md:mb-0 md:flex-1">
                 <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Predicted Grade</p>
                 <div className="flex items-baseline justify-center md:justify-start gap-3">
-                  <span className="text-5xl md:text-6xl font-black text-white">{currentGrade}</span>
-                  {studyPlan?.initial_score && (
-                    <span className="text-xl md:text-2xl font-bold text-white/80">
-                      ({Math.round(studyPlan.initial_score)}%)
-                    </span>
+                  <motion.span 
+                    className="text-5xl md:text-6xl font-black text-white"
+                    animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {currentGrade}
+                  </motion.span>
+                  {currentScore && (
+                    <motion.span 
+                      className="text-xl md:text-2xl font-bold text-white/90"
+                      animate={gradeJustUpdated ? { scale: [1, 1.15, 1] } : {}}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                    >
+                      ({Math.round(currentScore)}%)
+                    </motion.span>
                   )}
                 </div>
                 
