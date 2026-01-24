@@ -334,15 +334,17 @@ D. GUESSING DETECTION
 
       const updatedHistory = [...(studyPlan.grade_history || []), newGradeEntry];
       
-      // Update study plan with all Polly data
+      // Update study plan with all Polly data including the score %
       await base44.entities.StudyPlan.update(studyPlan.id, {
         grade_history: updatedHistory,
         current_predicted_grade: pollyResponse.engine_state.predicted_grade_letter,
+        current_score: pollyResponse.engine_state.predicted_score_percent,
         current_confidence: pollyResponse.engine_state.prediction_confidence_percent,
         learning_velocity: pollyResponse.engine_state.learning_velocity,
         mastery_gap: pollyResponse.engine_state.current_mastery_gap,
         suggested_topics: pollyResponse.suggested_topics || [],
-        behavioral_insights: pollyResponse.behavioral_insights || {}
+        behavioral_insights: pollyResponse.behavioral_insights || {},
+        last_polly_update: new Date().toISOString()
       });
       console.log(`🔮 [runPollyEngine] StudyPlan updated with grade=${pollyResponse.engine_state.predicted_grade_letter}, confidence=${pollyResponse.engine_state.prediction_confidence_percent}%, velocity=${pollyResponse.engine_state.learning_velocity}: ${Date.now() - startTime}ms`);
     }
@@ -354,6 +356,7 @@ D. GUESSING DETECTION
       polly_response: pollyResponse,
       grade_updated: true,
       new_grade: pollyResponse.engine_state.predicted_grade_letter,
+      new_score: pollyResponse.engine_state.predicted_score_percent,
       new_confidence: pollyResponse.engine_state.prediction_confidence_percent,
       timing_ms: Date.now() - startTime,
       token_usage: {
