@@ -111,7 +111,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     return () => unsubscribe();
   }, [lesson?.id, studyPlan?.current_predicted_grade]);
 
-  // Refresh live progress when tab becomes visible
+  // Refresh live progress when tab becomes visible or when studyPlan tasks change
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && lesson?.id && studyPlan) {
@@ -122,6 +122,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [lesson?.id, studyPlan]);
+
+  // Also refresh when studyPlan tasks change (from subscription)
+  useEffect(() => {
+    if (studyPlan?.tasks) {
+      loadLiveProgress();
+    }
+  }, [studyPlan?.tasks?.filter(t => t.completed).length]);
 
   const loadStudyPlan = async () => {
     try {
