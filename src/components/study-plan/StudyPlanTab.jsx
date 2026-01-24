@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Target, CheckCircle2, BookOpen, Zap, Brain, 
-  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, Layers, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus
+  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, Layers, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CreateTaskPanel from "./CreateTaskPanel";
@@ -238,6 +238,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const currentConfidence = studyPlan?.current_confidence || studyPlan?.initial_confidence || 45;
   const learningVelocity = studyPlan?.learning_velocity;
   const velocityConfig = getVelocityConfig(learningVelocity);
+  const behavioralInsights = studyPlan?.behavioral_insights;
 
   // Separate completed and incomplete tasks
   const incompleteTasks = studyPlan?.tasks?.filter(t => !t.completed) || [];
@@ -677,6 +678,51 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           )}
         </div>
       </div>
+
+      {/* Behavioral Insights - Compact display */}
+      {behavioralInsights && (behavioralInsights.is_guessing_detected || behavioralInsights.is_inefficient_studying || behavioralInsights.recommended_focus) && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35 }}
+          className="mt-4 space-y-2"
+        >
+          {/* Warning badges */}
+          <div className="flex flex-wrap gap-2">
+            {behavioralInsights.is_guessing_detected && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                <span className="text-[11px] font-medium text-amber-800">Guessing detected</span>
+              </div>
+            )}
+            {behavioralInsights.is_inefficient_studying && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-orange-50 border border-orange-200 rounded-lg">
+                <Clock className="w-3.5 h-3.5 text-orange-600" />
+                <span className="text-[11px] font-medium text-orange-800">Inefficient studying</span>
+              </div>
+            )}
+            {behavioralInsights.estimated_hours_to_target && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-50 border border-purple-200 rounded-lg">
+                <Target className="w-3.5 h-3.5 text-purple-600" />
+                <span className="text-[11px] font-medium text-purple-800">
+                  ~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {/* Recommended focus */}
+          {behavioralInsights.recommended_focus && (
+            <div className="flex items-start gap-2 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+              <Lightbulb className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-wide">AI Recommendation</p>
+                <p className="text-xs text-slate-700 leading-relaxed mt-0.5">{behavioralInsights.recommended_focus}</p>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* Rationale */}
       {studyPlan?.plan_rationale && (
