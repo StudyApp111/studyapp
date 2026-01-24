@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  BookOpen, Clock, FileCheck, Trophy, Layers, ChevronRight, Sparkles,
+  BookOpen, Clock, FileCheck, Trophy, Copy, ChevronRight, Sparkles,
   Target, TrendingUp, Upload, Flame, Zap
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -174,7 +174,7 @@ export default function LessonHistory() {
                 )}
                 {flashcards.length > 0 && (
                   <div className="flex items-center gap-1 px-2 py-1 bg-white/80 rounded-lg border border-slate-100">
-                    <Layers className="w-3 h-3 text-purple-500" />
+                    <Copy className="w-3 h-3 text-purple-500" />
                     <span className="text-[10px] font-medium text-slate-600">{masteredFlashcards}/{flashcards.length}</span>
                   </div>
                 )}
