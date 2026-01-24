@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
   Target, CheckCircle2, BookOpen, Zap, Brain, 
-  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, Layers, FileText, TrendingUp, AlertCircle
+  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, Layers, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus
 } from "lucide-react";
-import { motion } from "framer-motion";
-import GradeImprovementAnimation from "./GradeImprovementAnimation";
+import { motion, AnimatePresence } from "framer-motion";
+import CreateTaskPanel from "./CreateTaskPanel";
+import CompletedTaskItem from "./CompletedTaskItem";
 
 const TASK_CONFIG = {
   flashcards: { 
@@ -61,12 +62,22 @@ const getGradeColor = (grade) => {
   return 'from-red-500 to-rose-600';
 };
 
+const getVelocityConfig = (velocity) => {
+  switch (velocity) {
+    case 'Accelerating':
+      return { icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-100', label: 'Accelerating' };
+    case 'Declining':
+      return { icon: TrendingDown, color: 'text-red-500', bg: 'bg-red-100', label: 'Declining' };
+    default:
+      return { icon: Minus, color: 'text-amber-500', bg: 'bg-amber-100', label: 'Stagnating' };
+  }
+};
+
 export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPlan = false }) {
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveProgress, setLiveProgress] = useState({});
-  const [showGradeBoost, setShowGradeBoost] = useState(false);
-  const [previousCompleted, setPreviousCompleted] = useState(0);
+  const [showCreateTask, setShowCreateTask] = useState(false);
   const ctaRef = useRef(null);
 
   const scrollToCTA = () => {
@@ -79,7 +90,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     }
   }, [lesson?.id, isGeneratingPlan]);
 
-  // Refresh live progress when tab becomes visible - but only if study plan exists
+  // Refresh live progress when tab becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && lesson?.id && studyPlan) {
@@ -99,18 +110,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       });
       
       if (plans.length > 0) {
-        const newPlan = plans[0];
-        const newCompletedCount = newPlan.tasks?.filter(t => t.completed).length || 0;
-
-        // Check if task was just completed (show animation)
-        if (studyPlan && newCompletedCount > previousCompleted) {
-          setShowGradeBoost(true);
-        }
-
-        setPreviousCompleted(newCompletedCount);
-        setStudyPlan(newPlan);
-
-        // Only load live progress after study plan is confirmed to exist
+        setStudyPlan(plans[0]);
         loadLiveProgress();
       }
       setLoading(false);
@@ -120,7 +120,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     }
   };
 
-  // Load live progress from actual entities (flashcards, teachit cards, practice exams)
   const loadLiveProgress = async () => {
     try {
       const [flashcards, teachItCards, practiceExams] = await Promise.all([
@@ -129,7 +128,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         base44.entities.Exam.filter({ lesson_id: lesson.id, exam_type: 'practice' })
       ]);
       
-      // Get only completed practice exams for score calculation
       const completedPracticeExams = practiceExams.filter(e => e.completed);
       const latestPracticeExam = completedPracticeExams.sort((a, b) => 
         new Date(b.updated_date) - new Date(a.updated_date)
@@ -149,7 +147,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         practice_exam: {
           total: practiceExams.length,
           completed: completedPracticeExams.length,
-          // Use latest completed exam for score display
           totalQuestions: latestPracticeExam?.questions?.length || 0,
           correctAnswers: latestPracticeExam?.correct_count || 0
         }
@@ -164,14 +161,12 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     
     switch (task.task_type) {
       case 'flashcards':
-        // Pass task info to flashcards tab for targeted generation or review
         window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
           detail: { taskType: 'flashcards', task, isComplete }
         }));
         onNavigate('flashcards');
         break;
       case 'teach_it':
-        // Pass task info to teach it tab for targeted generation or review
         window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
           detail: { taskType: 'teach_it', task, isComplete }
         }));
@@ -181,12 +176,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         onNavigate('notes');
         break;
       case 'practice_exam':
-        // If task is complete, just navigate to exam tab (shows completed exams list)
-        // Do NOT regenerate another practice exam
         if (isComplete) {
           onNavigate('exam');
         } else {
-          // Only generate new practice exam if task is NOT complete
           window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
             detail: { 
               task,
@@ -204,20 +196,53 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     }
   };
 
-  // Get latest predicted grade from exams - check both exam_type field and absence of it
+  const handleCreateTask = async ({ topic, taskType, target_count }) => {
+    if (!studyPlan) return;
+    
+    const newTask = {
+      task_id: `custom_${Date.now()}`,
+      task_type: taskType,
+      title: topic.topic_name,
+      description: topic.topic_description || `Custom ${TASK_CONFIG[taskType]?.label} task`,
+      target_count: target_count,
+      completed_count: 0,
+      focus_topics: [topic.topic_name],
+      is_custom: true,
+      is_focus_factor: false,
+      completed: false
+    };
+
+    const updatedTasks = [...(studyPlan.tasks || []), newTask];
+    
+    try {
+      await base44.entities.StudyPlan.update(studyPlan.id, {
+        tasks: updatedTasks
+      });
+      
+      setStudyPlan(prev => ({ ...prev, tasks: updatedTasks }));
+      setShowCreateTask(false);
+      
+      // Navigate to the relevant tab and start generating
+      handleTaskClick(newTask);
+    } catch (error) {
+      console.error("Error creating custom task:", error);
+    }
+  };
+
+  // Get current grade - prefer Polly's live update, fallback to exam/initial
   const latestOfficialExam = (exams || [])
     .filter(e => e.completed && e.predicted_grade && e.exam_type !== 'practice')
     .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
 
-  const currentGrade = latestOfficialExam?.predicted_grade || studyPlan?.initial_predicted_grade || '—';
-  const currentScore = latestOfficialExam?.total_score || studyPlan?.initial_score;
+  const currentGrade = studyPlan?.current_predicted_grade || latestOfficialExam?.predicted_grade || studyPlan?.initial_predicted_grade || '—';
+  const currentConfidence = studyPlan?.current_confidence || studyPlan?.initial_confidence || 45;
+  const learningVelocity = studyPlan?.learning_velocity;
+  const velocityConfig = getVelocityConfig(learningVelocity);
 
-  // Calculate overall task progress
-  const completedTasks = studyPlan?.tasks?.filter(t => t.completed).length || 0;
+  // Separate completed and incomplete tasks
+  const incompleteTasks = studyPlan?.tasks?.filter(t => !t.completed) || [];
+  const completedTasks = studyPlan?.tasks?.filter(t => t.completed) || [];
   const totalTasks = studyPlan?.tasks?.length || 0;
-  // Unlock official exam after completing at least 1 task (not all tasks)
-  const canTakeOfficialExam = completedTasks >= 1;
-  const allComplete = completedTasks === totalTasks && totalTasks > 0;
 
   // Show placeholder while generating study plan
   if (isGeneratingPlan) {
@@ -282,15 +307,12 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           animate={{ opacity: 1, y: 0 }}
           className="space-y-5"
         >
-          {/* Hero Section - Emotional Hook */}
+          {/* Hero Section */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-6 shadow-2xl">
-            {/* Animated background elements */}
             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl" />
             
             <div className="relative">
-              {/* Emoji hook */}
               <div className="text-center mb-4">
                 <span className="text-5xl">😰</span>
               </div>
@@ -305,14 +327,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             </div>
           </div>
 
-          {/* The Problem → Solution */}
+          {/* Problem → Solution */}
           <div className="space-y-3">
             <div className="bg-red-50 border border-red-200 rounded-xl p-4">
               <div className="flex flex-col items-center text-center">
                 <span className="text-2xl mb-2">❌</span>
                 <h3 className="font-bold text-red-800 text-sm mb-1">The Old Way</h3>
                 <p className="text-red-700 text-xs leading-relaxed max-w-xs">
-                  Re-reading everything. Highlighting randomly. Studying what you already know. Panicking before exams.
+                  Re-reading everything. Highlighting randomly. Studying what you already know.
                 </p>
               </div>
             </div>
@@ -328,107 +350,18 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 <span className="text-2xl mb-2">✨</span>
                 <h3 className="font-bold text-emerald-800 text-sm mb-1">The StudyApp Way</h3>
                 <p className="text-emerald-700 text-xs leading-relaxed max-w-xs">
-                  AI finds your weak spots in 5 minutes. Then gives you a personalized plan that targets exactly what you need.
+                  AI finds your weak spots in 5 minutes. Then gives you a personalized plan.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Social Proof / Stats */}
-          <div className="bg-gradient-to-r from-purple-100 to-indigo-100 rounded-2xl p-4 border border-purple-200">
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div>
-                <p className="text-2xl font-black text-purple-700">73%</p>
-                <p className="text-[10px] text-purple-600 font-medium">study the wrong topics</p>
-              </div>
-              <div>
-                <p className="text-2xl font-black text-purple-700">2.5h</p>
-                <p className="text-[10px] text-purple-600 font-medium">saved per session</p>
-              </div>
-              <div>
-                <p className="text-2xl font-black text-purple-700">+15%</p>
-                <p className="text-[10px] text-purple-600 font-medium">avg grade boost</p>
-              </div>
-            </div>
-          </div>
-
-          {/* How it works - Visual Timeline */}
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">Your journey to better grades</p>
-            
-            <div className="relative pl-6">
-              {/* Vertical line */}
-              <div className="absolute left-2 top-2 bottom-2 w-0.5 bg-gradient-to-b from-purple-400 via-indigo-400 to-emerald-400" />
-              
-              <div className="space-y-3">
-                {[
-                  { emoji: "🎯", title: "5-Min Diagnostic", desc: "AI discovers your knowledge gaps", time: "Now", active: true, clickable: true },
-                  { emoji: "📋", title: "Personal Study Plan", desc: "Tasks designed for YOUR weaknesses", time: "+2 min" },
-                  { emoji: "🧠", title: "Focused Practice", desc: "Flashcards, quizzes, and more", time: "+15 min" },
-                  { emoji: "🏆", title: "Grade Improvement", desc: "Watch your predicted grade climb", time: "Ongoing" }
-                ].map((step, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 + idx * 0.1 }}
-                    className="relative"
-                    onClick={step.clickable ? scrollToCTA : undefined}
-                    style={step.clickable ? { cursor: 'pointer' } : undefined}
-                  >
-                    {/* Timeline dot */}
-                    <div className={`absolute -left-6 top-3 w-4 h-4 rounded-full border-2 ${
-                      step.active 
-                        ? 'bg-purple-500 border-purple-300 animate-pulse' 
-                        : 'bg-white border-slate-300'
-                    }`} />
-                    
-                    <div className={`p-3 rounded-xl border ${
-                      step.active 
-                        ? 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-300 shadow-md' 
-                        : 'bg-white border-slate-200'
-                    } ${step.clickable ? 'hover:shadow-lg transition-shadow' : ''}`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">{step.emoji}</span>
-                        <h4 className="font-bold text-slate-900 text-sm flex-1">{step.title}</h4>
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                          step.active ? 'bg-purple-200 text-purple-700' : 'bg-slate-100 text-slate-500'
-                        }`}>{step.time}</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 leading-snug pl-7">{step.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Testimonial / Trust */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm"
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-sm">
-                JM
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-slate-700 italic leading-relaxed mb-2">
-                  "I went from a C+ to an A- in just 3 weeks. The diagnostic showed me I was wasting time on stuff I already knew."
-                </p>
-                <p className="text-[10px] text-slate-500 font-medium">— Jordan M., Biology 12</p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Final CTA - Must scroll to see */}
+          {/* Final CTA */}
           <motion.div
             ref={ctaRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.3 }}
             className="pt-4"
           >
             <Button 
@@ -457,110 +390,79 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   }
 
   return (
-    <>
-      <GradeImprovementAnimation 
-        show={showGradeBoost}
-        improvement={2.5}
-        onComplete={() => setShowGradeBoost(false)}
-      />
-      
-      {/* Responsive container - mobile narrow, desktop wide, prevent horizontal scroll */}
-      <div className="px-3 md:px-6 pt-1 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 pb-8 overflow-x-hidden">
+    <div className="px-3 md:px-6 pt-1 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 pb-8 overflow-x-hidden">
       {/* Grade + Confidence Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* Intro text */}
         <p className="text-center text-slate-600 text-sm mb-2 px-2">
-          If your <span className="font-semibold text-slate-800">{lesson?.course_name || 'course'}</span> exam was today, you would score:
+          If your <span className="font-semibold text-slate-800">{lesson?.course_name || 'course'}</span> exam was today:
         </p>
 
         <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-5 md:p-6 shadow-xl`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
 
           <div className="relative">
-            {/* Desktop: Side by side layout */}
             <div className="md:flex md:items-center md:justify-between md:gap-8">
-              {/* Current Grade */}
+              {/* Current Grade + Velocity */}
               <div className="text-center md:text-left mb-4 md:mb-0 md:flex-1">
-                <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">StudyApp Predicted Grade</p>
+                <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Predicted Grade</p>
                 <div className="flex items-baseline justify-center md:justify-start gap-2">
                   <span className="text-5xl md:text-6xl font-black text-white">{currentGrade}</span>
-                  {currentScore && <span className="text-white/80 text-sm md:text-base font-medium">{Math.round(currentScore)}%</span>}
                 </div>
+                
+                {/* Learning Velocity - Integrated */}
+                {learningVelocity && (
+                  <div className={`inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full ${velocityConfig.bg}`}>
+                    <velocityConfig.icon className={`w-3.5 h-3.5 ${velocityConfig.color}`} />
+                    <span className={`text-[11px] font-bold ${velocityConfig.color}`}>
+                      {velocityConfig.label}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* Confidence Meter - The "Confidence Box" */}
-              {studyPlan && (
-                <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 md:p-4 md:min-w-[280px]">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-4 h-4 text-yellow-300" />
-                    <span className="text-white/90 text-xs font-bold uppercase tracking-wide">AI Confidence</span>
-                  </div>
-                  
-                  {/* Confidence Progress Bar - Dynamic based on completed tasks */}
-                  {(() => {
-                    const baseConfidence = studyPlan.initial_confidence || 45;
-                    const completedTasksCount = studyPlan.tasks?.filter(t => t.completed).length || 0;
-                    const dynamicConfidence = Math.min(95, baseConfidence + (completedTasksCount * 15));
-                    const confidenceLevel = dynamicConfidence >= 75 ? 'High' : dynamicConfidence >= 50 ? 'Medium' : 'Low';
-                    
-                    return (
-                      <>
-                        <div className="mb-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-white font-bold text-lg md:text-xl">
-                              {dynamicConfidence}%
-                            </span>
-                            <Badge className={`text-[10px] px-2 py-0.5 ${
-                              confidenceLevel === 'High' ? 'bg-emerald-500/80 text-white' :
-                              confidenceLevel === 'Medium' ? 'bg-amber-500/80 text-white' :
-                              'bg-red-500/80 text-white'
-                            }`}>
-                              {confidenceLevel} Data
-                            </Badge>
-                          </div>
-                          <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
-                            <motion.div 
-                              className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${dynamicConfidence}%` }}
-                              transition={{ duration: 1, delay: 0.3 }}
-                            />
-                          </div>
-                        </div>
-                        
-                        {/* The Nudge */}
-                        {dynamicConfidence < 95 && (
-                          <div className="flex items-start gap-1.5 bg-white/10 rounded-lg p-2">
-                            <AlertCircle className="w-3.5 h-3.5 text-yellow-300 mt-0.5 flex-shrink-0" />
-                            <p className="text-white/80 text-[10px] md:text-xs leading-tight">
-                              Complete a task to raise confidence to <span className="font-bold text-yellow-300">{Math.min(95, dynamicConfidence + 15)}%</span>
-                            </p>
-                          </div>
-                        )}
-                        {dynamicConfidence >= 95 && (
-                          <div className="flex items-start gap-1.5 bg-emerald-500/20 rounded-lg p-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300 mt-0.5 flex-shrink-0" />
-                            <p className="text-white/90 text-[10px] md:text-xs leading-tight font-medium">
-                              Maximum confidence reached! Take the official exam now.
-                            </p>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
+              {/* Confidence Meter */}
+              <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 md:p-4 md:min-w-[280px]">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="w-4 h-4 text-yellow-300" />
+                  <span className="text-white/90 text-xs font-bold uppercase tracking-wide">AI Confidence</span>
                 </div>
-              )}
+                
+                <div className="mb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-white font-bold text-lg md:text-xl">
+                      {Math.round(currentConfidence)}%
+                    </span>
+                    <Badge className={`text-[10px] px-2 py-0.5 ${
+                      currentConfidence >= 75 ? 'bg-emerald-500/80 text-white' :
+                      currentConfidence >= 50 ? 'bg-amber-500/80 text-white' :
+                      'bg-red-500/80 text-white'
+                    }`}>
+                      {currentConfidence >= 75 ? 'High' : currentConfidence >= 50 ? 'Medium' : 'Low'} Data
+                    </Badge>
+                  </div>
+                  <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${currentConfidence}%` }}
+                      transition={{ duration: 1, delay: 0.3 }}
+                    />
+                  </div>
+                </div>
+                
+                {currentConfidence < 95 && (
+                  <div className="flex items-start gap-1.5 bg-white/10 rounded-lg p-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-yellow-300 mt-0.5 flex-shrink-0" />
+                    <p className="text-white/80 text-[10px] md:text-xs leading-tight">
+                      Complete tasks to improve prediction accuracy
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-            
-            {/* Practice tasks disclaimer */}
-            {!latestOfficialExam && studyPlan?.initial_predicted_grade && (
-              <p className="text-white/60 text-[10px] text-center md:text-left mt-3 italic">
-                Based on diagnostic • Complete tasks to improve accuracy
-              </p>
-            )}
             
             {/* Arrow + Target - Mobile only */}
             <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20 mt-4 md:hidden">
@@ -574,10 +476,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </div>
       </motion.div>
 
-      {/* Vertical Timeline of Tasks */}
+      {/* Task Timeline */}
       <div className="relative">
-        {/* Vertical line */}
-        <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-emerald-300" />
+        <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
         
         <div className="space-y-3">
           {/* Section Header */}
@@ -587,47 +488,33 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             </div>
             <div>
               <h3 className="font-bold text-slate-900 text-sm">Your Study Tasks</h3>
-              <p className="text-[11px] text-slate-500">{completedTasks} of {totalTasks} complete</p>
+              <p className="text-[11px] text-slate-500">{completedTasks.length} of {totalTasks} complete</p>
             </div>
           </div>
 
-          {/* Tasks */}
-          {studyPlan?.tasks?.map((task, idx) => {
+          {/* Incomplete Tasks */}
+          {incompleteTasks.map((task, idx) => {
             const config = TASK_CONFIG[task.task_type] || TASK_CONFIG.flashcards;
-            
-            // Get live progress for this task type
             const live = liveProgress[task.task_type] || {};
             let actualCount = task.completed_count || 0;
             let displayText = '';
-            let practiceScore = null;
             
-            // Calculate actual progress from live data
-            if (task.task_type === 'flashcards') {
-              if (live.mastered !== undefined) {
-                actualCount = Math.max(actualCount, live.mastered);
-              }
+            if (task.task_type === 'flashcards' && live.mastered !== undefined) {
+              actualCount = Math.max(actualCount, live.mastered);
               displayText = `${actualCount} / ${task.target_count || 10} mastered`;
-            } else if (task.task_type === 'teach_it') {
-              if (live.mastered !== undefined) {
-                actualCount = Math.max(actualCount, live.mastered);
-              }
+            } else if (task.task_type === 'teach_it' && live.mastered !== undefined) {
+              actualCount = Math.max(actualCount, live.mastered);
               displayText = `${actualCount} / ${task.target_count || 3} mastered`;
             } else if (task.task_type === 'practice_exam') {
-              if (live.completed !== undefined) {
-                actualCount = Math.max(actualCount, live.completed);
-              }
-              // Show score if completed
               if (live.completed > 0 && live.totalQuestions > 0) {
-                practiceScore = `${live.correctAnswers}/${live.totalQuestions}`;
-                displayText = `Score: ${practiceScore}`;
+                displayText = `Score: ${live.correctAnswers}/${live.totalQuestions}`;
               } else {
                 displayText = `${actualCount} / ${task.target_count || 1} completed`;
               }
-            } else if (task.task_type === 'review_notes') {
+            } else {
               displayText = task.completed ? 'Completed' : 'Not started';
             }
             
-            const isComplete = task.completed || (task.target_count > 0 && actualCount >= task.target_count);
             const progress = task.target_count > 0 ? (actualCount / task.target_count) * 100 : 0;
             const isFocusFactor = task.is_focus_factor;
 
@@ -639,9 +526,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 transition={{ delay: 0.05 + idx * 0.05 }}
                 className="relative pl-1"
               >
-                {/* Timeline dot */}
                 <div className={`absolute left-[14px] top-4 w-3 h-3 rounded-full z-10 ${
-                  isComplete ? 'bg-emerald-500' : isFocusFactor ? 'bg-amber-500 ring-2 ring-amber-300 ring-offset-1' : 'bg-white border-2 border-purple-300'
+                  isFocusFactor ? 'bg-amber-500 ring-2 ring-amber-300 ring-offset-1' : 'bg-white border-2 border-purple-300'
                 }`} />
                 
                 <button
@@ -649,90 +535,51 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                   className="w-full text-left ml-8 group pr-1"
                 >
                   <div className={`relative overflow-hidden rounded-xl transition-all ${
-                    isComplete 
-                      ? 'bg-emerald-50 border border-emerald-200' 
-                      : isFocusFactor 
-                        ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 hover:border-amber-400 hover:shadow-lg shadow-md'
-                        : 'bg-white border border-slate-200 hover:border-purple-300 hover:shadow-md'
+                    isFocusFactor 
+                      ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 hover:border-amber-400 hover:shadow-lg shadow-md'
+                      : 'bg-white border border-slate-200 hover:border-purple-300 hover:shadow-md'
                   } p-3 md:p-4`}>
-                    {/* Focus Factor Badge */}
-                    {isFocusFactor && !isComplete && (
+                    {isFocusFactor && (
                       <div className="absolute -top-0 -right-0">
-                        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] md:text-[10px] font-black uppercase px-2 py-0.5 rounded-bl-lg rounded-tr-xl shadow-sm">
+                        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-bl-lg rounded-tr-xl">
                           ⚡ Grade Booster
                         </div>
                       </div>
                     )}
                     
                     <div className="flex items-center gap-3">
-                      {/* Task Number/Icon */}
                       <div className={`w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        isComplete 
-                          ? 'bg-emerald-500' 
-                          : isFocusFactor
-                            ? 'bg-gradient-to-br from-amber-500 to-orange-600'
-                            : `bg-gradient-to-br ${config.gradient}`
+                        isFocusFactor
+                          ? 'bg-gradient-to-br from-amber-500 to-orange-600'
+                          : `bg-gradient-to-br ${config.gradient}`
                       } shadow-md group-hover:scale-105 transition-transform`}>
-                        {isComplete ? (
-                          <CheckCircle2 className="w-5 h-5 text-white" />
-                        ) : (
-                          <config.icon className="w-5 h-5 text-white" />
-                        )}
+                        <config.icon className="w-5 h-5 text-white" />
                       </div>
 
-                      {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                           <span className={`text-[10px] font-bold uppercase tracking-wide ${
-                            isComplete ? 'text-emerald-600' : isFocusFactor ? 'text-amber-700' : config.text
+                            isFocusFactor ? 'text-amber-700' : config.text
                           }`}>
                             {config.label}
+                            {task.is_custom && <span className="ml-1 text-slate-400">• Custom</span>}
                           </span>
-                          {/* Focus Topics Tags - Desktop only */}
-                          {task.focus_topics && task.focus_topics.length > 0 && !isComplete && (
-                            <div className="hidden md:flex items-center gap-1 flex-wrap">
-                              {task.focus_topics.slice(0, 2).map((topic, i) => (
-                                <span key={i} className="text-[9px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-full">
-                                  {topic.length > 20 ? topic.substring(0, 20) + '...' : topic}
-                                </span>
-                              ))}
-                              {task.focus_topics.length > 2 && (
-                                <span className="text-[9px] text-slate-400">+{task.focus_topics.length - 2}</span>
-                              )}
-                            </div>
-                          )}
                         </div>
                         <p className={`font-semibold text-sm md:text-base leading-tight ${
-                          isComplete ? 'text-emerald-700 line-through' : isFocusFactor ? 'text-amber-900' : 'text-slate-900'
+                          isFocusFactor ? 'text-amber-900' : 'text-slate-900'
                         }`}>
                           {task.title || `${config.action} ${task.target_count} ${config.unit}`}
                         </p>
                         
-                        {/* Task description - Desktop only */}
-                        {task.description && !isComplete && (
-                          <p className="hidden md:block text-xs text-slate-500 mt-1 line-clamp-1">
-                            {task.description}
-                          </p>
-                        )}
-                        
-                        {/* Always show progress bar for tasks with target_count */}
                         {task.target_count > 0 && (
                           <div className="mt-2">
                             <div className="flex items-center justify-between mb-1">
-                              <span className="text-[10px] text-slate-500 font-medium">
-                                {displayText || `${actualCount} / ${task.target_count} ${config.unit}`}
-                              </span>
-                              <span className="text-[10px] text-slate-400">
-                                {Math.min(100, Math.round(progress))}%
-                              </span>
+                              <span className="text-[10px] text-slate-500 font-medium">{displayText}</span>
+                              <span className="text-[10px] text-slate-400">{Math.round(progress)}%</span>
                             </div>
                             <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                               <div 
-                                className={`h-full bg-gradient-to-r ${
-                                  isComplete ? 'from-emerald-500 to-teal-500' : 
-                                  isFocusFactor ? 'from-amber-500 to-orange-500' : 
-                                  config.gradient
-                                } rounded-full transition-all`} 
+                                className={`h-full bg-gradient-to-r ${isFocusFactor ? 'from-amber-500 to-orange-500' : config.gradient} rounded-full transition-all`} 
                                 style={{ width: `${Math.min(100, progress)}%` }} 
                               />
                             </div>
@@ -740,12 +587,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                         )}
                       </div>
 
-                      {/* Arrow for incomplete */}
-                      {!isComplete && (
-                        <ChevronRight className={`w-5 h-5 flex-shrink-0 group-hover:translate-x-1 transition-all ${
-                          isFocusFactor ? 'text-amber-500 group-hover:text-amber-600' : 'text-slate-400 group-hover:text-purple-600'
-                        }`} />
-                      )}
+                      <ChevronRight className={`w-5 h-5 flex-shrink-0 group-hover:translate-x-1 transition-all ${
+                        isFocusFactor ? 'text-amber-500' : 'text-slate-400 group-hover:text-purple-600'
+                      }`} />
                     </div>
                   </div>
                 </button>
@@ -753,67 +597,85 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             );
           })}
 
-          {/* Official Exam CTA at Bottom */}
+          {/* Completed Tasks - Collapsed */}
+          {completedTasks.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="relative pl-1"
+            >
+              <div className="absolute left-[14px] top-3 w-3 h-3 rounded-full z-10 bg-emerald-500" />
+              <div className="ml-8 pr-1">
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-2">
+                  Completed ({completedTasks.length})
+                </p>
+                <div className="space-y-1.5">
+                  {completedTasks.map((task) => (
+                    <CompletedTaskItem 
+                      key={task.task_id} 
+                      task={task} 
+                      onClick={() => handleTaskClick(task)} 
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Add Custom Task Button */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 + (totalTasks * 0.05) }}
+            transition={{ delay: 0.2 }}
             className="relative pl-1 pt-2"
           >
-            {/* Timeline end dot */}
-            <div className={`absolute left-[11px] top-6 w-5 h-5 rounded-full z-10 flex items-center justify-center ${
-              canTakeOfficialExam ? 'bg-emerald-500' : 'bg-slate-200'
-            }`}>
-              <Trophy className={`w-3 h-3 ${canTakeOfficialExam ? 'text-white' : 'text-slate-400'}`} />
+            <div className="absolute left-[11px] top-6 w-5 h-5 rounded-full z-10 bg-slate-200 flex items-center justify-center">
+              <Plus className="w-3 h-3 text-slate-500" />
             </div>
             
-            <button
-              onClick={() => canTakeOfficialExam && onNavigate('exam')}
-              disabled={!canTakeOfficialExam}
-              className={`w-full ml-8 group pr-1 ${!canTakeOfficialExam ? 'cursor-not-allowed opacity-60' : ''}`}
-            >
-              <div className={`relative overflow-hidden rounded-xl p-4 transition-all ${
-                canTakeOfficialExam 
-                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg hover:shadow-xl' 
-                  : 'bg-slate-100 border border-slate-200'
-              }`}>
+            <div className="ml-8 pr-1">
+              <button
+                onClick={() => setShowCreateTask(!showCreateTask)}
+                className={`w-full text-left p-3 rounded-xl border-2 border-dashed transition-all ${
+                  showCreateTask 
+                    ? 'border-purple-400 bg-purple-50' 
+                    : 'border-slate-300 hover:border-purple-400 hover:bg-slate-50'
+                }`}
+              >
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-md ${
-                    canTakeOfficialExam ? 'bg-white/20' : 'bg-white'
-                  } group-hover:scale-105 transition-transform`}>
-                    <Trophy className={`w-6 h-6 ${canTakeOfficialExam ? 'text-yellow-300' : 'text-slate-400'}`} />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    showCreateTask ? 'bg-purple-600' : 'bg-slate-100'
+                  }`}>
+                    <Plus className={`w-5 h-5 ${showCreateTask ? 'text-white' : 'text-slate-500'}`} />
                   </div>
-                  <div className="flex-1 text-left">
-                    <p className={`text-[10px] font-bold uppercase tracking-wide ${
-                      canTakeOfficialExam ? 'text-emerald-100' : 'text-slate-400'
-                    }`}>
-                      {canTakeOfficialExam ? (allComplete ? 'All tasks done!' : 'Unlocked!') : 'Complete 1 task first'}
+                  <div>
+                    <p className={`font-semibold text-sm ${showCreateTask ? 'text-purple-700' : 'text-slate-700'}`}>
+                      Add Custom Task
                     </p>
-                    <p className={`font-bold text-base ${
-                      canTakeOfficialExam ? 'text-white' : 'text-slate-500'
-                    }`}>
-                      Take Official Exam
+                    <p className="text-[10px] text-slate-500">
+                      Choose any topic and learning format
                     </p>
-                  </div>
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    canTakeOfficialExam ? 'bg-white/20' : 'bg-slate-200'
-                  } group-hover:translate-x-1 transition-transform`}>
-                    <ArrowRight className={`w-5 h-5 ${canTakeOfficialExam ? 'text-white' : 'text-slate-400'}`} />
                   </div>
                 </div>
-                
-                {canTakeOfficialExam && (
-                  <p className="text-emerald-100 text-[11px] mt-2 pl-15">
-                    Retaking the exam will generate a new study plan
-                  </p>
+              </button>
+
+              {/* Create Task Panel - Inline */}
+              <AnimatePresence>
+                {showCreateTask && (
+                  <CreateTaskPanel
+                    isOpen={showCreateTask}
+                    onClose={() => setShowCreateTask(false)}
+                    suggestedTopics={studyPlan?.suggested_topics || []}
+                    onCreateTask={handleCreateTask}
+                  />
                 )}
-              </div>
-            </button>
+              </AnimatePresence>
+            </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Rationale - Collapsible at bottom */}
+      {/* Rationale */}
       {studyPlan?.plan_rationale && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -828,6 +690,5 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </motion.div>
       )}
     </div>
-    </>
   );
 }
