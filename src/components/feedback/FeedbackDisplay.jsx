@@ -33,7 +33,8 @@ ${question.options?.length > 0 ? `\n**Options:**\n${question.options.map((o, i) 
 
 Please explain why ${isCorrect ? 'this answer is correct and what concept it tests' : 'my answer was wrong and help me understand the correct answer'}. Break it down step by step.`;
     
-    openWithContext({ initialPrompt: prompt });
+    // Dispatch event to AI panel (desktop) instead of modal
+    window.dispatchEvent(new CustomEvent('askAIFromContext', { detail: { initialPrompt: prompt } }));
   };
 
   // Helper to get score color based on value

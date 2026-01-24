@@ -587,13 +587,16 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
     try {
       // Grade any subjective questions that haven't been graded yet
+      // Wait for all pending AI grading to complete first
       const learningProfile = await getLearningProfile();
 
-      const questionsWithGrading = await Promise.all(exam.questions.map(async (q) => {
+      const questionsWithGrading = await Promise.all(exam.questions.map(async (q, idx) => {
         // For subjective questions, use AI grading if not already graded
         if (isSubjectiveQuestion(q.question_type)) {
+          // If grading is still in progress or AI score not yet set, wait and grade now
           if (q.ai_score_out_of_10 === undefined && q.user_answer?.trim()) {
             try {
+              console.log(`📝 Grading subjective question ${idx + 1} on submit...`);
               const { data: gradingResult } = await base44.functions.invoke('gradeShortAnswer', {
                 question_text: q.question_text,
                 question_type: q.question_type,
@@ -607,6 +610,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
                 course_name: lesson.course_name
               });
               
+              console.log(`✅ Question ${idx + 1} graded: ${gradingResult.score_out_of_10}/10`);
               return {
                 ...q,
                 ai_score_out_of_10: gradingResult.score_out_of_10,
@@ -615,15 +619,17 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
                 ai_keypoints_hit: gradingResult.keypoints_hit,
                 ai_keypoints_missed: gradingResult.keypoints_missed,
                 ai_misconception_detected: gradingResult.misconception_detected,
-                is_correct: gradingResult.score_out_of_10 >= 7.5
+                is_correct: gradingResult.score_out_of_10 >= 7
               };
             } catch (gradingError) {
               console.error('Error grading subjective question:', gradingError);
-              return { ...q, is_correct: false };
+              // Don't mark as 0 - use a lenient fallback
+              return { ...q, is_correct: false, ai_score_out_of_10: 0, ai_rationale_short: 'Grading failed - please ask AI for help understanding this question.' };
             }
           }
-          // Already graded
-          return { ...q, is_correct: q.ai_score_out_of_10 >= 7.5 };
+          // Already graded - use existing score
+          const aiScore = q.ai_score_out_of_10 ?? 0;
+          return { ...q, is_correct: aiScore >= 7 };
         }
         
         // For objective questions, use letter-based comparison

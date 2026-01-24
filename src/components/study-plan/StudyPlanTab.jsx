@@ -161,21 +161,32 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     
     switch (task.task_type) {
       case 'flashcards':
-        window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
-          detail: { taskType: 'flashcards', task, isComplete }
-        }));
-        onNavigate('flashcards');
+        // For completed tasks, just navigate without regenerating
+        if (isComplete) {
+          onNavigate('flashcards');
+        } else {
+          window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
+            detail: { taskType: 'flashcards', task, isComplete }
+          }));
+          onNavigate('flashcards');
+        }
         break;
       case 'teach_it':
-        window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
-          detail: { taskType: 'teach_it', task, isComplete }
-        }));
-        onNavigate('teachit');
+        // For completed tasks, just navigate without regenerating
+        if (isComplete) {
+          onNavigate('teachit');
+        } else {
+          window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
+            detail: { taskType: 'teach_it', task, isComplete }
+          }));
+          onNavigate('teachit');
+        }
         break;
       case 'review_notes':
         onNavigate('notes');
         break;
       case 'practice_exam':
+        // For completed practice exams, just navigate to show the list
         if (isComplete) {
           onNavigate('exam');
         } else {
@@ -219,10 +230,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         tasks: updatedTasks
       });
       
+      // Update local state FIRST so task card appears immediately
       setStudyPlan(prev => ({ ...prev, tasks: updatedTasks }));
       setShowCreateTask(false);
       
-      // Navigate to the relevant tab and start generating
+      // Small delay to let the UI update and show the new task card
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Then navigate to the relevant tab and start generating
       handleTaskClick(newTask);
     } catch (error) {
       console.error("Error creating custom task:", error);
@@ -406,11 +421,16 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
           <div className="relative">
             <div className="md:flex md:items-center md:justify-between md:gap-8">
-              {/* Current Grade + Velocity */}
+              {/* Current Grade + Score + Velocity */}
               <div className="text-center md:text-left mb-4 md:mb-0 md:flex-1">
                 <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Predicted Grade</p>
-                <div className="flex items-baseline justify-center md:justify-start gap-2">
+                <div className="flex items-baseline justify-center md:justify-start gap-3">
                   <span className="text-5xl md:text-6xl font-black text-white">{currentGrade}</span>
+                  {studyPlan?.initial_score && (
+                    <span className="text-xl md:text-2xl font-bold text-white/80">
+                      ({Math.round(studyPlan.initial_score)}%)
+                    </span>
+                  )}
                 </div>
                 
                 {/* Learning Velocity - Integrated */}
@@ -476,6 +496,51 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           </div>
         </div>
       </motion.div>
+
+      {/* Behavioral Insights - Above Tasks */}
+      {behavioralInsights && (behavioralInsights.is_guessing_detected || behavioralInsights.is_inefficient_studying || behavioralInsights.recommended_focus || behavioralInsights.estimated_hours_to_target) && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-2"
+        >
+          {/* Warning badges */}
+          <div className="flex flex-wrap gap-2">
+            {behavioralInsights.is_guessing_detected && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                <span className="text-[11px] font-medium text-amber-800">Guessing detected</span>
+              </div>
+            )}
+            {behavioralInsights.is_inefficient_studying && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-orange-50 border border-orange-200 rounded-lg">
+                <Clock className="w-3.5 h-3.5 text-orange-600" />
+                <span className="text-[11px] font-medium text-orange-800">Inefficient studying</span>
+              </div>
+            )}
+            {behavioralInsights.estimated_hours_to_target && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-50 border border-purple-200 rounded-lg">
+                <Target className="w-3.5 h-3.5 text-purple-600" />
+                <span className="text-[11px] font-medium text-purple-800">
+                  ~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {/* Recommended focus */}
+          {behavioralInsights.recommended_focus && (
+            <div className="flex items-start gap-2 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+              <Lightbulb className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-wide">AI Recommendation</p>
+                <p className="text-xs text-slate-700 leading-relaxed mt-0.5">{behavioralInsights.recommended_focus}</p>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
 
       {/* Task Timeline */}
       <div className="relative">
@@ -679,50 +744,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </div>
       </div>
 
-      {/* Behavioral Insights - Compact display */}
-      {behavioralInsights && (behavioralInsights.is_guessing_detected || behavioralInsights.is_inefficient_studying || behavioralInsights.recommended_focus) && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
-          className="mt-4 space-y-2"
-        >
-          {/* Warning badges */}
-          <div className="flex flex-wrap gap-2">
-            {behavioralInsights.is_guessing_detected && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-[11px] font-medium text-amber-800">Guessing detected</span>
-              </div>
-            )}
-            {behavioralInsights.is_inefficient_studying && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-orange-50 border border-orange-200 rounded-lg">
-                <Clock className="w-3.5 h-3.5 text-orange-600" />
-                <span className="text-[11px] font-medium text-orange-800">Inefficient studying</span>
-              </div>
-            )}
-            {behavioralInsights.estimated_hours_to_target && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-50 border border-purple-200 rounded-lg">
-                <Target className="w-3.5 h-3.5 text-purple-600" />
-                <span className="text-[11px] font-medium text-purple-800">
-                  ~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A
-                </span>
-              </div>
-            )}
-          </div>
-          
-          {/* Recommended focus */}
-          {behavioralInsights.recommended_focus && (
-            <div className="flex items-start gap-2 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
-              <Lightbulb className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-wide">AI Recommendation</p>
-                <p className="text-xs text-slate-700 leading-relaxed mt-0.5">{behavioralInsights.recommended_focus}</p>
-              </div>
-            </div>
-          )}
-        </motion.div>
-      )}
+
 
       {/* Rationale */}
       {studyPlan?.plan_rationale && (
