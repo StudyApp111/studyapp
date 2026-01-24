@@ -5,20 +5,18 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, TrendingUp } from "lucide-react";
+import { BookOpen, Plus, Clock, Calculator, Beaker, Globe, BookText, Languages, Code, Palette, Music, Briefcase, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, TrendingUp, Layers, Brain } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
-import BadgeDisplay from "@/components/gamification/BadgeDisplay";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
-import { LessonActivityCard, AssignmentActivityCard } from "@/components/home/ActivityCard";
-import XPProgressBar from "@/components/gamification/XPProgressBar";
+import { AssignmentActivityCard } from "@/components/home/ActivityCard";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
-import NextActionCard from "@/components/home/NextActionCard";
-import LessonProgressCard from "@/components/home/LessonProgressCard";
+import AICoachCard from "@/components/home/AICoachCard";
+import LearningTrajectory from "@/components/home/LearningTrajectory";
 
 export default function Home() {
     const navigate = useNavigate();
@@ -241,84 +239,76 @@ export default function Home() {
 
 
 
+  // Calculate tasks remaining per lesson for display
+  const lessonsWithTasks = React.useMemo(() => {
+    return lessons.slice(0, 6).map(lesson => {
+      const plan = studyPlansByLesson[lesson.id];
+      const totalTasks = plan?.tasks?.length || 0;
+      const completedTasks = plan?.tasks?.filter(t => t.completed)?.length || 0;
+      const tasksRemaining = totalTasks - completedTasks;
+      const currentGrade = plan?.current_predicted_grade || plan?.initial_predicted_grade;
+      return { lesson, plan, tasksRemaining, totalTasks, completedTasks, currentGrade };
+    });
+  }, [lessons, studyPlansByLesson]);
+
+  const getGradeColor = (grade) => {
+    if (!grade) return 'from-slate-400 to-slate-500';
+    if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
+    if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
+    if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
+    return 'from-red-500 to-rose-600';
+  };
+
+  const TASK_ICONS = {
+    flashcards: Layers,
+    teach_it: Brain,
+    practice_exam: Zap,
+    review_notes: BookOpen
+  };
+
   return (
-    <div className="p-4 md:p-10 max-w-7xl mx-auto pb-28 md:pb-10">
-      {/* Hero Section with Gamification */}
-      <div className="mb-5 md:mb-8">
-        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-purple-600 via-purple-700 to-yellow-500 p-4 md:p-8 shadow-xl md:shadow-2xl">
-          <div className="absolute top-0 right-0 w-40 md:w-64 h-40 md:h-64 bg-white/10 rounded-full blur-3xl -mr-20 md:-mr-32 -mt-20 md:-mt-32" />
-          <div className="absolute bottom-0 left-0 w-32 md:w-48 h-32 md:h-48 bg-yellow-400/20 rounded-full blur-2xl -ml-16 md:-ml-24 -mb-16 md:-mb-24" />
-
-          <div className="relative">
-            <div className="text-center mb-4">
-              <div className="flex items-center justify-center gap-2 mb-1 md:mb-2">
-                <h1 className="text-xl md:text-4xl font-bold text-white">
-                  Hi {user.full_name?.split(' ')[0] || 'there'}! 👋
-                </h1>
-                <span className="bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-full text-white text-xs md:text-sm font-semibold">
-                  Level {user?.level || 1}
-                </span>
-              </div>
-              <p className="text-white/90 text-sm md:text-lg max-w-2xl mx-auto">
-                {learningProfile?.grade && learningProfile?.school ? (
-                  <>
-                    {learningProfile.grade} at {learningProfile.school}
-                  </>
-                ) : (
-                  "Ready to ace your next exam?"
-                )}
-              </p>
+    <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
+      {/* Compact Header */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900">
+              Hi {user.full_name?.split(' ')[0] || 'there'}! 👋
+            </h1>
+            <p className="text-sm text-slate-500">
+              {learningProfile?.school || "Ready to ace your next exam?"}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Streak */}
+            <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl ${user.current_streak > 0 ? 'bg-orange-100' : 'bg-slate-100'}`}>
+              <Flame className={`w-4 h-4 ${user.current_streak > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
+              <span className={`text-sm font-bold ${user.current_streak > 0 ? 'text-orange-700' : 'text-slate-500'}`}>{user.current_streak || 0}</span>
             </div>
-
-            {/* Gamification Stats Row */}
-            <div className="flex items-center justify-center gap-3 md:gap-4 flex-wrap">
-              {/* Streak */}
-              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${user.current_streak > 0 ? 'bg-white/20' : 'bg-white/10'}`}>
-                <Flame className={`w-4 h-4 md:w-5 md:h-5 ${user.current_streak > 0 ? 'text-orange-400' : 'text-white/50'}`} />
-                <span className="text-white font-bold text-sm md:text-base">{user.current_streak || 0}</span>
-                <span className="text-white/70 text-xs md:text-sm">day streak</span>
-              </div>
-
-              {/* Daily XP */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20">
-                <Zap className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
-                <span className="text-white font-bold text-sm md:text-base">{dailyXP}</span>
-                <span className="text-white/70 text-xs md:text-sm">/ 50 XP today</span>
-              </div>
+            {/* XP */}
+            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-100">
+              <Zap className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-bold text-purple-700">{dailyXP}/50</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Next Action - What to do NOW */}
-      {nextActionLesson && (
-        <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-purple-600" />
-            <h2 className="text-sm md:text-base font-bold text-slate-900">Continue where you left off</h2>
-          </div>
-          <NextActionCard 
-            lesson={nextActionLesson.lesson}
-            studyPlan={nextActionLesson.plan}
-            tasksRemaining={nextActionLesson.tasksRemaining}
-          />
-        </div>
-      )}
-
-      {/* Daily Challenges - Both Mobile and Desktop */}
-      <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
-        <DailyChallenge 
-          studyMinutes={studyMinutesToday}
-          questionsAnswered={questionsToday}
-          flashcardsReviewed={flashcardsToday}
+      {/* AI Coach - Smart Next Action */}
+      <div className="mb-6">
+        <AICoachCard 
+          lessons={lessons}
+          studyPlans={studyPlans}
+          user={user}
         />
       </div>
 
-      {/* All Lessons Progress */}
-      {!isLoading && lessons.length > 0 && (
-        <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm md:text-base font-bold text-slate-900">Your Courses</h2>
+      {/* Two Column Layout on Desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        {/* Left: Courses with Tasks */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900">Your Courses</h2>
             <button 
               onClick={() => navigate(createPageUrl("LessonHistory"))}
               className="text-xs text-purple-600 font-medium hover:text-purple-700 flex items-center gap-0.5"
@@ -326,21 +316,107 @@ export default function Home() {
               View all <ChevronRight className="w-3 h-3" />
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
-            {lessons.slice(0, 6).map((lesson, idx) => (
-              <LessonProgressCard 
-                key={lesson.id}
-                lesson={lesson}
-                studyPlan={studyPlansByLesson[lesson.id]}
-                index={idx}
-              />
-            ))}
-          </div>
+
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-100 rounded-xl animate-pulse" />)}
+            </div>
+          ) : lessons.length === 0 ? (
+            <div className="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <BookOpen className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+              <p className="text-sm text-slate-500">No courses yet</p>
+              <p className="text-xs text-slate-400">Upload your first lesson to get started</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {lessonsWithTasks.map(({ lesson, plan, tasksRemaining, totalTasks, completedTasks, currentGrade }, idx) => (
+                <motion.div
+                  key={lesson.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
+                  className="bg-white rounded-xl border border-slate-200 p-3 hover:shadow-md hover:border-purple-200 transition-all cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Grade indicator */}
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradeColor(currentGrade)} flex items-center justify-center shadow-sm flex-shrink-0`}>
+                      {currentGrade ? (
+                        <span className="text-white font-black text-sm">{currentGrade}</span>
+                      ) : (
+                        <Target className="w-5 h-5 text-white" />
+                      )}
+                    </div>
+
+                    {/* Course info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-slate-900 text-sm truncate group-hover:text-purple-700 transition-colors">
+                        {lesson.course_name}
+                      </h3>
+                      
+                      {plan ? (
+                        <div className="flex items-center gap-2 mt-1">
+                          {/* Progress bar */}
+                          <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden max-w-[100px]">
+                            <div 
+                              className="h-full bg-purple-500 rounded-full transition-all"
+                              style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] text-slate-500">
+                            {tasksRemaining > 0 ? `${tasksRemaining} tasks left` : 'Complete ✓'}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-purple-600 mt-0.5 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" /> Take diagnostic →
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Next task preview */}
+                    {plan && tasksRemaining > 0 && (
+                      <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 bg-purple-50 rounded-lg flex-shrink-0">
+                        {(() => {
+                          const nextTask = plan.tasks?.find(t => !t.completed);
+                          const Icon = TASK_ICONS[nextTask?.task_type] || Target;
+                          return (
+                            <>
+                              <Icon className="w-3 h-3 text-purple-600" />
+                              <span className="text-[10px] text-purple-700 font-medium">
+                                {nextTask?.task_type === 'flashcards' ? 'Cards' :
+                                 nextTask?.task_type === 'teach_it' ? 'Teach' :
+                                 nextTask?.task_type === 'practice_exam' ? 'Quiz' : 'Notes'}
+                              </span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-purple-500 transition-colors flex-shrink-0" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Right: Trajectory + Daily */}
+        <div className="space-y-4">
+          <LearningTrajectory studyPlans={studyPlans} lessons={lessons} />
+          
+          <DailyChallenge 
+            studyMinutes={studyMinutesToday}
+            questionsAnswered={questionsToday}
+            flashcardsReviewed={flashcardsToday}
+            compact
+          />
+        </div>
+      </div>
 
       {/* CTA Cards - Full and descriptive */}
-      <div className="mb-5 md:mb-8 max-w-6xl mx-auto">
+      <div className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {/* Upload Notes Card */}
           <motion.div
@@ -406,43 +482,19 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Recent Graded Assignments */}
-      {!isLoading && gradedAssignments.length > 0 && (
-        <div className="mb-8 max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm md:text-base font-bold text-slate-900">Recent Graded Work</h2>
-            <button 
-              onClick={() => navigate(createPageUrl("AssignmentHistory"))}
-              className="text-xs text-purple-600 font-medium hover:text-purple-700 flex items-center gap-0.5"
-            >
-              View all <ChevronRight className="w-3 h-3" />
-            </button>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
-            {gradedAssignments.slice(0, 3).map((assignment, idx) => (
-              <AssignmentActivityCard 
-                key={`assignment-${assignment.id}`} 
-                assignment={assignment}
-                index={idx}
-              />
-            ))}
-          </div>
-        </div>
-      )}
 
 {/* Create Lesson Modal */}
-<CreateLessonModal 
-  open={createLessonModalOpen} 
-  onOpenChange={setCreateLessonModalOpen} 
-/>
+      <CreateLessonModal 
+        open={createLessonModalOpen} 
+        onOpenChange={setCreateLessonModalOpen} 
+      />
 
-{/* First Session Welcome */}
-<FirstSessionWelcome 
-  open={showWelcome}
-  onOpenChange={setShowWelcome}
-  userName={user?.full_name?.split(' ')[0]}
-/>
-</div>
-);
+      <FirstSessionWelcome 
+        open={showWelcome}
+        onOpenChange={setShowWelcome}
+        userName={user?.full_name?.split(' ')[0]}
+      />
+    </div>
+  );
 }
