@@ -208,10 +208,11 @@ ALL question text and answers MUST be readable as plain text without any LaTeX r
         ? `${focus_topics[0]} Practice Quiz`
         : 'Practice Quiz';
 
-    // Create practice exam record with proper title
+    // Create practice exam record with proper title - NO exam_number for practice exams
     const exam = await base44.entities.Exam.create({
       lesson_id,
       exam_type: 'practice',
+      exam_number: null, // Practice exams don't have exam numbers
       title: examTitle,
       focus_competency: target_competency,
       focus_description: examData.exam_focus_summary || `Practice quiz on ${(focus_topics || []).slice(0, 2).join(', ')}`,
