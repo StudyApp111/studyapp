@@ -138,7 +138,7 @@ CONSTRAINTS
             generationConfig: {
                 temperature: 0.2,
                 topP: 0.95,
-                maxOutputTokens: 2048,
+                maxOutputTokens: 4096,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: "object",
