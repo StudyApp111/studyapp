@@ -43,9 +43,6 @@ export default function LearningTrajectory({ studyPlans, lessons }) {
     else if (recent < older - 3) trend = 'down';
   }
 
-  const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
-  const trendColor = trend === 'up' ? 'text-emerald-600' : trend === 'down' ? 'text-red-500' : 'text-slate-500';
-  const trendBg = trend === 'up' ? 'bg-emerald-50' : trend === 'down' ? 'bg-red-50' : 'bg-slate-50';
   const trendText = trend === 'up' ? 'Improving' : trend === 'down' ? 'Needs focus' : 'Stable';
 
   return (
