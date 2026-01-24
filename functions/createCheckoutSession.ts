@@ -3,10 +3,13 @@ import Stripe from 'npm:stripe@14.21.0';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_API_KEY"));
 
-// Price IDs - you'll need to create these in Stripe Dashboard
+// Price IDs - Create these in Stripe Dashboard:
+// 1. Create a Product called "Locked In Pro"
+// 2. Add two prices: $6.99/month (monthly) and $59.88/year ($4.99/mo billed yearly)
+// 3. Replace these IDs with your actual Stripe price IDs
 const PRICE_IDS = {
-  monthly: 'price_monthly_699', // Replace with actual Stripe price ID
-  yearly: 'price_yearly_4999'   // Replace with actual Stripe price ID
+  monthly: Deno.env.get("STRIPE_PRICE_MONTHLY") || 'price_monthly_placeholder',
+  yearly: Deno.env.get("STRIPE_PRICE_YEARLY") || 'price_yearly_placeholder'
 };
 
 Deno.serve(async (req) => {
