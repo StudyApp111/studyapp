@@ -35,24 +35,36 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   }, [lesson?.id]);
 
   // Listen for study task generation requests - auto-generate when navigating from study plan
+  const studyTaskHandledRef = useRef(false);
+  
   useEffect(() => {
     const handleStudyTask = async (e) => {
-      if (e.detail.taskType === 'teach_it') {
-        console.log('🎯 Received teach it generation request from study plan');
-        
+      if (e.detail.taskType !== 'teach_it') return;
+      
+      // Prevent duplicate handling
+      if (studyTaskHandledRef.current || isGeneratingRef.current) {
+        console.log('🎯 TeachIt: Ignoring duplicate study task event');
+        return;
+      }
+      studyTaskHandledRef.current = true;
+      
+      console.log('🎯 Received teach it generation request from study plan');
+      
+      try {
         // Load cards first to check if they exist
         const existingCards = await base44.entities.TeachItCard.filter({ lesson_id: lesson?.id });
         
         // If no cards exist, auto-generate
         if (!existingCards || existingCards.length === 0) {
-          if (!isGeneratingRef.current) {
-            generateCards();
-          }
+          generateCards();
         } else {
           setCards(existingCards);
           const incompleteIndex = existingCards.findIndex(c => !c.completed);
           setCurrentCardIndex(incompleteIndex >= 0 ? incompleteIndex : 0);
         }
+      } finally {
+        // Reset after a short delay to allow re-triggering if user navigates away and back
+        setTimeout(() => { studyTaskHandledRef.current = false; }, 2000);
       }
     };
     
