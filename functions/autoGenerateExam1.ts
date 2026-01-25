@@ -184,15 +184,14 @@ No extra text.`;
       }
     };
 
-    console.log('Calling Gemini with retry logic for exam generation...');
-    const resp = await fetchWithRetry(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+    console.log('Calling Gemini for exam generation...');
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      },
-      3
+      }
     );
 
     if (!resp.ok) {
