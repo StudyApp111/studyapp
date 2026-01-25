@@ -129,17 +129,21 @@ export default function CreateLesson() {
       setCreatedLessonId(lesson.id);
       console.log("✅ Lesson created:", lesson.id);
 
-      // Fire-and-forget: Generate exam in background
-      console.log("🎯 Starting background exam generation...");
-      base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-        .then(result => {
-          if (result?.data?.success) {
-            console.log("✅ Exam 1 auto-generated:", result.data.exam_id);
-          }
-        })
-        .catch(err => console.error("❌ Background exam generation error:", err.message));
+      // CRITICAL: Wait for exam generation to complete before proceeding
+      console.log("🎯 Generating diagnostic exam (must complete)...");
+      try {
+        const examResult = await base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id });
+        if (examResult?.data?.success) {
+          console.log("✅ Exam 1 generated:", examResult.data.exam_id);
+        } else {
+          console.warn("⚠️ Exam generation returned:", examResult?.data);
+        }
+      } catch (examErr) {
+        console.error("❌ Exam generation failed:", examErr.message);
+        // Continue anyway - user can retry from the exam tab
+      }
 
-      // Fire-and-forget: Curriculum mapping in background
+      // Fire-and-forget: Curriculum mapping in background (non-blocking)
       const curriculumPrompt = `Educational Curriculum Analysis Request
 Role: Expert curriculum analyst. Generate concise curriculum profile for ${courseName}.
 Student Grade: ${learningProfile?.grade || "N/A"}
@@ -157,10 +161,8 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
         })
         .catch(err => console.warn("Curriculum mapping error:", err));
 
-      // Wait for loader animation then mark complete
-      setTimeout(() => {
-        setLoaderComplete(true);
-      }, 5000);
+      // Mark complete - exam is ready
+      setLoaderComplete(true);
 
     } catch (error) {
       console.error("Error creating lesson:", error);
