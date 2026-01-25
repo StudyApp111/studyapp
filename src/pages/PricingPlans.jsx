@@ -5,12 +5,13 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { 
   ArrowLeft, Check, X, Zap, Skull, Crown, Sparkles, 
   Infinity, Lock, Brain, Target, FileText, MessageSquare,
-  Loader2, CheckCircle2
+  Loader2, CheckCircle2, Gift, AlertCircle
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function PricingPlans() {
   const navigate = useNavigate();
@@ -18,6 +19,10 @@ export default function PricingPlans() {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPromoInput, setShowPromoInput] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoResult, setPromoResult] = useState(null);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -61,6 +66,36 @@ export default function PricingPlans() {
     } catch (error) {
       console.error('Checkout error:', error);
       setLoading(false);
+    }
+  };
+
+  const handlePromoSubmit = async () => {
+    if (!promoCode.trim()) return;
+    
+    setPromoLoading(true);
+    setPromoResult(null);
+    
+    try {
+      const response = await base44.functions.invoke('redeemPromoCode', {
+        code: promoCode.trim()
+      });
+      
+      if (response.data?.success) {
+        setPromoResult({ success: true, message: response.data.message });
+        // Refresh user data
+        const updatedUser = await base44.auth.me();
+        setUser(updatedUser);
+        
+        if (response.data.type === 'free_access') {
+          setShowSuccess(true);
+        }
+      } else {
+        setPromoResult({ success: false, message: response.data?.error || 'Invalid code' });
+      }
+    } catch (error) {
+      setPromoResult({ success: false, message: 'Something went wrong. Try again.' });
+    } finally {
+      setPromoLoading(false);
     }
   };
 
@@ -294,8 +329,92 @@ export default function PricingPlans() {
           </motion.div>
         </div>
 
+        {/* Promo Code Section */}
+        <div className="mt-10 max-w-md mx-auto">
+          <AnimatePresence mode="wait">
+            {!showPromoInput ? (
+              <motion.button
+                key="promo-trigger"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowPromoInput(true)}
+                className="w-full flex items-center justify-center gap-2 text-sm text-purple-300 hover:text-white transition-colors py-3 border border-purple-500/30 rounded-xl hover:border-purple-500/50 hover:bg-purple-500/10"
+              >
+                <Gift className="w-4 h-4" />
+                Have a promo code?
+              </motion.button>
+            ) : (
+              <motion.div
+                key="promo-input"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-3 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-purple-500/30"
+              >
+                <div className="flex items-center gap-2 text-purple-200 text-sm mb-2">
+                  <Gift className="w-4 h-4" />
+                  Enter your promo code
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="PROMO CODE"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => e.key === 'Enter' && handlePromoSubmit()}
+                    className="flex-1 uppercase bg-white/10 border-purple-500/30 text-white placeholder:text-purple-300/50"
+                    disabled={promoLoading}
+                    maxLength={20}
+                  />
+                  <Button
+                    onClick={handlePromoSubmit}
+                    disabled={promoLoading || !promoCode.trim()}
+                    className="bg-purple-600 hover:bg-purple-500 px-6"
+                  >
+                    {promoLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Apply'
+                    )}
+                  </Button>
+                </div>
+
+                {promoResult && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex items-center gap-2 text-sm p-3 rounded-lg ${
+                      promoResult.success 
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' 
+                        : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                    }`}
+                  >
+                    {promoResult.success ? (
+                      <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    )}
+                    <span>{promoResult.message}</span>
+                  </motion.div>
+                )}
+
+                <button
+                  onClick={() => {
+                    setShowPromoInput(false);
+                    setPromoCode('');
+                    setPromoResult(null);
+                  }}
+                  className="text-xs text-purple-400 hover:text-purple-300"
+                >
+                  Cancel
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* FAQ or Trust badges */}
-        <div className="mt-12 text-center">
+        <div className="mt-10 text-center">
           <p className="text-slate-400 text-sm">
             Trusted by 10,000+ students worldwide 🌍
           </p>
@@ -305,7 +424,7 @@ export default function PricingPlans() {
             <span className="text-white text-xs">🚫 No hidden fees</span>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
+        </div>
+        </div>
+        );
+        }

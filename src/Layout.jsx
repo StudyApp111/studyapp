@@ -29,10 +29,9 @@ import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton.jsx
 
 import { AITutorProvider } from "@/components/ai-tutor/AITutorContext";
 import AITutorSheet from "@/components/ai-tutor/AITutorSheet";
-import { SubscriptionProvider } from "@/components/subscription/SubscriptionContext";
+import { SubscriptionProvider, useSubscription } from "@/components/subscription/SubscriptionContext";
 import { UpgradeNavBadge } from "@/components/subscription/UpgradeBadge";
 import UpgradeModal from "@/components/subscription/UpgradeModal";
-import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 const navigationItems = [
         {
