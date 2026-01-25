@@ -68,7 +68,8 @@ export default function PricingPlans() {
       if (response.data?.checkout_url) {
         window.location.href = response.data.checkout_url;
       } else if (response.data?.error) {
-        setCheckoutError(response.data.error);
+        console.error('Checkout error details:', response.data);
+        setCheckoutError(`${response.data.error}${response.data.details ? ` (${response.data.details})` : ''}`);
         setLoading(false);
       } else {
         setCheckoutError('Unable to start checkout. Please try again.');
