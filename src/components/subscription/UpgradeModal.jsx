@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Skull, Zap, X, Check, Sparkles, Lock, Infinity } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Input } from '@/components/ui/input';
+import { Skull, Zap, X, Check, Sparkles, Lock, Infinity, Gift, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { base44 } from '@/api/base44Client';
+import { useSubscription } from './SubscriptionContext';
 
 const LIMIT_MESSAGES = {
   upload: {
@@ -36,11 +39,55 @@ const LIMIT_MESSAGES = {
 
 export default function UpgradeModal({ open, onOpenChange, reason = 'default' }) {
   const navigate = useNavigate();
+  const { refreshUser } = useSubscription();
   const limitInfo = LIMIT_MESSAGES[reason] || LIMIT_MESSAGES.default;
+  
+  const [showPromoInput, setShowPromoInput] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoResult, setPromoResult] = useState(null);
 
   const handleUpgrade = () => {
     onOpenChange(false);
     navigate(createPageUrl("PricingPlans"));
+  };
+
+  const handlePromoSubmit = async () => {
+    if (!promoCode.trim()) return;
+    
+    setPromoLoading(true);
+    setPromoResult(null);
+    
+    try {
+      const response = await base44.functions.invoke('redeemPromoCode', {
+        code: promoCode.trim()
+      });
+      
+      if (response.data?.success) {
+        setPromoResult({ success: true, message: response.data.message });
+        await refreshUser();
+        // Close modal after success
+        setTimeout(() => {
+          onOpenChange(false);
+          setPromoCode('');
+          setPromoResult(null);
+          setShowPromoInput(false);
+        }, 2000);
+      } else {
+        setPromoResult({ success: false, message: response.data?.error || 'Invalid code' });
+      }
+    } catch (error) {
+      setPromoResult({ success: false, message: 'Something went wrong. Try again.' });
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
+    setPromoCode('');
+    setPromoResult(null);
+    setShowPromoInput(false);
   };
 
   return (
@@ -53,7 +100,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
         >
           {/* Close button */}
           <button 
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
             className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
           >
             <X className="w-4 h-4" />
@@ -132,6 +179,75 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
             <p className="text-center text-xs text-slate-400 mt-3">
               Starting at $4.99/mo • Cancel anytime
             </p>
+
+            {/* Promo Code Section */}
+            <div className="mt-4 pt-4 border-t border-slate-100">
+              <AnimatePresence mode="wait">
+                {!showPromoInput ? (
+                  <motion.button
+                    key="promo-trigger"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowPromoInput(true)}
+                    className="w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-purple-600 transition-colors py-2"
+                  >
+                    <Gift className="w-4 h-4" />
+                    Have a promo code?
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    key="promo-input"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-3"
+                  >
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Enter promo code"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => e.key === 'Enter' && handlePromoSubmit()}
+                        className="flex-1 uppercase"
+                        disabled={promoLoading}
+                        maxLength={20}
+                      />
+                      <Button
+                        onClick={handlePromoSubmit}
+                        disabled={promoLoading || !promoCode.trim()}
+                        className="bg-purple-600 hover:bg-purple-700 px-4"
+                      >
+                        {promoLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          'Apply'
+                        )}
+                      </Button>
+                    </div>
+                    
+                    {promoResult && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex items-center gap-2 text-sm p-2 rounded-lg ${
+                          promoResult.success 
+                            ? 'bg-emerald-50 text-emerald-700' 
+                            : 'bg-red-50 text-red-700'
+                        }`}
+                      >
+                        {promoResult.success ? (
+                          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                        ) : (
+                          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        )}
+                        <span>{promoResult.message}</span>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </motion.div>
       </DialogContent>

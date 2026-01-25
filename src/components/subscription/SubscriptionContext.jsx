@@ -38,7 +38,28 @@ export function SubscriptionProvider({ children }) {
   };
 
   const isPro = () => {
-    return user?.subscription_tier === 'pro' && user?.subscription_status === 'active';
+    if (user?.subscription_tier !== 'pro' || user?.subscription_status !== 'active') {
+      return false;
+    }
+    // Check if promo access has expired
+    if (user?.promo_access_until) {
+      const expiryDate = new Date(user.promo_access_until);
+      if (expiryDate < new Date()) {
+        // Promo expired - will be updated on next server call
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Get remaining promo days
+  const getPromoRemainingDays = () => {
+    if (!user?.promo_access_until) return null;
+    const expiryDate = new Date(user.promo_access_until);
+    const now = new Date();
+    const diffTime = expiryDate - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
   };
 
   const getToday = () => new Date().toISOString().split('T')[0];
@@ -166,7 +187,8 @@ export function SubscriptionProvider({ children }) {
     showUpgradeModal,
     setShowUpgradeModal,
     upgradeReason,
-    FREE_TIER_LIMITS
+    FREE_TIER_LIMITS,
+    getPromoRemainingDays
   };
 
   return (
