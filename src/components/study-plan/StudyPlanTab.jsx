@@ -713,9 +713,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             if (task.task_type === 'flashcards' && live.mastered !== undefined) {
               actualCount = Math.max(actualCount, live.mastered);
               displayText = `${actualCount} / ${task.target_count || 10} mastered`;
-            } else if (task.task_type === 'teach_it' && live.mastered !== undefined) {
+            } else if (task.task_type === 'teach_it') {
               // TeachIt tracks mastered cards (score >= 70)
-              actualCount = Math.max(actualCount, live.mastered);
+              // Prioritize task.completed_count from study plan as it's the source of truth
+              actualCount = task.completed_count || 0;
+              if (live.mastered !== undefined && live.mastered > actualCount) {
+                actualCount = live.mastered;
+              }
               const targetCount = task.target_count || 3;
               displayText = `${actualCount} / ${targetCount} mastered`;
             } else if (task.task_type === 'practice_exam') {
