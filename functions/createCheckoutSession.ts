@@ -45,6 +45,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid plan type' }, { status: 400 });
     }
 
+    // Get Stripe instance and price ID
+    const stripe = getStripe();
+    const priceId = getPriceId(plan_type);
+    
+    // Validate price ID exists
+    if (!priceId) {
+      console.error(`Missing price ID for ${plan_type}. STRIPE_PRICE_${plan_type.toUpperCase()} env var not set.`);
+      return Response.json({ error: `Price not configured for ${plan_type} plan. Please contact support.` }, { status: 400 });
+    }
+
+    console.log(`Creating checkout for ${plan_type} with price ID: ${priceId}`);
+
     // Check if user already has a Stripe customer ID
     let customerId = user.stripe_customer_id;
     
@@ -64,15 +76,6 @@ Deno.serve(async (req) => {
         stripe_customer_id: customerId
       });
     }
-
-    // Validate price ID exists
-    const priceId = PRICE_IDS[plan_type];
-    if (!priceId || priceId.includes('placeholder')) {
-      console.error(`Invalid price ID for ${plan_type}:`, priceId);
-      return Response.json({ error: `Price not configured for ${plan_type} plan. Please contact support.` }, { status: 400 });
-    }
-
-    console.log(`Creating checkout for ${plan_type} with price ID: ${priceId}`);
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
