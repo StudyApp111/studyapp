@@ -143,7 +143,7 @@ export default function PricingPlans() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 pb-28 md:p-8 md:pb-8">
       <div className="max-w-5xl mx-auto">
         {/* Back button */}
         <Button

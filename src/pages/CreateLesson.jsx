@@ -191,7 +191,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-700 via-violet-600 to-indigo-600 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-700 via-violet-600 to-indigo-600 flex items-center justify-center p-4 pb-28 md:pb-4">
       <div className="w-full max-w-lg md:max-w-2xl relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-4">

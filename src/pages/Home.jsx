@@ -218,7 +218,7 @@ export default function Home() {
           </div>
           </div>
 
-      <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
+      <div className="p-4 md:p-8 max-w-6xl mx-auto pb-32 md:pb-10">
 
 
         {/* Two Column Layout */}
