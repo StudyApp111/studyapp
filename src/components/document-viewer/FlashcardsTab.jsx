@@ -134,19 +134,30 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         return;
       }
       
-      const savedCards = await Promise.all(
-        generatedCards.map(card => 
-          base44.entities.Flashcard.create({
-            lesson_id: lesson.id,
-            question: card.question || "Question",
-            answer: card.answer || "Answer",
-            topics: card.topics || [],
-            difficulty: card.difficulty || "medium",
-            status: "new",
-            mastery_level: 0
-          })
-        )
-      );
+      // Save cards sequentially to avoid rate limits/502 errors
+      const savedCards = [];
+      for (const card of generatedCards) {
+        let attempts = 0;
+        while (attempts < 3) {
+          try {
+            const saved = await base44.entities.Flashcard.create({
+              lesson_id: lesson.id,
+              question: card.question || "Question",
+              answer: card.answer || "Answer",
+              topics: card.topics || [],
+              difficulty: card.difficulty || "medium",
+              status: "new",
+              mastery_level: 0
+            });
+            savedCards.push(saved);
+            break;
+          } catch (err) {
+            attempts++;
+            if (attempts >= 3) throw err;
+            await new Promise(r => setTimeout(r, 500 * attempts)); // backoff
+          }
+        }
+      }
       setCards(savedCards);
       pendingStudyTaskRef.current = null;
     } catch (error) {

@@ -90,8 +90,10 @@ Deno.serve(async (req) => {
 
     console.log(`Creating checkout for ${plan_type} with price ID: ${priceId}`);
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
+    // Yearly is a one-time payment, monthly is subscription
+    const isOneTime = plan_type === 'yearly';
+    
+    const sessionConfig = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       payment_method_types: ['card'],
@@ -101,7 +103,7 @@ Deno.serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription',
+      mode: isOneTime ? 'payment' : 'subscription',
       success_url: success_url || `${req.headers.get('origin')}/PricingPlans?success=true`,
       cancel_url: cancel_url || `${req.headers.get('origin')}/PricingPlans?canceled=true`,
       metadata: {
@@ -109,15 +111,22 @@ Deno.serve(async (req) => {
         user_id: user.id,
         plan_type: plan_type
       },
-      subscription_data: {
+      allow_promotion_codes: true,
+    };
+    
+    // Only add subscription_data for subscription mode
+    if (!isOneTime) {
+      sessionConfig.subscription_data = {
         metadata: {
           user_email: user.email,
           user_id: user.id,
           plan_type: plan_type
         }
-      },
-      allow_promotion_codes: true,
-    });
+      };
+    }
+
+    // Create checkout session
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return Response.json({ 
       checkout_url: session.url,

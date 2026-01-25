@@ -171,6 +171,24 @@ export default function Settings() {
                 label="Pricing Plans"
                 onClick={() => navigate(createPageUrl("PricingPlans"))}
               />
+              {/* Show subscription status if user is pro */}
+              {user?.subscription_tier === 'pro' && user?.subscription_status === 'active' && (
+                <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-emerald-800">Locked In Pro</p>
+                      <p className="text-xs text-emerald-600">
+                        {user.subscription_end_date 
+                          ? `Active until ${new Date(user.subscription_end_date).toLocaleDateString()}`
+                          : 'Active subscription'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               <SettingsItem
                 icon={History}
                 label="History"
