@@ -29,9 +29,9 @@ import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton.jsx
 
 import { AITutorProvider } from "@/components/ai-tutor/AITutorContext";
 import AITutorSheet from "@/components/ai-tutor/AITutorSheet";
-import { SubscriptionProvider, useSubscription } from "@/components/subscription/SubscriptionContext";
+import { SubscriptionProvider } from "@/components/subscription/SubscriptionContext";
 import { UpgradeNavBadge } from "@/components/subscription/UpgradeBadge";
-import UpgradeModal from "@/components/subscription/UpgradeModal";
+import UpgradeModalWrapper from "@/components/subscription/UpgradeModalWrapper";
 
 const navigationItems = [
         {
@@ -341,6 +341,9 @@ export default function Layout({ children, currentPageName }) {
 
         {/* AI Tutor Sheet - Mobile contextual helper */}
         <AITutorSheet />
+
+        {/* Global Upgrade Modal */}
+        <UpgradeModalWrapper />
 
         </div>
         </SidebarProvider>
