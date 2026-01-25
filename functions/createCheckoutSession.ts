@@ -58,6 +58,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Validate price ID exists
+    const priceId = PRICE_IDS[plan_type];
+    if (!priceId || priceId.includes('placeholder')) {
+      console.error(`Invalid price ID for ${plan_type}:`, priceId);
+      return Response.json({ error: `Price not configured for ${plan_type} plan. Please contact support.` }, { status: 400 });
+    }
+
+    console.log(`Creating checkout for ${plan_type} with price ID: ${priceId}`);
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -65,7 +74,7 @@ Deno.serve(async (req) => {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: PRICE_IDS[plan_type],
+          price: priceId,
           quantity: 1,
         },
       ],
