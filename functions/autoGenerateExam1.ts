@@ -128,11 +128,6 @@ Examples:
   Use case scenarios, numbers, or decisions.
   DO NOT test abstract definitions without application.
 
-• Light Search (Minimal):
-Use Google Search ONLY to confirm typical exam TASK TYPES for this course
-(e.g., “short story analysis”, “data interpretation”, “problem solving”).
-Do NOT introduce new topics.
-
 • Difficulty Progression:
 Q1–2: Moderate
 Q3–4: Challenging
