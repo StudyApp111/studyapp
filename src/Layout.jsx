@@ -85,6 +85,9 @@ export default function Layout({ children, currentPageName }) {
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
 
   React.useEffect(() => {
+    // Initialize TikTok Pixel
+    initTikTokPixel();
+    
     let cleanup;
     (async () => {
       try {
