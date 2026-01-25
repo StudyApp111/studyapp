@@ -181,18 +181,20 @@ No extra text.`;
             type: "object",
             properties: {
               question_number: { type: "integer" },
-              question_type: { type: "string" },
-              difficulty_index: { type: "string" },
+              question_type: { type: "string", enum: ["Multiple Choice", "True/False", "Fill in the Blank", "Short Answer"] },
+              difficulty_index: { type: "string", enum: ["Moderate", "Challenging", "High Challenge"] },
               question_text: { type: "string" },
               options: { type: "array", items: { type: "string" } },
               correct_answer: { type: "string" },
               explanation: { type: "string" },
               assessed_competencies: { type: "array", items: { type: "string" } },
               targeted_misconception: { type: "string" }
-            }
+            },
+            required: ["question_number", "question_type", "question_text", "correct_answer", "explanation"]
           }
         }
-      }
+      },
+      required: ["exam_questions"]
     };
 
     const payload = {
@@ -201,7 +203,7 @@ No extra text.`;
       }],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 16000,
+        maxOutputTokens: 8192,
         responseMimeType: "application/json",
         responseSchema: responseSchema
       }

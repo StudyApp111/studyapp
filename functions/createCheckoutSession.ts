@@ -7,17 +7,7 @@ const stripe = new Stripe(Deno.env.get("STRIPE_API_KEY"));
 // 1. Create a Product called "Locked In Pro"
 // 2. Add two prices: $6.99/month (monthly) and $59.88/year ($4.99/mo billed yearly)
 // 3. Replace these IDs with your actual Stripe price IDs
-// Get price IDs from environment - log them for debugging
-const STRIPE_PRICE_MONTHLY = Deno.env.get("STRIPE_PRICE_MONTHLY");
-const STRIPE_PRICE_YEARLY = Deno.env.get("STRIPE_PRICE_YEARLY");
-
-console.log("ENV CHECK - STRIPE_PRICE_MONTHLY:", STRIPE_PRICE_MONTHLY ? `${STRIPE_PRICE_MONTHLY.substring(0, 10)}...` : "NOT SET");
-console.log("ENV CHECK - STRIPE_PRICE_YEARLY:", STRIPE_PRICE_YEARLY ? `${STRIPE_PRICE_YEARLY.substring(0, 10)}...` : "NOT SET");
-
-const PRICE_IDS = {
-  monthly: STRIPE_PRICE_MONTHLY || 'price_monthly_placeholder',
-  yearly: STRIPE_PRICE_YEARLY || 'price_yearly_placeholder'
-};
+// Price IDs are read inside the handler to ensure fresh env values
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -45,6 +35,20 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid plan type' }, { status: 400 });
     }
 
+    // Get price IDs fresh from environment
+    const STRIPE_PRICE_MONTHLY = Deno.env.get("STRIPE_PRICE_MONTHLY");
+    const STRIPE_PRICE_YEARLY = Deno.env.get("STRIPE_PRICE_YEARLY");
+    
+    console.log("=== Stripe Checkout Debug ===");
+    console.log("Plan type requested:", plan_type);
+    console.log("STRIPE_PRICE_MONTHLY env:", STRIPE_PRICE_MONTHLY || "NOT SET");
+    console.log("STRIPE_PRICE_YEARLY env:", STRIPE_PRICE_YEARLY || "NOT SET");
+    
+    const PRICE_IDS = {
+      monthly: STRIPE_PRICE_MONTHLY,
+      yearly: STRIPE_PRICE_YEARLY
+    };
+
     // Check if user already has a Stripe customer ID
     let customerId = user.stripe_customer_id;
     
@@ -67,9 +71,21 @@ Deno.serve(async (req) => {
 
     // Validate price ID exists
     const priceId = PRICE_IDS[plan_type];
-    if (!priceId || priceId.includes('placeholder')) {
-      console.error(`Invalid price ID for ${plan_type}:`, priceId);
-      return Response.json({ error: `Price not configured for ${plan_type} plan. Please contact support.` }, { status: 400 });
+    if (!priceId) {
+      console.error(`Price ID not set for ${plan_type}. STRIPE_PRICE_${plan_type.toUpperCase()} env var is missing or empty.`);
+      return Response.json({ 
+        error: `Price not configured for ${plan_type} plan. Please contact support.`,
+        debug: `Missing STRIPE_PRICE_${plan_type.toUpperCase()} environment variable`
+      }, { status: 400 });
+    }
+
+    // Validate price ID format
+    if (!priceId.startsWith('price_')) {
+      console.error(`Invalid price ID format for ${plan_type}:`, priceId, "- must start with 'price_'");
+      return Response.json({ 
+        error: `Invalid price configuration for ${plan_type} plan.`,
+        debug: `Price ID should start with 'price_', got: ${priceId.substring(0, 20)}...`
+      }, { status: 400 });
     }
 
     console.log(`Creating checkout for ${plan_type} with price ID: ${priceId}`);
