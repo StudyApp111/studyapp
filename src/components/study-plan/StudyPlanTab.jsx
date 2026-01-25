@@ -387,53 +387,96 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-5"
+          className="space-y-4"
         >
-          {/* Hero Section */}
+          {/* Hero Section - The Big Hook */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-6 shadow-2xl">
             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl" />
             
-            <div className="relative">
-              <div className="text-center mb-4">
-                <span className="text-5xl">😰</span>
-              </div>
-              
-              <h2 className="text-2xl font-black text-white text-center mb-3 leading-tight">
-                "I don't know where<br/>to start studying..."
+            <div className="relative text-center">
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-3 leading-tight">
+                Know your grade<br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400">before you walk in.</span>
               </h2>
               
-              <p className="text-purple-200 text-sm text-center max-w-xs mx-auto leading-relaxed">
-                Sound familiar? You're not alone. Most students waste hours studying the wrong things.
+              <p className="text-purple-200 text-sm max-w-sm mx-auto leading-relaxed">
+                One 5-minute diagnostic. One path to an A+.<br/>
+                <span className="text-white font-medium">No more "guessing" if you've studied enough.</span>
               </p>
             </div>
           </div>
 
-          {/* Problem → Solution */}
-          <div className="space-y-3">
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <div className="flex flex-col items-center text-center">
-                <span className="text-2xl mb-2">❌</span>
-                <h3 className="font-bold text-red-800 text-sm mb-1">The Old Way</h3>
-                <p className="text-red-700 text-xs leading-relaxed max-w-xs">
-                  Re-reading everything. Highlighting randomly. Studying what you already know.
-                </p>
+          {/* Comparison - Old Way vs StudyApp Way */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Old Way */}
+            <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 relative">
+              <div className="absolute -top-2 -left-1">
+                <span className="text-lg">💀</span>
               </div>
+              <h3 className="font-bold text-slate-700 text-xs mb-2 mt-1">The Old Way</h3>
+              <ul className="space-y-1.5">
+                <li className="flex items-start gap-1.5 text-[11px] text-slate-600">
+                  <span className="text-red-500 font-bold">✕</span>
+                  <span>Staring at 400 pages of notes</span>
+                </li>
+                <li className="flex items-start gap-1.5 text-[11px] text-slate-600">
+                  <span className="text-red-500 font-bold">✕</span>
+                  <span>Guessing what might be on the exam</span>
+                </li>
+                <li className="flex items-start gap-1.5 text-[11px] text-slate-600">
+                  <span className="text-red-500 font-bold">✕</span>
+                  <span>Anxiety until results day</span>
+                </li>
+              </ul>
             </div>
-            
-            <div className="flex justify-center">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                <ArrowRight className="w-4 h-4 text-white rotate-90" />
+
+            {/* StudyApp Way */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-3 relative shadow-md">
+              <div className="absolute -top-2 -left-1">
+                <span className="text-lg">🐐</span>
               </div>
+              <h3 className="font-bold text-emerald-700 text-xs mb-2 mt-1">The StudyApp Way</h3>
+              <ul className="space-y-1.5">
+                <li className="flex items-start gap-1.5 text-[11px] text-emerald-700">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  <span>AI finds weak spots in 5 min</span>
+                </li>
+                <li className="flex items-start gap-1.5 text-[11px] text-emerald-700">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  <span>Curated plan: exactly what to do</span>
+                </li>
+                <li className="flex items-start gap-1.5 text-[11px] text-emerald-700">
+                  <span className="text-emerald-500 font-bold">✓</span>
+                  <span>Predicted grade updates in real-time</span>
+                </li>
+              </ul>
             </div>
-            
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-              <div className="flex flex-col items-center text-center">
-                <span className="text-2xl mb-2">✨</span>
-                <h3 className="font-bold text-emerald-800 text-sm mb-1">The StudyApp Way</h3>
-                <p className="text-emerald-700 text-xs leading-relaxed max-w-xs">
-                  AI finds your weak spots in 5 minutes. Then gives you a personalized plan.
-                </p>
+          </div>
+
+          {/* How It Works - Simple Steps */}
+          <div className="bg-white rounded-xl border border-purple-100 p-4 shadow-sm">
+            <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wide mb-3 text-center">How it works</p>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col items-center text-center flex-1">
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-1.5">
+                  <span className="text-lg">📝</span>
+                </div>
+                <p className="text-[10px] text-slate-700 font-medium leading-tight">5-min<br/>Diagnostic</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-purple-300 flex-shrink-0" />
+              <div className="flex flex-col items-center text-center flex-1">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mb-1.5">
+                  <span className="text-lg">🎯</span>
+                </div>
+                <p className="text-[10px] text-slate-700 font-medium leading-tight">See Your<br/>Predicted Grade</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-purple-300 flex-shrink-0" />
+              <div className="flex flex-col items-center text-center flex-1">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-1.5">
+                  <span className="text-lg">🚀</span>
+                </div>
+                <p className="text-[10px] text-slate-700 font-medium leading-tight">Follow Plan<br/>to Improve</p>
               </div>
             </div>
           </div>
@@ -444,7 +487,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="pt-4"
+            className="pt-2"
           >
             <Button 
               onClick={() => onNavigate('exam')}
@@ -455,7 +498,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               Start 5-Minute Diagnostic
             </Button>
             <p className="text-center text-[10px] text-slate-400 mt-2">
-              Free • No credit card • Results in 5 minutes
+              Free • Results in 5 minutes • Know your grade before exam day
             </p>
           </motion.div>
         </motion.div>
