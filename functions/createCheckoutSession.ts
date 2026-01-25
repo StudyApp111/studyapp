@@ -7,9 +7,16 @@ const stripe = new Stripe(Deno.env.get("STRIPE_API_KEY"));
 // 1. Create a Product called "Locked In Pro"
 // 2. Add two prices: $6.99/month (monthly) and $59.88/year ($4.99/mo billed yearly)
 // 3. Replace these IDs with your actual Stripe price IDs
+// Get price IDs from environment - log them for debugging
+const STRIPE_PRICE_MONTHLY = Deno.env.get("STRIPE_PRICE_MONTHLY");
+const STRIPE_PRICE_YEARLY = Deno.env.get("STRIPE_PRICE_YEARLY");
+
+console.log("ENV CHECK - STRIPE_PRICE_MONTHLY:", STRIPE_PRICE_MONTHLY ? `${STRIPE_PRICE_MONTHLY.substring(0, 10)}...` : "NOT SET");
+console.log("ENV CHECK - STRIPE_PRICE_YEARLY:", STRIPE_PRICE_YEARLY ? `${STRIPE_PRICE_YEARLY.substring(0, 10)}...` : "NOT SET");
+
 const PRICE_IDS = {
-  monthly: Deno.env.get("STRIPE_PRICE_MONTHLY") || 'price_monthly_placeholder',
-  yearly: Deno.env.get("STRIPE_PRICE_YEARLY") || 'price_yearly_placeholder'
+  monthly: STRIPE_PRICE_MONTHLY || 'price_monthly_placeholder',
+  yearly: STRIPE_PRICE_YEARLY || 'price_yearly_placeholder'
 };
 
 Deno.serve(async (req) => {

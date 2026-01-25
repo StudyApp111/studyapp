@@ -129,17 +129,24 @@ export default function CreateLesson() {
       setCreatedLessonId(lesson.id);
       console.log("✅ Lesson created:", lesson.id);
 
-      // Fire-and-forget: Generate exam in background
-      console.log("🎯 Starting background exam generation...");
-      base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-        .then(result => {
-          if (result?.data?.success) {
-            console.log("✅ Exam 1 auto-generated:", result.data.exam_id);
-          }
-        })
-        .catch(err => console.error("❌ Background exam generation error:", err.message));
+      // CRITICAL: Generate Exam 1 BEFORE completing loader - user needs this ready
+      console.log("🎯 Generating diagnostic exam...");
+      let examGenerated = false;
+      
+      try {
+        const examResult = await base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id });
+        if (examResult?.data?.success) {
+          console.log("✅ Exam 1 generated:", examResult.data.exam_id);
+          examGenerated = true;
+        } else {
+          console.warn("⚠️ Exam generation returned but no success flag");
+        }
+      } catch (examErr) {
+        console.error("❌ Exam generation error:", examErr.message);
+        // Continue anyway - user can still view materials
+      }
 
-      // Fire-and-forget: Curriculum mapping in background
+      // Fire-and-forget: Curriculum mapping in background (not critical path)
       const curriculumPrompt = `Educational Curriculum Analysis Request
 Role: Expert curriculum analyst. Generate concise curriculum profile for ${courseName}.
 Student Grade: ${learningProfile?.grade || "N/A"}
@@ -157,10 +164,8 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
         })
         .catch(err => console.warn("Curriculum mapping error:", err));
 
-      // Wait for loader animation then mark complete
-      setTimeout(() => {
-        setLoaderComplete(true);
-      }, 5000);
+      // Now complete the loader - exam is ready (or we tried our best)
+      setLoaderComplete(true);
 
     } catch (error) {
       console.error("Error creating lesson:", error);

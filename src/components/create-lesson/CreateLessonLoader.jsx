@@ -11,13 +11,13 @@ const steps = [
   },
   {
     id: "curriculum",
-    title: "Creating curriculum map",
+    title: "Finding your weak spots",
     icon: ListChecks,
     color: "indigo"
   },
   {
     id: "generating",
-    title: "Generating study tools",
+    title: "Creating your diagnostic",
     icon: Sparkles,
     color: "amber"
   }
@@ -75,10 +75,10 @@ export default function CreateLessonLoader({ fileName, isComplete, onAnimationCo
           className="text-center mb-8"
         >
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            Preparing your material...
+            Know your grade before your exam
           </h1>
           <p className="text-white/70">
-            This usually takes about 30 seconds
+            Building your personalized diagnostic...
           </p>
         </motion.div>
 
