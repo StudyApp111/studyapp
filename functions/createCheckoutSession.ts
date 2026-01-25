@@ -90,9 +90,8 @@ Deno.serve(async (req) => {
 
     console.log(`Creating checkout for ${plan_type} with price ID: ${priceId}`);
 
-    // Yearly is a one-time payment, monthly is subscription
-    const isOneTime = plan_type === 'yearly';
-    
+    // BOTH plans are one-time payments (monthly $6.99 one-time, yearly $59.88 one-time)
+    // Subscription management is handled internally, not via Stripe recurring billing
     const sessionConfig = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -103,7 +102,7 @@ Deno.serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: isOneTime ? 'payment' : 'subscription',
+      mode: 'payment', // Always one-time payment
       success_url: success_url || `${req.headers.get('origin')}/PricingPlans?success=true`,
       cancel_url: cancel_url || `${req.headers.get('origin')}/PricingPlans?canceled=true`,
       metadata: {
@@ -113,17 +112,6 @@ Deno.serve(async (req) => {
       },
       allow_promotion_codes: true,
     };
-    
-    // Only add subscription_data for subscription mode
-    if (!isOneTime) {
-      sessionConfig.subscription_data = {
-        metadata: {
-          user_email: user.email,
-          user_id: user.id,
-          plan_type: plan_type
-        }
-      };
-    }
 
     // Create checkout session
     const session = await stripe.checkout.sessions.create(sessionConfig);
