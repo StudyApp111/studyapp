@@ -387,67 +387,64 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
+          className="space-y-5"
         >
           {/* Hero Section */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-5 shadow-2xl">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-6 shadow-2xl">
             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl" />
             
-            <div className="relative text-center">
-              <span className="text-4xl">🎯</span>
-              <h2 className="text-xl font-black text-white mt-2 mb-2 leading-tight">
-                Find Out Your Grade<br/>Before Your Exam
+            <div className="relative">
+              <div className="text-center mb-4">
+                <span className="text-5xl">😰</span>
+              </div>
+              
+              <h2 className="text-2xl font-black text-white text-center mb-3 leading-tight">
+                "I don't know where<br/>to start studying..."
               </h2>
-              <p className="text-purple-200 text-sm max-w-xs mx-auto">
-                Take a quick 5-question diagnostic and we'll tell you exactly where you stand.
+              
+              <p className="text-purple-200 text-sm text-center max-w-xs mx-auto leading-relaxed">
+                Sound familiar? You're not alone. Most students waste hours studying the wrong things.
               </p>
             </div>
           </div>
 
-          {/* What You'll Get */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-            <h3 className="font-bold text-slate-900 text-sm mb-3 text-center">After the diagnostic, you'll get:</h3>
+          {/* Problem → Solution */}
+          <div className="space-y-3">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <div className="flex flex-col items-center text-center">
+                <span className="text-2xl mb-2">❌</span>
+                <h3 className="font-bold text-red-800 text-sm mb-1">The Old Way</h3>
+                <p className="text-red-700 text-xs leading-relaxed max-w-xs">
+                  Re-reading everything. Highlighting randomly. Studying what you already know.
+                </p>
+              </div>
+            </div>
             
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Target className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="font-bold text-emerald-800 text-sm">Your Predicted Grade</p>
-                  <p className="text-emerald-700 text-xs">See what you'd likely score if the exam was today</p>
-                </div>
+            <div className="flex justify-center">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                <ArrowRight className="w-4 h-4 text-white rotate-90" />
               </div>
-              
-              <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                  <AlertCircle className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="font-bold text-amber-800 text-sm">Your Weak Spots</p>
-                  <p className="text-amber-700 text-xs">The exact topics that are pulling your grade down</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="font-bold text-purple-800 text-sm">Personalized Study Plan</p>
-                  <p className="text-purple-700 text-xs">Flashcards, practice quizzes & tasks built just for you</p>
-                </div>
+            </div>
+            
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+              <div className="flex flex-col items-center text-center">
+                <span className="text-2xl mb-2">✨</span>
+                <h3 className="font-bold text-emerald-800 text-sm mb-1">The StudyApp Way</h3>
+                <p className="text-emerald-700 text-xs leading-relaxed max-w-xs">
+                  AI finds your weak spots in 5 minutes. Then gives you a personalized plan.
+                </p>
               </div>
             </div>
           </div>
 
-          {/* CTA */}
+          {/* Final CTA */}
           <motion.div
             ref={ctaRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3 }}
+            className="pt-4"
           >
             <Button 
               onClick={() => onNavigate('exam')}
@@ -455,10 +452,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               <Play className="w-5 h-5 mr-2" />
-              Start 5-Question Diagnostic
+              Start 5-Minute Diagnostic
             </Button>
             <p className="text-center text-[10px] text-slate-400 mt-2">
-              Takes about 5 minutes • Instant results
+              Free • No credit card • Results in 5 minutes
             </p>
           </motion.div>
         </motion.div>

@@ -1,7 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Retry helper with exponential backoff
+async function fetchWithRetry(url, options, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const response = await fetch(url, options);
+        if (response.ok) return response;
+        
+        if (response.status === 429 && attempt < maxRetries) {
+            const waitTime = Math.pow(2, attempt) * 1000;
+            console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+            await new Promise(r => setTimeout(r, waitTime));
+            continue;
+        }
+        return response;
+    }
+}
+
 // Auto-generates Exam 1 questions when lesson is ready
-// Called ONCE from CreateLesson page after lesson creation
+// Called from DocumentViewer preload logic
 
 Deno.serve(async (req) => {
   console.log('=== autoGenerateExam1 Start ===');
@@ -18,11 +34,23 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
     }
 
-    // CRITICAL: Check if exam 1 already exists with questions - if so, return immediately
+    // Check if exam 1 already exists with questions OR is being generated
     const existingExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
-    if (existingExams.length > 0 && existingExams[0].questions?.length > 0) {
-      console.log('Exam 1 already exists with questions, returning existing exam');
-      return Response.json({ success: true, skipped: true, exam_id: existingExams[0].id });
+    if (existingExams.length > 0) {
+      const exam = existingExams[0];
+      // Already has questions - skip
+      if (exam.questions?.length > 0) {
+        console.log('Exam 1 already has questions, skipping generation');
+        return Response.json({ success: true, skipped: true, exam_id: exam.id });
+      }
+      // Check if generation is in progress (created within last 60 seconds without questions)
+      const createdAt = new Date(exam.created_date);
+      const now = new Date();
+      const secondsSinceCreation = (now - createdAt) / 1000;
+      if (secondsSinceCreation < 60) {
+        console.log('Exam 1 generation already in progress, skipping');
+        return Response.json({ success: true, skipped: true, in_progress: true, exam_id: exam.id });
+      }
     }
 
     // Get lesson data
@@ -184,14 +212,15 @@ No extra text.`;
       }
     };
 
-    console.log('Calling Gemini for exam generation...');
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    console.log('Calling Gemini with retry logic for exam generation...');
+    const resp = await fetchWithRetry(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      }
+      },
+      3
     );
 
     if (!resp.ok) {
