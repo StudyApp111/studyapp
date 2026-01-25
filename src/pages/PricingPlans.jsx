@@ -51,8 +51,11 @@ export default function PricingPlans() {
   const yearlyTotal = yearlyPrice * 12;
   const yearlySavings = Math.round(((monthlyPrice * 12 - yearlyTotal) / (monthlyPrice * 12)) * 100);
 
+  const [checkoutError, setCheckoutError] = useState(null);
+
   const handleUpgrade = async () => {
     setLoading(true);
+    setCheckoutError(null);
     try {
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: isYearly ? 'yearly' : 'monthly',
@@ -60,11 +63,20 @@ export default function PricingPlans() {
         cancel_url: `${window.location.origin}${createPageUrl("PricingPlans")}?canceled=true`
       });
 
+      console.log('Checkout response:', response);
+
       if (response.data?.checkout_url) {
         window.location.href = response.data.checkout_url;
+      } else if (response.data?.error) {
+        setCheckoutError(response.data.error);
+        setLoading(false);
+      } else {
+        setCheckoutError('Unable to start checkout. Please try again.');
+        setLoading(false);
       }
     } catch (error) {
       console.error('Checkout error:', error);
+      setCheckoutError('Something went wrong. Please try again.');
       setLoading(false);
     }
   };
@@ -173,14 +185,14 @@ export default function PricingPlans() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto items-stretch">
           
           {/* Free Tier - Good Luck */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative bg-slate-800/50 backdrop-blur-sm rounded-3xl p-6 border border-slate-700"
+            className="relative bg-slate-800/50 backdrop-blur-sm rounded-3xl p-6 border border-slate-700 flex flex-col"
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-2xl bg-slate-700 flex items-center justify-center">
@@ -192,12 +204,12 @@ export default function PricingPlans() {
               </div>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-6 h-14 flex flex-col justify-center">
               <span className="text-4xl font-black text-white">$0</span>
               <span className="text-slate-400 text-sm">/month</span>
             </div>
 
-            <ul className="space-y-3 mb-6">
+            <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-3 text-slate-300">
                 <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
                   <FileText className="w-3 h-3 text-slate-400" />
@@ -230,13 +242,18 @@ export default function PricingPlans() {
               </li>
             </ul>
 
-            <Button
-              variant="outline"
-              className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 py-5"
-              disabled
-            >
-              Current Plan
-            </Button>
+            <div className="mt-auto">
+              <Button
+                variant="outline"
+                className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 py-5"
+                disabled
+              >
+                Current Plan
+              </Button>
+              <p className="text-center text-slate-500 text-xs mt-3 invisible">
+                Placeholder for alignment
+              </p>
+            </div>
           </motion.div>
 
           {/* Pro Tier - Locked In */}
@@ -244,7 +261,7 @@ export default function PricingPlans() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="relative bg-gradient-to-br from-purple-600/30 to-indigo-600/30 backdrop-blur-sm rounded-3xl p-6 border-2 border-purple-500 shadow-2xl shadow-purple-500/20"
+            className="relative bg-gradient-to-br from-purple-600/30 to-indigo-600/30 backdrop-blur-sm rounded-3xl p-6 border-2 border-purple-500 shadow-2xl shadow-purple-500/20 flex flex-col"
           >
             {/* Popular badge */}
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -263,19 +280,25 @@ export default function PricingPlans() {
               </div>
             </div>
 
-            <div className="mb-6">
-              <span className="text-4xl font-black text-white">
-                ${isYearly ? yearlyPrice : monthlyPrice}
-              </span>
-              <span className="text-purple-300 text-sm">/month</span>
-              {isYearly && (
-                <p className="text-emerald-400 text-xs mt-1">
+            <div className="mb-6 h-14 flex flex-col justify-center">
+              <div>
+                <span className="text-4xl font-black text-white">
+                  ${isYearly ? yearlyPrice : monthlyPrice}
+                </span>
+                <span className="text-purple-300 text-sm">/month</span>
+              </div>
+              {isYearly ? (
+                <p className="text-emerald-400 text-xs">
                   Billed ${yearlyTotal.toFixed(2)} yearly
+                </p>
+              ) : (
+                <p className="text-purple-300/50 text-xs">
+                  Billed monthly
                 </p>
               )}
             </div>
 
-            <ul className="space-y-3 mb-6">
+            <ul className="space-y-3 mb-6 flex-1">
               <li className="flex items-center gap-3 text-white">
                 <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
                   <Infinity className="w-3 h-3 text-white" />
@@ -308,24 +331,30 @@ export default function PricingPlans() {
               </li>
             </ul>
 
-            <Button
-              onClick={handleUpgrade}
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-6 text-base shadow-xl shadow-purple-500/30"
-            >
-              {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <Zap className="w-5 h-5 mr-2" />
-                  Get Locked In
-                </>
+            <div className="mt-auto">
+              <Button
+                onClick={handleUpgrade}
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-5 text-base shadow-xl shadow-purple-500/30"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Zap className="w-5 h-5 mr-2" />
+                    Get Locked In
+                  </>
+                )}
+              </Button>
+              <p className="text-center text-purple-300 text-xs mt-3">
+                Cancel anytime • 7-day money back guarantee
+              </p>
+              {checkoutError && (
+                <p className="text-center text-red-400 text-xs mt-2">
+                  {checkoutError}
+                </p>
               )}
-            </Button>
-
-            <p className="text-center text-purple-300 text-xs mt-3">
-              Cancel anytime • 7-day money back guarantee
-            </p>
+            </div>
           </motion.div>
         </div>
 
