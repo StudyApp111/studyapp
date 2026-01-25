@@ -39,18 +39,19 @@ Deno.serve(async (req) => {
 
     console.log(`Received Stripe event: ${event.type}`);
 
-    // Handle checkout.session.completed
+    // Handle checkout.session.completed (both payment and subscription)
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       const userEmail = session.customer_email || session.metadata?.user_email;
       const planType = session.metadata?.plan_type || 'monthly'; // monthly or yearly
+      const isOneTimePayment = session.mode === 'payment'; // yearly is one-time payment
       
       if (!userEmail) {
         console.error('No user email found in session');
         return Response.json({ error: 'No user email' }, { status: 400 });
       }
 
-      console.log(`Processing subscription for: ${userEmail}, plan: ${planType}`);
+      console.log(`Processing ${isOneTimePayment ? 'one-time payment' : 'subscription'} for: ${userEmail}, plan: ${planType}`);
 
       // Find user by email and update subscription
       const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
@@ -74,10 +75,13 @@ Deno.serve(async (req) => {
           subscription_start_date: now,
           subscription_end_date: endDate.toISOString(),
           stripe_customer_id: session.customer,
-          stripe_subscription_id: session.subscription
+          // Only set subscription_id for actual subscriptions, not one-time payments
+          stripe_subscription_id: isOneTimePayment ? null : session.subscription,
+          // For one-time yearly, store the payment intent ID for reference
+          stripe_payment_intent_id: isOneTimePayment ? session.payment_intent : null
         });
 
-        console.log(`User ${userEmail} upgraded to pro (${planType})`);
+        console.log(`User ${userEmail} upgraded to pro (${planType}, ${isOneTimePayment ? 'one-time' : 'recurring'})`);
       } else {
         console.error(`User not found: ${userEmail}`);
       }
