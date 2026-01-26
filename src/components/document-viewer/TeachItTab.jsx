@@ -303,13 +303,13 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       setCards(updatedCards);
       setShowFeedback(true);
 
-      // Update study plan with total mastered count (score >= 70)
-      const totalMastered = updatedCards.filter(c => c.mastered).length;
-      console.log(`🧠 TeachIt: ${totalMastered} cards mastered out of ${updatedCards.length}, isMastered=${isMastered}, score=${gradingResult.score}`);
-      await updateStudyPlanProgress(totalMastered);
+      // Update study plan with total COMPLETED count (not mastered - just answered)
+      const totalCompleted = updatedCards.filter(c => c.completed).length;
+      console.log(`🧠 TeachIt: ${totalCompleted} cards completed out of ${updatedCards.length}, score=${gradingResult.score}`);
+      await updateStudyPlanProgress(totalCompleted);
 
-      // Trigger Polly engine when task completes OR on mastery milestones
-      const taskCompleted = await checkIfTaskCompleted('teach_it', totalMastered);
+      // Trigger Polly engine when task completes OR on completion milestones
+      const taskCompleted = await checkIfTaskCompleted('teach_it', totalCompleted);
       if (taskCompleted || (isMastered && totalMastered % 2 === 0)) {
         base44.functions.invoke('runPollyEngine', {
           trigger_event: taskCompleted ? 'task_completed' : 'teachit_milestone',
