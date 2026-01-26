@@ -4,8 +4,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileText, Type, Loader2, File, X, CheckCircle, Lightbulb } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function MaterialUploader({ courseName, school, onMaterialReady }) {
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState("upload");
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [pastedNotes, setPastedNotes] = useState("");
@@ -105,24 +107,24 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-xl">
+        <TabsList className={`grid w-full grid-cols-3 p-1 rounded-xl ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
           <TabsTrigger 
             value="upload" 
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className={`rounded-lg ${isDark ? 'data-[state=active]:bg-white/20 data-[state=active]:shadow-sm' : 'data-[state=active]:bg-white data-[state=active]:shadow-sm'}`}
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload
           </TabsTrigger>
           <TabsTrigger 
             value="paste"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className={`rounded-lg ${isDark ? 'data-[state=active]:bg-white/20 data-[state=active]:shadow-sm' : 'data-[state=active]:bg-white data-[state=active]:shadow-sm'}`}
           >
             <FileText className="w-4 h-4 mr-2" />
             Paste
           </TabsTrigger>
           <TabsTrigger 
             value="topic"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className={`rounded-lg ${isDark ? 'data-[state=active]:bg-white/20 data-[state=active]:shadow-sm' : 'data-[state=active]:bg-white data-[state=active]:shadow-sm'}`}
           >
             <Type className="w-4 h-4 mr-2" />
             Topic
@@ -144,7 +146,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="w-full border-2 border-dashed border-purple-300 hover:border-purple-400 bg-purple-50/50 hover:bg-purple-50 rounded-2xl p-8 transition-all"
+              className={`w-full border-2 border-dashed rounded-2xl p-8 transition-all ${isDark ? 'border-purple-500/30 hover:border-purple-500/50 bg-purple-600/10 hover:bg-purple-600/20' : 'border-purple-300 hover:border-purple-400 bg-purple-50/50 hover:bg-purple-50'}`}
             >
               {isUploading ? (
                 <div className="flex flex-col items-center gap-3">
@@ -153,13 +155,13 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-3">
-                  <div className="w-16 h-16 rounded-2xl bg-purple-100 flex items-center justify-center">
-                    <Upload className="w-8 h-8 text-purple-600" />
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
+                    <Upload className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                   </div>
                   <div>
-                    <p className="text-purple-700 font-semibold text-lg">Upload Your Materials</p>
-                    <p className="text-slate-500 text-sm mt-1">PDF, Word, PowerPoint, TXT, PNG, JPG, WEBP, GIF, BMP, TIFF</p>
-                    <p className="text-slate-400 text-xs mt-1">Max 15MB per file</p>
+                    <p className={`font-semibold text-lg ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>Upload Your Materials</p>
+                    <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>PDF, Word, PowerPoint, TXT, PNG, JPG, WEBP, GIF, BMP, TIFF</p>
+                    <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Max 15MB per file</p>
                   </div>
                 </div>
               )}
@@ -167,20 +169,20 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
           ) : (
             <div className="space-y-3">
               {uploadedFiles.map((file, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <div key={idx} className={`flex items-center gap-3 p-3 border rounded-xl ${isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'}`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isDark ? 'bg-emerald-600/20' : 'bg-emerald-100'}`}>
+                    <CheckCircle className={`w-5 h-5 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 truncate">{file.name}</p>
-                    <p className="text-xs text-slate-500">{formatFileSize(file.size)}</p>
+                    <p className={`font-medium truncate ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>{file.name}</p>
+                    <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatFileSize(file.size)}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeFile(idx)}
-                    className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors"
+                    className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-200'}`}
                   >
-                    <X className="w-4 h-4 text-slate-500" />
+                    <X className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                   </button>
                 </div>
               ))}
@@ -203,9 +205,9 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
             value={pastedNotes}
             onChange={handleNotesChange}
             placeholder="Paste your lecture notes, textbook excerpts, or any study material here..."
-            className="min-h-[200px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4"
+            className={`min-h-[200px] resize-none border-2 rounded-xl p-4 ${isDark ? 'border-white/10 bg-white/5 focus:border-purple-500 text-slate-200 placeholder:text-slate-500' : 'border-slate-200 focus:border-purple-400'}`}
           />
-          <p className="text-xs text-slate-500 mt-2 text-center">
+          <p className={`text-xs mt-2 text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Paste any text content you want to study
           </p>
         </TabsContent>
@@ -215,22 +217,22 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
             value={topicDescription}
             onChange={handleTopicChange}
             placeholder={`Describe what you want to learn about ${courseName}...\n\nExample: "I want to learn about photosynthesis, including the light and dark reactions, and how plants convert CO2 into glucose."`}
-            className="min-h-[140px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4"
+            className={`min-h-[140px] resize-none border-2 rounded-xl p-4 ${isDark ? 'border-white/10 bg-white/5 focus:border-purple-500 text-slate-200 placeholder:text-slate-500' : 'border-slate-200 focus:border-purple-400'}`}
           />
           
           {/* AI Suggestions */}
           {courseName && (
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-3">
+            <div className={`border rounded-xl p-3 ${isDark ? 'bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border-purple-500/30' : 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200'}`}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-purple-600" />
-                  <span className="text-xs font-semibold text-purple-800">Topic Ideas</span>
+                  <Lightbulb className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                  <span className={`text-xs font-semibold ${isDark ? 'text-purple-300' : 'text-purple-800'}`}>Topic Ideas</span>
                 </div>
-                {loadingSuggestions && <Loader2 className="w-3 h-3 animate-spin text-purple-600" />}
+                {loadingSuggestions && <Loader2 className={`w-3 h-3 animate-spin ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />}
               </div>
               
               {loadingSuggestions && suggestions.length === 0 && (
-                <p className="text-[11px] text-purple-600">Finding topics...</p>
+                <p className={`text-[11px] ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Finding topics...</p>
               )}
               
               {suggestions.length > 0 && (
@@ -243,7 +245,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
                         setTopicDescription(suggestion);
                         onMaterialReady({ type: "topic", content: suggestion });
                       }}
-                      className="text-[11px] text-slate-700 bg-white hover:bg-purple-100 border border-purple-100 rounded-full px-3 py-1.5 transition-all shadow-sm hover:shadow"
+                      className={`text-[11px] border rounded-full px-3 py-1.5 transition-all shadow-sm hover:shadow ${isDark ? 'text-slate-300 bg-white/10 hover:bg-purple-600/30 border-purple-500/30' : 'text-slate-700 bg-white hover:bg-purple-100 border-purple-100'}`}
                     >
                       {suggestion.length > 50 ? suggestion.substring(0, 50) + '...' : suggestion}
                     </button>
@@ -263,7 +265,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
             </div>
           )}
           
-          <p className="text-xs text-slate-500 text-center">
+          <p className={`text-xs text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Be specific about the topics you want to cover
           </p>
         </TabsContent>
