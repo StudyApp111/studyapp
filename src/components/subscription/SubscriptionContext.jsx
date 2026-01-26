@@ -70,14 +70,24 @@ export function SubscriptionProvider({ children }) {
 
   // Check and reset counters based on rolling windows from account creation
   const checkAndResetCounters = async () => {
-    if (!user) return user;
+    // Always fetch fresh user data to ensure accurate counters
+    let currentUser = user;
+    if (!currentUser) {
+      try {
+        currentUser = await base44.auth.me();
+        setUser(currentUser);
+      } catch {
+        return null;
+      }
+    }
+    if (!currentUser) return null;
     
     const now = new Date();
     let updates = {};
     let needsRefresh = false;
 
     // Daily counters - 24h rolling window
-    const dailyResetTime = user.daily_reset_timestamp ? new Date(user.daily_reset_timestamp) : null;
+    const dailyResetTime = currentUser.daily_reset_timestamp ? new Date(currentUser.daily_reset_timestamp) : null;
     const dailyWindowExpired = !dailyResetTime || (now.getTime() - dailyResetTime.getTime()) >= 24 * 60 * 60 * 1000;
     
     if (dailyWindowExpired) {
@@ -88,7 +98,7 @@ export function SubscriptionProvider({ children }) {
     }
 
     // Weekly counters - 7 day rolling window
-    const weeklyResetTime = user.weekly_reset_timestamp ? new Date(user.weekly_reset_timestamp) : null;
+    const weeklyResetTime = currentUser.weekly_reset_timestamp ? new Date(currentUser.weekly_reset_timestamp) : null;
     const weeklyWindowExpired = !weeklyResetTime || (now.getTime() - weeklyResetTime.getTime()) >= 7 * 24 * 60 * 60 * 1000;
     
     if (weeklyWindowExpired) {
@@ -101,7 +111,7 @@ export function SubscriptionProvider({ children }) {
       await base44.auth.updateMe(updates);
       return await refreshUser();
     }
-    return user;
+    return currentUser;
   };
 
   // Check if user can perform action
