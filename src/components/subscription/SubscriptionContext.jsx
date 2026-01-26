@@ -86,39 +86,41 @@ export function SubscriptionProvider({ children }) {
     
     const now = new Date();
     let updates = {};
-    let needsReset = false;
+    let needsUpdate = false;
 
     // Daily counters - 24h rolling window
-    // If no timestamp exists, DON'T reset - just set the timestamp
     const dailyResetTime = currentUser.daily_reset_timestamp ? new Date(currentUser.daily_reset_timestamp) : null;
     
     if (!dailyResetTime) {
-      // First time - initialize timestamp without resetting counters
+      // First time - initialize timestamp AND reset counters to 0 (fresh start)
       updates.daily_reset_timestamp = now.toISOString();
-      needsReset = true;
+      updates.daily_tasks_count = 0;
+      updates.daily_ai_messages_count = 0;
+      needsUpdate = true;
     } else if ((now.getTime() - dailyResetTime.getTime()) >= 24 * 60 * 60 * 1000) {
-      // Window expired - reset counters
+      // 24h window expired - reset counters
       updates.daily_tasks_count = 0;
       updates.daily_ai_messages_count = 0;
       updates.daily_reset_timestamp = now.toISOString();
-      needsReset = true;
+      needsUpdate = true;
     }
 
     // Weekly counters - 7 day rolling window
     const weeklyResetTime = currentUser.weekly_reset_timestamp ? new Date(currentUser.weekly_reset_timestamp) : null;
     
     if (!weeklyResetTime) {
-      // First time - initialize timestamp without resetting counters
+      // First time - initialize timestamp AND reset counters to 0 (fresh start)
       updates.weekly_reset_timestamp = now.toISOString();
-      needsReset = true;
+      updates.weekly_uploads_count = 0;
+      needsUpdate = true;
     } else if ((now.getTime() - weeklyResetTime.getTime()) >= 7 * 24 * 60 * 60 * 1000) {
-      // Window expired - reset counters
+      // 7-day window expired - reset counters
       updates.weekly_uploads_count = 0;
       updates.weekly_reset_timestamp = now.toISOString();
-      needsReset = true;
+      needsUpdate = true;
     }
 
-    if (needsReset) {
+    if (needsUpdate) {
       await base44.auth.updateMe(updates);
       return await refreshUser();
     }
