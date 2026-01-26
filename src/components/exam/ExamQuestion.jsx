@@ -302,6 +302,14 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       {/* Question */}
       <div>
         <div className="flex items-center justify-between gap-2 mb-2">
+          {/* Left side - Explain This button only */}
+          <AskAIButton 
+            type="question" 
+            data={{ ...question, user_answer: selectedAnswer }} 
+            lesson={lesson} 
+          />
+          
+          {/* Right side - Question type and difficulty badges */}
           <div className="flex gap-1 flex-wrap items-center">
             <Badge className={`text-[9px] px-1.5 py-0 ${isDark ? 'bg-purple-600/20 text-purple-300 border-purple-500/30' : 'bg-purple-100 text-purple-700'}`}>
               {(question.question_type || '')
@@ -314,12 +322,6 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
                   .replace(/\b\w/g, c => c.toUpperCase())}
               </Badge>
             )}
-            {/* Explain This Button - Inline with badges */}
-            <AskAIButton 
-              type="question" 
-              data={{ ...question, user_answer: selectedAnswer }} 
-              lesson={lesson} 
-            />
           </div>
         </div>
         <MathText className={`text-sm font-medium leading-relaxed ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>

@@ -60,6 +60,21 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   const lastSavedQuestionsRef = useRef(null);
 
   const practiceExamGeneratingRef = useRef(false);
+  const generatedTaskIdsRef = useRef(new Set());
+
+  // Listen for direct exam results viewing from StudyPlanTab
+  useEffect(() => {
+    const handleViewExamResults = (e) => {
+      const { examId } = e.detail;
+      const targetExam = (exams || []).find(ex => ex.id === examId);
+      if (targetExam) {
+        setViewingCompletedExam(targetExam);
+      }
+    };
+    
+    window.addEventListener('viewExamResults', handleViewExamResults);
+    return () => window.removeEventListener('viewExamResults', handleViewExamResults);
+  }, [exams]);
 
   useEffect(() => {
     const handleGeneratePracticeExam = async (e) => {
@@ -69,6 +84,14 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       }
 
       const { task, focus_topics, target_competency, misconception_addressed } = e.detail;
+      
+      // Check if we've already generated an exam for this specific task
+      const taskId = task?.task_id;
+      if (taskId && generatedTaskIdsRef.current.has(taskId)) {
+        console.log('⚠️ Already generated exam for this task, skipping duplicate');
+        return;
+      }
+      
       console.log('🎯 Received practice exam generation request from study plan');
 
       // Clear any existing exam view state FIRST before generating
@@ -77,6 +100,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       setCurrentQuestion(0);
 
       practiceExamGeneratingRef.current = true;
+      if (taskId) generatedTaskIdsRef.current.add(taskId);
       setIsGenerating(true);
 
       try {
@@ -97,6 +121,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
             }
       } catch (error) {
         console.error("Error generating practice exam:", error);
+        // Remove from generated set on error so user can retry
+        if (taskId) generatedTaskIdsRef.current.delete(taskId);
       } finally {
         setIsGenerating(false);
         practiceExamGeneratingRef.current = false;
@@ -1517,7 +1543,7 @@ JSON Output (exact schema):
               <Button
                 onClick={handleNext}
                 disabled={!canProceed}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-xs h-10 rounded-xl font-medium"
+                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white text-xs h-10 rounded-xl font-medium"
               >
                 Next Question
               </Button>
