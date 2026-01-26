@@ -11,6 +11,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function AITutorPanel({ messages, setMessages, input, setInput, isLoading, setIsLoading, lesson }) {
   const { canSendAIMessage, incrementAIMessageCount, triggerUpgradeModal, isPro } = useSubscription();
+  const { isDark } = useTheme();
   const messagesEndRef = useRef(null);
   const [showQuickActions, setShowQuickActions] = useState(true);
 
@@ -162,9 +163,9 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
   const hasDocument = lesson?.extracted_content || lesson?.file_url;
 
   return (
-    <div className="flex-1 bg-[#12121a] rounded-xl shadow-xl border border-white/10 flex flex-col overflow-hidden" style={{ height: '100%' }}>
+    <div className={`flex-1 rounded-xl shadow-xl border flex flex-col overflow-hidden ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-purple-200'}`} style={{ height: '100%' }}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-700 to-purple-800 rounded-t-xl px-4 py-3 flex items-center gap-3 shadow-lg flex-shrink-0">
+      <div className={`rounded-t-xl px-4 py-3 flex items-center gap-3 shadow-lg flex-shrink-0 ${isDark ? 'bg-gradient-to-r from-purple-700 to-purple-800' : 'bg-gradient-to-r from-purple-600 to-indigo-600'}`}>
         <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
           <Sparkles className="w-4 h-4 text-white" />
         </div>
@@ -177,7 +178,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
       {/* Quick Actions - Always visible above input as pills */}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-gradient-to-b from-purple-900/10 to-[#12121a]">
+      <div className={`flex-1 overflow-y-auto p-3 space-y-2.5 ${isDark ? 'bg-gradient-to-b from-purple-900/10 to-[#12121a]' : 'bg-slate-50'}`}>
         {messages.map((msg, idx) => (
           <motion.div
             key={idx}
@@ -190,7 +191,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
               className={`max-w-[85%] rounded-2xl px-3 py-2 ${
                 msg.role === 'user'
                   ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white shadow-md'
-                  : 'bg-[#1a1a2e] text-slate-200 shadow-sm border border-white/10'
+                  : isDark ? 'bg-[#1a1a2e] text-slate-200 shadow-sm border border-white/10' : 'bg-white text-slate-800 shadow-sm border border-slate-200'
               }`}
             >
               {msg.role === 'assistant' ? (
@@ -232,7 +233,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
             animate={{ opacity: 1 }}
             className="flex justify-start"
           >
-            <div className="bg-[#1a1a2e] rounded-2xl px-4 py-3 shadow-sm border border-white/10">
+            <div className={`rounded-2xl px-4 py-3 shadow-sm border ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-slate-200'}`}>
               <div className="flex gap-1">
                 <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
@@ -257,7 +258,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
       </div>
 
       {/* Input with Quick Action Pills */}
-      <div className="p-3 bg-[#12121a] border-t border-white/10 rounded-b-xl flex-shrink-0 space-y-2">
+      <div className={`p-3 border-t rounded-b-xl flex-shrink-0 space-y-2 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
         {/* Quick Actions Pills - Always visible */}
         {hasDocument && (
           <div className="flex flex-wrap gap-1.5">
@@ -266,7 +267,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
                 key={action.label}
                 onClick={() => handleSend(action.prompt)}
                 disabled={isLoading}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 transition-all text-[10px] font-medium text-purple-300 whitespace-nowrap"
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all text-[10px] font-medium whitespace-nowrap ${isDark ? 'bg-purple-600/20 border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 text-purple-300' : 'bg-purple-100 border-purple-200 hover:bg-purple-200 text-purple-700'}`}
               >
                 <action.icon className="w-3 h-3" />
                 {action.label}
@@ -282,7 +283,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder={hasDocument ? "Ask about your document..." : "Ask me anything..."}
             disabled={isLoading}
-            className="flex-1 bg-white/5 border-white/10 focus-visible:ring-purple-500 text-xs rounded-xl h-9 text-slate-200 placeholder:text-slate-500"
+            className={`flex-1 focus-visible:ring-purple-500 text-xs rounded-xl h-9 ${isDark ? 'bg-white/5 border-white/10 text-slate-200 placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
           />
           <Button
             onClick={() => handleSend()}
