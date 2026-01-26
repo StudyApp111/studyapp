@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Sparkles, Loader2 } from "lucide-react";
 import MaterialUploader from "@/components/onboarding/MaterialUploader";
 import CreateLessonLoader from "@/components/create-lesson/CreateLessonLoader";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
+  const { canUpload, incrementUploadCount, triggerUpgradeModal } = useSubscription();
   const [courseName, setCourseName] = useState("");
   const [materialData, setMaterialData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,9 +57,20 @@ export default function CreateLesson() {
     
     setIsSubmitting(true);
     setError("");
-    setShowLoader(true);
 
     try {
+      // Check upload limit
+      const uploadCheck = await canUpload();
+      if (!uploadCheck.allowed) {
+        setIsSubmitting(false);
+        triggerUpgradeModal('uploads');
+        return;
+      }
+      
+      setShowLoader(true);
+      
+      // Increment upload counter
+      await incrementUploadCount();
       // Create the lesson - handle file extraction inline for reliability
       const lessonData = {
         course_name: courseName.trim(),
