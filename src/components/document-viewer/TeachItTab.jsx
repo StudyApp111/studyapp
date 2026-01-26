@@ -576,7 +576,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                             }
                             setShowSetsList(false);
                           }}
-                          className="w-full p-3 bg-slate-50 hover:bg-purple-50 rounded-xl border border-slate-200 hover:border-purple-300 transition-all text-left"
+                          className={`w-full p-3 rounded-xl border transition-all text-left ${isDark ? 'bg-white/5 hover:bg-purple-600/20 border-white/10 hover:border-purple-500/30' : 'bg-slate-50 hover:bg-purple-50 border-slate-200 hover:border-purple-300'}`}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <span className={`font-semibold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{set.topic}</span>
@@ -827,7 +827,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               variant="outline"
               onClick={handlePrevious}
               disabled={currentCardIndex === 0}
-              className="flex-1 h-10 md:h-12 rounded-xl border-2 border-purple-300 hover:bg-purple-50 disabled:opacity-30 font-semibold text-sm md:text-base"
+              className={`flex-1 h-10 md:h-12 rounded-xl border-2 disabled:opacity-30 font-semibold text-sm md:text-base ${isDark ? 'border-purple-500/30 hover:bg-purple-600/20 text-slate-200' : 'border-purple-300 hover:bg-purple-50 text-slate-900'}`}
             >
               Previous
             </Button>

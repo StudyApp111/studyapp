@@ -9,9 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Calendar, ArrowLeft, GraduationCap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function AssignmentHistory() {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['graded-assignments'],
@@ -37,7 +39,7 @@ export default function AssignmentHistory() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10 pb-28 md:pb-10">
+    <div className={`min-h-screen p-4 md:p-10 pb-28 md:pb-10 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
           <Button
@@ -54,8 +56,8 @@ export default function AssignmentHistory() {
               <GraduationCap className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Assignment History</h1>
-              <p className="text-slate-600">View your previously graded assignments</p>
+              <h1 className={`text-3xl md:text-4xl font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Assignment History</h1>
+              <p className={isDark ? 'text-slate-300' : 'text-slate-600'}>View your previously graded assignments</p>
             </div>
           </div>
         </div>
@@ -75,11 +77,11 @@ export default function AssignmentHistory() {
             ))}
           </div>
         ) : assignments.length === 0 ? (
-          <Card className="text-center py-16 bg-gradient-to-br from-purple-50 to-yellow-50 border-dashed border-2 border-purple-300">
+          <Card className={`text-center py-16 border-dashed border-2 ${isDark ? 'bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border-purple-500/30' : 'bg-gradient-to-br from-purple-50 to-yellow-50 border-purple-300'}`}>
             <CardContent>
-              <FileText className="w-16 h-16 mx-auto text-purple-600 mb-4" />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">No Graded Assignments Yet</h3>
-              <p className="text-slate-500 mb-6">Upload your first assignment to get started</p>
+              <FileText className={`w-16 h-16 mx-auto mb-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+              <h3 className={`text-xl font-semibold mb-2 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>No Graded Assignments Yet</h3>
+              <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Upload your first assignment to get started</p>
               <Button
                 onClick={() => navigate(createPageUrl("SmartGrader"))}
                 className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900"
@@ -98,16 +100,16 @@ export default function AssignmentHistory() {
                 transition={{ duration: 0.3, delay: idx * 0.05 }}
               >
                 <Card 
-                  className="cursor-pointer hover:shadow-xl transition-all duration-300 border-0 shadow-lg"
+                  className={`cursor-pointer hover:shadow-xl transition-all duration-300 border-0 shadow-lg ${isDark ? 'bg-[#12121a]' : ''}`}
                   onClick={() => navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`)}
                 >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-xl text-slate-900 mb-1">
+                        <CardTitle className={`text-xl mb-1 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                           {assignment.assignment_title}
                         </CardTitle>
-                        <p className="text-sm text-slate-600">{assignment.course_name}</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{assignment.course_name}</p>
                       </div>
                       {assignment.grading_result?.predicted_grade && (
                         <Badge className={`text-lg px-4 py-1 ${getGradeColor(assignment.grading_result.predicted_grade)}`}>
@@ -118,18 +120,18 @@ export default function AssignmentHistory() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                         <Calendar className="w-4 h-4" />
                         <span>{formatDate(assignment.created_date)}</span>
                       </div>
                       {assignment.grading_result?.total_score !== null && assignment.grading_result?.total_score !== undefined && (
-                        <div className="text-sm font-semibold text-purple-700">
+                        <div className={`text-sm font-semibold ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
                           Score: {assignment.grading_result.total_score}%
                         </div>
                       )}
                     </div>
                     {assignment.grading_result?.overall_performance_summary && (
-                      <p className="text-sm text-slate-600 mt-3 line-clamp-2">
+                      <p className={`text-sm mt-3 line-clamp-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                         {assignment.grading_result.overall_performance_summary}
                       </p>
                     )}
