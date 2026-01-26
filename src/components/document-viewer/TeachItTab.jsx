@@ -360,7 +360,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
     }
   };
 
-  const checkIfTaskCompleted = async (taskType, masteredCount) => {
+  const checkIfTaskCompleted = async (taskType, completedCount) => {
     try {
       const plans = await base44.entities.StudyPlan.filter({ 
         lesson_id: lesson.id,
@@ -372,13 +372,13 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       const task = plan.tasks?.find(t => t.task_type === taskType);
       if (!task || task.completed) return false;
       
-      return masteredCount >= (task.target_count || 3);
+      return completedCount >= (task.target_count || 3);
     } catch {
       return false;
     }
   };
 
-  const updateStudyPlanProgress = async (masteredCount) => {
+  const updateStudyPlanProgress = async (completedCount) => {
     try {
       const plans = await base44.entities.StudyPlan.filter({ 
         lesson_id: lesson.id,
@@ -391,8 +391,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       
       const updatedTasks = plan.tasks.map(task => {
         if (task.task_type === 'teach_it') {
-          // Use mastered count (score >= 70) as the completed_count
-          const newCount = masteredCount;
+          // Use completion count (any completed card counts)
+          const newCount = completedCount;
           const wasComplete = task.completed;
           const targetCount = task.target_count || 3;
           const isComplete = newCount >= targetCount;
@@ -402,7 +402,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
             taskJustCompleted = true;
           }
           
-          console.log(`📊 TeachIt task update: ${newCount}/${targetCount} mastered, complete: ${isComplete}`);
+          console.log(`📊 TeachIt task update: ${newCount}/${targetCount} completed, task complete: ${isComplete}`);
           
           return {
             ...task,
