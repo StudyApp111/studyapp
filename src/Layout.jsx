@@ -140,9 +140,9 @@ function LayoutContent({ children, currentPageName }) {
           }
         `}</style>
         
-        {/* Desktop Sidebar - Adaptive theme, fixed to viewport */}
-        {showSidebar && (
-          <div className={`hidden md:flex flex-col w-16 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'} border-r fixed top-0 left-0 h-screen z-40`}>
+        {/* Desktop Sidebar - Adaptive theme, fixed to viewport - ONLY show when not onboarding */}
+          {showSidebar && !isOnboardingPage && (
+            <div className={`hidden md:flex flex-col w-16 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'} border-r fixed top-0 left-0 h-screen z-40`}>
             {/* Logo */}
             <div className="p-3 flex justify-center">
               <Link to={createPageUrl("Home")} className="hover:opacity-80 transition-opacity">
@@ -247,7 +247,7 @@ function LayoutContent({ children, currentPageName }) {
           </div>
         )}
 
-        <main className="flex-1 flex flex-col md:ml-16">
+        <main className={`flex-1 flex flex-col ${showSidebar && !isOnboardingPage ? 'md:ml-16' : ''}`}>
           {/* Mobile Header - Hidden during onboarding and on DocumentViewer */}
           {showNavigation && !isOnboardingPage && showMobileHeader && (
             <header className={`${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-slate-200'} backdrop-blur-xl border-b px-3 py-2 md:hidden`}>
