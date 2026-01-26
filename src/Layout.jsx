@@ -45,6 +45,8 @@ import AITutorSheet from "@/components/ai-tutor/AITutorSheet";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionContext";
 import { UpgradeNavBadge } from "@/components/subscription/UpgradeBadge";
 import UpgradeModalWrapper from "@/components/subscription/UpgradeModalWrapper";
+import { ThemeProvider, useTheme } from "@/components/theme/ThemeProvider";
+import { Moon, Sun } from "lucide-react";
 
 const navigationItems = [
         {
@@ -77,12 +79,12 @@ const formatTime = (seconds) => {
   return `${hours}h ${mins}m`;
 };
 
-export default function Layout({ children, currentPageName }) {
+function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = React.useState(null);
-  // CreateLessonModal replaced with CreateLesson page
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
   React.useEffect(() => {
     // Initialize TikTok Pixel
@@ -126,11 +128,9 @@ export default function Layout({ children, currentPageName }) {
 
 
   return (
-    <SubscriptionProvider>
-    <AITutorProvider>
     <SidebarProvider>
       <BrowserCompatibilityBanner />
-      <div className="min-h-screen flex w-full bg-[#0a0a12] relative">
+      <div className={`min-h-screen flex w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'} relative`}>
         <style>{`
           /* Hide desktop sidebar on mobile */
           @media (max-width: 768px) {
@@ -140,9 +140,9 @@ export default function Layout({ children, currentPageName }) {
           }
         `}</style>
         
-        {/* Desktop Sidebar - Dark theme, fixed to viewport */}
+        {/* Desktop Sidebar - Adaptive theme, fixed to viewport */}
         {showSidebar && (
-          <div className="hidden md:flex flex-col w-16 bg-[#12121a] border-r border-white/10 fixed top-0 left-0 h-screen z-40">
+          <div className={`hidden md:flex flex-col w-16 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'} border-r fixed top-0 left-0 h-screen z-40`}>
             {/* Logo */}
             <div className="p-3 flex justify-center">
               <Link to={createPageUrl("Home")} className="hover:opacity-80 transition-opacity">
@@ -203,6 +203,15 @@ export default function Layout({ children, currentPageName }) {
 
               {/* Upgrade Badge */}
               <UpgradeNavBadge />
+
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'}`}
+                title={isDark ? 'Light Mode' : 'Dark Mode'}
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
               </nav>
 
             {/* Bottom: Settings + Profile */}
@@ -213,7 +222,7 @@ export default function Layout({ children, currentPageName }) {
                 className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
                   location.pathname.replace(/\/$/, '') === createPageUrl("Settings").replace(/\/$/, '')
                     ? 'bg-purple-600/20 text-purple-400 shadow-sm' 
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                    : isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                 }`}
                 title="Settings"
               >
@@ -241,7 +250,7 @@ export default function Layout({ children, currentPageName }) {
         <main className="flex-1 flex flex-col md:ml-16">
           {/* Mobile Header - Hidden during onboarding and on DocumentViewer */}
           {showNavigation && !isOnboardingPage && showMobileHeader && (
-            <header className="bg-[#12121a]/95 backdrop-blur-xl border-b border-white/10 px-3 py-2 md:hidden">
+            <header className={`${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-slate-200'} backdrop-blur-xl border-b px-3 py-2 md:hidden`}>
               <div className="flex items-center justify-center">
                 {/* Logo + App Name - centered */}
                 <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -250,7 +259,7 @@ export default function Layout({ children, currentPageName }) {
                     alt="StudyApp Logo"
                     className="w-6 h-6"
                   />
-                  <span className="font-bold text-white text-sm">StudyApp</span>
+                  <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>StudyApp</span>
                 </Link>
               </div>
             </header>
@@ -265,7 +274,7 @@ export default function Layout({ children, currentPageName }) {
           {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
           {showNavigation && !isOnboardingPage && showMobileBottomNav && (
             <nav 
-              className="md:hidden fixed bottom-0 left-0 right-0 bg-[#12121a] border-t border-white/10 z-[9999]"
+              className={`md:hidden fixed bottom-0 left-0 right-0 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'} border-t z-[9999]`}
               style={{ 
                 paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
                 minHeight: '60px'
@@ -277,7 +286,7 @@ export default function Layout({ children, currentPageName }) {
                   className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("Home")
                       ? 'text-purple-400 bg-purple-600/20'
-                      : 'text-slate-400'
+                      : isDark ? 'text-slate-400' : 'text-slate-600'
                   }`}
                 >
                   <Home className="w-6 h-6" />
@@ -288,7 +297,7 @@ export default function Layout({ children, currentPageName }) {
                   className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("LessonHistory")
                       ? 'text-purple-400 bg-purple-600/20'
-                      : 'text-slate-400'
+                      : isDark ? 'text-slate-400' : 'text-slate-600'
                   }`}
                 >
                   <History className="w-6 h-6" />
@@ -299,7 +308,7 @@ export default function Layout({ children, currentPageName }) {
 
                 <button
                   onClick={() => setFeedbackModalOpen(true)}
-                  className="flex items-center justify-center p-2.5 rounded-xl transition-all text-slate-400 hover:text-purple-400 hover:bg-purple-600/20"
+                  className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${isDark ? 'text-slate-400' : 'text-slate-600'} hover:text-purple-400 hover:bg-purple-600/20`}
                 >
                   <Mail className="w-6 h-6" />
                 </button>
@@ -309,7 +318,7 @@ export default function Layout({ children, currentPageName }) {
                   className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("Settings")
                       ? 'text-purple-400 bg-purple-600/20'
-                      : 'text-slate-400'
+                      : isDark ? 'text-slate-400' : 'text-slate-600'
                   }`}
                 >
                   <Settings className="w-6 h-6" />
@@ -325,7 +334,7 @@ export default function Layout({ children, currentPageName }) {
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 blur-xl opacity-50 group-hover:opacity-70 transition-opacity" />
 
                     {/* Main button - Upload icon */}
-                    <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 rounded-2xl shadow-xl ring-4 ring-[#12121a] flex items-center justify-center transform group-hover:scale-105 transition-transform duration-200">
+                    <div className={`relative w-14 h-14 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 rounded-2xl shadow-xl ring-4 ${isDark ? 'ring-[#12121a]' : 'ring-white'} flex items-center justify-center transform group-hover:scale-105 transition-transform duration-200`}>
                       <Upload className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
                   </div>
@@ -355,7 +364,17 @@ export default function Layout({ children, currentPageName }) {
 
         </div>
         </SidebarProvider>
-        </AITutorProvider>
-        </SubscriptionProvider>
         );
         }
+
+export default function Layout({ children, currentPageName }) {
+  return (
+    <ThemeProvider>
+      <SubscriptionProvider>
+        <AITutorProvider>
+          <LayoutContent children={children} currentPageName={currentPageName} />
+        </AITutorProvider>
+      </SubscriptionProvider>
+    </ThemeProvider>
+  );
+}

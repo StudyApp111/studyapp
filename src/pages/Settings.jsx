@@ -25,8 +25,11 @@ import {
   BarChart3,
   Mail,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Moon,
+  Sun
 } from "lucide-react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +51,7 @@ export default function Settings() {
   const [deleteConfirmStep, setDeleteConfirmStep] = useState(1);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     base44.auth.me()
@@ -118,37 +122,37 @@ export default function Settings() {
       className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${
         variant === "danger" 
           ? "border-red-500/30 hover:bg-red-500/10 hover:border-red-500/50 bg-red-500/5" 
-          : "border-white/10 hover:bg-white/5 hover:border-white/20 bg-white/5"
+          : isDark ? "border-white/10 hover:bg-white/5 hover:border-white/20 bg-white/5" : "border-slate-200 hover:bg-slate-50 hover:border-slate-300 bg-slate-50"
       }`}
     >
       <div className="flex items-center gap-3">
-        <Icon className={`w-5 h-5 ${variant === "danger" ? "text-red-400" : "text-slate-400"}`} />
-        <span className={`font-medium ${variant === "danger" ? "text-red-400" : "text-slate-200"}`}>
+        <Icon className={`w-5 h-5 ${variant === "danger" ? "text-red-400" : isDark ? "text-slate-400" : "text-slate-600"}`} />
+        <span className={`font-medium ${variant === "danger" ? "text-red-400" : isDark ? "text-slate-200" : "text-slate-900"}`}>
           {label}
         </span>
       </div>
-      {rightContent || <ArrowRight className="w-5 h-5 text-slate-500" />}
+      {rightContent || <ArrowRight className={`w-5 h-5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />}
     </button>
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a12] p-4 md:p-10 pb-28 md:pb-10">
+    <div className={`min-h-screen ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'} p-4 md:p-10 pb-28 md:pb-10`}>
       <div className="max-w-3xl mx-auto">
         <Button
           variant="ghost"
           onClick={() => navigate(createPageUrl("Home"))}
-          className="mb-6 hover:bg-white/10 text-slate-300"
+          className={`mb-6 ${isDark ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-slate-100 text-slate-700'}`}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
         </Button>
 
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Settings</h1>
+          <h1 className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-slate-900'} mb-2`}>Settings</h1>
           <p className="text-slate-400">Manage your account preferences and settings</p>
         </div>
 
-        <Card className="bg-[#12121a] border-white/10 mb-6">
+        <Card className={`${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'} mb-6`}>
           <CardContent className="p-6">
             <SettingsSection title="Account">
               <SettingsItem
@@ -220,14 +224,25 @@ export default function Settings() {
             )}
 
             <SettingsSection title="Others">
-              <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-white/5">
+              <div className={`flex items-center justify-between p-4 rounded-lg border ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'}`}>
                 <div className="flex items-center gap-3">
-                  <Bell className="w-5 h-5 text-slate-400" />
-                  <span className="font-medium text-slate-200">Notifications</span>
+                  <Bell className={`w-5 h-5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`} />
+                  <span className={`font-medium ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>Notifications</span>
                 </div>
                 <Switch
                   checked={notificationsEnabled}
                   onCheckedChange={handleNotificationsToggle}
+                />
+              </div>
+
+              <div className={`flex items-center justify-between p-4 rounded-lg border ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'}`}>
+                <div className="flex items-center gap-3">
+                  {isDark ? <Moon className="w-5 h-5 text-slate-400" /> : <Sun className="w-5 h-5 text-slate-600" />}
+                  <span className={`font-medium ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>Dark Mode</span>
+                </div>
+                <Switch
+                  checked={isDark}
+                  onCheckedChange={toggleTheme}
                 />
               </div>
               
