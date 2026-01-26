@@ -14,6 +14,7 @@ import XPGainToast from "@/components/gamification/XPGainToast";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 import FeedbackDisplay from "@/components/feedback/FeedbackDisplay";
 import TaskCompletionToast from "@/components/gamification/TaskCompletionToast";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -33,6 +34,7 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
 };
 
 export default function ExamTab({ lesson, exams, onExamComplete }) {
+  const { isDark } = useTheme();
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -1066,9 +1068,9 @@ JSON Output (exact schema):
   if (error) {
     return (
       <div className="px-3 py-8 w-full max-w-[320px] mx-auto">
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
+        <div className={`border rounded-xl p-4 text-center ${isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'}`}>
           <div className="text-3xl mb-2">⚠️</div>
-          <p className="text-red-800 font-medium mb-3">{error}</p>
+          <p className={`font-medium mb-3 ${isDark ? 'text-red-300' : 'text-red-800'}`}>{error}</p>
           <Button 
             onClick={() => {
               setError(null);
@@ -1139,7 +1141,7 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-        <div className="px-3 md:px-6 py-4 w-full max-w-[320px] md:max-w-2xl lg:max-w-3xl mx-auto space-y-4 md:space-y-6 pb-8">
+        <div className={`px-3 md:px-6 py-4 w-full max-w-[320px] md:max-w-2xl lg:max-w-3xl mx-auto space-y-4 md:space-y-6 pb-8 ${isDark ? 'bg-[#0a0a12]' : ''}`}>
         {/* Practice Exams Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
           <div>
@@ -1148,8 +1150,8 @@ JSON Output (exact schema):
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h2 className="text-base md:text-lg font-black text-slate-900">Practice Exams</h2>
-                <p className="text-[10px] md:text-xs text-slate-500">Quick drills • No grade impact</p>
+                <h2 className={`text-base md:text-lg font-black ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Practice Exams</h2>
+                <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Quick drills • No grade impact</p>
               </div>
             </div>
             
@@ -1176,7 +1178,7 @@ JSON Output (exact schema):
                     className={`group relative w-full overflow-hidden p-2.5 md:p-3 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
                       isCompleted
                         ? 'bg-gradient-to-r from-blue-500 to-cyan-600'
-                        : 'bg-white border border-blue-200 hover:border-blue-300'
+                        : isDark ? 'bg-white/5 border border-white/10 hover:border-blue-500/30' : 'bg-white border border-blue-200 hover:border-blue-300'
                     }`}
                   >
                     <div className="relative flex items-center gap-2 md:gap-3">
@@ -1191,10 +1193,10 @@ JSON Output (exact schema):
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold text-xs md:text-sm truncate ${isCompleted ? 'text-white' : 'text-slate-900'}`}>
+                        <h3 className={`font-semibold text-xs md:text-sm truncate ${isCompleted ? 'text-white' : isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                           {displayTitle}
                         </h3>
-                        <p className={`text-[10px] md:text-xs ${isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
+                        <p className={`text-[10px] md:text-xs ${isCompleted ? 'text-white/70' : isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                           {totalQuestions} questions
                         </p>
                       </div>
@@ -1224,8 +1226,8 @@ JSON Output (exact schema):
               <Trophy className="w-4 h-4 text-yellow-300" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900">Official Exams</h2>
-              <p className="text-[10px] text-slate-500">Establishes your baseline grade</p>
+              <h2 className={`text-base font-black ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Official Exams</h2>
+              <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Establishes your baseline grade</p>
             </div>
           </div>
           
@@ -1441,13 +1443,13 @@ JSON Output (exact schema):
       </AnimatePresence>
 
       <div className="flex flex-col h-full md:h-auto md:pb-4">
-        <div className="flex-1 flex flex-col bg-white/95 backdrop-blur-xl md:rounded-2xl border-0 md:border border-purple-200/80 shadow-none md:shadow-sm md:mx-0 overflow-hidden">
+        <div className={`flex-1 flex flex-col backdrop-blur-xl md:rounded-2xl border-0 md:border shadow-none md:shadow-sm md:mx-0 overflow-hidden ${isDark ? 'bg-[#12121a]/95 md:border-purple-500/30' : 'bg-white/95 border-purple-200/80'}`}>
           {/* Exam Header with Back Button and Type Indicator */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-purple-100 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shrink-0 relative">
+          <div className={`flex items-center justify-between px-3 py-2 border-b backdrop-blur-sm sticky top-0 z-10 shrink-0 relative ${isDark ? 'border-white/10 bg-[#12121a]/95' : 'border-purple-100 bg-white/95'}`}>
             <div className="flex items-center gap-2">
                   <button
                     onClick={handleExitExam}
-                    className="flex items-center gap-1 text-slate-500 hover:text-slate-700 transition-colors"
+                    className={`flex items-center gap-1 transition-colors ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'}`}
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span className="text-xs font-medium hidden sm:inline">Exit</span>
@@ -1463,20 +1465,20 @@ JSON Output (exact schema):
                   }`}>
                     {isPracticeExam ? 'Practice' : 'Official'}
                   </div>
-                  <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${isDark ? 'text-slate-300 bg-white/10' : 'text-slate-600 bg-slate-100'}`}>
                     {currentQuestion + 1}/{exam.questions.length}
                   </span>
                 </div>
             <div className="flex items-center gap-2">
               <Progress value={progress} className="h-1.5 w-16 hidden sm:block" />
-              <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${isDark ? 'text-purple-300 bg-purple-600/20' : 'text-purple-600 bg-purple-50'}`}>
                 <Clock className="w-3 h-3" />
                 <span className="text-xs font-semibold tabular-nums">{formatTime(elapsedSeconds)}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto overscroll-contain p-3 md:p-5">
+          <div className={`flex-1 overflow-y-auto overscroll-contain p-3 md:p-5 ${isDark ? 'bg-[#0a0a12]' : ''}`}>
             <AnimatePresence mode="wait">
               <ExamQuestion
                 key={currentQuestion}
@@ -1489,7 +1491,7 @@ JSON Output (exact schema):
             </AnimatePresence>
           </div>
 
-          <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-4 border-t border-purple-100 bg-white/95 backdrop-blur-sm shrink-0">
+          <div className={`flex gap-2 px-3 py-3 md:px-5 md:pb-4 border-t backdrop-blur-sm shrink-0 ${isDark ? 'border-white/10 bg-[#12121a]/95' : 'border-purple-100 bg-white/95'}`}>
             <Button
               variant="outline"
               onClick={handlePrevious}

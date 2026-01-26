@@ -11,9 +11,11 @@ import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 import FlashcardSetsList from "./FlashcardSetsList";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function FlashcardsTab({ lesson, extractedContent, focusTopics }) {
   const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
+  const { isDark } = useTheme();
   const [cards, setCards] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -376,7 +378,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   // Initial state - not generated - styled like TeachItTab
   if (!cards && !isGenerating) {
     return (
-      <div className="flex items-center justify-center p-4 pb-8 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40">
+      <div className={`flex items-center justify-center p-4 pb-8 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40'}`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -396,15 +398,15 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
               </p>
             </div>
             <div className="p-6 text-center">
-              <p className="text-slate-600 mb-4 leading-relaxed">
+              <p className={`mb-4 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                 Generate smart flashcards from your notes. Think of the answer, then reveal to check yourself!
               </p>
               
               {/* XP incentive */}
-              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-3 border border-yellow-200 mb-6">
+              <div className={`rounded-xl p-3 border mb-6 ${isDark ? 'bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border-yellow-500/30' : 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200'}`}>
                 <div className="flex items-center justify-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-600" />
-                  <span className="text-xs font-medium text-yellow-800">
+                  <Zap className={`w-4 h-4 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`} />
+                  <span className={`text-xs font-medium ${isDark ? 'text-yellow-300' : 'text-yellow-800'}`}>
                     Earn <span className="font-bold">+2-10 XP</span> per card mastered!
                   </span>
                 </div>
@@ -427,14 +429,14 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   // Loading state
   if (isGenerating) {
     return (
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl mx-3 p-6 max-w-lg md:mx-auto mb-8">
+      <Card className={`backdrop-blur-xl border shadow-xl mx-3 p-6 max-w-lg md:mx-auto mb-8 ${isDark ? 'bg-[#12121a]/90 border-purple-500/30' : 'bg-white/90 border-purple-200'}`}>
         <div className="text-center space-y-4">
           <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center mx-auto animate-pulse">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Generating Flashcards...</h3>
-            <p className="text-sm text-slate-600">
+            <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Generating Flashcards...</h3>
+            <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
               Creating intelligent flashcards from your course content.
             </p>
           </div>
@@ -448,7 +450,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   if (!cards || cards.length === 0) {
     return (
-      <div className="flex items-center justify-center p-4 pb-8 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40">
+      <div className={`flex items-center justify-center p-4 pb-8 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40'}`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -463,7 +465,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
               </p>
             </div>
             <div className="p-6 text-center">
-              <p className="text-slate-600 mb-6 leading-relaxed">
+              <p className={`mb-6 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                 Generate intelligent flashcards from your notes.
               </p>
               <Button
@@ -499,7 +501,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   return (
-    <div className="space-y-3 px-3 pt-2 pb-8 max-w-lg mx-auto">
+    <div className={`space-y-3 px-3 pt-2 pb-8 max-w-lg mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
       {/* How to use modal */}
       <AnimatePresence>
         {showHowTo && (
@@ -514,49 +516,49 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl"
+              className={`rounded-2xl max-w-sm w-full p-5 shadow-2xl ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-slate-900">How to Use Flashcards</h3>
-                <button onClick={() => setShowHowTo(false)} className="p-1 hover:bg-slate-100 rounded-full">
+                <h3 className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>How to Use Flashcards</h3>
+                <button onClick={() => setShowHowTo(false)} className={`p-1 rounded-full ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}>
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
               
               <div className="space-y-4">
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-purple-600 font-bold text-sm">1</span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
+                    <span className={`font-bold text-sm ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>1</span>
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900 text-sm">Read the question</p>
-                    <p className="text-xs text-slate-500">Think about the answer in your head or say it out loud</p>
+                    <p className={`font-medium text-sm ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>Read the question</p>
+                    <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Think about the answer in your head or say it out loud</p>
                   </div>
                 </div>
                 
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-purple-600 font-bold text-sm">2</span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
+                    <span className={`font-bold text-sm ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>2</span>
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900 text-sm">Tap to reveal</p>
-                    <p className="text-xs text-slate-500">Click anywhere on the card to flip and see the answer</p>
+                    <p className={`font-medium text-sm ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>Tap to reveal</p>
+                    <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Click anywhere on the card to flip and see the answer</p>
                   </div>
                 </div>
                 
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-purple-600 font-bold text-sm">3</span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
+                    <span className={`font-bold text-sm ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>3</span>
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900 text-sm">Rate yourself honestly</p>
-                    <p className="text-xs text-slate-500">Did you know it? This helps the app show you cards you need to practice more</p>
+                    <p className={`font-medium text-sm ${isDark ? 'text-slate-200' : 'text-slate-900'}`}>Rate yourself honestly</p>
+                    <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Did you know it? This helps the app show you cards you need to practice more</p>
                   </div>
                 </div>
 
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-4">
-                  <p className="text-xs text-amber-800">
+                <div className={`border rounded-xl p-3 mt-4 ${isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
+                  <p className={`text-xs ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
                     <strong>💡 Tip:</strong> Don't type answers! Active recall (thinking before revealing) is proven to be more effective for memory.
                   </p>
                 </div>
@@ -611,12 +613,12 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl max-h-[70vh] overflow-y-auto"
+              className={`rounded-2xl max-w-sm w-full p-5 shadow-2xl max-h-[70vh] overflow-y-auto ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-slate-900">Flashcard Sets</h3>
-                <button onClick={() => setShowSetsList(false)} className="p-1 hover:bg-slate-100 rounded-full">
+                <h3 className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Flashcard Sets</h3>
+                <button onClick={() => setShowSetsList(false)} className={`p-1 rounded-full ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}>
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
@@ -654,10 +656,10 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                           className="w-full p-3 bg-slate-50 hover:bg-purple-50 rounded-xl border border-slate-200 hover:border-purple-300 transition-all text-left"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-sm text-slate-900">{set.topic}</span>
-                            <span className="text-xs text-slate-500">{set.mastered}/{set.cards.length}</span>
+                            <span className={`font-semibold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{set.topic}</span>
+                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{set.mastered}/{set.cards.length}</span>
                           </div>
-                          <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
                             <div 
                               className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full"
                               style={{ width: `${progress}%` }}
@@ -687,14 +689,14 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
       {/* Session stats - always show */}
       <div className="flex justify-center items-center gap-3 text-xs">
-        <span className="text-slate-500 bg-slate-50 px-2 py-1 rounded-lg">
-          Session: <span className="font-semibold text-slate-700">{sessionStats.correct}/{sessionStats.reviewed}</span> correct
+        <span className={`px-2 py-1 rounded-lg ${isDark ? 'text-slate-300 bg-white/5' : 'text-slate-500 bg-slate-50'}`}>
+          Session: <span className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-700'}`}>{sessionStats.correct}/{sessionStats.reviewed}</span> correct
         </span>
         {streakCount >= 2 && (
           <motion.span 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="bg-orange-100 text-orange-700 px-2 py-1 rounded-lg font-bold flex items-center gap-1"
+            className={`px-2 py-1 rounded-lg font-bold flex items-center gap-1 ${isDark ? 'bg-orange-500/20 text-orange-300' : 'bg-orange-100 text-orange-700'}`}
           >
             🔥 {streakCount} streak!
           </motion.span>
@@ -733,13 +735,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                     </div>
                   </div>
                 </div>
-                <div className="p-6 flex flex-col items-center justify-center min-h-[220px] bg-white">
-                  <p className="text-slate-900 text-base font-medium leading-relaxed text-center mb-6">
+                <div className={`p-6 flex flex-col items-center justify-center min-h-[220px] ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+                  <p className={`text-base font-medium leading-relaxed text-center mb-6 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                     {currentCard.question}
                   </p>
                   <div className="text-center">
-                    <p className="text-xs text-slate-400 mb-1">Think of the answer, then...</p>
-                    <p className="text-sm text-purple-600 font-semibold">Tap to reveal →</p>
+                    <p className={`text-xs mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Think of the answer, then...</p>
+                    <p className={`text-sm font-semibold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Tap to reveal →</p>
                   </div>
                 </div>
               </motion.div>
@@ -768,14 +770,14 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                     {currentCard.mastered && <span className="text-[10px] ml-1">✓</span>}
                   </div>
                 </div>
-                <div className="p-6 flex flex-col min-h-[220px] bg-white">
-                  <p className="text-slate-900 text-sm leading-relaxed text-center flex-1 flex items-center justify-center">
+                <div className={`p-6 flex flex-col min-h-[220px] ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+                  <p className={`text-sm leading-relaxed text-center flex-1 flex items-center justify-center ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                     {currentCard.answer}
                   </p>
                   
                   {/* Rating section */}
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <p className="text-xs text-center text-slate-500 mb-3">Did you know the answer?</p>
+                  <div className={`mt-4 pt-4 border-t ${isDark ? 'border-white/10' : 'border-slate-100'}`}>
+                    <p className={`text-xs text-center mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Did you know the answer?</p>
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={(e) => { e.stopPropagation(); handleRating(false); }}
@@ -814,9 +816,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       <div className="flex items-center justify-between">
         <button
           onClick={handlePrev}
-          className="p-2 rounded-full hover:bg-slate-100 transition-colors"
+          className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
         >
-          <ChevronLeft className="w-5 h-5 text-slate-600" />
+          <ChevronLeft className={`w-5 h-5 ${isDark ? 'text-slate-300' : 'text-slate-600'}`} />
         </button>
         
         <div className="flex gap-2">
@@ -842,9 +844,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         
         <button
           onClick={handleNext}
-          className="p-2 rounded-full hover:bg-slate-100 transition-colors"
+          className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}
         >
-          <ChevronRight className="w-5 h-5 text-slate-600" />
+          <ChevronRight className={`w-5 h-5 ${isDark ? 'text-slate-300' : 'text-slate-600'}`} />
         </button>
       </div>
 
