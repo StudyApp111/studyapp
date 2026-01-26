@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
-  X, Sparkles, Plus, Brain, Copy, Zap, FileText, Loader2, ChevronRight
+  X, Sparkles, Plus, Brain, Copy, Zap, FileText, Loader2, ChevronRight, Lightbulb
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
