@@ -3,11 +3,11 @@ import { base44 } from '@/api/base44Client';
 
 const SubscriptionContext = createContext(null);
 
-// Limits for free tier - resets based on account creation date
+// Limits for free tier - resets based on rolling windows
 export const FREE_TIER_LIMITS = {
-  uploads_per_week: 2,  // 2 uploads per 7-day rolling window from account creation
-  tasks_per_day: 2,     // 2 tasks per 24h rolling window from account creation
-  ai_messages_per_day: 10  // 10 AI messages per 24h rolling window from account creation
+  uploads_per_week: 2,  // 2 uploads per 7-day rolling window
+  tasks_per_day: 1,     // 1 task per 24h rolling window  
+  ai_messages_per_day: 10  // 10 AI messages per 24h rolling window
 };
 
 export function SubscriptionProvider({ children }) {
