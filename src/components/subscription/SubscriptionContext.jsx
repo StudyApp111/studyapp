@@ -152,31 +152,31 @@ export function SubscriptionProvider({ children }) {
     };
   };
 
-  // Increment counters
+  // Increment counters - always fetch fresh data to avoid race conditions
   const incrementUploadCount = async () => {
     if (isPro()) return;
-    await checkAndResetCounters();
-    await base44.auth.updateMe({
-      weekly_uploads_count: (user?.weekly_uploads_count || 0) + 1
-    });
+    const freshUser = await checkAndResetCounters();
+    if (!freshUser) return;
+    const newCount = (freshUser.weekly_uploads_count || 0) + 1;
+    await base44.auth.updateMe({ weekly_uploads_count: newCount });
     await refreshUser();
   };
 
   const incrementTaskCount = async () => {
     if (isPro()) return;
-    await checkAndResetCounters();
-    await base44.auth.updateMe({
-      daily_tasks_count: (user?.daily_tasks_count || 0) + 1
-    });
+    const freshUser = await checkAndResetCounters();
+    if (!freshUser) return;
+    const newCount = (freshUser.daily_tasks_count || 0) + 1;
+    await base44.auth.updateMe({ daily_tasks_count: newCount });
     await refreshUser();
   };
 
   const incrementAIMessageCount = async () => {
     if (isPro()) return;
-    await checkAndResetCounters();
-    await base44.auth.updateMe({
-      daily_ai_messages_count: (user?.daily_ai_messages_count || 0) + 1
-    });
+    const freshUser = await checkAndResetCounters();
+    if (!freshUser) return;
+    const newCount = (freshUser.daily_ai_messages_count || 0) + 1;
+    await base44.auth.updateMe({ daily_ai_messages_count: newCount });
     await refreshUser();
   };
 
