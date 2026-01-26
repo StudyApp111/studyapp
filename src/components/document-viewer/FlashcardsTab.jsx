@@ -198,34 +198,12 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     // Check subscription limit for tasks (only on first review of a card)
     const wasReviewed = currentCard.review_count > 0;
     if (!wasReviewed) {
-      try {
-        const user = await base44.auth.me();
-        const isPro = user?.subscription_tier === 'pro' && user?.subscription_status === 'active';
-        
-        if (!isPro) {
-          // Check daily task count
-          const today = new Date().toISOString().split('T')[0];
-          if (user?.daily_tasks_reset_date !== today) {
-            await base44.auth.updateMe({
-              daily_tasks_count: 0,
-              daily_tasks_reset_date: today
-            });
-          }
-          
-          const taskCount = user?.daily_tasks_count || 0;
-          if (taskCount >= 1) {
-            alert("You've reached your daily limit of 1 study task on the free plan. Upgrade to Locked In for unlimited tasks!");
-            return;
-          }
-          
-          // Increment task counter
-          await base44.auth.updateMe({
-            daily_tasks_count: taskCount + 1
-          });
-        }
-      } catch (error) {
-        console.error("Error checking subscription:", error);
+      const taskCheck = await canDoTask();
+      if (!taskCheck.allowed) {
+        triggerUpgradeModal('tasks');
+        return;
       }
+      await incrementTaskCount();
     }
     
     // Track review count - any review counts as completion

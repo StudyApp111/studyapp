@@ -3,11 +3,11 @@ import { base44 } from '@/api/base44Client';
 
 const SubscriptionContext = createContext(null);
 
-// Limits for free tier
+// Limits for free tier - resets based on account creation date
 export const FREE_TIER_LIMITS = {
-  uploads_per_week: 2,
-  tasks_per_day: 1,
-  ai_messages_per_day: 10
+  uploads_per_week: 2,  // 2 uploads per 7-day rolling window from account creation
+  tasks_per_day: 2,     // 2 tasks per 24h rolling window from account creation
+  ai_messages_per_day: 10  // 10 AI messages per 24h rolling window from account creation
 };
 
 export function SubscriptionProvider({ children }) {
@@ -62,39 +62,42 @@ export function SubscriptionProvider({ children }) {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const getToday = () => new Date().toISOString().split('T')[0];
-  const getWeekStart = () => {
+  // Get rolling window dates based on account creation
+  const getRollingWindowStart = (hours) => {
     const now = new Date();
-    const dayOfWeek = now.getDay();
-    const diff = now.getDate() - dayOfWeek;
-    return new Date(now.setDate(diff)).toISOString().split('T')[0];
+    return new Date(now.getTime() - hours * 60 * 60 * 1000);
   };
 
-  // Check and reset daily/weekly counters
+  // Check and reset counters based on rolling windows from account creation
   const checkAndResetCounters = async () => {
     if (!user) return user;
     
-    const today = getToday();
-    const weekStart = getWeekStart();
+    const now = new Date();
     let updates = {};
+    let needsRefresh = false;
 
-    // Reset daily counters
-    if (user.daily_tasks_reset_date !== today) {
+    // Daily counters - 24h rolling window
+    const dailyResetTime = user.daily_reset_timestamp ? new Date(user.daily_reset_timestamp) : null;
+    const dailyWindowExpired = !dailyResetTime || (now.getTime() - dailyResetTime.getTime()) >= 24 * 60 * 60 * 1000;
+    
+    if (dailyWindowExpired) {
       updates.daily_tasks_count = 0;
-      updates.daily_tasks_reset_date = today;
-    }
-    if (user.daily_ai_messages_reset_date !== today) {
       updates.daily_ai_messages_count = 0;
-      updates.daily_ai_messages_reset_date = today;
+      updates.daily_reset_timestamp = now.toISOString();
+      needsRefresh = true;
     }
 
-    // Reset weekly counters
-    if (user.weekly_uploads_reset_date !== weekStart) {
+    // Weekly counters - 7 day rolling window
+    const weeklyResetTime = user.weekly_reset_timestamp ? new Date(user.weekly_reset_timestamp) : null;
+    const weeklyWindowExpired = !weeklyResetTime || (now.getTime() - weeklyResetTime.getTime()) >= 7 * 24 * 60 * 60 * 1000;
+    
+    if (weeklyWindowExpired) {
       updates.weekly_uploads_count = 0;
-      updates.weekly_uploads_reset_date = weekStart;
+      updates.weekly_reset_timestamp = now.toISOString();
+      needsRefresh = true;
     }
 
-    if (Object.keys(updates).length > 0) {
+    if (needsRefresh) {
       await base44.auth.updateMe(updates);
       return await refreshUser();
     }
