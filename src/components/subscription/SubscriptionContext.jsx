@@ -37,19 +37,22 @@ export function SubscriptionProvider({ children }) {
     return currentUser;
   };
 
+  // Check if user has pro subscription - must have BOTH tier=pro AND status=active
   const isPro = () => {
-    if (user?.subscription_tier !== 'pro' || user?.subscription_status !== 'active') {
-      return false;
-    }
-    // Check if promo access has expired
-    if (user?.promo_access_until) {
-      const expiryDate = new Date(user.promo_access_until);
-      if (expiryDate < new Date()) {
-        // Promo expired - will be updated on next server call
-        return false;
+    if (!user) return false;
+    
+    // Check for active subscription
+    if (user.subscription_tier === 'pro' && user.subscription_status === 'active') {
+      // Check if promo access has expired
+      if (user.promo_access_until) {
+        const expiryDate = new Date(user.promo_access_until);
+        if (expiryDate < new Date()) {
+          return false; // Promo expired
+        }
       }
+      return true;
     }
-    return true;
+    return false;
   };
 
   // Get remaining promo days
