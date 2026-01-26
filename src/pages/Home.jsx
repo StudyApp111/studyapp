@@ -16,6 +16,7 @@ import LearningTrajectory from "@/components/home/LearningTrajectory";
 
 export default function Home() {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [user, setUser] = useState(null);
   // CreateLessonModal removed - using CreateLesson page instead
   const [dailyXP, setDailyXP] = useState(0);
@@ -138,12 +139,12 @@ export default function Home() {
   const subtitle = subtitleParts.join(' • ');
 
   return (
-    <div className="min-h-screen bg-[#0a0a12]">
+    <div className={`min-h-screen ${isDark ? 'bg-[#0a0a12]' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
       {/* Hero Section */}
-      <div className="relative overflow-hidden px-4 pt-10 pb-8 md:px-8 md:pt-14 md:pb-12 bg-gradient-to-b from-purple-900/50 to-[#0a0a12]">
+      <div className={`relative overflow-hidden px-4 pt-10 pb-8 md:px-8 md:pt-14 md:pb-12 ${isDark ? 'bg-gradient-to-b from-purple-900/50 to-[#0a0a12]' : 'bg-gradient-to-b from-purple-100 to-purple-50/30'}`}>
         {/* Subtle gradient blobs */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl" />
+        <div className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl ${isDark ? 'bg-purple-600/10' : 'bg-purple-400/20'}`} />
+        <div className={`absolute bottom-0 right-1/4 w-80 h-80 rounded-full blur-3xl ${isDark ? 'bg-indigo-600/10' : 'bg-indigo-400/20'}`} />
 
         <div className="max-w-6xl mx-auto relative">
         {/* Logo + App Name + Upgrade - Above Pill */}
@@ -158,15 +159,15 @@ export default function Home() {
         </div>
 
           {/* Hero Pill - Full Width */}
-          <div className="bg-white/5 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border border-white/10 shadow-2xl">
+          <div className={`backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border shadow-2xl ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-purple-200'}`}>
             <div className="flex flex-col items-center text-center gap-4">
               {/* Title - Centered and Large */}
               <div>
-                <h1 className="text-2xl md:text-4xl font-black text-white leading-tight">
+                <h1 className={`text-2xl md:text-4xl font-black leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   Hey {firstName}, are you ready to lock in?
                 </h1>
                 {subtitle && (
-                  <p className="text-slate-400 text-sm md:text-base mt-2">
+                  <p className={`text-sm md:text-base mt-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                     {subtitle}
                   </p>
                 )}
@@ -175,20 +176,20 @@ export default function Home() {
               {/* Stats Row - School, Year, Streak, XP */}
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
                 {learningProfile?.school && (
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <BookOpen className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm font-bold text-slate-200">{learningProfile.school}</span>
+                  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200'}`}>
+                    <BookOpen className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                    <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{learningProfile.school}</span>
                   </div>
                 )}
                 {learningProfile?.grade && (
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <GraduationCap className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm font-bold text-slate-200">{learningProfile.grade.replace(/_/g, ' ')}</span>
+                  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200'}`}>
+                    <GraduationCap className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                    <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{learningProfile.grade.replace(/_/g, ' ')}</span>
                   </div>
                 )}
-                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/20 border-orange-500/30' : 'bg-white/10 border-white/10'}`}>
-                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-orange-400' : 'text-orange-400'}`} />
-                  <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : 'text-slate-200'}`}>{user?.current_streak || 0} day streak</span>
+                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/20 border-orange-500/30' : (isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200')}`}>
+                  <Flame className="w-4 h-4 text-orange-400" />
+                  <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : (isDark ? 'text-slate-200' : 'text-slate-700')}`}>{user?.current_streak || 0} day streak</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/30">
                   <Zap className="w-4 h-4 text-yellow-400" />
@@ -227,7 +228,7 @@ export default function Home() {
           {/* Left Column - Courses */}
           <div className="lg:col-span-2 space-y-4">
             {/* Your Courses */}
-            <div className="bg-[#12121a] rounded-2xl border border-white/10 overflow-hidden">
+            <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-purple-200'}`}>
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-800 via-purple-700 to-indigo-700">
                 <h2 className="font-bold text-white">Your Courses</h2>
                 <button 
@@ -244,11 +245,11 @@ export default function Home() {
                 </div>
               ) : lessons.length === 0 ? (
                 <div className="p-8 text-center">
-                  <div className="w-16 h-16 bg-purple-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <BookOpen className="w-8 h-8 text-purple-400" />
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
+                    <BookOpen className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                   </div>
-                  <p className="font-medium text-slate-200 mb-1">No courses yet</p>
-                  <p className="text-sm text-slate-400 mb-4">Upload your first lesson to get started</p>
+                  <p className={`font-medium mb-1 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>No courses yet</p>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Upload your first lesson to get started</p>
                   <Button onClick={() => navigate(createPageUrl("CreateLesson"))} className="bg-purple-600 hover:bg-purple-700">
                     <Upload className="w-4 h-4 mr-2" /> Upload Notes
                   </Button>
@@ -271,8 +272,8 @@ export default function Home() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: idx * 0.05 }}
                         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
-                        className="p-4 hover:bg-white/5 transition-colors cursor-pointer group"
-                      >
+                        className={`p-4 transition-colors cursor-pointer group ${isDark ? 'hover:bg-white/5' : 'hover:bg-purple-50/50'}`}
+                        >
                         <div className="flex items-center gap-4">
                           <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getGradeColor(currentGrade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
                             {currentGrade ? (
@@ -286,7 +287,7 @@ export default function Home() {
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-slate-100 truncate group-hover:text-purple-400 transition-colors">
+                            <h3 className={`font-semibold truncate transition-colors ${isDark ? 'text-slate-100 group-hover:text-purple-400' : 'text-slate-900 group-hover:text-purple-600'}`}>
                               {lesson.course_name}
                             </h3>
                             
@@ -311,7 +312,7 @@ export default function Home() {
                                 )}
                               </div>
                             ) : (
-                              <p className="text-xs text-purple-400 mt-1 flex items-center gap-1 font-medium">
+                              <p className={`text-xs mt-1 flex items-center gap-1 font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
                                 <Sparkles className="w-3 h-3" /> Take diagnostic →
                               </p>
                             )}
@@ -336,7 +337,7 @@ export default function Home() {
                             </div>
                           )}
 
-                          <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-purple-400 flex-shrink-0" />
+                          <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isDark ? 'text-slate-600 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
                         </div>
                       </motion.div>
                     );

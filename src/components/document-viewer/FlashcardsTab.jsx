@@ -617,7 +617,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Flashcard Sets</h3>
+                <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Flashcard Sets</h3>
                 <button onClick={() => setShowSetsList(false)} className={`p-1 rounded-full ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}>
                   <X className="w-5 h-5 text-slate-500" />
                 </button>

@@ -21,12 +21,14 @@ import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
 
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 // Track study minutes every minute
       
 export default function DocumentViewer() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState("studyplan");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -423,11 +425,11 @@ export default function DocumentViewer() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center p-4">
+      <div className={`min-h-screen flex items-center justify-center p-4 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
         <div className="text-center">
           <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Unable to Load Lesson</h2>
-          <p className="text-slate-600 mb-4">{error}</p>
+          <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Unable to Load Lesson</h2>
+          <p className={`mb-4 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{error}</p>
           <Button onClick={() => navigate(createPageUrl("Home"))}>
             Go Back Home
           </Button>
@@ -437,7 +439,7 @@ export default function DocumentViewer() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a12] overflow-x-hidden w-full">
+    <div className={`min-h-screen overflow-x-hidden w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
 
       
       {/* Desktop Header - Unified Purple Banner */}
@@ -452,8 +454,8 @@ export default function DocumentViewer() {
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <div className="bg-white/10 backdrop-blur-sm px-4 py-1 rounded-full border border-white/20">
-                <span className="text-white font-semibold text-sm truncate block max-w-[280px]">
+              <div className={`backdrop-blur-sm px-4 py-1 rounded-full border ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-purple-200'}`}>
+                <span className={`font-semibold text-sm truncate block max-w-[280px] ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {lesson?.course_name}
                 </span>
               </div>
@@ -532,11 +534,11 @@ export default function DocumentViewer() {
           <div className="flex-1 min-w-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
               <div className="flex-shrink-0">
-                <TabsList className="flex w-full bg-[#1a1a2e] border border-white/10 p-1 gap-1 h-auto rounded-lg">
+                <TabsList className={`flex w-full border p-1 gap-1 h-auto rounded-lg ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
-                      className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
+                      className={`flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                     >
                       <FileText className="w-4 h-4 flex-shrink-0" />
                       <span className="text-xs font-medium">Doc</span>
@@ -544,7 +546,7 @@ export default function DocumentViewer() {
                   )}
                   <TabsTrigger 
                     value="studyplan"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     {showStudyPlanDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Target className="w-4 h-4 flex-shrink-0" />
@@ -552,14 +554,14 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="notes"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     <StickyNote className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Notes</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="teachit"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     {showTeachItDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Brain className="w-4 h-4 flex-shrink-0" />
@@ -567,7 +569,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     {showFlashcardsDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
@@ -575,7 +577,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Zap className="w-4 h-4 flex-shrink-0" />
@@ -648,12 +650,12 @@ export default function DocumentViewer() {
               </div>
               
               {/* Tabs bar */}
-              <div className="bg-[#12121a]/95 backdrop-blur-sm px-2 py-1.5 border-b border-white/10">
-                <TabsList className="flex w-full bg-[#1a1a2e] border border-white/10 p-0.5 h-auto rounded-lg shadow-sm gap-0.5">
+              <div className={`backdrop-blur-sm px-2 py-1.5 border-b ${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-purple-200'}`}>
+                <TabsList className={`flex w-full border p-0.5 h-auto rounded-lg shadow-sm gap-0.5 ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
                   {hasDocument && (
                     <TabsTrigger 
                       value="doc"
-                      className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
+                      className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                     >
                       <FileText className="w-3.5 h-3.5" />
                       <span className="text-[10px] font-semibold">Doc</span>
@@ -661,7 +663,7 @@ export default function DocumentViewer() {
                   )}
                   <TabsTrigger 
                     value="studyplan"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     {showStudyPlanDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Target className="w-3.5 h-3.5" />
@@ -669,14 +671,14 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="notes"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     <StickyNote className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-semibold">Notes</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="teachit"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     {showTeachItDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Brain className="w-3.5 h-3.5" />
@@ -684,7 +686,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     {showFlashcardsDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <BookMarked className="w-3.5 h-3.5" />
@@ -692,7 +694,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
                     {showExamDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Zap className="w-3.5 h-3.5" />

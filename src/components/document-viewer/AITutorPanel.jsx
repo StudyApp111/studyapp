@@ -7,6 +7,7 @@ import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { renderMathContent } from "@/components/utils/MathRenderer";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function AITutorPanel({ messages, setMessages, input, setInput, isLoading, setIsLoading, lesson }) {
   const { canSendAIMessage, incrementAIMessageCount, triggerUpgradeModal, isPro } = useSubscription();
