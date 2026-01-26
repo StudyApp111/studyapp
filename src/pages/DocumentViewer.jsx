@@ -118,12 +118,63 @@ export default function DocumentViewer() {
   const hasIncompleteTasks = activePlan?.tasks?.some(t => !t.completed);
   const showStudyPlanDot = activePlan && hasIncompleteTasks;
 
+  // Track first lesson view (SubmitApplication)
+  const hasTrackedFirstLesson = useRef(false);
+  
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab');
     // Default to 'doc' for immediate content; URL param overrides
     if (tabParam) setActiveTab(tabParam);
   }, [location.search]);
+
+  // Track SubmitApplication when user views their FIRST lesson
+  useEffect(() => {
+    const trackFirstLesson = async () => {
+      if (hasTrackedFirstLesson.current || !lesson?.id) return;
+      
+      try {
+        const user = await base44.auth.me();
+        if (!user) return;
+        
+        // Check if this is their first lesson (just completed onboarding)
+        const allLessons = await base44.entities.Lesson.filter({ created_by: user.email });
+        const isFirstLesson = allLessons.length === 1;
+        
+        if (isFirstLesson && window.ttq) {
+          hasTrackedFirstLesson.current = true;
+          
+          // Hash user ID for privacy
+          const encoder = new TextEncoder();
+          const data = encoder.encode(user.id);
+          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+          
+          // Identify user
+          window.ttq.identify({
+            external_id: hashedId
+          });
+          
+          // Track first lesson start
+          window.ttq.track('SubmitApplication', {
+            contents: [{
+              content_id: 'first_lesson',
+              content_type: 'product',
+              content_name: lesson.course_name || 'First Lesson',
+              price: 0
+            }],
+            value: 0,
+            currency: 'USD'
+          });
+        }
+      } catch (err) {
+        console.error('TikTok tracking error:', err);
+      }
+    };
+    
+    trackFirstLesson();
+  }, [lesson?.id]);
 
   useEffect(() => {
     const handleSwitchToStudyPlan = () => setActiveTab('studyplan');

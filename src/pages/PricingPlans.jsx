@@ -38,16 +38,44 @@ export default function PricingPlans() {
     // Check for success parameter
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'true') {
-      // Track successful payment
-      if (window.ttq) {
-        window.ttq.track('CompletePayment', {
-          content_type: 'product',
-          content_name: 'Pro Subscription',
-          currency: 'USD',
-          status: 'success'
-        });
-      }
-
+      // Track successful subscription payment
+      const trackSubscription = async () => {
+        try {
+          const user = await base44.auth.me();
+          if (user && window.ttq) {
+            // Hash user ID for privacy
+            const encoder = new TextEncoder();
+            const data = encoder.encode(user.id);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // Identify user
+            window.ttq.identify({
+              external_id: hashedId
+            });
+            
+            // Determine plan type from URL or default
+            const planType = urlParams.get('plan') || 'yearly';
+            const value = planType === 'yearly' ? 59.88 : 6.99;
+            
+            // Track Subscribe event
+            window.ttq.track('Subscribe', {
+              contents: [{
+                content_id: `pro_${planType}`,
+                content_type: 'product',
+                content_name: `Pro Subscription (${planType})`
+              }],
+              value: value,
+              currency: 'USD'
+            });
+          }
+        } catch (err) {
+          console.error('TikTok tracking error:', err);
+        }
+      };
+      
+      trackSubscription();
       setShowSuccess(true);
       // Clear the URL parameter
       window.history.replaceState({}, '', createPageUrl("PricingPlans"));

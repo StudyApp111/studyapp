@@ -75,11 +75,55 @@ export default function Onboarding() {
   // Prefetch schools data on mount
   const prefetchedSchoolsRef = useRef(null);
 
+  // Track CompleteRegistration when user lands on first onboarding question
+  const hasTrackedRegistration = useRef(false);
+  
   useEffect(() => {
     checkExistingProfile();
     // Prefetch nearby schools immediately on page load
     prefetchNearbySchools();
   }, []);
+
+  // Track registration once when onboarding starts (user is authenticated but hasn't completed onboarding)
+  useEffect(() => {
+    const trackRegistration = async () => {
+      if (hasTrackedRegistration.current || isLoading) return;
+      
+      try {
+        const user = await base44.auth.me();
+        if (user && !user.onboarding_completed && window.ttq) {
+          hasTrackedRegistration.current = true;
+          
+          // Hash user ID for privacy
+          const encoder = new TextEncoder();
+          const data = encoder.encode(user.id);
+          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+          
+          // Identify user
+          window.ttq.identify({
+            external_id: hashedId
+          });
+          
+          // Track registration
+          window.ttq.track('CompleteRegistration', {
+            contents: [{
+              content_id: 'signup',
+              content_type: 'product',
+              content_name: 'StudyApp Registration'
+            }],
+            value: 0,
+            currency: 'USD'
+          });
+        }
+      } catch (err) {
+        console.error('TikTok tracking error:', err);
+      }
+    };
+    
+    trackRegistration();
+  }, [isLoading]);
 
   const prefetchNearbySchools = async () => {
     try {
