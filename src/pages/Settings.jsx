@@ -25,8 +25,11 @@ import {
   BarChart3,
   Mail,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Moon,
+  Sun
 } from "lucide-react";
+import { useTheme } from "@/components/theme/ThemeContext";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +43,7 @@ import FeedbackModal from "@/components/feedback/FeedbackModal";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -220,6 +224,17 @@ export default function Settings() {
             )}
 
             <SettingsSection title="Others">
+              <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-white/5">
+                <div className="flex items-center gap-3">
+                  {isDark ? <Moon className="w-5 h-5 text-slate-400" /> : <Sun className="w-5 h-5 text-slate-400" />}
+                  <span className="font-medium text-slate-200">Dark Mode</span>
+                </div>
+                <Switch
+                  checked={isDark}
+                  onCheckedChange={toggleTheme}
+                />
+              </div>
+              
               <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-white/5">
                 <div className="flex items-center gap-3">
                   <Bell className="w-5 h-5 text-slate-400" />
