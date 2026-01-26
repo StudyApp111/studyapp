@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CreateTaskPanel from "./CreateTaskPanel";
+import PracticeTopicsPanel from "./PracticeTopicsPanel";
 import CompletedTaskItem from "./CompletedTaskItem";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -80,6 +81,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const [loading, setLoading] = useState(true);
   const [liveProgress, setLiveProgress] = useState({});
   const [showCreateTask, setShowCreateTask] = useState(false);
+  const [showPracticeTopics, setShowPracticeTopics] = useState(false);
   const [gradeJustUpdated, setGradeJustUpdated] = useState(false);
   const [previousGrade, setPreviousGrade] = useState(null);
   const [gradeChange, setGradeChange] = useState(null); // { from, to, scoreDiff }
@@ -694,6 +696,56 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
         
         <div className="space-y-3">
+          {/* Practice Your Topics - First Item */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative pl-1"
+          >
+            <div className="absolute left-[11px] top-4 w-5 h-5 rounded-full z-10 bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+              <Lightbulb className="w-3 h-3 text-white" />
+            </div>
+            
+            <div className="ml-8 pr-1">
+              <button
+                onClick={() => setShowPracticeTopics(!showPracticeTopics)}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all group ${
+                  showPracticeTopics 
+                    ? (isDark ? 'border-purple-500 bg-gradient-to-r from-purple-600/20 to-indigo-600/20' : 'border-purple-500 bg-gradient-to-r from-purple-50 to-indigo-50')
+                    : (isDark ? 'border-purple-500/40 bg-gradient-to-r from-purple-600/10 to-indigo-600/10 hover:border-purple-500/60' : 'border-purple-300 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 hover:border-purple-500')
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg`}>
+                    <Lightbulb className={`w-5 h-5 text-white ${showPracticeTopics ? '' : 'group-hover:scale-110'} transition-transform`} />
+                  </div>
+                  <div className="flex-1">
+                    <p className={`font-bold text-sm ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+                      Practice Your Topics
+                    </p>
+                    <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      Choose topics from your materials • Pick your format
+                    </p>
+                  </div>
+                  <Sparkles className={`w-5 h-5 transition-all ${showPracticeTopics ? 'text-purple-400' : 'text-purple-300 group-hover:text-purple-500'}`} />
+                </div>
+              </button>
+
+              {/* Practice Topics Panel - Inline */}
+              <AnimatePresence>
+                {showPracticeTopics && (
+                  <PracticeTopicsPanel
+                    isOpen={showPracticeTopics}
+                    onClose={() => setShowPracticeTopics(false)}
+                    lessonId={lesson?.id}
+                    compressedContent={lesson?.compressed_content || lesson?.extracted_content}
+                    onCreateTask={handleCreateTask}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+
           {/* Section Header */}
           <div className="flex items-center gap-3 pl-1">
             <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center z-10 shadow-lg">
@@ -820,43 +872,42 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             );
           })}
 
-          {/* Add Custom Task Button */}
+          {/* Add Custom Task Button - Now smaller, secondary */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="relative pl-1 pt-2"
           >
-            <div className="absolute left-[11px] top-6 w-5 h-5 rounded-full z-10 bg-slate-200 flex items-center justify-center">
-              <Plus className="w-3 h-3 text-slate-500" />
+            <div className={`absolute left-[11px] top-6 w-5 h-5 rounded-full z-10 flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
+              <Plus className={`w-3 h-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
             </div>
             
             <div className="ml-8 pr-1">
               <button
                 onClick={() => setShowCreateTask(!showCreateTask)}
-                className={`w-full text-left p-4 rounded-xl border-2 border-dashed transition-all group ${
+                className={`w-full text-left p-3 rounded-xl border-2 border-dashed transition-all group ${
                   showCreateTask 
-                    ? (isDark ? 'border-purple-500 bg-gradient-to-r from-purple-600/20 to-indigo-600/20' : 'border-purple-500 bg-gradient-to-r from-purple-50 to-indigo-50')
-                    : (isDark ? 'border-purple-500/30 hover:border-purple-500/50 hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-indigo-600/10' : 'border-purple-300 hover:border-purple-500 hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-indigo-50/50')
+                    ? (isDark ? 'border-slate-500 bg-slate-800/50' : 'border-slate-400 bg-slate-100')
+                    : (isDark ? 'border-slate-600/50 hover:border-slate-500/70' : 'border-slate-300 hover:border-slate-400')
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
                     showCreateTask 
-                      ? 'bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg' 
-                      : 'bg-gradient-to-br from-purple-100 to-indigo-100 group-hover:from-purple-200 group-hover:to-indigo-200'
+                      ? (isDark ? 'bg-slate-700' : 'bg-slate-200') 
+                      : (isDark ? 'bg-slate-700/50 group-hover:bg-slate-700' : 'bg-slate-100 group-hover:bg-slate-200')
                   }`}>
-                    <Plus className={`w-5 h-5 transition-transform ${showCreateTask ? 'text-white rotate-45' : 'text-purple-600 group-hover:scale-110'}`} />
+                    <Plus className={`w-4 h-4 transition-transform ${showCreateTask ? (isDark ? 'text-slate-300 rotate-45' : 'text-slate-600 rotate-45') : (isDark ? 'text-slate-400' : 'text-slate-500')}`} />
                   </div>
                   <div className="flex-1">
-                    <p className={`font-bold text-sm ${showCreateTask ? (isDark ? 'text-purple-400' : 'text-purple-700') : (isDark ? 'text-purple-400 group-hover:text-purple-300' : 'text-purple-600 group-hover:text-purple-700')}`}>
-                      Add Custom Task
+                    <p className={`font-medium text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                      Custom Topic
                     </p>
-                    <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Choose any topic • Pick your format
+                    <p className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Enter your own topic
                     </p>
                   </div>
-                  <Sparkles className={`w-4 h-4 transition-all ${showCreateTask ? 'text-purple-500' : 'text-purple-300 group-hover:text-purple-500'}`} />
                 </div>
               </button>
 
