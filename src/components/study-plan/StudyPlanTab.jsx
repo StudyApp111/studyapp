@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PracticeTopicsPanel from "./PracticeTopicsPanel";
 import CompletedTaskItem from "./CompletedTaskItem";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 const TASK_CONFIG = {
   flashcards: { 
@@ -76,6 +77,7 @@ const getVelocityConfig = (velocity) => {
 
 export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPlan = false }) {
   const { isDark } = useTheme();
+  const { canDoTask, triggerUpgradeModal } = useSubscription();
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveProgress, setLiveProgress] = useState({});
@@ -226,6 +228,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   const handleTaskClick = async (task) => {
     const isComplete = task.completed || (task.target_count > 0 && (task.completed_count || 0) >= task.target_count);
+    
+    // For incomplete tasks, check if user has tasks remaining (except practice_exam which has its own tracking)
+    if (!isComplete && task.task_type !== 'practice_exam') {
+      const taskCheck = await canDoTask();
+      if (!taskCheck.allowed) {
+        triggerUpgradeModal('tasks');
+        return;
+      }
+    }
     
     switch (task.task_type) {
       case 'flashcards':

@@ -110,8 +110,20 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   const handleGenerate = async () => {
     if (isGeneratingRef.current) return;
+    
+    // Check subscription limit for flashcard generation
+    const taskCheck = await canDoTask();
+    if (!taskCheck.allowed) {
+      triggerUpgradeModal('tasks');
+      return;
+    }
+    
     isGeneratingRef.current = true;
     setIsGenerating(true);
+    
+    // Increment task count BEFORE generating
+    await incrementTaskCount();
+    
     try {
       // Use compressed content if available, otherwise truncate large content
       let contentForFlashcards = lesson.compressed_content || extractedContent || lesson.description || 'General course material';
@@ -348,6 +360,16 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   const handleRegenerate = async () => {
+    // Check subscription limit for regeneration
+    const taskCheck = await canDoTask();
+    if (!taskCheck.allowed) {
+      triggerUpgradeModal('tasks');
+      return;
+    }
+    
+    // Increment task count BEFORE regenerating
+    await incrementTaskCount();
+    
     // Delete existing cards
     if (cards && cards.length > 0) {
       await Promise.all(cards.map(c => base44.entities.Flashcard.delete(c.id)));

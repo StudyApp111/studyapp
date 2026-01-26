@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, CheckCircle2, Microscope, FileEdit } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { canGradeAssignment, incrementAssignmentCount, triggerUpgradeModal } = useSubscription();
   const [courseName, setCourseName] = useState("");
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentFile, setAssignmentFile] = useState(null);
@@ -52,6 +54,14 @@ export default function SmartGrader() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    
+    // Check subscription limit FIRST before any processing
+    const assignmentCheck = await canGradeAssignment();
+    if (!assignmentCheck.allowed) {
+      triggerUpgradeModal('assignments');
+      return;
+    }
+    
     setIsProcessing(true);
     setProcessingStep("");
 
@@ -71,6 +81,9 @@ export default function SmartGrader() {
       if (!curriculumFile) {
         throw new Error("Please upload your grading rubric");
       }
+      
+      // Increment assignment counter BEFORE processing (to prevent bypass)
+      await incrementAssignmentCount();
 
       // Fetch learning profile
       const profiles = await base44.entities.LearningProfile.filter({});

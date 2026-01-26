@@ -7,7 +7,8 @@ const SubscriptionContext = createContext(null);
 export const FREE_TIER_LIMITS = {
   uploads_per_week: 2,  // 2 uploads per 7-day rolling window
   tasks_per_day: 1,     // 1 task per 24h rolling window  
-  ai_messages_per_day: 10  // 10 AI messages per 24h rolling window
+  ai_messages_per_day: 10,  // 10 AI messages per 24h rolling window
+  assignments_per_week: 1  // 1 assignment graded per 7-day rolling window
 };
 
 export function SubscriptionProvider({ children }) {
@@ -112,10 +113,12 @@ export function SubscriptionProvider({ children }) {
       // First time - initialize timestamp AND reset counters to 0 (fresh start)
       updates.weekly_reset_timestamp = now.toISOString();
       updates.weekly_uploads_count = 0;
+      updates.weekly_assignments_count = 0;
       needsUpdate = true;
     } else if ((now.getTime() - weeklyResetTime.getTime()) >= 7 * 24 * 60 * 60 * 1000) {
       // 7-day window expired - reset counters
       updates.weekly_uploads_count = 0;
+      updates.weekly_assignments_count = 0;
       updates.weekly_reset_timestamp = now.toISOString();
       needsUpdate = true;
     }
@@ -171,6 +174,18 @@ export function SubscriptionProvider({ children }) {
     };
   };
 
+  const canGradeAssignment = async () => {
+    if (isPro()) return { allowed: true };
+    const currentUser = await checkAndResetCounters();
+    const count = currentUser?.weekly_assignments_count || 0;
+    return {
+      allowed: count < FREE_TIER_LIMITS.assignments_per_week,
+      current: count,
+      limit: FREE_TIER_LIMITS.assignments_per_week,
+      remaining: Math.max(0, FREE_TIER_LIMITS.assignments_per_week - count)
+    };
+  };
+
   // Increment counters - always fetch fresh data to avoid race conditions
   const incrementUploadCount = async () => {
     if (isPro()) return;
@@ -200,6 +215,15 @@ export function SubscriptionProvider({ children }) {
     await refreshUser();
   };
 
+  const incrementAssignmentCount = async () => {
+    if (isPro()) return;
+    const freshUser = await checkAndResetCounters();
+    if (!freshUser) return;
+    const newCount = (freshUser.weekly_assignments_count || 0) + 1;
+    await base44.auth.updateMe({ weekly_assignments_count: newCount });
+    await refreshUser();
+  };
+
   // Trigger upgrade modal
   const triggerUpgradeModal = (reason) => {
     setUpgradeReason(reason);
@@ -214,9 +238,11 @@ export function SubscriptionProvider({ children }) {
     canUpload,
     canDoTask,
     canSendAIMessage,
+    canGradeAssignment,
     incrementUploadCount,
     incrementTaskCount,
     incrementAIMessageCount,
+    incrementAssignmentCount,
     triggerUpgradeModal,
     showUpgradeModal,
     setShowUpgradeModal,

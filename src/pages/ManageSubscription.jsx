@@ -69,36 +69,36 @@ export default function ManageSubscription() {
   const isCancelled = user?.subscription_status === 'cancelled';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10 pb-28 md:pb-10">
+    <div className="min-h-screen dark:bg-gradient-to-br dark:from-purple-900/20 dark:via-purple-800/10 dark:to-purple-900/20 bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10 pb-28 md:pb-10">
       <div className="max-w-2xl mx-auto">
         <Button
           variant="ghost"
           onClick={() => navigate(createPageUrl("Settings"))}
-          className="mb-6 hover:bg-purple-100"
+          className="mb-6 dark:hover:bg-white/10 hover:bg-purple-100"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Settings
         </Button>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Manage Subscription</h1>
-          <p className="text-slate-600">View and manage your subscription details</p>
+          <h1 className="text-3xl font-bold dark:text-slate-100 text-slate-900 mb-2">Manage Subscription</h1>
+          <p className="dark:text-slate-300 text-slate-600">View and manage your subscription details</p>
         </div>
 
-        <Card className="shadow-xl border-0 mb-6">
+        <Card className="shadow-xl border-0 dark:bg-[#12121a] mb-6">
           <CardContent className="p-6">
             {/* Current Plan */}
             <div className="flex items-start gap-4 mb-6">
               <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                isPro ? 'bg-emerald-100' : 'bg-slate-100'
+                isPro ? 'bg-emerald-100' : 'dark:bg-white/10 bg-slate-100'
               }`}>
-                <CreditCard className={`w-6 h-6 ${isPro ? 'text-emerald-600' : 'text-slate-600'}`} />
+                <CreditCard className={`w-6 h-6 ${isPro ? 'text-emerald-600' : 'dark:text-slate-300 text-slate-600'}`} />
               </div>
               <div className="flex-1">
-                <h2 className="text-xl font-bold text-slate-900">
+                <h2 className="text-xl font-bold dark:text-slate-100 text-slate-900">
                   {isPro ? 'Pro Plan' : 'Free Plan'}
                 </h2>
-                <p className="text-slate-600">
+                <p className="dark:text-slate-300 text-slate-600">
                   {isPro 
                     ? 'Unlimited access to all features' 
                     : 'Limited access with daily quotas'}
@@ -119,13 +119,13 @@ export default function ManageSubscription() {
             {isPro && (
               <>
                 {/* Subscription Details */}
-                <div className="bg-slate-50 rounded-xl p-4 mb-6 space-y-3">
+                <div className="dark:bg-white/5 bg-slate-50 rounded-xl p-4 mb-6 space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-slate-600">
+                    <div className="flex items-center gap-2 dark:text-slate-300 text-slate-600">
                       <Calendar className="w-4 h-4" />
                       <span>Next billing date</span>
                     </div>
-                    <span className="font-medium text-slate-900">
+                    <span className="font-medium dark:text-slate-100 text-slate-900">
                       {user.subscription_end_date 
                         ? new Date(user.subscription_end_date).toLocaleDateString('en-US', {
                             month: 'long',
@@ -138,7 +138,7 @@ export default function ManageSubscription() {
                   
                   {user.stripe_customer_id && (
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-slate-600">
+                      <div className="flex items-center gap-2 dark:text-slate-300 text-slate-600">
                         <CreditCard className="w-4 h-4" />
                         <span>Payment method</span>
                       </div>
@@ -175,12 +175,12 @@ export default function ManageSubscription() {
                 )}
 
                 {isCancelled && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <div className="dark:bg-amber-500/10 dark:border-amber-500/30 bg-amber-50 border border-amber-200 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                       <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-amber-800">Subscription Cancelled</p>
-                        <p className="text-sm text-amber-700 mt-1">
+                        <p className="font-medium dark:text-amber-300 text-amber-800">Subscription Cancelled</p>
+                        <p className="text-sm dark:text-amber-200 text-amber-700 mt-1">
                           Your subscription will remain active until {user.subscription_end_date 
                             ? new Date(user.subscription_end_date).toLocaleDateString() 
                             : 'the end of your billing period'}. 
@@ -188,7 +188,7 @@ export default function ManageSubscription() {
                         </p>
                         <Button
                           variant="link"
-                          className="text-amber-700 p-0 h-auto mt-2"
+                          className="dark:text-amber-300 text-amber-700 p-0 h-auto mt-2"
                           onClick={() => navigate(createPageUrl("PricingPlans"))}
                         >
                           Resubscribe →

@@ -1467,13 +1467,13 @@ JSON Output (exact schema):
       </AnimatePresence>
 
       <div className="flex flex-col h-full md:h-auto md:pb-4">
-        <div className="flex-1 flex flex-col bg-white/95 backdrop-blur-xl md:rounded-2xl border-0 md:border border-purple-200/80 shadow-none md:shadow-sm md:mx-0 overflow-hidden">
+        <div className="flex-1 flex flex-col dark:bg-[#12121a]/95 bg-white/95 backdrop-blur-xl md:rounded-2xl border-0 md:border dark:md:border-purple-500/30 border-purple-200/80 shadow-none md:shadow-sm md:mx-0 overflow-hidden">
           {/* Exam Header with Back Button and Type Indicator */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-purple-100 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shrink-0 relative">
+          <div className="flex items-center justify-between px-3 py-2 border-b dark:border-white/10 border-purple-100 dark:bg-[#12121a]/95 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shrink-0 relative">
             <div className="flex items-center gap-2">
                   <button
                     onClick={handleExitExam}
-                    className="flex items-center gap-1 text-slate-500 hover:text-slate-700 transition-colors"
+                    className="flex items-center gap-1 dark:text-slate-400 dark:hover:text-slate-200 text-slate-500 hover:text-slate-700 transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span className="text-xs font-medium hidden sm:inline">Exit</span>
@@ -1489,20 +1489,20 @@ JSON Output (exact schema):
                   }`}>
                     {isPracticeExam ? 'Practice' : 'Official'}
                   </div>
-                  <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-bold dark:text-slate-300 dark:bg-white/10 text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
                     {currentQuestion + 1}/{exam.questions.length}
                   </span>
                 </div>
             <div className="flex items-center gap-2">
               <Progress value={progress} className="h-1.5 w-16 hidden sm:block" />
-              <div className="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">
+              <div className="flex items-center gap-1 dark:text-purple-300 dark:bg-purple-600/20 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">
                 <Clock className="w-3 h-3" />
                 <span className="text-xs font-semibold tabular-nums">{formatTime(elapsedSeconds)}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto overscroll-contain p-3 md:p-5">
+          <div className="flex-1 overflow-y-auto overscroll-contain p-3 md:p-5 dark:bg-[#0a0a12]">
             <AnimatePresence mode="wait">
               <ExamQuestion
                 key={currentQuestion}
@@ -1515,12 +1515,12 @@ JSON Output (exact schema):
             </AnimatePresence>
           </div>
 
-          <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-4 border-t border-purple-100 bg-white/95 backdrop-blur-sm shrink-0">
+          <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-4 border-t dark:border-white/10 border-purple-100 dark:bg-[#12121a]/95 bg-white/95 backdrop-blur-sm shrink-0">
             <Button
               variant="outline"
               onClick={handlePrevious}
               disabled={currentQuestion === 0}
-              className="flex-1 text-xs h-10 rounded-xl font-medium"
+              className="flex-1 dark:text-white text-xs h-10 rounded-xl font-medium"
             >
               Previous
             </Button>

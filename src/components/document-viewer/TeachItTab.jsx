@@ -115,8 +115,20 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
 
   const generateCards = async () => {
     if (isGeneratingRef.current) return;
+    
+    // Check subscription limit for teach it generation
+    const taskCheck = await canDoTask();
+    if (!taskCheck.allowed) {
+      triggerUpgradeModal('tasks');
+      return;
+    }
+    
     isGeneratingRef.current = true;
     setIsGenerating(true);
+    
+    // Increment task count BEFORE generating
+    await incrementTaskCount();
+    
     try {
       const user = await base44.auth.me();
       const profile = await base44.entities.LearningProfile.filter({ 
@@ -362,6 +374,13 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   const handleRegenerate = async () => {
     if (confirm("Regenerate all cards? Current progress will be lost.")) {
+      // Check subscription limit for regeneration
+      const taskCheck = await canDoTask();
+      if (!taskCheck.allowed) {
+        triggerUpgradeModal('tasks');
+        return;
+      }
+      
       try {
         await Promise.all(cards.map(card => base44.entities.TeachItCard.delete(card.id)));
         setCards([]);

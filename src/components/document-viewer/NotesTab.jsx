@@ -9,6 +9,7 @@ import NoteSettingsModal from "@/components/modals/NoteSettingsModal";
 import { toast } from "sonner";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 const TYPE_CONFIG = {
   "Detailed Notes": { icon: BookOpen, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
@@ -20,6 +21,7 @@ const TYPE_CONFIG = {
 
 export default function NotesTab({ lesson }) {
   const { isDark } = useTheme();
+  const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
   const [note, setNote] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -55,6 +57,13 @@ export default function NotesTab({ lesson }) {
   };
 
   const generateNotes = async (currentSettings = settings) => {
+    // Check subscription limit for note generation
+    const taskCheck = await canDoTask();
+    if (!taskCheck.allowed) {
+      triggerUpgradeModal('tasks');
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const content = lesson.compressed_content || lesson.extracted_content || lesson.description;
@@ -64,6 +73,9 @@ export default function NotesTab({ lesson }) {
         setIsLoading(false);
         return;
       }
+      
+      // Increment task count BEFORE generating (to prevent bypass)
+      await incrementTaskCount();
 
       const { data } = await base44.functions.invoke('generateLessonNotes', {
         lesson_content: content,
