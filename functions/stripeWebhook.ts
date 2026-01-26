@@ -102,16 +102,13 @@ Deno.serve(async (req) => {
               .map(b => b.toString(16).padStart(2, '0'))
               .join('');
             
-            // TikTok Events API v1.3 format - event_source_id is REQUIRED at event level
+            // TikTok Events API v1.3 - pixel_code at root, data contains events
             const eventData = {
-              event_source: "web",
-              event_source_id: tiktokPixelId,
               event: "Subscribe",
               event_id: `subscribe_${user.id}_${Date.now()}`,
               event_time: Math.floor(Date.now() / 1000),
               user: {
-                email: hashedEmail,
-                external_id: hashedEmail
+                email: hashedEmail
               },
               page: {
                 url: "https://app.studyappai.com/pricingplans"
@@ -128,7 +125,8 @@ Deno.serve(async (req) => {
             };
 
             const requestBody = {
-              pixel_code: tiktokPixelId,
+              event_source: "web",
+              event_source_id: tiktokPixelId,
               data: [eventData]
             };
             
