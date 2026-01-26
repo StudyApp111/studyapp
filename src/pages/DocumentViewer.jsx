@@ -50,6 +50,7 @@ export default function DocumentViewer() {
   const [userStreak, setUserStreak] = useState(0);
   const [userDailyXP, setUserDailyXP] = useState(0);
   const [isGeneratingStudyPlan, setIsGeneratingStudyPlan] = useState(false);
+  const [pomodoroEnabled, setPomodoroEnabled] = useState(false);
   
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
@@ -491,7 +492,13 @@ export default function DocumentViewer() {
               
               {/* Timer */}
               <div className="flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1.5">
-                <Clock className="w-4 h-4 text-white/80" />
+                <button 
+                  onClick={() => setPomodoroEnabled(!pomodoroEnabled)}
+                  className={`w-4 h-4 flex items-center justify-center transition-colors ${pomodoroEnabled ? 'text-yellow-300' : 'text-white/80'}`}
+                  title={pomodoroEnabled ? 'Pomodoro enabled' : 'Enable Pomodoro breaks'}
+                >
+                  <Clock className="w-4 h-4" />
+                </button>
                 <span className="text-white text-xs font-mono font-semibold min-w-[45px]">
                   {formatStudyTime(studyTime)}
                 </span>
@@ -756,7 +763,8 @@ export default function DocumentViewer() {
         {isTimerRunning && (
           <PomodoroTimer 
             elapsedSeconds={studyTime} 
-            onBreakComplete={() => {}} 
+            onBreakComplete={() => {}}
+            enabled={pomodoroEnabled}
           />
         )}
       </div>

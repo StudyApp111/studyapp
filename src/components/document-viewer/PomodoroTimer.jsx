@@ -5,8 +5,10 @@ import { Coffee, Zap, Trophy, Brain, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import XPGainToast from "@/components/gamification/XPGainToast";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
-export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
+export default function PomodoroTimer({ elapsedSeconds, onBreakComplete, enabled = false }) {
+  const { isDark } = useTheme();
   const [showBreakPrompt, setShowBreakPrompt] = useState(false);
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [breakTimeLeft, setBreakTimeLeft] = useState(300); // 5 minutes in seconds
@@ -16,7 +18,8 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
   const [xpAwarded, setXpAwarded] = useState(false);
 
   useEffect(() => {
-    // Show break prompt every 20 minutes
+    // Show break prompt every 20 minutes (only if enabled)
+    if (!enabled) return;
     if (elapsedSeconds > 0 && elapsedSeconds % 1200 === 0) {
       const currentInterval = Math.floor(elapsedSeconds / 1200);
       if (!hasPromptedAt20 || currentInterval !== Math.floor((elapsedSeconds - 1) / 1200)) {
@@ -28,7 +31,7 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
         setPomodoroCount(prev => prev + 1);
       }
     }
-  }, [elapsedSeconds]);
+  }, [elapsedSeconds, enabled]);
 
   useEffect(() => {
     let interval;
@@ -86,7 +89,7 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
   return (
     <>
       <Dialog open={showBreakPrompt || isOnBreak} onOpenChange={(open) => !open && handleSkipBreak()}>
-        <DialogContent className="max-w-[300px] w-[calc(100%-2rem)] mx-auto rounded-2xl p-4 border-0 overflow-hidden">
+        <DialogContent className={`max-w-[300px] w-[calc(100%-2rem)] mx-auto rounded-2xl p-4 border-0 overflow-hidden ${isDark ? 'bg-[#1a1a2e]' : 'bg-white'}`}>
           {isOnBreak ? (
             <div className="space-y-3">
               {/* Break header */}
@@ -98,7 +101,7 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
                 >
                   <Coffee className="w-5 h-5 text-white" />
                 </motion.div>
-                <h2 className="text-base font-bold text-slate-900">Break Time</h2>
+                <h2 className={`text-base font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Break Time</h2>
               </div>
 
               {/* Timer with progress ring */}
@@ -109,7 +112,7 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
                     cy="56"
                     r="48"
                     fill="none"
-                    stroke="#e2e8f0"
+                    stroke={isDark ? '#374151' : '#e2e8f0'}
                     strokeWidth="6"
                   />
                   <motion.circle
@@ -131,16 +134,16 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
                   </defs>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold text-emerald-600 font-mono">
+                  <span className="text-2xl font-bold text-emerald-500 font-mono">
                     {formatTime(breakTimeLeft)}
                   </span>
-                  <span className="text-[10px] text-slate-400">remaining</span>
+                  <span className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>remaining</span>
                 </div>
               </div>
 
               {/* XP reward preview */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-center">
-                <span className="text-[10px] text-yellow-800">
+              <div className={`rounded-lg p-2 text-center ${isDark ? 'bg-yellow-500/20 border border-yellow-500/30' : 'bg-yellow-50 border border-yellow-200'}`}>
+                <span className={`text-[10px] ${isDark ? 'text-yellow-300' : 'text-yellow-800'}`}>
                   Complete for <span className="font-bold">+25 XP</span>
                 </span>
               </div>
@@ -148,7 +151,7 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
               <Button
                 onClick={handleSkipBreak}
                 variant="ghost"
-                className="w-full h-8 text-xs text-slate-400 hover:text-slate-600"
+                className={`w-full h-8 text-xs ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 Skip break (no bonus XP)
               </Button>
@@ -165,8 +168,8 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
                 >
                   <Trophy className="w-5 h-5 text-white" />
                 </motion.div>
-                <h2 className="text-base font-bold text-slate-900">Pomodoro Complete! 🎉</h2>
-                <p className="text-[10px] text-slate-500">20 min focused studying</p>
+                <h2 className={`text-base font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Pomodoro Complete! 🎉</h2>
+                <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>20 min focused studying</p>
               </div>
 
               {/* XP Earned */}
@@ -178,8 +181,8 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
               </div>
 
               {/* Break incentive */}
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-center">
-                <p className="text-[10px] text-emerald-800">
+              <div className={`rounded-lg p-2 text-center ${isDark ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-emerald-50 border border-emerald-200'}`}>
+                <p className={`text-[10px] ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>
                   <Coffee className="w-3 h-3 inline mr-1" />
                   5 min break = <span className="font-bold">+25 bonus XP</span>
                 </p>
@@ -196,7 +199,7 @@ export default function PomodoroTimer({ elapsedSeconds, onBreakComplete }) {
                 <Button
                   onClick={handleSkipBreak}
                   variant="ghost"
-                  className="w-full h-7 text-[10px] text-slate-400"
+                  className={`w-full h-7 text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-400'}`}
                 >
                   Skip
                 </Button>

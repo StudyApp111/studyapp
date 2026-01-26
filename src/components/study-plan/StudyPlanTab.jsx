@@ -8,7 +8,6 @@ import {
   Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock, Copy
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import CreateTaskPanel from "./CreateTaskPanel";
 import PracticeTopicsPanel from "./PracticeTopicsPanel";
 import CompletedTaskItem from "./CompletedTaskItem";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -703,7 +702,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             className="relative pl-1"
           >
             <div className="absolute left-[11px] top-4 w-5 h-5 rounded-full z-10 bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
-              <Lightbulb className="w-3 h-3 text-white" />
+              <Plus className="w-3 h-3 text-white" />
             </div>
             
             <div className="ml-8 pr-1">
@@ -717,7 +716,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg`}>
-                    <Lightbulb className={`w-5 h-5 text-white ${showPracticeTopics ? '' : 'group-hover:scale-110'} transition-transform`} />
+                    <Plus className={`w-5 h-5 text-white ${showPracticeTopics ? 'rotate-45' : 'group-hover:scale-110'} transition-transform`} />
                   </div>
                   <div className="flex-1">
                     <p className={`font-bold text-sm ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
@@ -872,58 +871,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             );
           })}
 
-          {/* Add Custom Task Button - Now smaller, secondary */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="relative pl-1 pt-2"
-          >
-            <div className={`absolute left-[11px] top-6 w-5 h-5 rounded-full z-10 flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
-              <Plus className={`w-3 h-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-            </div>
-            
-            <div className="ml-8 pr-1">
-              <button
-                onClick={() => setShowCreateTask(!showCreateTask)}
-                className={`w-full text-left p-3 rounded-xl border-2 border-dashed transition-all group ${
-                  showCreateTask 
-                    ? (isDark ? 'border-slate-500 bg-slate-800/50' : 'border-slate-400 bg-slate-100')
-                    : (isDark ? 'border-slate-600/50 hover:border-slate-500/70' : 'border-slate-300 hover:border-slate-400')
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                    showCreateTask 
-                      ? (isDark ? 'bg-slate-700' : 'bg-slate-200') 
-                      : (isDark ? 'bg-slate-700/50 group-hover:bg-slate-700' : 'bg-slate-100 group-hover:bg-slate-200')
-                  }`}>
-                    <Plus className={`w-4 h-4 transition-transform ${showCreateTask ? (isDark ? 'text-slate-300 rotate-45' : 'text-slate-600 rotate-45') : (isDark ? 'text-slate-400' : 'text-slate-500')}`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className={`font-medium text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                      Custom Topic
-                    </p>
-                    <p className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                      Enter your own topic
-                    </p>
-                  </div>
-                </div>
-              </button>
 
-              {/* Create Task Panel - Inline */}
-              <AnimatePresence>
-                {showCreateTask && (
-                  <CreateTaskPanel
-                    isOpen={showCreateTask}
-                    onClose={() => setShowCreateTask(false)}
-                    suggestedTopics={studyPlan?.suggested_topics || []}
-                    onCreateTask={handleCreateTask}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
 
           {/* Completed Tasks - Below Custom Task */}
           {completedTasks.length > 0 && (

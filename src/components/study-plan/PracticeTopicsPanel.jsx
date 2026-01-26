@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { 
-  X, Sparkles, Lightbulb, Brain, Copy, Zap, FileText, Loader2, ChevronRight
+  X, Sparkles, Plus, Brain, Copy, Zap, FileText, Loader2, ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -45,6 +46,7 @@ export default function PracticeTopicsPanel({
   const [extractedTopics, setExtractedTopics] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState(null);
+  const [customTopic, setCustomTopic] = useState('');
   const [step, setStep] = useState(1); // 1 = topics, 2 = format
 
   useEffect(() => {
@@ -100,7 +102,15 @@ Return ONLY a JSON array with this exact format:
 
   const handleTopicSelect = (topic) => {
     setSelectedTopic(topic);
+    setCustomTopic('');
     setStep(2);
+  };
+
+  const handleCustomTopicSubmit = () => {
+    if (customTopic.trim()) {
+      setSelectedTopic({ topic_name: customTopic.trim(), topic_description: '' });
+      setStep(2);
+    }
   };
 
   const handleTypeSelect = (type) => {
@@ -114,6 +124,7 @@ Return ONLY a JSON array with this exact format:
 
   const handleReset = () => {
     setSelectedTopic(null);
+    setCustomTopic('');
     setStep(1);
     onClose();
   };
@@ -137,12 +148,12 @@ Return ONLY a JSON array with this exact format:
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-              <Lightbulb className="w-4 h-4 text-white" />
+              <Plus className="w-4 h-4 text-white" />
             </div>
             <div>
               <h4 className={`font-bold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Practice Your Topics</h4>
               <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                {step === 1 ? 'Select a topic from your materials' : 'Choose how to practice'}
+                {step === 1 ? 'Select a topic or enter your own' : 'Choose how to practice'}
               </p>
             </div>
           </div>
@@ -163,44 +174,66 @@ Return ONLY a JSON array with this exact format:
               exit={{ opacity: 0, x: -20 }}
               className="space-y-3"
             >
+              {/* Custom Topic Input - Always at top */}
+              <div className="mb-3">
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    value={customTopic}
+                    onChange={(e) => setCustomTopic(e.target.value)}
+                    placeholder="Enter your own topic..."
+                    className={`flex-1 text-sm ${isDark ? 'bg-white/5 border-white/10 text-slate-200 placeholder:text-slate-500' : ''}`}
+                    onKeyDown={(e) => e.key === 'Enter' && handleCustomTopicSubmit()}
+                  />
+                  <Button
+                    onClick={handleCustomTopicSubmit}
+                    disabled={!customTopic.trim()}
+                    className="bg-purple-600 hover:bg-purple-700 px-4"
+                  >
+                    Go
+                  </Button>
+                </div>
+              </div>
+
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-purple-500 mb-3" />
-                  <p className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Extracting topics from your materials...</p>
+                <div className="flex flex-col items-center justify-center py-6">
+                  <Loader2 className="w-6 h-6 animate-spin text-purple-500 mb-2" />
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Extracting topics...</p>
                 </div>
               ) : extractedTopics.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {extractedTopics.map((topic, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleTopicSelect(topic)}
-                      className={`text-left p-3 rounded-xl border transition-all group ${
-                        isDark 
-                          ? 'bg-white/5 border-white/10 hover:border-purple-500/50 hover:bg-white/10' 
-                          : 'bg-white border-slate-200 hover:border-purple-400 hover:shadow-md'
-                      }`}
-                    >
-                      <div className="flex items-start gap-2">
-                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-purple-600/30' : 'bg-purple-100'}`}>
-                          <Sparkles className={`w-3 h-3 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                <>
+                  <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Or select from your materials
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {extractedTopics.map((topic, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleTopicSelect(topic)}
+                        className={`text-left p-3 rounded-xl border transition-all group ${
+                          isDark 
+                            ? 'bg-white/5 border-white/10 hover:border-purple-500/50 hover:bg-white/10' 
+                            : 'bg-white border-slate-200 hover:border-purple-400 hover:shadow-md'
+                        }`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-purple-600/30' : 'bg-purple-100'}`}>
+                            <Sparkles className={`w-3 h-3 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-semibold text-xs leading-tight mb-0.5 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                              {topic.topic_name}
+                            </p>
+                            <p className={`text-[10px] leading-tight line-clamp-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                              {topic.topic_description}
+                            </p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`font-semibold text-xs leading-tight mb-0.5 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                            {topic.topic_name}
-                          </p>
-                          <p className={`text-[10px] leading-tight line-clamp-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                            {topic.topic_description}
-                          </p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className={`text-center py-6 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  <p className="text-sm">No topics found. Try uploading more content.</p>
-                </div>
-              )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : null}
             </motion.div>
           ) : (
             <motion.div

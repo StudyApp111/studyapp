@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Skull, Zap, X, Check, Sparkles, Lock, Infinity, Gift, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Skull, Zap, X, Check, Sparkles, Lock, Infinity, Gift, Loader2, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useSubscription } from './SubscriptionContext';
@@ -54,14 +54,28 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
   const { isDark } = useTheme();
   const limitInfo = LIMIT_MESSAGES[reason] || LIMIT_MESSAGES.default;
   
+  const [selectedPlan, setSelectedPlan] = useState('yearly');
   const [showPromoInput, setShowPromoInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoResult, setPromoResult] = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  const handleUpgrade = () => {
-    onOpenChange(false);
-    navigate(createPageUrl("PricingPlans"));
+  const handleSelectPlan = async () => {
+    setCheckoutLoading(true);
+    try {
+      const response = await base44.functions.invoke('createCheckoutSession', {
+        plan_type: selectedPlan
+      });
+      
+      if (response.data?.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   const handlePromoSubmit = async () => {
@@ -129,67 +143,106 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
 
           {/* Content */}
           <div className={`p-6 -mt-4 rounded-t-3xl relative ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
-            {/* Comparison */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {/* Free Tier */}
-              <div className={`rounded-xl p-4 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Skull className={`w-5 h-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
-                  <span className={`font-bold text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Good Luck</span>
-                </div>
-                <ul className={`space-y-2 text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                  <li className="flex items-center gap-2">
-                    <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>2</span> uploads/week
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>1</span> task/day
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>10</span> AI msgs/day
-                  </li>
-                  <li className={`flex items-center gap-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                    <Lock className="w-3 h-3" /> Basic prediction
-                  </li>
-                </ul>
-              </div>
-
-              {/* Pro Tier */}
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border-2 border-purple-300 relative">
+            {/* Plan Selection */}
+            <div className="space-y-3 mb-6">
+              {/* Yearly Plan */}
+              <button
+                onClick={() => setSelectedPlan('yearly')}
+                className={`w-full p-4 rounded-xl border-2 transition-all text-left relative ${
+                  selectedPlan === 'yearly'
+                    ? 'border-purple-500 bg-purple-500/10'
+                    : isDark ? 'border-white/10 bg-white/5 hover:border-white/20' : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
                 <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-                  BEST
+                  SAVE 50%
                 </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Zap className="w-5 h-5 text-purple-600" />
-                  <span className="font-bold text-purple-700 text-sm">Locked In</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      selectedPlan === 'yearly' ? 'border-purple-500 bg-purple-500' : isDark ? 'border-white/30' : 'border-slate-300'
+                    }`}>
+                      {selectedPlan === 'yearly' && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                    <div>
+                      <p className={`font-bold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Annual</p>
+                      <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Billed yearly</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-bold text-lg ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>$4.99<span className="text-xs font-normal">/mo</span></p>
+                    <p className={`text-[10px] line-through ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>$9.99/mo</p>
+                  </div>
                 </div>
-                <ul className="space-y-2 text-xs text-purple-700">
-                  <li className="flex items-center gap-2">
-                    <Infinity className="w-3 h-3 text-purple-500" /> Unlimited uploads
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Infinity className="w-3 h-3 text-purple-500" /> Unlimited tasks
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Infinity className="w-3 h-3 text-purple-500" /> Unlimited AI
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Sparkles className="w-3 h-3 text-purple-500" /> AI Forensics
-                  </li>
-                </ul>
+              </button>
+
+              {/* Monthly Plan */}
+              <button
+                onClick={() => setSelectedPlan('monthly')}
+                className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                  selectedPlan === 'monthly'
+                    ? 'border-purple-500 bg-purple-500/10'
+                    : isDark ? 'border-white/10 bg-white/5 hover:border-white/20' : 'border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      selectedPlan === 'monthly' ? 'border-purple-500 bg-purple-500' : isDark ? 'border-white/30' : 'border-slate-300'
+                    }`}>
+                      {selectedPlan === 'monthly' && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                    <div>
+                      <p className={`font-bold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Monthly</p>
+                      <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Billed monthly</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-bold text-lg ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>$9.99<span className="text-xs font-normal">/mo</span></p>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Features */}
+            <div className={`rounded-xl p-3 mb-4 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>What you get</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Infinity className="w-3 h-3 text-purple-500" />
+                  <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Unlimited uploads</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Infinity className="w-3 h-3 text-purple-500" />
+                  <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Unlimited tasks</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Infinity className="w-3 h-3 text-purple-500" />
+                  <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Unlimited AI</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3 text-purple-500" />
+                  <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>AI Forensics</span>
+                </div>
               </div>
             </div>
 
             {/* CTA */}
             <Button
-              onClick={handleUpgrade}
+              onClick={handleSelectPlan}
+              disabled={checkoutLoading}
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-6 text-base rounded-xl shadow-lg shadow-purple-500/30"
             >
-              <Zap className="w-5 h-5 mr-2" />
-              Upgrade to Locked In
+              {checkoutLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              ) : (
+                <Zap className="w-5 h-5 mr-2" />
+              )}
+              Select Plan
             </Button>
 
             <p className={`text-center text-xs mt-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              Starting at $4.99/mo • Cancel anytime
+              Cancel anytime • Secure checkout
             </p>
 
             {/* Promo Code Section */}
