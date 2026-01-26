@@ -41,16 +41,16 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
 
   // Helper to get score color based on value
   const getScoreColor = (score) => {
-    if (score >= 8) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
-    if (score >= 4.5) return 'text-amber-600 bg-amber-50 border-amber-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (score >= 8) return isDark ? 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30' : 'text-emerald-600 bg-emerald-50 border-emerald-200';
+    if (score >= 4.5) return isDark ? 'text-amber-400 bg-amber-500/20 border-amber-500/30' : 'text-amber-600 bg-amber-50 border-amber-200';
+    return isDark ? 'text-red-400 bg-red-500/20 border-red-500/30' : 'text-red-600 bg-red-50 border-red-200';
   };
 
   // Helper to get border color based on score
   const getBorderByScore = (score) => {
-    if (score >= 8) return 'border-emerald-400 shadow-emerald-100';
-    if (score >= 4.5) return 'border-amber-400 shadow-amber-100';
-    return 'border-red-400 shadow-red-100';
+    if (score >= 8) return isDark ? 'border-emerald-500/50 shadow-emerald-500/10' : 'border-emerald-400 shadow-emerald-100';
+    if (score >= 4.5) return isDark ? 'border-amber-500/50 shadow-amber-500/10' : 'border-amber-400 shadow-amber-100';
+    return isDark ? 'border-red-500/50 shadow-red-500/10' : 'border-red-400 shadow-red-100';
   };
 
   const [sectionsExpanded, setSectionsExpanded] = useState({
@@ -204,74 +204,71 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                     
                     return (
                       <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.03 }}
-                        className={`rounded-xl border-[3px] overflow-hidden transition-all shadow-md ${borderClass}`}
+                      key={idx}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.03 }}
+                      className={`rounded-xl border-[3px] overflow-hidden transition-all shadow-md ${isDark ? 'bg-[#12121a]' : 'bg-white'} ${borderClass}`}
                       >
-                        <div 
-                          className={`px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors ${isExpanded ? 'border-b border-slate-100' : ''}`}
-                          onClick={() => toggleQuestion(idx)}
-                        >
-                          <div className="flex items-center gap-2">
-                            {/* Score/Status Icon - always show score if available */}
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                              hasAIScore 
-                                ? (aiScore >= 7 ? 'bg-emerald-500' : aiScore >= 4 ? 'bg-amber-500' : 'bg-red-500')
-                                : (isCorrect ? 'bg-emerald-500' : 'bg-red-500')
-                            } text-white`}>
-                              {hasAIScore 
-                                ? <span className="text-xs font-bold">{Math.round(aiScore)}</span>
-                                : (isCorrect ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />)
+                      <div 
+                        className={`px-3 py-2 cursor-pointer transition-colors ${isExpanded ? (isDark ? 'border-b border-white/10' : 'border-b border-slate-100') : ''} ${isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
+                        onClick={() => toggleQuestion(idx)}
+                      >
+                        <div className="flex items-center gap-2">
+                          {/* Score/Status Icon - always show score if available */}
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            hasAIScore 
+                              ? (aiScore >= 7 ? 'bg-emerald-500' : aiScore >= 4 ? 'bg-amber-500' : 'bg-red-500')
+                              : (isCorrect ? 'bg-emerald-500' : 'bg-red-500')
+                          } text-white`}>
+                            {hasAIScore 
+                              ? <span className="text-xs font-bold">{Math.round(aiScore)}</span>
+                              : (isCorrect ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />)
+                            }
+                          </div>
+
+                          {/* Explain This Button - FIRST */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const ca = question.correct_answer;
+                              let correctAnswerDisplay = ca;
+                              if (/^[A-Da-d]$/i.test(ca?.trim())) {
+                                const letter = ca.trim().toUpperCase();
+                                const optIdx = letter.charCodeAt(0) - 65;
+                                const opt = question.options?.[optIdx];
+                                const optText = typeof opt === 'string' ? opt : (opt?.text || opt?.label || '');
+                                correctAnswerDisplay = `${letter}. ${optText.replace(/^[A-Da-d][\).\s]+\s*/g, '').trim()}`;
                               }
-                            </div>
-                            
-                            {/* Question Number */}
-                            <span className="font-bold text-slate-900 text-sm">Q{idx + 1}</span>
-                            
-                            {/* Score Badge - always show for practice exams */}
-                            <Badge className={`text-[10px] px-1.5 py-0 border ${hasAIScore ? getScoreColor(aiScore) : (isCorrect ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-red-600 bg-red-50 border-red-200')}`}>
-                              {hasAIScore ? `${Math.round(aiScore)}/10` : (isCorrect ? '10/10' : '0/10')}
+                              handleAskAI(question, question.user_answer, correctAnswerDisplay, isCorrect);
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white rounded-full shadow-md hover:shadow-lg transition-all active:scale-95"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            <span>Explain This</span>
+                          </button>
+
+                          {/* Spacer */}
+                          <div className="flex-1" />
+
+                          {/* Score Badge - top right area */}
+                          <Badge className={`text-[10px] px-1.5 py-0 border ${hasAIScore ? getScoreColor(aiScore) : (isCorrect ? (isDark ? 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30' : 'text-emerald-600 bg-emerald-50 border-emerald-200') : (isDark ? 'text-red-400 bg-red-500/20 border-red-500/30' : 'text-red-600 bg-red-50 border-red-200'))}`}>
+                            {hasAIScore ? `${Math.round(aiScore)}/10` : (isCorrect ? '10/10' : '0/10')}
+                          </Badge>
+
+                          {/* Difficulty Badge */}
+                          {question.difficulty_index && (
+                            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${isDark ? 'text-purple-300 border-purple-500/30 bg-purple-500/20' : 'text-purple-600 border-purple-200 bg-purple-50'}`}>
+                              {question.difficulty_index}
                             </Badge>
-                            
-                            {/* Difficulty Badge */}
-                            {question.difficulty_index && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-purple-600 border-purple-200 bg-purple-50">
-                                {question.difficulty_index}
-                              </Badge>
-                            )}
-                            
-                            {/* Spacer */}
-                            <div className="flex-1" />
-                            
-                            {/* Ask AI Button - inline, same style as questions */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const ca = question.correct_answer;
-                                let correctAnswerDisplay = ca;
-                                if (/^[A-Da-d]$/i.test(ca?.trim())) {
-                                  const letter = ca.trim().toUpperCase();
-                                  const optIdx = letter.charCodeAt(0) - 65;
-                                  const opt = question.options?.[optIdx];
-                                  const optText = typeof opt === 'string' ? opt : (opt?.text || opt?.label || '');
-                                  correctAnswerDisplay = `${letter}. ${optText.replace(/^[A-Da-d][\).\s]+\s*/g, '').trim()}`;
-                                }
-                                handleAskAI(question, question.user_answer, correctAnswerDisplay, isCorrect);
-                              }}
-                              className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white rounded-full shadow-md hover:shadow-lg transition-all active:scale-95"
-                            >
-                              <Sparkles className="w-3 h-3" />
-                              <span className="hidden sm:inline">Ask AI</span>
-                            </button>
-                            
-                            {/* Expand/Collapse */}
-                            <div className={isDark ? "text-slate-500" : "text-slate-400"}>
-                              {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                            </div>
+                          )}
+
+                          {/* Expand/Collapse */}
+                          <div className={isDark ? "text-slate-500" : "text-slate-400"}>
+                            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                           </div>
                         </div>
+                      </div>
 
                         <AnimatePresence>
                           {isExpanded && (
@@ -281,9 +278,9 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                               exit={{ height: 0, opacity: 0 }}
                               transition={{ duration: 0.2 }}
                             >
-                              <div className="p-3 bg-slate-50/50 space-y-3">
-                                <div className="bg-white rounded-xl p-3 border border-slate-200">
-                                  <MathText className="text-slate-800 font-medium text-xs leading-relaxed">
+                              <div className={`p-3 space-y-3 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50/50'}`}>
+                                <div className={`rounded-xl p-3 border ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
+                                  <MathText className={`font-medium text-xs leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                                     {question.question_text}
                                   </MathText>
                                   {question.options && question.options.length > 0 && (
@@ -293,10 +290,11 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                                         if (typeof opt === 'string') {
                                           optionText = opt;
                                         } else if (opt && typeof opt === 'object') {
-                                          optionText = opt.text || opt.label || opt.value || opt.content || JSON.stringify(opt);
+                                          optionText = opt.text || opt.label || opt.value || opt.content || '';
                                         } else {
                                           optionText = String(opt);
                                         }
+                                        if (!optionText) return null;
                                         return (
                                           <MathText key={i} className={`text-xs block py-0.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`} inline>
                                             <span className={`font-bold w-5 inline-block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{String.fromCharCode(65 + i)}.</span> {optionText}
@@ -308,23 +306,23 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
-                                  <div className="bg-blue-50 p-2 rounded-xl border border-blue-100">
-                                    <p className="text-[10px] font-bold text-blue-700 uppercase mb-1">Your Answer</p>
-                                    <MathText className="text-xs text-slate-800 font-medium">
+                                  <div className={`p-2 rounded-xl border ${isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-100'}`}>
+                                    <p className={`text-[10px] font-bold uppercase mb-1 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>Your Answer</p>
+                                    <MathText className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                                       {(() => {
                                         const ua = question.user_answer;
                                         if (!ua) return "No answer";
                                         // If user answer is an object, extract meaningful text
                                         if (typeof ua === 'object') {
-                                          return ua.text || ua.label || ua.value || JSON.stringify(ua);
+                                          return ua.text || ua.label || ua.value || '';
                                         }
                                         return ua;
                                       })()}
                                     </MathText>
                                   </div>
-                                  <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-100">
-                                    <p className="text-[10px] font-bold text-emerald-700 uppercase mb-1">Answer</p>
-                                    <MathText className="text-xs text-slate-800 font-medium">
+                                  <div className={`p-2 rounded-xl border ${isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-100'}`}>
+                                    <p className={`text-[10px] font-bold uppercase mb-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Answer</p>
+                                    <MathText className={`text-xs font-medium ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                                       {(() => {
                                         const ca = question.correct_answer;
                                         if (!ca) return "N/A";
@@ -453,7 +451,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-4 border border-slate-200 max-w-md mx-auto"
+          className={`rounded-2xl p-4 border max-w-md mx-auto ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200'}`}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -461,9 +459,9 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
               <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>AI Prediction Confidence</span>
             </div>
             <Badge className={`text-[10px] ${
-              confidenceLevel === 'High' ? 'bg-emerald-100 text-emerald-700' :
-              confidenceLevel === 'Medium' ? 'bg-amber-100 text-amber-700' :
-              'bg-red-100 text-red-700'
+              confidenceLevel === 'High' ? (isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700') :
+              confidenceLevel === 'Medium' ? (isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700') :
+              (isDark ? 'bg-red-500/20 text-red-300' : 'bg-red-100 text-red-700')
             }`}>
               {confidenceLevel} Data
             </Badge>
@@ -600,7 +598,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
-                      className={`rounded-xl border-[3px] overflow-hidden transition-all shadow-md bg-white ${borderClass}`}
+                      className={`rounded-xl border-[3px] overflow-hidden transition-all shadow-md ${isDark ? 'bg-[#12121a]' : 'bg-white'} ${borderClass}`}
                     >
                       {/* Question Header - Compact single row */}
                       <div 
@@ -625,48 +623,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                             )}
                           </div>
                           
-                          {/* Question Number */}
-                          <span className={`font-bold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                            Q{question.question_number}
-                          </span>
-                          
-                          {/* Score Badge */}
-                          {hasAIScore ? (
-                            <Badge className={`text-[10px] px-1.5 py-0 border ${getScoreColor(aiScore)}`}>
-                              {aiScore}/10
-                            </Badge>
-                          ) : (
-                            <Badge className={`text-[10px] px-1.5 py-0 border ${feedback.is_correct ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-red-600 bg-red-50 border-red-200'}`}>
-                              {feedback.points_earned}/10
-                            </Badge>
-                          )}
-                          
-                          {/* Question Type */}
-                          {question.question_type && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-slate-50 text-slate-600 border-slate-200 hidden sm:inline-flex">
-                              {question.question_type}
-                            </Badge>
-                          )}
-                          
-                          {/* Difficulty */}
-                          {question.difficulty_index && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-50 text-purple-600 border-purple-200">
-                              {question.difficulty_index}
-                            </Badge>
-                          )}
-                          
-                          {/* Time */}
-                          {questionTime > 0 && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-slate-100 text-slate-600 hidden sm:inline-flex">
-                              <Clock className="w-3 h-3 mr-1" />
-                              {formatTime(questionTime)}
-                            </Badge>
-                          )}
-                          
-                          {/* Spacer */}
-                          <div className="flex-1" />
-                          
-                          {/* Ask AI Button - same style as questions */}
+                          {/* Explain This Button - FIRST */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -684,8 +641,36 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                             className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white rounded-full shadow-md hover:shadow-lg transition-all active:scale-95"
                           >
                             <Sparkles className="w-3 h-3" />
-                            <span className="hidden sm:inline">Ask AI</span>
+                            <span>Explain This</span>
                           </button>
+                          
+                          {/* Spacer */}
+                          <div className="flex-1" />
+                          
+                          {/* Score Badge - top right area */}
+                          {hasAIScore ? (
+                            <Badge className={`text-[10px] px-1.5 py-0 border ${getScoreColor(aiScore)}`}>
+                              {aiScore}/10
+                            </Badge>
+                          ) : (
+                            <Badge className={`text-[10px] px-1.5 py-0 border ${feedback.is_correct ? (isDark ? 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30' : 'text-emerald-600 bg-emerald-50 border-emerald-200') : (isDark ? 'text-red-400 bg-red-500/20 border-red-500/30' : 'text-red-600 bg-red-50 border-red-200')}`}>
+                              {feedback.points_earned}/10
+                            </Badge>
+                          )}
+                          
+                          {/* Question Type */}
+                          {question.question_type && (
+                            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 hidden sm:inline-flex ${isDark ? 'bg-white/5 text-slate-400 border-white/10' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                              {question.question_type}
+                            </Badge>
+                          )}
+                          
+                          {/* Difficulty */}
+                          {question.difficulty_index && (
+                            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${isDark ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-50 text-purple-600 border-purple-200'}`}>
+                              {question.difficulty_index}
+                            </Badge>
+                          )}
                           
                           {/* Expand/Collapse */}
                           <div className={isDark ? "text-slate-500" : "text-slate-400"}>

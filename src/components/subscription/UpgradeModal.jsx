@@ -137,14 +137,42 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
             <div className="text-center">
               <div className="text-5xl mb-3">{limitInfo.icon}</div>
               <h2 className="text-xl font-bold text-white mb-2">{limitInfo.title}</h2>
-              <p className="text-purple-200 text-sm">{limitInfo.description}</p>
+              <p className="text-purple-200 text-sm mb-3">{limitInfo.description}</p>
+              <p className="text-white/80 text-xs font-medium">Join 10,000+ students locking in their A+ this semester</p>
             </div>
           </div>
 
           {/* Content */}
           <div className={`p-6 -mt-4 rounded-t-3xl relative ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+            {/* Features */}
+            <div className={`rounded-xl p-4 mb-5 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
+              <p className={`text-[10px] font-bold uppercase tracking-wide mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>What you get</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited uploads</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited study tasks</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited AI messages</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Advanced AI forensics</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Personalized study roadmap</span>
+                </div>
+              </div>
+            </div>
+
             {/* Plan Selection */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-5">
               {/* Yearly Plan */}
               <button
                 onClick={() => setSelectedPlan('yearly')}
@@ -155,7 +183,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
                 }`}
               >
                 <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-                  SAVE 50%
+                  29% OFF
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -171,7 +199,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
                   </div>
                   <div className="text-right">
                     <p className={`font-bold text-lg ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>$4.99<span className="text-xs font-normal">/mo</span></p>
-                    <p className={`text-[10px] line-through ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>$9.99/mo</p>
+                    <p className={`text-[10px] line-through ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>$6.99/mo</p>
                   </div>
                 </div>
               </button>
@@ -198,33 +226,10 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`font-bold text-lg ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>$9.99<span className="text-xs font-normal">/mo</span></p>
+                    <p className={`font-bold text-lg ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>$6.99<span className="text-xs font-normal">/mo</span></p>
                   </div>
                 </div>
               </button>
-            </div>
-
-            {/* Features */}
-            <div className={`rounded-xl p-3 mb-4 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
-              <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>What you get</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center gap-1.5">
-                  <Infinity className="w-3 h-3 text-purple-500" />
-                  <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Unlimited uploads</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Infinity className="w-3 h-3 text-purple-500" />
-                  <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Unlimited tasks</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Infinity className="w-3 h-3 text-purple-500" />
-                  <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Unlimited AI</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3 text-purple-500" />
-                  <span className={`text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>AI Forensics</span>
-                </div>
-              </div>
             </div>
 
             {/* CTA */}
