@@ -102,8 +102,10 @@ Deno.serve(async (req) => {
               .map(b => b.toString(16).padStart(2, '0'))
               .join('');
             
-            // TikTok Events API v1.3 format
+            // TikTok Events API v1.3 format - event_source_id is REQUIRED at event level
             const eventData = {
+              event_source: "web",
+              event_source_id: tiktokPixelId,
               event: "Subscribe",
               event_id: `subscribe_${user.id}_${Date.now()}`,
               event_time: Math.floor(Date.now() / 1000),

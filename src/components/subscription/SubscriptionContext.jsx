@@ -44,28 +44,28 @@ export function SubscriptionProvider({ children }) {
     
     const now = new Date();
     
-    // Check for active subscription with valid dates
-    if (user.subscription_tier === 'pro' && user.subscription_status === 'active') {
-      // Check promo access expiry first
-      if (user.promo_access_until) {
-        const promoExpiry = new Date(user.promo_access_until);
-        if (promoExpiry < now) {
-          return false; // Promo expired
-        }
-        return true; // Promo still valid
+    // Must have pro tier AND active status
+    if (user.subscription_tier !== 'pro') return false;
+    if (user.subscription_status !== 'active') return false;
+    
+    // Check promo access expiry first
+    if (user.promo_access_until) {
+      const promoExpiry = new Date(user.promo_access_until);
+      if (promoExpiry < now) {
+        return false; // Promo expired
       }
-      
-      // Check subscription end date for paid subscriptions
-      if (user.subscription_end_date) {
-        const subExpiry = new Date(user.subscription_end_date);
-        if (subExpiry < now) {
-          return false; // Subscription expired
-        }
-      }
-      
-      return true;
+      return true; // Promo still valid
     }
-    return false;
+    
+    // Check subscription end date for paid subscriptions
+    if (user.subscription_end_date) {
+      const subExpiry = new Date(user.subscription_end_date);
+      if (subExpiry < now) {
+        return false; // Subscription expired
+      }
+    }
+    
+    return true;
   };
 
   // Get remaining promo days

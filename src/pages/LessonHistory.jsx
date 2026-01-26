@@ -45,45 +45,23 @@ export default function LessonHistory() {
     staleTime: 30 * 1000,
   });
 
-  const visibleLessonIds = React.useMemo(() => lessons.slice(0, 20).map(l => l.id), [lessons]);
-
+  // Batch fetch all related data in single queries to avoid rate limiting
   const { data: allExams = [] } = useQuery({
-    queryKey: ['exams-history', visibleLessonIds],
-    queryFn: async () => {
-      if (visibleLessonIds.length === 0) return [];
-      const examPromises = visibleLessonIds.map(id =>
-        base44.entities.Exam.filter({ lesson_id: id }).catch(() => [])
-      );
-      return (await Promise.all(examPromises)).flat();
-    },
-    enabled: visibleLessonIds.length > 0,
-    staleTime: 30 * 1000,
+    queryKey: ['exams-history-all'],
+    queryFn: () => base44.entities.Exam.list('-created_date', 200),
+    staleTime: 60 * 1000,
   });
 
   const { data: allFlashcards = [] } = useQuery({
-    queryKey: ['flashcards-history', visibleLessonIds],
-    queryFn: async () => {
-      if (visibleLessonIds.length === 0) return [];
-      const flashcardPromises = visibleLessonIds.map(id =>
-        base44.entities.Flashcard.filter({ lesson_id: id }).catch(() => [])
-      );
-      return (await Promise.all(flashcardPromises)).flat();
-    },
-    enabled: visibleLessonIds.length > 0,
-    staleTime: 30 * 1000,
+    queryKey: ['flashcards-history-all'],
+    queryFn: () => base44.entities.Flashcard.list('-created_date', 500),
+    staleTime: 60 * 1000,
   });
 
   const { data: allStudyPlans = [] } = useQuery({
-    queryKey: ['study-plans-history', visibleLessonIds],
-    queryFn: async () => {
-      if (visibleLessonIds.length === 0) return [];
-      const planPromises = visibleLessonIds.map(id =>
-        base44.entities.StudyPlan.filter({ lesson_id: id }).catch(() => [])
-      );
-      return (await Promise.all(planPromises)).flat();
-    },
-    enabled: visibleLessonIds.length > 0,
-    staleTime: 30 * 1000,
+    queryKey: ['study-plans-history-all'],
+    queryFn: () => base44.entities.StudyPlan.list('-created_date', 100),
+    staleTime: 60 * 1000,
   });
 
   const isLoading = lessonsLoading || assignmentsLoading;
