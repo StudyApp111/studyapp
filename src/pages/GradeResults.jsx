@@ -10,9 +10,11 @@ import {
   ChevronDown, Loader2, AlertTriangle, Sparkles, Award
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function GradeResults() {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [assignment, setAssignment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState({});
@@ -62,7 +64,7 @@ export default function GradeResults() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center">
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
         <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
       </div>
     );
@@ -132,7 +134,7 @@ export default function GradeResults() {
       </motion.div>
 
       {/* Content Section - White Background */}
-      <div className="bg-white rounded-t-3xl min-h-[50vh] px-4 pt-6 pb-8">
+      <div className={`rounded-t-3xl min-h-[50vh] px-4 pt-6 pb-8 ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
         <div className="max-w-lg mx-auto space-y-6">
           
           {/* Summary */}
@@ -143,7 +145,7 @@ export default function GradeResults() {
               transition={{ delay: 0.1 }}
               className="text-center"
             >
-              <p className="text-slate-600 leading-relaxed text-sm">{result.overall_performance_summary}</p>
+              <p className={`leading-relaxed text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{result.overall_performance_summary}</p>
             </motion.div>
           )}
 
@@ -159,13 +161,13 @@ export default function GradeResults() {
                 <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
                   <CheckCircle2 className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-bold text-emerald-800">Strengths</h3>
+                <h3 className={`font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>Strengths</h3>
               </div>
               <ul className="space-y-2">
                 {result.identified_strengths.map((strength, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 flex-shrink-0" />
-                    <span className="text-sm text-emerald-700">{strength}</span>
+                    <div className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${isDark ? 'bg-emerald-400' : 'bg-emerald-500'}`} />
+                    <span className={`text-sm ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>{strength}</span>
                   </li>
                 ))}
               </ul>
@@ -184,13 +186,13 @@ export default function GradeResults() {
                 <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-bold text-amber-800">Areas to Improve</h3>
+                <h3 className={`font-bold ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Areas to Improve</h3>
               </div>
               <ul className="space-y-2">
                 {result.areas_for_improvement.map((area, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 flex-shrink-0" />
-                    <span className="text-sm text-amber-700">{area}</span>
+                    <div className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${isDark ? 'bg-amber-400' : 'bg-amber-500'}`} />
+                    <span className={`text-sm ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>{area}</span>
                   </li>
                 ))}
               </ul>
@@ -208,7 +210,7 @@ export default function GradeResults() {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
                   <Award className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-bold text-slate-900">Rubric Breakdown</h3>
+                <h3 className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Rubric Breakdown</h3>
               </div>
               <div className="space-y-3">
                 {result.rubric_breakdown.map((item, idx) => {
@@ -221,19 +223,19 @@ export default function GradeResults() {
                   };
                   
                   return (
-                    <div key={idx} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                    <div key={idx} className={`rounded-2xl p-4 border shadow-sm ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100'}`}>
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-slate-900 text-sm mb-1">{item.criterion}</h4>
+                          <h4 className={`font-semibold text-sm mb-1 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{item.criterion}</h4>
                           {item.comments && (
-                            <p className="text-xs text-slate-500 leading-relaxed">{item.comments}</p>
+                            <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{item.comments}</p>
                           )}
                         </div>
                         <div className={`ml-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${getScoreColor()} flex-shrink-0`}>
                           <span className="text-sm font-black text-white">{item.score}/{item.max_score}</span>
                         </div>
                       </div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
                         <div 
                           className={`h-full bg-gradient-to-r ${getScoreColor()} rounded-full transition-all`}
                           style={{ width: `${percentage}%` }}
@@ -257,7 +259,7 @@ export default function GradeResults() {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="font-bold text-slate-900">Section Feedback</h3>
+                <h3 className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Section Feedback</h3>
               </div>
               <div className="space-y-3">
                 {result.detailed_feedback_by_section.map((section, idx) => {
@@ -267,10 +269,10 @@ export default function GradeResults() {
                     : 0;
                   
                   return (
-                    <div key={idx} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div key={idx} className={`rounded-2xl border shadow-sm overflow-hidden ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100'}`}>
                       <button
                         onClick={() => toggleSection(idx)}
-                        className="w-full p-4 text-left hover:bg-slate-50 transition-colors"
+                        className={`w-full p-4 text-left transition-colors ${isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -284,16 +286,16 @@ export default function GradeResults() {
                               <span className="text-sm font-black">{Math.round(percentage)}%</span>
                             </div>
                             <div className="min-w-0">
-                              <h4 className="font-semibold text-slate-900 text-sm truncate">{section.section_name}</h4>
-                              <p className="text-[11px] text-slate-500">
+                              <h4 className={`font-semibold text-sm truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{section.section_name}</h4>
+                              <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                                 {section.points_earned}/{section.points_possible} points
                               </p>
                             </div>
                           </div>
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-transform ${
-                            isExpanded ? 'bg-purple-100 rotate-180' : 'bg-slate-100'
+                            isExpanded ? (isDark ? 'bg-purple-600/30 rotate-180' : 'bg-purple-100 rotate-180') : (isDark ? 'bg-white/10' : 'bg-slate-100')
                           }`}>
-                            <ChevronDown className={`w-4 h-4 ${isExpanded ? 'text-purple-600' : 'text-slate-400'}`} />
+                            <ChevronDown className={`w-4 h-4 ${isExpanded ? (isDark ? 'text-purple-400' : 'text-purple-600') : (isDark ? 'text-slate-500' : 'text-slate-400')}`} />
                           </div>
                         </div>
                       </button>
@@ -305,12 +307,12 @@ export default function GradeResults() {
                             exit={{ height: 0, opacity: 0 }}
                             className="border-t border-slate-100"
                           >
-                            <div className="p-4 bg-gradient-to-b from-slate-50 to-white">
-                              <p className="text-sm text-slate-700 leading-relaxed mb-3">{section.feedback}</p>
+                            <div className={`p-4 ${isDark ? 'bg-gradient-to-b from-white/5 to-[#12121a]' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
+                              <p className={`text-sm leading-relaxed mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{section.feedback}</p>
                               {section.competencies_assessed?.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5">
-                                  {section.competencies_assessed.map((comp, cidx) => (
-                                    <span key={cidx} className="text-[10px] font-medium bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                {section.competencies_assessed.map((comp, cidx) => (
+                                  <span key={cidx} className={`text-[10px] font-medium px-2 py-1 rounded-full ${isDark ? 'bg-purple-600/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
                                       {comp}
                                     </span>
                                   ))}

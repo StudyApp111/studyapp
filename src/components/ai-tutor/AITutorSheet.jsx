@@ -6,12 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useAITutor } from "./AITutorContext";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 import { renderMathContent } from "@/components/utils/MathRenderer";
 
 export default function AITutorSheet() {
   const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
   const { canSendAIMessage, incrementAIMessageCount, triggerUpgradeModal } = useSubscription();
+  const { isDark } = useTheme();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasUsedInitialPrompt, setHasUsedInitialPrompt] = useState(false);
@@ -130,7 +132,7 @@ export default function AITutorSheet() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            className="fixed left-0 right-0 bottom-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl md:left-auto md:right-4 md:bottom-4 md:w-[400px] md:h-[600px] md:rounded-2xl"
+            className={`fixed left-0 right-0 bottom-0 z-[9999] rounded-t-3xl flex flex-col overflow-hidden shadow-2xl md:left-auto md:right-4 md:bottom-4 md:w-[400px] md:h-[600px] md:rounded-2xl ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}
             style={{ height: '75vh', maxHeight: 'calc(100vh - 60px)' }}
           >
             {/* Header */}
@@ -158,11 +160,11 @@ export default function AITutorSheet() {
 
             {/* Context Preview */}
             {context && (context.question || context.flashcard || context.selectedText) && (
-              <div className="px-4 py-2 bg-purple-50 border-b border-purple-100">
-                <div className="text-[10px] text-purple-600 font-medium mb-1">
+              <div className={`px-4 py-2 border-b ${isDark ? 'bg-purple-600/20 border-purple-500/30' : 'bg-purple-50 border-purple-100'}`}>
+                <div className={`text-[10px] font-medium mb-1 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
                   {context.type === "question" ? "📝 Question:" : context.type === "flashcard" ? "🎴 Flashcard:" : "📄 Selected text:"}
                 </div>
-                <p className="text-xs text-slate-700 line-clamp-2">
+                <p className={`text-xs line-clamp-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                   {context.question?.text || context.flashcard?.question || context.selectedText}
                 </p>
               </div>
@@ -181,7 +183,7 @@ export default function AITutorSheet() {
                     className={`max-w-[85%] rounded-2xl px-3 py-2 ${
                       msg.role === "user"
                         ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-md"
-                        : "bg-slate-100 text-slate-800"
+                        : isDark ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-800"
                     }`}
                   >
                     {msg.role === "assistant" ? (
@@ -219,7 +221,7 @@ export default function AITutorSheet() {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-slate-100 rounded-2xl px-4 py-3">
+                  <div className={`rounded-2xl px-4 py-3 ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
                     <div className="flex gap-1">
                       <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-2 h-2 bg-purple-600 rounded-full" />
                       <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-2 h-2 bg-purple-600 rounded-full" />
@@ -236,25 +238,25 @@ export default function AITutorSheet() {
               <div className="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide">
                 <button
                   onClick={() => handleSend("Explain this material like I'm 5 years old - super simple!")}
-                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${isDark ? 'bg-purple-600/20 text-purple-300 hover:bg-purple-600/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}
                 >
                   Explain like I'm 5
                 </button>
                 <button
                   onClick={() => handleSend("Give me a real-world example of the main concept")}
-                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${isDark ? 'bg-purple-600/20 text-purple-300 hover:bg-purple-600/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}
                 >
                   Give me an example
                 </button>
                 <button
                   onClick={() => handleSend("Why is this material important? When would I use it?")}
-                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${isDark ? 'bg-purple-600/20 text-purple-300 hover:bg-purple-600/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}
                 >
                   Why is this important?
                 </button>
                 <button
                   onClick={() => handleSend("Quiz me with 3 questions on this material")}
-                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-medium whitespace-nowrap transition-colors ${isDark ? 'bg-purple-600/20 text-purple-300 hover:bg-purple-600/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}
                 >
                   Quiz Me
                 </button>
@@ -262,7 +264,7 @@ export default function AITutorSheet() {
             )}
 
             {/* Input */}
-            <div className="border-t border-slate-200 p-3 bg-white flex-shrink-0">
+            <div className={`border-t p-3 flex-shrink-0 ${isDark ? 'border-white/10 bg-[#12121a]' : 'border-slate-200 bg-white'}`}>
               <div className="flex gap-2">
                 <input
                   ref={inputRef}
@@ -271,7 +273,7 @@ export default function AITutorSheet() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSend()}
                   placeholder="Ask a follow-up question..."
-                  className="flex-1 px-4 py-2.5 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className={`flex-1 px-4 py-2.5 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 ${isDark ? 'border-white/10 bg-white/5 text-slate-200 placeholder:text-slate-500' : 'border-slate-200 bg-white text-slate-900'}`}
                 />
                 <Button
                   onClick={() => handleSend()}

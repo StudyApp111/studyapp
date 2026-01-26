@@ -8,6 +8,7 @@ import { Skull, Zap, X, Check, Sparkles, Lock, Infinity, Gift, Loader2, CheckCir
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useSubscription } from './SubscriptionContext';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 const LIMIT_MESSAGES = {
   uploads: {
@@ -50,6 +51,7 @@ const LIMIT_MESSAGES = {
 export default function UpgradeModal({ open, onOpenChange, reason = 'default' }) {
   const navigate = useNavigate();
   const { refreshUser } = useSubscription();
+  const { isDark } = useTheme();
   const limitInfo = LIMIT_MESSAGES[reason] || LIMIT_MESSAGES.default;
   
   const [showPromoInput, setShowPromoInput] = useState(false);
@@ -126,26 +128,26 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
           </div>
 
           {/* Content */}
-          <div className="bg-white p-6 -mt-4 rounded-t-3xl relative">
+          <div className={`p-6 -mt-4 rounded-t-3xl relative ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
             {/* Comparison */}
             <div className="grid grid-cols-2 gap-3 mb-6">
               {/* Free Tier */}
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+              <div className={`rounded-xl p-4 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                 <div className="flex items-center gap-2 mb-3">
-                  <Skull className="w-5 h-5 text-slate-500" />
-                  <span className="font-bold text-slate-700 text-sm">Good Luck</span>
+                  <Skull className={`w-5 h-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                  <span className={`font-bold text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Good Luck</span>
                 </div>
-                <ul className="space-y-2 text-xs text-slate-600">
+                <ul className={`space-y-2 text-xs ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                   <li className="flex items-center gap-2">
-                    <span className="text-slate-400">2</span> uploads/week
+                    <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>2</span> uploads/week
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-slate-400">1</span> task/day
+                    <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>1</span> task/day
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-slate-400">10</span> AI msgs/day
+                    <span className={isDark ? 'text-slate-500' : 'text-slate-400'}>10</span> AI msgs/day
                   </li>
-                  <li className="flex items-center gap-2 text-slate-400">
+                  <li className={`flex items-center gap-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                     <Lock className="w-3 h-3" /> Basic prediction
                   </li>
                 </ul>
@@ -186,12 +188,12 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
               Upgrade to Locked In
             </Button>
 
-            <p className="text-center text-xs text-slate-400 mt-3">
+            <p className={`text-center text-xs mt-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
               Starting at $4.99/mo • Cancel anytime
             </p>
 
             {/* Promo Code Section */}
-            <div className="mt-4 pt-4 border-t border-slate-100">
+            <div className={`mt-4 pt-4 border-t ${isDark ? 'border-white/10' : 'border-slate-100'}`}>
               <AnimatePresence mode="wait">
                 {!showPromoInput ? (
                   <motion.button
@@ -200,7 +202,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setShowPromoInput(true)}
-                    className="w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-purple-600 transition-colors py-2"
+                    className={`w-full flex items-center justify-center gap-2 text-sm transition-colors py-2 ${isDark ? 'text-slate-400 hover:text-purple-400' : 'text-slate-500 hover:text-purple-600'}`}
                   >
                     <Gift className="w-4 h-4" />
                     Have a promo code?

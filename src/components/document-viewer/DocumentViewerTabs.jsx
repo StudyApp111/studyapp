@@ -8,6 +8,7 @@ import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles
 import NotesTab from "./NotesTab";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 const HIGHLIGHT_COLORS = {
   yellow: { bg: '#fef08a', border: '#fde047', name: 'Yellow' },
@@ -18,6 +19,7 @@ const HIGHLIGHT_COLORS = {
 };
 
 export default function DocumentViewerTabs({ lesson }) {
+  const { isDark } = useTheme();
   const hasFile = !!lesson?.file_url;
   const [viewMode, setViewMode] = useState(hasFile ? "pdf" : "transcript");
   const [searchQuery, setSearchQuery] = useState("");
@@ -318,18 +320,18 @@ export default function DocumentViewerTabs({ lesson }) {
 
   return (
     <div className="w-full">
-      <Card className="bg-white/90 border-purple-200 backdrop-blur-xl shadow-xl overflow-hidden mx-2 md:mx-0 md:h-full">
+      <Card className={`backdrop-blur-xl shadow-xl overflow-hidden mx-2 md:mx-0 md:h-full ${isDark ? 'bg-[#12121a]/90 border-purple-500/30' : 'bg-white/90 border-purple-200'}`}>
         <div className="flex flex-col">
           {/* Header with Controls */}
-          <div className="border-b border-purple-200 px-3 py-2">
+          <div className={`border-b px-3 py-2 ${isDark ? 'border-white/10' : 'border-purple-200'}`}>
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+              <div className={`flex items-center rounded-lg p-0.5 ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
                 {hasFile && (
                   <Button
                     variant={viewMode === "pdf" ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("pdf")}
-                    className={`text-xs h-7 px-3 ${viewMode === "pdf" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+                    className={`text-xs h-7 px-3 ${viewMode === "pdf" ? (isDark ? "bg-white/20 shadow-sm text-white" : "bg-white shadow-sm text-slate-900") : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900")}`}
                   >
                     <FileText className="w-3 h-3 mr-1" />
                     PDF
@@ -339,7 +341,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   variant={viewMode === "transcript" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("transcript")}
-                  className={`text-xs h-7 px-3 ${viewMode === "transcript" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+                  className={`text-xs h-7 px-3 ${viewMode === "transcript" ? (isDark ? "bg-white/20 shadow-sm text-white" : "bg-white shadow-sm text-slate-900") : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900")}`}
                 >
                   <Highlighter className="w-3 h-3 mr-1" />
                   Annotate
@@ -348,7 +350,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   variant={viewMode === "notes" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("notes")}
-                  className={`text-xs h-7 px-3 ${viewMode === "notes" ? "bg-white shadow-sm text-slate-900" : "text-slate-600 hover:text-slate-900"}`}
+                  className={`text-xs h-7 px-3 ${viewMode === "notes" ? (isDark ? "bg-white/20 shadow-sm text-white" : "bg-white shadow-sm text-slate-900") : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900")}`}
                 >
                   <StickyNote className="w-3 h-3 mr-1" />
                   Notes
@@ -379,7 +381,7 @@ export default function DocumentViewerTabs({ lesson }) {
             </div>
             
             {viewMode === "transcript" && (
-              <p className="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1">
+              <p className={`text-[10px] mt-1.5 flex items-center gap-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 <Highlighter className="w-3 h-3" />
                 Select text to highlight, add notes, or ask AI
               </p>
@@ -390,7 +392,7 @@ export default function DocumentViewerTabs({ lesson }) {
           <div className="relative md:flex-1 md:overflow-hidden" style={{ minHeight: '70vh' }}>
             {/* PDF View */}
             {hasFile && viewMode === "pdf" && (
-              <div className="w-full bg-slate-50" style={{ height: '70vh' }}>
+              <div className={`w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ height: '70vh' }}>
                 {isPDF || isOfficeDoc ? (
                   <>
                     {!pdfLoaded && !pdfError && (
@@ -468,12 +470,12 @@ export default function DocumentViewerTabs({ lesson }) {
               <div className="w-full min-h-[70vh] flex flex-col md:flex-row overflow-hidden">
                 <div 
                   ref={contentRef}
-                  className={`flex-1 p-4 bg-slate-50 overflow-y-auto ${activeAnnotation ? 'md:w-2/3' : 'w-full'}`}
+                  className={`flex-1 p-4 overflow-y-auto ${activeAnnotation ? 'md:w-2/3' : 'w-full'} ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}
                   style={{ maxHeight: '70vh' }}
                   onMouseUp={handleTextSelection}
                 >
                   <div 
-                    className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words prose prose-sm"
+                    className={`text-sm leading-relaxed whitespace-pre-wrap break-words prose prose-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}
                     style={{ wordBreak: 'break-word', maxWidth: '100%', overflowWrap: 'anywhere' }}
                   >
                     {renderHighlightedContent()}
@@ -481,10 +483,10 @@ export default function DocumentViewerTabs({ lesson }) {
                 </div>
               
               {activeAnnotation && (
-                <div className="hidden md:block w-1/3 border-l border-purple-200 bg-white p-4">
+                <div className={`hidden md:block w-1/3 border-l p-4 ${isDark ? 'border-white/10 bg-[#12121a]' : 'border-purple-200 bg-white'}`}>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-sm text-slate-900">Annotation</h3>
+                      <h3 className={`font-semibold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Annotation</h3>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -507,12 +509,12 @@ export default function DocumentViewerTabs({ lesson }) {
                     </div>
                     
                     {activeAnnotation.note ? (
-                      <div className="bg-slate-50 p-2 rounded-lg">
-                        <p className="text-xs font-medium text-slate-600 mb-1">Note:</p>
-                        <p className="text-sm text-slate-700">{activeAnnotation.note}</p>
+                      <div className={`p-2 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
+                        <p className={`text-xs font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Note:</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{activeAnnotation.note}</p>
                       </div>
                     ) : (
-                      <p className="text-xs text-slate-400 italic">No note added</p>
+                      <p className={`text-xs italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>No note added</p>
                     )}
                     
                     <div className="flex gap-2 pt-2">
