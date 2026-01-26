@@ -710,9 +710,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             let actualCount = task.completed_count || 0;
             let displayText = '';
             
-            if (task.task_type === 'flashcards' && live.mastered !== undefined) {
-              actualCount = Math.max(actualCount, live.mastered);
-              displayText = `${actualCount} / ${task.target_count || 10} mastered`;
+            if (task.task_type === 'flashcards') {
+              // Flashcards track reviewed cards (any card that has been seen)
+              actualCount = task.completed_count || 0;
+              if (live.reviewed !== undefined && live.reviewed > actualCount) {
+                actualCount = live.reviewed;
+              }
+              const targetCount = task.target_count || 10;
+              displayText = `${actualCount} / ${targetCount} reviewed`;
             } else if (task.task_type === 'teach_it') {
               // TeachIt tracks completed cards (any answered card counts)
               actualCount = task.completed_count || 0;
