@@ -437,12 +437,12 @@ export default function DocumentViewer() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 overflow-x-hidden w-full">
+    <div className="min-h-screen bg-[#0a0a12] overflow-x-hidden w-full">
 
       
       {/* Desktop Header - Unified Purple Banner */}
       <div className="hidden md:block sticky top-0 z-10 w-full">
-        <div className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-600 px-4 py-2.5 shadow-lg">
+        <div className="bg-gradient-to-r from-purple-800 via-purple-700 to-indigo-700 px-4 py-2.5 shadow-lg">
           <div className="flex items-center justify-between gap-4">
             {/* Left: Back + Course Name */}
             <div className="flex items-center gap-3 flex-shrink-0 min-w-0">
@@ -532,35 +532,34 @@ export default function DocumentViewer() {
           <div className="flex-1 min-w-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
               <div className="flex-shrink-0">
-                <TabsList className="flex w-full bg-white border border-purple-200 p-1 gap-1 h-auto rounded-lg">
-                  {hasDocument ? (
+                <TabsList className="flex w-full bg-[#1a1a2e] border border-white/10 p-1 gap-1 h-auto rounded-lg">
+                  {hasDocument && (
                     <TabsTrigger 
                       value="doc"
-                      className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
+                      className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
                     >
                       <FileText className="w-4 h-4 flex-shrink-0" />
                       <span className="text-xs font-medium">Doc</span>
                     </TabsTrigger>
-                  ) : (
-                    <TabsTrigger 
-                      value="notes"
-                      className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
-                    >
-                      <StickyNote className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-xs font-medium">Notes</span>
-                    </TabsTrigger>
                   )}
                   <TabsTrigger 
                     value="studyplan"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
                     {showStudyPlanDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Target className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Plan</span>
+                    <span className="text-xs font-medium">Study Plan</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="notes"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md"
+                  >
+                    <StickyNote className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Notes</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="teachit"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
                     {showTeachItDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Brain className="w-4 h-4 flex-shrink-0" />
@@ -568,7 +567,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
                     {showFlashcardsDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <BookMarked className="w-4 h-4 flex-shrink-0" />
@@ -576,7 +575,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
+                    className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md"
                   >
                     {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Zap className="w-4 h-4 flex-shrink-0" />
@@ -586,6 +585,16 @@ export default function DocumentViewer() {
               </div>
 
               <div className="w-full flex-1 overflow-auto">
+                {hasDocument && (
+                  <TabsContent value="doc" className="mt-0 p-0 h-full">
+                    {!lesson ? (
+                      <ParsingLoader />
+                    ) : (
+                      <DocumentViewerTabs lesson={lesson} />
+                    )}
+                  </TabsContent>
+                )}
+
                 <TabsContent value="studyplan" className="mt-0 p-0 h-full">
                   <StudyPlanTab 
                     lesson={lesson} 
@@ -593,14 +602,6 @@ export default function DocumentViewer() {
                     onNavigate={handleStudyPlanNavigate}
                     isGeneratingPlan={isGeneratingStudyPlan}
                   />
-                </TabsContent>
-
-                <TabsContent value="doc" className="mt-0 p-0 h-full">
-                  {!lesson ? (
-                    <ParsingLoader />
-                  ) : (
-                    <DocumentViewerTabs lesson={lesson} />
-                  )}
                 </TabsContent>
 
                 <TabsContent value="notes" className="mt-0 p-0 h-full">
@@ -631,7 +632,7 @@ export default function DocumentViewer() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full overflow-x-hidden flex-1">
             {/* Fixed tabs + info bar */}
             <div 
-              className="fixed left-0 right-0 z-40 bg-gradient-to-r from-purple-600 to-purple-700"
+              className="fixed left-0 right-0 z-40 bg-gradient-to-r from-purple-800 to-purple-700"
               style={{ 
                 top: '0px',
                 paddingTop: 'env(safe-area-inset-top, 0px)'
@@ -647,36 +648,35 @@ export default function DocumentViewer() {
               </div>
               
               {/* Tabs bar */}
-              <div className="bg-white/95 backdrop-blur-sm px-2 py-1.5 border-b border-purple-100">
-                <TabsList className="flex w-full bg-white border border-purple-200 p-0.5 h-auto rounded-lg shadow-sm gap-0.5">
-                  {hasDocument ? (
+              <div className="bg-[#12121a]/95 backdrop-blur-sm px-2 py-1.5 border-b border-white/10">
+                <TabsList className="flex w-full bg-[#1a1a2e] border border-white/10 p-0.5 h-auto rounded-lg shadow-sm gap-0.5">
+                  {hasDocument && (
                     <TabsTrigger 
                       value="doc"
-                      className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
+                      className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
                     >
                       <FileText className="w-3.5 h-3.5" />
                       <span className="text-[10px] font-semibold">Doc</span>
                     </TabsTrigger>
-                  ) : (
-                    <TabsTrigger 
-                      value="notes"
-                      className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
-                    >
-                      <StickyNote className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Notes</span>
-                    </TabsTrigger>
                   )}
                   <TabsTrigger 
                     value="studyplan"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
                   >
                     {showStudyPlanDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Target className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-semibold">Plan</span>
                   </TabsTrigger>
                   <TabsTrigger 
+                    value="notes"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all"
+                  >
+                    <StickyNote className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-semibold">Notes</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
                     value="teachit"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
                   >
                     {showTeachItDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Brain className="w-3.5 h-3.5" />
@@ -684,7 +684,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
                   >
                     {showFlashcardsDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <BookMarked className="w-3.5 h-3.5" />
@@ -692,7 +692,7 @@ export default function DocumentViewer() {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="exam"
-                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
+                    className="flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:text-slate-400 flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative"
                   >
                     {showExamDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                     <Zap className="w-3.5 h-3.5" />
@@ -707,6 +707,16 @@ export default function DocumentViewer() {
 
             {/* Scrollable content area */}
             <div className="overflow-x-hidden w-full pb-28">
+              {hasDocument && (
+                <TabsContent value="doc" className="mt-0 p-0 w-full overflow-x-hidden">
+                  {!lesson ? (
+                    <ParsingLoader />
+                  ) : (
+                    <DocumentViewerTabs lesson={lesson} />
+                  )}
+                </TabsContent>
+              )}
+
               <TabsContent value="studyplan" className="mt-0 p-0 w-full overflow-x-hidden">
                 <StudyPlanTab 
                   lesson={lesson} 
@@ -714,14 +724,6 @@ export default function DocumentViewer() {
                   onNavigate={handleStudyPlanNavigate}
                   isGeneratingPlan={isGeneratingStudyPlan}
                 />
-              </TabsContent>
-
-              <TabsContent value="doc" className="mt-0 p-0 w-full overflow-x-hidden">
-                {!lesson ? (
-                  <ParsingLoader />
-                ) : (
-                  <DocumentViewerTabs lesson={lesson} />
-                )}
               </TabsContent>
 
               <TabsContent value="notes" className="mt-0 p-0 w-full overflow-x-hidden">
