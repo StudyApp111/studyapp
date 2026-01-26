@@ -73,6 +73,37 @@ export default function AITutorSheet() {
     setHasUsedInitialPrompt(true);
 
     try {
+      // Check subscription limit for AI messages
+      const user = await base44.auth.me();
+      const isPro = user?.subscription_tier === 'pro' && user?.subscription_status === 'active';
+      
+      if (!isPro) {
+        // Check daily message count
+        const today = new Date().toISOString().split('T')[0];
+        if (user?.daily_ai_messages_reset_date !== today) {
+          // Reset counter for new day
+          await base44.auth.updateMe({
+            daily_ai_messages_count: 0,
+            daily_ai_messages_reset_date: today
+          });
+        }
+        
+        const messageCount = user?.daily_ai_messages_count || 0;
+        if (messageCount >= 10) {
+          setMessages((prev) => [...prev, {
+            role: "assistant",
+            content: "🔒 You've reached your daily limit of 10 AI messages on the free plan. Upgrade to Locked In for unlimited AI help!"
+          }]);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Increment counter
+        await base44.auth.updateMe({
+          daily_ai_messages_count: messageCount + 1
+        });
+      }
+      
       const response = await base44.functions.invoke('pollyChat', {
         messages: [...messages, { role: "user", content: messageToSend }],
         lessonContext: context?.lesson || {},
