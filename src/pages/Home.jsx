@@ -175,24 +175,24 @@ export default function Home() {
               {/* Stats Row - School, Year, Streak, XP */}
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
                 {learningProfile?.school && (
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg">
-                    <BookOpen className="w-4 h-4 text-white" />
-                    <span className="text-sm font-bold text-white">{learningProfile.school}</span>
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/90 backdrop-blur-sm border border-white shadow-lg">
+                    <BookOpen className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-bold text-slate-800">{learningProfile.school}</span>
                   </div>
                 )}
                 {learningProfile?.grade && (
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg">
-                    <GraduationCap className="w-4 h-4 text-white" />
-                    <span className="text-sm font-bold text-white">{learningProfile.grade.replace(/_/g, ' ')}</span>
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/90 backdrop-blur-sm border border-white shadow-lg">
+                    <GraduationCap className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-bold text-slate-800">{learningProfile.grade.replace(/_/g, ' ')}</span>
                   </div>
                 )}
-                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border shadow-lg ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/50 border-orange-400/60' : 'bg-white/20 border-white/30'}`}>
-                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-orange-100' : 'text-white'}`} />
-                  <span className="text-sm font-bold text-white">{user?.current_streak || 0} day streak</span>
+                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border shadow-lg ${(user?.current_streak || 0) > 0 ? 'bg-orange-500 border-orange-400' : 'bg-white/90 border-white'}`}>
+                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-white' : 'text-orange-500'}`} />
+                  <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-white' : 'text-slate-800'}`}>{user?.current_streak || 0} day streak</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-500/50 backdrop-blur-sm border border-yellow-400/60 shadow-lg">
-                  <Zap className="w-4 h-4 text-yellow-100" />
-                  <span className="text-sm font-bold text-white">{dailyXP}/50 XP</span>
+                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-400 backdrop-blur-sm border border-yellow-300 shadow-lg">
+                  <Zap className="w-4 h-4 text-yellow-800" />
+                  <span className="text-sm font-bold text-yellow-900">{dailyXP}/50 XP</span>
                 </div>
               </div>
 
