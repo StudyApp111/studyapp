@@ -38,6 +38,16 @@ export default function PricingPlans() {
     // Check for success parameter
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'true') {
+      // Track successful payment
+      if (window.ttq) {
+        window.ttq.track('CompletePayment', {
+          content_type: 'product',
+          content_name: 'Pro Subscription',
+          currency: 'USD',
+          status: 'success'
+        });
+      }
+
       setShowSuccess(true);
       // Clear the URL parameter
       window.history.replaceState({}, '', createPageUrl("PricingPlans"));
