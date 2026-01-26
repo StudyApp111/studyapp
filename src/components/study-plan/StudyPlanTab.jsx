@@ -530,7 +530,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           </p>
           {latestOfficialExam && (
             <button
-              onClick={() => onNavigate('exam', { showResults: latestOfficialExam.id })}
+              onClick={() => window.dispatchEvent(new CustomEvent('viewExamResults', { detail: { examId: latestOfficialExam.id } }))}
               className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors ${isDark ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'}`}
             >
               View Diagnostic Results →
@@ -655,48 +655,48 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </div>
       </motion.div>
 
-      {/* Behavioral Insights - Centered */}
+      {/* AI Insights Card - Consolidated */}
       {behavioralInsights && (behavioralInsights.is_guessing_detected || behavioralInsights.is_inefficient_studying || behavioralInsights.recommended_focus || behavioralInsights.estimated_hours_to_target) && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
-          className="space-y-2"
         >
-          {/* Warning badges - Centered */}
-          <div className="flex flex-wrap justify-center gap-2">
-            {behavioralInsights.is_guessing_detected && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
-                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-[11px] font-medium text-amber-800">Guessing detected</span>
+          <div className={`rounded-2xl p-4 border ${isDark ? 'bg-gradient-to-br from-indigo-950/50 to-purple-950/50 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200/60'}`}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
+                <Lightbulb className={`w-4 h-4 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
               </div>
-            )}
-            {behavioralInsights.is_inefficient_studying && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-orange-50 border border-orange-200 rounded-lg">
-                <Clock className="w-3.5 h-3.5 text-orange-600" />
-                <span className="text-[11px] font-medium text-orange-800">Inefficient studying</span>
-              </div>
-            )}
-            {behavioralInsights.estimated_hours_to_target && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-purple-50 border border-purple-200 rounded-lg">
-                <Target className="w-3.5 h-3.5 text-purple-600" />
-                <span className="text-[11px] font-medium text-purple-800">
-                  ~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A
-                </span>
-              </div>
+              <span className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>AI Study Coach</span>
+            </div>
+            
+            {/* Metrics Row */}
+            <div className="flex flex-wrap gap-2 mb-3">
+              {behavioralInsights.estimated_hours_to_target && (
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
+                  <Clock className="w-3 h-3" />
+                  <span className="text-[11px] font-semibold">~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A+</span>
+                </div>
+              )}
+              {behavioralInsights.is_guessing_detected && (
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
+                  <AlertCircle className="w-3 h-3" />
+                  <span className="text-[11px] font-semibold">Slow down</span>
+                </div>
+              )}
+              {behavioralInsights.is_inefficient_studying && (
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-orange-500/20 text-orange-300' : 'bg-orange-100 text-orange-700'}`}>
+                  <Target className="w-3 h-3" />
+                  <span className="text-[11px] font-semibold">Focus needed</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Recommendation */}
+            {behavioralInsights.recommended_focus && (
+              <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{behavioralInsights.recommended_focus}</p>
             )}
           </div>
-          
-          {/* Recommended focus - Centered */}
-          {behavioralInsights.recommended_focus && (
-            <div className="flex flex-col items-center text-center p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Lightbulb className="w-4 h-4 text-indigo-600" />
-                <p className="text-[10px] font-bold text-indigo-700 uppercase tracking-wide">AI Recommendation</p>
-              </div>
-              <p className="text-xs text-slate-700 leading-relaxed max-w-md">{behavioralInsights.recommended_focus}</p>
-            </div>
-          )}
         </motion.div>
       )}
 

@@ -201,12 +201,16 @@ ALL question text and answers MUST be readable as plain text without any LaTeX r
       return normalized;
     });
 
-    // Create title based on target competency or focus topics
-    const examTitle = target_competency 
-      ? `${target_competency} Practice Quiz`
+    // Create title based on target competency or focus topics - clean any "Diagnostic" prefix
+    let examTitle = target_competency 
+      ? `${target_competency}`
       : (focus_topics && focus_topics.length > 0)
-        ? `${focus_topics[0]} Practice Quiz`
+        ? `${focus_topics[0]}`
         : 'Practice Quiz';
+    
+    // Remove any "Diagnostic Quiz:" prefix that might have been passed
+    examTitle = examTitle.replace(/^Diagnostic Quiz:\s*/i, '').replace(/\s*Practice Quiz$/i, '');
+    examTitle = examTitle ? `${examTitle} Practice Quiz` : 'Practice Quiz';
 
     // Create practice exam record with proper title - NO exam_number for practice exams
     const exam = await base44.entities.Exam.create({
