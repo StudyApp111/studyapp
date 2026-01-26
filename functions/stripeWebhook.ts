@@ -82,6 +82,71 @@ Deno.serve(async (req) => {
         });
 
         console.log(`User ${userEmail} upgraded to pro (${planType}, ${isOneTimePayment ? 'one-time' : 'recurring'})`);
+        
+        // Send TikTok Subscribe event via server-side API
+        try {
+          const tiktokAccessToken = Deno.env.get("TIKTOK_ACCESS_TOKEN");
+          const tiktokPixelId = Deno.env.get("TIKTOK_PIXEL_ID");
+          
+          if (tiktokAccessToken && tiktokPixelId) {
+            const amount = planType === 'yearly' ? 59.88 : 6.99;
+            
+            // Hash email for TikTok
+            const emailHash = await crypto.subtle.digest(
+              "SHA-256",
+              new TextEncoder().encode(userEmail.toLowerCase().trim())
+            );
+            const hashedEmail = Array.from(new Uint8Array(emailHash))
+              .map(b => b.toString(16).padStart(2, '0'))
+              .join('');
+            
+            const tiktokPayload = {
+              pixel_code: tiktokPixelId,
+              event: "Subscribe",
+              event_id: `subscribe_${user.id}_${Date.now()}`,
+              timestamp: new Date().toISOString(),
+              context: {
+                user: {
+                  email: hashedEmail,
+                  external_id: hashedEmail
+                },
+                page: {
+                  url: "https://app.studyappai.com/pricingplans"
+                }
+              },
+              properties: {
+                contents: [{
+                  content_id: `pro_${planType}`,
+                  content_type: "product",
+                  content_name: `Pro Subscription (${planType})`
+                }],
+                currency: "USD",
+                value: amount
+              }
+            };
+
+            const tiktokResponse = await fetch(
+              `https://business-api.tiktok.com/open_api/v1.3/event/track/`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Access-Token": tiktokAccessToken
+                },
+                body: JSON.stringify({
+                  pixel_code: tiktokPixelId,
+                  data: [tiktokPayload],
+                  test_event_code: "TEST28393"
+                })
+              }
+            );
+            
+            const tiktokResult = await tiktokResponse.json();
+            console.log("TikTok Subscribe event sent:", tiktokResult);
+          }
+        } catch (tiktokErr) {
+          console.error("TikTok event error (non-blocking):", tiktokErr.message);
+        }
       } else {
         console.error(`User not found: ${userEmail}`);
       }

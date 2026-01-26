@@ -674,15 +674,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           transition={{ delay: 0.15 }}
         >
           <div className={`rounded-2xl p-4 border ${isDark ? 'bg-gradient-to-br from-indigo-950/50 to-purple-950/50 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200/60'}`}>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center gap-2 mb-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
                 <Lightbulb className={`w-4 h-4 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
               </div>
-              <span className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>AI Study Coach</span>
+              <span className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>StudyApp Insights</span>
             </div>
             
             {/* Metrics Row */}
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap justify-center gap-2 mb-3">
               {behavioralInsights.estimated_hours_to_target && (
                 <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
                   <Clock className="w-3 h-3" />
@@ -705,7 +705,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             
             {/* Recommendation */}
             {behavioralInsights.recommended_focus && (
-              <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{behavioralInsights.recommended_focus}</p>
+              <p className={`text-sm leading-relaxed text-center ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{behavioralInsights.recommended_focus}</p>
             )}
           </div>
         </motion.div>

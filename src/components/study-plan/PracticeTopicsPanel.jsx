@@ -49,7 +49,7 @@ export default function PracticeTopicsPanel({
   const [customTopic, setCustomTopic] = useState('');
   const [step, setStep] = useState(1); // 1 = topics, 2 = format
 
-  // Load saved topics from localStorage on mount
+  // Load saved topics from localStorage on mount - before checking isOpen
   useEffect(() => {
     if (lessonId) {
       const saved = localStorage.getItem(`topics_${lessonId}`);
@@ -58,6 +58,7 @@ export default function PracticeTopicsPanel({
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setExtractedTopics(parsed);
+            return; // Don't proceed to extract if we have saved topics
           }
         } catch (e) {
           console.error('Error loading saved topics:', e);
@@ -66,11 +67,16 @@ export default function PracticeTopicsPanel({
     }
   }, [lessonId]);
 
+  // Only extract topics if panel is open AND we don't have any topics yet
   useEffect(() => {
-    if (isOpen && extractedTopics.length === 0 && compressedContent) {
-      extractTopics();
+    if (isOpen && extractedTopics.length === 0 && compressedContent && !loading) {
+      // Double-check localStorage again to avoid race condition
+      const saved = localStorage.getItem(`topics_${lessonId}`);
+      if (!saved) {
+        extractTopics();
+      }
     }
-  }, [isOpen, compressedContent]);
+  }, [isOpen, extractedTopics.length, compressedContent, lessonId]);
 
   const extractTopics = async () => {
     if (!compressedContent) return;
