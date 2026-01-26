@@ -117,10 +117,10 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-  const isOnboardingPage = location.pathname === createPageUrl("Onboarding");
+  const isOnboardingPage = location.pathname === createPageUrl("Onboarding") || currentPageName === "Onboarding";
   const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname === createPageUrl("DocumentViewer");
   const showNavigation = user?.onboarding_completed || isOnboardingPage;
-  const showSidebar = showNavigation && !isOnboardingPage;
+  const showSidebar = showNavigation && !isOnboardingPage && user?.onboarding_completed;
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
   const showMobileHeader = !isDocumentViewerPage;
   const showMobileBottomNav = !pagesWithCustomNav.includes(currentPageName);
