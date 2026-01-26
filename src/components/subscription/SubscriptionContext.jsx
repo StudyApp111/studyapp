@@ -156,9 +156,15 @@ export function SubscriptionProvider({ children }) {
   const canSendAIMessage = async () => {
     if (isPro()) return { allowed: true };
     const currentUser = await checkAndResetCounters();
-    const count = currentUser?.daily_ai_messages_count || 0;
+    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.ai_messages_per_day, remaining: 0 };
+    
+    const count = currentUser.daily_ai_messages_count || 0;
+    const allowed = count < FREE_TIER_LIMITS.ai_messages_per_day;
+    
+    console.log(`🔒 AI Message Check: ${count}/${FREE_TIER_LIMITS.ai_messages_per_day}, allowed=${allowed}`);
+    
     return {
-      allowed: count < FREE_TIER_LIMITS.ai_messages_per_day,
+      allowed,
       current: count,
       limit: FREE_TIER_LIMITS.ai_messages_per_day,
       remaining: Math.max(0, FREE_TIER_LIMITS.ai_messages_per_day - count)
@@ -189,6 +195,7 @@ export function SubscriptionProvider({ children }) {
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
     const newCount = (freshUser.daily_ai_messages_count || 0) + 1;
+    console.log(`🔒 Incrementing AI message count: ${freshUser.daily_ai_messages_count || 0} -> ${newCount}`);
     await base44.auth.updateMe({ daily_ai_messages_count: newCount });
     await refreshUser();
   };
