@@ -31,17 +31,17 @@ export default function DailyChallenge({
   // Compact version for sidebar
   if (compact) {
     return (
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
+      <div className="bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-700">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-              <Target className="w-4 h-4 text-emerald-600" />
+            <div className="w-8 h-8 bg-emerald-600/20 rounded-lg flex items-center justify-center">
+              <Target className="w-4 h-4 text-emerald-400" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900">Daily Goals</p>
+              <p className="text-sm font-bold text-slate-100">Daily Goals</p>
             </div>
           </div>
-          <span className="text-xs font-bold text-emerald-600">{completedCount}/3</span>
+          <span className="text-xs font-bold text-emerald-400">{completedCount}/3</span>
         </div>
         
         <div className="space-y-2">
@@ -52,7 +52,7 @@ export default function DailyChallenge({
             
             return (
               <div key={challenge.id} className="flex items-center gap-2">
-                <div className={`w-6 h-6 rounded-md flex items-center justify-center ${complete ? 'bg-emerald-500' : 'bg-slate-100'}`}>
+                <div className={`w-6 h-6 rounded-md flex items-center justify-center ${complete ? 'bg-emerald-500' : 'bg-slate-700'}`}>
                   {complete ? (
                     <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                   ) : (
@@ -61,13 +61,13 @@ export default function DailyChallenge({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1 bg-slate-700 rounded-full overflow-hidden">
                       <div 
                         className={`h-full rounded-full transition-all ${complete ? 'bg-emerald-500' : 'bg-purple-500'}`}
                         style={{ width: `${(progress / challenge.target) * 100}%` }}
                       />
                     </div>
-                    <span className="text-[10px] text-slate-400 w-8">{progress}/{challenge.target}</span>
+                    <span className="text-[10px] text-slate-500 w-8">{progress}/{challenge.target}</span>
                   </div>
                 </div>
               </div>
@@ -79,19 +79,19 @@ export default function DailyChallenge({
   }
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-lg border border-purple-100">
+    <div className="bg-slate-800 rounded-2xl p-4 shadow-lg border border-slate-700">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
             <Target className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-900">Daily Challenges</p>
-            <p className="text-xs text-slate-500">{completedCount}/{DAILY_CHALLENGES.length} completed</p>
+            <p className="text-sm font-bold text-slate-100">Daily Challenges</p>
+            <p className="text-xs text-slate-400">{completedCount}/{DAILY_CHALLENGES.length} completed</p>
           </div>
         </div>
-        <div className="bg-emerald-100 px-3 py-1 rounded-full">
-          <span className="text-xs font-bold text-emerald-700">
+        <div className="bg-emerald-600/20 px-3 py-1 rounded-full border border-emerald-500/30">
+          <span className="text-xs font-bold text-emerald-400">
             +{DAILY_CHALLENGES.filter(isComplete).reduce((sum, c) => sum + c.xp, 0)} XP
           </span>
         </div>
@@ -111,34 +111,34 @@ export default function DailyChallenge({
               transition={{ delay: idx * 0.1 }}
               className={`p-3 rounded-xl border-2 transition-all ${
                 complete 
-                  ? 'bg-emerald-50 border-emerald-300' 
-                  : 'bg-slate-50 border-slate-200'
+                  ? 'bg-emerald-600/20 border-emerald-500/50' 
+                  : 'bg-slate-700/50 border-slate-600'
               }`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                  complete ? 'bg-emerald-500' : 'bg-slate-200'
+                  complete ? 'bg-emerald-500' : 'bg-slate-600'
                 }`}>
                   {complete ? (
                     <CheckCircle2 className="w-5 h-5 text-white" />
                   ) : (
-                    <Icon className="w-4 h-4 text-slate-500" />
+                    <Icon className="w-4 h-4 text-slate-400" />
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <p className={`text-sm font-medium ${complete ? 'text-emerald-800 line-through' : 'text-slate-700'}`}>
+                    <p className={`text-sm font-medium ${complete ? 'text-emerald-300 line-through' : 'text-slate-200'}`}>
                       {challenge.title}
                     </p>
-                    <span className={`text-xs font-bold ${complete ? 'text-emerald-600' : 'text-slate-500'}`}>
+                    <span className={`text-xs font-bold ${complete ? 'text-emerald-400' : 'text-slate-400'}`}>
                       +{challenge.xp} XP
                     </span>
                   </div>
                   
                   {!complete && (
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-slate-600 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-purple-500 rounded-full transition-all"
                           style={{ width: `${(progress / challenge.target) * 100}%` }}
