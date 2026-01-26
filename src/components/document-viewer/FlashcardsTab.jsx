@@ -264,8 +264,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     }, 200);
   };
 
-  const updateStudyPlanProgress = async (taskType, masteredCount) => {
-    // Update study plan with total mastered count (not increments)
+  const updateStudyPlanProgress = async (taskType, completedCount) => {
+    // Update study plan with total completed count (cards reviewed at least once)
     // Returns true if task just completed
     try {
       const plans = await base44.entities.StudyPlan.filter({ 
@@ -279,14 +279,17 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       
       const updatedTasks = plan.tasks.map(task => {
         if (task.task_type === taskType) {
-          const newCount = masteredCount;
+          const newCount = completedCount;
           const wasComplete = task.completed;
-          const isComplete = newCount >= task.target_count;
+          const targetCount = task.target_count || 10;
+          const isComplete = newCount >= targetCount;
           
           // Check if task just became complete
           if (isComplete && !wasComplete) {
             taskJustCompleted = true;
           }
+          
+          console.log(`📚 Flashcard task update: ${newCount}/${targetCount} completed, task complete: ${isComplete}`);
           
           return {
             ...task,
