@@ -4,9 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Send, Sparkles, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
-import { renderMathText } from "@/components/math/MathText";
 import { useAITutor } from "./AITutorContext";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+
+// Simple LaTeX renderer for inline and block math
+const renderMathContent = (text) => {
+  if (!text || typeof text !== 'string') return text;
+  
+  // Replace block math $$...$$ with styled div
+  let result = text.replace(/\$\$(.*?)\$\$/gs, (match, math) => {
+    return `<div class="my-2 p-2 bg-slate-100 rounded text-center font-mono text-sm">${math}</div>`;
+  });
+  
+  // Replace inline math $...$ with styled span
+  result = result.replace(/\$([^$]+)\$/g, (match, math) => {
+    return `<span class="font-mono bg-slate-100 px-1 rounded text-sm">${math}</span>`;
+  });
+  
+  return result;
+};
 
 export default function AITutorSheet() {
   const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
@@ -129,7 +145,7 @@ export default function AITutorSheet() {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            className="fixed left-0 right-0 bottom-0 z-[9999] bg-slate-800 rounded-t-3xl flex flex-col overflow-hidden shadow-2xl md:left-auto md:right-4 md:bottom-4 md:w-[400px] md:h-[600px] md:rounded-2xl"
+            className="fixed left-0 right-0 bottom-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl md:left-auto md:right-4 md:bottom-4 md:w-[400px] md:h-[600px] md:rounded-2xl"
             style={{ height: '75vh', maxHeight: 'calc(100vh - 60px)' }}
           >
             {/* Header */}
@@ -157,18 +173,18 @@ export default function AITutorSheet() {
 
             {/* Context Preview */}
             {context && (context.question || context.flashcard || context.selectedText) && (
-              <div className="px-4 py-2 bg-purple-900/30 border-b border-purple-500/30">
-                <div className="text-[10px] text-purple-300 font-medium mb-1">
+              <div className="px-4 py-2 bg-purple-50 border-b border-purple-100">
+                <div className="text-[10px] text-purple-600 font-medium mb-1">
                   {context.type === "question" ? "📝 Question:" : context.type === "flashcard" ? "🎴 Flashcard:" : "📄 Selected text:"}
                 </div>
-                <p className="text-xs text-slate-200 line-clamp-2">
+                <p className="text-xs text-slate-700 line-clamp-2">
                   {context.question?.text || context.flashcard?.question || context.selectedText}
                 </p>
               </div>
             )}
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-900/30">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((msg, idx) => (
                 <motion.div
                   key={idx}
@@ -180,16 +196,30 @@ export default function AITutorSheet() {
                     className={`max-w-[85%] rounded-2xl px-3 py-2 ${
                       msg.role === "user"
                         ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-md"
-                        : "bg-slate-700 text-slate-100 border border-slate-600"
+                        : "bg-slate-100 text-slate-800"
                     }`}
                   >
                     {msg.role === "assistant" ? (
                       <ReactMarkdown 
-                        className="text-[11px] leading-relaxed prose prose-invert prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-[11px] [&>ol]:my-1 [&>ol]:ml-3"
+                        className="text-[11px] leading-relaxed prose prose-xs max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:my-1 [&>ul]:my-1 [&>ul]:ml-3 [&>ul]:text-[11px] [&>ol]:my-1 [&>ol]:ml-3"
                         components={{
-                          p: ({ children }) => <p className="my-1" dangerouslySetInnerHTML={{ __html: renderMathText(String(children)) }} />,
-                          li: ({ children }) => <li dangerouslySetInnerHTML={{ __html: renderMathText(String(children)) }} />,
-                          code: ({ inline, children }) => inline ? <code className="bg-slate-600 px-1 rounded text-[10px]">{children}</code> : <pre className="bg-slate-900 p-2 rounded text-[10px] overflow-x-auto"><code>{children}</code></pre>
+                          p: ({ children }) => {
+                            const text = typeof children === 'string' ? children : 
+                              (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                            if (text.includes('$')) {
+                              return <p className="my-1" dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
+                            }
+                            return <p className="my-1">{children}</p>;
+                          },
+                          li: ({ children }) => {
+                            const text = typeof children === 'string' ? children : 
+                              (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                            if (text.includes('$')) {
+                              return <li dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
+                            }
+                            return <li>{children}</li>;
+                          },
+                          code: ({ inline, children }) => inline ? <code className="bg-slate-200 px-1 rounded text-[10px]">{children}</code> : <pre className="bg-slate-200 p-2 rounded text-[10px] overflow-x-auto"><code>{children}</code></pre>
                         }}
                       >
                         {msg.content}
@@ -202,11 +232,11 @@ export default function AITutorSheet() {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-slate-700 rounded-2xl px-4 py-3 border border-slate-600">
+                  <div className="bg-slate-100 rounded-2xl px-4 py-3">
                     <div className="flex gap-1">
-                      <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-2 h-2 bg-purple-500 rounded-full" />
-                      <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-2 h-2 bg-purple-500 rounded-full" />
-                      <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-2 h-2 bg-purple-500 rounded-full" />
+                      <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.6 }} className="w-2 h-2 bg-purple-600 rounded-full" />
+                      <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-2 h-2 bg-purple-600 rounded-full" />
+                      <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-2 h-2 bg-purple-600 rounded-full" />
                     </div>
                   </div>
                 </div>
@@ -219,25 +249,25 @@ export default function AITutorSheet() {
               <div className="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide">
                 <button
                   onClick={() => handleSend("Explain this material like I'm 5 years old - super simple!")}
-                  className="px-3 py-1.5 bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-600/30 transition-colors"
+                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
                 >
                   Explain like I'm 5
                 </button>
                 <button
                   onClick={() => handleSend("Give me a real-world example of the main concept")}
-                  className="px-3 py-1.5 bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-600/30 transition-colors"
+                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
                 >
                   Give me an example
                 </button>
                 <button
                   onClick={() => handleSend("Why is this material important? When would I use it?")}
-                  className="px-3 py-1.5 bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-600/30 transition-colors"
+                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
                 >
                   Why is this important?
                 </button>
                 <button
                   onClick={() => handleSend("Quiz me with 3 questions on this material")}
-                  className="px-3 py-1.5 bg-purple-600/20 text-purple-300 border border-purple-500/30 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-600/30 transition-colors"
+                  className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-[10px] font-medium whitespace-nowrap hover:bg-purple-200 transition-colors"
                 >
                   Quiz Me
                 </button>
@@ -245,7 +275,7 @@ export default function AITutorSheet() {
             )}
 
             {/* Input */}
-            <div className="border-t border-slate-700 p-3 bg-slate-800 flex-shrink-0">
+            <div className="border-t border-slate-200 p-3 bg-white flex-shrink-0">
               <div className="flex gap-2">
                 <input
                   ref={inputRef}
@@ -254,7 +284,7 @@ export default function AITutorSheet() {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSend()}
                   placeholder="Ask a follow-up question..."
-                  className="flex-1 px-4 py-2.5 border border-slate-600 bg-slate-700 text-slate-100 placeholder:text-slate-400 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 px-4 py-2.5 border border-slate-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 <Button
                   onClick={() => handleSend()}

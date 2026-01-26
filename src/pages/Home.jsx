@@ -138,12 +138,12 @@ export default function Home() {
   const subtitle = subtitleParts.join(' • ');
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 via-30% to-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-purple-600 via-purple-200 via-30% to-slate-50">
       {/* Hero Section */}
       <div className="relative overflow-hidden px-4 pt-10 pb-8 md:px-8 md:pt-14 md:pb-12">
         {/* Subtle gradient blobs */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl" />
 
         <div className="max-w-6xl mx-auto relative">
         {/* Logo + App Name + Upgrade - Above Pill */}
@@ -158,15 +158,15 @@ export default function Home() {
         </div>
 
           {/* Hero Pill - Full Width */}
-          <div className="bg-slate-800/60 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border border-slate-700/50 shadow-2xl">
+          <div className="bg-white/15 backdrop-blur-md rounded-3xl px-6 py-6 md:px-10 md:py-8 border border-white/20 shadow-2xl">
             <div className="flex flex-col items-center text-center gap-4">
               {/* Title - Centered and Large */}
               <div>
-                <h1 className="text-2xl md:text-4xl font-black text-slate-100 leading-tight">
+                <h1 className="text-2xl md:text-4xl font-black text-white leading-tight">
                   Hey {firstName}, are you ready to lock in?
                 </h1>
                 {subtitle && (
-                  <p className="text-slate-400 text-sm md:text-base mt-2">
+                  <p className="text-white/70 text-sm md:text-base mt-2">
                     {subtitle}
                   </p>
                 )}
@@ -175,23 +175,23 @@ export default function Home() {
               {/* Stats Row - School, Year, Streak, XP */}
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
                 {learningProfile?.school && (
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-700/80 backdrop-blur-sm border border-slate-600 shadow-lg">
-                    <BookOpen className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm font-bold text-slate-200">{learningProfile.school}</span>
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/90 backdrop-blur-sm border border-white shadow-lg">
+                    <BookOpen className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-bold text-slate-800">{learningProfile.school}</span>
                   </div>
                 )}
                 {learningProfile?.grade && (
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-700/80 backdrop-blur-sm border border-slate-600 shadow-lg">
-                    <GraduationCap className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm font-bold text-slate-200">{learningProfile.grade.replace(/_/g, ' ')}</span>
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/90 backdrop-blur-sm border border-white shadow-lg">
+                    <GraduationCap className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-bold text-slate-800">{learningProfile.grade.replace(/_/g, ' ')}</span>
                   </div>
                 )}
-                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border shadow-lg ${(user?.current_streak || 0) > 0 ? 'bg-orange-500 border-orange-400' : 'bg-slate-700/80 border-slate-600'}`}>
-                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-white' : 'text-orange-400'}`} />
-                  <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-white' : 'text-slate-200'}`}>{user?.current_streak || 0} day streak</span>
+                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border shadow-lg ${(user?.current_streak || 0) > 0 ? 'bg-orange-500 border-orange-400' : 'bg-white/90 border-white'}`}>
+                  <Flame className={`w-4 h-4 ${(user?.current_streak || 0) > 0 ? 'text-white' : 'text-orange-500'}`} />
+                  <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-white' : 'text-slate-800'}`}>{user?.current_streak || 0} day streak</span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-500/90 backdrop-blur-sm border border-yellow-400 shadow-lg">
-                  <Zap className="w-4 h-4 text-yellow-900" />
+                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-400 backdrop-blur-sm border border-yellow-300 shadow-lg">
+                  <Zap className="w-4 h-4 text-yellow-800" />
                   <span className="text-sm font-bold text-yellow-900">{dailyXP}/50 XP</span>
                 </div>
               </div>
@@ -200,14 +200,14 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md mt-2">
                 <button
                   onClick={() => navigate(createPageUrl("CreateLesson"))}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:from-purple-500 hover:to-indigo-500 transition-all hover:scale-[1.02] border border-purple-500/50"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:from-purple-600 hover:to-indigo-700 transition-all hover:scale-[1.02] border-2 border-white/30"
                 >
                   <Upload className="w-5 h-5" />
                   Upload Notes
                 </button>
                 <button
                   onClick={() => navigate(createPageUrl("SmartGrader"))}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:from-emerald-500 hover:to-teal-500 transition-all hover:scale-[1.02] border border-emerald-500/50"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:from-emerald-600 hover:to-teal-700 transition-all hover:scale-[1.02] border-2 border-white/30"
                 >
                   <FileCheck className="w-5 h-5" />
                   Grade Essay
@@ -227,7 +227,7 @@ export default function Home() {
           {/* Left Column - Courses */}
           <div className="lg:col-span-2 space-y-4">
             {/* Your Courses */}
-            <div className="bg-slate-800 rounded-2xl shadow-sm border border-slate-700 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm border border-purple-100 overflow-hidden">
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600">
                 <h2 className="font-bold text-white">Your Courses</h2>
                 <button 
@@ -240,21 +240,21 @@ export default function Home() {
 
               {lessonsLoading ? (
                 <div className="p-4 space-y-3">
-                  {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-700 rounded-xl animate-pulse" />)}
+                  {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-100 rounded-xl animate-pulse" />)}
                 </div>
               ) : lessons.length === 0 ? (
                 <div className="p-8 text-center">
-                  <div className="w-16 h-16 bg-purple-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <BookOpen className="w-8 h-8 text-purple-400" />
+                  <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="w-8 h-8 text-purple-500" />
                   </div>
-                  <p className="font-medium text-slate-200 mb-1">No courses yet</p>
-                  <p className="text-sm text-slate-400 mb-4">Upload your first lesson to get started</p>
-                  <Button onClick={() => navigate(createPageUrl("CreateLesson"))} className="bg-purple-600 hover:bg-purple-700">
+                  <p className="font-medium text-slate-700 mb-1">No courses yet</p>
+                  <p className="text-sm text-slate-500 mb-4">Upload your first lesson to get started</p>
+                  <Button onClick={() => setCreateLessonModalOpen(true)} className="bg-purple-600 hover:bg-purple-700">
                     <Upload className="w-4 h-4 mr-2" /> Upload Notes
                   </Button>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-700">
+                <div className="divide-y divide-slate-100">
                   {lessons.slice(0, 3).map((lesson, idx) => {
                     const plan = studyPlansByLesson[lesson.id];
                     const totalTasks = plan?.tasks?.length || 0;
@@ -271,7 +271,7 @@ export default function Home() {
                         animate={{ opacity: 1 }}
                         transition={{ delay: idx * 0.05 }}
                         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
-                        className="p-4 hover:bg-slate-700/50 transition-colors cursor-pointer group"
+                        className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group"
                       >
                         <div className="flex items-center gap-4">
                           <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getGradeColor(currentGrade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
@@ -286,46 +286,46 @@ export default function Home() {
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-slate-100 truncate group-hover:text-purple-400 transition-colors">
+                            <h3 className="font-semibold text-slate-900 truncate group-hover:text-purple-700 transition-colors">
                               {lesson.course_name}
                             </h3>
                             
                             {plan ? (
                               <div className="mt-1.5">
                                 <div className="flex items-center gap-2">
-                                  <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden max-w-[140px]">
+                                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden max-w-[140px]">
                                     <div 
                                       className={`h-full rounded-full ${tasksRemaining === 0 ? 'bg-emerald-500' : 'bg-purple-500'}`}
                                       style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
                                     />
                                   </div>
-                                  <span className={`text-xs font-medium ${tasksRemaining === 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
+                                  <span className={`text-xs font-medium ${tasksRemaining === 0 ? 'text-emerald-600' : 'text-slate-500'}`}>
                                     {tasksRemaining > 0 ? `${tasksRemaining} tasks left` : '✓ Complete'}
                                   </span>
                                 </div>
                                 {completedExams > 0 && (
                                   <div className="flex items-center gap-1 mt-1">
-                                    <Trophy className="w-3 h-3 text-amber-400" />
-                                    <span className="text-[10px] text-slate-500">{completedExams} exam{completedExams > 1 ? 's' : ''}</span>
+                                    <Trophy className="w-3 h-3 text-amber-500" />
+                                    <span className="text-[10px] text-slate-400">{completedExams} exam{completedExams > 1 ? 's' : ''}</span>
                                   </div>
                                 )}
                               </div>
                             ) : (
-                              <p className="text-xs text-purple-400 mt-1 flex items-center gap-1 font-medium">
+                              <p className="text-xs text-purple-600 mt-1 flex items-center gap-1 font-medium">
                                 <Sparkles className="w-3 h-3" /> Take diagnostic →
                               </p>
                             )}
                           </div>
 
                           {plan && tasksRemaining > 0 && (
-                            <div className="hidden sm:flex flex-col items-center gap-1 px-3 py-2 bg-purple-600/20 rounded-xl border border-purple-500/30">
+                            <div className="hidden sm:flex flex-col items-center gap-1 px-3 py-2 bg-purple-50 rounded-xl border border-purple-100">
                               {(() => {
                                 const nextTask = plan.tasks?.find(t => !t.completed);
                                 const Icon = TASK_ICONS[nextTask?.task_type] || Target;
                                 return (
                                   <>
-                                    <Icon className="w-4 h-4 text-purple-400" />
-                                    <span className="text-[10px] text-purple-300 font-medium">
+                                    <Icon className="w-4 h-4 text-purple-600" />
+                                    <span className="text-[10px] text-purple-700 font-medium">
                                       {nextTask?.task_type === 'flashcards' ? 'Cards' :
                                        nextTask?.task_type === 'teach_it' ? 'Teach' :
                                        nextTask?.task_type === 'practice_exam' ? 'Quiz' : 'Notes'}
@@ -336,7 +336,7 @@ export default function Home() {
                             </div>
                           )}
 
-                          <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-purple-400 flex-shrink-0" />
+                          <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-purple-500 flex-shrink-0" />
                         </div>
                       </motion.div>
                     );

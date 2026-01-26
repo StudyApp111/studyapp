@@ -49,7 +49,7 @@ export default function LearningTrajectory({ studyPlans, lessons }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-slate-800 rounded-2xl border border-slate-700 shadow-sm overflow-hidden"
+      className="bg-white rounded-2xl border border-amber-100 shadow-sm overflow-hidden"
     >
       <div className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500">
         <div className="flex items-center gap-2">
@@ -76,9 +76,9 @@ export default function LearningTrajectory({ studyPlans, lessons }) {
           {lessonsWithGrades.map(({ lesson, grade }, idx) => (
             <div key={lesson.id} className="flex items-center gap-2">
               <div className="w-16 truncate">
-                <span className="text-[10px] text-slate-400 truncate block">{lesson.course_name.split(' ').slice(0, 2).join(' ')}</span>
+                <span className="text-[10px] text-slate-500 truncate block">{lesson.course_name.split(' ').slice(0, 2).join(' ')}</span>
               </div>
-              <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${getGradeValue(grade)}%` }}
@@ -86,7 +86,7 @@ export default function LearningTrajectory({ studyPlans, lessons }) {
                   className={`h-full rounded-full ${getGradeColor(grade)}`}
                 />
               </div>
-              <span className="text-xs font-bold text-slate-200 w-8 text-right">{grade}</span>
+              <span className="text-xs font-bold text-slate-700 w-8 text-right">{grade}</span>
             </div>
           ))}
         </div>
