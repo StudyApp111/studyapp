@@ -13,6 +13,7 @@ import DailyChallenge from "@/components/gamification/DailyChallenge";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
 import LearningTrajectory from "@/components/home/LearningTrajectory";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function Home() {
   const navigate = useNavigate();
