@@ -88,10 +88,12 @@ Deno.serve(async (req) => {
           const tiktokAccessToken = Deno.env.get("TIKTOK_ACCESS_TOKEN");
           const tiktokPixelId = Deno.env.get("TIKTOK_PIXEL_ID");
           
+          console.log("TikTok config check - Pixel ID exists:", !!tiktokPixelId, "Access Token exists:", !!tiktokAccessToken);
+          
           if (tiktokAccessToken && tiktokPixelId) {
             const amount = planType === 'yearly' ? 59.88 : 6.99;
             
-            // Hash email for TikTok
+            // Hash email for TikTok (SHA256)
             const emailHash = await crypto.subtle.digest(
               "SHA-256",
               new TextEncoder().encode(userEmail.toLowerCase().trim())
@@ -100,19 +102,17 @@ Deno.serve(async (req) => {
               .map(b => b.toString(16).padStart(2, '0'))
               .join('');
             
-            const tiktokPayload = {
-              pixel_code: tiktokPixelId,
+            // TikTok Events API v1.3 format
+            const eventData = {
               event: "Subscribe",
               event_id: `subscribe_${user.id}_${Date.now()}`,
-              timestamp: new Date().toISOString(),
-              context: {
-                user: {
-                  email: hashedEmail,
-                  external_id: hashedEmail
-                },
-                page: {
-                  url: "https://app.studyappai.com/pricingplans"
-                }
+              event_time: Math.floor(Date.now() / 1000),
+              user: {
+                email: hashedEmail,
+                external_id: hashedEmail
+              },
+              page: {
+                url: "https://app.studyappai.com/pricingplans"
               },
               properties: {
                 contents: [{
@@ -125,27 +125,32 @@ Deno.serve(async (req) => {
               }
             };
 
+            const requestBody = {
+              pixel_code: tiktokPixelId,
+              data: [eventData]
+            };
+            
+            console.log("Sending TikTok event:", JSON.stringify(requestBody));
+
             const tiktokResponse = await fetch(
-              `https://business-api.tiktok.com/open_api/v1.3/event/track/`,
+              "https://business-api.tiktok.com/open_api/v1.3/event/track/",
               {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
                   "Access-Token": tiktokAccessToken
                 },
-                body: JSON.stringify({
-                  pixel_code: tiktokPixelId,
-                  data: [tiktokPayload],
-                  test_event_code: "TEST28393"
-                })
+                body: JSON.stringify(requestBody)
               }
             );
             
             const tiktokResult = await tiktokResponse.json();
-            console.log("TikTok Subscribe event sent:", tiktokResult);
+            console.log("TikTok Subscribe event response:", JSON.stringify(tiktokResult));
+          } else {
+            console.log("TikTok tracking skipped - missing credentials");
           }
         } catch (tiktokErr) {
-          console.error("TikTok event error (non-blocking):", tiktokErr.message);
+          console.error("TikTok event error (non-blocking):", tiktokErr.message, tiktokErr.stack);
         }
       } else {
         console.error(`User not found: ${userEmail}`);
