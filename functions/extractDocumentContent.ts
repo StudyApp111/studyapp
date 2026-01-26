@@ -138,66 +138,79 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
-        // For PDFs, try direct text extraction first
-        if (fileExt === 'pdf') {
-            try {
-                const pdf = (await import('npm:pdf-parse@1.1.1')).default;
-                const arrayBuffer = await fileBlob.arrayBuffer();
-                const pdfData = await pdf(new Uint8Array(arrayBuffer));
-                const extractedText = pdfData.text?.trim();
-                
-                if (extractedText && extractedText.length > 50) {
-                    console.log('Direct PDF extraction successful');
-                    return Response.json({ 
-                        extracted_content: extractedText,
-                        characters: extractedText.length,
-                        file_size: fileSize,
-                        file_type: 'PDF',
-                        method: 'direct_pdf_parse',
-                        pages: pdfData.numpages
-                    });
-                }
-            } catch (pdfError) {
-                console.log('Direct PDF extraction failed, falling back to Google Vision OCR');
+        // For large files or PDFs/DOCX, prefer Mistral OCR (handles URLs directly, no CPU-heavy processing)
+        // This avoids CPU timeouts from downloading/encoding large files
+        if (fileSize > 2 * 1024 * 1024 || fileExt === 'pdf' || fileExt === 'docx' || fileExt === 'pptx') {
+            console.log('Large file or document detected, using Mistral OCR (URL-based)...');
+            
+            const mistralResult = await extractWithMistralOCR(file_url, fileExt);
+            if (mistralResult.success && mistralResult.content.trim().length > 50) {
+                return Response.json({ 
+                    extracted_content: mistralResult.content.trim(),
+                    characters: mistralResult.content.trim().length,
+                    file_size: fileSize,
+                    file_type: fileExt.toUpperCase(),
+                    method: 'mistral_ocr'
+                });
             }
+            
+            // Mistral failed, try direct extraction for smaller PDFs only
+            if (fileExt === 'pdf' && fileSize < 3 * 1024 * 1024) {
+                try {
+                    const pdf = (await import('npm:pdf-parse@1.1.1')).default;
+                    const arrayBuffer = await fileBlob.arrayBuffer();
+                    const pdfData = await pdf(new Uint8Array(arrayBuffer));
+                    const extractedText = pdfData.text?.trim();
+                    
+                    if (extractedText && extractedText.length > 50) {
+                        console.log('Direct PDF extraction successful');
+                        return Response.json({ 
+                            extracted_content: extractedText,
+                            characters: extractedText.length,
+                            file_size: fileSize,
+                            file_type: 'PDF',
+                            method: 'direct_pdf_parse',
+                            pages: pdfData.numpages
+                        });
+                    }
+                } catch (pdfError) {
+                    console.log('Direct PDF extraction failed:', pdfError.message);
+                }
+            }
+            
+            // For DOCX, try mammoth as fallback
+            if (fileExt === 'docx' && fileSize < 3 * 1024 * 1024) {
+                try {
+                    const mammoth = await import('npm:mammoth@1.6.0');
+                    const arrayBuffer = await fileBlob.arrayBuffer();
+                    const result = await mammoth.extractRawText({ arrayBuffer });
+                    
+                    if (result.value && result.value.trim().length > 50) {
+                        return Response.json({ 
+                            extracted_content: result.value.trim(),
+                            characters: result.value.trim().length,
+                            file_size: fileSize,
+                            file_type: 'DOCX',
+                            method: 'direct_docx_extraction'
+                        });
+                    }
+                } catch (docxError) {
+                    console.log('Direct DOCX extraction failed:', docxError.message);
+                }
+            }
+            
+            return Response.json({ 
+                error: 'Could not extract content from document',
+                details: 'The document may be scanned or image-based. Please try a different file.'
+            }, { status: 400 });
         }
 
-        // For DOCX, try mammoth extraction
-        if (fileExt === 'docx') {
-            try {
-                const mammoth = await import('npm:mammoth@1.6.0');
-                const arrayBuffer = await fileBlob.arrayBuffer();
-                const result = await mammoth.extractRawText({ arrayBuffer });
-                
-                if (result.value && result.value.trim().length > 50) {
-                    return Response.json({ 
-                        extracted_content: result.value.trim(),
-                        characters: result.value.trim().length,
-                        file_size: fileSize,
-                        file_type: 'DOCX',
-                        method: 'direct_docx_extraction'
-                    });
-                }
-            } catch (docxError) {
-                console.log('Direct DOCX extraction failed, falling back to Google Vision OCR');
-            }
-        }
-
-        // Use Gemini for document/image OCR and understanding
+        // For images and small files, use Gemini Vision
         console.log('Using Gemini Vision for OCR...');
         
-        // Convert blob to base64 - chunked approach for large files
+        // Convert blob to base64
         const arrayBuffer = await fileBlob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        
-        // Process in chunks to avoid stack overflow on large files
-        let base64Content = '';
-        const chunkSize = 32768; // 32KB chunks
-        for (let i = 0; i < uint8Array.length; i += chunkSize) {
-            const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-            base64Content += String.fromCharCode.apply(null, chunk);
-        }
-        base64Content = btoa(base64Content);
+        const base64Content = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
         console.log('Base64 encoding complete, length:', base64Content.length);
         
         // Determine MIME type - Gemini requires specific supported types
