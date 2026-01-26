@@ -39,7 +39,8 @@ Deno.serve(async (req) => {
       ip,
       user_agent,
       ttclid, // TikTok click ID from URL param
-      ttp // TikTok cookie _ttp
+      ttp, // TikTok cookie _ttp
+      test_event_code // For testing in TikTok Events Manager
     } = await req.json();
 
     if (!event_name) {
@@ -56,6 +57,7 @@ Deno.serve(async (req) => {
     const eventPayload = {
       event_source: "web",
       event_source_id: TIKTOK_PIXEL_ID,
+      ...(test_event_code && { test_event_code }),
       data: [
         {
           event: event_name,
