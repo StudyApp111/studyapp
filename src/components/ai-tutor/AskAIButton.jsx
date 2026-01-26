@@ -1,9 +1,9 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import { useAITutor } from "./AITutorContext";
 
 /**
- * Contextual "Ask AI" button that pre-loads context into the AI tutor
+ * Contextual "Explain This" button that pre-loads context into the AI tutor
  * 
  * @param {string} type - "question" | "flashcard" | "document" | "teachit"
  * @param {object} data - Context data (question object, flashcard, or selected text)
@@ -93,8 +93,8 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
       onClick={handleClick}
       className={`inline-flex items-center ${sizeClasses} bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-medium rounded-full shadow-md hover:shadow-lg transition-all active:scale-95`}
     >
-      <Sparkles className={size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} />
-      <span>Ask AI</span>
+      <HelpCircle className={size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} />
+      <span>Explain This</span>
     </button>
   );
 }

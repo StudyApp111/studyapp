@@ -178,7 +178,7 @@ export default function NotesTab({ lesson }) {
                 variant="outline" 
                 size="sm" 
                 onClick={copyToClipboard} 
-                className="text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                className={`${isDark ? 'text-slate-300 border-white/20 hover:bg-white/10 hover:text-white' : 'text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
               >
                 {copied ? <Check className="w-4 h-4 mr-1.5 text-emerald-500" /> : <Copy className="w-4 h-4 mr-1.5" />}
                 {copied ? "Copied" : "Copy"}
@@ -187,7 +187,7 @@ export default function NotesTab({ lesson }) {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSettingsOpen(true)} 
-                className="text-purple-700 border-purple-200 hover:bg-purple-50 hover:text-purple-900 hover:border-purple-300 transition-all"
+                className={`${isDark ? 'text-purple-300 border-purple-500/30 hover:bg-purple-500/20 hover:text-purple-200' : 'text-purple-700 border-purple-200 hover:bg-purple-50 hover:text-purple-900 hover:border-purple-300'} transition-all`}
               >
                 <Settings2 className="w-4 h-4 mr-1.5" />
                 Customize
@@ -195,7 +195,7 @@ export default function NotesTab({ lesson }) {
               <Button 
                 size="sm" 
                 onClick={() => generateNotes(settings)} 
-                className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-200 transition-all"
+                className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-500/30 transition-all"
               >
                 <RefreshCw className="w-4 h-4 mr-1.5" />
                 Regenerate

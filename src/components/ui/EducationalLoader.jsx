@@ -210,7 +210,10 @@ const FUN_FACTS = [
   { fact_text: "The shortest flight in the world lasts about 57 seconds.", category: "Fun", icon: "✈️" }
 ];
 
+import { useTheme } from "@/components/theme/ThemeProvider";
+
 export default function EducationalLoader({ title = "Creating Your Lesson", description = "Our AI is analyzing the curriculum and generating personalized content..." }) {
+  const { isDark } = useTheme();
   const [currentFact, setCurrentFact] = useState(null);
   const [factIndex, setFactIndex] = useState(0);
 
@@ -242,15 +245,15 @@ export default function EducationalLoader({ title = "Creating Your Lesson", desc
       </div>
 
       {/* Title */}
-      <h2 className="text-lg font-bold text-slate-900 mb-1 text-center">
+      <h2 className={`text-lg font-bold mb-1 text-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
         {title}
       </h2>
-      <p className="text-sm text-slate-500 mb-6 text-center max-w-xs">
+      <p className={`text-sm mb-6 text-center max-w-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
         {description}
       </p>
 
       {/* Divider */}
-      <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-6" />
+      <div className={`h-px w-full bg-gradient-to-r from-transparent ${isDark ? 'via-slate-700' : 'via-slate-200'} to-transparent mb-6`} />
 
       {/* Fun fact card */}
       <div className="min-h-[120px] w-full flex flex-col items-center justify-center">
@@ -267,10 +270,10 @@ export default function EducationalLoader({ title = "Creating Your Lesson", desc
               <span className="text-4xl">{currentFact.icon || "💡"}</span>
               
               <div className="space-y-2">
-                <span className="inline-block text-[10px] font-bold text-purple-600 uppercase tracking-wider bg-purple-50 px-2.5 py-1 rounded-full">
+                <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? 'text-purple-300 bg-purple-500/20' : 'text-purple-600 bg-purple-50'}`}>
                   {currentFact.category || "Fun Fact"}
                 </span>
-                <p className="text-sm font-medium text-slate-700 leading-relaxed max-w-xs">
+                <p className={`text-sm font-medium leading-relaxed max-w-xs ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                   {currentFact.fact_text}
                 </p>
               </div>
@@ -285,7 +288,7 @@ export default function EducationalLoader({ title = "Creating Your Lesson", desc
           <div
             key={i}
             className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-              i === factIndex % 3 ? 'bg-purple-500' : 'bg-slate-200'
+              i === factIndex % 3 ? 'bg-purple-500' : (isDark ? 'bg-slate-600' : 'bg-slate-200')
             }`}
           />
         ))}

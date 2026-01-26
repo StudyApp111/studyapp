@@ -524,9 +524,19 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <p className={`text-center text-sm mb-2 px-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-          If your <span className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{lesson?.course_name || 'course'}</span> exam was today:
-        </p>
+        <div className="flex items-center justify-between mb-2 px-2">
+          <p className={`text-center text-sm flex-1 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            If your <span className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{lesson?.course_name || 'course'}</span> exam was today:
+          </p>
+          {latestOfficialExam && (
+            <button
+              onClick={() => onNavigate('exam', { showResults: latestOfficialExam.id })}
+              className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors ${isDark ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'}`}
+            >
+              View Diagnostic Results →
+            </button>
+          )}
+        </div>
 
         <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-5 md:p-6 shadow-xl transition-all duration-500 ${gradeJustUpdated ? 'ring-4 ring-yellow-400 ring-offset-2 animate-pulse' : ''}`}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />

@@ -49,6 +49,23 @@ export default function PracticeTopicsPanel({
   const [customTopic, setCustomTopic] = useState('');
   const [step, setStep] = useState(1); // 1 = topics, 2 = format
 
+  // Load saved topics from localStorage on mount
+  useEffect(() => {
+    if (lessonId) {
+      const saved = localStorage.getItem(`topics_${lessonId}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setExtractedTopics(parsed);
+          }
+        } catch (e) {
+          console.error('Error loading saved topics:', e);
+        }
+      }
+    }
+  }, [lessonId]);
+
   useEffect(() => {
     if (isOpen && extractedTopics.length === 0 && compressedContent) {
       extractTopics();
@@ -92,6 +109,10 @@ Return ONLY a JSON array with this exact format:
       
       if (result?.topics) {
         setExtractedTopics(result.topics);
+        // Save to localStorage for persistence
+        if (lessonId) {
+          localStorage.setItem(`topics_${lessonId}`, JSON.stringify(result.topics));
+        }
       }
     } catch (error) {
       console.error("Error extracting topics:", error);
