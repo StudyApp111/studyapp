@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import CreateLessonModal from "@/components/modals/CreateLessonModal";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 const formatTime = (seconds) => {
   if (!seconds || seconds === 0) return '0m';
@@ -23,6 +24,7 @@ const formatTime = (seconds) => {
 
 export default function LessonHistory() {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [createLessonModalOpen, setCreateLessonModalOpen] = useState(false);
@@ -113,11 +115,11 @@ export default function LessonHistory() {
   };
 
   const getGradeBgColor = (g) => {
-    if (!g) return 'bg-[#12121a] border-white/10';
-    if (g.startsWith('A')) return 'bg-emerald-500/10 border-emerald-500/30';
-    if (g.startsWith('B')) return 'bg-blue-500/10 border-blue-500/30';
-    if (g.startsWith('C')) return 'bg-amber-500/10 border-amber-500/30';
-    return 'bg-red-500/10 border-red-500/30';
+    if (!g) return isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200';
+    if (g.startsWith('A')) return isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200';
+    if (g.startsWith('B')) return isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-200';
+    if (g.startsWith('C')) return isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200';
+    return isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200';
   };
 
   const LessonCard = ({ lesson, index }) => {
@@ -144,69 +146,69 @@ export default function LessonHistory() {
         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
         className="cursor-pointer group"
       >
-        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 md:p-4 ${getGradeBgColor(grade)}`}>
-          <div className="flex items-start gap-3 md:gap-4">
-            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-3">
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
                 <>
-                  <span className="text-white font-black text-lg md:text-xl leading-none">{grade}</span>
-                  {confidence && <span className="text-white/70 text-[7px] md:text-[8px] mt-0.5">{Math.round(confidence)}%</span>}
+                  <span className="text-white font-black text-lg leading-none">{grade}</span>
+                  {confidence && <span className="text-white/70 text-[7px] mt-0.5">{Math.round(confidence)}%</span>}
                 </>
               ) : (
                 <>
-                  <Target className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                  <span className="text-white/70 text-[7px] md:text-[8px] mt-0.5">start</span>
+                  <Target className="w-5 h-5 text-white" />
+                  <span className="text-white/70 text-[7px] mt-0.5">start</span>
                 </>
               )}
             </div>
 
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-slate-100 text-sm md:text-base truncate group-hover:text-purple-400 transition-colors mb-1.5 md:mb-2">
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <h3 className={`font-bold text-sm truncate group-hover:text-purple-400 transition-colors mb-1.5 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                 {lesson.course_name}
               </h3>
               
-              <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1.5 md:mb-2">
+              <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
                 {completedExamsCount > 0 && (
-                  <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/5 rounded-lg border border-white/10">
-                    <Trophy className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-400" />
-                    <span className="text-[9px] md:text-[10px] font-medium text-slate-300">{completedExamsCount}</span>
+                  <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                    <Trophy className="w-2.5 h-2.5 text-amber-400" />
+                    <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{completedExamsCount}</span>
                   </div>
                 )}
                 {flashcards.length > 0 && (
-                  <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/5 rounded-lg border border-white/10">
-                    <Copy className="w-2.5 h-2.5 md:w-3 md:h-3 text-purple-400" />
-                    <span className="text-[9px] md:text-[10px] font-medium text-slate-300">{masteredFlashcards}/{flashcards.length}</span>
+                  <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                    <Copy className="w-2.5 h-2.5 text-purple-400" />
+                    <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{masteredFlashcards}/{flashcards.length}</span>
                   </div>
                 )}
                 {studyTime > 0 && (
-                  <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/5 rounded-lg border border-white/10">
-                    <Clock className="w-2.5 h-2.5 md:w-3 md:h-3 text-blue-400" />
-                    <span className="text-[9px] md:text-[10px] font-medium text-slate-300">{formatTime(studyTime)}</span>
+                  <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                    <Clock className="w-2.5 h-2.5 text-blue-400" />
+                    <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{formatTime(studyTime)}</span>
                   </div>
                 )}
               </div>
               
               {totalTasks > 0 ? (
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 md:h-2 bg-white/10 rounded-full overflow-hidden max-w-[100px] md:max-w-[150px]">
+                  <div className={`flex-1 h-1.5 rounded-full overflow-hidden max-w-[100px] ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
                     <div 
                       className={`h-full rounded-full ${completedTasks === totalTasks ? 'bg-emerald-500' : 'bg-purple-500'}`}
                       style={{ width: `${(completedTasks / totalTasks) * 100}%` }}
                     />
                   </div>
-                  <span className={`text-[10px] md:text-xs font-medium ${completedTasks === totalTasks ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  <span className={`text-[10px] font-medium ${completedTasks === totalTasks ? 'text-emerald-500' : (isDark ? 'text-slate-400' : 'text-slate-500')}`}>
                     {completedTasks === totalTasks ? '✓' : `${totalTasks - completedTasks} left`}
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1 text-purple-400">
-                  <Sparkles className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                  <span className="text-[10px] md:text-xs font-medium">Diagnostic →</span>
+                <div className="flex items-center gap-1 text-purple-500">
+                  <Sparkles className="w-3 h-3" />
+                  <span className="text-[10px] font-medium">Diagnostic →</span>
                 </div>
               )}
             </div>
 
-            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-500 group-hover:text-purple-400 flex-shrink-0 mt-3 md:mt-5" />
+            <ChevronRight className={`w-4 h-4 flex-shrink-0 mt-3 ${isDark ? 'text-slate-500 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
           </div>
         </div>
       </motion.div>
@@ -227,50 +229,50 @@ export default function LessonHistory() {
         onClick={() => navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`)}
         className="cursor-pointer group"
       >
-        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 md:p-4 ${getGradeBgColor(grade)}`}>
-          <div className="flex items-start gap-3 md:gap-4">
-            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-3">
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
                 <>
-                  <span className="text-white font-black text-lg md:text-xl leading-none">{grade}</span>
-                  {score && <span className="text-white/70 text-[7px] md:text-[8px] mt-0.5">{Math.round(score)}%</span>}
+                  <span className="text-white font-black text-lg leading-none">{grade}</span>
+                  {score && <span className="text-white/70 text-[7px] mt-0.5">{Math.round(score)}%</span>}
                 </>
               ) : (
                 <>
-                  <FileCheck className="w-5 h-5 md:w-6 md:h-6 text-white" />
-                  <span className="text-white/70 text-[7px] md:text-[8px] mt-0.5">grading</span>
+                  <FileCheck className="w-5 h-5 text-white" />
+                  <span className="text-white/70 text-[7px] mt-0.5">grading</span>
                 </>
               )}
             </div>
 
-            <div className="flex-1 min-w-0">
-              <Badge variant="outline" className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px] md:text-[10px] mb-1 px-1.5 py-0">
-                <FileCheck className="w-2 h-2 md:w-2.5 md:h-2.5 mr-0.5 md:mr-1" /> Assignment
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <Badge variant="outline" className={`text-[9px] mb-1 px-1.5 py-0 ${isDark ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
+                <FileCheck className="w-2 h-2 mr-0.5" /> Assignment
               </Badge>
-              <h3 className="font-bold text-slate-100 text-sm md:text-base truncate group-hover:text-emerald-400 transition-colors mb-0.5 md:mb-1">
+              <h3 className={`font-bold text-sm truncate group-hover:text-emerald-500 transition-colors mb-0.5 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                 {assignment.assignment_title}
               </h3>
-              <p className="text-[10px] md:text-xs text-slate-400 truncate mb-1.5 md:mb-2">{assignment.course_name}</p>
+              <p className={`text-[10px] truncate mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{assignment.course_name}</p>
               
               {grade && (
-                <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   {strengths > 0 && (
-                    <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/5 rounded-lg border border-white/10">
-                      <TrendingUp className="w-2.5 h-2.5 md:w-3 md:h-3 text-emerald-400" />
-                      <span className="text-[9px] md:text-[10px] font-medium text-slate-300">{strengths}</span>
+                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                      <TrendingUp className="w-2.5 h-2.5 text-emerald-400" />
+                      <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{strengths}</span>
                     </div>
                   )}
                   {improvements > 0 && (
-                    <div className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/5 rounded-lg border border-white/10">
-                      <Target className="w-2.5 h-2.5 md:w-3 md:h-3 text-amber-400" />
-                      <span className="text-[9px] md:text-[10px] font-medium text-slate-300">{improvements}</span>
+                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                      <Target className="w-2.5 h-2.5 text-amber-400" />
+                      <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{improvements}</span>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-slate-500 group-hover:text-emerald-400 flex-shrink-0 mt-3 md:mt-5" />
+            <ChevronRight className={`w-4 h-4 flex-shrink-0 mt-3 ${isDark ? 'text-slate-500 group-hover:text-emerald-400' : 'text-slate-400 group-hover:text-emerald-600'}`} />
           </div>
         </div>
       </motion.div>
@@ -300,11 +302,11 @@ export default function LessonHistory() {
     : allItems.filter(i => i.itemType === 'assignment');
 
   return (
-    <div className="min-h-screen bg-[#0a0a12]">
+    <div className={`min-h-screen overflow-x-hidden ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
       {/* Compact Header */}
-      <div className="bg-[#12121a] border-b border-white/10 px-4 py-4 md:px-8">
+      <div className={`border-b px-4 py-4 md:px-8 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-xl md:text-2xl font-bold text-white mb-4">Your Learning Journey</h1>
+          <h1 className={`text-xl md:text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Your Learning Journey</h1>
           
           {/* Stats Row - Mobile optimized */}
           <div className="grid grid-cols-4 gap-2 md:gap-3">
@@ -348,14 +350,14 @@ export default function LessonHistory() {
         </div>
       </div>
 
-      <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10">
+      <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10 overflow-x-hidden">
         {/* Tabs */}
-        <div className="bg-[#12121a] rounded-xl border border-white/10 p-1.5 mb-4">
+        <div className={`rounded-xl border p-1.5 mb-4 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-white/5 p-1 rounded-lg w-full grid grid-cols-3">
-              <TabsTrigger value="all" className="rounded-md text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=inactive]:text-slate-400">All</TabsTrigger>
-              <TabsTrigger value="lessons" className="rounded-md text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=inactive]:text-slate-400">Courses</TabsTrigger>
-              <TabsTrigger value="assignments" className="rounded-md text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=inactive]:text-slate-400">Graded</TabsTrigger>
+            <TabsList className={`p-1 rounded-lg w-full grid grid-cols-3 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
+              <TabsTrigger value="all" className={`rounded-md text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>All</TabsTrigger>
+              <TabsTrigger value="lessons" className={`rounded-md text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Courses</TabsTrigger>
+              <TabsTrigger value="assignments" className={`rounded-md text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Graded</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -368,14 +370,14 @@ export default function LessonHistory() {
             ))}
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-16 bg-[#12121a] rounded-2xl border-2 border-dashed border-white/20">
-            <div className="w-20 h-20 bg-purple-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="w-10 h-10 text-purple-400" />
+          <div className={`text-center py-16 rounded-2xl border-2 border-dashed ${isDark ? 'bg-[#12121a] border-white/20' : 'bg-white border-slate-300'}`}>
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
+              <BookOpen className={`w-10 h-10 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
             </div>
-            <h3 className="text-lg font-bold text-slate-200 mb-2">
+            <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
               {activeTab === 'all' ? 'Start Your Journey' : activeTab === 'lessons' ? 'No courses yet' : 'No assignments yet'}
             </h3>
-            <p className="text-sm text-slate-400 mb-6 max-w-sm mx-auto">
+            <p className={`text-sm mb-6 max-w-sm mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               {activeTab === 'assignments' 
                 ? 'Grade your first assignment to see it here'
                 : 'Upload your lecture notes to get AI-powered study plans'}
