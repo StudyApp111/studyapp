@@ -115,9 +115,12 @@ export function SubscriptionProvider({ children }) {
   };
 
   const canDoTask = async () => {
-    if (isPro()) return { allowed: true };
+    const pro = isPro();
+    console.log(`📦 Subscription check - isPro: ${pro}, tier: ${user?.subscription_tier}, status: ${user?.subscription_status}`);
+    if (pro) return { allowed: true };
     const currentUser = await checkAndResetCounters();
     const count = currentUser?.daily_tasks_count || 0;
+    console.log(`📦 Task limit check - count: ${count}, limit: ${FREE_TIER_LIMITS.tasks_per_day}`);
     return {
       allowed: count < FREE_TIER_LIMITS.tasks_per_day,
       current: count,
