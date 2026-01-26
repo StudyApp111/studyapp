@@ -68,46 +68,54 @@ export function SubscriptionProvider({ children }) {
     return new Date(now.getTime() - hours * 60 * 60 * 1000);
   };
 
-  // Check and reset counters based on rolling windows from account creation
+  // Check and reset counters based on rolling windows
+  // IMPORTANT: Always fetches fresh user data to avoid stale counter values
   const checkAndResetCounters = async () => {
-    // Always fetch fresh user data to ensure accurate counters
-    let currentUser = user;
-    if (!currentUser) {
-      try {
-        currentUser = await base44.auth.me();
-        setUser(currentUser);
-      } catch {
-        return null;
-      }
+    // ALWAYS fetch fresh user data from server to get accurate counters
+    let currentUser;
+    try {
+      currentUser = await base44.auth.me();
+      setUser(currentUser);
+    } catch {
+      return null;
     }
     if (!currentUser) return null;
     
     const now = new Date();
     let updates = {};
-    let needsRefresh = false;
+    let needsReset = false;
 
     // Daily counters - 24h rolling window
+    // If no timestamp exists, DON'T reset - just set the timestamp
     const dailyResetTime = currentUser.daily_reset_timestamp ? new Date(currentUser.daily_reset_timestamp) : null;
-    const dailyWindowExpired = !dailyResetTime || (now.getTime() - dailyResetTime.getTime()) >= 24 * 60 * 60 * 1000;
     
-    if (dailyWindowExpired) {
+    if (!dailyResetTime) {
+      // First time - initialize timestamp without resetting counters
+      updates.daily_reset_timestamp = now.toISOString();
+      needsReset = true;
+    } else if ((now.getTime() - dailyResetTime.getTime()) >= 24 * 60 * 60 * 1000) {
+      // Window expired - reset counters
       updates.daily_tasks_count = 0;
       updates.daily_ai_messages_count = 0;
       updates.daily_reset_timestamp = now.toISOString();
-      needsRefresh = true;
+      needsReset = true;
     }
 
     // Weekly counters - 7 day rolling window
     const weeklyResetTime = currentUser.weekly_reset_timestamp ? new Date(currentUser.weekly_reset_timestamp) : null;
-    const weeklyWindowExpired = !weeklyResetTime || (now.getTime() - weeklyResetTime.getTime()) >= 7 * 24 * 60 * 60 * 1000;
     
-    if (weeklyWindowExpired) {
+    if (!weeklyResetTime) {
+      // First time - initialize timestamp without resetting counters
+      updates.weekly_reset_timestamp = now.toISOString();
+      needsReset = true;
+    } else if ((now.getTime() - weeklyResetTime.getTime()) >= 7 * 24 * 60 * 60 * 1000) {
+      // Window expired - reset counters
       updates.weekly_uploads_count = 0;
       updates.weekly_reset_timestamp = now.toISOString();
-      needsRefresh = true;
+      needsReset = true;
     }
 
-    if (needsRefresh) {
+    if (needsReset) {
       await base44.auth.updateMe(updates);
       return await refreshUser();
     }
