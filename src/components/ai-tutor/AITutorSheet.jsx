@@ -6,6 +6,7 @@ import { Send, X, Sparkles, Loader2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useAITutor } from "./AITutorContext";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 // Simple LaTeX renderer for inline and block math
 const renderMathContent = (text) => {
