@@ -1,8 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
-import * as ReactDOM from "react-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Send, X, Sparkles, Loader2, ChevronDown } from "lucide-react";
+import { Send, Sparkles, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useAITutor } from "./AITutorContext";
@@ -27,7 +26,7 @@ const renderMathContent = (text) => {
 
 export default function AITutorSheet() {
   const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
-  const { canSendAIMessage, incrementAIMessageCount } = useSubscription();
+  const { canSendAIMessage, incrementAIMessageCount, triggerUpgradeModal } = useSubscription();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasUsedInitialPrompt, setHasUsedInitialPrompt] = useState(false);
@@ -72,12 +71,9 @@ export default function AITutorSheet() {
     // Check subscription limit BEFORE showing user message
     const aiCheck = await canSendAIMessage();
     if (!aiCheck.allowed) {
-      // Show upgrade modal via subscription context
-      const { triggerUpgradeModal } = useSubscription;
       // Close sheet and show upgrade modal
       close();
-      // Dispatch event to trigger upgrade modal
-      window.dispatchEvent(new CustomEvent('triggerUpgradeModal', { detail: { reason: 'ai_message' } }));
+      triggerUpgradeModal('ai_message');
       return;
     }
 
