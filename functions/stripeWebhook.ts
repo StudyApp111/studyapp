@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
               .map(b => b.toString(16).padStart(2, '0'))
               .join('');
             
-            // TikTok Events API v1.3 - event_time must be string in milliseconds
+            // TikTok Events API v1.3 format
             const eventData = {
               event: "Subscribe",
               event_id: `subscribe_${user.id}_${Date.now()}`,
