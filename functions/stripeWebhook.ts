@@ -102,13 +102,23 @@ Deno.serve(async (req) => {
               .map(b => b.toString(16).padStart(2, '0'))
               .join('');
             
+            // Hash user ID for external_id
+            const userIdHash = await crypto.subtle.digest(
+              "SHA-256",
+              new TextEncoder().encode(user.id)
+            );
+            const hashedUserId = Array.from(new Uint8Array(userIdHash))
+              .map(b => b.toString(16).padStart(2, '0'))
+              .join('');
+            
             // TikTok Events API v1.3 format
             const eventData = {
               event: "Subscribe",
               event_id: `subscribe_${user.id}_${Date.now()}`,
-              event_time: String(Date.now()),
+              event_time: Math.floor(Date.now() / 1000),
               user: {
-                email: hashedEmail
+                email: hashedEmail,
+                external_id: hashedUserId
               },
               page: {
                 url: "https://app.studyappai.com/pricingplans"
