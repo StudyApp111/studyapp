@@ -68,10 +68,15 @@ export default function AITutorSheet() {
     const messageToSend = customMessage || input.trim();
     if (!messageToSend || isLoading) return;
 
+    setIsLoading(true);
+    
     // Check subscription limit BEFORE showing user message
     const aiCheck = await canSendAIMessage();
+    console.log('🔒 AITutorSheet: canSendAIMessage result:', aiCheck);
+    
     if (!aiCheck.allowed) {
       // Close sheet and show upgrade modal
+      setIsLoading(false);
       close();
       triggerUpgradeModal('ai_message');
       return;
@@ -79,10 +84,9 @@ export default function AITutorSheet() {
 
     if (!customMessage) setInput("");
     setMessages((prev) => [...prev, { role: "user", content: messageToSend }]);
-    setIsLoading(true);
     setHasUsedInitialPrompt(true);
 
-    // Increment counter AFTER user commits to sending
+    // Increment counter AFTER check passes
     await incrementAIMessageCount();
 
     try {
