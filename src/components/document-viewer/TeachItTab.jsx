@@ -11,8 +11,10 @@ import EducationalLoader from "@/components/ui/EducationalLoader";
 import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import TeachItSetsList from "./TeachItSetsList";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
+  const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
   const [cards, setCards] = useState([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");

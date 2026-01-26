@@ -27,6 +27,7 @@ const renderMathContent = (text) => {
 
 export default function AITutorSheet() {
   const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
+  const { canSendAIMessage, incrementAIMessageCount } = useSubscription();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasUsedInitialPrompt, setHasUsedInitialPrompt] = useState(false);

@@ -10,8 +10,10 @@ import XPGainToast from "@/components/gamification/XPGainToast";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 import FlashcardSetsList from "./FlashcardSetsList";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 export default function FlashcardsTab({ lesson, extractedContent, focusTopics }) {
+  const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
   const [cards, setCards] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
