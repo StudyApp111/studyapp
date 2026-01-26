@@ -12,9 +12,11 @@ import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import TeachItSetsList from "./TeachItSetsList";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
+  const { isDark } = useTheme();
   const [cards, setCards] = useState([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
@@ -468,14 +470,14 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length === 0) {
     return (
-      <div className="flex items-center justify-center p-4 pb-8 bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 min-h-[400px]">
+      <div className={`flex items-center justify-center p-4 pb-8 min-h-[400px] ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40'}`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
           className="w-full max-w-md md:max-w-xl"
         >
-          <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200 shadow-2xl overflow-hidden">
+          <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
             <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-6 py-6 md:py-8 text-center">
               <motion.div
                 animate={{ rotate: [0, -10, 10, -10, 0] }}
@@ -489,7 +491,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               </p>
             </div>
             <div className="p-5 md:p-6 text-center">
-              <p className="text-slate-600 mb-5 leading-relaxed text-sm md:text-base">
+              <p className={`mb-5 leading-relaxed text-sm md:text-base ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                 Explain concepts in your own words and get instant AI feedback on your understanding.
               </p>
               <Button
@@ -533,12 +535,12 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl max-h-[70vh] overflow-y-auto"
+              className={`rounded-2xl max-w-sm w-full p-5 shadow-2xl max-h-[70vh] overflow-y-auto ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-slate-900">Teach It Sets</h3>
-                <button onClick={() => setShowSetsList(false)} className="p-1 hover:bg-slate-100 rounded-full">
+                <h3 className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Teach It Sets</h3>
+                <button onClick={() => setShowSetsList(false)} className={`p-1 rounded-full ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}>
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
@@ -577,10 +579,10 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                           className="w-full p-3 bg-slate-50 hover:bg-purple-50 rounded-xl border border-slate-200 hover:border-purple-300 transition-all text-left"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-sm text-slate-900">{set.topic}</span>
-                            <span className="text-xs text-slate-500">{set.mastered}/{set.cards.length}</span>
+                            <span className={`font-semibold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{set.topic}</span>
+                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{set.mastered}/{set.cards.length}</span>
                           </div>
-                          <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
                             <div 
                               className="h-full bg-gradient-to-r from-violet-500 to-purple-600 rounded-full"
                               style={{ width: `${progress}%` }}
@@ -609,7 +611,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         )}
       </AnimatePresence>
 
-      <div className="flex flex-col bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40 md:rounded-2xl w-full pb-8">
+      <div className={`flex flex-col md:rounded-2xl w-full pb-8 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40'}`}>
         {/* Centered content */}
         <div className="px-3 py-4 md:px-6 md:py-6 w-full flex items-start justify-center">
           <AnimatePresence mode="wait">
@@ -621,7 +623,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               transition={{ duration: 0.25 }}
               className="w-full max-w-md md:max-w-2xl lg:max-w-3xl"
             >
-              <Card className="bg-white/95 backdrop-blur-xl border border-purple-200/50 shadow-xl overflow-hidden w-full">
+              <Card className={`backdrop-blur-xl border shadow-xl overflow-hidden w-full ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200/50'}`}>
                 {/* Integrated Card Header with Progress */}
                 <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 md:px-6 md:py-4 w-full">
                   {/* Top row: Progress info + Actions */}
@@ -737,18 +739,18 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       </motion.div>
 
                       {/* 1. Your Answer */}
-                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 md:p-4 w-full">
-                        <h4 className="font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
-                          <PenLine className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-500" />
+                      <div className={`border rounded-xl p-3 md:p-4 w-full ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                        <h4 className={`font-semibold mb-1.5 flex items-center gap-1.5 text-xs md:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                          <PenLine className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
                           Your Answer
                         </h4>
-                        <p className="text-slate-600 text-xs md:text-sm leading-relaxed">{currentCard.user_answer}</p>
+                        <p className={`text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{currentCard.user_answer}</p>
                       </div>
 
                       {/* 2. Did Well (Strengths) */}
                       {currentCard.strengths?.length > 0 && (
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 md:p-4 w-full">
-                          <h4 className="font-semibold text-emerald-800 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
+                        <div className={`border rounded-xl p-3 md:p-4 w-full ${isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'}`}>
+                          <h4 className={`font-semibold mb-1.5 flex items-center gap-1.5 text-xs md:text-sm ${isDark ? 'text-emerald-400' : 'text-emerald-800'}`}>
                             <CheckCircle2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-600" />
                             What You Did Well
                           </h4>
@@ -771,8 +773,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
                       {/* 3. To Review (Gaps) */}
                       {currentCard.gaps?.length > 0 && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 md:p-4 w-full">
-                          <h4 className="font-semibold text-amber-800 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
+                        <div className={`border rounded-xl p-3 md:p-4 w-full ${isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
+                          <h4 className={`font-semibold mb-1.5 flex items-center gap-1.5 text-xs md:text-sm ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>
                             <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-amber-600" />
                             To Review
                           </h4>
@@ -794,21 +796,21 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       )}
 
                       {/* 4. Correct Answer */}
-                      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl p-3 md:p-4 w-full">
-                        <h4 className="font-semibold text-indigo-800 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
-                          <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-600" />
+                      <div className={`border rounded-xl p-3 md:p-4 w-full ${isDark ? 'bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-indigo-500/30' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200'}`}>
+                        <h4 className={`font-semibold mb-1.5 flex items-center gap-1.5 text-xs md:text-sm ${isDark ? 'text-indigo-400' : 'text-indigo-800'}`}>
+                          <Sparkles className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
                           Correct Answer
                         </h4>
-                        <p className="text-slate-700 text-xs md:text-sm leading-relaxed">{currentCard.model_answer}</p>
+                        <p className={`text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{currentCard.model_answer}</p>
                       </div>
 
                       {/* 5. Feedback */}
-                      <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 md:p-4 w-full">
-                        <h4 className="font-semibold text-purple-800 mb-1.5 flex items-center gap-1.5 text-xs md:text-sm">
-                          <Lightbulb className="w-3.5 h-3.5 md:w-4 md:h-4 text-purple-600" />
+                      <div className={`border rounded-xl p-3 md:p-4 w-full ${isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200'}`}>
+                        <h4 className={`font-semibold mb-1.5 flex items-center gap-1.5 text-xs md:text-sm ${isDark ? 'text-purple-400' : 'text-purple-800'}`}>
+                          <Lightbulb className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                           AI Feedback
                         </h4>
-                        <p className="text-slate-700 text-xs md:text-sm leading-relaxed">{currentCard.feedback}</p>
+                        <p className={`text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{currentCard.feedback}</p>
                       </div>
                     </motion.div>
                   )}
@@ -819,7 +821,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         </div>
 
         {/* Navigation */}
-        <div className="bg-white/95 backdrop-blur-xl border-t border-purple-200 px-3 py-3 md:px-6 md:py-4 w-full">
+        <div className={`backdrop-blur-xl border-t px-3 py-3 md:px-6 md:py-4 w-full ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
           <div className="flex gap-3 w-full max-w-lg mx-auto">
             <Button
               variant="outline"
