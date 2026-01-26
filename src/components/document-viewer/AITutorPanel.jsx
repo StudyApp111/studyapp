@@ -2,11 +2,13 @@ import React, { useRef, useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Sparkles, FileText, HelpCircle, List, Lightbulb } from "lucide-react";
+import { Send, Sparkles, FileText, HelpCircle, List, Lightbulb, Lock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 export default function AITutorPanel({ messages, setMessages, input, setInput, isLoading, setIsLoading, lesson }) {
+  const { canSendAIMessage, incrementAIMessageCount, triggerUpgradeModal, isPro } = useSubscription();
   const messagesEndRef = useRef(null);
   const [showQuickActions, setShowQuickActions] = useState(true);
 
@@ -71,10 +73,20 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     const messageToSend = customMessage || input.trim();
     if (!messageToSend || isLoading) return;
 
+    // Check AI message limit BEFORE sending
+    const aiCheck = await canSendAIMessage();
+    if (!aiCheck.allowed) {
+      triggerUpgradeModal('ai_message');
+      return;
+    }
+
     if (!customMessage) setInput("");
     setMessages((prev) => [...prev, { role: "user", content: messageToSend }]);
     setIsLoading(true);
     setShowQuickActions(false);
+
+    // Increment counter AFTER user commits to sending
+    await incrementAIMessageCount();
 
     try {
       const docContent = lesson?.extracted_content || '';
