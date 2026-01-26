@@ -25,8 +25,11 @@ import {
   BarChart3,
   Mail,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Sun,
+  Moon
 } from "lucide-react";
+import { useTheme } from "@/components/theme/ThemeContext";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +51,7 @@ export default function Settings() {
   const [deleteConfirmStep, setDeleteConfirmStep] = useState(1);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     base44.auth.me()
@@ -220,16 +224,27 @@ export default function Settings() {
             )}
 
             <SettingsSection title="Others">
-              <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-white/5">
-                <div className="flex items-center gap-3">
-                  <Bell className="w-5 h-5 text-slate-400" />
-                  <span className="font-medium text-slate-200">Notifications</span>
+                <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-white/5">
+                  <div className="flex items-center gap-3">
+                    {isDark ? <Moon className="w-5 h-5 text-slate-400" /> : <Sun className="w-5 h-5 text-slate-400" />}
+                    <span className="font-medium text-slate-200">Dark Mode</span>
+                  </div>
+                  <Switch
+                    checked={isDark}
+                    onCheckedChange={toggleTheme}
+                  />
                 </div>
-                <Switch
-                  checked={notificationsEnabled}
-                  onCheckedChange={handleNotificationsToggle}
-                />
-              </div>
+
+                <div className="flex items-center justify-between p-4 rounded-lg border border-white/10 bg-white/5">
+                  <div className="flex items-center gap-3">
+                    <Bell className="w-5 h-5 text-slate-400" />
+                    <span className="font-medium text-slate-200">Notifications</span>
+                  </div>
+                  <Switch
+                    checked={notificationsEnabled}
+                    onCheckedChange={handleNotificationsToggle}
+                  />
+                </div>
               
               <SettingsItem
                 icon={Lock}
