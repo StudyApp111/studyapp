@@ -9,10 +9,10 @@ import ManageSubscription from './pages/ManageSubscription';
 import Onboarding from './pages/Onboarding';
 import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
-import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
 import Home from './pages/Home';
 import DocumentViewer from './pages/DocumentViewer';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -28,10 +28,10 @@ export const PAGES = {
     "Onboarding": Onboarding,
     "PricingPlans": PricingPlans,
     "ProfileInformation": ProfileInformation,
-    "Settings": Settings,
     "SmartGrader": SmartGrader,
     "Home": Home,
     "DocumentViewer": DocumentViewer,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {
