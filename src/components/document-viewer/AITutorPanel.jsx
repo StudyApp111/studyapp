@@ -73,19 +73,23 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     const messageToSend = customMessage || input.trim();
     if (!messageToSend || isLoading) return;
 
+    setIsLoading(true);
+
     // Check AI message limit BEFORE sending
     const aiCheck = await canSendAIMessage();
+    console.log('🔒 AITutorPanel: canSendAIMessage result:', aiCheck);
+    
     if (!aiCheck.allowed) {
+      setIsLoading(false);
       triggerUpgradeModal('ai_message');
       return;
     }
 
     if (!customMessage) setInput("");
     setMessages((prev) => [...prev, { role: "user", content: messageToSend }]);
-    setIsLoading(true);
     setShowQuickActions(false);
 
-    // Increment counter AFTER user commits to sending
+    // Increment counter AFTER check passes
     await incrementAIMessageCount();
 
     try {
