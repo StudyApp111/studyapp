@@ -175,32 +175,67 @@ export default function Settings() {
               label="Pricing Plans"
               onClick={() => navigate(createPageUrl("PricingPlans"))}
             />
-            {/* Show subscription status if user is pro */}
-            {user?.subscription_tier === 'pro' && user?.subscription_status === 'active' && (
-              <div className="p-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-emerald-400" />
+            {/* Show subscription status */}
+            {(() => {
+              const isActivePro = user?.subscription_tier === 'pro' && user?.subscription_status === 'active';
+              const endDate = user?.subscription_end_date ? new Date(user.subscription_end_date) : null;
+              const promoEndDate = user?.promo_access_until ? new Date(user.promo_access_until) : null;
+              const now = new Date();
+              const isExpired = (endDate && endDate < now) || (promoEndDate && promoEndDate < now && !endDate);
+              const activeEndDate = promoEndDate || endDate;
+              
+              if (isActivePro && !isExpired) {
+                return (
+                  <div className="p-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-emerald-300">Pro Active</p>
+                        <p className="text-xs text-emerald-400">
+                          {promoEndDate ? `Promo until ${promoEndDate.toLocaleDateString()}` :
+                           endDate ? `${user.subscription_plan_type === 'yearly' ? 'Yearly' : 'Monthly'} • Renews ${endDate.toLocaleDateString()}` :
+                           'Active subscription'}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(createPageUrl("ManageSubscription"))}
+                        className="text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
+                      >
+                        Manage
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-emerald-300">Locked In Pro</p>
-                    <p className="text-xs text-emerald-400">
-                      {user.subscription_end_date 
-                        ? `Active until ${new Date(user.subscription_end_date).toLocaleDateString()}`
-                        : 'Active subscription'}
-                    </p>
+                );
+              } else if (isExpired || user?.subscription_status === 'canceled') {
+                return (
+                  <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
+                        <AlertTriangle className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-amber-300">Subscription Expired</p>
+                        <p className="text-xs text-amber-400">
+                          {activeEndDate ? `Ended ${activeEndDate.toLocaleDateString()}` : 'Your subscription has ended'}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(createPageUrl("PricingPlans"))}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        Renew
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(createPageUrl("ManageSubscription"))}
-                    className="text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
-                  >
-                    Manage
-                  </Button>
-                </div>
-              </div>
-            )}
+                );
+              }
+              return null;
+            })()}
             <SettingsItem
               icon={History}
               label="History"
