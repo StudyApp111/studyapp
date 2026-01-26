@@ -761,7 +761,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.4 + idx * 0.1 }}
-                                className="flex items-start gap-2 text-slate-700 text-xs md:text-sm"
+                                className={`flex items-start gap-2 text-xs md:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
                               >
                                 <span className="text-emerald-500 mt-0.5">✓</span>
                                 <span className="leading-relaxed">{strength}</span>
@@ -785,7 +785,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.5 + idx * 0.1 }}
-                                className="flex items-start gap-2 text-slate-700 text-xs md:text-sm"
+                                className={`flex items-start gap-2 text-xs md:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}
                               >
                                 <span className="text-amber-500 mt-0.5">→</span>
                                 <span className="leading-relaxed">{gap}</span>
