@@ -4,7 +4,7 @@
 
 @layer base {
   /* Dark mode is default */
-  :root {
+  :root, .dark {
     --background: 224 71% 4%;
     --foreground: 213 31% 91%;
     --card: 224 71% 6%;
@@ -30,6 +30,15 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    
+    /* Theme-specific colors for components */
+    --theme-bg: #0a0a12;
+    --theme-card: #12121a;
+    --theme-card-hover: rgba(255, 255, 255, 0.05);
+    --theme-border: rgba(255, 255, 255, 0.1);
+    --theme-text: #e2e8f0;
+    --theme-text-muted: #94a3b8;
+    --theme-text-subtle: #64748b;
   }
 
   .light {
@@ -58,6 +67,15 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    
+    /* Light theme colors */
+    --theme-bg: #f8fafc;
+    --theme-card: #ffffff;
+    --theme-card-hover: rgba(0, 0, 0, 0.02);
+    --theme-border: rgba(0, 0, 0, 0.1);
+    --theme-text: #0f172a;
+    --theme-text-muted: #475569;
+    --theme-text-subtle: #94a3b8;
   }
 }
 
