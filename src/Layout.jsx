@@ -130,15 +130,8 @@ export default function Layout({ children, currentPageName }) {
     <AITutorProvider>
     <SidebarProvider>
       <BrowserCompatibilityBanner />
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 relative">
+      <div className="min-h-screen flex w-full bg-slate-900 relative">
         <style>{`
-          :root {
-            --primary: 270 50% 50%;
-            --primary-foreground: 0 0% 100%;
-            --secondary: 45 100% 85%;
-            --accent: 280 60% 60%;
-          }
-          
           /* Hide desktop sidebar on mobile */
           @media (max-width: 768px) {
             aside[data-sidebar] {
@@ -147,16 +140,16 @@ export default function Layout({ children, currentPageName }) {
           }
         `}</style>
         
-        {/* Desktop Sidebar - White theme, fixed to viewport */}
+        {/* Desktop Sidebar - Dark theme, fixed to viewport */}
         {showSidebar && (
-          <div className="hidden md:flex flex-col w-16 bg-white border-r border-slate-200 shadow-sm fixed top-0 left-0 h-screen z-40">
+          <div className="hidden md:flex flex-col w-16 bg-slate-800 border-r border-slate-700 shadow-sm fixed top-0 left-0 h-screen z-40">
             {/* Logo */}
             <div className="p-3 flex justify-center">
               <Link to={createPageUrl("Home")} className="hover:opacity-80 transition-opacity">
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/127ee5758_StudyAppAI1024x1024px.png"
                   alt="StudyApp"
-                  className="w-10 h-10 object-contain rounded-lg border-2 border-purple-200 shadow-sm"
+                  className="w-10 h-10 object-contain rounded-lg border-2 border-purple-500/30 shadow-sm"
                 />
               </Link>
             </div>
@@ -175,7 +168,6 @@ export default function Layout({ children, currentPageName }) {
             {/* Navigation Icons */}
             <nav className="flex-1 flex flex-col items-center gap-1 px-2 py-2">
               {navigationItems.map((item) => {
-                // More robust active check - compare pathname without trailing slashes
                 const currentPath = location.pathname.replace(/\/$/, '');
                 const itemPath = item.url.replace(/\/$/, '');
                 const isActive = currentPath === itemPath || 
@@ -187,8 +179,8 @@ export default function Layout({ children, currentPageName }) {
                     to={item.url}
                     className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
                       isActive 
-                        ? 'bg-purple-100 text-purple-700 shadow-sm' 
-                        : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                        ? 'bg-purple-600/20 text-purple-400 shadow-sm' 
+                        : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
                     }`}
                     title={item.title}
                   >
@@ -203,7 +195,7 @@ export default function Layout({ children, currentPageName }) {
               {/* Feedback/Email icon */}
               <button
                 onClick={() => setFeedbackModalOpen(true)}
-                className="relative w-full aspect-square rounded-xl flex items-center justify-center transition-all text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                className="relative w-full aspect-square rounded-xl flex items-center justify-center transition-all text-slate-400 hover:bg-slate-700 hover:text-slate-200"
                 title="Send Feedback"
               >
                 <Mail className="w-5 h-5" />
@@ -220,8 +212,8 @@ export default function Layout({ children, currentPageName }) {
                 to={createPageUrl("Settings")}
                 className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
                   location.pathname.replace(/\/$/, '') === createPageUrl("Settings").replace(/\/$/, '')
-                    ? 'bg-purple-100 text-purple-700 shadow-sm' 
-                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                    ? 'bg-purple-600/20 text-purple-400 shadow-sm' 
+                    : 'text-slate-400 hover:bg-slate-700 hover:text-slate-200'
                 }`}
                 title="Settings"
               >
@@ -232,7 +224,7 @@ export default function Layout({ children, currentPageName }) {
               {user && (
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}
-                  className="w-full aspect-square rounded-xl bg-slate-100 hover:bg-purple-100 flex items-center justify-center transition-all"
+                  className="w-full aspect-square rounded-xl bg-slate-700 hover:bg-purple-600/20 flex items-center justify-center transition-all"
                   title={user.full_name || 'Profile'}
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center">
@@ -249,7 +241,7 @@ export default function Layout({ children, currentPageName }) {
         <main className="flex-1 flex flex-col md:ml-16">
           {/* Mobile Header - Hidden during onboarding and on DocumentViewer */}
           {showNavigation && !isOnboardingPage && showMobileHeader && (
-            <header className="bg-white/95 backdrop-blur-xl border-b border-purple-100 px-3 py-2 md:hidden">
+            <header className="bg-slate-800/95 backdrop-blur-xl border-b border-slate-700 px-3 py-2 md:hidden">
               <div className="flex items-center justify-center">
                 {/* Logo + App Name - centered */}
                 <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -258,7 +250,7 @@ export default function Layout({ children, currentPageName }) {
                     alt="StudyApp Logo"
                     className="w-6 h-6"
                   />
-                  <span className="font-bold text-slate-900 text-sm">StudyApp</span>
+                  <span className="font-bold text-slate-100 text-sm">StudyApp</span>
                 </Link>
               </div>
             </header>
@@ -273,7 +265,7 @@ export default function Layout({ children, currentPageName }) {
           {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
           {showNavigation && !isOnboardingPage && showMobileBottomNav && (
             <nav 
-              className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-[9999]"
+              className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 z-[9999]"
               style={{ 
                 paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)',
                 minHeight: '60px'
@@ -284,8 +276,8 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl("Home")}
                   className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("Home")
-                      ? 'text-purple-600 bg-purple-50'
-                      : 'text-slate-500'
+                      ? 'text-purple-400 bg-purple-600/20'
+                      : 'text-slate-400'
                   }`}
                 >
                   <Home className="w-6 h-6" />
@@ -295,8 +287,8 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl("LessonHistory")}
                   className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("LessonHistory")
-                      ? 'text-purple-600 bg-purple-50'
-                      : 'text-slate-500'
+                      ? 'text-purple-400 bg-purple-600/20'
+                      : 'text-slate-400'
                   }`}
                 >
                   <History className="w-6 h-6" />
@@ -307,7 +299,7 @@ export default function Layout({ children, currentPageName }) {
 
                 <button
                   onClick={() => setFeedbackModalOpen(true)}
-                  className="flex items-center justify-center p-2.5 rounded-xl transition-all text-slate-500 hover:text-purple-600 hover:bg-purple-50"
+                  className="flex items-center justify-center p-2.5 rounded-xl transition-all text-slate-400 hover:text-purple-400 hover:bg-purple-600/20"
                 >
                   <Mail className="w-6 h-6" />
                 </button>
@@ -316,8 +308,8 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl("Settings")}
                   className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("Settings")
-                      ? 'text-purple-600 bg-purple-50'
-                      : 'text-slate-500'
+                      ? 'text-purple-400 bg-purple-600/20'
+                      : 'text-slate-400'
                   }`}
                 >
                   <Settings className="w-6 h-6" />
@@ -333,7 +325,7 @@ export default function Layout({ children, currentPageName }) {
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 blur-xl opacity-50 group-hover:opacity-70 transition-opacity" />
 
                     {/* Main button - Upload icon */}
-                    <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 rounded-2xl shadow-xl ring-4 ring-white flex items-center justify-center transform group-hover:scale-105 transition-transform duration-200">
+                    <div className="relative w-14 h-14 bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-700 rounded-2xl shadow-xl ring-4 ring-slate-800 flex items-center justify-center transform group-hover:scale-105 transition-transform duration-200">
                       <Upload className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
                   </div>
