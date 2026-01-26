@@ -10,14 +10,24 @@ import { base44 } from '@/api/base44Client';
 import { useSubscription } from './SubscriptionContext';
 
 const LIMIT_MESSAGES = {
+  uploads: {
+    title: "Weekly Upload Limit Reached",
+    description: "Free users can upload 2 documents per week.",
+    icon: "📄"
+  },
   upload: {
     title: "Weekly Upload Limit Reached",
     description: "Free users can upload 2 documents per week.",
     icon: "📄"
   },
+  tasks: {
+    title: "Daily Task Limit Reached", 
+    description: "Free users can complete 2 study tasks per day.",
+    icon: "📝"
+  },
   task: {
     title: "Daily Task Limit Reached", 
-    description: "Free users can complete 1 study task per day.",
+    description: "Free users can complete 2 study tasks per day.",
     icon: "📝"
   },
   ai_message: {
@@ -130,7 +140,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
                     <span className="text-slate-400">2</span> uploads/week
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-slate-400">1</span> task/day
+                    <span className="text-slate-400">2</span> tasks/day
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-slate-400">10</span> AI msgs/day
