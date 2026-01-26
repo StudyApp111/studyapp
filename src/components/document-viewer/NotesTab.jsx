@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, GraduationCap, FileText, Download, Notebook } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { renderMathContent } from "@/components/utils/MathRenderer";
 import NoteSettingsModal from "@/components/modals/NoteSettingsModal";
 import { toast } from "sonner";
 import EducationalLoader from "@/components/ui/EducationalLoader";
@@ -220,7 +221,28 @@ export default function NotesTab({ lesson }) {
                   prose-hr:border-slate-200 prose-hr:my-8
                   prose-table:text-sm
                 ">
-                  <ReactMarkdown>{note.content}</ReactMarkdown>
+                  <ReactMarkdown
+                    components={{
+                      p: ({ children }) => {
+                        const text = typeof children === 'string' ? children : 
+                          (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                        if (text.includes('$')) {
+                          return <p dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
+                        }
+                        return <p>{children}</p>;
+                      },
+                      li: ({ children }) => {
+                        const text = typeof children === 'string' ? children : 
+                          (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                        if (text.includes('$')) {
+                          return <li dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
+                        }
+                        return <li>{children}</li>;
+                      }
+                    }}
+                  >
+                    {note.content}
+                  </ReactMarkdown>
                 </div>
               </Card>
               

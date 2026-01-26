@@ -7,22 +7,7 @@ import ReactMarkdown from "react-markdown";
 import { useAITutor } from "./AITutorContext";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
-// Simple LaTeX renderer for inline and block math
-const renderMathContent = (text) => {
-  if (!text || typeof text !== 'string') return text;
-  
-  // Replace block math $$...$$ with styled div
-  let result = text.replace(/\$\$(.*?)\$\$/gs, (match, math) => {
-    return `<div class="my-2 p-2 bg-slate-100 rounded text-center font-mono text-sm">${math}</div>`;
-  });
-  
-  // Replace inline math $...$ with styled span
-  result = result.replace(/\$([^$]+)\$/g, (match, math) => {
-    return `<span class="font-mono bg-slate-100 px-1 rounded text-sm">${math}</span>`;
-  });
-  
-  return result;
-};
+import { renderMathContent } from "@/components/utils/MathRenderer";
 
 export default function AITutorSheet() {
   const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
@@ -219,7 +204,9 @@ export default function AITutorSheet() {
                             }
                             return <li>{children}</li>;
                           },
-                          code: ({ inline, children }) => inline ? <code className="bg-slate-200 px-1 rounded text-[10px]">{children}</code> : <pre className="bg-slate-200 p-2 rounded text-[10px] overflow-x-auto"><code>{children}</code></pre>
+                          code: ({ inline, children }) => inline ? 
+                            <code className="bg-slate-700 px-1 rounded text-[10px]">{children}</code> : 
+                            <pre className="bg-slate-800 text-slate-200 p-2 rounded text-[10px] overflow-x-auto"><code>{children}</code></pre>
                         }}
                       >
                         {msg.content}
