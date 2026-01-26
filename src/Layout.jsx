@@ -45,22 +45,6 @@ import AITutorSheet from "@/components/ai-tutor/AITutorSheet";
 import { SubscriptionProvider } from "@/components/subscription/SubscriptionContext";
 import { UpgradeNavBadge } from "@/components/subscription/UpgradeBadge";
 import UpgradeModalWrapper from "@/components/subscription/UpgradeModalWrapper";
-import { ThemeProvider, useTheme } from "@/components/theme/ThemeContext";
-import { Moon, Sun } from "lucide-react";
-
-// Theme toggle button component
-function ThemeToggleButton() {
-  const { isDark, toggleTheme } = useTheme();
-  return (
-    <button
-      onClick={toggleTheme}
-      className="relative w-full aspect-square rounded-xl flex items-center justify-center transition-all text-slate-400 hover:bg-white/5 hover:text-slate-200"
-      title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-    >
-      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-    </button>
-  );
-}
 
 const navigationItems = [
         {
@@ -142,7 +126,6 @@ export default function Layout({ children, currentPageName }) {
 
 
   return (
-    <ThemeProvider>
     <SubscriptionProvider>
     <AITutorProvider>
     <SidebarProvider>
@@ -220,9 +203,6 @@ export default function Layout({ children, currentPageName }) {
 
               {/* Upgrade Badge */}
               <UpgradeNavBadge />
-              
-              {/* Theme Toggle */}
-              <ThemeToggleButton />
               </nav>
 
             {/* Bottom: Settings + Profile */}
@@ -377,6 +357,5 @@ export default function Layout({ children, currentPageName }) {
         </SidebarProvider>
         </AITutorProvider>
         </SubscriptionProvider>
-        </ThemeProvider>
         );
         }
