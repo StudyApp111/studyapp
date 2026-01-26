@@ -9,8 +9,10 @@ import { CheckCircle, XCircle, Lightbulb, Sparkles, Star } from "lucide-react";
 import MathText from "@/components/math/MathText";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function ExamQuestion({ question, answer, onAnswer, showFeedback = false, lesson = null }) {
+  const { isDark } = useTheme();
   const [hasAnswered, setHasAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(answer || "");
   const [isCorrect, setIsCorrect] = useState(null);
@@ -94,20 +96,20 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   const getOptionStyle = (optionText, optionIndex) => {
     if (!hasAnswered || !isObjective) {
       return selectedAnswer === optionText
-        ? "border-purple-500 bg-purple-50"
-        : "border-slate-200 hover:border-purple-300 bg-white";
+        ? isDark ? "border-purple-500 bg-purple-600/20" : "border-purple-500 bg-purple-50"
+        : isDark ? "border-white/10 hover:border-purple-500/30 bg-white/5" : "border-slate-200 hover:border-purple-300 bg-white";
     }
 
     const isThisCorrect = checkIsCorrect(optionText, question.correct_answer, optionIndex);
     const isThisSelected = selectedAnswer === optionText;
 
     if (isThisCorrect) {
-      return "border-emerald-500 bg-emerald-50";
+      return isDark ? "border-emerald-500 bg-emerald-500/20" : "border-emerald-500 bg-emerald-50";
     }
     if (isThisSelected && !isThisCorrect) {
-      return "border-red-400 bg-red-50";
+      return isDark ? "border-red-400 bg-red-500/20" : "border-red-400 bg-red-50";
     }
-    return "border-slate-200 bg-slate-50 opacity-60";
+    return isDark ? "border-white/10 bg-white/5 opacity-60" : "border-slate-200 bg-slate-50 opacity-60";
   };
 
   // Strip leading letter prefix like "A)", "B.", "C) " from option text
@@ -145,8 +147,8 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
             <RadioGroupItem value={optionText} id={`option-${index}`} className="pointer-events-none shrink-0" disabled={hasAnswered} />
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-1">
-                <span className="font-semibold text-slate-700 text-xs shrink-0">{optionLetter}.</span>
-                <MathText inline className="text-slate-700 text-xs leading-snug break-words">{displayText}</MathText>
+                <span className={`font-semibold text-xs shrink-0 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{optionLetter}.</span>
+                <MathText inline className={`text-xs leading-snug break-words ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{displayText}</MathText>
               </div>
             </div>
             {hasAnswered && isThisCorrect && (
@@ -301,13 +303,13 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
       <div>
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex gap-1 flex-wrap">
-            <Badge className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0">
+            <Badge className={`text-[9px] px-1.5 py-0 ${isDark ? 'bg-purple-600/20 text-purple-300 border-purple-500/30' : 'bg-purple-100 text-purple-700'}`}>
               {(question.question_type || '')
                 .replace(/_/g, ' ')
                 .replace(/\b\w/g, c => c.toUpperCase())}
             </Badge>
             {question.difficulty_index && (
-              <Badge className="bg-slate-100 text-slate-600 text-[9px] px-1.5 py-0">
+              <Badge className={`text-[9px] px-1.5 py-0 ${isDark ? 'bg-white/10 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
                 {(question.difficulty_index || '')
                   .replace(/\b\w/g, c => c.toUpperCase())}
               </Badge>
@@ -320,7 +322,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
             lesson={lesson} 
           />
         </div>
-        <MathText className="text-sm font-medium text-slate-900 leading-relaxed">
+        <MathText className={`text-sm font-medium leading-relaxed ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
           {question.question_text}
         </MathText>
       </div>
@@ -334,7 +336,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className={`p-3 rounded-xl ${isCorrect ? 'bg-gradient-to-br from-emerald-50 to-emerald-100 border border-emerald-300 shadow-sm shadow-emerald-200' : 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-300 shadow-sm shadow-amber-200'}`}
+          className={`p-3 rounded-xl border ${isCorrect ? (isDark ? 'bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 border-emerald-500/30' : 'bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-300 shadow-sm shadow-emerald-200') : (isDark ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30' : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300 shadow-sm shadow-amber-200')}`}
         >
           <div className="flex items-start gap-2">
             {isCorrect ? (
@@ -359,12 +361,12 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
               </motion.div>
             )}
             <div className="flex-1">
-              <p className={`text-xs font-bold ${isCorrect ? 'text-emerald-700' : 'text-amber-700'}`}>
+              <p className={`text-xs font-bold ${isCorrect ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-amber-300' : 'text-amber-700')}`}>
                 {isCorrect ? "🎉 Excellent!" : "Keep learning!"}
               </p>
               {/* Show correct answer when wrong */}
               {!isCorrect && question.correct_answer && (
-                <p className="text-xs text-emerald-700 font-medium mt-1">
+                <p className={`text-xs font-medium mt-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
                   Correct answer: {isMCQ && /^[A-Da-d]$/i.test(question.correct_answer.trim()) 
                     ? (() => {
                         const letter = question.correct_answer.trim().toUpperCase();
@@ -377,7 +379,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
                 </p>
               )}
               {question.explanation && (
-                <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+                <p className={`text-xs mt-1.5 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                   {question.explanation}
                 </p>
               )}

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MathText from "../math/MathText";
 import { useAITutor } from "../ai-tutor/AITutorContext";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 const formatTime = (seconds) => {
   if (!seconds) return '0s';
@@ -20,6 +21,7 @@ const formatTime = (seconds) => {
 export default function FeedbackDisplay({ exam, lesson, allExams = [], courseName }) {
   const isPracticeExam = exam?.exam_type === 'practice';
   const { openWithContext } = useAITutor();
+  const { isDark } = useTheme();
   
   const handleAskAI = (question, userAnswer, correctAnswer, isCorrect) => {
     const prompt = `I need help understanding this question from my exam:
@@ -115,20 +117,20 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
   // Practice Exam Results UI
   if (isPracticeExam) {
     return (
-      <div className="space-y-5 px-3 md:px-6 max-w-lg md:max-w-3xl lg:max-w-4xl mx-auto pb-8">
+      <div className={`space-y-5 px-3 md:px-6 max-w-lg md:max-w-3xl lg:max-w-4xl mx-auto pb-8 ${isDark ? 'bg-[#0a0a12]' : ''}`}>
         {/* Compact Header Row */}
         <div className="flex items-center justify-between gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
-            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 h-8 px-3"
+            className={isDark ? "text-purple-400 hover:text-purple-300 hover:bg-purple-600/20 h-8 px-3" : "text-purple-600 hover:text-purple-700 hover:bg-purple-50 h-8 px-3"}
           >
             <Target className="w-3.5 h-3.5 mr-1.5" />
             <span className="text-xs">Study Plan</span>
           </Button>
           
-          <Badge className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5">Practice Quiz</Badge>
+          <Badge className={isDark ? "bg-blue-600/20 text-blue-300 text-[10px] px-2 py-0.5 border-blue-500/30" : "bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5"}>Practice Quiz</Badge>
         </div>
 
         {/* Practice Exam Hero */}
@@ -137,7 +139,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-4"
         >
-          <h2 className="text-xl font-bold text-slate-900">
+          <h2 className={`text-xl font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
             {exam.title || 'Practice Quiz Results'}
           </h2>
 
@@ -160,13 +162,13 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
 
           {/* Quick Stats */}
           <div className="flex items-center justify-center gap-3 pt-2">
-            <div className="flex items-center gap-2 bg-blue-50 rounded-xl px-3 py-2">
-              <Clock className="w-4 h-4 text-blue-600" />
-              <span className="font-semibold text-slate-900 text-sm">{formatTime(exam.time_taken_seconds || 0)}</span>
+            <div className={`flex items-center gap-2 rounded-xl px-3 py-2 ${isDark ? 'bg-blue-600/20' : 'bg-blue-50'}`}>
+              <Clock className={`w-4 h-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+              <span className={`font-semibold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{formatTime(exam.time_taken_seconds || 0)}</span>
             </div>
           </div>
 
-          <p className="text-xs text-slate-500">
+          <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             Practice exams don't affect your predicted grade
           </p>
         </motion.div>
@@ -178,9 +180,9 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card className="border-0 shadow-lg bg-white">
+            <Card className={`border-0 shadow-lg ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-slate-900">
+                <CardTitle className={`flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                   <Eye className="w-5 h-5 text-blue-600" />
                   <span className="text-base font-bold">Question Review</span>
                 </CardTitle>
@@ -265,7 +267,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                             </button>
                             
                             {/* Expand/Collapse */}
-                            <div className="text-slate-400">
+                            <div className={isDark ? "text-slate-500" : "text-slate-400"}>
                               {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                             </div>
                           </div>
@@ -285,7 +287,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                                     {question.question_text}
                                   </MathText>
                                   {question.options && question.options.length > 0 && (
-                                    <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
+                                    <div className={`mt-2 space-y-1 p-2 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
                                       {question.options.map((opt, i) => {
                                         let optionText = '';
                                         if (typeof opt === 'string') {
@@ -296,8 +298,8 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                                           optionText = String(opt);
                                         }
                                         return (
-                                          <MathText key={i} className="text-xs text-slate-700 block py-0.5" inline>
-                                            <span className="font-bold w-5 inline-block text-slate-500">{String.fromCharCode(65 + i)}.</span> {optionText}
+                                          <MathText key={i} className={`text-xs block py-0.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`} inline>
+                                            <span className={`font-bold w-5 inline-block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{String.fromCharCode(65 + i)}.</span> {optionText}
                                           </MathText>
                                         );
                                       })}
@@ -346,12 +348,12 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                                 </div>
 
                                 {question.explanation && (
-                                  <div className="bg-purple-50 p-2.5 md:p-3 rounded-xl border border-purple-100">
+                                  <div className={`p-2.5 md:p-3 rounded-xl border ${isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-100'}`}>
                                     <div className="flex items-center gap-1.5 mb-1">
-                                      <Brain className="w-3 h-3 text-purple-600" />
-                                      <p className="text-[10px] md:text-xs font-bold text-purple-700 uppercase">Explanation</p>
+                                      <Brain className={`w-3 h-3 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                                      <p className={`text-[10px] md:text-xs font-bold uppercase ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>Explanation</p>
                                     </div>
-                                    <MathText className="text-xs md:text-sm text-slate-700 leading-relaxed">
+                                    <MathText className={`text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                                       {question.explanation}
                                     </MathText>
                                   </div>
@@ -361,15 +363,15 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                                 {(question.ai_rationale_short || question.ai_misconception_detected) && (
                                   <div className="flex flex-wrap gap-2">
                                     {question.ai_rationale_short && (
-                                      <div className="flex-1 min-w-[140px] bg-slate-50 px-2.5 py-2 rounded-lg border border-slate-200">
-                                        <p className="text-[9px] font-bold text-slate-500 uppercase mb-0.5">AI Insight</p>
-                                        <p className="text-[11px] text-slate-700 leading-snug">{question.ai_rationale_short}</p>
+                                      <div className={`flex-1 min-w-[140px] px-2.5 py-2 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                                        <p className={`text-[9px] font-bold uppercase mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>AI Insight</p>
+                                        <p className={`text-[11px] leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{question.ai_rationale_short}</p>
                                       </div>
                                     )}
                                     {question.ai_misconception_detected && (
-                                      <div className="flex items-center gap-1.5 bg-amber-50 px-2.5 py-2 rounded-lg border border-amber-200">
-                                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                                        <p className="text-[11px] text-amber-700 font-medium">Misconception detected</p>
+                                      <div className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg border ${isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
+                                        <AlertTriangle className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+                                        <p className={`text-[11px] font-medium ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Misconception detected</p>
                                       </div>
                                     )}
                                   </div>
@@ -397,7 +399,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
 
   // Official Exam Results UI (existing)
   return (
-    <div className="space-y-6 px-3 max-w-5xl mx-auto">
+    <div className={`space-y-6 px-3 max-w-5xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -405,8 +407,8 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
         className="text-center space-y-4"
       >
         {/* Intro Text */}
-        <p className="text-lg md:text-xl text-slate-700 font-medium">
-          If your <span className="font-bold text-slate-900">{courseName || lesson?.course_name || 'course'}</span> exam was today, you would score:
+        <p className={`text-lg md:text-xl font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+          If your <span className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{courseName || lesson?.course_name || 'course'}</span> exam was today, you would score:
         </p>
 
         {/* Grade Badge */}
@@ -432,17 +434,17 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
 
         {/* Stats Grid - moved directly below grade */}
         <div className="flex items-center justify-center gap-3 flex-wrap pt-2">
-          <div className="flex items-center gap-2 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl px-4 py-3 shadow-sm">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
-            <span className="font-bold text-slate-900">{Math.round(exam.total_score)}%</span>
+          <div className={`flex items-center gap-2 rounded-2xl px-4 py-3 shadow-sm ${isDark ? 'bg-gradient-to-br from-purple-600/20 to-purple-700/20' : 'bg-gradient-to-br from-purple-50 to-purple-100'}`}>
+            <TrendingUp className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+            <span className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{Math.round(exam.total_score)}%</span>
           </div>
-          <div className="flex items-center gap-2 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl px-4 py-3 shadow-sm">
-            <Clock className="w-5 h-5 text-blue-600" />
-            <span className="font-bold text-slate-900">{formatTime(exam.time_taken_seconds || 0)}</span>
+          <div className={`flex items-center gap-2 rounded-2xl px-4 py-3 shadow-sm ${isDark ? 'bg-gradient-to-br from-blue-600/20 to-blue-700/20' : 'bg-gradient-to-br from-blue-50 to-blue-100'}`}>
+            <Clock className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+            <span className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{formatTime(exam.time_taken_seconds || 0)}</span>
           </div>
-          <div className="flex items-center gap-2 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl px-4 py-3 shadow-sm">
-            <Award className="w-5 h-5 text-amber-600" />
-            <span className="font-bold text-slate-900">{exam.feedback?.filter(f => f.is_correct).length || 0}/{exam.questions?.length || 0}</span>
+          <div className={`flex items-center gap-2 rounded-2xl px-4 py-3 shadow-sm ${isDark ? 'bg-gradient-to-br from-amber-600/20 to-amber-700/20' : 'bg-gradient-to-br from-amber-50 to-amber-100'}`}>
+            <Award className={`w-5 h-5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+            <span className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{exam.feedback?.filter(f => f.is_correct).length || 0}/{exam.questions?.length || 0}</span>
           </div>
         </div>
 
@@ -455,8 +457,8 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-slate-600" />
-              <span className="text-sm font-bold text-slate-700">AI Prediction Confidence</span>
+              <TrendingUp className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`} />
+              <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>AI Prediction Confidence</span>
             </div>
             <Badge className={`text-[10px] ${
               confidenceLevel === 'High' ? 'bg-emerald-100 text-emerald-700' :
@@ -469,9 +471,9 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
           
           <div className="mb-2">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-2xl font-black text-slate-900">{confidencePercent}%</span>
+              <span className={`text-2xl font-black ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{confidencePercent}%</span>
             </div>
-            <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+            <div className={`h-3 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
               <motion.div 
                 className={`h-full rounded-full ${
                   confidenceLevel === 'High' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
@@ -485,17 +487,17 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
             </div>
           </div>
           
-          <div className="flex items-start gap-2 bg-white/80 rounded-xl p-2.5 border border-slate-200">
-            <AlertCircle className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-slate-600 leading-tight">
-              Complete study tasks to increase confidence to <span className="font-bold text-purple-700">{Math.min(95, confidencePercent + 15)}%</span> and get a more accurate grade prediction.
+          <div className={`flex items-start gap-2 rounded-xl p-2.5 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-slate-200'}`}>
+            <AlertCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+            <p className={`text-xs leading-tight ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+              Complete study tasks to increase confidence to <span className={`font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{Math.min(95, confidencePercent + 15)}%</span> and get a more accurate grade prediction.
             </p>
           </div>
         </motion.div>
 
         {/* Summary - max 1 sentence */}
         {exam.ai_feedback?.overall_performance_summary_text && (
-          <p className="text-xs text-slate-500 max-w-md mx-auto">
+          <p className={`text-xs max-w-md mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             {exam.ai_feedback.overall_performance_summary_text.split('.')[0]}.
           </p>
         )}
@@ -510,22 +512,22 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="border-0 shadow-lg bg-white overflow-hidden group hover:shadow-xl transition-all">
-              <CardHeader className="pb-3 bg-gradient-to-br from-emerald-50 to-teal-50">
-                <CardTitle className="flex items-center gap-2 text-emerald-700">
+            <Card className={`border-0 shadow-lg overflow-hidden group hover:shadow-xl transition-all ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+              <CardHeader className={`pb-3 ${isDark ? 'bg-gradient-to-br from-emerald-600/20 to-teal-600/20' : 'bg-gradient-to-br from-emerald-50 to-teal-50'}`}>
+                <CardTitle className={`flex items-center gap-2 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
                   <Star className="w-5 h-5 fill-emerald-600" />
                   <span className="text-base font-bold">What You Nailed</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {strengths.slice(0, 3).map((strength, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                  <div key={idx} className={`flex items-start gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                     <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                     <span>{strength}</span>
                   </div>
                 ))}
                 {strengths.length > 3 && (
-                  <p className="text-xs text-slate-500 italic pt-1">+{strengths.length - 3} more strengths</p>
+                  <p className={`text-xs italic pt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>+{strengths.length - 3} more strengths</p>
                 )}
               </CardContent>
             </Card>
@@ -539,22 +541,22 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <Card className="border-0 shadow-lg bg-white overflow-hidden group hover:shadow-xl transition-all">
-              <CardHeader className="pb-3 bg-gradient-to-br from-purple-50 to-indigo-50">
-                <CardTitle className="flex items-center gap-2 text-purple-700">
+            <Card className={`border-0 shadow-lg overflow-hidden group hover:shadow-xl transition-all ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+              <CardHeader className={`pb-3 ${isDark ? 'bg-gradient-to-br from-purple-600/20 to-indigo-600/20' : 'bg-gradient-to-br from-purple-50 to-indigo-50'}`}>
+                <CardTitle className={`flex items-center gap-2 ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
                   <Rocket className="w-5 h-5" />
                   <span className="text-base font-bold">Focus On This</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4 space-y-2">
                 {weaknesses.slice(0, 3).map((weakness, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-sm text-slate-700">
+                  <div key={idx} className={`flex items-start gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                     <Target className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
                     <span>{weakness}</span>
                   </div>
                 ))}
                 {weaknesses.length > 3 && (
-                  <p className="text-xs text-slate-500 italic pt-1">+{weaknesses.length - 3} more areas</p>
+                  <p className={`text-xs italic pt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>+{weaknesses.length - 3} more areas</p>
                 )}
               </CardContent>
             </Card>
@@ -569,13 +571,13 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
         >
-          <Card className="border-0 shadow-lg bg-white">
+          <Card className={`border-0 shadow-lg ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-slate-900">
+              <CardTitle className={`flex items-center gap-2 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                 <Eye className="w-5 h-5 text-indigo-600" />
                 <span className="text-lg font-bold">Review Questions</span>
               </CardTitle>
-              <p className="text-slate-500 text-xs mt-1">Tap any question to see details</p>
+              <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tap any question to see details</p>
             </CardHeader>
             
             <CardContent className="px-3 md:px-4 pb-3">
@@ -602,9 +604,9 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                     >
                       {/* Question Header - Compact single row */}
                       <div 
-                        className={`px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors ${
-                          isExpanded ? 'border-b border-slate-100' : ''
-                        }`}
+                        className={`px-3 py-2 cursor-pointer transition-colors ${
+                          isExpanded ? (isDark ? 'border-b border-white/10' : 'border-b border-slate-100') : ''
+                        } ${isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
                         onClick={() => toggleQuestion(idx)}
                       >
                         <div className="flex items-center gap-2">
@@ -624,7 +626,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                           </div>
                           
                           {/* Question Number */}
-                          <span className="font-bold text-slate-900 text-sm">
+                          <span className={`font-bold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                             Q{question.question_number}
                           </span>
                           
@@ -686,7 +688,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                           </button>
                           
                           {/* Expand/Collapse */}
-                          <div className="text-slate-400">
+                          <div className={isDark ? "text-slate-500" : "text-slate-400"}>
                             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                           </div>
                         </div>
@@ -700,14 +702,14 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                             exit={{ height: 0, opacity: 0 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <div className="p-3 md:p-4 bg-slate-50/50 space-y-3">
+                            <div className={`p-3 md:p-4 space-y-3 ${isDark ? 'bg-[#0a0a12]/50' : 'bg-slate-50/50'}`}>
                               {/* Question Text */}
-                              <div className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
-                                <MathText className="text-slate-800 font-medium text-xs md:text-sm leading-relaxed">
+                              <div className={`rounded-xl p-3 border shadow-sm ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+                                <MathText className={`font-medium text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                                   {question.question_text}
                                 </MathText>
                                 {question.options && question.options.length > 0 && (
-                                  <div className="mt-2 space-y-1 bg-slate-50 p-2 rounded-lg">
+                                  <div className={`mt-2 space-y-1 p-2 rounded-lg ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
                                     {question.options.map((opt, i) => {
                                       let optionText = '';
                                       if (typeof opt === 'string') {
@@ -717,8 +719,8 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                                       }
                                       if (!optionText) return null;
                                       return (
-                                        <MathText key={i} className="text-xs text-slate-700 block py-0.5" inline>
-                                          <span className="font-bold w-5 inline-block text-slate-500">{String.fromCharCode(65 + i)}.</span> {optionText}
+                                        <MathText key={i} className={`text-xs block py-0.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`} inline>
+                                          <span className={`font-bold w-5 inline-block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{String.fromCharCode(65 + i)}.</span> {optionText}
                                         </MathText>
                                       );
                                     })}
@@ -728,9 +730,9 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
 
                               {/* Answers Comparison - Stacked on mobile */}
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                <div className="bg-blue-50 p-2 md:p-3 rounded-xl border border-blue-100">
-                                  <p className="text-[10px] md:text-xs font-bold text-blue-700 uppercase mb-1">Your Answer</p>
-                                  <MathText className="text-xs md:text-sm text-slate-800 font-medium">
+                                <div className={`p-2 md:p-3 rounded-xl border ${isDark ? 'bg-blue-500/10 border-blue-500/30' : 'bg-blue-50 border-blue-100'}`}>
+                                  <p className={`text-[10px] md:text-xs font-bold uppercase mb-1 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>Your Answer</p>
+                                  <MathText className={`text-xs md:text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                                     {question.user_answer || "No answer"}
                                   </MathText>
                                 </div>
@@ -755,23 +757,23 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
 
                               {/* Feedback */}
                               <div className={`p-3 md:p-4 rounded-xl ${
-                                feedback.is_correct ? 'bg-emerald-50 border border-emerald-100' : 'bg-red-50 border border-red-100'
+                                feedback.is_correct ? (isDark ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-emerald-50 border border-emerald-100') : (isDark ? 'bg-red-500/10 border border-red-500/30' : 'bg-red-50 border border-red-100')
                               }`}>
                                 <div className="flex items-start gap-2">
-                                  {feedback.is_correct ? <Sparkles className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" /> : <Zap className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />}
-                                  <MathText className="text-xs md:text-sm text-slate-700 leading-relaxed">
+                                  {feedback.is_correct ? <Sparkles className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} /> : <Zap className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? 'text-red-400' : 'text-red-600'}`} />}
+                                  <MathText className={`text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                                     {feedback.feedback}
                                   </MathText>
                                 </div>
                               </div>
 
                               {/* Explanation */}
-                              <div className="bg-purple-50 p-3 rounded-xl border border-purple-100">
+                              <div className={`p-3 rounded-xl border ${isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-100'}`}>
                                 <div className="flex items-center gap-1.5 mb-1">
-                                  <Brain className="w-3.5 h-3.5 text-purple-600" />
-                                  <p className="text-[10px] md:text-xs font-bold text-purple-700 uppercase">Explanation</p>
+                                  <Brain className={`w-3.5 h-3.5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                                  <p className={`text-[10px] md:text-xs font-bold uppercase ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>Explanation</p>
                                 </div>
-                                <MathText className="text-xs md:text-sm text-slate-700 leading-relaxed">
+                                <MathText className={`text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                                   {question.explanation}
                                 </MathText>
                               </div>
@@ -780,15 +782,15 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                               {(question.ai_rationale_short || question.ai_misconception_detected) && (
                                 <div className="flex flex-wrap gap-2">
                                   {question.ai_rationale_short && (
-                                    <div className="flex-1 min-w-[140px] bg-slate-50 px-2.5 py-2 rounded-lg border border-slate-200">
-                                      <p className="text-[9px] font-bold text-slate-500 uppercase mb-0.5">AI Insight</p>
-                                      <p className="text-[11px] text-slate-700 leading-snug">{question.ai_rationale_short}</p>
+                                    <div className={`flex-1 min-w-[140px] px-2.5 py-2 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                                      <p className={`text-[9px] font-bold uppercase mb-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>AI Insight</p>
+                                      <p className={`text-[11px] leading-snug ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{question.ai_rationale_short}</p>
                                     </div>
                                   )}
                                   {question.ai_misconception_detected && (
-                                    <div className="flex items-center gap-1.5 bg-amber-50 px-2.5 py-2 rounded-lg border border-amber-200">
-                                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                                      <p className="text-[11px] text-amber-700 font-medium">Misconception detected</p>
+                                    <div className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg border ${isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
+                                      <AlertTriangle className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+                                      <p className={`text-[11px] font-medium ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Misconception detected</p>
                                     </div>
                                   )}
                                 </div>
