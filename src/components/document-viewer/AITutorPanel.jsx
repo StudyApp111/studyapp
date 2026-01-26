@@ -6,6 +6,7 @@ import { Send, Sparkles, FileText, HelpCircle, List, Lightbulb, Lock } from "luc
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { renderMathContent } from "@/components/utils/MathRenderer";
 
 export default function AITutorPanel({ messages, setMessages, input, setInput, isLoading, setIsLoading, lesson }) {
   const { canSendAIMessage, incrementAIMessageCount, triggerUpgradeModal, isPro } = useSubscription();
@@ -20,40 +21,73 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     scrollToBottom();
   }, [messages]);
 
-  // Add welcome message on mount or when lesson changes
+  // Load chat history or show welcome message
   useEffect(() => {
-    const loadWelcomeMessage = async () => {
-      if (lesson) {
-        const courseName = lesson.course_name || "your course";
+    const loadChatHistory = async () => {
+      if (!lesson?.id) return;
+      
+      try {
+        // Try to load existing chat history
+        const histories = await base44.entities.PollyChatHistory.filter({ lesson_id: lesson.id });
         
-        // Check for lesson-specific Polly prediction data from StudyPlan (not user profile)
-        let pollyInsight = '';
-        try {
-          const plans = await base44.entities.StudyPlan.filter({ 
-            lesson_id: lesson.id, 
-            status: 'active' 
-          });
-          if (plans.length > 0 && plans[0].current_predicted_grade) {
-            const plan = plans[0];
-            const velocityEmoji = plan.learning_velocity === 'Accelerating' ? '📈' : 
-                                   plan.learning_velocity === 'Declining' ? '📉' : '➡️';
-            pollyInsight = `\n\n🔮 **Current Prediction:** ${plan.current_predicted_grade} (${plan.current_confidence || 45}% confidence) ${velocityEmoji}`;
-            if (plan.mastery_gap) {
-              pollyInsight += `\n💡 Focus area: *${plan.mastery_gap}*`;
-            }
-          }
-        } catch (err) {
-          // Silent fail - just don't show Polly insight
+        if (histories.length > 0 && histories[0].messages?.length > 0) {
+          setMessages(histories[0].messages);
+          return;
         }
+      } catch (err) {
+        console.error("Error loading chat history:", err);
+      }
+      
+      // No history - show welcome message
+      const courseName = lesson.course_name || "your course";
+      
+      let pollyInsight = '';
+      try {
+        const plans = await base44.entities.StudyPlan.filter({ 
+          lesson_id: lesson.id, 
+          status: 'active' 
+        });
+        if (plans.length > 0 && plans[0].current_predicted_grade) {
+          const plan = plans[0];
+          const velocityEmoji = plan.learning_velocity === 'Accelerating' ? '📈' : 
+                                 plan.learning_velocity === 'Declining' ? '📉' : '➡️';
+          pollyInsight = `\n\n🔮 **Current Prediction:** ${plan.current_predicted_grade} (${plan.current_confidence || 45}% confidence) ${velocityEmoji}`;
+          if (plan.mastery_gap) {
+            pollyInsight += `\n💡 Focus area: *${plan.mastery_gap}*`;
+          }
+        }
+      } catch (err) {}
+      
+      setMessages([{
+        role: "assistant",
+        content: `👋 Hi! I'm Polly, your AI study assistant for **${courseName}**.${pollyInsight}\n\nI can help you:\n• Summarize key concepts\n• Quiz you on the material\n• Explain confusing topics\n• Check your progress`
+      }]);
+    };
+    loadChatHistory();
+  }, [lesson?.id]);
+
+  // Save chat history when messages change
+  useEffect(() => {
+    const saveChatHistory = async () => {
+      if (!lesson?.id || messages.length === 0) return;
+      
+      try {
+        const histories = await base44.entities.PollyChatHistory.filter({ lesson_id: lesson.id });
         
-        setMessages([{
-          role: "assistant",
-          content: `👋 Hi! I'm Polly, your AI study assistant for **${courseName}**.${pollyInsight}\n\nI can help you:\n• Summarize key concepts\n• Quiz you on the material\n• Explain confusing topics\n• Check your progress`
-        }]);
+        if (histories.length > 0) {
+          await base44.entities.PollyChatHistory.update(histories[0].id, { messages });
+        } else {
+          await base44.entities.PollyChatHistory.create({ lesson_id: lesson.id, messages });
+        }
+      } catch (err) {
+        console.error("Error saving chat history:", err);
       }
     };
-    loadWelcomeMessage();
-  }, [lesson?.id]);
+    
+    // Debounce save
+    const timeout = setTimeout(saveChatHistory, 1000);
+    return () => clearTimeout(timeout);
+  }, [messages, lesson?.id]);
 
   // Listen for "Ask AI" button clicks from exam/flashcard components
   useEffect(() => {
@@ -159,7 +193,30 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
               }`}
             >
               {msg.role === 'assistant' ? (
-                <ReactMarkdown className="text-xs leading-relaxed prose prose-xs max-w-none [&>p]:my-0.5 [&>ul]:my-1 [&>ul]:ml-3 [&>ol]:my-1 [&>ol]:ml-3 [&>li]:my-0.5">
+                <ReactMarkdown 
+                  className="text-xs leading-relaxed prose prose-xs max-w-none [&>p]:my-0.5 [&>ul]:my-1 [&>ul]:ml-3 [&>ol]:my-1 [&>ol]:ml-3 [&>li]:my-0.5"
+                  components={{
+                    p: ({ children }) => {
+                      const text = typeof children === 'string' ? children : 
+                        (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                      if (text.includes('$')) {
+                        return <p className="my-0.5" dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
+                      }
+                      return <p className="my-0.5">{children}</p>;
+                    },
+                    li: ({ children }) => {
+                      const text = typeof children === 'string' ? children : 
+                        (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                      if (text.includes('$')) {
+                        return <li dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
+                      }
+                      return <li>{children}</li>;
+                    },
+                    code: ({ inline, children }) => inline ? 
+                      <code className="bg-purple-100 px-1 rounded text-[10px]">{children}</code> : 
+                      <pre className="bg-slate-800 text-slate-200 p-2 rounded text-[10px] overflow-x-auto"><code>{children}</code></pre>
+                  }}
+                >
                   {msg.content}
                 </ReactMarkdown>
               ) : (
