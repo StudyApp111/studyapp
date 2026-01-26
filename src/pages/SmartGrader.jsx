@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, CheckCircle2, Microscope, FileEdit } from "lucide-react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [courseName, setCourseName] = useState("");
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentFile, setAssignmentFile] = useState(null);
@@ -340,7 +342,7 @@ Output valid JSON matching the expected schema.`;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10 pb-28 md:pb-10">
+    <div className={`min-h-screen p-4 md:p-10 pb-28 md:pb-10 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
       <div className="max-w-3xl mx-auto">
         {/* Hero Header Section */}
         <div className="mb-8">
@@ -371,26 +373,26 @@ Output valid JSON matching the expected schema.`;
           </div>
 
           {/* What Can Be Graded */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-100 text-center">
-            <p className="text-sm font-semibold text-slate-700 mb-3">StudyApp can grade:</p>
+          <div className={`backdrop-blur-sm rounded-xl p-4 shadow-lg border text-center ${isDark ? 'bg-white/5 border-purple-500/30' : 'bg-white/80 border-purple-100'}`}>
+            <p className={`text-sm font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>StudyApp can grade:</p>
             <div className="flex justify-center gap-6">
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <FileEdit className="w-4 h-4 text-purple-600" />
+              <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                <FileEdit className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                 <span>Essays</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <FileText className="w-4 h-4 text-purple-600" />
+              <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                <FileText className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                 <span>Assignments</span>
               </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Microscope className="w-4 h-4 text-purple-600" />
+              <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                <Microscope className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                 <span>Projects</span>
               </div>
             </div>
           </div>
         </div>
 
-        <Card className="shadow-2xl border-0">
+        <Card className={`shadow-2xl border-0 ${isDark ? 'bg-[#12121a]' : ''}`}>
           <CardHeader className="pb-4">
             <CardTitle>Upload Assignment</CardTitle>
           </CardHeader>
@@ -404,9 +406,9 @@ Output valid JSON matching the expected schema.`;
               )}
 
               {processingStep && (
-                <Alert className="bg-purple-50 border-purple-200">
-                  <Loader2 className="w-4 h-4 animate-spin text-purple-600 flex-shrink-0" />
-                  <AlertDescription className="text-purple-900 ml-2 text-sm break-words">
+                <Alert className={isDark ? "bg-purple-600/20 border-purple-500/30" : "bg-purple-50 border-purple-200"}>
+                  <Loader2 className={`w-4 h-4 animate-spin flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                  <AlertDescription className={`ml-2 text-sm break-words ${isDark ? 'text-purple-200' : 'text-purple-900'}`}>
                     {processingStep}
                   </AlertDescription>
                 </Alert>
@@ -466,8 +468,8 @@ Output valid JSON matching the expected schema.`;
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
                 />
                 {curriculumFile && (
-                  <div className="flex items-center justify-between bg-purple-50 border border-purple-200 rounded-lg p-2">
-                    <div className="flex items-center gap-2 text-sm text-purple-700">
+                  <div className={`flex items-center justify-between rounded-lg p-2 border ${isDark ? 'bg-purple-600/20 border-purple-500/30' : 'bg-purple-50 border-purple-200'}`}>
+                    <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
                       <FileCheck className="w-4 h-4" />
                       <span>{curriculumFile.name}</span>
                     </div>
@@ -477,13 +479,13 @@ Output valid JSON matching the expected schema.`;
                         setCurriculumFile(null);
                         document.getElementById('curriculumFile').value = '';
                       }}
-                      className="text-purple-600 hover:text-purple-800"
+                      className={isDark ? "text-purple-400 hover:text-purple-300" : "text-purple-600 hover:text-purple-800"}
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 )}
-                <p className="text-xs text-slate-500">
+                <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   Upload the official grading rubric for this assignment
                 </p>
               </div>

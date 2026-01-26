@@ -331,7 +331,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   // Show placeholder while generating study plan
   if (isGeneratingPlan) {
     return (
-      <div className="px-3 md:px-6 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto">
+      <div className={`px-3 md:px-6 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -351,8 +351,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           {/* Loading Message */}
           <div className="text-center py-4">
             <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
-            <p className="text-slate-700 font-medium">Generating your study plan...</p>
-            <p className="text-slate-500 text-sm mt-1">Analyzing your diagnostic results</p>
+            <p className={`font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Generating your study plan...</p>
+            <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Analyzing your diagnostic results</p>
           </div>
 
           {/* Task Skeletons */}
@@ -385,7 +385,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
-      <div className="px-3 md:px-6 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto">
+      <div className={`px-3 md:px-6 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -457,28 +457,28 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           </div>
 
           {/* How It Works - Simple Steps */}
-          <div className="bg-white rounded-xl border border-purple-100 p-4 shadow-sm">
-            <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wide mb-3 text-center">How it works</p>
+          <div className={`rounded-xl border p-4 shadow-sm ${isDark ? 'bg-white/5 border-purple-500/30' : 'bg-white border-purple-100'}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-wide mb-3 text-center ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>How it works</p>
             <div className="flex items-center justify-between">
               <div className="flex flex-col items-center text-center flex-1">
-                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-1.5">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
                   <span className="text-lg">📝</span>
                 </div>
-                <p className="text-[10px] text-slate-700 font-medium leading-tight">5-min<br/>Diagnostic</p>
+                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>5-min<br/>Diagnostic</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-purple-300 flex-shrink-0" />
+              <ArrowRight className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-purple-500' : 'text-purple-300'}`} />
               <div className="flex flex-col items-center text-center flex-1">
-                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mb-1.5">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 ${isDark ? 'bg-amber-600/20' : 'bg-amber-100'}`}>
                   <span className="text-lg">🎯</span>
                 </div>
-                <p className="text-[10px] text-slate-700 font-medium leading-tight">See Your<br/>Predicted Grade</p>
+                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>See Your<br/>Predicted Grade</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-purple-300 flex-shrink-0" />
+              <ArrowRight className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-purple-500' : 'text-purple-300'}`} />
               <div className="flex flex-col items-center text-center flex-1">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-1.5">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 ${isDark ? 'bg-emerald-600/20' : 'bg-emerald-100'}`}>
                   <span className="text-lg">🚀</span>
                 </div>
-                <p className="text-[10px] text-slate-700 font-medium leading-tight">Follow Plan<br/>to Improve</p>
+                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Follow Plan<br/>to Improve</p>
               </div>
             </div>
           </div>
