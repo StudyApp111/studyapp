@@ -36,6 +36,11 @@ const LIMIT_MESSAGES = {
     description: "Free users can send 10 AI messages per day.",
     icon: "💬"
   },
+  assignments: {
+    title: "Weekly Grading Limit Reached",
+    description: "Free users can grade 1 assignment per week.",
+    icon: "📝"
+  },
   polly: {
     title: "Advanced Grade Prediction Locked",
     description: "Unlock AI-powered grade forensics and personalized roadmaps.",
@@ -159,6 +164,10 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-500" />
                   <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited AI messages</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited assignment grading</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-500" />
