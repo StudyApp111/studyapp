@@ -195,27 +195,20 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const handleRating = async (knew) => {
     const currentCard = cards[currentIndex];
     
-    // Track review count for mastery (need 3 "Got it" ratings)
-    const newReviewCount = knew 
-      ? (currentCard.review_count || 0) + 1 
-      : 0; // Reset on miss
-    
-    const isMastered = newReviewCount >= 3;
-    const wasMastered = currentCard.mastered;
-    const newStatus = isMastered ? 'mastered' : newReviewCount >= 1 ? 'learning' : 'new';
+    // Track review count - any review counts as completion
+    const newReviewCount = (currentCard.review_count || 0) + 1;
+    const wasReviewed = currentCard.review_count > 0;
+    const newStatus = newReviewCount >= 1 ? 'learning' : 'new';
     
     // Update streak and award XP
     if (knew) {
       const newStreak = streakCount + 1;
       setStreakCount(newStreak);
       
-      // Award XP based on streak - only on mastery milestone or streak milestones
-      if (isMastered && !wasMastered) {
-        awardXP(5, 'Card mastered! ⭐');
-      } else if (newStreak >= 5 && newStreak % 5 === 0) {
+      // Award XP on streak milestones
+      if (newStreak >= 5 && newStreak % 5 === 0) {
         awardXP(10, `${newStreak} card streak! 🔥`);
       }
-      // No XP for regular correct answers to reduce API calls
     } else {
       setStreakCount(0);
     }
@@ -224,7 +217,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       await base44.entities.Flashcard.update(currentCard.id, {
         status: newStatus,
         review_count: newReviewCount,
-        mastered: isMastered,
         last_reviewed: new Date().toISOString()
       });
 
@@ -232,8 +224,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       updatedCards[currentIndex] = { 
         ...currentCard, 
         status: newStatus, 
-        review_count: newReviewCount,
-        mastered: isMastered 
+        review_count: newReviewCount
       };
       setCards(updatedCards);
       
@@ -243,13 +234,15 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         correct: knew ? prev.correct + 1 : prev.correct
       }));
 
-      // Update study plan only when mastery changes (not every card)
-      if (isMastered && !wasMastered) {
-        const totalMastered = updatedCards.filter(c => c.mastered).length;
-        const taskCompleted = await updateStudyPlanProgress('flashcards', totalMastered);
+      // Update study plan with total reviewed count (cards that have been reviewed at least once)
+      // First review of a card = 1 completion toward the task
+      if (!wasReviewed) {
+        const totalReviewed = updatedCards.filter(c => c.review_count > 0).length;
+        console.log(`📚 Flashcards: ${totalReviewed} cards reviewed/completed`);
+        const taskCompleted = await updateStudyPlanProgress('flashcards', totalReviewed);
         
-        // Trigger Polly engine when task completes OR on mastery milestones (every 5 cards)
-        if (taskCompleted || totalMastered % 5 === 0) {
+        // Trigger Polly engine when task completes OR on milestones (every 5 cards)
+        if (taskCompleted || totalReviewed % 5 === 0) {
           base44.functions.invoke('runPollyEngine', {
             trigger_event: taskCompleted ? 'task_completed' : 'flashcard_milestone',
             lesson_id: lesson.id
