@@ -69,26 +69,27 @@ export default function AITutorSheet() {
     const messageToSend = customMessage || input.trim();
     if (!messageToSend || isLoading) return;
 
+    // Check subscription limit BEFORE showing user message
+    const aiCheck = await canSendAIMessage();
+    if (!aiCheck.allowed) {
+      // Show upgrade modal via subscription context
+      const { triggerUpgradeModal } = useSubscription;
+      // Close sheet and show upgrade modal
+      close();
+      // Dispatch event to trigger upgrade modal
+      window.dispatchEvent(new CustomEvent('triggerUpgradeModal', { detail: { reason: 'ai_message' } }));
+      return;
+    }
+
     if (!customMessage) setInput("");
     setMessages((prev) => [...prev, { role: "user", content: messageToSend }]);
     setIsLoading(true);
     setHasUsedInitialPrompt(true);
 
+    // Increment counter AFTER user commits to sending
+    await incrementAIMessageCount();
+
     try {
-      // Check subscription limit for AI messages using global context
-      const aiCheck = await canSendAIMessage();
-      if (!aiCheck.allowed) {
-        setMessages((prev) => [...prev, {
-          role: "assistant",
-          content: `🔒 You've reached your daily limit of ${aiCheck.limit} AI messages on the free plan. Upgrade to Locked In for unlimited AI help!`
-        }]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Increment counter
-      await incrementAIMessageCount();
-      
       const response = await base44.functions.invoke('pollyChat', {
         messages: [...messages, { role: "user", content: messageToSend }],
         lessonContext: context?.lesson || {},
