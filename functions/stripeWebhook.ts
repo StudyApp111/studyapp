@@ -102,11 +102,11 @@ Deno.serve(async (req) => {
               .map(b => b.toString(16).padStart(2, '0'))
               .join('');
             
-            // TikTok Events API v1.3 - pixel_code at root, data contains events
+            // TikTok Events API v1.3 - event_time must be string in milliseconds
             const eventData = {
               event: "Subscribe",
               event_id: `subscribe_${user.id}_${Date.now()}`,
-              event_time: Math.floor(Date.now() / 1000),
+              event_time: String(Date.now()),
               user: {
                 email: hashedEmail
               },
@@ -116,9 +116,9 @@ Deno.serve(async (req) => {
               properties: {
                 contents: [{
                   content_id: `pro_${planType}`,
-                  content_type: "product",
                   content_name: `Pro Subscription (${planType})`
                 }],
+                content_type: "product",
                 currency: "USD",
                 value: amount
               }
