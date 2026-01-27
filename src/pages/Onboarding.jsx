@@ -503,8 +503,8 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
         </div>
 
         <div className="text-center mb-4 md:mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-white mb-1">{currentQuestion?.question}</h1>
-          <p className="text-white/70 text-xs md:text-sm">{currentQuestion?.subtitle}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{currentQuestion?.question}</h1>
+          <p className="text-white/80 text-sm md:text-base">{currentQuestion?.subtitle}</p>
         </div>
 
         {/* Progress dots */}
