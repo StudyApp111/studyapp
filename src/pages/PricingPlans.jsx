@@ -201,10 +201,10 @@ export default function PricingPlans() {
             animate={{ opacity: 1, y: 0 }}
           >
             <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
-              Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study Mode</span>
+              Stop Guessing. <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Start Mastering</span>
             </h1>
             <p className="text-purple-200 text-lg max-w-xl mx-auto">
-              Are you here to wing it or win it?
+              Join 10,000+ students locking in their A+ for less than the price of a coffee.
             </p>
           </motion.div>
 
@@ -238,7 +238,7 @@ export default function PricingPlans() {
                 <Skull className="w-6 h-6 text-slate-400" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Good Luck 💀</h2>
+                <h2 className="text-xl font-bold text-white">Foundations 📚</h2>
                 <p className="text-slate-400 text-sm">Free forever</p>
               </div>
             </div>
@@ -315,7 +315,7 @@ export default function PricingPlans() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Locked In ⚡</h2>
-                <p className="text-purple-300 text-sm">For serious students</p>
+                <p className="text-purple-300 text-sm">For students who want to ace their exams</p>
               </div>
             </div>
 
@@ -328,11 +328,11 @@ export default function PricingPlans() {
               </div>
               {isYearly ? (
                 <p className="text-emerald-400 text-xs">
-                  Billed ${yearlyTotal.toFixed(2)} yearly
+                  Billed ${yearlyTotal.toFixed(2)} yearly - Less than one textbook
                 </p>
               ) : (
                 <p className="text-purple-300/50 text-xs">
-                  Billed monthly
+                  Billed monthly - Less than one coffee
                 </p>
               )}
             </div>
@@ -342,31 +342,37 @@ export default function PricingPlans() {
                 <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
                   <Infinity className="w-3 h-3 text-white" />
                 </div>
-                <span className="text-sm font-medium">Unlimited uploads</span>
+                <span className="text-sm font-medium">Unlimited everything - all courses, all features</span>
               </li>
               <li className="flex items-center gap-3 text-white">
                 <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
-                  <Infinity className="w-3 h-3 text-white" />
+                  <Target className="w-3 h-3 text-white" />
                 </div>
-                <span className="text-sm font-medium">Unlimited study tasks</span>
+                <span className="text-sm font-medium">Know if you'll pass - Advanced grade predictions</span>
               </li>
               <li className="flex items-center gap-3 text-white">
                 <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
-                  <Infinity className="w-3 h-3 text-white" />
+                  <Brain className="w-3 h-3 text-white" />
                 </div>
-                <span className="text-sm font-medium">Unlimited AI messages</span>
+                <span className="text-sm font-medium">Study only weak spots - AI identifies what you suck at</span>
               </li>
               <li className="flex items-center gap-3 text-white">
                 <div className="w-5 h-5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
-                  <Brain className="w-3 h-3 text-white" />
+                  <MessageSquare className="w-3 h-3 text-white" />
                 </div>
-                <span className="text-sm font-medium">Advanced AI forensics</span>
+                <span className="text-sm font-medium">24/7 AI tutor - Unlimited questions, instant answers</span>
               </li>
               <li className="flex items-center gap-3 text-white">
                 <div className="w-5 h-5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0">
                   <Sparkles className="w-3 h-3 text-white" />
                 </div>
-                <span className="text-sm font-medium">Personalized study roadmap</span>
+                <span className="text-sm font-medium">Custom study plans - Daily roadmap to an A+</span>
+              </li>
+              <li className="flex items-center gap-3 text-white">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-sm font-medium">Progress tracking - Watch your grade prediction improve</span>
               </li>
             </ul>
 
