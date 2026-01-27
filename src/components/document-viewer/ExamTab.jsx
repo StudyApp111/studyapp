@@ -1165,7 +1165,7 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-        <div className="px-3 md:px-6 py-3 w-full max-w-[320px] md:max-w-2xl lg:max-w-3xl mx-auto space-y-3 md:space-y-4 pb-8">
+        <div className="px-3 md:px-6 py-3 w-full max-w-full md:max-w-2xl lg:max-w-3xl mx-auto space-y-3 md:space-y-4 pb-8" style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
         {/* Practice Exams Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
           <div>

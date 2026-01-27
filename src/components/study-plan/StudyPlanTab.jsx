@@ -528,7 +528,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   }
 
   return (
-    <div className={`w-full py-3 space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+    <div className={`w-full max-w-full overflow-x-hidden py-3 space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box' }}>
       {/* Grade + Confidence Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -716,21 +716,21 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       )}
 
       {/* Task Timeline */}
-      <div className="relative px-3 md:px-0">
-        <div className="absolute left-8 md:left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
+      <div className="relative w-full max-w-full overflow-x-hidden px-3 md:px-6" style={{ boxSizing: 'border-box' }}>
+        <div className="absolute left-[30px] md:left-[29px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
         
-        <div className="space-y-3">
+        <div className="space-y-3 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
           {/* Practice Your Topics - First Item */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative"
+            className="relative w-full flex items-start gap-3"
           >
-            <div className="absolute left-[14px] md:left-[11px] top-4 w-5 h-5 rounded-full z-10 bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0 mt-3.5">
               <Plus className="w-3 h-3 text-white" />
             </div>
             
-            <div className="ml-11 md:ml-8">
+            <div className="flex-1 min-w-0">
               <button
                 onClick={() => setShowPracticeTopics(!showPracticeTopics)}
                 className={`w-full text-left p-3 rounded-xl border-2 transition-all group ${
@@ -771,13 +771,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           </motion.div>
 
           {/* Section Header */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center z-10 shadow-lg">
+          <div className="flex items-center gap-3 w-full">
+            <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center z-10 shadow-lg flex-shrink-0">
               <Target className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className={`font-bold text-sm md:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Complete these tasks to improve your grade</h3>
-              <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{completedTasks.length} of {totalTasks} complete • Each task boosts your prediction</p>
+              <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{completedTasks.length} of {totalTasks} complete</p>
             </div>
           </div>
 
@@ -823,15 +823,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 + idx * 0.05 }}
-                className="relative"
+                className="relative w-full flex items-start gap-3"
               >
-                <div className={`absolute left-[17px] md:left-[14px] top-4 w-3 h-3 rounded-full z-10 ${
+                <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-4 ${
                   isFocusFactor ? 'bg-amber-500 ring-2 ring-amber-300 ring-offset-1' : 'bg-white border-2 border-purple-300'
                 }`} />
                 
                 <button
                   onClick={() => handleTaskClick(task)}
-                  className="w-full text-left ml-11 md:ml-8 group"
+                  className="flex-1 min-w-0 text-left group"
                 >
                   <div className={`relative rounded-xl transition-all ${
                     isFocusFactor 
@@ -903,10 +903,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="relative pt-2"
+              className="relative pt-2 w-full flex items-start gap-3"
             >
-              <div className="absolute left-[17px] md:left-[14px] top-6 w-3 h-3 rounded-full z-10 bg-emerald-500" />
-              <div className="ml-11 md:ml-8">
+              <div className="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0 mt-6" />
+              <div className="flex-1 min-w-0">
                 <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                   Completed ({completedTasks.length})
                 </p>

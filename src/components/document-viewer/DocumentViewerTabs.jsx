@@ -389,7 +389,7 @@ export default function DocumentViewerTabs({ lesson }) {
           </div>
 
           {/* Content Area - Full height, no extra space */}
-          <div className="relative md:flex-1 md:overflow-hidden" style={{ minHeight: '70vh' }}>
+          <div className="relative md:flex-1 md:overflow-hidden w-full max-w-full" style={{ minHeight: '70vh', boxSizing: 'border-box', overflowX: 'hidden' }}>
             {/* PDF View */}
             {hasFile && viewMode === "pdf" && (
               <div className={`w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ height: '70vh' }}>

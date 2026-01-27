@@ -630,9 +630,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         )}
       </AnimatePresence>
 
-      <div className={`flex flex-col w-full pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+      <div className={`flex flex-col w-full max-w-full pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
         {/* Centered content */}
-        <div className="px-3 py-3 md:px-6 w-full flex items-start justify-center">
+        <div className="px-3 py-3 md:px-6 w-full max-w-full flex items-start justify-center" style={{ boxSizing: 'border-box' }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={currentCardIndex}

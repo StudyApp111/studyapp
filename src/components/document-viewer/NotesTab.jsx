@@ -216,8 +216,8 @@ export default function NotesTab({ lesson }) {
           </div>
 
           {/* Content */}
-          <div className={`overflow-y-auto p-3 sm:p-6 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
-            <div className="w-full max-w-4xl mx-auto">
+          <div className={`overflow-y-auto p-3 sm:p-6 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
+            <div className="w-full max-w-full md:max-w-4xl mx-auto" style={{ boxSizing: 'border-box' }}>
               <Card className={`p-4 sm:p-8 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'}`}>
                 <div className="prose prose-slate max-w-none 
                   prose-headings:font-bold prose-headings:text-slate-900 

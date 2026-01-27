@@ -99,8 +99,13 @@
 }
 
 /* Global horizontal scroll prevention */
-* {
-  max-width: 100%;
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body, #root, main {
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* Ensure cards and containers don't overflow on mobile */
