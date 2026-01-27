@@ -468,6 +468,26 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             </div>
           </div>
 
+          {/* Final CTA - Moved above How It Works */}
+          <motion.div
+            ref={ctaRef}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Button 
+              onClick={() => onNavigate('exam')}
+              className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:via-indigo-700 hover:to-purple-800 text-white font-bold py-5 text-base rounded-2xl shadow-xl shadow-purple-500/30 relative overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+              <Play className="w-5 h-5 mr-2" />
+              Start 5-Minute Diagnostic
+            </Button>
+            <p className="text-center text-[10px] text-slate-400 mt-2">
+              Free • Results in 5 minutes • Know your grade before exam day
+            </p>
+          </motion.div>
+
           {/* How It Works - Simple Steps */}
           <div className={`rounded-xl border p-4 shadow-sm ${isDark ? 'bg-white/5 border-purple-500/30' : 'bg-white border-purple-100'}`}>
             <p className={`text-[10px] font-bold uppercase tracking-wide mb-3 text-center ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>How it works</p>
@@ -494,27 +514,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               </div>
             </div>
           </div>
-
-          {/* Final CTA */}
-          <motion.div
-            ref={ctaRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="pt-2"
-          >
-            <Button 
-              onClick={() => onNavigate('exam')}
-              className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:via-indigo-700 hover:to-purple-800 text-white font-bold py-5 text-base rounded-2xl shadow-xl shadow-purple-500/30 relative overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-              <Play className="w-5 h-5 mr-2" />
-              Start 5-Minute Diagnostic
-            </Button>
-            <p className="text-center text-[10px] text-slate-400 mt-2">
-              Free • Results in 5 minutes • Know your grade before exam day
-            </p>
-          </motion.div>
         </motion.div>
       </div>
     );
@@ -535,14 +534,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="flex items-center justify-between mb-2 px-2">
-          <p className={`text-center text-sm flex-1 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-1 mb-2 px-2">
+          <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
             If your <span className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{lesson?.course_name || 'course'}</span> exam was today:
           </p>
           {latestOfficialExam && (
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('viewExamResults', { detail: { examId: latestOfficialExam.id } }))}
-              className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors ${isDark ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'}`}
+              className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors whitespace-nowrap ${isDark ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'}`}
             >
               View Diagnostic Results →
             </button>

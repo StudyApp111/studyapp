@@ -122,10 +122,10 @@ export default function LessonHistory() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: Math.min(index * 0.03, 0.15) }}
         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
-        className="cursor-pointer group"
+        className="cursor-pointer group w-full"
       >
-        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 ${getGradeBgColor(grade)}`}>
-          <div className="flex items-start gap-3">
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 w-full overflow-hidden ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-2 sm:gap-3 w-full">
             <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
                 <>
@@ -140,12 +140,12 @@ export default function LessonHistory() {
               )}
             </div>
 
-            <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="flex-1 min-w-0">
               <h3 className={`font-bold text-sm truncate group-hover:text-purple-400 transition-colors mb-1.5 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                 {lesson.course_name}
               </h3>
               
-              <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mb-1.5">
                 {completedExamsCount > 0 && (
                   <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
                     <Trophy className="w-2.5 h-2.5 text-amber-400" />
@@ -205,10 +205,10 @@ export default function LessonHistory() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: Math.min(index * 0.03, 0.15) }}
         onClick={() => navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`)}
-        className="cursor-pointer group"
+        className="cursor-pointer group w-full"
       >
-        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 ${getGradeBgColor(grade)}`}>
-          <div className="flex items-start gap-3">
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 w-full overflow-hidden ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-2 sm:gap-3 w-full">
             <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
                 <>
@@ -223,7 +223,7 @@ export default function LessonHistory() {
               )}
             </div>
 
-            <div className="flex-1 min-w-0 overflow-hidden">
+            <div className="flex-1 min-w-0">
               <Badge variant="outline" className={`text-[9px] mb-1 px-1.5 py-0 ${isDark ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
                 <FileCheck className="w-2 h-2 mr-0.5" /> Assignment
               </Badge>
@@ -233,7 +233,7 @@ export default function LessonHistory() {
               <p className={`text-[10px] truncate mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{assignment.course_name}</p>
               
               {grade && (
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
                   {strengths > 0 && (
                     <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
                       <TrendingUp className="w-2.5 h-2.5 text-emerald-400" />
@@ -280,10 +280,10 @@ export default function LessonHistory() {
     : allItems.filter(i => i.itemType === 'assignment');
 
   return (
-    <div className={`min-h-screen overflow-x-hidden ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+    <div className={`min-h-screen overflow-x-hidden w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
       {/* Compact Header */}
-      <div className={`border-b px-4 py-4 md:px-8 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
-        <div className="max-w-6xl mx-auto">
+      <div className={`border-b px-3 py-4 md:px-8 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
+        <div className="max-w-6xl mx-auto w-full">
           <h1 className={`text-xl md:text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Your Learning Journey</h1>
           
           {/* Stats Row - Mobile optimized */}
@@ -328,7 +328,7 @@ export default function LessonHistory() {
         </div>
       </div>
 
-      <div className="p-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10 overflow-x-hidden">
+      <div className="px-3 py-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10 overflow-x-hidden w-full box-border">
         {/* Tabs */}
         <div className={`rounded-xl border p-1.5 mb-4 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
