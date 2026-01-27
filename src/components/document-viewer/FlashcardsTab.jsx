@@ -400,13 +400,14 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   // Initial state - not generated - styled like TeachItTab
   if (!cards && !isGenerating) {
     return (
-      <div className={`flex items-center justify-center p-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+      <div className={`flex items-center justify-center p-4 pb-8 w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
+          className="w-full max-w-md"
         >
-          <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden max-w-md ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
+          <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
             <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-5 py-6 text-center">
               <motion.div
                 animate={{ rotate: [0, -10, 10, -10, 0] }}
@@ -419,7 +420,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                 Master concepts through active recall
               </p>
             </div>
-            <div className="p-5 text-center">
+            <div className="p-5 text-center w-full" style={{ boxSizing: 'border-box' }}>
               <p className={`mb-4 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                 Generate smart flashcards from your notes. Think of the answer, then reveal to check yourself!
               </p>

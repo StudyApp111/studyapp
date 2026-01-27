@@ -489,7 +489,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length === 0) {
     return (
-      <div className={`flex items-center justify-center p-4 pb-8 min-h-[400px] ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+      <div className={`flex items-center justify-center p-4 pb-8 min-h-[400px] w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}

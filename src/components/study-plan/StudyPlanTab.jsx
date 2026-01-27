@@ -655,7 +655,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             </div>
             
             {/* Arrow + Target - Mobile only */}
-            <div className="flex items-center justify-center gap-2 pt-3 border-t border-white/20 mt-3 md:hidden">
+            <div className="flex items-center justify-center gap-2 pt-3 mt-3 md:hidden">
               <motion.div
                 animate={{ y: [0, 3, 0] }}
                 transition={{ duration: 1, repeat: Infinity }}

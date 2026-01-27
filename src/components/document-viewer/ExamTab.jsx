@@ -1174,8 +1174,8 @@ JSON Output (exact schema):
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h2 className="text-base md:text-lg font-black text-slate-900">Practice Exams</h2>
-                <p className="text-[10px] md:text-xs text-slate-500">Quick drills • No grade impact</p>
+                <h2 className={`text-base md:text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Practice Exams</h2>
+                <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Quick drills • No grade impact</p>
               </div>
             </div>
             
@@ -1250,8 +1250,8 @@ JSON Output (exact schema):
               <Trophy className="w-4 h-4 text-yellow-300" />
             </div>
             <div>
-              <h2 className="text-base font-black text-slate-900">Official Exams</h2>
-              <p className="text-[10px] text-slate-500">Establishes your baseline grade</p>
+              <h2 className={`text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Official Exams</h2>
+              <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Establishes your baseline grade</p>
             </div>
           </div>
           
