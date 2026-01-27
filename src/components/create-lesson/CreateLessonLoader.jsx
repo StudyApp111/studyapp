@@ -68,6 +68,20 @@ export default function CreateLessonLoader({ fileName, isComplete, onAnimationCo
       </div>
 
       <div className="relative z-10 w-full max-w-lg">
+        {/* Logo + Branding */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-center gap-2 mb-6"
+        >
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+            alt="StudyApp"
+            className="w-8 h-8"
+          />
+          <span className="text-white font-bold text-xl">StudyApp</span>
+        </motion.div>
+
         {/* Main content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -75,7 +89,7 @@ export default function CreateLessonLoader({ fileName, isComplete, onAnimationCo
           className="text-center mb-8"
         >
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            Know your grade before your exam
+            Preparing Your Material
           </h1>
           <p className="text-white/70">
             Building your personalized diagnostic...

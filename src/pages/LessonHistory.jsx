@@ -122,71 +122,71 @@ export default function LessonHistory() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: Math.min(index * 0.03, 0.15) }}
         onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}`)}
-        className="cursor-pointer group w-full"
+        className="cursor-pointer group"
       >
-        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 w-full overflow-hidden ${getGradeBgColor(grade)}`}>
-          <div className="flex items-start gap-2 sm:gap-3 w-full">
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-2">
+            <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
                 <>
-                  <span className="text-white font-black text-lg leading-none">{grade}</span>
-                  {confidence && <span className="text-white/70 text-[7px] mt-0.5">{Math.round(confidence)}%</span>}
+                  <span className="text-white font-black text-base leading-none">{grade}</span>
+                  {confidence && <span className="text-white/70 text-[6px] mt-0.5">{Math.round(confidence)}%</span>}
                 </>
               ) : (
                 <>
-                  <Target className="w-5 h-5 text-white" />
-                  <span className="text-white/70 text-[7px] mt-0.5">start</span>
+                  <Target className="w-4 h-4 text-white" />
+                  <span className="text-white/70 text-[6px] mt-0.5">start</span>
                 </>
               )}
             </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className={`font-bold text-sm truncate group-hover:text-purple-400 transition-colors mb-1.5 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+              <h3 className={`font-bold text-sm truncate group-hover:text-purple-400 transition-colors mb-1 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                 {lesson.course_name}
               </h3>
               
-              <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mb-1.5">
+              <div className="flex flex-wrap items-center gap-1 mb-1">
                 {completedExamsCount > 0 && (
-                  <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                  <div className={`flex items-center gap-0.5 px-1 py-0.5 rounded border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
                     <Trophy className="w-2.5 h-2.5 text-amber-400" />
-                    <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{completedExamsCount}</span>
+                    <span className={`text-[8px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{completedExamsCount}</span>
                   </div>
                 )}
                 {flashcards.length > 0 && (
-                  <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                  <div className={`flex items-center gap-0.5 px-1 py-0.5 rounded border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
                     <Copy className="w-2.5 h-2.5 text-purple-400" />
-                    <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{masteredFlashcards}/{flashcards.length}</span>
+                    <span className={`text-[8px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{masteredFlashcards}/{flashcards.length}</span>
                   </div>
                 )}
                 {studyTime > 0 && (
-                  <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                  <div className={`flex items-center gap-0.5 px-1 py-0.5 rounded border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
                     <Clock className="w-2.5 h-2.5 text-blue-400" />
-                    <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{formatTime(studyTime)}</span>
+                    <span className={`text-[8px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{formatTime(studyTime)}</span>
                   </div>
                 )}
               </div>
               
               {totalTasks > 0 ? (
-                <div className="flex items-center gap-2">
-                  <div className={`flex-1 h-1.5 rounded-full overflow-hidden max-w-[100px] ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
+                <div className="flex items-center gap-1.5">
+                  <div className={`flex-1 h-1 rounded-full overflow-hidden max-w-[80px] ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
                     <div 
                       className={`h-full rounded-full ${completedTasks === totalTasks ? 'bg-emerald-500' : 'bg-purple-500'}`}
                       style={{ width: `${(completedTasks / totalTasks) * 100}%` }}
                     />
                   </div>
-                  <span className={`text-[10px] font-medium ${completedTasks === totalTasks ? 'text-emerald-500' : (isDark ? 'text-slate-400' : 'text-slate-500')}`}>
+                  <span className={`text-[9px] font-medium ${completedTasks === totalTasks ? 'text-emerald-500' : (isDark ? 'text-slate-400' : 'text-slate-500')}`}>
                     {completedTasks === totalTasks ? '✓' : `${totalTasks - completedTasks} left`}
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-purple-500">
-                  <Sparkles className="w-3 h-3" />
-                  <span className="text-[10px] font-medium">Diagnostic →</span>
+                  <Sparkles className="w-2.5 h-2.5" />
+                  <span className="text-[9px] font-medium">Diagnostic →</span>
                 </div>
               )}
             </div>
 
-            <ChevronRight className={`w-4 h-4 flex-shrink-0 mt-3 ${isDark ? 'text-slate-500 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
+            <ChevronRight className={`w-4 h-4 flex-shrink-0 self-center ${isDark ? 'text-slate-500 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
           </div>
         </div>
       </motion.div>
@@ -205,52 +205,52 @@ export default function LessonHistory() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: Math.min(index * 0.03, 0.15) }}
         onClick={() => navigate(createPageUrl("GradeResults") + `?assignmentId=${assignment.id}`)}
-        className="cursor-pointer group w-full"
+        className="cursor-pointer group"
       >
-        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 w-full overflow-hidden ${getGradeBgColor(grade)}`}>
-          <div className="flex items-start gap-2 sm:gap-3 w-full">
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
+        <div className={`rounded-2xl border-2 hover:shadow-lg transition-all p-3 ${getGradeBgColor(grade)}`}>
+          <div className="flex items-start gap-2">
+            <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${getGradientByGrade(grade)} flex flex-col items-center justify-center shadow-lg flex-shrink-0`}>
               {grade ? (
                 <>
-                  <span className="text-white font-black text-lg leading-none">{grade}</span>
-                  {score && <span className="text-white/70 text-[7px] mt-0.5">{Math.round(score)}%</span>}
+                  <span className="text-white font-black text-base leading-none">{grade}</span>
+                  {score && <span className="text-white/70 text-[6px] mt-0.5">{Math.round(score)}%</span>}
                 </>
               ) : (
                 <>
-                  <FileCheck className="w-5 h-5 text-white" />
-                  <span className="text-white/70 text-[7px] mt-0.5">grading</span>
+                  <FileCheck className="w-4 h-4 text-white" />
+                  <span className="text-white/70 text-[6px] mt-0.5">grading</span>
                 </>
               )}
             </div>
 
             <div className="flex-1 min-w-0">
-              <Badge variant="outline" className={`text-[9px] mb-1 px-1.5 py-0 ${isDark ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
+              <Badge variant="outline" className={`text-[8px] mb-0.5 px-1 py-0 ${isDark ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
                 <FileCheck className="w-2 h-2 mr-0.5" /> Assignment
               </Badge>
               <h3 className={`font-bold text-sm truncate group-hover:text-emerald-500 transition-colors mb-0.5 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                 {assignment.assignment_title}
               </h3>
-              <p className={`text-[10px] truncate mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{assignment.course_name}</p>
+              <p className={`text-[9px] truncate mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{assignment.course_name}</p>
               
               {grade && (
-                <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+                <div className="flex flex-wrap items-center gap-1">
                   {strengths > 0 && (
-                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                    <div className={`flex items-center gap-0.5 px-1 py-0.5 rounded border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
                       <TrendingUp className="w-2.5 h-2.5 text-emerald-400" />
-                      <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{strengths}</span>
+                      <span className={`text-[8px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{strengths}</span>
                     </div>
                   )}
                   {improvements > 0 && (
-                    <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                    <div className={`flex items-center gap-0.5 px-1 py-0.5 rounded border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
                       <Target className="w-2.5 h-2.5 text-amber-400" />
-                      <span className={`text-[9px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{improvements}</span>
+                      <span className={`text-[8px] font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{improvements}</span>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            <ChevronRight className={`w-4 h-4 flex-shrink-0 mt-3 ${isDark ? 'text-slate-500 group-hover:text-emerald-400' : 'text-slate-400 group-hover:text-emerald-600'}`} />
+            <ChevronRight className={`w-4 h-4 flex-shrink-0 self-center ${isDark ? 'text-slate-500 group-hover:text-emerald-400' : 'text-slate-400 group-hover:text-emerald-600'}`} />
           </div>
         </div>
       </motion.div>
@@ -280,47 +280,47 @@ export default function LessonHistory() {
     : allItems.filter(i => i.itemType === 'assignment');
 
   return (
-    <div className={`min-h-screen overflow-x-hidden w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+    <div className={`min-h-screen w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ maxWidth: '100vw', overflowX: 'hidden' }}>
       {/* Compact Header */}
-      <div className={`border-b px-3 py-4 md:px-8 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
-        <div className="max-w-6xl mx-auto w-full">
-          <h1 className={`text-xl md:text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Your Learning Journey</h1>
+      <div className={`border-b ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
+        <div className="w-full px-3 py-4 md:px-6 lg:px-8 max-w-3xl mx-auto">
+          <h1 className={`text-lg md:text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>Your Learning Journey</h1>
           
-          {/* Stats Row - Mobile optimized */}
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
-            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-2.5 md:p-3 text-white">
+          {/* Stats Row - 2x2 on mobile, 4 cols on desktop */}
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-2.5 text-white">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-white/80 flex-shrink-0" />
-                <div>
-                  <p className="text-base md:text-xl font-bold leading-none">{lessons.length}</p>
-                  <p className="text-[9px] md:text-[10px] text-white/70">Courses</p>
+                <div className="min-w-0">
+                  <p className="text-base font-bold leading-none">{lessons.length}</p>
+                  <p className="text-[9px] text-white/70">Courses</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl p-2.5 md:p-3 text-white">
+            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl p-2.5 text-white">
               <div className="flex items-center gap-2">
                 <FileCheck className="w-4 h-4 text-white/80 flex-shrink-0" />
-                <div>
-                  <p className="text-base md:text-xl font-bold leading-none">{gradedAssignments.length}</p>
-                  <p className="text-[9px] md:text-[10px] text-white/70">Graded</p>
+                <div className="min-w-0">
+                  <p className="text-base font-bold leading-none">{gradedAssignments.length}</p>
+                  <p className="text-[9px] text-white/70">Graded</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-amber-600 to-orange-700 rounded-xl p-2.5 md:p-3 text-white">
+            <div className="bg-gradient-to-br from-amber-600 to-orange-700 rounded-xl p-2.5 text-white">
               <div className="flex items-center gap-2">
                 <Trophy className="w-4 h-4 text-white/80 flex-shrink-0" />
-                <div>
-                  <p className="text-base md:text-xl font-bold leading-none">{totalCompletedExams}</p>
-                  <p className="text-[9px] md:text-[10px] text-white/70">Exams</p>
+                <div className="min-w-0">
+                  <p className="text-base font-bold leading-none">{totalCompletedExams}</p>
+                  <p className="text-[9px] text-white/70">Exams</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-600 to-cyan-700 rounded-xl p-2.5 md:p-3 text-white">
+            <div className="bg-gradient-to-br from-blue-600 to-cyan-700 rounded-xl p-2.5 text-white">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-white/80 flex-shrink-0" />
-                <div>
-                  <p className="text-base md:text-xl font-bold leading-none truncate max-w-[60px]">{formatTime(totalStudyTime)}</p>
-                  <p className="text-[9px] md:text-[10px] text-white/70">Studied</p>
+                <div className="min-w-0">
+                  <p className="text-base font-bold leading-none truncate">{formatTime(totalStudyTime)}</p>
+                  <p className="text-[9px] text-white/70">Studied</p>
                 </div>
               </div>
             </div>
@@ -328,14 +328,14 @@ export default function LessonHistory() {
         </div>
       </div>
 
-      <div className="px-3 py-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10 overflow-x-hidden w-full box-border">
+      <div className="w-full px-3 py-4 md:px-6 lg:px-8 max-w-3xl mx-auto pb-28 md:pb-10">
         {/* Tabs */}
-        <div className={`rounded-xl border p-1 mb-4 w-full ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
+        <div className={`rounded-xl border p-1 mb-4 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className={`p-0.5 rounded-lg w-full grid grid-cols-3 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
-              <TabsTrigger value="all" className={`rounded-md text-xs sm:text-sm py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>All</TabsTrigger>
-              <TabsTrigger value="lessons" className={`rounded-md text-xs sm:text-sm py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Courses</TabsTrigger>
-              <TabsTrigger value="assignments" className={`rounded-md text-xs sm:text-sm py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Graded</TabsTrigger>
+              <TabsTrigger value="all" className={`rounded-md text-xs py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>All</TabsTrigger>
+              <TabsTrigger value="lessons" className={`rounded-md text-xs py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Courses</TabsTrigger>
+              <TabsTrigger value="assignments" className={`rounded-md text-xs py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Graded</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
