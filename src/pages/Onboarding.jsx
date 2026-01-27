@@ -545,7 +545,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
               variant="ghost"
               onClick={handleBack}
               disabled={currentStep === 0 || isSubmitting}
-              className="gap-2"
+              className="gap-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
             >
               <ChevronLeft className="w-4 h-4" />
               Back

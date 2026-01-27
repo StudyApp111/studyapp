@@ -108,21 +108,21 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
         <TabsList className="grid w-full grid-cols-3 p-1 rounded-xl bg-slate-100">
           <TabsTrigger 
             value="upload" 
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="rounded-lg text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
           >
             <Upload className="w-4 h-4 mr-2" />
             Upload
           </TabsTrigger>
           <TabsTrigger 
             value="paste"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="rounded-lg text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
           >
             <FileText className="w-4 h-4 mr-2" />
             Paste
           </TabsTrigger>
           <TabsTrigger 
             value="topic"
-            className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            className="rounded-lg text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
           >
             <Type className="w-4 h-4 mr-2" />
             Topic
