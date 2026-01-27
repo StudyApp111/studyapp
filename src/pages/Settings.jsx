@@ -136,8 +136,8 @@ export default function Settings() {
   );
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'} p-4 md:p-10 pb-28 md:pb-10`}>
-      <div className="max-w-3xl mx-auto">
+    <div className={`min-h-screen w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'} p-4 md:p-10 pb-28 md:pb-10`} style={{ overflowX: 'hidden', boxSizing: 'border-box' }}>
+      <div className="max-w-full md:max-w-3xl mx-auto" style={{ boxSizing: 'border-box' }}>
         <Button
           variant="ghost"
           onClick={() => navigate(createPageUrl("Home"))}

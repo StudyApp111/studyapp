@@ -355,8 +355,8 @@ Output valid JSON matching the expected schema.`;
   };
 
   return (
-    <div className={`min-h-screen p-4 md:p-10 pb-28 md:pb-10 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
-      <div className="max-w-3xl mx-auto">
+    <div className={`min-h-screen w-full max-w-full p-4 md:p-10 pb-28 md:pb-10 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`} style={{ overflowX: 'hidden', boxSizing: 'border-box' }}>
+      <div className="max-w-full md:max-w-3xl mx-auto" style={{ boxSizing: 'border-box' }}>
         {/* Hero Header Section */}
         <div className="mb-8">
           <div className="flex justify-end mb-4">
