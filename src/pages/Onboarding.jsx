@@ -53,10 +53,10 @@ const baseQuestions = [
   },
   {
     id: "materials",
-    question: "StudyApp will predict your grade and help you study.",
+    question: "Let's set up your first lesson",
     type: "materials",
     icon: "✨",
-    subtitle: "Upload your materials to get started"
+    subtitle: (answers) => `Upload materials for ${answers.course_name || 'your course'}`
   }
 ];
 
@@ -504,7 +504,11 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
 
         <div className="text-center mb-4 md:mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{currentQuestion?.question}</h1>
-          <p className="text-white/80 text-sm md:text-base">{currentQuestion?.subtitle}</p>
+          <p className="text-white/80 text-sm md:text-base">
+            {typeof currentQuestion?.subtitle === 'function' 
+              ? currentQuestion.subtitle(answers) 
+              : currentQuestion?.subtitle}
+          </p>
         </div>
 
         {/* Progress dots */}
