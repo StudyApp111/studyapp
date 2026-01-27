@@ -8,14 +8,12 @@ import { Sparkles, Loader2 } from "lucide-react";
 import MaterialUploader from "@/components/onboarding/MaterialUploader";
 import CreateLessonLoader from "@/components/create-lesson/CreateLessonLoader";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
-import { useTheme } from "@/components/theme/ThemeProvider";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
   const { canUpload, incrementUploadCount, triggerUpgradeModal } = useSubscription();
-  const { isDark } = useTheme();
   const [courseName, setCourseName] = useState("");
   const [materialData, setMaterialData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -211,7 +209,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 pb-28 md:pb-4 ${isDark ? 'bg-gradient-to-br from-purple-900/50 via-violet-900/40 to-indigo-900/50' : 'bg-gradient-to-br from-purple-700 via-violet-600 to-indigo-600'}`}>
+    <div className="min-h-screen bg-gradient-to-br from-purple-700 via-violet-600 to-indigo-600 flex items-center justify-center p-4 pb-28 md:pb-4">
       <div className="w-full max-w-lg md:max-w-2xl relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-4">
@@ -231,16 +229,16 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
           <p className="text-white/70 text-xs md:text-sm">Upload your materials to get started</p>
         </div>
 
-        <div className={`backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-white/20'}`}>
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border border-white/20">
           {error && (
-            <div className={`mb-4 p-3 border rounded-xl text-sm ${isDark ? 'bg-red-500/10 border-red-500/30 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
               {error}
             </div>
           )}
 
           {/* Course Name Input */}
           <div className="mb-4">
-            <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
               Course Name
             </label>
             <Input
@@ -258,7 +256,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
             onMaterialReady={handleMaterialReady}
           />
 
-          <div className={`mt-6 pt-4 border-t ${isDark ? 'border-white/10' : 'border-slate-100'}`}>
+          <div className="mt-6 pt-4 border-t border-slate-100">
             <Button
               onClick={handleSubmit}
               disabled={!canSubmit || isSubmitting}
