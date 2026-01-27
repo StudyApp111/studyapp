@@ -181,22 +181,60 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Handle subscription canceled/deleted
-    if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
+    // Handle subscription updates (trial ending, status changes)
+    if (event.type === 'customer.subscription.updated') {
       const subscription = event.data.object;
-      
-      if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
-        const users = await base44.asServiceRole.entities.User.filter({ 
-          stripe_subscription_id: subscription.id 
-        });
-        
-        if (users.length > 0) {
-          await base44.asServiceRole.entities.User.update(users[0].id, {
-            subscription_tier: 'free',
-            subscription_status: 'canceled'
+
+      const users = await base44.asServiceRole.entities.User.filter({ 
+        stripe_subscription_id: subscription.id 
+      });
+
+      if (users.length > 0) {
+        const user = users[0];
+
+        // Update status based on subscription state
+        if (subscription.status === 'active') {
+          // Trial ended, now active paying customer
+          await base44.asServiceRole.entities.User.update(user.id, {
+            subscription_status: 'active',
+            trial_end_date: null // Clear trial date
           });
-          console.log(`User ${users[0].email} downgraded to free`);
+          console.log(`User ${user.email} trial ended, now active`);
+        } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+          await base44.asServiceRole.entities.User.update(user.id, {
+            subscription_tier: 'free',
+            subscription_status: 'canceled',
+            trial_end_date: null
+          });
+          console.log(`User ${user.email} subscription canceled`);
+        } else if (subscription.status === 'trialing') {
+          // Still in trial
+          const trialEnd = subscription.trial_end 
+            ? new Date(subscription.trial_end * 1000).toISOString() 
+            : null;
+          await base44.asServiceRole.entities.User.update(user.id, {
+            subscription_status: 'trialing',
+            trial_end_date: trialEnd
+          });
         }
+      }
+    }
+
+    // Handle subscription deleted
+    if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object;
+
+      const users = await base44.asServiceRole.entities.User.filter({ 
+        stripe_subscription_id: subscription.id 
+      });
+
+      if (users.length > 0) {
+        await base44.asServiceRole.entities.User.update(users[0].id, {
+          subscription_tier: 'free',
+          subscription_status: 'canceled',
+          trial_end_date: null
+        });
+        console.log(`User ${users[0].email} subscription deleted`);
       }
     }
 
