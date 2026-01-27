@@ -72,7 +72,7 @@ export default function OnboardingQuestion({ question, value, onChange, prefetch
             value={searchQuery}
             onChange={handleSchoolSearch}
             placeholder={question.placeholder}
-            className="text-base pl-12 pr-4 py-6 h-auto rounded-xl border-2 border-slate-200 focus:border-purple-400 text-slate-900 bg-white"
+            className="text-base pl-12 pr-4 py-6 h-auto rounded-xl border-2 border-slate-200 focus:border-purple-400 text-slate-900 bg-white placeholder:text-slate-400"
             autoComplete="off"
           />
         </div>

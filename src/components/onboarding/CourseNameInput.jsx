@@ -48,7 +48,7 @@ export default function CourseNameInput({ value, onChange, school, year }) {
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder="e.g., ECON 203, Biology 101"
-          className="text-lg pl-12 pr-4 py-6 h-auto rounded-xl border-2 border-slate-200 focus:border-purple-400 text-slate-900 bg-white"
+          className="text-lg pl-12 pr-4 py-6 h-auto rounded-xl border-2 border-slate-200 focus:border-purple-400 text-slate-900 bg-white placeholder:text-slate-400"
           autoComplete="off"
           autoFocus
         />
