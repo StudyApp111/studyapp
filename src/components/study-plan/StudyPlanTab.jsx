@@ -528,14 +528,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   }
 
   return (
-    <div className={`w-full max-w-full overflow-x-hidden py-3 space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box' }}>
+    <div className={`w-full max-w-full overflow-x-hidden py-3 space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', maxWidth: '100vw' }}>
       {/* Grade + Confidence Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="px-3 md:px-0"
+        className="px-3 md:px-4 w-full max-w-full"
+        style={{ boxSizing: 'border-box' }}
       >
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-1 mb-2">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-1 mb-2 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
           <p className={`text-xs md:text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
             If your <span className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{lesson?.course_name || 'course'}</span> exam was today, you'd score:
           </p>
@@ -549,7 +550,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           )}
         </div>
 
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-5 md:p-6 shadow-xl transition-all duration-500 ${gradeJustUpdated ? 'ring-4 ring-yellow-400 ring-offset-2 animate-pulse' : ''}`}>
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-4 md:p-6 shadow-xl transition-all duration-500 w-full max-w-full ${gradeJustUpdated ? 'ring-4 ring-yellow-400 ring-offset-2 animate-pulse' : ''}`} style={{ boxSizing: 'border-box' }}>
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
           
           {/* Grade Updated Banner - More Prominent */}
@@ -578,8 +579,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             )}
           </AnimatePresence>
 
-          <div className={`relative ${gradeJustUpdated ? 'pt-6' : ''}`}>
-            <div className="md:flex md:items-center md:justify-between md:gap-8">
+          <div className={`relative w-full max-w-full ${gradeJustUpdated ? 'pt-6' : ''}`} style={{ boxSizing: 'border-box' }}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
               {/* Current Grade + Score + Velocity */}
               <div className="text-center md:text-left mb-4 md:mb-0 md:flex-1">
                 <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">StudyApp Predicted Grade</p>
@@ -614,7 +615,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               </div>
 
               {/* Confidence Meter */}
-              <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 md:p-4 md:min-w-[280px]">
+              <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 md:p-4 w-full md:w-auto">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-4 h-4 text-yellow-300" />
                   <span className="text-white/90 text-xs font-bold uppercase tracking-wide">Prediction Confidence</span>
@@ -675,7 +676,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
-          className="px-3 md:px-0"
+          className="px-3 md:px-4 w-full max-w-full"
+          style={{ boxSizing: 'border-box' }}
         >
           <div className={`rounded-2xl p-4 border ${isDark ? 'bg-gradient-to-br from-indigo-950/50 to-purple-950/50 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200/60'}`}>
             <div className="flex items-center justify-center gap-2 mb-3">
@@ -716,8 +718,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       )}
 
       {/* Task Timeline */}
-      <div className="relative w-full max-w-full overflow-x-hidden px-3 md:px-6" style={{ boxSizing: 'border-box' }}>
-        <div className="absolute left-[30px] md:left-[29px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
+      <div className="relative w-full max-w-full overflow-x-hidden px-3 md:px-4" style={{ boxSizing: 'border-box' }}>
+        <div className="absolute left-[28px] md:left-[26px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
         
         <div className="space-y-3 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
           {/* Practice Your Topics - First Item */}
@@ -933,7 +935,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="mt-4 px-3 md:px-0"
+          className="mt-4 px-3 md:px-4 w-full max-w-full"
+          style={{ boxSizing: 'border-box' }}
         >
           <div className={`rounded-xl p-3 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
             <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Why this plan</p>

@@ -1165,7 +1165,7 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-        <div className="px-3 md:px-6 py-3 w-full max-w-full md:max-w-2xl lg:max-w-3xl mx-auto space-y-3 md:space-y-4 pb-8" style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
+        <div className="px-3 md:px-6 py-3 w-full max-w-full mx-auto space-y-3 md:space-y-4 pb-8" style={{ boxSizing: 'border-box', overflowX: 'hidden', maxWidth: '100vw' }}>
         {/* Practice Exams Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
           <div>
@@ -1179,7 +1179,7 @@ JSON Output (exact schema):
               </div>
             </div>
             
-            <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+            <div className="space-y-2 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
               {sortedPracticeExams.slice(0, 6).map((e) => {
                 const isCompleted = e.completed;
                 const correctCount = e.correct_count || 0;

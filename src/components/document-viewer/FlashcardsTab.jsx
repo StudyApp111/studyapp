@@ -730,9 +730,10 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       {/* Flashcard */}
       <div 
         onClick={handleFlip}
-        className="cursor-pointer select-none"
+        className="cursor-pointer select-none w-full max-w-full"
+        style={{ boxSizing: 'border-box' }}
       >
-        <Card className="border-0 shadow-xl overflow-hidden min-h-[280px] relative">
+        <Card className="border-0 shadow-xl overflow-hidden min-h-[280px] relative w-full" style={{ boxSizing: 'border-box' }}>
           <AnimatePresence mode="wait">
             {!isFlipped ? (
               <motion.div
@@ -760,7 +761,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                   </div>
                 </div>
                 <div className={`p-6 flex flex-col items-center justify-center min-h-[220px] ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
-                  <p className={`text-base font-medium leading-relaxed text-center mb-6 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                 <p className={`text-base font-medium leading-relaxed text-center mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     {currentCard.question}
                   </p>
                   <div className="text-center">
@@ -795,7 +796,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                   </div>
                 </div>
                 <div className={`p-6 flex flex-col min-h-[220px] ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
-                  <p className={`text-sm leading-relaxed text-center flex-1 flex items-center justify-center ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                  <p className={`text-sm leading-relaxed text-center flex-1 flex items-center justify-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     {currentCard.answer}
                   </p>
                   

@@ -632,7 +632,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
       <div className={`flex flex-col w-full max-w-full pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
         {/* Centered content */}
-        <div className="px-3 py-3 md:px-6 w-full max-w-full flex items-start justify-center" style={{ boxSizing: 'border-box' }}>
+        <div className="px-3 py-3 md:px-4 w-full max-w-full flex items-start justify-center" style={{ boxSizing: 'border-box' }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={currentCardIndex}
@@ -640,11 +640,12 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.25 }}
-              className="w-full max-w-md md:max-w-2xl lg:max-w-3xl"
+              className="w-full max-w-full"
+              style={{ boxSizing: 'border-box' }}
             >
-              <Card className={`backdrop-blur-xl border shadow-xl overflow-hidden w-full ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200/50'}`}>
+              <Card className={`backdrop-blur-xl border shadow-xl overflow-hidden w-full max-w-full ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200/50'}`} style={{ boxSizing: 'border-box' }}>
                 {/* Integrated Card Header with Progress */}
-                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 md:px-6 md:py-4 w-full">
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 md:px-6 md:py-4 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
                   {/* Top row: Progress info + Actions */}
                   <div className="flex items-center justify-between mb-2">
                     <button
@@ -693,12 +694,12 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                   </div>
                   
                   {/* Question */}
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-2 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
                     <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[9px] flex-shrink-0 mt-0.5">
                       <HelpCircle className="w-2.5 h-2.5 mr-0.5" />
                       Explain
                     </Badge>
-                    <h3 className="text-sm font-bold text-white leading-snug break-words flex-1">
+                    <h3 className="text-sm font-bold text-white leading-snug break-words flex-1 min-w-0">
                       {currentCard.question}
                     </h3>
                   </div>
