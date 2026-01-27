@@ -3,12 +3,6 @@ import Stripe from 'npm:stripe@14.21.0';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_API_KEY"));
 
-// Price IDs - Create these in Stripe Dashboard:
-// 1. Create a Product called "Locked In Pro"
-// 2. Add two prices: $6.99/month (monthly) and $59.88/year ($4.99/mo billed yearly)
-// 3. Replace these IDs with your actual Stripe price IDs
-// Price IDs are read inside the handler to ensure fresh env values
-
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -29,31 +23,33 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { plan_type, success_url, cancel_url } = await req.json();
+    const { plan_type, trial, success_url, cancel_url } = await req.json();
     
-    if (!plan_type || !['monthly', 'yearly'].includes(plan_type)) {
-      return Response.json({ error: 'Invalid plan type' }, { status: 400 });
-    }
-
-    // Get price IDs fresh from environment
+    // Default to monthly with trial for the new flow
+    const planType = plan_type || 'monthly';
+    const includeTrial = trial !== false; // Default to true for 7-day trial
+    
+    // Get price IDs
     const STRIPE_PRICE_MONTHLY = Deno.env.get("STRIPE_PRICE_MONTHLY");
-    const STRIPE_PRICE_YEARLY = Deno.env.get("STRIPE_PRICE_YEARLY");
     
     console.log("=== Stripe Checkout Debug ===");
-    console.log("Plan type requested:", plan_type);
-    console.log("STRIPE_PRICE_MONTHLY env:", STRIPE_PRICE_MONTHLY || "NOT SET");
-    console.log("STRIPE_PRICE_YEARLY env:", STRIPE_PRICE_YEARLY || "NOT SET");
+    console.log("Plan type:", planType);
+    console.log("Include trial:", includeTrial);
+    console.log("STRIPE_PRICE_MONTHLY:", STRIPE_PRICE_MONTHLY || "NOT SET");
     
-    const PRICE_IDS = {
-      monthly: STRIPE_PRICE_MONTHLY,
-      yearly: STRIPE_PRICE_YEARLY
-    };
+    // Use monthly price for trial flow
+    const priceId = STRIPE_PRICE_MONTHLY;
+    
+    if (!priceId || !priceId.startsWith('price_')) {
+      return Response.json({ 
+        error: 'Price not configured. Please contact support.',
+      }, { status: 400 });
+    }
 
     // Check if user already has a Stripe customer ID
     let customerId = user.stripe_customer_id;
     
     if (!customerId) {
-      // Create a new customer
       const customer = await stripe.customers.create({
         email: user.email,
         name: user.full_name,
@@ -63,42 +59,14 @@ Deno.serve(async (req) => {
       });
       customerId = customer.id;
       
-      // Save customer ID to user
       await base44.auth.updateMe({
         stripe_customer_id: customerId
       });
     }
 
-    // Validate price ID exists
-    const priceId = PRICE_IDS[plan_type];
-    if (!priceId) {
-      console.error(`Price ID not set for ${plan_type}. STRIPE_PRICE_${plan_type.toUpperCase()} env var is missing or empty.`);
-      return Response.json({ 
-        error: `Price not configured for ${plan_type} plan. Please contact support.`,
-        debug: `Missing STRIPE_PRICE_${plan_type.toUpperCase()} environment variable`
-      }, { status: 400 });
-    }
-
-    // Validate price ID format
-    if (!priceId.startsWith('price_')) {
-      console.error(`Invalid price ID format for ${plan_type}:`, priceId, "- must start with 'price_'");
-      return Response.json({ 
-        error: `Invalid price configuration for ${plan_type} plan.`,
-        debug: `Price ID should start with 'price_', got: ${priceId.substring(0, 20)}...`
-      }, { status: 400 });
-    }
-
-    console.log(`Creating checkout for ${plan_type} with price ID: ${priceId}`);
-
-    // Fetch the price from Stripe to determine if it's recurring or one-time
-    const stripePrice = await stripe.prices.retrieve(priceId);
-    const isRecurring = stripePrice.type === 'recurring';
-    
-    console.log(`Price type from Stripe: ${stripePrice.type}, isRecurring: ${isRecurring}`);
-    
+    // Create checkout session with 7-day trial
     const sessionConfig = {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       payment_method_types: ['card'],
       line_items: [
         {
@@ -106,44 +74,39 @@ Deno.serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: isRecurring ? 'subscription' : 'payment',
-      success_url: success_url || `${req.headers.get('origin')}/PricingPlans?success=true`,
-      cancel_url: cancel_url || `${req.headers.get('origin')}/PricingPlans?canceled=true`,
+      mode: 'subscription',
+      success_url: success_url || `${req.headers.get('origin')}/Home?subscription=success`,
+      cancel_url: cancel_url || `${req.headers.get('origin')}/Home?subscription=canceled`,
       metadata: {
         user_email: user.email,
         user_id: user.id,
-        plan_type: plan_type
+        plan_type: planType
       },
-      allow_promotion_codes: true,
-    };
-    
-    // Only add subscription_data for subscription mode
-    if (isRecurring) {
-      sessionConfig.subscription_data = {
+      subscription_data: {
+        trial_period_days: includeTrial ? 7 : undefined,
         metadata: {
           user_email: user.email,
           user_id: user.id,
-          plan_type: plan_type
+          plan_type: planType
         }
-      };
-    }
+      },
+      // Collect payment method upfront for trial
+      payment_method_collection: 'always',
+      allow_promotion_codes: true,
+    };
 
-    // Create checkout session
+    console.log("Creating checkout session with config:", JSON.stringify(sessionConfig, null, 2));
+
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return Response.json({ 
+      url: session.url,
       checkout_url: session.url,
       session_id: session.id 
     });
 
   } catch (error) {
     console.error('Checkout session error:', error);
-    console.error('Error details:', JSON.stringify({
-      message: error.message,
-      type: error.type,
-      code: error.code,
-      param: error.param
-    }));
     return Response.json({ 
       error: error.message,
       details: error.type || error.code || 'Unknown error'

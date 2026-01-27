@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Skull, Zap, X, Check, Sparkles, Lock, Infinity, Gift, Loader2, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
+import { X, Check, Zap, Gift, Loader2, CheckCircle2, AlertCircle, Calendar, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useSubscription } from './SubscriptionContext';
@@ -12,23 +10,23 @@ import { useTheme } from '@/components/theme/ThemeProvider';
 
 const LIMIT_MESSAGES = {
   uploads: {
-    title: "Weekly Upload Limit Reached",
-    description: "Free users can upload 2 documents per week.",
+    title: "Start Your Free Trial",
+    description: "Upload unlimited study materials with Pro.",
     icon: "📄"
   },
   upload: {
-    title: "Weekly Upload Limit Reached",
-    description: "Free users can upload 2 documents per week.",
+    title: "Start Your Free Trial",
+    description: "Upload unlimited study materials with Pro.",
     icon: "📄"
   },
   tasks: {
-    title: "Daily Task Limit Reached", 
-    description: "Free users can complete 1 study task per day.",
+    title: "Start Your Free Trial", 
+    description: "Complete unlimited study tasks with Pro.",
     icon: "📝"
   },
   task: {
-    title: "Daily Task Limit Reached", 
-    description: "Free users can complete 1 study task per day.",
+    title: "Start Your Free Trial", 
+    description: "Complete unlimited study tasks with Pro.",
     icon: "📝"
   },
   ai_message: {
@@ -37,40 +35,39 @@ const LIMIT_MESSAGES = {
     icon: "💬"
   },
   assignments: {
-    title: "Weekly Grading Limit Reached",
-    description: "Free users can grade 1 assignment per week.",
+    title: "Start Your Free Trial",
+    description: "Grade unlimited assignments with Pro.",
     icon: "📝"
   },
   polly: {
-    title: "Advanced Grade Prediction Locked",
+    title: "Start Your Free Trial",
     description: "Unlock AI-powered grade forensics and personalized roadmaps.",
     icon: "🔮"
   },
   default: {
-    title: "Upgrade to Locked In",
+    title: "Start Your 7-Day Free Trial",
     description: "Unlock unlimited access to all features.",
     icon: "🚀"
   }
 };
 
 export default function UpgradeModal({ open, onOpenChange, reason = 'default' }) {
-  const navigate = useNavigate();
   const { refreshUser } = useSubscription();
   const { isDark } = useTheme();
   const limitInfo = LIMIT_MESSAGES[reason] || LIMIT_MESSAGES.default;
   
-  const [selectedPlan, setSelectedPlan] = useState('yearly');
   const [showPromoInput, setShowPromoInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoResult, setPromoResult] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  const handleSelectPlan = async () => {
+  const handleStartTrial = async () => {
     setCheckoutLoading(true);
     try {
       const response = await base44.functions.invoke('createCheckoutSession', {
-        plan_type: selectedPlan
+        plan_type: 'monthly',
+        trial: true
       });
       
       if (response.data?.url) {
@@ -97,7 +94,6 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
       if (response.data?.success) {
         setPromoResult({ success: true, message: response.data.message });
         await refreshUser();
-        // Close modal after success
         setTimeout(() => {
           onOpenChange(false);
           setPromoCode('');
@@ -143,107 +139,69 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
               <div className="text-5xl mb-3">{limitInfo.icon}</div>
               <h2 className="text-xl font-bold text-white mb-2">{limitInfo.title}</h2>
               <p className="text-purple-200 text-sm mb-3">{limitInfo.description}</p>
-              <p className="text-white/80 text-xs font-medium">Join 10,000+ students locking in their A+ this semester</p>
+              
+              {/* Trial Badge */}
+              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                <Calendar className="w-4 h-4 text-yellow-300" />
+                <span className="text-white font-bold text-sm">7 Days Free</span>
+                <span className="text-white/70 text-sm">• Then $6.99/mo</span>
+              </div>
             </div>
           </div>
 
           {/* Content */}
           <div className={`p-6 -mt-4 rounded-t-3xl relative ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
-            {/* Features */}
+            {/* What you get */}
             <div className={`rounded-xl p-4 mb-5 ${isDark ? 'bg-white/5' : 'bg-slate-50'}`}>
-              <p className={`text-[10px] font-bold uppercase tracking-wide mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>What you get</p>
-              <div className="space-y-2">
+              <p className={`text-[10px] font-bold uppercase tracking-wide mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>What you get with Pro</p>
+              <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited uploads</span>
+                  <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited uploads & courses</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited study tasks</span>
+                  <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited study tasks & flashcards</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-500" />
+                  <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                   <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited AI messages</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-500" />
+                  <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                   <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Unlimited assignment grading</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Advanced AI forensics</span>
+                  <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>AI-powered grade predictions</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Personalized study roadmap</span>
+                  <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <span className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Personalized study roadmaps</span>
                 </div>
               </div>
             </div>
 
-            {/* Plan Selection */}
-            <div className="space-y-3 mb-5">
-              {/* Yearly Plan */}
-              <button
-                onClick={() => setSelectedPlan('yearly')}
-                className={`w-full p-4 rounded-xl border-2 transition-all text-left relative ${
-                  selectedPlan === 'yearly'
-                    ? 'border-purple-500 bg-purple-500/10'
-                    : isDark ? 'border-white/10 bg-white/5 hover:border-white/20' : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-                  29% OFF
+            {/* Trial Info Box */}
+            <div className={`rounded-xl p-4 mb-5 border-2 border-dashed ${isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200'}`}>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedPlan === 'yearly' ? 'border-purple-500 bg-purple-500' : isDark ? 'border-white/30' : 'border-slate-300'
-                    }`}>
-                      {selectedPlan === 'yearly' && <Check className="w-3 h-3 text-white" />}
-                    </div>
-                    <div>
-                      <p className={`font-bold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Annual</p>
-                      <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Billed yearly</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-bold text-lg ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>$4.99<span className="text-xs font-normal">/mo</span></p>
-                    <p className={`text-[10px] line-through ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>$6.99/mo</p>
-                  </div>
+                <div>
+                  <p className={`font-bold text-sm mb-1 ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>How the free trial works</p>
+                  <ul className={`text-xs space-y-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    <li>• Try Pro free for 7 days</li>
+                    <li>• Cancel anytime before trial ends</li>
+                    <li>• Only $6.99/month after trial</li>
+                  </ul>
                 </div>
-              </button>
-
-              {/* Monthly Plan */}
-              <button
-                onClick={() => setSelectedPlan('monthly')}
-                className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                  selectedPlan === 'monthly'
-                    ? 'border-purple-500 bg-purple-500/10'
-                    : isDark ? 'border-white/10 bg-white/5 hover:border-white/20' : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedPlan === 'monthly' ? 'border-purple-500 bg-purple-500' : isDark ? 'border-white/30' : 'border-slate-300'
-                    }`}>
-                      {selectedPlan === 'monthly' && <Check className="w-3 h-3 text-white" />}
-                    </div>
-                    <div>
-                      <p className={`font-bold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Monthly</p>
-                      <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Billed monthly</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className={`font-bold text-lg ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>$6.99<span className="text-xs font-normal">/mo</span></p>
-                  </div>
-                </div>
-              </button>
+              </div>
             </div>
 
             {/* CTA */}
             <Button
-              onClick={handleSelectPlan}
+              onClick={handleStartTrial}
               disabled={checkoutLoading}
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-6 text-base rounded-xl shadow-lg shadow-purple-500/30"
             >
@@ -252,11 +210,11 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
               ) : (
                 <Zap className="w-5 h-5 mr-2" />
               )}
-              Select Plan
+              Start 7-Day Free Trial
             </Button>
 
             <p className={`text-center text-xs mt-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              Cancel anytime • Secure checkout
+              Cancel anytime • No charge for 7 days
             </p>
 
             {/* Promo Code Section */}
@@ -311,8 +269,8 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
                         animate={{ opacity: 1, y: 0 }}
                         className={`flex items-center gap-2 text-sm p-2 rounded-lg ${
                           promoResult.success 
-                            ? 'bg-emerald-50 text-emerald-700' 
-                            : 'bg-red-50 text-red-700'
+                            ? (isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-700')
+                            : (isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-50 text-red-700')
                         }`}
                       >
                         {promoResult.success ? (

@@ -287,40 +287,40 @@ export default function LessonHistory() {
           <h1 className={`text-xl md:text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Your Learning Journey</h1>
           
           {/* Stats Row - Mobile optimized */}
-          <div className="grid grid-cols-4 gap-2 md:gap-3">
-            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-2 md:p-3 text-white">
-              <div className="flex flex-col md:flex-row items-center md:gap-2">
-                <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-white/80 mb-1 md:mb-0" />
-                <div className="text-center md:text-left">
-                  <p className="text-lg md:text-xl font-bold leading-none">{lessons.length}</p>
-                  <p className="text-[8px] md:text-[10px] text-white/70">Courses</p>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
+            <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-2.5 md:p-3 text-white">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-white/80 flex-shrink-0" />
+                <div>
+                  <p className="text-base md:text-xl font-bold leading-none">{lessons.length}</p>
+                  <p className="text-[9px] md:text-[10px] text-white/70">Courses</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl p-2 md:p-3 text-white">
-              <div className="flex flex-col md:flex-row items-center md:gap-2">
-                <FileCheck className="w-4 h-4 md:w-5 md:h-5 text-white/80 mb-1 md:mb-0" />
-                <div className="text-center md:text-left">
-                  <p className="text-lg md:text-xl font-bold leading-none">{gradedAssignments.length}</p>
-                  <p className="text-[8px] md:text-[10px] text-white/70">Graded</p>
+            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-xl p-2.5 md:p-3 text-white">
+              <div className="flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-white/80 flex-shrink-0" />
+                <div>
+                  <p className="text-base md:text-xl font-bold leading-none">{gradedAssignments.length}</p>
+                  <p className="text-[9px] md:text-[10px] text-white/70">Graded</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-amber-600 to-orange-700 rounded-xl p-2 md:p-3 text-white">
-              <div className="flex flex-col md:flex-row items-center md:gap-2">
-                <Trophy className="w-4 h-4 md:w-5 md:h-5 text-white/80 mb-1 md:mb-0" />
-                <div className="text-center md:text-left">
-                  <p className="text-lg md:text-xl font-bold leading-none">{totalCompletedExams}</p>
-                  <p className="text-[8px] md:text-[10px] text-white/70">Exams</p>
+            <div className="bg-gradient-to-br from-amber-600 to-orange-700 rounded-xl p-2.5 md:p-3 text-white">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-4 h-4 text-white/80 flex-shrink-0" />
+                <div>
+                  <p className="text-base md:text-xl font-bold leading-none">{totalCompletedExams}</p>
+                  <p className="text-[9px] md:text-[10px] text-white/70">Exams</p>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-blue-600 to-cyan-700 rounded-xl p-2 md:p-3 text-white">
-              <div className="flex flex-col md:flex-row items-center md:gap-2">
-                <Clock className="w-4 h-4 md:w-5 md:h-5 text-white/80 mb-1 md:mb-0" />
-                <div className="text-center md:text-left">
-                  <p className="text-lg md:text-xl font-bold leading-none">{formatTime(totalStudyTime)}</p>
-                  <p className="text-[8px] md:text-[10px] text-white/70">Studied</p>
+            <div className="bg-gradient-to-br from-blue-600 to-cyan-700 rounded-xl p-2.5 md:p-3 text-white">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-white/80 flex-shrink-0" />
+                <div>
+                  <p className="text-base md:text-xl font-bold leading-none truncate max-w-[60px]">{formatTime(totalStudyTime)}</p>
+                  <p className="text-[9px] md:text-[10px] text-white/70">Studied</p>
                 </div>
               </div>
             </div>
@@ -330,12 +330,12 @@ export default function LessonHistory() {
 
       <div className="px-3 py-4 md:p-8 max-w-6xl mx-auto pb-28 md:pb-10 overflow-x-hidden w-full box-border">
         {/* Tabs */}
-        <div className={`rounded-xl border p-1.5 mb-4 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
+        <div className={`rounded-xl border p-1 mb-4 w-full ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className={`p-1 rounded-lg w-full grid grid-cols-3 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
-              <TabsTrigger value="all" className={`rounded-md text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>All</TabsTrigger>
-              <TabsTrigger value="lessons" className={`rounded-md text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Courses</TabsTrigger>
-              <TabsTrigger value="assignments" className={`rounded-md text-sm data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Graded</TabsTrigger>
+            <TabsList className={`p-0.5 rounded-lg w-full grid grid-cols-3 ${isDark ? 'bg-white/5' : 'bg-slate-100'}`}>
+              <TabsTrigger value="all" className={`rounded-md text-xs sm:text-sm py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>All</TabsTrigger>
+              <TabsTrigger value="lessons" className={`rounded-md text-xs sm:text-sm py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Courses</TabsTrigger>
+              <TabsTrigger value="assignments" className={`rounded-md text-xs sm:text-sm py-2 data-[state=active]:bg-purple-600 data-[state=active]:text-white ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>Graded</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>

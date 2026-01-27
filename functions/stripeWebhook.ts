@@ -39,46 +39,60 @@ Deno.serve(async (req) => {
 
     console.log(`Received Stripe event: ${event.type}`);
 
-    // Handle checkout.session.completed (both payment and subscription)
+    // Handle checkout.session.completed (subscription with potential trial)
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       const userEmail = session.customer_email || session.metadata?.user_email;
-      const planType = session.metadata?.plan_type || 'monthly'; // monthly or yearly
-      const isOneTimePayment = session.mode === 'payment'; // yearly is one-time payment
-      
+      const planType = session.metadata?.plan_type || 'monthly';
+
       if (!userEmail) {
         console.error('No user email found in session');
         return Response.json({ error: 'No user email' }, { status: 400 });
       }
 
-      console.log(`Processing ${isOneTimePayment ? 'one-time payment' : 'subscription'} for: ${userEmail}, plan: ${planType}`);
+      console.log(`Processing subscription for: ${userEmail}, plan: ${planType}`);
 
       // Find user by email and update subscription
       const users = await base44.asServiceRole.entities.User.filter({ email: userEmail });
-      
+
       if (users.length > 0) {
         const user = users[0];
-        const now = new Date().toISOString();
-        
-        // Calculate subscription end date
-        const endDate = new Date();
-        if (planType === 'yearly') {
-          endDate.setFullYear(endDate.getFullYear() + 1);
-        } else {
-          endDate.setMonth(endDate.getMonth() + 1);
+        const now = new Date();
+
+        // Get subscription details to check for trial
+        let subscriptionStatus = 'active';
+        let trialEndDate = null;
+        let subscriptionEndDate = new Date();
+        subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
+
+        if (session.subscription) {
+          try {
+            const subscription = await stripe.subscriptions.retrieve(session.subscription);
+            subscriptionStatus = subscription.status; // 'trialing' or 'active'
+
+            if (subscription.trial_end) {
+              trialEndDate = new Date(subscription.trial_end * 1000).toISOString();
+            }
+
+            if (subscription.current_period_end) {
+              subscriptionEndDate = new Date(subscription.current_period_end * 1000);
+            }
+
+            console.log(`Subscription status: ${subscriptionStatus}, trial_end: ${trialEndDate}`);
+          } catch (subError) {
+            console.error('Error fetching subscription:', subError);
+          }
         }
 
         await base44.asServiceRole.entities.User.update(user.id, {
           subscription_tier: 'pro',
-          subscription_status: 'active',
+          subscription_status: subscriptionStatus,
           subscription_plan_type: planType,
-          subscription_start_date: now,
-          subscription_end_date: endDate.toISOString(),
+          subscription_start_date: now.toISOString(),
+          subscription_end_date: subscriptionEndDate.toISOString(),
+          trial_end_date: trialEndDate,
           stripe_customer_id: session.customer,
-          // Only set subscription_id for actual subscriptions, not one-time payments
-          stripe_subscription_id: isOneTimePayment ? null : session.subscription,
-          // For one-time yearly, store the payment intent ID for reference
-          stripe_payment_intent_id: isOneTimePayment ? session.payment_intent : null
+          stripe_subscription_id: session.subscription
         });
 
         console.log(`User ${userEmail} upgraded to pro (${planType}, ${isOneTimePayment ? 'one-time' : 'recurring'})`);

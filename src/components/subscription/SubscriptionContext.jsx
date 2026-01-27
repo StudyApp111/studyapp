@@ -3,12 +3,9 @@ import { base44 } from '@/api/base44Client';
 
 const SubscriptionContext = createContext(null);
 
-// Limits for free tier - resets based on rolling windows
+// Only AI messages remain limited for non-pro users (hard paywall for everything else)
 export const FREE_TIER_LIMITS = {
-  uploads_per_week: 2,  // 2 uploads per 7-day rolling window
-  tasks_per_day: 1,     // 1 task per 24h rolling window  
-  ai_messages_per_day: 10,  // 10 AI messages per 24h rolling window
-  assignments_per_week: 1  // 1 assignment graded per 7-day rolling window
+  ai_messages_per_day: 10  // 10 AI messages per 24h rolling window - ONLY limit kept
 };
 
 export function SubscriptionProvider({ children }) {
@@ -38,11 +35,19 @@ export function SubscriptionProvider({ children }) {
     return currentUser;
   };
 
-  // Check if user has pro subscription - validates tier, status, AND expiry dates
+  // Check if user has pro subscription OR is in trial period
   const isPro = () => {
     if (!user) return false;
     
     const now = new Date();
+    
+    // Check for active trial first
+    if (user.subscription_status === 'trialing' && user.trial_end_date) {
+      const trialEnd = new Date(user.trial_end_date);
+      if (trialEnd > now) {
+        return true; // Trial still active
+      }
+    }
     
     // Must have pro tier AND active status
     if (user.subscription_tier !== 'pro') return false;
@@ -67,6 +72,29 @@ export function SubscriptionProvider({ children }) {
     
     return true;
   };
+  
+  // Check if user is in trial
+  const isInTrial = () => {
+    if (!user) return false;
+    if (user.subscription_status !== 'trialing') return false;
+    if (!user.trial_end_date) return false;
+    
+    const now = new Date();
+    const trialEnd = new Date(user.trial_end_date);
+    return trialEnd > now;
+  };
+  
+  // Get trial remaining days
+  const getTrialRemainingDays = () => {
+    if (!user?.trial_end_date) return null;
+    if (user.subscription_status !== 'trialing') return null;
+    
+    const now = new Date();
+    const trialEnd = new Date(user.trial_end_date);
+    const diffTime = trialEnd - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
 
   // Get remaining promo days
   const getPromoRemainingDays = () => {
@@ -78,16 +106,8 @@ export function SubscriptionProvider({ children }) {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  // Get rolling window dates based on account creation
-  const getRollingWindowStart = (hours) => {
-    const now = new Date();
-    return new Date(now.getTime() - hours * 60 * 60 * 1000);
-  };
-
-  // Check and reset counters based on rolling windows
-  // IMPORTANT: Always fetches fresh user data to avoid stale counter values
+  // Check and reset AI message counter (only counter kept)
   const checkAndResetCounters = async () => {
-    // ALWAYS fetch fresh user data from server to get accurate counters
     let currentUser;
     try {
       currentUser = await base44.auth.me();
@@ -101,37 +121,16 @@ export function SubscriptionProvider({ children }) {
     let updates = {};
     let needsUpdate = false;
 
-    // Daily counters - 24h rolling window
+    // Daily AI message counter - 24h rolling window
     const dailyResetTime = currentUser.daily_reset_timestamp ? new Date(currentUser.daily_reset_timestamp) : null;
     
     if (!dailyResetTime) {
-      // First time - initialize timestamp AND reset counters to 0 (fresh start)
       updates.daily_reset_timestamp = now.toISOString();
-      updates.daily_tasks_count = 0;
       updates.daily_ai_messages_count = 0;
       needsUpdate = true;
     } else if ((now.getTime() - dailyResetTime.getTime()) >= 24 * 60 * 60 * 1000) {
-      // 24h window expired - reset counters
-      updates.daily_tasks_count = 0;
       updates.daily_ai_messages_count = 0;
       updates.daily_reset_timestamp = now.toISOString();
-      needsUpdate = true;
-    }
-
-    // Weekly counters - 7 day rolling window
-    const weeklyResetTime = currentUser.weekly_reset_timestamp ? new Date(currentUser.weekly_reset_timestamp) : null;
-    
-    if (!weeklyResetTime) {
-      // First time - initialize timestamp AND reset counters to 0 (fresh start)
-      updates.weekly_reset_timestamp = now.toISOString();
-      updates.weekly_uploads_count = 0;
-      updates.weekly_assignments_count = 0;
-      needsUpdate = true;
-    } else if ((now.getTime() - weeklyResetTime.getTime()) >= 7 * 24 * 60 * 60 * 1000) {
-      // 7-day window expired - reset counters
-      updates.weekly_uploads_count = 0;
-      updates.weekly_assignments_count = 0;
-      updates.weekly_reset_timestamp = now.toISOString();
       needsUpdate = true;
     }
 
@@ -142,30 +141,17 @@ export function SubscriptionProvider({ children }) {
     return currentUser;
   };
 
-  // Check if user can perform action
+  // HARD PAYWALL: Everything requires Pro except AI messages (which have a limit)
   const canUpload = async () => {
     if (isPro()) return { allowed: true };
-    const currentUser = await checkAndResetCounters();
-    const count = currentUser?.weekly_uploads_count || 0;
-    return {
-      allowed: count < FREE_TIER_LIMITS.uploads_per_week,
-      current: count,
-      limit: FREE_TIER_LIMITS.uploads_per_week,
-      remaining: Math.max(0, FREE_TIER_LIMITS.uploads_per_week - count)
-    };
+    // Hard paywall - must be pro to upload
+    return { allowed: false, requiresPro: true };
   };
 
   const canDoTask = async () => {
-    const pro = isPro();
-    if (pro) return { allowed: true };
-    const currentUser = await checkAndResetCounters();
-    const count = currentUser?.daily_tasks_count || 0;
-    return {
-      allowed: count < FREE_TIER_LIMITS.tasks_per_day,
-      current: count,
-      limit: FREE_TIER_LIMITS.tasks_per_day,
-      remaining: Math.max(0, FREE_TIER_LIMITS.tasks_per_day - count)
-    };
+    if (isPro()) return { allowed: true };
+    // Hard paywall - must be pro to do tasks
+    return { allowed: false, requiresPro: true };
   };
 
   const canSendAIMessage = async () => {
@@ -175,8 +161,6 @@ export function SubscriptionProvider({ children }) {
     
     const count = currentUser.daily_ai_messages_count || 0;
     const allowed = count < FREE_TIER_LIMITS.ai_messages_per_day;
-    
-    console.log(`🔒 AI Message Check: ${count}/${FREE_TIER_LIMITS.ai_messages_per_day}, allowed=${allowed}`);
     
     return {
       allowed,
@@ -188,53 +172,24 @@ export function SubscriptionProvider({ children }) {
 
   const canGradeAssignment = async () => {
     if (isPro()) return { allowed: true };
-    const currentUser = await checkAndResetCounters();
-    const count = currentUser?.weekly_assignments_count || 0;
-    return {
-      allowed: count < FREE_TIER_LIMITS.assignments_per_week,
-      current: count,
-      limit: FREE_TIER_LIMITS.assignments_per_week,
-      remaining: Math.max(0, FREE_TIER_LIMITS.assignments_per_week - count)
-    };
+    // Hard paywall - must be pro to grade
+    return { allowed: false, requiresPro: true };
   };
 
-  // Increment counters - always fetch fresh data to avoid race conditions
-  const incrementUploadCount = async () => {
-    if (isPro()) return;
-    const freshUser = await checkAndResetCounters();
-    if (!freshUser) return;
-    const newCount = (freshUser.weekly_uploads_count || 0) + 1;
-    await base44.auth.updateMe({ weekly_uploads_count: newCount });
-    await refreshUser();
-  };
-
-  const incrementTaskCount = async () => {
-    if (isPro()) return;
-    const freshUser = await checkAndResetCounters();
-    if (!freshUser) return;
-    const newCount = (freshUser.daily_tasks_count || 0) + 1;
-    await base44.auth.updateMe({ daily_tasks_count: newCount });
-    await refreshUser();
-  };
-
+  // Keep increment functions but they only matter for AI messages now
+  const incrementUploadCount = async () => { /* No-op - hard paywall */ };
+  const incrementTaskCount = async () => { /* No-op - hard paywall */ };
+  
   const incrementAIMessageCount = async () => {
     if (isPro()) return;
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
     const newCount = (freshUser.daily_ai_messages_count || 0) + 1;
-    console.log(`🔒 Incrementing AI message count: ${freshUser.daily_ai_messages_count || 0} -> ${newCount}`);
     await base44.auth.updateMe({ daily_ai_messages_count: newCount });
     await refreshUser();
   };
 
-  const incrementAssignmentCount = async () => {
-    if (isPro()) return;
-    const freshUser = await checkAndResetCounters();
-    if (!freshUser) return;
-    const newCount = (freshUser.weekly_assignments_count || 0) + 1;
-    await base44.auth.updateMe({ weekly_assignments_count: newCount });
-    await refreshUser();
-  };
+  const incrementAssignmentCount = async () => { /* No-op - hard paywall */ };
 
   // Trigger upgrade modal
   const triggerUpgradeModal = (reason) => {
@@ -246,6 +201,8 @@ export function SubscriptionProvider({ children }) {
     user,
     loading,
     isPro,
+    isInTrial,
+    getTrialRemainingDays,
     refreshUser,
     canUpload,
     canDoTask,
