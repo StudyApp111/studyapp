@@ -528,7 +528,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   }
 
   return (
-    <div className={`px-3 md:px-6 py-3 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ maxWidth: '100vw', overflowX: 'hidden', boxSizing: 'border-box' }}>
+    <div className={`px-3 md:px-6 py-3 w-full mx-auto space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
       {/* Grade + Confidence Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -653,21 +653,16 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               </div>
             </div>
             
-            {/* Scroll Indicator + Target - Mobile only */}
-            <div className="flex flex-col items-center justify-center gap-2 pt-3 border-t border-white/20 mt-4 md:hidden">
-              <span className="text-white/60 text-xs font-medium">Complete tasks to reach</span>
-              <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
-                <ArrowRight className="w-4 h-4 text-yellow-300" />
-                <span className="text-2xl font-black text-yellow-300">A+</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 mt-1">
-                <span className="text-white/40 text-[10px]">Scroll down for tasks ↓</span>
-                <motion.div
-                  animate={{ y: [0, 4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="w-1 h-8 bg-white/20 rounded-full"
-                />
-              </div>
+            {/* Arrow + Target - Mobile only */}
+            <div className="flex items-center justify-center gap-2 pt-3 border-t border-white/20 mt-3 md:hidden">
+              <span className="text-white/50 text-[10px]">Tasks below</span>
+              <motion.div
+                animate={{ y: [0, 3, 0] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="text-white/70"
+              >
+                ↓
+              </motion.div>
             </div>
           </div>
         </div>
@@ -733,7 +728,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               <Plus className="w-3 h-3 text-white" />
             </div>
             
-            <div className="ml-8 pr-0">
+            <div className="ml-8">
               <button
                 onClick={() => setShowPracticeTopics(!showPracticeTopics)}
                 className={`w-full text-left p-3 rounded-xl border-2 transition-all group ${
@@ -834,7 +829,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 
                 <button
                   onClick={() => handleTaskClick(task)}
-                  className="w-full text-left ml-8 group pr-0"
+                  className="w-full text-left ml-8 group"
                 >
                   <div className={`relative rounded-xl transition-all ${
                     isFocusFactor 

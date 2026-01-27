@@ -114,7 +114,7 @@ const colorClasses = {
 
 export default function StudyTypeSelector({ value, onChange }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-[400px] md:max-h-none overflow-y-auto px-1">
+    <div className="grid grid-cols-2 gap-2 px-1">
       {studyTypes.map((type) => {
         const isSelected = value === type.id;
         const colors = colorClasses[type.color];
@@ -125,22 +125,22 @@ export default function StudyTypeSelector({ value, onChange }) {
             key={type.id}
             type="button"
             onClick={() => onChange(type.id)}
-            className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
+            className={`w-full flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
               isSelected 
                 ? `${colors.selectedBorder} ${colors.selectedBg}` 
                 : `${colors.border} ${colors.bg} hover:border-opacity-80`
             }`}
           >
-            <div className={`w-12 h-12 rounded-xl ${colors.iconBg} flex items-center justify-center flex-shrink-0`}>
-              <Icon className={`w-6 h-6 ${colors.icon}`} />
+            <div className={`w-10 h-10 rounded-xl ${colors.iconBg} flex items-center justify-center`}>
+              <Icon className={`w-5 h-5 ${colors.icon}`} />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-slate-900 text-base">{type.header}</p>
-              <p className="text-sm text-slate-500 leading-snug">{type.sub}</p>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">{type.header}</p>
+              <p className="text-[9px] text-slate-500 leading-tight line-clamp-2">{type.sub}</p>
             </div>
             {isSelected && (
-              <div className={`w-6 h-6 rounded-full ${colors.selectedBorder.replace('border-', 'bg-')} flex items-center justify-center`}>
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className={`absolute top-1 right-1 w-4 h-4 rounded-full ${colors.selectedBorder.replace('border-', 'bg-')} flex items-center justify-center`}>
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
