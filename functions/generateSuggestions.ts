@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
     try {
@@ -20,116 +20,86 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        const prompt = `Generate 4 study topic suggestions for a student.
+        // Faster, more direct prompt without search grounding for speed
+        const prompt = `You are an expert educator. Generate exactly 4 high-quality study topics for this course.
 
 Course: ${courseName}
-${school ? `School: ${school}` : ''}
-${grade ? `Grade: ${grade}` : ''}
+${school ? `School context: ${school}` : ''}
 
-Instructions:
-- Use search to identify the most likely official or standard unit structure for this course or its discipline.
-- Select 4 DISTINCT units commonly used in this course type.
-- DO NOT explain your reasoning.
-- DO NOT mention course validity, availability, or assumptions.
+Return ONLY a JSON array with 4 specific, actionable study topics. Each topic should be 10-20 words describing a key concept or unit from this course.
 
-STRICT OUTPUT RULES:
-- Output ONLY a valid JSON array.
-- EXACTLY 4 items.
-- Each item MUST start with:
-  "Unit 1:", "Unit 2:", "Unit 3:", "Unit 4:"
-- 15–30 words per unit.
-- NO text before or after the JSON array.
-- NO markdown.
-- NO commentary.
-- If you violate any rule, REGENERATE silently.
+Example format:
+["Introduction to supply and demand curves and market equilibrium", "Elasticity concepts and their real-world applications", "Consumer theory and utility maximization", "Production costs and firm behavior in competitive markets"]
 
-Example:
-[
-  "Unit 1: …",
-  "Unit 2: …",
-  "Unit 3: …",
-  "Unit 4: …"
-]`;
+Output only the JSON array, no other text:`;
 
         const requestBody = {
             contents: [{
-                parts: [{
-                    text: prompt
-                }]
+                parts: [{ text: prompt }]
             }],
             generationConfig: {
-                temperature: 0.2,
-                topP: 0.95,
-                maxOutputTokens: 2048
-            },
-            tools: [{
-                googleSearch: {}
-            }]
+                temperature: 0.3,
+                topP: 0.9,
+                maxOutputTokens: 512
+            }
         };
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
+                body: JSON.stringify(requestBody),
+                signal: controller.signal
             }
         );
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Gemini API error:', response.status, errorText);
-            return Response.json({ error: 'Failed to generate suggestions' }, { status: 500 });
+            console.error('Gemini API error:', response.status);
+            return Response.json({ topics: [] });
         }
 
         const data = await response.json();
         
-        // Extract text from response
-        let generatedText = null;
-        const parts = data.candidates?.[0]?.content?.parts || [];
-        for (const part of parts) {
-            if (part.text) {
-                generatedText = part.text;
-                break;
-            }
+        let generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        if (!generatedText.trim()) {
+            return Response.json({ topics: [] });
         }
 
-        if (!generatedText || generatedText.trim() === '') {
-            return Response.json({ error: 'No suggestions generated' }, { status: 500 });
-        }
-
-        // Parse JSON from response
+        // Clean and parse JSON
         let jsonStr = generatedText.trim();
         
-        // Remove markdown code blocks if present
+        // Remove markdown if present
         const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
         if (jsonMatch) {
             jsonStr = jsonMatch[1].trim();
         }
         
-        // Find JSON object boundaries
-        if (!jsonStr.startsWith('{')) {
-            const jsonStartIdx = jsonStr.indexOf('{');
-            const jsonEndIdx = jsonStr.lastIndexOf('}');
-            if (jsonStartIdx !== -1 && jsonEndIdx !== -1 && jsonEndIdx > jsonStartIdx) {
-                jsonStr = jsonStr.substring(jsonStartIdx, jsonEndIdx + 1);
-            }
+        // Find array boundaries
+        const arrayStart = jsonStr.indexOf('[');
+        const arrayEnd = jsonStr.lastIndexOf(']');
+        if (arrayStart !== -1 && arrayEnd !== -1) {
+            jsonStr = jsonStr.substring(arrayStart, arrayEnd + 1);
         }
 
-        let parsedResponse;
         try {
-            parsedResponse = JSON.parse(jsonStr);
-        } catch (parseError) {
-            console.error('JSON parse failed:', parseError.message);
-            return Response.json({ topics: [] });
+            const topics = JSON.parse(jsonStr);
+            if (Array.isArray(topics)) {
+                return Response.json({ topics: topics.slice(0, 4) });
+            }
+        } catch (e) {
+            console.error('Parse error:', e.message);
         }
 
-        // Handle both array response and object with topics key
-        const topics = Array.isArray(parsedResponse) ? parsedResponse : (parsedResponse.topics || []);
-        return Response.json({ topics });
+        return Response.json({ topics: [] });
 
     } catch (error) {
-        console.error('Error in generateSuggestions:', error.message);
-        return Response.json({ error: 'Internal server error' }, { status: 500 });
+        console.error('Error:', error.message);
+        return Response.json({ topics: [] });
     }
 });

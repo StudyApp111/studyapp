@@ -117,13 +117,25 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-  const isOnboardingPage = location.pathname === createPageUrl("Onboarding") || currentPageName === "Onboarding";
-  const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname === createPageUrl("DocumentViewer");
-  const showNavigation = user?.onboarding_completed || isOnboardingPage;
-  const showSidebar = showNavigation && !isOnboardingPage && user?.onboarding_completed;
+  // ROBUST navigation visibility logic - only hide during actual onboarding
+  const currentPath = location.pathname.replace(/\/$/, '').toLowerCase();
+  const onboardingPath = createPageUrl("Onboarding").replace(/\/$/, '').toLowerCase();
+  const isOnboardingPage = currentPath === onboardingPath || currentPageName === "Onboarding";
+  
+  const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname.includes("DocumentViewer");
+  
+  // Show navigation if: user has completed onboarding OR user exists (even if onboarding_completed is undefined/null)
+  // Only hide navigation if: we're actively on the onboarding page
+  const userIsAuthenticated = !!user;
+  const userCompletedOnboarding = user?.onboarding_completed === true;
+  
+  // Navigation shows for all authenticated users EXCEPT when on onboarding page
+  const showNavigation = userIsAuthenticated && !isOnboardingPage;
+  const showSidebar = showNavigation && userCompletedOnboarding;
+  
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
-  const showMobileHeader = !isDocumentViewerPage;
-  const showMobileBottomNav = !pagesWithCustomNav.includes(currentPageName);
+  const showMobileHeader = showNavigation && !isDocumentViewerPage;
+  const showMobileBottomNav = showNavigation && !pagesWithCustomNav.includes(currentPageName);
 
 
 
@@ -140,8 +152,8 @@ function LayoutContent({ children, currentPageName }) {
           }
         `}</style>
         
-        {/* Desktop Sidebar - Adaptive theme, fixed to viewport - ONLY show when not onboarding */}
-          {showSidebar && !isOnboardingPage && (
+        {/* Desktop Sidebar - Adaptive theme, fixed to viewport */}
+          {showSidebar && (
             <div className={`hidden md:flex flex-col w-16 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'} border-r fixed top-0 left-0 h-screen z-40`}>
             {/* Logo */}
             <div className="p-3 flex justify-center">
@@ -247,9 +259,9 @@ function LayoutContent({ children, currentPageName }) {
           </div>
         )}
 
-        <main className={`flex-1 flex flex-col ${showSidebar && !isOnboardingPage ? 'md:ml-16' : ''}`}>
-          {/* Mobile Header - Hidden during onboarding and on DocumentViewer */}
-          {showNavigation && !isOnboardingPage && showMobileHeader && (
+        <main className={`flex-1 flex flex-col ${showSidebar ? 'md:ml-16' : ''}`}>
+          {/* Mobile Header */}
+            {showMobileHeader && (
             <header className={`${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-slate-200'} backdrop-blur-xl border-b px-3 py-2 md:hidden`}>
               <div className="flex items-center justify-center">
                 {/* Logo + App Name - centered */}
@@ -271,8 +283,8 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-          {/* Mobile Bottom Navigation - Hidden during onboarding and on pages with custom nav */}
-          {showNavigation && !isOnboardingPage && showMobileBottomNav && (
+          {/* Mobile Bottom Navigation */}
+            {showMobileBottomNav && (
             <nav 
               className={`md:hidden fixed bottom-0 left-0 right-0 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'} border-t z-[9999]`}
               style={{ 
@@ -351,7 +363,7 @@ function LayoutContent({ children, currentPageName }) {
 
 
         {/* Floating AI Tutor Button */}
-        {showNavigation && !isOnboardingPage && <AITutorFloatingButton hidden={false} />}
+        {showNavigation && <AITutorFloatingButton hidden={false} />}
 
         {/* Feedback Modal */}
         <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />

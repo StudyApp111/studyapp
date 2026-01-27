@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
 
     const { searchQuery } = await req.json();
 
-    // Get user's approximate location from IP
+    // Get user's approximate location from IP with short timeout
     const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
       || req.headers.get('cf-connecting-ip') 
       || req.headers.get('x-real-ip')
@@ -22,11 +22,11 @@ Deno.serve(async (req) => {
     let userLat = null;
     let userLon = null;
 
-    // Quick geo lookup with 3s timeout
+    // Quick geo lookup with 2s timeout
     try {
       const geoUrl = clientIP ? `https://ipapi.co/${clientIP}/json/` : 'https://ipapi.co/json/';
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
       
       const geoResponse = await fetch(geoUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
@@ -41,30 +41,25 @@ Deno.serve(async (req) => {
         }
       }
     } catch (geoError) {
-      console.log('Geo lookup failed:', geoError.message);
+      console.log('Geo lookup skipped:', geoError.message);
     }
 
     let nearbySchools = [];
     
     if (userLat && userLon) {
       try {
-        // Search for universities, colleges AND high schools within 30km radius
-        // Use a simpler, faster query
-        const overpassQuery = `
-          [out:json][timeout:5];
-          (
-            node["amenity"="university"](around:30000,${userLat},${userLon});
-            node["amenity"="college"](around:30000,${userLat},${userLon});
-            node["amenity"="school"]["school:level"="secondary"](around:30000,${userLat},${userLon});
-            node["amenity"="school"]["isced:level"~"3"](around:30000,${userLat},${userLon});
-            way["amenity"="university"](around:30000,${userLat},${userLon});
-            way["amenity"="college"](around:30000,${userLat},${userLon});
-          );
-          out center tags 20;
-        `;
+        // Simplified, faster Overpass query - just universities and colleges
+        const overpassQuery = `[out:json][timeout:3];
+(
+  node["amenity"="university"](around:25000,${userLat},${userLon});
+  node["amenity"="college"](around:25000,${userLat},${userLon});
+  way["amenity"="university"](around:25000,${userLat},${userLon});
+  way["amenity"="college"](around:25000,${userLat},${userLon});
+);
+out center tags 12;`;
         
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
         
         const overpassResponse = await fetch('https://overpass-api.de/api/interpreter', {
           method: 'POST',
@@ -100,10 +95,7 @@ Deno.serve(async (req) => {
             }
 
             const amenity = el.tags?.amenity;
-            let type = 'school';
-            if (amenity === 'university') type = 'university';
-            else if (amenity === 'college') type = 'college';
-            else type = 'high_school';
+            const type = amenity === 'university' ? 'university' : 'college';
 
             nearbySchools.push({
               name,
@@ -114,37 +106,29 @@ Deno.serve(async (req) => {
             });
           }
 
-          nearbySchools.sort((a, b) => {
-            if (a.distance && b.distance) return a.distance - b.distance;
-            return 0;
-          });
+          nearbySchools.sort((a, b) => (a.distance || 999) - (b.distance || 999));
         }
       } catch (overpassError) {
-        console.log('Overpass API error:', overpassError.message);
+        console.log('Overpass skipped:', overpassError.message);
       }
     }
 
-    // Filter by search query
-    if (searchQuery && searchQuery.trim()) {
+    // Filter by search query if provided
+    if (searchQuery?.trim()) {
       const query = searchQuery.toLowerCase().trim();
       nearbySchools = nearbySchools.filter(s => 
         s.name.toLowerCase().includes(query)
       );
     }
 
-    nearbySchools = nearbySchools.slice(0, 15);
-
     return Response.json({
       success: true,
-      location: {
-        city: userCity,
-        country: userCountry
-      },
-      schools: nearbySchools
+      location: { city: userCity, country: userCountry },
+      schools: nearbySchools.slice(0, 10)
     });
 
   } catch (error) {
-    console.error('Error in getNearbySchools:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Error:', error.message);
+    return Response.json({ success: true, schools: [], location: {} });
   }
 });
