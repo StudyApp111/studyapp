@@ -528,15 +528,16 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   }
 
   return (
-    <div className={`px-3 md:px-6 py-3 w-full mx-auto space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+    <div className={`w-full py-3 space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
       {/* Grade + Confidence Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        className="px-3 md:px-0"
       >
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-1 mb-2 px-2">
-          <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-            If your <span className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{lesson?.course_name || 'course'}</span> exam was today:
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-1 mb-2">
+          <p className={`text-xs md:text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            If your <span className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{lesson?.course_name || 'course'}</span> exam was today, you'd score:
           </p>
           {latestOfficialExam && (
             <button
@@ -581,7 +582,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             <div className="md:flex md:items-center md:justify-between md:gap-8">
               {/* Current Grade + Score + Velocity */}
               <div className="text-center md:text-left mb-4 md:mb-0 md:flex-1">
-                <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Predicted Grade</p>
+                <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">StudyApp Predicted Grade</p>
                 <div className="flex items-baseline justify-center md:justify-start gap-3">
                   <motion.span 
                     className="text-5xl md:text-6xl font-black text-white"
@@ -616,7 +617,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 md:p-4 md:min-w-[280px]">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-4 h-4 text-yellow-300" />
-                  <span className="text-white/90 text-xs font-bold uppercase tracking-wide">AI Confidence</span>
+                  <span className="text-white/90 text-xs font-bold uppercase tracking-wide">Prediction Confidence</span>
                 </div>
                 
                 <div className="mb-2">
@@ -655,14 +656,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             
             {/* Arrow + Target - Mobile only */}
             <div className="flex items-center justify-center gap-2 pt-3 border-t border-white/20 mt-3 md:hidden">
-              <span className="text-white/50 text-[10px]">Tasks below</span>
               <motion.div
                 animate={{ y: [0, 3, 0] }}
                 transition={{ duration: 1, repeat: Infinity }}
-                className="text-white/70"
+                className="text-white/70 text-sm"
               >
                 ↓
               </motion.div>
+              <span className="text-white/60 text-[11px] font-medium">Complete Tasks To Get A+</span>
             </div>
           </div>
         </div>
@@ -674,6 +675,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.15 }}
+          className="px-3 md:px-0"
         >
           <div className={`rounded-2xl p-4 border ${isDark ? 'bg-gradient-to-br from-indigo-950/50 to-purple-950/50 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200/60'}`}>
             <div className="flex items-center justify-center gap-2 mb-3">
@@ -714,21 +716,21 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       )}
 
       {/* Task Timeline */}
-      <div className="relative">
-        <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
+      <div className="relative px-3 md:px-0">
+        <div className="absolute left-8 md:left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
         
         <div className="space-y-3">
           {/* Practice Your Topics - First Item */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="relative pl-1"
+            className="relative"
           >
-            <div className="absolute left-[11px] top-4 w-5 h-5 rounded-full z-10 bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+            <div className="absolute left-[14px] md:left-[11px] top-4 w-5 h-5 rounded-full z-10 bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
               <Plus className="w-3 h-3 text-white" />
             </div>
             
-            <div className="ml-8">
+            <div className="ml-11 md:ml-8">
               <button
                 onClick={() => setShowPracticeTopics(!showPracticeTopics)}
                 className={`w-full text-left p-3 rounded-xl border-2 transition-all group ${
@@ -769,13 +771,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           </motion.div>
 
           {/* Section Header */}
-          <div className="flex items-center gap-3 pl-1">
+          <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center z-10 shadow-lg">
               <Target className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <h3 className={`font-bold text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Complete these tasks to improve your grade</h3>
-              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{completedTasks.length} of {totalTasks} complete • Each task boosts your prediction</p>
+            <div className="flex-1 min-w-0">
+              <h3 className={`font-bold text-sm md:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Complete these tasks to improve your grade</h3>
+              <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{completedTasks.length} of {totalTasks} complete • Each task boosts your prediction</p>
             </div>
           </div>
 
@@ -821,15 +823,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.05 + idx * 0.05 }}
-                className="relative pl-1"
+                className="relative"
               >
-                <div className={`absolute left-[14px] top-4 w-3 h-3 rounded-full z-10 ${
+                <div className={`absolute left-[17px] md:left-[14px] top-4 w-3 h-3 rounded-full z-10 ${
                   isFocusFactor ? 'bg-amber-500 ring-2 ring-amber-300 ring-offset-1' : 'bg-white border-2 border-purple-300'
                 }`} />
                 
                 <button
                   onClick={() => handleTaskClick(task)}
-                  className="w-full text-left ml-8 group"
+                  className="w-full text-left ml-11 md:ml-8 group"
                 >
                   <div className={`relative rounded-xl transition-all ${
                     isFocusFactor 
@@ -901,10 +903,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="relative pl-1 pt-2"
+              className="relative pt-2"
             >
-              <div className="absolute left-[14px] top-6 w-3 h-3 rounded-full z-10 bg-emerald-500" />
-              <div className="ml-8 pr-1">
+              <div className="absolute left-[17px] md:left-[14px] top-6 w-3 h-3 rounded-full z-10 bg-emerald-500" />
+              <div className="ml-11 md:ml-8">
                 <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                   Completed ({completedTasks.length})
                 </p>
@@ -931,7 +933,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="mt-4"
+          className="mt-4 px-3 md:px-0"
         >
           <div className={`rounded-xl p-3 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
             <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Why this plan</p>
