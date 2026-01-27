@@ -489,7 +489,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length === 0) {
     return (
-      <div className={`flex items-center justify-center p-4 pb-8 min-h-[400px] ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40'}`}>
+      <div className={`flex items-center justify-center p-4 pb-8 min-h-[400px] ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -630,9 +630,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         )}
       </AnimatePresence>
 
-      <div className={`flex flex-col md:rounded-2xl w-full pb-8 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40'}`}>
+      <div className={`flex flex-col w-full pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
         {/* Centered content */}
-        <div className="px-3 py-4 md:px-6 md:py-6 w-full flex items-start justify-center">
+        <div className="px-3 py-3 md:px-6 w-full flex items-start justify-center">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentCardIndex}
@@ -646,20 +646,20 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                 {/* Integrated Card Header with Progress */}
                 <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 md:px-6 md:py-4 w-full">
                   {/* Top row: Progress info + Actions */}
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-2">
                     <button
                       onClick={() => setShowSetsList(true)}
-                      className="flex items-center gap-1.5 text-xs text-white/90 hover:text-white font-medium bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                      className="flex items-center gap-1 text-xs text-white/90 hover:text-white font-medium bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg transition-colors"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-3 h-3" />
                       Back
                     </button>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-white/90 text-xs font-medium">
                         {currentCardIndex + 1}/{cards.length}
                       </span>
                       <span className="text-white/60 text-xs">•</span>
-                      <span className="text-white/70 text-xs">{completedCount} mastered</span>
+                      <span className="text-white/70 text-xs">{completedCount} done</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div onClick={(e) => e.stopPropagation()}>
@@ -683,7 +683,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                   </div>
                   
                   {/* Progress Bar */}
-                  <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mb-4">
+                  <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mb-3">
                     <motion.div
                       className="h-full bg-gradient-to-r from-yellow-400 via-pink-400 to-yellow-300"
                       initial={{ width: 0 }}
@@ -694,11 +694,11 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                   
                   {/* Question */}
                   <div className="flex items-start gap-2">
-                    <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[10px] flex-shrink-0 mt-0.5">
-                      <HelpCircle className="w-2.5 h-2.5 mr-1" />
+                    <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[9px] flex-shrink-0 mt-0.5">
+                      <HelpCircle className="w-2.5 h-2.5 mr-0.5" />
                       Explain
                     </Badge>
-                    <h3 className="text-sm md:text-lg font-bold text-white leading-snug break-words flex-1">
+                    <h3 className="text-sm font-bold text-white leading-snug break-words flex-1">
                       {currentCard.question}
                     </h3>
                   </div>

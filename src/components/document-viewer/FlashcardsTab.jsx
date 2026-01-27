@@ -400,27 +400,27 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   // Initial state - not generated - styled like TeachItTab
   if (!cards && !isGenerating) {
     return (
-      <div className={`flex items-center justify-center p-4 pb-8 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40'}`}>
+      <div className={`flex items-center justify-center p-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200 shadow-2xl overflow-hidden max-w-md">
-            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-6 py-8 text-center">
+          <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden max-w-md ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
+            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-5 py-6 text-center">
               <motion.div
                 animate={{ rotate: [0, -10, 10, -10, 0] }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-4 drop-shadow-lg" />
+                <Sparkles className="w-16 h-16 text-yellow-300 mx-auto mb-3 drop-shadow-lg" />
               </motion.div>
-              <h3 className="text-2xl md:text-3xl font-black text-white mb-2">AI-Powered Flashcards</h3>
-              <p className="text-purple-100 text-sm">
+              <h3 className="text-xl font-black text-white mb-1">AI-Powered Flashcards</h3>
+              <p className="text-purple-100 text-xs">
                 Master concepts through active recall
               </p>
             </div>
-            <div className="p-6 text-center">
-              <p className={`mb-4 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            <div className="p-5 text-center">
+              <p className={`mb-4 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                 Generate smart flashcards from your notes. Think of the answer, then reveal to check yourself!
               </p>
               
@@ -472,22 +472,22 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   if (!cards || cards.length === 0) {
     return (
-      <div className={`flex items-center justify-center p-4 pb-8 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/20 to-purple-100/40'}`}>
+      <div className={`flex items-center justify-center p-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
         >
-          <Card className="bg-white/95 backdrop-blur-xl border-2 border-purple-200 shadow-2xl overflow-hidden max-w-md">
-            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-6 py-8 text-center">
-              <Sparkles className="w-20 h-20 text-yellow-300 mx-auto mb-4 drop-shadow-lg" />
-              <h3 className="text-2xl md:text-3xl font-black text-white mb-2">AI-Powered Flashcards</h3>
-              <p className="text-purple-100 text-sm">
+          <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden max-w-md ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
+            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-5 py-6 text-center">
+              <Sparkles className="w-16 h-16 text-yellow-300 mx-auto mb-3 drop-shadow-lg" />
+              <h3 className="text-xl font-black text-white mb-1">AI-Powered Flashcards</h3>
+              <p className="text-purple-100 text-xs">
                 Master concepts through active recall
               </p>
             </div>
-            <div className="p-6 text-center">
-              <p className={`mb-6 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            <div className="p-5 text-center">
+              <p className={`mb-5 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                 Generate intelligent flashcards from your notes.
               </p>
               <Button
@@ -523,7 +523,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   return (
-    <div className={`space-y-3 px-3 pt-2 pb-8 max-w-lg mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
+    <div className={`space-y-3 px-3 py-3 pb-8 w-full max-w-lg mx-auto ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
       {/* How to use modal */}
       <AnimatePresence>
         {showHowTo && (
@@ -598,23 +598,23 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       <div className="flex items-center justify-between">
         <button
           onClick={() => setShowSetsList(true)}
-          className="flex items-center gap-1.5 text-xs text-amber-600 hover:text-amber-700 font-medium bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg transition-colors"
+          className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${isDark ? 'text-amber-400 bg-amber-500/20 hover:bg-amber-500/30' : 'text-amber-600 bg-amber-50 hover:bg-amber-100'}`}
         >
           <Copy className="w-3.5 h-3.5" />
           All Sets
         </button>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-slate-600">
+          <span className={`text-xs font-medium ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
             {currentIndex + 1} / {cards.length}
           </span>
-          <span className="text-xs text-slate-400">•</span>
-          <span className="text-xs text-emerald-600 font-medium">
+          <span className={`text-xs ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>•</span>
+          <span className={`text-xs font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
             {masteredCount} mastered
           </span>
         </div>
         <button
           onClick={() => setShowHowTo(true)}
-          className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 font-medium"
+          className={`flex items-center gap-1 text-xs font-medium ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}
         >
           <HelpCircle className="w-3.5 h-3.5" />
           How to use
@@ -748,7 +748,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                     <span className="font-semibold text-sm text-white">Question</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className={`${getDifficultyColor(currentCard.difficulty)} text-[10px]`}>
+                    <Badge className={`text-[10px] ${isDark ? 'bg-purple-500/30 text-purple-200 border-purple-400/30' : getDifficultyColor(currentCard.difficulty)}`}>
                       {currentCard.difficulty}
                     </Badge>
                     {/* Ask AI Button */}

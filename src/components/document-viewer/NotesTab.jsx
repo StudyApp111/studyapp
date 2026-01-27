@@ -158,7 +158,7 @@ export default function NotesTab({ lesson }) {
   }
 
   return (
-    <div className={`min-h-[60vh] flex flex-col relative ${isDark ? 'bg-[#0a0a12]/50' : 'bg-slate-50/50'}`}>
+    <div className={`flex flex-col relative ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
       <NoteSettingsModal 
         open={settingsOpen} 
         onOpenChange={setSettingsOpen} 
@@ -167,9 +167,9 @@ export default function NotesTab({ lesson }) {
       />
 
       {note ? (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col">
           {/* Header */}
-          <div className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 border-b sticky top-0 z-10 shadow-sm gap-3 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
+          <div className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:px-4 border-b sticky top-0 z-10 gap-2 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg border ${isDark ? 'bg-purple-600/20 text-purple-400 border-purple-500/30' : 'bg-purple-100 text-purple-600 border-purple-200'}`}>
                 <Notebook className="w-5 h-5" />
@@ -216,9 +216,9 @@ export default function NotesTab({ lesson }) {
           </div>
 
           {/* Content */}
-          <div className={`flex-1 overflow-y-auto p-4 sm:p-8 ${isDark ? 'bg-[#0a0a12]/50' : 'bg-slate-50/50'}`}>
-            <div className="max-w-4xl mx-auto">
-              <Card className={`p-8 sm:p-10 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'}`}>
+          <div className={`overflow-y-auto p-3 sm:p-6 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+            <div className="w-full max-w-4xl mx-auto">
+              <Card className={`p-4 sm:p-8 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'}`}>
                 <div className="prose prose-slate max-w-none 
                   prose-headings:font-bold prose-headings:text-slate-900 
                   prose-h1:text-3xl prose-h1:border-b prose-h1:border-slate-100 prose-h1:pb-4 prose-h1:mb-6
@@ -259,15 +259,11 @@ export default function NotesTab({ lesson }) {
                   </ReactMarkdown>
                 </div>
               </Card>
-              
-              <div className={`mt-8 text-center text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                Generated content may contain inaccuracies. Always verify with your course materials.
-              </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className={`flex-1 overflow-y-auto p-4 md:p-8 ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+        <div className={`overflow-y-auto p-4 ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
           <div className="max-w-md mx-auto text-center py-8">
             <div className={`w-20 h-20 md:w-24 md:h-24 rounded-3xl rotate-3 flex items-center justify-center mb-6 mx-auto shadow-xl ${isDark ? 'bg-violet-600/20 shadow-violet-900/50' : 'bg-violet-100 shadow-violet-100'}`}>
               <Sparkles className={`w-10 h-10 md:w-12 md:h-12 ${isDark ? 'text-violet-400' : 'text-violet-600'}`} />

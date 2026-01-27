@@ -528,7 +528,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   }
 
   return (
-    <div className={`px-3 md:px-6 pt-1 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-4 md:space-y-6 pb-8 overflow-x-hidden box-border ${isDark ? 'bg-[#0a0a12]' : ''}`}>
+    <div className={`px-3 md:px-6 py-3 w-full max-w-[360px] md:max-w-3xl lg:max-w-4xl mx-auto space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ maxWidth: '100vw', overflowX: 'hidden', boxSizing: 'border-box' }}>
       {/* Grade + Confidence Card */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -653,12 +653,20 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               </div>
             </div>
             
-            {/* Arrow + Target - Mobile only */}
-            <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20 mt-4 md:hidden">
+            {/* Scroll Indicator + Target - Mobile only */}
+            <div className="flex flex-col items-center justify-center gap-2 pt-3 border-t border-white/20 mt-4 md:hidden">
               <span className="text-white/60 text-xs font-medium">Complete tasks to reach</span>
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5">
                 <ArrowRight className="w-4 h-4 text-yellow-300" />
                 <span className="text-2xl font-black text-yellow-300">A+</span>
+              </div>
+              <div className="flex flex-col items-center gap-1 mt-1">
+                <span className="text-white/40 text-[10px]">Scroll down for tasks ↓</span>
+                <motion.div
+                  animate={{ y: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="w-1 h-8 bg-white/20 rounded-full"
+                />
               </div>
             </div>
           </div>
@@ -725,10 +733,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               <Plus className="w-3 h-3 text-white" />
             </div>
             
-            <div className="ml-8 pr-1">
+            <div className="ml-8 pr-0">
               <button
                 onClick={() => setShowPracticeTopics(!showPracticeTopics)}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all group ${
+                className={`w-full text-left p-3 rounded-xl border-2 transition-all group ${
                   showPracticeTopics 
                     ? (isDark ? 'border-purple-500 bg-gradient-to-r from-purple-600/20 to-indigo-600/20' : 'border-purple-500 bg-gradient-to-r from-purple-50 to-indigo-50')
                     : (isDark ? 'border-purple-500/40 bg-gradient-to-r from-purple-600/10 to-indigo-600/10 hover:border-purple-500/60' : 'border-purple-300 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 hover:border-purple-500')
@@ -826,13 +834,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 
                 <button
                   onClick={() => handleTaskClick(task)}
-                  className="w-full text-left ml-8 group pr-1 max-w-full"
+                  className="w-full text-left ml-8 group pr-0"
                 >
-                  <div className={`relative overflow-hidden rounded-xl transition-all ${
+                  <div className={`relative rounded-xl transition-all ${
                     isFocusFactor 
                       ? (isDark ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-500/40 hover:border-amber-500/60 hover:shadow-lg shadow-md' : 'bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 hover:border-amber-400 hover:shadow-lg shadow-md')
                       : (isDark ? 'bg-white/5 border border-white/10 hover:border-purple-500/30 hover:shadow-md' : 'bg-white border border-slate-200 hover:border-purple-300 hover:shadow-md')
-                  } p-3 md:p-4`}>
+                  } p-3`}>
                     {isFocusFactor && (
                       <div className="absolute -top-0 -right-0">
                         <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-bl-lg rounded-tr-xl">
@@ -841,37 +849,37 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-3">
-                      <div className={`w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                         isFocusFactor
                           ? 'bg-gradient-to-br from-amber-500 to-orange-600'
                           : `bg-gradient-to-br ${config.gradient}`
                       } shadow-md group-hover:scale-105 transition-transform`}>
-                        <config.icon className="w-5 h-5 text-white" />
+                        <config.icon className="w-4 h-4 text-white" />
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                          <span className={`text-[10px] font-bold uppercase tracking-wide ${
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className={`text-[9px] font-bold uppercase tracking-wide ${
                             isFocusFactor ? (isDark ? 'text-amber-300' : 'text-amber-700') : (isDark ? 'text-purple-400' : config.text)
                           }`}>
                             {config.label}
                             {task.is_custom && <span className={`ml-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>• Custom</span>}
                           </span>
                         </div>
-                        <p className={`font-semibold text-sm md:text-base leading-tight ${
+                        <p className={`font-semibold text-xs leading-tight mb-1 ${
                           isFocusFactor ? (isDark ? 'text-amber-200' : 'text-amber-900') : (isDark ? 'text-slate-100' : 'text-slate-900')
                         }`}>
                           {task.title || `${config.action} ${task.target_count} ${config.unit}`}
                         </p>
                         
                         {task.target_count > 0 && (
-                          <div className="mt-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className={`text-[10px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{displayText}</span>
-                              <span className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{Math.round(progress)}%</span>
+                          <div>
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className={`text-[9px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{displayText}</span>
+                              <span className={`text-[9px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{Math.round(progress)}%</span>
                             </div>
-                            <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
+                            <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
                               <div 
                                 className={`h-full bg-gradient-to-r ${isFocusFactor ? 'from-amber-500 to-orange-500' : config.gradient} rounded-full transition-all`} 
                                 style={{ width: `${Math.min(100, progress)}%` }} 
@@ -881,7 +889,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                         )}
                       </div>
 
-                      <ChevronRight className={`w-5 h-5 flex-shrink-0 group-hover:translate-x-1 transition-all ${
+                      <ChevronRight className={`w-4 h-4 flex-shrink-0 group-hover:translate-x-0.5 transition-all ${
                         isFocusFactor ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-slate-500 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600')
                       }`} />
                     </div>

@@ -1165,7 +1165,7 @@ JSON Output (exact schema):
     const sortedPracticeExams = practiceExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     return (
-        <div className="px-3 md:px-6 py-4 w-full max-w-[320px] md:max-w-2xl lg:max-w-3xl mx-auto space-y-4 md:space-y-6 pb-8">
+        <div className="px-3 md:px-6 py-3 w-full max-w-[320px] md:max-w-2xl lg:max-w-3xl mx-auto space-y-3 md:space-y-4 pb-8">
         {/* Practice Exams Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
           <div>
@@ -1473,7 +1473,7 @@ JSON Output (exact schema):
             <div className="flex items-center gap-2">
                   <button
                     onClick={handleExitExam}
-                    className="flex items-center gap-1 dark:text-slate-400 dark:hover:text-slate-200 text-slate-500 hover:text-slate-700 transition-colors"
+                    className="flex items-center gap-1 dark:text-slate-300 dark:hover:text-white text-slate-600 hover:text-slate-900 transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span className="text-xs font-medium hidden sm:inline">Exit</span>
@@ -1481,21 +1481,21 @@ JSON Output (exact schema):
                 </div>
 
                 {/* Centered badge */}
-                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-                  <div className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide ${
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+                  <div className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wide ${
                     isPracticeExam 
-                      ? 'bg-blue-100 text-blue-700' 
-                      : 'bg-purple-100 text-purple-700'
+                      ? (isDark ? 'bg-blue-500/30 text-blue-300' : 'bg-blue-100 text-blue-700')
+                      : (isDark ? 'bg-purple-500/30 text-purple-300' : 'bg-purple-100 text-purple-700')
                   }`}>
                     {isPracticeExam ? 'Practice' : 'Official'}
                   </div>
-                  <span className="text-xs font-bold dark:text-slate-300 dark:bg-white/10 text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${isDark ? 'text-slate-300 bg-white/10' : 'text-slate-600 bg-slate-100'}`}>
                     {currentQuestion + 1}/{exam.questions.length}
                   </span>
                 </div>
             <div className="flex items-center gap-2">
               <Progress value={progress} className="h-1.5 w-16 hidden sm:block" />
-              <div className="flex items-center gap-1 dark:text-purple-300 dark:bg-purple-600/20 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg">
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${isDark ? 'text-purple-300 bg-purple-600/20' : 'text-purple-600 bg-purple-50'}`}>
                 <Clock className="w-3 h-3" />
                 <span className="text-xs font-semibold tabular-nums">{formatTime(elapsedSeconds)}</span>
               </div>

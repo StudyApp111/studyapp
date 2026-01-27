@@ -232,15 +232,15 @@ Return ONLY a JSON array with this exact format:
                   <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     Or select from your materials
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-2">
                     {extractedTopics.map((topic, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleTopicSelect(topic)}
-                        className={`text-left p-3 rounded-xl border transition-all group ${
+                        className={`text-left p-2.5 rounded-xl border transition-all group w-full ${
                           isDark 
                             ? 'bg-white/5 border-white/10 hover:border-purple-500/50 hover:bg-white/10' 
-                            : 'bg-white border-slate-200 hover:border-purple-400 hover:shadow-md'
+                            : 'bg-white border-slate-200 hover:border-purple-400 hover:shadow-sm'
                         }`}
                       >
                         <div className="flex items-start gap-2">
@@ -251,10 +251,11 @@ Return ONLY a JSON array with this exact format:
                             <p className={`font-semibold text-xs leading-tight mb-0.5 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
                               {topic.topic_name}
                             </p>
-                            <p className={`text-[10px] leading-tight line-clamp-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            <p className={`text-[9px] leading-tight line-clamp-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                               {topic.topic_description}
                             </p>
                           </div>
+                          <ChevronRight className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-slate-500 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
                         </div>
                       </button>
                     ))}

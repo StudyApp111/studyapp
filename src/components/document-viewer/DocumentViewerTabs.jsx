@@ -388,7 +388,7 @@ export default function DocumentViewerTabs({ lesson }) {
             )}
           </div>
 
-          {/* Content Area - Dynamic height on mobile, flex on desktop */}
+          {/* Content Area - Full height, no extra space */}
           <div className="relative md:flex-1 md:overflow-hidden" style={{ minHeight: '70vh' }}>
             {/* PDF View */}
             {hasFile && viewMode === "pdf" && (
