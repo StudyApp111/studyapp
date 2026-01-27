@@ -203,7 +203,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
             value={pastedNotes}
             onChange={handleNotesChange}
             placeholder="Paste your lecture notes, textbook excerpts, or any study material here..."
-            className="min-h-[200px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4"
+            className="min-h-[200px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4 bg-white text-slate-900"
           />
           <p className="text-xs mt-2 text-center text-slate-500">
             Paste any text content you want to study
@@ -215,7 +215,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
             value={topicDescription}
             onChange={handleTopicChange}
             placeholder={`Describe what you want to learn about ${courseName}...\n\nExample: "I want to learn about photosynthesis, including the light and dark reactions, and how plants convert CO2 into glucose."`}
-            className="min-h-[140px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4"
+            className="min-h-[140px] resize-none border-2 border-slate-200 focus:border-purple-400 rounded-xl p-4 bg-white text-slate-900"
           />
           
           {/* AI Suggestions */}
