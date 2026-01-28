@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy, Zap, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Lock, Loader2, Clock, Sparkles, Play, Pause, CheckCircle2, Trophy, Zap, ChevronLeft, ChevronRight, X, Check } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import ExamQuestion from "@/components/exam/ExamQuestion.jsx";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
@@ -21,6 +21,89 @@ const formatTime = (seconds) => {
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
+
+// Animated step component for exam generation
+function GeneratingStep({ step, index, totalSteps }) {
+  const { isDark } = useTheme();
+  const [progress, setProgress] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  
+  useEffect(() => {
+    // Stagger the start of each step
+    const startDelay = index * 2500;
+    const duration = 2200;
+    
+    const startTimer = setTimeout(() => {
+      setIsActive(true);
+      const startTime = Date.now();
+      
+      const progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const newProgress = Math.min((elapsed / duration) * 100, 100);
+        setProgress(newProgress);
+        
+        if (newProgress >= 100) {
+          clearInterval(progressInterval);
+          setIsComplete(true);
+        }
+      }, 50);
+      
+      return () => clearInterval(progressInterval);
+    }, startDelay);
+    
+    return () => clearTimeout(startTimer);
+  }, [index]);
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0.5, x: -10 }}
+      animate={{ opacity: isActive ? 1 : 0.5, x: 0 }}
+      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+        isComplete 
+          ? (isDark ? 'bg-emerald-500/15' : 'bg-emerald-50')
+          : isActive 
+            ? (isDark ? 'bg-purple-500/15' : 'bg-purple-50')
+            : (isDark ? 'bg-slate-800/30' : 'bg-slate-50')
+      }`}
+    >
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${
+        isComplete 
+          ? 'bg-emerald-500' 
+          : isActive 
+            ? 'bg-purple-500' 
+            : (isDark ? 'bg-slate-700' : 'bg-slate-200')
+      }`}>
+        {isComplete ? (
+          <Check className="w-4 h-4 text-white" />
+        ) : (
+          <span>{step.icon}</span>
+        )}
+      </div>
+      
+      <div className="flex-1">
+        <p className={`text-sm font-medium ${
+          isComplete 
+            ? (isDark ? 'text-emerald-300' : 'text-emerald-700')
+            : isActive 
+              ? (isDark ? 'text-white' : 'text-slate-900')
+              : (isDark ? 'text-slate-500' : 'text-slate-400')
+        }`}>
+          {step.label}
+        </p>
+        
+        {isActive && !isComplete && (
+          <div className={`h-1 mt-1.5 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
+            <motion.div
+              className="h-full bg-purple-500 rounded-full"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
 const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
   for (let i = 0; i < maxRetries; i++) {
@@ -1341,22 +1424,56 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   }
 
   if (waitingForCompression) {
-    return <EducationalLoader 
-      title="Optimizing Content" 
-      description="Compressing your document for faster exam generation..."
-    />;
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4">
+        <div className="relative w-20 h-20 mb-4">
+          <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" className={isDark ? 'stroke-slate-700' : 'stroke-slate-200'} />
+            <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" strokeLinecap="round" className="stroke-purple-500 animate-pulse" 
+              style={{ strokeDasharray: '50 220' }} />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-2xl">📄</span>
+          </div>
+        </div>
+        <h3 className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Optimizing Content</h3>
+        <p className={`text-sm text-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Preparing your document...</p>
+      </div>
+    );
   }
 
   if (isGenerating) {
-    // Check if we're generating a practice exam
     const isPracticeGeneration = practiceExamGeneratingRef.current;
-    
-    return <EducationalLoader 
-      title={isPracticeGeneration ? "Generating Practice Quiz" : "Creating Your Exam"}
-      description={isPracticeGeneration 
-        ? "Creating targeted practice questions... This will take 5-10 seconds ⏱️" 
-        : "Generating personalized exam questions based on your diagnostic results..."}
-    />;
+    const steps = isPracticeGeneration 
+      ? [
+          { label: "Analyzing weak areas", icon: "🎯" },
+          { label: "Creating questions", icon: "📝" },
+          { label: "Finalizing quiz", icon: "✨" }
+        ]
+      : [
+          { label: "Reading your material", icon: "📖" },
+          { label: "Building question bank", icon: "🧠" },
+          { label: "Calibrating difficulty", icon: "⚖️" },
+          { label: "Preparing exam", icon: "📋" }
+        ];
+
+    return (
+      <div className="flex flex-col items-center justify-center py-8 px-4">
+        <h2 className={`text-lg font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          {isPracticeGeneration ? "Generating Practice Quiz" : "Creating Your Exam"}
+        </h2>
+        
+        <div className="w-full max-w-xs space-y-3">
+          {steps.map((step, i) => (
+            <GeneratingStep key={i} step={step} index={i} totalSteps={steps.length} />
+          ))}
+        </div>
+        
+        <p className={`text-xs mt-6 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+          {isPracticeGeneration ? "Usually takes 5-10 seconds" : "Usually takes 10-20 seconds"}
+        </p>
+      </div>
+    );
   }
 
   if (!exam) return null;
