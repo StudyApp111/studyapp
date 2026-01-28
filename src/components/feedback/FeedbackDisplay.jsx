@@ -83,6 +83,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
   };
 
   const getGradeColor = (grade) => {
+    if (!grade) return 'from-slate-500 to-slate-600';
     if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
     if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
     if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
@@ -90,6 +91,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
   };
 
   const getGradeEmoji = (grade) => {
+    if (!grade) return '📊';
     if (grade.startsWith('A')) return '🎉';
     if (grade.startsWith('B')) return '👍';
     if (grade.startsWith('C')) return '📚';
