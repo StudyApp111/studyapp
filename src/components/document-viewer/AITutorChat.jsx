@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { MessageCircle, Send, X, Loader2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import MathText from "@/components/math/MathText";
 
 export default function AITutorChat({ lesson, extractedContent }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -88,9 +89,9 @@ export default function AITutorChat({ lesson, extractedContent }) {
                   }`}
                 >
                   {msg.role === 'assistant' ? (
-                    <ReactMarkdown className="text-sm prose prose-sm max-w-none">
+                    <MathText className="text-sm prose prose-sm max-w-none">
                       {msg.content}
-                    </ReactMarkdown>
+                    </MathText>
                   ) : (
                     <p className="text-sm">{msg.content}</p>
                   )}
@@ -195,9 +196,9 @@ export default function AITutorChat({ lesson, extractedContent }) {
                           }`}
                         >
                           {msg.role === 'assistant' ? (
-                            <ReactMarkdown className="text-sm prose prose-sm max-w-none">
+                            <MathText className="text-sm prose prose-sm max-w-none">
                               {msg.content}
-                            </ReactMarkdown>
+                            </MathText>
                           ) : (
                             <p className="text-sm">{msg.content}</p>
                           )}
