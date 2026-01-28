@@ -374,8 +374,8 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-purple-400" />
       </div>
     );
   }
@@ -392,34 +392,11 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
     );
   }
 
-  // Get step-specific styling
-  const getStepStyle = () => {
-    const styles = {
-      "study_type": { 
-        bg: 'from-purple-600 via-indigo-600 to-purple-700',
-        accent: 'from-yellow-400 to-amber-500'
-      },
-      "university_year": { 
-        bg: 'from-indigo-600 via-purple-600 to-pink-600',
-        accent: 'from-pink-400 to-rose-500'
-      },
-      "school": { 
-        bg: 'from-purple-600 via-violet-600 to-indigo-600',
-        accent: 'from-emerald-400 to-teal-500'
-      },
-      "course_name": { 
-        bg: 'from-indigo-700 via-purple-600 to-violet-600',
-        accent: 'from-cyan-400 to-blue-500'
-      },
-      "materials": { 
-        bg: 'from-purple-700 via-violet-600 to-indigo-600',
-        accent: 'from-amber-400 to-orange-500'
-      }
-    };
-    return styles[currentQuestion?.id] || styles["study_type"];
+  // Consistent dark background like PricingPlans page
+  const stepStyle = {
+    bg: 'from-slate-900 via-purple-900 to-slate-900',
+    accent: 'from-purple-400 to-pink-400'
   };
-
-  const stepStyle = getStepStyle();
 
   // Render current question content
   const renderQuestionContent = () => {
@@ -491,20 +468,25 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
           </Button>
         </div>
 
-        {/* Logo */}
-        <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-sm border-2 border-white/20 shadow-xl">
+        {/* Logo + Brand */}
+        <div className="flex flex-col items-center mb-4">
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-sm border-2 border-white/20 shadow-xl mb-2">
             <img 
               src={LOGO_URL} 
               alt="StudyApp" 
               className="w-full h-full object-cover"
             />
           </div>
+          {/* StudyApp branding */}
+          <h1 className="text-2xl md:text-3xl font-black">
+            <span className="text-white">Study</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">App</span>
+          </h1>
         </div>
 
         <div className="text-center mb-4 md:mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{currentQuestion?.question}</h1>
-          <p className="text-white/80 text-sm md:text-base">
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">{currentQuestion?.question}</h2>
+          <p className="text-purple-200 text-sm md:text-base">
             {typeof currentQuestion?.subtitle === 'function' 
               ? currentQuestion.subtitle(answers) 
               : currentQuestion?.subtitle}
@@ -527,7 +509,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
           ))}
         </div>
 
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border border-white/20">
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border border-slate-700">
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -544,12 +526,12 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
             </div>
           </AnimatePresence>
 
-          <div className="flex justify-between mt-6 pt-4 border-t border-slate-100">
+          <div className="flex justify-between mt-6 pt-4 border-t border-slate-700">
             <Button
               variant="ghost"
               onClick={handleBack}
               disabled={currentStep === 0 || isSubmitting}
-              className="gap-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+              className="gap-2 text-slate-300 hover:text-white hover:bg-white/10"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
@@ -557,7 +539,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
             <Button
               onClick={handleNext}
               disabled={!isCurrentAnswered() || isSubmitting}
-              className={`bg-gradient-to-r ${stepStyle.accent} hover:opacity-90 text-white font-bold gap-2 px-6 shadow-lg`}
+              className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold gap-2 px-6 shadow-lg shadow-purple-500/30"
             >
               {currentStep === visibleQuestions.length - 1 ? (
                 isSubmitting ? (
@@ -582,7 +564,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
         </div>
 
         <div className="text-center mt-6">
-          <p className="text-white/50 text-xs">Powered by StudyApp.AI</p>
+          <p className="text-slate-500 text-xs">Powered by StudyApp.AI</p>
         </div>
       </div>
     </div>
