@@ -1,18 +1,27 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Retry helper with exponential backoff
-async function fetchWithRetry(url, options, maxRetries = 3) {
+// Retry helper with exponential backoff + jitter for rate limits
+async function fetchWithRetry(url, options, maxRetries = 4) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        const response = await fetch(url, options);
-        if (response.ok) return response;
-        
-        if (response.status === 429 && attempt < maxRetries) {
-            const waitTime = Math.pow(2, attempt) * 1000;
-            console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+        try {
+            const response = await fetch(url, options);
+            if (response.ok) return response;
+            
+            if (response.status === 429 && attempt < maxRetries) {
+                const baseWait = Math.pow(2, attempt) * 1000;
+                const jitter = Math.random() * baseWait;
+                const waitTime = baseWait + jitter;
+                console.log(`Rate limited (429), waiting ${Math.round(waitTime)}ms before retry ${attempt + 1}/${maxRetries}`);
+                await new Promise(r => setTimeout(r, waitTime));
+                continue;
+            }
+            return response;
+        } catch (err) {
+            if (attempt === maxRetries) throw err;
+            const waitTime = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+            console.log(`Network error, waiting ${Math.round(waitTime)}ms before retry ${attempt + 1}/${maxRetries}`);
             await new Promise(r => setTimeout(r, waitTime));
-            continue;
         }
-        return response;
     }
 }
 
@@ -82,8 +91,8 @@ Deno.serve(async (req) => {
 
     console.log('Calling Gemini Flash with retry logic...');
 
-    // Using retry logic for rate limit handling
-    const resp = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' + apiKey, {
+    // Using retry logic for rate limit handling with stable model
+    const resp = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

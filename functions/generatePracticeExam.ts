@@ -2,19 +2,28 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const API_KEY = Deno.env.get("GEMINIAPIKEY");
 
-// Retry helper with exponential backoff
-async function fetchWithRetry(url, options, maxRetries = 3) {
+// Retry helper with exponential backoff + jitter for rate limits
+async function fetchWithRetry(url, options, maxRetries = 4) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        const response = await fetch(url, options);
-        if (response.ok) return response;
-        
-        if (response.status === 429 && attempt < maxRetries) {
-            const waitTime = Math.pow(2, attempt) * 1000;
-            console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+        try {
+            const response = await fetch(url, options);
+            if (response.ok) return response;
+            
+            if (response.status === 429 && attempt < maxRetries) {
+                const baseWait = Math.pow(2, attempt) * 1000;
+                const jitter = Math.random() * baseWait;
+                const waitTime = baseWait + jitter;
+                console.log(`Rate limited (429), waiting ${Math.round(waitTime)}ms before retry ${attempt + 1}/${maxRetries}`);
+                await new Promise(r => setTimeout(r, waitTime));
+                continue;
+            }
+            return response;
+        } catch (err) {
+            if (attempt === maxRetries) throw err;
+            const waitTime = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+            console.log(`Network error, waiting ${Math.round(waitTime)}ms before retry ${attempt + 1}/${maxRetries}`);
             await new Promise(r => setTimeout(r, waitTime));
-            continue;
         }
-        return response;
     }
 }
 
@@ -130,9 +139,9 @@ ALL question text and answers MUST be readable as plain text without any LaTeX r
       }
     };
 
-    // Use gemini-flash-latest with global endpoint for better availability
-    const modelName = 'gemini-flash-latest';
-    console.log(`📝 generatePracticeExam: Using model ${modelName} (global endpoint)`);
+    // Use stable gemini-1.5-flash model
+    const modelName = 'gemini-1.5-flash';
+    console.log(`📝 generatePracticeExam: Using model ${modelName}`);
     console.log(`📝 Content length: ${contentForExam.length} chars`);
     console.log(`📝 Focus topics: ${(focus_topics || []).join(', ') || 'None'}`);
     console.log(`📝 Target competency: ${target_competency || 'None'}`);
