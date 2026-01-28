@@ -1059,7 +1059,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
       // TikTok Pixel: Track Submit Application for diagnostic quiz submission
       if (window.ttq) {
-        window.ttq.track('Subscribe', {
+        window.ttq.track('SubmitApplication', {
           contents: [{
             content_id: exam.id,
             content_type: 'product',
@@ -1068,7 +1068,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
           value: 0,
           currency: 'USD'
         });
-        console.log('📊 TikTok Pixel: Subscribe tracked for diagnostic quiz');
+        console.log('📊 TikTok Pixel: SubmitApplication tracked for diagnostic quiz');
       }
 
       // Navigate to study plan tab FIRST (while still showing submit loading)
