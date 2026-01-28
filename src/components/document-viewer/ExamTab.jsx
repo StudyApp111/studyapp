@@ -1057,6 +1057,20 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         }
       });
 
+      // TikTok Pixel: Track SubmitForm for diagnostic quiz submission
+      if (window.ttq) {
+        window.ttq.track('SubmitForm', {
+          contents: [{
+            content_id: exam.id,
+            content_type: 'product',
+            content_name: 'Diagnostic Quiz Submission'
+          }],
+          value: 0,
+          currency: 'USD'
+        });
+        console.log('📊 TikTok Pixel: SubmitForm tracked for diagnostic quiz');
+      }
+
       // Navigate to study plan tab FIRST (while still showing submit loading)
       window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
       
