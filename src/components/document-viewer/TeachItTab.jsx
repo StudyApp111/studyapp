@@ -336,20 +336,13 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       console.log(`🧠 TeachIt: ${totalCompleted} cards completed out of ${updatedCards.length}, score=${gradingResult.score}`);
       await updateStudyPlanProgress(totalCompleted);
 
-      // Trigger Polly engine ONLY when ALL tasks complete (for paid users)
+      // Trigger Polly engine when a task is COMPLETED (for paid users)
       const taskCompleted = await checkIfTaskCompleted('teach_it', totalCompleted);
       if (taskCompleted) {
-        // Check if ALL tasks in study plan are now complete
-        const plans = await base44.entities.StudyPlan.filter({ 
-          lesson_id: lesson.id, 
-          status: 'active' 
-        });
-        if (plans.length > 0 && plans[0].all_tasks_completed) {
-          base44.functions.invoke('runPollyEngine', {
-            trigger_event: 'all_tasks_completed',
-            lesson_id: lesson.id
-          }).catch(err => console.warn('Polly trigger failed:', err.message));
-        }
+        base44.functions.invoke('runPollyEngine', {
+          trigger_event: 'task_completed',
+          lesson_id: lesson.id
+        }).catch(err => console.warn('Polly trigger failed:', err.message));
       }
 
       // Award XP

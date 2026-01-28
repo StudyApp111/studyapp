@@ -793,8 +793,14 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       // For practice exams, show the question review (FeedbackDisplay)
       setViewingCompletedExam(completedExam);
 
-      // NOTE: runPollyEngine is ONLY for paid users when tasks complete
-      // Practice exams do NOT trigger Polly - they use simple score calculation
+      // Trigger Polly engine when practice exam task completes (for paid users)
+      if (taskJustCompleted) {
+        base44.functions.invoke('runPollyEngine', {
+          trigger_event: 'task_completed',
+          lesson_id: lesson.id,
+          exam_id: exam.id
+        }).catch(err => console.warn('Polly engine trigger failed:', err.message));
+      }
       
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
