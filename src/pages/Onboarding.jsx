@@ -455,7 +455,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${stepStyle.bg} flex items-center justify-center p-4 transition-colors duration-300`}>
-      <div className="w-full max-w-lg md:max-w-2xl relative z-10">
+      <div className="w-full max-w-lg md:max-w-3xl relative z-10">
         <div className="flex justify-end mb-4">
           <Button
             variant="ghost"
@@ -468,20 +468,15 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
           </Button>
         </div>
 
-        {/* Logo + Brand */}
-        <div className="flex flex-col items-center mb-4">
-          <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-sm border-2 border-white/20 shadow-xl mb-2">
-            <img 
-              src={LOGO_URL} 
-              alt="StudyApp" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          {/* StudyApp branding */}
-          <h1 className="text-2xl md:text-3xl font-black">
+        {/* Hero Header - Large like PricingPlans */}
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-2">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
             <span className="text-white">App</span>
           </h1>
+          <p className="text-purple-200 text-lg md:text-xl">
+            Are you ready to lock in? 🔥
+          </p>
         </div>
 
         <div className="text-center mb-4 md:mb-6">

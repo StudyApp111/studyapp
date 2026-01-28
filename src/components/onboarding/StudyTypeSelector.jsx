@@ -115,7 +115,7 @@ const colorClasses = {
 
 export default function StudyTypeSelector({ value, onChange }) {
   return (
-    <div className="grid grid-cols-2 gap-2 px-1">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 px-1">
       {studyTypes.map((type) => {
         const isSelected = value === type.id;
         const colors = colorClasses[type.color];
@@ -126,22 +126,22 @@ export default function StudyTypeSelector({ value, onChange }) {
             key={type.id}
             type="button"
             onClick={() => onChange(type.id)}
-            className={`w-full flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
+            className={`relative w-full flex flex-col items-center gap-2 p-4 md:p-5 rounded-2xl border-2 transition-all text-center hover:scale-[1.02] ${
               isSelected 
-                ? `${colors.selectedBorder} ${colors.selectedBg}` 
+                ? `${colors.selectedBorder} ${colors.selectedBg} shadow-lg` 
                 : `${colors.border} ${colors.bg} hover:border-opacity-80`
             }`}
           >
-            <div className={`w-10 h-10 rounded-xl ${colors.iconBg} flex items-center justify-center`}>
-              <Icon className={`w-5 h-5 ${colors.icon}`} />
+            <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl ${colors.iconBg} flex items-center justify-center`}>
+              <Icon className={`w-6 h-6 md:w-7 md:h-7 ${colors.icon}`} />
             </div>
             <div>
-              <p className="font-bold text-white text-xs">{type.header}</p>
-              <p className="text-[9px] text-slate-400 leading-tight line-clamp-2">{type.sub}</p>
+              <p className="font-bold text-white text-sm md:text-base">{type.header}</p>
+              <p className="text-[10px] md:text-xs text-slate-400 leading-tight line-clamp-2 mt-0.5">{type.sub}</p>
             </div>
             {isSelected && (
-              <div className={`absolute top-1 right-1 w-4 h-4 rounded-full ${colors.selectedBorder.replace('border-', 'bg-')} flex items-center justify-center`}>
-                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className={`absolute top-2 right-2 w-5 h-5 rounded-full ${colors.selectedBorder.replace('border-', 'bg-')} flex items-center justify-center`}>
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
