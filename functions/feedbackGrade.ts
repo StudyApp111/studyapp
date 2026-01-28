@@ -100,7 +100,7 @@ Prediction Algorithm:
 
 Confidence Calculation (MIN 20% MAX 65%):
 - Base confidence = (questions_answered/total_questions * 40) + (competencies_covered/total_competencies * 40) + 20
-- Adjust: If exam_number=1 (diagnostic only), cap at 65%. Each completed study task adds ~5-10% confidence.
+- Adjust: If exam_number=1 (diagnostic only), cap at 65%. 
 - confidence_level: "Low" (<40%), "Medium" (40-65%) 
 
 Mastery Gap Analysis:
