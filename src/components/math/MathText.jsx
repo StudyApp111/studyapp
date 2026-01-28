@@ -88,8 +88,11 @@ const renderLatexContent = (text) => {
   result = result.replace(/\\prod/g, '∏');
   result = result.replace(/\\int/g, '∫');
   
-  // Handle \frac{a}{b}
-  result = result.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>');
+  // Handle \frac{a}{b} and frac{a}{b} (sometimes backslash is missing)
+  result = result.replace(/\\?frac\{([^}]+)\}\{([^}]+)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>');
+  
+  // Handle rac{a}{b} - malformed frac without backslash (common AI output error)
+  result = result.replace(/\brac\{([^}]+)\}\{([^}]+)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>');
   
   // Handle \sqrt{x}
   result = result.replace(/\\sqrt\{([^}]+)\}/g, '√$1');
