@@ -1047,13 +1047,15 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         console.error("Error awarding exam XP:", xpError);
       }
 
-      // Track lesson completion (first exam = diagnostic complete)
+      // Track lesson completion (first exam = diagnostic complete) - FUNNEL STEP 3
       base44.analytics.track({
-        eventName: "lesson_diagnostic_completed",
+        eventName: "diagnostic_exam_completed",
         properties: {
           lesson_id: lesson.id,
           course_name: lesson.course_name,
-          time_taken_seconds: elapsedSeconds
+          time_taken_seconds: elapsedSeconds,
+          correct_count: correctCount,
+          total_questions: questionsWithGrading.length
         }
       });
 
