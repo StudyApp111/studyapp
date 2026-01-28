@@ -542,7 +542,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           </p>
           {latestOfficialExam && (
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent('viewExamResults', { detail: { examId: latestOfficialExam.id } }))}
+              onClick={() => {
+                // Navigate to exam tab with the exam ID
+                onNavigate('exam');
+                // Also dispatch event to show specific exam
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('viewExamResults', { detail: { examId: latestOfficialExam.id } }));
+                }, 100);
+              }}
               className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors whitespace-nowrap ${isDark ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'}`}
             >
               View Diagnostic Results →
