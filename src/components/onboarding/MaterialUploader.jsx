@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileText, Type, Loader2, File, X, CheckCircle, Lightbulb } from "lucide-react";
+import { Upload, FileText, Type, Loader2, X, CheckCircle, Lightbulb, ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 export default function MaterialUploader({ courseName, school, onMaterialReady }) {
@@ -15,7 +14,6 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Generate suggestions when switching to topic tab
   useEffect(() => {
     if (activeTab === "topic" && courseName && suggestions.length === 0 && !loadingSuggestions) {
       generateSuggestions();
@@ -27,11 +25,16 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
     
     setLoadingSuggestions(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      
       const result = await base44.functions.invoke('generateSuggestions', {
         courseName: courseName.trim(),
         school: school || '',
         grade: ''
       });
+      
+      clearTimeout(timeoutId);
       
       const topics = result?.data?.topics || [];
       setSuggestions(topics.slice(0, 4));
@@ -51,16 +54,14 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
 
     for (const file of files) {
       try {
-        console.log("📤 Uploading file:", file.name);
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        console.log("✅ File uploaded:", file_url);
         newFiles.push({
           name: file.name,
           url: file_url,
           size: file.size
         });
       } catch (error) {
-        console.error("❌ Error uploading file:", error);
+        console.error("Error uploading file:", error);
       }
     }
 
@@ -68,13 +69,8 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
     setUploadedFiles(allFiles);
     setIsUploading(false);
     
-    // Notify parent with all files
     if (allFiles.length > 0) {
-      console.log("📦 Material ready with", allFiles.length, "file(s):", allFiles.map(f => f.url));
-      onMaterialReady({
-        type: "file",
-        files: allFiles
-      });
+      onMaterialReady({ type: "file", files: allFiles });
     }
   };
 
@@ -102,34 +98,36 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const tabs = [
+    { id: "upload", label: "Upload", icon: Upload, emoji: "📄" },
+    { id: "paste", label: "Paste", icon: FileText, emoji: "📝" },
+    { id: "topic", label: "Topic", icon: Type, emoji: "💡" }
+  ];
+
   return (
     <div className="space-y-4">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 p-1 rounded-xl bg-slate-700/50">
-          <TabsTrigger 
-            value="upload" 
-            className="rounded-lg text-slate-400 data-[state=active]:bg-purple-500/20 data-[state=active]:text-white data-[state=active]:shadow-sm"
+      {/* Tab selector - more visual */}
+      <div className="grid grid-cols-3 gap-2 p-1 bg-slate-800/50 rounded-xl">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center justify-center gap-2 py-3 px-2 rounded-lg font-medium transition-all ${
+              activeTab === tab.id
+                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+            }`}
           >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload
-          </TabsTrigger>
-          <TabsTrigger 
-            value="paste"
-            className="rounded-lg text-slate-400 data-[state=active]:bg-purple-500/20 data-[state=active]:text-white data-[state=active]:shadow-sm"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Paste
-          </TabsTrigger>
-          <TabsTrigger 
-            value="topic"
-            className="rounded-lg text-slate-400 data-[state=active]:bg-purple-500/20 data-[state=active]:text-white data-[state=active]:shadow-sm"
-          >
-            <Type className="w-4 h-4 mr-2" />
-            Topic
-          </TabsTrigger>
-        </TabsList>
+            <span className="text-lg">{tab.emoji}</span>
+            <span className="text-sm">{tab.label}</span>
+          </button>
+        ))}
+      </div>
 
-        <TabsContent value="upload" className="mt-4">
+      {/* Upload Tab */}
+      {activeTab === "upload" && (
+        <div>
           <input
             ref={fileInputRef}
             type="file"
@@ -144,22 +142,25 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="w-full border-2 border-dashed border-purple-500/50 hover:border-purple-400 bg-purple-500/10 hover:bg-purple-500/20 rounded-2xl p-8 transition-all"
+              className="w-full border-2 border-dashed border-purple-400/50 hover:border-purple-400 bg-gradient-to-br from-purple-500/10 to-indigo-500/10 hover:from-purple-500/20 hover:to-indigo-500/20 rounded-2xl p-8 transition-all group"
             >
               {isUploading ? (
                 <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="w-10 h-10 text-purple-400 animate-spin" />
-                  <p className="text-purple-300 font-medium">Uploading...</p>
+                  <Loader2 className="w-12 h-12 text-purple-400 animate-spin" />
+                  <p className="text-purple-300 font-semibold">Uploading...</p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-16 h-16 rounded-2xl bg-purple-500/20 flex items-center justify-center">
-                    <Upload className="w-8 h-8 text-purple-400" />
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/30 to-indigo-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <span className="text-4xl">📤</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-lg text-purple-300">Upload Your Materials</p>
-                    <p className="text-sm mt-1 text-slate-400">PDF, Word, PowerPoint, TXT, PNG, JPG, WEBP, GIF, BMP, TIFF</p>
-                    <p className="text-xs mt-1 text-slate-500">Max 15MB per file</p>
+                    <p className="font-bold text-xl text-white mb-1">Drop your files here</p>
+                    <p className="text-sm text-slate-400">PDF, Word, PowerPoint, Images</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-purple-300 text-sm font-medium">
+                    <span>Tap to browse</span>
+                    <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
               )}
@@ -167,20 +168,20 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
           ) : (
             <div className="space-y-3">
               {uploadedFiles.map((file, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                <div key={idx} className="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-xl">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/30 flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-emerald-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white truncate">{file.name}</p>
-                    <p className="text-xs text-slate-400">{formatFileSize(file.size)}</p>
+                    <p className="font-semibold text-white truncate">{file.name}</p>
+                    <p className="text-sm text-emerald-300">{formatFileSize(file.size)} • Ready</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeFile(idx)}
-                    className="p-1.5 rounded-lg hover:bg-slate-700 transition-colors"
+                    className="p-2 rounded-lg hover:bg-slate-700/50 transition-colors"
                   >
-                    <X className="w-4 h-4 text-slate-400" />
+                    <X className="w-5 h-5 text-slate-400 hover:text-white" />
                   </button>
                 </div>
               ))}
@@ -189,48 +190,55 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
+                className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 py-3"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Add more files
               </Button>
             </div>
           )}
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="paste" className="mt-4">
+      {/* Paste Tab */}
+      {activeTab === "paste" && (
+        <div>
           <Textarea
             value={pastedNotes}
             onChange={handleNotesChange}
-            placeholder="Paste your lecture notes, textbook excerpts, or any study material here..."
-            className="min-h-[200px] resize-none border-2 border-slate-600 focus:border-purple-400 rounded-xl p-4 bg-slate-800/50 text-white placeholder:text-slate-500"
+            placeholder="Paste your notes, textbook excerpts, or any study material..."
+            className="min-h-[180px] resize-none border-2 border-purple-500/30 focus:border-purple-400 rounded-xl p-4 bg-slate-800/80 text-white placeholder:text-slate-500 text-base"
           />
-          <p className="text-xs mt-2 text-center text-slate-400">
-            Paste any text content you want to study
-          </p>
-        </TabsContent>
+          {pastedNotes && (
+            <div className="mt-3 flex items-center gap-2 text-emerald-400 text-sm">
+              <CheckCircle className="w-4 h-4" />
+              <span>{pastedNotes.length} characters ready</span>
+            </div>
+          )}
+        </div>
+      )}
 
-        <TabsContent value="topic" className="mt-4 space-y-3">
+      {/* Topic Tab */}
+      {activeTab === "topic" && (
+        <div className="space-y-4">
           <Textarea
             value={topicDescription}
             onChange={handleTopicChange}
-            placeholder={`Describe what you want to learn about ${courseName}...\n\nExample: "I want to learn about photosynthesis, including the light and dark reactions, and how plants convert CO2 into glucose."`}
-            className="min-h-[140px] resize-none border-2 border-slate-600 focus:border-purple-400 rounded-xl p-4 bg-slate-800/50 text-white placeholder:text-slate-500"
+            placeholder={`What do you want to learn in ${courseName}?\n\nExample: "Photosynthesis - light and dark reactions"`}
+            className="min-h-[120px] resize-none border-2 border-purple-500/30 focus:border-purple-400 rounded-xl p-4 bg-slate-800/80 text-white placeholder:text-slate-500 text-base"
           />
           
           {/* AI Suggestions */}
           {courseName && (
-            <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="w-4 h-4 text-purple-400" />
-                  <span className="text-xs font-semibold text-purple-300">Topic Ideas</span>
-                </div>
-                {loadingSuggestions && <Loader2 className="w-3 h-3 animate-spin text-purple-400" />}
+            <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/30 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Lightbulb className="w-4 h-4 text-yellow-400" />
+                <span className="text-sm font-semibold text-purple-200">Popular topics</span>
+                {loadingSuggestions && <Loader2 className="w-3 h-3 animate-spin text-purple-400 ml-auto" />}
               </div>
               
               {loadingSuggestions && suggestions.length === 0 && (
-                <p className="text-[11px] text-purple-400">Finding topics...</p>
+                <p className="text-sm text-purple-300">Finding topics for {courseName}...</p>
               )}
               
               {suggestions.length > 0 && (
@@ -243,9 +251,9 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
                         setTopicDescription(suggestion);
                         onMaterialReady({ type: "topic", content: suggestion });
                       }}
-                      className="text-[11px] text-slate-300 bg-slate-700/50 hover:bg-purple-500/20 border border-slate-600 rounded-full px-3 py-1.5 transition-all"
+                      className="text-sm text-white bg-slate-700/70 hover:bg-purple-500/30 border border-slate-600 hover:border-purple-400/50 rounded-lg px-3 py-2 transition-all"
                     >
-                      {suggestion.length > 50 ? suggestion.substring(0, 50) + '...' : suggestion}
+                      {suggestion.length > 40 ? suggestion.substring(0, 40) + '...' : suggestion}
                     </button>
                   ))}
                 </div>
@@ -255,19 +263,15 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
                 <button
                   type="button"
                   onClick={generateSuggestions}
-                  className="w-full text-[11px] bg-purple-600 hover:bg-purple-500 text-white font-medium px-3 py-2 rounded-lg transition-colors"
+                  className="w-full text-sm bg-purple-600 hover:bg-purple-500 text-white font-medium px-4 py-2.5 rounded-lg transition-colors"
                 >
-                  Generate Topic Ideas
+                  ✨ Generate topic ideas
                 </button>
               )}
             </div>
           )}
-          
-          <p className="text-xs text-center text-slate-400">
-            Be specific about the topics you want to cover
-          </p>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }

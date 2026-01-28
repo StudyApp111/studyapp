@@ -11,52 +11,51 @@ import { trackUserSession } from "../components/utils/userTracking";
 // Import onboarding components
 import StudyTypeSelector from "../components/onboarding/StudyTypeSelector";
 import UniversityYearSelector from "../components/onboarding/UniversityYearSelector";
-import OnboardingQuestion from "../components/onboarding/OnboardingQuestion";
+import SchoolSelector from "../components/onboarding/SchoolSelector";
 import CourseNameInput from "../components/onboarding/CourseNameInput";
 import MaterialUploader from "../components/onboarding/MaterialUploader";
 import OnboardingLoader from "../components/onboarding/OnboardingLoader";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
-// Question definitions
+// Question definitions - Optimized for engagement & reduced drop-off
 const baseQuestions = [
   {
     id: "study_type",
-    question: "What are you studying for?",
+    question: "What brings you here? 👋",
     type: "study-type",
-    icon: "🎯",
-    subtitle: "Select your learning path"
+    emoji: "🎯",
+    subtitle: "Pick your learning journey"
   },
   {
     id: "university_year",
     question: "What year are you in?",
     type: "university-year",
-    icon: "📅",
-    subtitle: "Tell us where you are in your journey",
+    emoji: "📅",
+    subtitle: "This helps us personalize your experience",
     showIf: (answers) => answers.study_type === "university"
   },
   {
     id: "school",
-    question: "What School Do You Go To?",
+    question: "What's your school? 🏫",
     type: "school-search",
-    placeholder: "Search for your school...",
-    icon: "🏫",
-    subtitle: "Let's personalize your learning",
+    emoji: "🎓",
+    subtitle: "Find classmates studying the same thing",
     showIf: (answers) => ["university", "grad_school", "high_school", "med_school"].includes(answers.study_type)
   },
   {
     id: "course_name",
-    question: "What course would you like to study?",
+    question: "Pick your first course 📚",
     type: "course-name",
-    icon: "📚",
-    subtitle: "We'll create your first lesson"
+    emoji: "✏️",
+    subtitle: "We'll create AI-powered study tools for it"
   },
   {
     id: "materials",
-    question: "Let's set up your first lesson",
+    question: "Add your study materials ✨",
     type: "materials",
-    icon: "✨",
-    subtitle: (answers) => `Upload materials for ${answers.course_name || 'your course'}`
+    emoji: "📄",
+    subtitle: (answers) => `Upload notes for ${answers.course_name || 'your course'}`
   }
 ];
 
@@ -440,8 +439,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
       
       case "school-search":
         return (
-          <OnboardingQuestion
-            question={currentQuestion}
+          <SchoolSelector
             value={answers.school}
             onChange={(val) => handleAnswer("school", val)}
             prefetchedData={prefetchedSchoolsRef.current}
@@ -487,43 +485,32 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
           </Button>
         </div>
 
-        {/* Hero Header - Large like PricingPlans */}
-        <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-2">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
-            <span className="text-white">App</span>
-          </h1>
-          <p className="text-purple-200 text-lg md:text-xl">
-            Are you ready to lock in? 🔥
-          </p>
+        {/* Progress Bar - Clear visual indicator */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-purple-300 font-medium">Step {currentStep + 1} of {totalSteps}</span>
+            <span className="text-sm text-purple-300">{Math.round(progress)}% complete</span>
+          </div>
+          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
 
-        <div className="text-center mb-4 md:mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">{currentQuestion?.question}</h2>
-          <p className="text-purple-200 text-sm md:text-base">
+        {/* Question Header - Warm, conversational */}
+        <div className="text-center mb-6">
+          <div className="text-4xl mb-3">{currentQuestion?.emoji}</div>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">{currentQuestion?.question}</h2>
+          <p className="text-purple-200/80 text-base">
             {typeof currentQuestion?.subtitle === 'function' 
               ? currentQuestion.subtitle(answers) 
               : currentQuestion?.subtitle}
           </p>
         </div>
 
-        {/* Progress dots */}
-        <div className="flex justify-center gap-2 mb-6">
-          {visibleQuestions.map((_, idx) => (
-            <div
-              key={idx}
-              className={`h-2 rounded-full transition-all duration-200 ${
-                idx === currentStep 
-                  ? 'w-8 bg-white' 
-                  : idx < currentStep 
-                    ? 'w-2 bg-white/60' 
-                    : 'w-2 bg-white/30'
-              }`}
-            />
-          ))}
-        </div>
-
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border border-slate-700">
+        <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-2xl p-5 md:p-6 border border-slate-700/50">
           {error && (
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
@@ -540,12 +527,12 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
             </div>
           </AnimatePresence>
 
-          <div className="flex justify-between mt-6 pt-4 border-t border-slate-700">
+          <div className="flex justify-between mt-6 pt-5 border-t border-slate-700/50">
             <Button
               variant="ghost"
               onClick={handleBack}
               disabled={currentStep === 0 || isSubmitting}
-              className="gap-2 text-slate-300 hover:text-white hover:bg-white/10"
+              className="gap-2 text-slate-400 hover:text-white hover:bg-white/10 px-4"
             >
               <ChevronLeft className="w-4 h-4" />
               Back
@@ -553,24 +540,24 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
             <Button
               onClick={handleNext}
               disabled={!isCurrentAnswered() || isSubmitting}
-              className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold gap-2 px-6 shadow-lg shadow-purple-500/30"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold gap-2 px-8 py-3 text-base shadow-xl shadow-purple-500/30 disabled:opacity-40 transition-all hover:scale-[1.02]"
             >
               {currentStep === visibleQuestions.length - 1 ? (
                 isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Creating...
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Creating your lesson...
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
-                    Let's Go!
+                    <Sparkles className="w-5 h-5" />
+                    Start Learning!
                   </>
                 )
               ) : (
                 <>
-                  Next
-                  <ChevronRight className="w-4 h-4" />
+                  Continue
+                  <ChevronRight className="w-5 h-5" />
                 </>
               )}
             </Button>
