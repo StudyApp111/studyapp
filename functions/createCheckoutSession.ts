@@ -93,6 +93,19 @@ Deno.serve(async (req) => {
     }
 
     // Create checkout session with trial only if eligible
+    const subscriptionData = {
+      metadata: {
+        user_email: user.email,
+        user_id: user.id,
+        plan_type: planType
+      }
+    };
+    
+    // Only add trial_period_days if canHaveTrial is true
+    if (canHaveTrial) {
+      subscriptionData.trial_period_days = 7;
+    }
+
     const sessionConfig = {
       customer: customerId,
       payment_method_types: ['card'],
@@ -110,14 +123,7 @@ Deno.serve(async (req) => {
         user_id: user.id,
         plan_type: planType
       },
-      subscription_data: {
-        trial_period_days: canHaveTrial ? 7 : undefined,
-        metadata: {
-          user_email: user.email,
-          user_id: user.id,
-          plan_type: planType
-        }
-      },
+      subscription_data: subscriptionData,
       // Collect payment method upfront for trial
       payment_method_collection: 'always',
       allow_promotion_codes: true,
