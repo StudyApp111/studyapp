@@ -280,10 +280,10 @@ export default function LessonHistory() {
     : allItems.filter(i => i.itemType === 'assignment');
 
   return (
-    <div className={`min-h-screen w-full max-w-full pb-20 md:pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ overflowX: 'hidden', boxSizing: 'border-box' }}>
+    <div className={`min-h-screen w-full max-w-full pb-20 md:pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ overflowX: 'hidden', boxSizing: 'border-box', maxWidth: '100vw' }}>
       {/* Compact Header */}
       <div className={`border-b ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
-        <div className="w-full max-w-full px-3 py-4 md:px-6 lg:px-8 md:max-w-3xl mx-auto" style={{ boxSizing: 'border-box' }}>
+        <div className="w-full max-w-full px-3 py-4 md:px-4 mx-auto" style={{ boxSizing: 'border-box', maxWidth: '100vw' }}>
           <h1 className={`text-lg md:text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}>Your Learning Journey</h1>
           
           {/* Stats Row - 2x2 on mobile, 4 cols on desktop */}
@@ -328,7 +328,7 @@ export default function LessonHistory() {
         </div>
       </div>
 
-      <div className="w-full max-w-full px-3 py-4 md:px-6 lg:px-8 md:max-w-3xl mx-auto" style={{ boxSizing: 'border-box' }}>
+      <div className="w-full max-w-full px-3 py-4 md:px-4 mx-auto" style={{ boxSizing: 'border-box', maxWidth: '100vw' }}>
         {/* Tabs */}
         <div className={`rounded-xl border p-1 mb-4 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
