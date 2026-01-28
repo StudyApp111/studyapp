@@ -473,18 +473,6 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
   return (
     <div className={`min-h-screen bg-gradient-to-br ${stepStyle.bg} flex items-center justify-center p-4 transition-colors duration-300`}>
       <div className="w-full max-w-lg md:max-w-3xl relative z-10">
-        <div className="flex justify-end mb-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="gap-2 text-white/70 hover:text-white hover:bg-white/10"
-          >
-            <LogOut className="w-4 h-4" />
-            Back to Login
-          </Button>
-        </div>
-
         {/* Progress Bar - Clear visual indicator */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
@@ -564,8 +552,15 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
           </div>
         </div>
 
-        <div className="text-center mt-6">
+        {/* Footer with logout option */}
+        <div className="text-center mt-6 space-y-2">
           <p className="text-slate-500 text-xs">Powered by StudyApp.AI</p>
+          <button
+            onClick={handleLogout}
+            className="text-slate-500 hover:text-slate-300 text-xs underline transition-colors"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </div>
