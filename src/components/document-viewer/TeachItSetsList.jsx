@@ -2,20 +2,22 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Brain, CheckCircle2, Play, ChevronRight, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) {
+  const { isDark } = useTheme();
   const totalMastered = cards.filter(c => c.mastered).length;
 
   return (
-    <div className="px-3 md:px-6 py-4 w-full max-w-[320px] md:max-w-2xl lg:max-w-3xl mx-auto space-y-4 md:space-y-6 pb-8">
+    <div className={`px-3 md:px-4 py-4 w-full max-w-full mx-auto space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden', maxWidth: '100vw' }}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md">
           <Brain className="w-4 h-4 text-white" />
         </div>
         <div>
-          <h2 className="text-base md:text-lg font-black text-slate-900">Teach It Cards</h2>
-          <p className="text-[10px] md:text-xs text-slate-500">
+          <h2 className={`text-base md:text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Teach It Cards</h2>
+          <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             {totalMastered} / {cards.length} mastered
           </p>
         </div>
@@ -40,7 +42,7 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
                   ? 'bg-gradient-to-r from-violet-500 to-purple-600'
                   : isCompleted
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500'
-                    : 'bg-white border border-purple-200 hover:border-purple-300'
+                    : (isDark ? 'bg-white/5 border border-purple-500/30 hover:border-purple-500/50' : 'bg-white border border-purple-200 hover:border-purple-300')
               }`}
             >
               <div className="relative flex items-center gap-3">
@@ -52,15 +54,15 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
                   ) : isCompleted ? (
                     <span className="text-white font-bold text-sm">{score}%</span>
                   ) : (
-                    <Brain className="w-5 h-5 text-purple-600" />
+                    <Brain className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className={`font-semibold text-sm line-clamp-2 leading-tight ${isMastered || isCompleted ? 'text-white' : 'text-slate-900'}`}>
+                  <h3 className={`font-semibold text-sm line-clamp-2 leading-tight ${isMastered || isCompleted ? 'text-white' : (isDark ? 'text-white' : 'text-slate-900')}`}>
                     {card.question}
                   </h3>
-                  <p className={`text-[10px] mt-1 ${isMastered || isCompleted ? 'text-white/70' : 'text-slate-500'}`}>
+                  <p className={`text-[10px] mt-1 ${isMastered || isCompleted ? 'text-white/70' : (isDark ? 'text-slate-400' : 'text-slate-500')}`}>
                     {isMastered ? 'Mastered ✓' : isCompleted ? `Score: ${score}/100` : 'Not attempted'}
                   </p>
                 </div>
@@ -68,8 +70,8 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
                 {isMastered || isCompleted ? (
                   <ChevronRight className="w-4 h-4 text-white/70 flex-shrink-0" />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 group-hover:bg-purple-200 transition-colors">
-                    <Play className="w-3 h-3 text-purple-600" />
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${isDark ? 'bg-purple-600/20 group-hover:bg-purple-600/30' : 'bg-purple-100 group-hover:bg-purple-200'}`}>
+                    <Play className={`w-3 h-3 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                   </div>
                 )}
               </div>
