@@ -100,7 +100,7 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
       <Button
         variant="outline"
         onClick={onGenerateNew}
-        className="w-full mt-4 border-2 border-dashed border-amber-300 hover:border-amber-400 hover:bg-amber-50"
+        className={`w-full mt-4 border-2 border-dashed ${isDark ? 'border-amber-500/30 hover:border-amber-500/50 hover:bg-amber-600/10 text-amber-400' : 'border-amber-300 hover:border-amber-400 hover:bg-amber-50'}`}
       >
         <RotateCcw className="w-4 h-4 mr-2" />
         Generate New Set

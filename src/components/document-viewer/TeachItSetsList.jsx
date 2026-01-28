@@ -84,7 +84,7 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
       <Button
         variant="outline"
         onClick={onGenerateNew}
-        className="w-full mt-4 border-2 border-dashed border-purple-300 hover:border-purple-400 hover:bg-purple-50"
+        className={`w-full mt-4 border-2 border-dashed ${isDark ? 'border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-600/10 text-purple-400' : 'border-purple-300 hover:border-purple-400 hover:bg-purple-50'}`}
       >
         <RefreshCw className="w-4 h-4 mr-2" />
         Generate New Cards
