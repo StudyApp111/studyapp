@@ -318,7 +318,13 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
     }
 
     try {
-      // Look for existing exam 1 in the loaded exams
+      // FIRST: Check if we already have the exam loaded in state
+      if (exam && exam.exam_number === 1 && exam.questions?.length > 0) {
+        console.log('✅ Exam 1 already loaded in state with questions, skipping reload');
+        return;
+      }
+
+      // Look for existing exam 1 in the loaded exams prop
       const existingExams = (exams || []).filter(e => e.exam_number === 1 && e.exam_type !== 'practice');
       console.log(`📋 Looking for Exam 1 in loaded exams:`, existingExams.length > 0 ? 'FOUND' : 'NOT FOUND');
 
@@ -326,15 +332,18 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         const loadedExam = existingExams[0];
 
         if (loadedExam.completed) {
+          console.log('✅ Exam 1 already completed, loading from cache');
           setExam(loadedExam);
           return;
         }
 
         if (loadedExam.questions?.length > 0) {
-          // Exam exists with questions - load it
+          // Exam exists with questions - load it directly, NO regeneration needed
+          console.log('✅ Exam 1 found with', loadedExam.questions.length, 'questions - loading directly');
           setExam(loadedExam);
           const firstUnanswered = loadedExam.questions.findIndex(q => !q.user_answer?.trim());
           setCurrentQuestion(firstUnanswered >= 0 ? firstUnanswered : loadedExam.questions.length - 1);
+          return;
         } else {
           // Exam exists but no questions yet - autoGenerateExam1 is still processing
           // Show loading state and wait for it
@@ -347,6 +356,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
               await new Promise(r => setTimeout(r, 1000));
               const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
               if (refreshed[0]?.questions?.length > 0) {
+                console.log('✅ Questions appeared after polling');
                 setExam(refreshed[0]);
                 setIsGenerating(false);
                 return;
@@ -357,42 +367,85 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
             setIsGenerating(false);
           };
           pollForQuestions();
+          return;
         }
-      } else {
-        // No exam 1 exists at all - trigger autoGenerateExam1 with timeout handling
-        console.log('🎯 No Exam 1 found, triggering autoGenerateExam1...');
+      }
+      
+      // SECOND: Double-check database directly before triggering generation
+      // This catches race conditions where exams prop hasn't updated yet
+      const dbExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
+      const dbExam = dbExams.find(e => e.exam_type !== 'practice');
+      
+      if (dbExam?.questions?.length > 0) {
+        console.log('✅ Exam 1 found in DB with questions (race condition caught)');
+        setExam(dbExam);
+        const firstUnanswered = dbExam.questions.findIndex(q => !q.user_answer?.trim());
+        setCurrentQuestion(firstUnanswered >= 0 ? firstUnanswered : dbExam.questions.length - 1);
+        return;
+      }
+      
+      if (dbExam && !dbExam.questions?.length) {
+        // Exam record exists but no questions - poll for it
+        console.log('⏳ Exam 1 record exists in DB but no questions - polling...');
         setIsGenerating(true);
+        
+        for (let i = 0; i < 30; i++) {
+          await new Promise(r => setTimeout(r, 1000));
+          const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
+          if (refreshed[0]?.questions?.length > 0) {
+            console.log('✅ Questions appeared after DB polling');
+            setExam(refreshed[0]);
+            setIsGenerating(false);
+            return;
+          }
+        }
+        setIsGenerating(false);
+        return;
+      }
 
-        try {
-          const result = await Promise.race([
-            base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id }),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Exam generation timeout - taking longer than expected')), 55000)
-            )
-          ]);
-          
-          if (result?.data?.success && result?.data?.exam_id) {
-            const createdExams = await base44.entities.Exam.filter({ id: result.data.exam_id });
-            if (createdExams[0]) {
-              setExam(createdExams[0]);
+      // No exam 1 exists at all - trigger autoGenerateExam1 with timeout handling
+      console.log('🎯 No Exam 1 found anywhere, triggering autoGenerateExam1...');
+      setIsGenerating(true);
+
+      try {
+        const result = await Promise.race([
+          base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id }),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Exam generation timeout - taking longer than expected')), 55000)
+          )
+        ]);
+        
+        if (result?.data?.success && result?.data?.exam_id) {
+          const createdExams = await base44.entities.Exam.filter({ id: result.data.exam_id });
+          if (createdExams[0]) {
+            setExam(createdExams[0]);
+          }
+        } else if (result?.data?.skipped) {
+          // autoGenerateExam1 returned skipped=true, meaning exam already exists
+          console.log('✅ autoGenerateExam1 returned skipped - exam already exists');
+          const existingExamId = result?.data?.exam_id;
+          if (existingExamId) {
+            const existingExam = await base44.entities.Exam.filter({ id: existingExamId });
+            if (existingExam[0]?.questions?.length > 0) {
+              setExam(existingExam[0]);
             }
           }
-        } catch (err) {
-          const is502 = err.response?.status === 502;
-          const isTimeout = err.message?.includes('timeout') || is502;
-          
-          if (isTimeout) {
-            console.error('⚠️ Exam generation timeout - the AI is taking longer than usual. Please refresh and try again.');
-            setError('Exam generation is taking longer than expected. Please refresh the page to try again.');
-          } else {
-            console.error('Error generating exam 1:', err);
-            setError('Failed to generate exam. Please try again.');
-          }
-          
-          await logError('exam_generation_timeout', err, { lesson_id: lesson?.id, is502, isTimeout });
-        } finally {
-          setIsGenerating(false);
         }
+      } catch (err) {
+        const is502 = err.response?.status === 502;
+        const isTimeout = err.message?.includes('timeout') || is502;
+        
+        if (isTimeout) {
+          console.error('⚠️ Exam generation timeout - the AI is taking longer than usual. Please refresh and try again.');
+          setError('Exam generation is taking longer than expected. Please refresh the page to try again.');
+        } else {
+          console.error('Error generating exam 1:', err);
+          setError('Failed to generate exam. Please try again.');
+        }
+        
+        await logError('exam_generation_timeout', err, { lesson_id: lesson?.id, is502, isTimeout });
+      } finally {
+        setIsGenerating(false);
       }
     } catch (error) {
       console.error("Error loading exam:", error);
