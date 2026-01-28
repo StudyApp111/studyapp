@@ -14,6 +14,7 @@ import XPGainToast from "@/components/gamification/XPGainToast";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 import FeedbackDisplay from "@/components/feedback/FeedbackDisplay";
 import TaskCompletionToast from "@/components/gamification/TaskCompletionToast";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -33,6 +34,7 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
 };
 
 export default function ExamTab({ lesson, exams, onExamComplete }) {
+  const { isDark } = useTheme();
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
