@@ -98,10 +98,10 @@ Prediction Algorithm:
 5) Coverage: competency weight≥25% & <2 items→-2 each (max -4); ≥80% assessed→+1 to +2. Cap [-8,+4].
 6) Final: round(aggregate+modifier) [0,100]+"%". If 0/10→"Not Calculable".
 
-Confidence Calculation:
+Confidence Calculation (MAX 65%):
 - Base confidence = (questions_answered/total_questions * 40) + (competencies_covered/total_competencies * 40) + 20
 - Adjust: If exam_number=1 (diagnostic only), cap at 65%. Each completed study task adds ~5-10% confidence.
-- confidence_level: "Low" (<50%), "Medium" (50-75%), "High" (>75%)
+- confidence_level: "Low" (<40%), "Medium" (40-65%) 
 
 Mastery Gap Analysis:
 - Identify the SINGLE weakest competency based on question performance
@@ -110,8 +110,8 @@ Mastery Gap Analysis:
 JSON Output (exact schema):
 - feedback_session_title: "Exam ${examNumber} Performance & Grade Prediction"
 - predicted_exam_score_percentage: "%"|"Not Calculable"
-- prediction_confidence_percentage: number (0-100)
-- confidence_level: "Low"|"Medium"|"High"
+- prediction_confidence_percentage: number (0-65)
+- confidence_level: "Low"|"Medium"|
 - mastery_gap: string (the single weakest competency name)
 - mastery_gap_description: string (why this is the biggest weakness)`;
         }
