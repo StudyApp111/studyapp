@@ -220,11 +220,9 @@ C. CONFIDENCE CALIBRATION (Defensibility vs. Data Volume)
      - Cap **Confidence** at 60%. (Do NOT lower the Grade, only the Confidence).
    - **Guessing Penalty:** Only apply -15% confidence penalty if "question_time_laps" < 3s on High Difficulty items.
 
-D. TOPIC RECOMMENDATION
-   - Identify 3 distinct topics:
-     1. **Mastery Gap:** The weakest *attempted* topic.
-     2. **Next Logical Step:** The next topic in "competency_weightings" that has 0% progress.
-     3. **Review:** A high-score topic to boost ego/retention.
+D. STUDY TASK RECOMMENDATION Identify 2 distinct Study Tasks (Flashcards, Teach-It, Practice Exam, or Review Notes) based on:
+- Mastery Gap Task: An intensive task (e.g., Teach-It) targeting the weakest attempted topic.
+- Next Step Task: An introductory task (e.g., Practice Exam) for the next logic topic in competency_weightings with 0% progress.
 
 [STRICT JSON OUTPUT - Return ONLY this JSON]`;
 
