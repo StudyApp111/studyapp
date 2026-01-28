@@ -203,7 +203,7 @@ No extra text.`;
       }],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 16000,
         responseMimeType: "application/json",
         responseSchema: responseSchema
       }
@@ -211,7 +211,7 @@ No extra text.`;
 
     console.log('Calling Gemini with retry logic for exam generation...');
     const resp = await fetchWithRetry(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -226,54 +226,35 @@ No extra text.`;
       return Response.json({ error: 'Failed to generate exam', details: errText }, { status: 500 });
     }
 
-    const data = await resp.json();
+    // Read full response body as text first to avoid stream issues
+    const responseText = await resp.text();
+    console.log('Response text length:', responseText.length);
     
-    // Check for finish reason issues
-    const finishReason = data?.candidates?.[0]?.finishReason;
-    if (finishReason && finishReason !== 'STOP') {
-      console.error('Gemini finish reason:', finishReason);
-      if (finishReason === 'MAX_TOKENS') {
-        console.error('Response was truncated due to max tokens');
-      }
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseErr) {
+      console.error('Failed to parse Gemini API response:', parseErr.message);
+      console.error('Response preview:', responseText.substring(0, 500));
+      return Response.json({ error: 'Invalid API response format' }, { status: 500 });
     }
     
     const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!content) {
-      console.error('No content from Gemini, full response:', JSON.stringify(data));
+      console.error('No content from Gemini, candidates:', JSON.stringify(data?.candidates));
       return Response.json({ error: 'No content generated' }, { status: 500 });
     }
 
-    console.log('Raw content length:', content.length);
-    console.log('Content preview:', content.substring(0, 200));
+    console.log('Content length:', content.length);
 
     let examData;
     try {
       examData = JSON.parse(content);
     } catch (e) {
       console.error('JSON parse failed:', e?.message);
-      console.error('Content that failed to parse:', content.substring(content.length - 200));
-      
-      // Attempt to fix truncated JSON by finding the last complete question
-      try {
-        // Try to extract valid questions from partial JSON
-        const partialMatch = content.match(/"exam_questions"\s*:\s*\[([\s\S]*)/);
-        if (partialMatch) {
-          let questionsStr = partialMatch[1];
-          // Find all complete question objects
-          const questionMatches = questionsStr.match(/\{[^{}]*"question_number"[^{}]*"question_text"[^{}]*"correct_answer"[^{}]*\}/g);
-          if (questionMatches && questionMatches.length > 0) {
-            console.log('Recovered', questionMatches.length, 'questions from truncated response');
-            examData = { exam_questions: questionMatches.map(q => JSON.parse(q)) };
-          }
-        }
-      } catch (recoveryErr) {
-        console.error('Recovery attempt failed:', recoveryErr.message);
-      }
-      
-      if (!examData) {
-        return Response.json({ error: 'Failed to parse exam response', raw_length: content.length }, { status: 500 });
-      }
+      console.error('Content end:', content.substring(Math.max(0, content.length - 300)));
+      return Response.json({ error: 'Failed to parse exam response' }, { status: 500 });
     }
 
     const examQuestions = examData?.exam_questions || [];
