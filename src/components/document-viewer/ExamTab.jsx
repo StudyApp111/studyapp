@@ -878,23 +878,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 // NOTE: Grading is done via feedbackGrade backend function ONLY
       // This prompt is NOT used - it's passed to feedbackGrade which handles it
 
-      // Calculate score locally first (don't wait for AI feedback)
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
       const totalQuestions = questionsWithGrading.length;
-      const rawScore = Math.round((correctCount / totalQuestions) * 100);
-      
-      // Simple grade calculation based on raw score
-      let letterGrade = "F";
-      if (rawScore >= 90) letterGrade = "A+";
-      else if (rawScore >= 85) letterGrade = "A";
-      else if (rawScore >= 80) letterGrade = "A-";
-      else if (rawScore >= 77) letterGrade = "B+";
-      else if (rawScore >= 73) letterGrade = "B";
-      else if (rawScore >= 70) letterGrade = "B-";
-      else if (rawScore >= 67) letterGrade = "C+";
-      else if (rawScore >= 63) letterGrade = "C";
-      else if (rawScore >= 60) letterGrade = "C-";
-      else if (rawScore >= 50) letterGrade = "D";
 
       const questionFeedback = questionsWithGrading.map((q, idx) => {
         let feedback = "";
@@ -921,13 +906,12 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         };
       });
 
-      // Save exam immediately with local score
+      // Save exam with questions and feedback, but NO grade/score yet
+      // feedbackGrade will update it with the AI prediction
       await retryOperation(() => 
         base44.entities.Exam.update(exam.id, {
           questions: questionsWithGrading,
           feedback: questionFeedback,
-          total_score: rawScore,
-          predicted_grade: letterGrade,
           time_taken_seconds: elapsedSeconds,
           question_time_laps: questionTimeLaps,
           status: "completed",
@@ -1013,78 +997,48 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
       });
 
-      let examXP = 25;
-      if (correctCount >= 8) examXP += 25;
-      if (correctCount === questionsWithGrading.length) examXP += 50;
-
+      // Award XP and track stats
+      const examXP = 25 + (correctCount >= 8 ? 25 : 0) + (correctCount === questionsWithGrading.length ? 50 : 0);
+      
       try {
-        const xpResult = await awardDailyXP(examXP, 'Exam completed!');
-        
+        const xpResult = await awardDailyXP(examXP, 'Diagnostic completed!');
         const currentUserXP = await base44.auth.me();
+        
+        // Track badges
+        const earnedBadges = [...(currentUserXP.badges || [])];
+        const badgeIds = earnedBadges.map(b => b.badge_id);
+        const earnedNow = [];
+
+        if (!badgeIds.includes('first_exam')) {
+          earnedBadges.push({
+            badge_id: 'first_exam',
+            badge_name: 'First Exam',
+            badge_description: 'Completed your first exam!',
+            badge_icon: '📝',
+            earned_date: new Date().toISOString()
+          });
+          earnedNow.push(earnedBadges[earnedBadges.length - 1]);
+        }
+
         await base44.auth.updateMe({
-          total_exams_completed: (currentUserXP.total_exams_completed || 0) + 1
+          total_exams_completed: (currentUserXP.total_exams_completed || 0) + 1,
+          questions_completed: (currentUserXP.questions_completed || 0) + questionsWithGrading.length,
+          time_spent_seconds: (currentUserXP.time_spent_seconds || 0) + elapsedSeconds,
+          badges: earnedBadges
         });
 
-        let xpReason = 'Exam completed!';
-        if (correctCount === questionsWithGrading.length) xpReason = 'Perfect exam! 🌟';
-        else if (correctCount >= 8) xpReason = 'Great score! 🎯';
-
         if (xpResult.success) {
+          const xpReason = correctCount === questionsWithGrading.length ? 'Perfect exam! 🌟' : 
+                          correctCount >= 8 ? 'Great score! 🎯' : 'Exam completed!';
           setXpToast({ show: true, xp: examXP, reason: xpReason });
+        }
+
+        if (earnedNow.length > 0 || correctCount >= 8) {
+          setShowConfetti(true);
+          setNewBadges(earnedNow);
         }
       } catch (xpError) {
         console.error("Error awarding exam XP:", xpError);
-      }
-
-      let pointsEarned = 50;
-      
-      questionsWithGrading.forEach(q => {
-        if (isSubjectiveQuestion(q.question_type) && q.ai_score_out_of_10 !== undefined) {
-          pointsEarned += Math.round(q.ai_score_out_of_10 * 2.5);
-        } else if (q.is_correct) {
-          pointsEarned += 15;
-        }
-      });
-
-      if (correctCount === questionsWithGrading.length) {
-        pointsEarned += 100;
-      }
-
-      if (letterGrade.startsWith('A')) {
-        pointsEarned += 50;
-      }
-
-      const earnedBadges = [...(user.badges || [])];
-      const badgeIds = earnedBadges.map(b => b.badge_id);
-      const earnedNow = [];
-
-      if (!badgeIds.includes('first_exam')) {
-        earnedBadges.push({
-          badge_id: 'first_exam',
-          badge_name: 'First Exam',
-          badge_description: 'Completed your first exam!',
-          badge_icon: '📝',
-          earned_date: new Date().toISOString()
-        });
-        earnedNow.push(earnedBadges[earnedBadges.length - 1]);
-      }
-
-      const newTotalPoints = (user.total_points || 0) + pointsEarned;
-      const newLevel = Math.floor(newTotalPoints / 100) + 1;
-
-      await retryOperation(() => 
-        base44.auth.updateMe({
-          questions_completed: (user.questions_completed || 0) + questionsWithGrading.length,
-          time_spent_seconds: (user.time_spent_seconds || 0) + elapsedSeconds,
-          total_points: newTotalPoints,
-          level: newLevel,
-          badges: earnedBadges
-        })
-      );
-
-      if (earnedNow.length > 0 || correctCount >= 8) {
-        setShowConfetti(true);
-        setNewBadges(earnedNow);
       }
 
       // Track lesson completion (first exam = diagnostic complete)
@@ -1093,8 +1047,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         properties: {
           lesson_id: lesson.id,
           course_name: lesson.course_name,
-          predicted_grade: letterGrade,
-          score_percentage: rawScore,
           time_taken_seconds: elapsedSeconds
         }
       });

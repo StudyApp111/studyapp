@@ -268,12 +268,19 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         console.log(`📚 Flashcards: ${totalReviewed} cards reviewed/completed`);
         const taskCompleted = await updateStudyPlanProgress('flashcards', totalReviewed);
         
-        // Trigger Polly engine when task completes OR on milestones (every 5 cards)
-        if (taskCompleted || totalReviewed % 5 === 0) {
-          base44.functions.invoke('runPollyEngine', {
-            trigger_event: taskCompleted ? 'task_completed' : 'flashcard_milestone',
-            lesson_id: lesson.id
-          }).catch(err => console.warn('Polly trigger failed:', err.message));
+        // Trigger Polly engine ONLY when ALL tasks complete (for paid users)
+        if (taskCompleted) {
+          // Check if ALL tasks in study plan are now complete
+          const plans = await base44.entities.StudyPlan.filter({ 
+            lesson_id: lesson.id, 
+            status: 'active' 
+          });
+          if (plans.length > 0 && plans[0].all_tasks_completed) {
+            base44.functions.invoke('runPollyEngine', {
+              trigger_event: 'all_tasks_completed',
+              lesson_id: lesson.id
+            }).catch(err => console.warn('Polly trigger failed:', err.message));
+          }
         }
       }
     } catch (error) {
