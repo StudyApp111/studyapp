@@ -223,8 +223,8 @@ Return JSON:
         body: JSON.stringify({
           contents: [{ parts: [{ text: planPrompt }] }],
           generationConfig: {
-            temperature: 0.75,
-            maxOutputTokens: 16000,
+            temperature: 0.3,
+            maxOutputTokens: 4096,
             responseMimeType: "application/json",
             responseSchema: {
               type: "object",

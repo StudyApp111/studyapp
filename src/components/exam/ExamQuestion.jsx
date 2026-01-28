@@ -205,7 +205,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
 
   const renderFillBlankInput = () => (
     <div className="space-y-2">
-      <p className="text-xs text-slate-500">Fill in the blank:</p>
+      <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Fill in the blank:</p>
       <input
         type="text"
         value={selectedAnswer}
@@ -214,7 +214,11 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
           onAnswer(e.target.value);
         }}
         placeholder="Type your answer..."
-        className="w-full p-2.5 text-sm border-2 border-slate-200 rounded-lg focus:border-purple-500 focus:ring-0 transition-colors"
+        className={`w-full p-2.5 text-sm border-2 rounded-lg focus:border-purple-500 focus:ring-0 transition-colors ${
+          isDark 
+            ? 'bg-white/10 border-white/20 text-white placeholder:text-slate-400' 
+            : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'
+        }`}
       />
     </div>
   );
