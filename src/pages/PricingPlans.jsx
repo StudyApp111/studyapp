@@ -97,7 +97,8 @@ export default function PricingPlans() {
     try {
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: isYearly ? 'yearly' : 'monthly',
-        success_url: `${window.location.origin}${createPageUrl("PricingPlans")}?success=true`,
+        trial: true,
+        success_url: `${window.location.origin}${createPageUrl("PricingPlans")}?success=true&plan=${isYearly ? 'yearly' : 'monthly'}`,
         cancel_url: `${window.location.origin}${createPageUrl("PricingPlans")}?canceled=true`
       });
 
