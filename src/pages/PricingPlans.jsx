@@ -150,8 +150,51 @@ export default function PricingPlans() {
     }
   };
 
+  // Track TikTok Subscribe event when success modal shows
+  useEffect(() => {
+    if (showSuccess && !isPro) {
+      // This means they just completed checkout (trial started)
+      const trackSubscribe = async () => {
+        try {
+          if (window.ttq) {
+            const currentUser = await base44.auth.me();
+            if (currentUser) {
+              const encoder = new TextEncoder();
+              const data = encoder.encode(currentUser.id);
+              const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+              const hashArray = Array.from(new Uint8Array(hashBuffer));
+              const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+              
+              window.ttq.identify({ external_id: hashedId });
+              
+              const urlParams = new URLSearchParams(window.location.search);
+              const planType = urlParams.get('plan') || (isYearly ? 'yearly' : 'monthly');
+              const value = planType === 'yearly' ? 59.88 : 6.99;
+              
+              window.ttq.track('Subscribe', {
+                contents: [{
+                  content_id: `pro_${planType}`,
+                  content_type: 'product',
+                  content_name: `Pro Subscription (${planType})`
+                }],
+                value: value,
+                currency: 'USD'
+              });
+              console.log('TikTok Subscribe event fired from PricingPlans success');
+            }
+          }
+        } catch (err) {
+          console.error('TikTok tracking error:', err);
+        }
+      };
+      trackSubscribe();
+    }
+  }, [showSuccess]);
+
   // Success state
   if (showSuccess || isPro) {
+    const isTrialing = user?.subscription_status === 'trialing';
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 flex items-center justify-center p-6">
         <motion.div
@@ -162,13 +205,20 @@ export default function PricingPlans() {
           <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 mb-2">You're Locked In! 🔥</h1>
+          <h1 className="text-3xl font-black text-slate-900 mb-2">
+            {isTrialing ? "Trial Started! 🎉" : "You're Locked In! 🔥"}
+          </h1>
           <p className="text-slate-600 mb-6">
-            Welcome to the pro squad. You now have unlimited access to everything.
+            {isTrialing 
+              ? "Your 7-day free trial is now active. Enjoy unlimited access to everything!"
+              : "Welcome to the pro squad. You now have unlimited access to everything."
+            }
           </p>
           <div className="flex items-center justify-center gap-2 mb-6">
             <Crown className="w-5 h-5 text-amber-500" />
-            <span className="font-bold text-purple-700">Locked In Member</span>
+            <span className="font-bold text-purple-700">
+              {isTrialing ? "Free Trial Active" : "Locked In Member"}
+            </span>
           </div>
           <Button
             onClick={() => navigate(createPageUrl("Home"))}
@@ -223,89 +273,19 @@ export default function PricingPlans() {
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto items-stretch">
-          
-          {/* Free Tier - Good Luck */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="relative bg-slate-800/50 backdrop-blur-sm rounded-3xl p-6 border border-slate-700 flex flex-col"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-slate-700 flex items-center justify-center">
-                <Skull className="w-6 h-6 text-slate-400" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">Foundations 📚</h2>
-                <p className="text-slate-400 text-sm">Free forever</p>
-              </div>
-            </div>
-
-            <div className="mb-6 h-14 flex flex-col justify-center">
-              <span className="text-4xl font-black text-white">$0</span>
-              <span className="text-slate-400 text-sm">/month</span>
-            </div>
-
-            <ul className="space-y-3 mb-6 flex-1">
-              <li className="flex items-center gap-3 text-slate-300">
-                <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-3 h-3 text-slate-400" />
-                </div>
-                <span className="text-sm">2 documents / week</span>
-              </li>
-              <li className="flex items-center gap-3 text-slate-300">
-                <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
-                  <Target className="w-3 h-3 text-slate-400" />
-                </div>
-                <span className="text-sm">1 study task / day</span>
-              </li>
-              <li className="flex items-center gap-3 text-slate-300">
-                <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
-                  <MessageSquare className="w-3 h-3 text-slate-400" />
-                </div>
-                <span className="text-sm">10 AI messages / day</span>
-              </li>
-              <li className="flex items-center gap-3 text-slate-400">
-                <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
-                  <Lock className="w-3 h-3 text-slate-500" />
-                </div>
-                <span className="text-sm">Basic grade prediction</span>
-              </li>
-              <li className="flex items-center gap-3 text-slate-500">
-                <div className="w-5 h-5 rounded-full bg-slate-700/50 flex items-center justify-center flex-shrink-0">
-                  <X className="w-3 h-3 text-slate-600" />
-                </div>
-                <span className="text-sm line-through">AI forensics & roadmap</span>
-              </li>
-            </ul>
-
-            <div className="mt-auto">
-              <Button
-                variant="outline"
-                className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 py-5"
-                disabled
-              >
-                Current Plan
-              </Button>
-              <p className="text-center text-slate-500 text-xs mt-3 invisible">
-                Placeholder for alignment
-              </p>
-            </div>
-          </motion.div>
-
+        {/* Pricing Card - Single Locked In Plan */}
+        <div className="max-w-lg mx-auto">
           {/* Pro Tier - Locked In */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="relative bg-gradient-to-br from-purple-600/30 to-indigo-600/30 backdrop-blur-sm rounded-3xl p-6 border-2 border-purple-500 shadow-2xl shadow-purple-500/20 flex flex-col"
+            className="relative bg-gradient-to-br from-purple-600/30 to-indigo-600/30 backdrop-blur-sm rounded-3xl p-8 border-2 border-purple-500 shadow-2xl shadow-purple-500/20 flex flex-col"
           >
-            {/* Popular badge */}
+            {/* Free Trial badge */}
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-1 text-xs font-bold shadow-lg">
-                🔥 MOST POPULAR
+              <Badge className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white px-4 py-1 text-xs font-bold shadow-lg">
+                🎉 7-DAY FREE TRIAL
               </Badge>
             </div>
 
@@ -315,7 +295,7 @@ export default function PricingPlans() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Locked In ⚡</h2>
-                <p className="text-purple-300 text-sm">For students who want to ace their exams</p>
+                <p className="text-purple-300 text-sm">Start free, cancel anytime</p>
               </div>
             </div>
 
@@ -380,19 +360,19 @@ export default function PricingPlans() {
               <Button
                 onClick={handleUpgrade}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-5 text-base shadow-xl shadow-purple-500/30"
+                className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-6 text-lg shadow-xl shadow-purple-500/30"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
                     <Zap className="w-5 h-5 mr-2" />
-                    Get Locked In
+                    Start 7-Day Free Trial
                   </>
                 )}
               </Button>
-              <p className="text-center text-purple-300 text-xs mt-3">
-                Cancel anytime • 7-day money back guarantee
+              <p className="text-center text-purple-300 text-sm mt-3">
+                No charge for 7 days • Cancel anytime
               </p>
               {checkoutError && (
                 <p className="text-center text-red-400 text-xs mt-2">

@@ -92,10 +92,11 @@ Deno.serve(async (req) => {
           subscription_end_date: subscriptionEndDate.toISOString(),
           trial_end_date: trialEndDate,
           stripe_customer_id: session.customer,
-          stripe_subscription_id: session.subscription
+          stripe_subscription_id: session.subscription,
+          has_used_trial: true // Mark that user has used their trial
         });
 
-        console.log(`User ${userEmail} upgraded to pro (${planType}, ${isOneTimePayment ? 'one-time' : 'recurring'})`);
+        console.log(`User ${userEmail} upgraded to pro (${planType})`);
         
         // Send TikTok Subscribe event via server-side API
         try {

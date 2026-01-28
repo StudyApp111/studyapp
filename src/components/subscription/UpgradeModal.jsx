@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { X, Check, Zap, Gift, Loader2, CheckCircle2, AlertCircle, Calendar, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
@@ -56,22 +58,27 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
   const { isDark } = useTheme();
   const limitInfo = LIMIT_MESSAGES[reason] || LIMIT_MESSAGES.default;
   
+  const [isYearly, setIsYearly] = useState(true); // Default to yearly
   const [showPromoInput, setShowPromoInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoResult, setPromoResult] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
+  const monthlyPrice = 6.99;
+  const yearlyPrice = 4.99;
+  const yearlySavings = 29;
+
   const handleStartTrial = async () => {
     setCheckoutLoading(true);
     try {
       const response = await base44.functions.invoke('createCheckoutSession', {
-        plan_type: 'monthly',
+        plan_type: isYearly ? 'yearly' : 'monthly',
         trial: true
       });
       
-      if (response.data?.url) {
-        window.location.href = response.data.url;
+      if (response.data?.url || response.data?.checkout_url) {
+        window.location.href = response.data.url || response.data.checkout_url;
       }
     } catch (error) {
       console.error('Checkout error:', error);
@@ -138,13 +145,27 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
             <div className="text-center">
               <div className="text-4xl sm:text-5xl mb-2">{limitInfo.icon}</div>
               <h2 className="text-lg sm:text-xl font-bold text-white mb-1">{limitInfo.title}</h2>
-              <p className="text-purple-200 text-xs sm:text-sm mb-2">{limitInfo.description}</p>
+              <p className="text-purple-200 text-xs sm:text-sm mb-3">{limitInfo.description}</p>
+              
+              {/* Billing Toggle */}
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <span className={`text-xs font-medium ${!isYearly ? 'text-white' : 'text-white/50'}`}>Monthly</span>
+                <Switch
+                  checked={isYearly}
+                  onCheckedChange={setIsYearly}
+                  className="data-[state=checked]:bg-emerald-500"
+                />
+                <span className={`text-xs font-medium ${isYearly ? 'text-white' : 'text-white/50'}`}>
+                  Yearly
+                  {isYearly && <Badge className="ml-1.5 bg-emerald-500 text-white text-[9px] px-1.5 py-0">-{yearlySavings}%</Badge>}
+                </span>
+              </div>
               
               {/* Trial Badge */}
               <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
                 <Calendar className="w-3.5 h-3.5 text-yellow-300" />
                 <span className="text-white font-bold text-xs sm:text-sm">7 Days Free</span>
-                <span className="text-white/70 text-xs">• $6.99/mo</span>
+                <span className="text-white/70 text-xs">• ${isYearly ? yearlyPrice : monthlyPrice}/mo after</span>
               </div>
             </div>
           </div>
@@ -190,7 +211,9 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
                 </div>
                 <div className="flex-1">
                   <p className={`font-bold text-xs ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>How it works</p>
-                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Try free for 7 days • Cancel anytime • $6.99/mo after</p>
+                  <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Try free for 7 days • Cancel anytime • {isYearly ? `$${(yearlyPrice * 12).toFixed(2)}/year` : `$${monthlyPrice}/mo`} after
+                  </p>
                 </div>
               </div>
             </div>
