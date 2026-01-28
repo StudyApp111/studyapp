@@ -48,7 +48,7 @@ export default function CourseNameInput({ value, onChange, school, year }) {
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
           placeholder="e.g., ECON 203, Biology 101"
-          className="text-lg pl-12 pr-4 py-6 h-auto rounded-xl border-2 border-slate-200 focus:border-purple-400 text-slate-900 bg-white placeholder:text-slate-400"
+          className="text-lg pl-12 pr-4 py-6 h-auto rounded-xl border-2 border-slate-600 focus:border-purple-400 text-white bg-slate-800/50 placeholder:text-slate-500"
           autoComplete="off"
           autoFocus
         />
@@ -58,7 +58,7 @@ export default function CourseNameInput({ value, onChange, school, year }) {
       {!value && (
         <div className="flex flex-wrap justify-center gap-2">
           {loading ? (
-            <div className="flex items-center gap-2 text-purple-600">
+            <div className="flex items-center gap-2 text-purple-400">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-xs">Loading courses...</span>
             </div>
@@ -68,7 +68,7 @@ export default function CourseNameInput({ value, onChange, school, year }) {
                 key={course}
                 type="button"
                 onClick={() => onChange(course)}
-                className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full transition-colors border border-purple-200"
+                className="text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-3 py-1.5 rounded-full transition-colors border border-purple-500/30"
               >
                 {course}
               </button>
@@ -77,7 +77,7 @@ export default function CourseNameInput({ value, onChange, school, year }) {
         </div>
       )}
       
-      <p className="text-center text-sm text-slate-500">
+      <p className="text-center text-sm text-slate-400">
         Enter the exact course name or subject you'd like to study first
       </p>
     </div>

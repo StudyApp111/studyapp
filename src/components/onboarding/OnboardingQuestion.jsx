@@ -63,8 +63,6 @@ export default function OnboardingQuestion({ question, value, onChange, prefetch
   if (question.type === "school-search") {
     return (
       <div className="space-y-4">
-        <h2 className="text-xl md:text-2xl font-bold text-slate-900 text-center">{question.question}</h2>
-        
         {/* Search Input */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -72,25 +70,25 @@ export default function OnboardingQuestion({ question, value, onChange, prefetch
             value={searchQuery}
             onChange={handleSchoolSearch}
             placeholder={question.placeholder}
-            className="text-base pl-12 pr-4 py-6 h-auto rounded-xl border-2 border-slate-200 focus:border-purple-400 text-slate-900 bg-white placeholder:text-slate-400"
+            className="text-base pl-12 pr-4 py-6 h-auto rounded-xl border-2 border-slate-600 focus:border-purple-400 text-white bg-slate-800/50 placeholder:text-slate-500"
             autoComplete="off"
           />
         </div>
 
         {/* Location indicator */}
         {userLocation?.city && (
-          <div className="flex items-center justify-center gap-1.5 text-sm text-slate-500">
+          <div className="flex items-center justify-center gap-1.5 text-sm text-slate-400">
             <MapPin className="w-4 h-4" />
             <span>Showing schools near {userLocation.city}</span>
           </div>
         )}
 
         {/* Schools List */}
-        <div className="max-h-[320px] overflow-y-auto rounded-xl border border-slate-200 bg-white divide-y divide-slate-100">
+        <div className="max-h-[280px] overflow-y-auto rounded-xl border border-slate-600 bg-slate-800/50 divide-y divide-slate-700">
           {isLoadingSchools ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
-              <span className="ml-2 text-slate-600">Finding nearby schools...</span>
+              <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+              <span className="ml-2 text-slate-300">Finding nearby schools...</span>
             </div>
           ) : nearbySchools.length > 0 ? (
             nearbySchools.map((school, idx) => (
@@ -98,20 +96,20 @@ export default function OnboardingQuestion({ question, value, onChange, prefetch
                 key={idx}
                 type="button"
                 onClick={() => selectSchool(school.name)}
-                className={`w-full flex items-start gap-3 p-4 text-left hover:bg-purple-50 transition-colors ${
-                  value === school.name ? 'bg-purple-50 border-l-4 border-purple-500' : ''
+                className={`w-full flex items-start gap-3 p-4 text-left hover:bg-purple-500/20 transition-colors ${
+                  value === school.name ? 'bg-purple-500/20 border-l-4 border-purple-500' : ''
                 }`}
               >
-                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="w-5 h-5 text-slate-600" />
+                <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center flex-shrink-0">
+                  <GraduationCap className="w-5 h-5 text-slate-300" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 truncate">{school.name}</p>
+                  <p className="font-semibold text-white truncate">{school.name}</p>
                   {school.address && (
-                    <p className="text-sm text-slate-500 truncate">{school.address}</p>
+                    <p className="text-sm text-slate-400 truncate">{school.address}</p>
                   )}
                   {school.classmates > 0 && (
-                    <p className="text-sm font-medium text-purple-600 flex items-center gap-1 mt-0.5">
+                    <p className="text-sm font-medium text-purple-400 flex items-center gap-1 mt-0.5">
                       <Users className="w-3.5 h-3.5" />
                       {school.classmates} classmate{school.classmates !== 1 ? 's' : ''}
                     </p>
@@ -121,12 +119,12 @@ export default function OnboardingQuestion({ question, value, onChange, prefetch
             ))
           ) : searchQuery.length >= 2 ? (
             <div className="py-8 text-center">
-              <p className="text-slate-600">No schools found matching "{searchQuery}"</p>
-              <p className="text-sm text-slate-400 mt-1">Try a different search or enter your school name manually</p>
+              <p className="text-slate-300">No schools found matching "{searchQuery}"</p>
+              <p className="text-sm text-slate-500 mt-1">Try a different search or enter your school name manually</p>
             </div>
           ) : (
             <div className="py-8 text-center">
-              <p className="text-slate-600">Start typing to search for your school</p>
+              <p className="text-slate-400">Start typing to search for your school</p>
             </div>
           )}
         </div>
@@ -136,7 +134,7 @@ export default function OnboardingQuestion({ question, value, onChange, prefetch
           <button
             type="button"
             onClick={() => onChange(searchQuery)}
-            className="w-full p-3 text-center text-purple-600 font-medium hover:bg-purple-50 rounded-lg transition-colors border border-purple-200"
+            className="w-full p-3 text-center text-purple-300 font-medium hover:bg-purple-500/20 rounded-lg transition-colors border border-purple-500/30"
           >
             Use "{searchQuery}" as my school
           </button>

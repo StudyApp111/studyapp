@@ -21,12 +21,12 @@ export default function UniversityYearSelector({ value, onChange }) {
             htmlFor={`year-${year.id}`}
             className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer ${
               isSelected 
-                ? 'border-purple-500 bg-purple-50' 
-                : 'border-slate-200 bg-white hover:border-purple-300'
+                ? 'border-purple-500 bg-purple-500/20' 
+                : 'border-slate-600 bg-slate-800/50 hover:border-purple-400'
             }`}
           >
             <RadioGroupItem value={year.id} id={`year-${year.id}`} className="shrink-0" />
-            <span className={`text-lg font-semibold ${isSelected ? 'text-slate-900' : 'text-slate-700'}`}>
+            <span className={`text-lg font-semibold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
               {year.label}
             </span>
           </label>
