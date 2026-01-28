@@ -372,22 +372,22 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
               </p>
               {/* Show correct answer when wrong */}
               {!isCorrect && question.correct_answer && (
-                <p className={`text-xs font-medium mt-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                <MathText className={`text-xs font-medium mt-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
                   Correct answer: {isMCQ && /^[A-Da-d]$/i.test(question.correct_answer.trim()) 
                     ? (() => {
                         const letter = question.correct_answer.trim().toUpperCase();
                         const idx = letter.charCodeAt(0) - 65;
                         const optText = question.options?.[idx];
-                        const cleanText = optText ? stripLetterPrefix(optText) : '';
+                        const cleanText = optText ? stripLetterPrefix(typeof optText === 'string' ? optText : (optText?.text || '')) : '';
                         return `${letter}. ${cleanText}`;
                       })()
                     : question.correct_answer}
-                </p>
+                </MathText>
               )}
               {question.explanation && (
-                <p className={`text-xs mt-1.5 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                <MathText className={`text-xs mt-1.5 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                   {question.explanation}
-                </p>
+                </MathText>
               )}
             </div>
           </div>

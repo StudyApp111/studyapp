@@ -793,12 +793,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       // For practice exams, show the question review (FeedbackDisplay)
       setViewingCompletedExam(completedExam);
 
-      // Trigger Polly engine to update predictions after practice exam
-      base44.functions.invoke('runPollyEngine', {
-        trigger_event: 'practice_exam_completed',
-        lesson_id: lesson.id,
-        exam_id: exam.id
-      }).catch(err => console.warn('Polly engine trigger failed:', err.message));
+      // NOTE: runPollyEngine is ONLY for paid users when tasks complete
+      // Practice exams do NOT trigger Polly - they use simple score calculation
       
       if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
@@ -879,25 +875,8 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         }
       }
 
-      const feedbackPrompt = `Expert educator for ${currentLesson.course_name} (grade ${learningProfile.grade || "N/A"}). Analyze exam performance using curriculum map to predict grade as if you were a teacher at this school teaching this course.
-
-Input: Grade ${learningProfile.grade || "N/A"}, ${currentLesson.course_name}, Exam ${exam.exam_number}/6
-Curriculum: ${JSON.stringify(currentLesson.curriculum_map, null, 2)}
-Performance: ${JSON.stringify(examPerformanceData, null, 2)}
-
-Fields: question_number, question_type, difficulty_index, question_text, options, student_answer, correct_answer, explanation, assessed_competencies[], targeted_misconception, is_correct, ai_grading{score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[]}.
-
-Prediction Algorithm:
-1) Per-item: base=0.90(correct) or 0.20. Blend w/ai_grading partial=(score/10). Apply difficulty multipliers: Correct→High×1.05(cap 0.98), Challenging×1.02(cap 0.96), Moderate×1.01(cap 0.92); Incorrect→High×0.90(floor 0.10), Challenging×0.80(floor 0.08), Moderate×0.70(floor 0.05). Misconception penalty -0.05/-0.07/-0.09. Clamp [0.05,0.98].
-2) Competency mastery: mean scores per competency from curriculum_map.core_competencies; if none→0.50.
-3) Weighted aggregate: parse competency_weightings ("30%"→0.30), normalize, Σ(mastery×weight)×100.
-4) Question-type adjust: AvgTypeScore vs curriculum_map.question_formats frequency. If <0.40 & ≥30%→-3 to -6; if ≥0.80 & ≥30%→+0 to +2. Cap [-8,+4].
-5) Coverage: competency weight≥25% & <2 items→-2 each (max -4); ≥80% assessed→+1 to +2. Cap [-8,+4].
-6) Final: round(aggregate+modifier) [0,100]+"%". If 0/10→"Not Calculable".
-
-JSON Output (exact schema):
-- feedback_session_title: "Exam ${exam.exam_number} Performance & Grade Prediction"
-- predicted_exam_score_percentage: "%"|"Not Calculable"`;
+// NOTE: Grading is done via feedbackGrade backend function ONLY
+      // This prompt is NOT used - it's passed to feedbackGrade which handles it
 
       // Calculate score locally first (don't wait for AI feedback)
       const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
@@ -960,22 +939,15 @@ JSON Output (exact schema):
       await new Promise(resolve => setTimeout(resolve, 3000));
 
       // Fire-and-forget: Get AI feedback in background and update exam + study plan
+      // feedbackGrade function handles the grading prompt internally - we just pass exam data
       base44.functions.invoke('feedbackGrade', {
-        prompt: feedbackPrompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            feedback_session_title: { type: "string" },
-            predicted_exam_score_percentage: { type: "string" },
-            prediction_confidence_percentage: { type: "number" },
-            confidence_level: { type: "string" },
-            mastery_gap: { type: "string" },
-            mastery_gap_description: { type: "string" },
-            overall_performance_summary_text: { type: "string" },
-            identified_strengths_list: { type: "array", items: { type: "string" } },
-            key_areas_for_improvement_list: { type: "array", items: { type: "string" } }
-          }
-        }
+        exam_id: exam.id,
+        lesson_id: lesson.id,
+        exam_performance_data: examPerformanceData,
+        curriculum_map: currentLesson.curriculum_map,
+        student_grade: learningProfile.grade || "N/A",
+        course_name: currentLesson.course_name,
+        exam_number: exam.exam_number
       }).then(async ({ data: feedbackData }) => {
         if (feedbackData?.predicted_exam_score_percentage) {
           const aiScore = parseInt(feedbackData.predicted_exam_score_percentage);
