@@ -34,23 +34,58 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
     }
 
-    // Check if exam 1 already exists with questions OR is being generated
+    // STEP 1: Check if exam 1 already exists with questions
     const existingExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
-    if (existingExams.length > 0) {
-      const exam = existingExams[0];
-      // Already has questions - skip
-      if (exam.questions?.length > 0) {
-        console.log('Exam 1 already has questions, skipping generation');
-        return Response.json({ success: true, skipped: true, exam_id: exam.id });
-      }
-      // Check if generation is in progress (created within last 60 seconds without questions)
-      const createdAt = new Date(exam.created_date);
+    const officialExam = existingExams.find(e => e.exam_type !== 'practice');
+    
+    if (officialExam?.questions?.length > 0) {
+      console.log('Exam 1 already has questions, skipping generation');
+      return Response.json({ success: true, skipped: true, exam_id: officialExam.id });
+    }
+    
+    // STEP 2: Check if generation is in progress (exam record exists within last 20 seconds)
+    if (officialExam) {
+      const createdAt = new Date(officialExam.created_date);
+      const updatedAt = new Date(officialExam.updated_date || officialExam.created_date);
       const now = new Date();
       const secondsSinceCreation = (now - createdAt) / 1000;
-      if (secondsSinceCreation < 60) {
-        console.log('Exam 1 generation already in progress, skipping');
-        return Response.json({ success: true, skipped: true, in_progress: true, exam_id: exam.id });
+      const secondsSinceUpdate = (now - updatedAt) / 1000;
+      
+      // If exam was created/updated within last 20 seconds, another call is in progress
+      if (secondsSinceCreation < 20 || secondsSinceUpdate < 20) {
+        console.log(`Exam 1 generation in progress (created ${secondsSinceCreation}s ago), skipping duplicate`);
+        return Response.json({ success: true, skipped: true, in_progress: true, exam_id: officialExam.id });
       }
+    }
+    
+    // STEP 3: Create a placeholder exam record IMMEDIATELY to act as a lock
+    // This prevents race conditions where two requests both pass the check above
+    let lockExam;
+    if (officialExam) {
+      // Update existing record to refresh updated_date (acts as lock refresh)
+      lockExam = await base44.entities.Exam.update(officialExam.id, {
+        status: "generating"
+      });
+      console.log('Refreshed lock on existing exam record:', lockExam.id);
+    } else {
+      // Create new placeholder record
+      lockExam = await base44.entities.Exam.create({
+        lesson_id,
+        exam_number: 1,
+        exam_type: "official",
+        questions: [],
+        status: "generating",
+        completed: false
+      });
+      console.log('Created lock exam record:', lockExam.id);
+    }
+    
+    // STEP 4: Double-check no other process created questions while we were creating the lock
+    const recheckExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
+    const recheckExam = recheckExams.find(e => e.exam_type !== 'practice' && e.questions?.length > 0);
+    if (recheckExam) {
+      console.log('Another process already generated questions, skipping');
+      return Response.json({ success: true, skipped: true, exam_id: recheckExam.id });
     }
 
     // Get lesson data
