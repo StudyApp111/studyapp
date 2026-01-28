@@ -8,7 +8,7 @@ import { useAITutor } from "./AITutorContext";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
-import { renderMathContent } from "@/components/utils/MathRenderer";
+import MathText, { renderMathText } from "@/components/math/MathText";
 
 export default function AITutorSheet() {
   const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
@@ -193,18 +193,12 @@ export default function AITutorSheet() {
                           p: ({ children }) => {
                             const text = typeof children === 'string' ? children : 
                               (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
-                            if (text.includes('$')) {
-                              return <p className="my-1" dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
-                            }
-                            return <p className="my-1">{children}</p>;
+                            return <p className="my-1" dangerouslySetInnerHTML={{ __html: renderMathText(text) }} />;
                           },
                           li: ({ children }) => {
                             const text = typeof children === 'string' ? children : 
                               (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
-                            if (text.includes('$')) {
-                              return <li dangerouslySetInnerHTML={{ __html: renderMathContent(text) }} />;
-                            }
-                            return <li>{children}</li>;
+                            return <li dangerouslySetInnerHTML={{ __html: renderMathText(text) }} />;
                           },
                           code: ({ inline, children }) => inline ? 
                             <code className="bg-slate-700 px-1 rounded text-[10px]">{children}</code> : 
