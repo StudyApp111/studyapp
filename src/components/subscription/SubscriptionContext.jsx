@@ -41,6 +41,18 @@ export function SubscriptionProvider({ children }) {
     
     const now = new Date();
     
+    // Cancelled users immediately lose access (no grace period for trials)
+    if (user.subscription_status === 'cancelled') {
+      // Check if they still have time left (paid subscription grace period)
+      if (user.subscription_end_date) {
+        const endDate = new Date(user.subscription_end_date);
+        if (endDate > now && user.subscription_tier === 'pro') {
+          return true; // Still in paid grace period
+        }
+      }
+      return false; // Cancelled, no access
+    }
+    
     // Check for active trial first
     if (user.subscription_status === 'trialing' && user.trial_end_date) {
       const trialEnd = new Date(user.trial_end_date);

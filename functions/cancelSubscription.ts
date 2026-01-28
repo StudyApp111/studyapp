@@ -12,35 +12,56 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Check if user has an active subscription
-        const isPro = user.subscription_tier === 'pro' && user.subscription_status === 'active';
+        // Check if user has an active subscription or is trialing
+        const isPro = user.subscription_tier === 'pro' && 
+            (user.subscription_status === 'active' || user.subscription_status === 'trialing');
+        
         if (!isPro) {
             return Response.json({ 
                 error: 'No active subscription found' 
             }, { status: 400 });
         }
 
-        // Handle yearly (one-time payment) vs monthly (recurring subscription)
-        const isYearlyOneTime = user.subscription_plan_type === 'yearly' && !user.stripe_subscription_id;
-        
-        if (isYearlyOneTime) {
-            // For yearly one-time payment, we can't cancel via Stripe API
-            // Just mark as cancelled - they keep access until subscription_end_date
+        // Check if user is in trial period
+        const isTrialing = user.subscription_status === 'trialing';
+
+        // If user has a Stripe subscription, cancel it
+        if (user.stripe_subscription_id) {
+            try {
+                if (isTrialing) {
+                    // For trial users: IMMEDIATELY cancel the subscription (no grace period)
+                    await stripe.subscriptions.cancel(user.stripe_subscription_id);
+                    console.log('Trial subscription immediately cancelled');
+                } else {
+                    // For paid users: Cancel at period end (user keeps access until billing period ends)
+                    await stripe.subscriptions.update(
+                        user.stripe_subscription_id,
+                        { cancel_at_period_end: true }
+                    );
+                    console.log('Paid subscription set to cancel at period end');
+                }
+            } catch (stripeErr) {
+                console.error('Stripe cancel error:', stripeErr.message);
+                // Continue anyway to update local state
+            }
+        }
+
+        // Update user record based on trial vs paid status
+        if (isTrialing) {
+            // Trial user: Immediately revoke access
             await base44.asServiceRole.entities.User.update(user.id, {
-                subscription_status: 'cancelled'
+                subscription_tier: 'free',
+                subscription_status: 'cancelled',
+                trial_end_date: null
             });
 
             return Response.json({ 
                 success: true,
-                message: 'Your yearly subscription will not renew. You have access until ' + 
-                    (user.subscription_end_date ? new Date(user.subscription_end_date).toLocaleDateString() : 'the end of your subscription period'),
-                cancel_at: user.subscription_end_date
+                message: 'Your free trial has been cancelled. You are now on the free plan.',
+                immediate: true
             });
-        }
-
-        // For monthly recurring subscriptions, cancel via Stripe
-        if (!user.stripe_subscription_id) {
-            // No Stripe subscription but has pro - treat as manual/promo subscription
+        } else {
+            // Paid user: Keep access until end of billing period
             await base44.asServiceRole.entities.User.update(user.id, {
                 subscription_status: 'cancelled'
             });
@@ -48,27 +69,10 @@ Deno.serve(async (req) => {
             return Response.json({ 
                 success: true,
                 message: 'Subscription cancelled. You have access until ' + 
-                    (user.subscription_end_date ? new Date(user.subscription_end_date).toLocaleDateString() : 'the end of your subscription period'),
+                    (user.subscription_end_date ? new Date(user.subscription_end_date).toLocaleDateString() : 'the end of your billing period'),
                 cancel_at: user.subscription_end_date
             });
         }
-
-        // Cancel at period end (user keeps access until billing period ends)
-        const subscription = await stripe.subscriptions.update(
-            user.stripe_subscription_id,
-            { cancel_at_period_end: true }
-        );
-
-        // Update user record
-        await base44.asServiceRole.entities.User.update(user.id, {
-            subscription_status: 'cancelled'
-        });
-
-        return Response.json({ 
-            success: true,
-            message: 'Subscription will be cancelled at the end of the billing period',
-            cancel_at: subscription.cancel_at
-        });
 
     } catch (error) {
         console.error('Cancel subscription error:', error);

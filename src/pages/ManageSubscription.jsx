@@ -65,7 +65,9 @@ export default function ManageSubscription() {
     );
   }
 
-  const isPro = user?.subscription_tier === 'pro' && user?.subscription_status === 'active';
+  const isPro = user?.subscription_tier === 'pro' && 
+    (user?.subscription_status === 'active' || user?.subscription_status === 'trialing');
+  const isTrialing = user?.subscription_status === 'trialing';
   const isCancelled = user?.subscription_status === 'cancelled';
 
   return (
@@ -96,22 +98,27 @@ export default function ManageSubscription() {
               </div>
               <div className="flex-1">
                 <h2 className="text-xl font-bold dark:text-slate-100 text-slate-900">
-                  {isPro ? 'Pro Plan' : 'Free Plan'}
+                  {isPro ? (isTrialing ? 'Pro Plan (Trial)' : 'Pro Plan') : 'Free Plan'}
                 </h2>
                 <p className="dark:text-slate-300 text-slate-600">
                   {isPro 
-                    ? 'Unlimited access to all features' 
+                    ? (isTrialing ? '7-day free trial active' : 'Unlimited access to all features')
                     : 'Limited access with daily quotas'}
                 </p>
               </div>
-              {isPro && (
+              {isPro && !isTrialing && (
                 <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
                   Active
                 </span>
               )}
+              {isTrialing && (
+                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  Trial
+                </span>
+              )}
               {isCancelled && (
                 <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
-                  Cancelling
+                  Cancelled
                 </span>
               )}
             </div>
@@ -224,13 +231,18 @@ export default function ManageSubscription() {
                     <DialogTitle className="text-xl">Subscription Cancelled</DialogTitle>
                   </div>
                   <DialogDescription className="text-left pt-2">
-                    Your subscription has been cancelled. You'll continue to have Pro access until the end of your current billing period.
+                    {user?.subscription_status === 'cancelled' && !user?.subscription_end_date
+                      ? "Your free trial has been cancelled. You are now on the free plan."
+                      : "Your subscription has been cancelled. You'll continue to have Pro access until the end of your current billing period."
+                    }
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
                   <Button onClick={() => {
                     setCancelDialogOpen(false);
                     setCancelSuccess(false);
+                    // Refresh the page to show updated status
+                    window.location.reload();
                   }}>
                     Got it
                   </Button>

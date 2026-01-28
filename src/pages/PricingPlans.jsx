@@ -95,9 +95,10 @@ export default function PricingPlans() {
     setLoading(true);
     setCheckoutError(null);
     try {
+      // PricingPlans page = direct payment, NO trial
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: isYearly ? 'yearly' : 'monthly',
-        trial: true,
+        trial: false,
         success_url: `${window.location.origin}${createPageUrl("PricingPlans")}?success=true&plan=${isYearly ? 'yearly' : 'monthly'}`,
         cancel_url: `${window.location.origin}${createPageUrl("PricingPlans")}?canceled=true`
       });
@@ -283,10 +284,10 @@ export default function PricingPlans() {
             transition={{ delay: 0.2 }}
             className="relative bg-gradient-to-br from-purple-600/30 to-indigo-600/30 backdrop-blur-sm rounded-3xl p-8 border-2 border-purple-500 shadow-2xl shadow-purple-500/20 flex flex-col"
           >
-            {/* Free Trial badge */}
+            {/* Popular badge */}
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white px-4 py-1 text-xs font-bold shadow-lg">
-                🎉 7-DAY FREE TRIAL
+              <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-1 text-xs font-bold shadow-lg">
+                🔥 MOST POPULAR
               </Badge>
             </div>
 
@@ -296,7 +297,7 @@ export default function PricingPlans() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Locked In ⚡</h2>
-                <p className="text-purple-300 text-sm">Start free, cancel anytime</p>
+                <p className="text-purple-300 text-sm">For serious students</p>
               </div>
             </div>
 
@@ -368,12 +369,12 @@ export default function PricingPlans() {
                 ) : (
                   <>
                     <Zap className="w-5 h-5 mr-2" />
-                    Start 7-Day Free Trial
+                    Get Locked In
                   </>
                 )}
               </Button>
               <p className="text-center text-purple-300 text-sm mt-3">
-                No charge for 7 days • Cancel anytime
+                Cancel anytime • 7-day money back guarantee
               </p>
               {checkoutError && (
                 <p className="text-center text-red-400 text-xs mt-2">

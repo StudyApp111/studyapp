@@ -25,9 +25,9 @@ Deno.serve(async (req) => {
 
     const { plan_type, trial, success_url, cancel_url } = await req.json();
     
-    // Default to yearly with trial for the new flow
+    // Default to yearly, trial must be explicitly set to true
     const planType = plan_type || 'yearly';
-    const includeTrial = trial !== false; // Default to true for 7-day trial
+    const includeTrial = trial === true; // Only include trial if explicitly requested
     
     // Get price IDs
     const STRIPE_PRICE_MONTHLY = Deno.env.get("STRIPE_PRICE_MONTHLY");
