@@ -1,29 +1,29 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Loader2, MapPin, GraduationCap, Users, ChevronRight } from "lucide-react";
+import { Search, Loader2, MapPin, GraduationCap, ChevronRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 export default function SchoolSelector({ value, onChange, prefetchedData }) {
   const [searchQuery, setSearchQuery] = useState(value || "");
   const [nearbySchools, setNearbySchools] = useState([]);
-  const [isLoadingSchools, setIsLoadingSchools] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
-  const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (!hasLoadedInitial) {
+    if (!initialized) {
       if (prefetchedData?.schools?.length > 0) {
         setNearbySchools(prefetchedData.schools);
         setUserLocation(prefetchedData.location);
-        setHasLoadedInitial(true);
       } else {
-        loadNearbySchools();
+        loadSchools();
       }
+      setInitialized(true);
     }
-  }, [hasLoadedInitial, prefetchedData]);
+  }, [initialized, prefetchedData]);
 
-  const loadNearbySchools = async (query = "") => {
-    setIsLoadingSchools(true);
+  const loadSchools = async (query = "") => {
+    setIsLoading(true);
     try {
       const result = await base44.functions.invoke('getNearbySchools', { searchQuery: query });
       if (result?.data?.success) {
@@ -31,10 +31,9 @@ export default function SchoolSelector({ value, onChange, prefetchedData }) {
         setUserLocation(result.data.location);
       }
     } catch (error) {
-      console.error("Error loading nearby schools:", error);
+      console.error("Error loading schools:", error);
     } finally {
-      setIsLoadingSchools(false);
-      setHasLoadedInitial(true);
+      setIsLoading(false);
     }
   };
 
@@ -42,12 +41,16 @@ export default function SchoolSelector({ value, onChange, prefetchedData }) {
     const query = e.target.value;
     setSearchQuery(query);
     
-    if (query.length >= 2) {
-      const timer = setTimeout(() => loadNearbySchools(query), 300);
-      return () => clearTimeout(timer);
-    } else if (query.length === 0) {
-      loadNearbySchools();
-    }
+    // Debounced search
+    const timer = setTimeout(() => {
+      if (query.length >= 2) {
+        loadSchools(query);
+      } else if (query.length === 0) {
+        loadSchools();
+      }
+    }, 300);
+    
+    return () => clearTimeout(timer);
   };
 
   const selectSchool = (schoolName) => {
@@ -55,95 +58,86 @@ export default function SchoolSelector({ value, onChange, prefetchedData }) {
     setSearchQuery(schoolName);
   };
 
-  const handleManualEntry = () => {
+  const useCustomSchool = () => {
     if (searchQuery.trim()) {
       onChange(searchQuery.trim());
     }
   };
 
+  const isSchoolSelected = value && nearbySchools.some(s => s.name === value);
+
   return (
     <div className="space-y-4">
-      {/* Search Input with clear styling */}
+      {/* Search Input */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
         <Input
           value={searchQuery}
           onChange={handleSearch}
-          placeholder="Type your school name..."
+          placeholder="Search or type your school..."
           className="text-base pl-12 pr-4 py-5 h-auto rounded-xl border-2 border-purple-500/30 focus:border-purple-400 text-white bg-slate-800/80 placeholder:text-slate-500"
           autoComplete="off"
         />
       </div>
 
-      {/* Location indicator - friendly */}
+      {/* Location indicator */}
       {userLocation?.city && (
-        <div className="flex items-center justify-center gap-2 text-sm text-purple-300 bg-purple-500/10 rounded-lg py-2 px-3">
+        <div className="flex items-center justify-center gap-2 text-sm text-purple-300 bg-purple-500/10 rounded-lg py-2">
           <MapPin className="w-4 h-4" />
-          <span>Showing schools near <strong>{userLocation.city}</strong></span>
+          <span>Near {userLocation.city}</span>
         </div>
       )}
 
-      {/* Schools List - Always visible, not hidden until typing */}
-      <div className="rounded-xl border border-slate-600/50 bg-slate-800/50 overflow-hidden">
-        {isLoadingSchools ? (
-          <div className="flex items-center justify-center py-8 gap-3">
+      {/* Schools List */}
+      <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 overflow-hidden max-h-[220px] overflow-y-auto">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-6 gap-2">
             <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
-            <span className="text-slate-300">Finding nearby schools...</span>
+            <span className="text-slate-300 text-sm">Finding schools...</span>
           </div>
         ) : nearbySchools.length > 0 ? (
-          <div className="max-h-[240px] overflow-y-auto divide-y divide-slate-700/50">
-            {nearbySchools.map((school, idx) => {
+          <div className="divide-y divide-slate-700/30">
+            {nearbySchools.slice(0, 6).map((school, idx) => {
               const isSelected = value === school.name;
               return (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => selectSchool(school.name)}
-                  className={`w-full flex items-center gap-3 p-4 text-left transition-all ${
+                  className={`w-full flex items-center gap-3 p-3 text-left transition-all ${
                     isSelected 
-                      ? 'bg-gradient-to-r from-purple-500/30 to-indigo-500/30' 
-                      : 'hover:bg-purple-500/10'
+                      ? 'bg-purple-500/20' 
+                      : 'hover:bg-slate-700/30'
                   }`}
                 >
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                     isSelected ? 'bg-purple-500' : 'bg-slate-700'
                   }`}>
-                    <GraduationCap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-slate-300'}`} />
+                    <GraduationCap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-semibold truncate ${isSelected ? 'text-white' : 'text-slate-200'}`}>
-                      {school.name}
-                    </p>
-                    {school.classmates > 0 && (
-                      <p className="text-sm text-purple-400 flex items-center gap-1 mt-0.5">
-                        <Users className="w-3.5 h-3.5" />
-                        {school.classmates} classmate{school.classmates !== 1 ? 's' : ''} here
-                      </p>
-                    )}
-                  </div>
-                  <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-purple-300' : 'text-slate-500'}`} />
+                  <span className={`flex-1 truncate ${isSelected ? 'text-white font-medium' : 'text-slate-200'}`}>
+                    {school.name}
+                  </span>
+                  {isSelected && <ChevronRight className="w-4 h-4 text-purple-300" />}
                 </button>
               );
             })}
           </div>
         ) : (
-          <div className="py-8 text-center px-4">
-            <p className="text-slate-300 mb-1">No schools found nearby</p>
-            <p className="text-sm text-slate-500">Type your school name above</p>
+          <div className="py-6 text-center text-slate-400 text-sm">
+            No schools found nearby
           </div>
         )}
       </div>
 
-      {/* Manual entry - always visible when typing something not in list */}
-      {searchQuery.trim() && !nearbySchools.find(s => s.name.toLowerCase() === searchQuery.toLowerCase()) && (
+      {/* Custom entry option */}
+      {searchQuery.trim() && !isSchoolSelected && (
         <button
           type="button"
-          onClick={handleManualEntry}
-          className="w-full p-4 text-center bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 rounded-xl transition-all border border-purple-500/30 group"
+          onClick={useCustomSchool}
+          className="w-full p-3 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-xl text-purple-200 font-medium transition-all"
         >
-          <span className="text-purple-200 font-medium group-hover:text-white transition-colors">
-            Continue with "<strong>{searchQuery}</strong>"
-          </span>
+          Use "{searchQuery}"
         </button>
       )}
     </div>
