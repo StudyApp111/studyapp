@@ -198,7 +198,12 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
 
   // Show loader when processing
   if (showLoader) {
-    const fileName = materialData?.type === "file" && materialData.files?.[0]?.name;
+    // Truncate long filenames to prevent overflow
+    let fileName = materialData?.type === "file" && materialData.files?.[0]?.name;
+    if (fileName && fileName.length > 30) {
+      const ext = fileName.split('.').pop();
+      fileName = fileName.substring(0, 25) + '...' + (ext ? `.${ext}` : '');
+    }
     return (
       <CreateLessonLoader 
         fileName={fileName}

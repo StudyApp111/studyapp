@@ -89,7 +89,7 @@ export default function SchoolSelector({ value, onChange, prefetchedData }) {
       )}
 
       {/* Schools List */}
-      <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 overflow-hidden max-h-[220px] overflow-y-auto">
+      <div className="rounded-xl border border-slate-700/50 bg-slate-800/50 overflow-hidden max-h-[220px] overflow-y-auto overflow-x-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-6 gap-2">
             <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
@@ -115,8 +115,8 @@ export default function SchoolSelector({ value, onChange, prefetchedData }) {
                   }`}>
                     <GraduationCap className={`w-5 h-5 ${isSelected ? 'text-white' : 'text-slate-400'}`} />
                   </div>
-                  <span className={`flex-1 truncate ${isSelected ? 'text-white font-medium' : 'text-slate-200'}`}>
-                    {school.name}
+                  <span className={`flex-1 truncate text-sm ${isSelected ? 'text-white font-medium' : 'text-slate-200'}`} style={{ maxWidth: 'calc(100% - 60px)' }}>
+                    {school.name.length > 40 ? school.name.substring(0, 40) + '...' : school.name}
                   </span>
                   {isSelected && <ChevronRight className="w-4 h-4 text-purple-300" />}
                 </button>

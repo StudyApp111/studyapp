@@ -2,7 +2,7 @@ import React from 'react';
 
 // Comprehensive math/science LaTeX rendering utility
 // Supports: Greek letters, fractions, subscripts, superscripts, isotopes, 
-// chemical equations, physics notation, calculus symbols, and more
+// chemical equations, physics notation, calculus symbols, matrices, vectors, and more
 
 const renderMathText = (text) => {
   if (!text) return text;
@@ -32,16 +32,47 @@ const renderLatexContent = (text) => {
   let result = text;
   
   // ═══════════════════════════════════════════════════════════════
-  // PHASE 1: NUCLEAR/ISOTOPE NOTATION (must come first!)
+  // PHASE 0: MATRICES AND ENVIRONMENTS (must come first!)
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Handle \begin{pmatrix}...\end{pmatrix} - parenthesized matrix
+  result = result.replace(/\\begin\{pmatrix\}([\s\S]*?)\\end\{pmatrix\}/g, (match, content) => {
+    return renderMatrix(content, '(', ')');
+  });
+  
+  // Handle \begin{bmatrix}...\end{bmatrix} - bracketed matrix
+  result = result.replace(/\\begin\{bmatrix\}([\s\S]*?)\\end\{bmatrix\}/g, (match, content) => {
+    return renderMatrix(content, '[', ']');
+  });
+  
+  // Handle \begin{vmatrix}...\end{vmatrix} - determinant matrix
+  result = result.replace(/\\begin\{vmatrix\}([\s\S]*?)\\end\{vmatrix\}/g, (match, content) => {
+    return renderMatrix(content, '|', '|');
+  });
+  
+  // Handle \begin{matrix}...\end{matrix} - plain matrix (no brackets)
+  result = result.replace(/\\begin\{matrix\}([\s\S]*?)\\end\{matrix\}/g, (match, content) => {
+    return renderMatrix(content, '', '');
+  });
+  
+  // Handle \begin{cases}...\end{cases} - piecewise functions
+  result = result.replace(/\\begin\{cases\}([\s\S]*?)\\end\{cases\}/g, (match, content) => {
+    const rows = content.split('\\\\').map(row => row.trim()).filter(row => row);
+    const formattedRows = rows.map(row => {
+      const parts = row.split('&').map(p => p.trim());
+      return `<tr><td style="padding-right: 1em;">${renderLatexContent(parts[0] || '')}</td><td>${renderLatexContent(parts[1] || '')}</td></tr>`;
+    }).join('');
+    return `<span style="display: inline-flex; align-items: center;"><span style="font-size: 2em; margin-right: 0.2em;">{</span><table style="display: inline-table; vertical-align: middle; border-collapse: collapse; line-height: 1.4;">${formattedRows}</table></span>`;
+  });
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 1: NUCLEAR/ISOTOPE NOTATION (must come early!)
   // ═══════════════════════════════════════════════════════════════
   
   // Handle malformed isotope notation like {}92238U or {}_92^238U
-  // Pattern: {}NUMBER1NUMBER2ELEMENT → mass=first part, atomic=second part
   result = result.replace(/\{\}\s*(\d{1,3})(\d{2,3})([A-Z][a-z]?)/g, (match, p1, p2, elem) => {
-    // Heuristic: if total digits > 4, split intelligently
     const combined = p1 + p2;
     if (combined.length >= 4) {
-      // For uranium-238: 92238 → atomic=92, mass=238
       const atomicNum = combined.slice(0, 2);
       const massNum = combined.slice(2);
       return `<sup>${massNum}</sup><sub>${atomicNum}</sub>${elem}`;
@@ -288,6 +319,30 @@ const renderLatexContent = (text) => {
   result = result.replace(/\s+/g, ' ');
   
   return result;
+};
+
+// Helper function to render matrix content
+const renderMatrix = (content, leftBracket, rightBracket) => {
+  // Split by \\ for rows
+  const rows = content.split('\\\\').map(row => row.trim()).filter(row => row);
+  
+  if (rows.length === 0) return '';
+  
+  // Build vertical matrix display
+  const formattedRows = rows.map(row => {
+    // Split by & for columns (if any), otherwise treat as single column
+    const cells = row.includes('&') ? row.split('&') : [row];
+    const formattedCells = cells.map(cell => 
+      `<td style="padding: 0.15em 0.3em; text-align: center;">${renderLatexContent(cell.trim())}</td>`
+    ).join('');
+    return `<tr>${formattedCells}</tr>`;
+  }).join('');
+  
+  const bracketStyle = 'font-size: 1.5em; line-height: 1; vertical-align: middle;';
+  const leftBracketHtml = leftBracket ? `<span style="${bracketStyle}">${leftBracket}</span>` : '';
+  const rightBracketHtml = rightBracket ? `<span style="${bracketStyle}">${rightBracket}</span>` : '';
+  
+  return `<span style="display: inline-flex; align-items: center; vertical-align: middle;">${leftBracketHtml}<table style="display: inline-table; vertical-align: middle; border-collapse: collapse; line-height: 1.2;">${formattedRows}</table>${rightBracketHtml}</span>`;
 };
 
 // Component for rendering mathematical text
