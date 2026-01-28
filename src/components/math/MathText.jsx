@@ -1,20 +1,22 @@
 import React from 'react';
 
-// Comprehensive math rendering utility
+// Comprehensive math/science LaTeX rendering utility
+// Supports: Greek letters, fractions, subscripts, superscripts, isotopes, 
+// chemical equations, physics notation, calculus symbols, and more
+
 const renderMathText = (text) => {
   if (!text) return text;
   
   let result = String(text);
   
-  // Remove LaTeX delimiters ($...$) and render the content
+  // Handle display math: $$expression$$ (block level)
+  result = result.replace(/\$\$([^$]+)\$\$/g, (match, content) => {
+    return `<div style="text-align: center; margin: 0.5em 0;">${renderLatexContent(content)}</div>`;
+  });
+  
   // Handle inline math: $expression$
   result = result.replace(/\$([^$]+)\$/g, (match, content) => {
     return renderLatexContent(content);
-  });
-  
-  // Handle display math: $$expression$$
-  result = result.replace(/\$\$([^$]+)\$\$/g, (match, content) => {
-    return `<div style="text-align: center; margin: 0.5em 0;">${renderLatexContent(content)}</div>`;
   });
   
   // Also process non-delimited content for basic math
@@ -29,154 +31,261 @@ const renderLatexContent = (text) => {
   
   let result = text;
   
-  // === PHASE 1: Handle backslash LaTeX commands FIRST ===
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 1: NUCLEAR/ISOTOPE NOTATION (must come first!)
+  // ═══════════════════════════════════════════════════════════════
   
-  // Arrows with backslash
-  result = result.replace(/\\rightarrow/g, '→');
-  result = result.replace(/\\leftarrow/g, '←');
-  result = result.replace(/\\to\b/g, '→');
-  result = result.replace(/\\gets\b/g, '←');
-  result = result.replace(/\\Rightarrow/g, '⇒');
-  result = result.replace(/\\Leftarrow/g, '⇐');
-  
-  // Bar/overline with backslash (for nu-bar, etc)
-  result = result.replace(/\\bar\{([^}]+)\}/g, '$1̄');
-  result = result.replace(/\\overline\{([^}]+)\}/g, '$1̄');
-  
-  // Greek letters with backslash
-  result = result.replace(/\\nu\b/g, 'ν');
-  result = result.replace(/\\beta\b/g, 'β');
-  result = result.replace(/\\alpha\b/g, 'α');
-  result = result.replace(/\\gamma\b/g, 'γ');
-  result = result.replace(/\\delta\b/g, 'δ');
-  result = result.replace(/\\epsilon\b/g, 'ε');
-  result = result.replace(/\\theta\b/g, 'θ');
-  result = result.replace(/\\lambda\b/g, 'λ');
-  result = result.replace(/\\mu\b/g, 'μ');
-  result = result.replace(/\\pi\b/g, 'π');
-  result = result.replace(/\\sigma\b/g, 'σ');
-  result = result.replace(/\\phi\b/g, 'φ');
-  result = result.replace(/\\omega\b/g, 'ω');
-  result = result.replace(/\\rho\b/g, 'ρ');
-  result = result.replace(/\\tau\b/g, 'τ');
-  result = result.replace(/\\eta\b/g, 'η');
-  result = result.replace(/\\psi\b/g, 'ψ');
-  result = result.replace(/\\chi\b/g, 'χ');
-  result = result.replace(/\\Delta\b/g, 'Δ');
-  result = result.replace(/\\Sigma\b/g, 'Σ');
-  result = result.replace(/\\Pi\b/g, 'Π');
-  result = result.replace(/\\Omega\b/g, 'Ω');
-  result = result.replace(/\\Gamma\b/g, 'Γ');
-  result = result.replace(/\\Lambda\b/g, 'Λ');
-  result = result.replace(/\\Phi\b/g, 'Φ');
-  result = result.replace(/\\Psi\b/g, 'Ψ');
-  
-  // Times/multiplication with backslash
-  result = result.replace(/\\times/g, '×');
-  result = result.replace(/\\cdot/g, '·');
-  result = result.replace(/\\div/g, '÷');
-  result = result.replace(/\\pm/g, '±');
-  result = result.replace(/\\mp/g, '∓');
-  result = result.replace(/\\approx/g, '≈');
-  result = result.replace(/\\neq/g, '≠');
-  result = result.replace(/\\leq/g, '≤');
-  result = result.replace(/\\geq/g, '≥');
-  result = result.replace(/\\infty/g, '∞');
-  result = result.replace(/\\partial/g, '∂');
-  result = result.replace(/\\nabla/g, '∇');
-  result = result.replace(/\\sum/g, '∑');
-  result = result.replace(/\\prod/g, '∏');
-  result = result.replace(/\\int/g, '∫');
-  
-  // Handle \frac{a}{b} and frac{a}{b} (sometimes backslash is missing)
-  result = result.replace(/\\?frac\{([^}]+)\}\{([^}]+)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>');
-  
-  // Handle rac{a}{b} - malformed frac without backslash (common AI output error)
-  result = result.replace(/\brac\{([^}]+)\}\{([^}]+)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>');
-  
-  // Handle \sqrt{x}
-  result = result.replace(/\\sqrt\{([^}]+)\}/g, '√$1');
-  
-  // Handle \text{...} - important for units like J·s, m/s, kg
-  result = result.replace(/\\text\{([^}]+)\}/g, '$1');
-  result = result.replace(/\\mathrm\{([^}]+)\}/g, '$1');
-  result = result.replace(/\\textbf\{([^}]+)\}/g, '<b>$1</b>');
-  
-  // === PHASE 2: Handle non-backslash LaTeX (raw AI output) ===
-  
-  // Arrows without backslash
-  result = result.replace(/\brightarrow\b/g, '→');
-  result = result.replace(/\bleftarrow\b/g, '←');
-  
-  // Bar without backslash
-  result = result.replace(/\bbar\{([^}]+)\}/g, '$1̄');
-  
-  // Times/cdot without backslash
-  result = result.replace(/\btimes\b/g, '×');
-  result = result.replace(/\bcdot\b/g, '·');
-  
-  // === PHASE 3: Handle subscripts and superscripts ===
-  
-  // Scientific notation: 6.626 × 10^{-34} or 6.626 x 10^-34
-  result = result.replace(/(\d+(?:\.\d+)?)\s*[×x]\s*10\s*\^\s*\{?\s*(-?\d+)\s*\}?/gi, (match, num, exp) => {
-    return `${num} × 10<sup>${exp}</sup>`;
+  // Handle malformed isotope notation like {}92238U or {}_92^238U
+  // Pattern: {}NUMBER1NUMBER2ELEMENT → mass=first part, atomic=second part
+  result = result.replace(/\{\}\s*(\d{1,3})(\d{2,3})([A-Z][a-z]?)/g, (match, p1, p2, elem) => {
+    // Heuristic: if total digits > 4, split intelligently
+    const combined = p1 + p2;
+    if (combined.length >= 4) {
+      // For uranium-238: 92238 → atomic=92, mass=238
+      const atomicNum = combined.slice(0, 2);
+      const massNum = combined.slice(2);
+      return `<sup>${massNum}</sup><sub>${atomicNum}</sub>${elem}`;
+    }
+    return `<sup>${p2}</sup><sub>${p1}</sub>${elem}`;
   });
   
-  // Handle isotope notation like ^{234}_{90}Th or 234/90 Th
-  result = result.replace(/\^\{?(\d+)\}?\s*_\{?(\d+)\}?\s*([A-Z][a-z]?)/g, '<sup>$1</sup><sub>$2</sub>$3');
-  result = result.replace(/(\d+)\/(\d+)\s*([A-Z][a-z]?)\b/g, '<sup>$1</sup><sub>$2</sub>$3');
+  // Handle {}24α pattern (helium-4 alpha particle)
+  result = result.replace(/\{\}\s*(\d)(\d)([αβγ]|alpha|beta|gamma)/gi, (match, p1, p2, particle) => {
+    const particleMap = { 'alpha': 'α', 'beta': 'β', 'gamma': 'γ', 'α': 'α', 'β': 'β', 'γ': 'γ' };
+    return `<sup>${p2}</sup><sub>${p1}</sub>${particleMap[particle.toLowerCase()] || particle}`;
+  });
   
-  // Handle ^{exp} superscripts (with braces) - supports complex content
-  result = result.replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>');
+  // Standard isotope: ^{mass}_{atomic}Element or ^mass_atomicElement
+  result = result.replace(/\^\{?(\d+)\}?\s*_\{?(\d+)\}?\s*([A-Z][a-z]{0,2})/g, '<sup>$1</sup><sub>$2</sub>$3');
+  result = result.replace(/_\{?(\d+)\}?\s*\^\{?(\d+)\}?\s*([A-Z][a-z]{0,2})/g, '<sup>$2</sup><sub>$1</sub>$3');
   
-  // Handle ^exp superscripts (without braces, single char or signed number)
-  result = result.replace(/\^(-?\d+)/g, '<sup>$1</sup>');
+  // Isotope with just mass: ^{238}U or ^238U
+  result = result.replace(/\^\{?(\d+)\}?\s*([A-Z][a-z]{0,2})(?![a-z])/g, '<sup>$1</sup>$2');
   
-  // Handle _{sub} subscripts (with braces) - supports complex content
-  result = result.replace(/_\{([^}]+)\}/g, '<sub>$1</sub>');
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 2: FRACTIONS (before other processing)
+  // ═══════════════════════════════════════════════════════════════
   
-  // Handle _sub subscripts (without braces, for things like m_e, x_1)
-  result = result.replace(/_([a-zA-Z0-9])/g, '<sub>$1</sub>');
+  // \frac{a}{b}, frac{a}{b}, rac{a}{b} (common AI errors)
+  result = result.replace(/\\?f?rac\{([^}]+)\}\{([^}]+)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>');
   
-  // === PHASE 4: Clean up remaining backslash commands ===
-  // Remove remaining backslashes from LaTeX commands we don't explicitly handle
-  result = result.replace(/\\([a-zA-Z]+)/g, '$1');
+  // \dfrac and \tfrac variants
+  result = result.replace(/\\[dt]frac\{([^}]+)\}\{([^}]+)\}/g, '<sup>$1</sup>⁄<sub>$2</sub>');
   
-  // === PHASE 5: Handle special notations ===
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 3: GREEK LETTERS (with backslash)
+  // ═══════════════════════════════════════════════════════════════
   
-  // Handle square roots: sqrt(x)
-  result = result.replace(/sqrt\(([^)]+)\)/gi, '√$1');
-  
-  // Handle cube roots
-  result = result.replace(/cbrt\(([^)]+)\)/gi, '∛$1');
-  
-  // Handle simple fractions: (a/b)
-  result = result.replace(/\((\d+)\/(\d+)\)/g, '<sup>$1</sup>⁄<sub>$2</sub>');
-  
-  // Greek letters (standalone words) - only if not already replaced
-  const greekLetters = {
-    'alpha': 'α', 'beta': 'β', 'gamma': 'γ', 'delta': 'δ', 
-    'epsilon': 'ε', 'theta': 'θ', 'lambda': 'λ', 'mu': 'μ',
-    'pi': 'π', 'sigma': 'σ', 'phi': 'φ', 'omega': 'ω',
-    'rho': 'ρ', 'tau': 'τ', 'eta': 'η', 'psi': 'ψ', 'chi': 'χ',
-    'nu': 'ν',
-    'Delta': 'Δ', 'Sigma': 'Σ', 'Pi': 'Π', 'Omega': 'Ω',
-    'Gamma': 'Γ', 'Lambda': 'Λ', 'Phi': 'Φ', 'Psi': 'Ψ'
+  const greekWithBackslash = {
+    // Lowercase
+    'alpha': 'α', 'beta': 'β', 'gamma': 'γ', 'delta': 'δ', 'epsilon': 'ε',
+    'varepsilon': 'ε', 'zeta': 'ζ', 'eta': 'η', 'theta': 'θ', 'vartheta': 'ϑ',
+    'iota': 'ι', 'kappa': 'κ', 'lambda': 'λ', 'mu': 'μ', 'nu': 'ν',
+    'xi': 'ξ', 'omicron': 'ο', 'pi': 'π', 'varpi': 'ϖ', 'rho': 'ρ',
+    'varrho': 'ϱ', 'sigma': 'σ', 'varsigma': 'ς', 'tau': 'τ', 'upsilon': 'υ',
+    'phi': 'φ', 'varphi': 'ϕ', 'chi': 'χ', 'psi': 'ψ', 'omega': 'ω',
+    // Uppercase
+    'Alpha': 'Α', 'Beta': 'Β', 'Gamma': 'Γ', 'Delta': 'Δ', 'Epsilon': 'Ε',
+    'Zeta': 'Ζ', 'Eta': 'Η', 'Theta': 'Θ', 'Iota': 'Ι', 'Kappa': 'Κ',
+    'Lambda': 'Λ', 'Mu': 'Μ', 'Nu': 'Ν', 'Xi': 'Ξ', 'Omicron': 'Ο',
+    'Pi': 'Π', 'Rho': 'Ρ', 'Sigma': 'Σ', 'Tau': 'Τ', 'Upsilon': 'Υ',
+    'Phi': 'Φ', 'Chi': 'Χ', 'Psi': 'Ψ', 'Omega': 'Ω'
   };
   
-  Object.entries(greekLetters).forEach(([name, symbol]) => {
-    const regex = new RegExp(`\\b${name}\\b`, 'g');
-    result = result.replace(regex, symbol);
+  Object.entries(greekWithBackslash).forEach(([name, symbol]) => {
+    result = result.replace(new RegExp(`\\\\${name}\\b`, 'g'), symbol);
   });
   
-  // Math operators
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 4: MATH OPERATORS & SYMBOLS (with backslash)
+  // ═══════════════════════════════════════════════════════════════
+  
+  const mathSymbols = {
+    // Arrows
+    'rightarrow': '→', 'leftarrow': '←', 'leftrightarrow': '↔',
+    'Rightarrow': '⇒', 'Leftarrow': '⇐', 'Leftrightarrow': '⇔',
+    'uparrow': '↑', 'downarrow': '↓', 'updownarrow': '↕',
+    'longrightarrow': '⟶', 'longleftarrow': '⟵',
+    'to': '→', 'gets': '←', 'mapsto': '↦',
+    
+    // Binary operators
+    'times': '×', 'cdot': '·', 'div': '÷', 'ast': '∗',
+    'star': '⋆', 'circ': '∘', 'bullet': '•',
+    'pm': '±', 'mp': '∓', 'oplus': '⊕', 'ominus': '⊖',
+    'otimes': '⊗', 'oslash': '⊘', 'odot': '⊙',
+    
+    // Relations
+    'leq': '≤', 'geq': '≥', 'neq': '≠', 'approx': '≈',
+    'equiv': '≡', 'sim': '∼', 'simeq': '≃', 'cong': '≅',
+    'propto': '∝', 'll': '≪', 'gg': '≫',
+    'subset': '⊂', 'supset': '⊃', 'subseteq': '⊆', 'supseteq': '⊇',
+    'in': '∈', 'notin': '∉', 'ni': '∋',
+    'perp': '⊥', 'parallel': '∥', 'angle': '∠',
+    
+    // Calculus & Analysis
+    'partial': '∂', 'nabla': '∇', 'infty': '∞',
+    'int': '∫', 'iint': '∬', 'iiint': '∭', 'oint': '∮',
+    'sum': '∑', 'prod': '∏', 'coprod': '∐',
+    'lim': 'lim', 'limsup': 'lim sup', 'liminf': 'lim inf',
+    
+    // Logic
+    'forall': '∀', 'exists': '∃', 'nexists': '∄',
+    'land': '∧', 'lor': '∨', 'lnot': '¬', 'neg': '¬',
+    'implies': '⟹', 'iff': '⟺',
+    
+    // Sets
+    'emptyset': '∅', 'varnothing': '∅',
+    'cup': '∪', 'cap': '∩', 'setminus': '∖',
+    
+    // Misc symbols
+    'degree': '°', 'degrees': '°', 'prime': '′', 'dprime': '″',
+    'hbar': 'ℏ', 'ell': 'ℓ', 'Re': 'ℜ', 'Im': 'ℑ',
+    'aleph': 'ℵ', 'wp': '℘',
+    'triangle': '△', 'square': '□', 'diamond': '◇',
+    'therefore': '∴', 'because': '∵',
+    
+    // Chemistry/Physics specific  
+    'ce': '', // Remove \ce wrapper
+    'pu': '', // Remove \pu wrapper
+  };
+  
+  Object.entries(mathSymbols).forEach(([cmd, symbol]) => {
+    result = result.replace(new RegExp(`\\\\${cmd}\\b`, 'g'), symbol);
+  });
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 5: TEXT FORMATTING COMMANDS
+  // ═══════════════════════════════════════════════════════════════
+  
+  // \text{...}, \mathrm{...}, \textrm{...}, \mbox{...}
+  result = result.replace(/\\(?:text|mathrm|textrm|mbox)\{([^}]+)\}/g, '$1');
+  result = result.replace(/\\textbf\{([^}]+)\}/g, '<b>$1</b>');
+  result = result.replace(/\\textit\{([^}]+)\}/g, '<i>$1</i>');
+  result = result.replace(/\\underline\{([^}]+)\}/g, '<u>$1</u>');
+  result = result.replace(/\\mathbf\{([^}]+)\}/g, '<b>$1</b>');
+  result = result.replace(/\\mathit\{([^}]+)\}/g, '<i>$1</i>');
+  result = result.replace(/\\boldsymbol\{([^}]+)\}/g, '<b>$1</b>');
+  
+  // Accents and decorations
+  result = result.replace(/\\bar\{([^}]+)\}/g, '$1̄');
+  result = result.replace(/\\overline\{([^}]+)\}/g, '$1̄');
+  result = result.replace(/\\vec\{([^}]+)\}/g, '$1⃗');
+  result = result.replace(/\\hat\{([^}]+)\}/g, '$1̂');
+  result = result.replace(/\\tilde\{([^}]+)\}/g, '$1̃');
+  result = result.replace(/\\dot\{([^}]+)\}/g, '$1̇');
+  result = result.replace(/\\ddot\{([^}]+)\}/g, '$1̈');
+  
+  // Roots
+  result = result.replace(/\\sqrt\[(\d+)\]\{([^}]+)\}/g, '<sup>$1</sup>√$2');
+  result = result.replace(/\\sqrt\{([^}]+)\}/g, '√$1');
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 6: BRACKETS & DELIMITERS
+  // ═══════════════════════════════════════════════════════════════
+  
+  result = result.replace(/\\left\(/g, '(');
+  result = result.replace(/\\right\)/g, ')');
+  result = result.replace(/\\left\[/g, '[');
+  result = result.replace(/\\right\]/g, ']');
+  result = result.replace(/\\left\{/g, '{');
+  result = result.replace(/\\right\}/g, '}');
+  result = result.replace(/\\left\|/g, '|');
+  result = result.replace(/\\right\|/g, '|');
+  result = result.replace(/\\langle/g, '⟨');
+  result = result.replace(/\\rangle/g, '⟩');
+  result = result.replace(/\\lceil/g, '⌈');
+  result = result.replace(/\\rceil/g, '⌉');
+  result = result.replace(/\\lfloor/g, '⌊');
+  result = result.replace(/\\rfloor/g, '⌋');
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 7: SCIENTIFIC NOTATION & UNITS
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Scientific notation: 6.626 × 10^{-34} or 6.626 x 10^-34
+  result = result.replace(/(\d+(?:\.\d+)?)\s*[×x]\s*10\s*\^\s*\{?\s*(-?\d+)\s*\}?/gi, '$1 × 10<sup>$2</sup>');
+  
+  // Handle 10^n patterns
+  result = result.replace(/10\s*\^\s*\{?\s*(-?\d+)\s*\}?/g, '10<sup>$1</sup>');
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 8: SUBSCRIPTS & SUPERSCRIPTS (general)
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Handle ^{exp} superscripts (with braces)
+  result = result.replace(/\^\{([^}]+)\}/g, '<sup>$1</sup>');
+  
+  // Handle ^exp superscripts (single char or signed number)
+  result = result.replace(/\^(-?\d+)/g, '<sup>$1</sup>');
+  result = result.replace(/\^([+\-])/g, '<sup>$1</sup>');
+  result = result.replace(/\^([a-zA-Z])/g, '<sup>$1</sup>');
+  
+  // Handle _{sub} subscripts (with braces)
+  result = result.replace(/_\{([^}]+)\}/g, '<sub>$1</sub>');
+  
+  // Handle _sub subscripts (single char)
+  result = result.replace(/_([a-zA-Z0-9])/g, '<sub>$1</sub>');
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 9: CHEMISTRY NOTATION
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Chemical arrows
+  result = result.replace(/-->/g, '→');
+  result = result.replace(/<--/g, '←');
+  result = result.replace(/<-->/g, '⇌');
+  result = result.replace(/<=>/g, '⇌');
+  result = result.replace(/->>/g, '⇀');
+  result = result.replace(/<<-/g, '↼');
+  
+  // Charge notation: ^+ or ^- or ^{2+}
+  result = result.replace(/\^\{(\d*[+\-])\}/g, '<sup>$1</sup>');
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 10: PLAIN TEXT GREEK (standalone words)
+  // ═══════════════════════════════════════════════════════════════
+  
+  const plainGreek = {
+    'alpha': 'α', 'beta': 'β', 'gamma': 'γ', 'delta': 'δ', 'epsilon': 'ε',
+    'zeta': 'ζ', 'eta': 'η', 'theta': 'θ', 'iota': 'ι', 'kappa': 'κ',
+    'lambda': 'λ', 'mu': 'μ', 'nu': 'ν', 'xi': 'ξ', 'pi': 'π',
+    'rho': 'ρ', 'sigma': 'σ', 'tau': 'τ', 'upsilon': 'υ', 'phi': 'φ',
+    'chi': 'χ', 'psi': 'ψ', 'omega': 'ω',
+    'Delta': 'Δ', 'Gamma': 'Γ', 'Lambda': 'Λ', 'Phi': 'Φ', 'Pi': 'Π',
+    'Psi': 'Ψ', 'Sigma': 'Σ', 'Theta': 'Θ', 'Omega': 'Ω', 'Xi': 'Ξ'
+  };
+  
+  Object.entries(plainGreek).forEach(([name, symbol]) => {
+    result = result.replace(new RegExp(`\\b${name}\\b`, 'g'), symbol);
+  });
+  
+  // ═══════════════════════════════════════════════════════════════
+  // PHASE 11: PLAIN TEXT OPERATORS & CLEANUP
+  // ═══════════════════════════════════════════════════════════════
+  
+  // Common text equivalents
   result = result.replace(/\+\/-/g, '±');
   result = result.replace(/<=/g, '≤');
   result = result.replace(/>=/g, '≥');
   result = result.replace(/!=/g, '≠');
   result = result.replace(/~=/g, '≈');
-  result = result.replace(/infinity/gi, '∞');
-  result = result.replace(/(\d+)\s*degrees?/gi, '$1°');
+  result = result.replace(/\binfinity\b/gi, '∞');
+  result = result.replace(/(\d+)\s*degrees?\b/gi, '$1°');
+  result = result.replace(/\bdegC\b/g, '°C');
+  result = result.replace(/\bdegF\b/g, '°F');
+  
+  // Plain text math words
+  result = result.replace(/\brightarrow\b/g, '→');
+  result = result.replace(/\bleftarrow\b/g, '←');
+  result = result.replace(/\btimes\b/g, '×');
+  result = result.replace(/\bcdot\b/g, '·');
+  
+  // Clean up empty braces and remaining backslashes
+  result = result.replace(/\{\}/g, '');
+  result = result.replace(/\\([a-zA-Z]+)/g, '$1'); // Remove unhandled backslash commands
+  
+  // Clean up double spaces
+  result = result.replace(/\s+/g, ' ');
   
   return result;
 };
