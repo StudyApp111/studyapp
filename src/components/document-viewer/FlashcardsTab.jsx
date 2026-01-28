@@ -12,6 +12,7 @@ import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset
 import FlashcardSetsList from "./FlashcardSetsList";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import MathText from "@/components/math/MathText";
 
 export default function FlashcardsTab({ lesson, extractedContent, focusTopics }) {
   const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
@@ -761,9 +762,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                   </div>
                 </div>
                 <div className={`p-6 flex flex-col items-center justify-center min-h-[220px] ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
-                 <p className={`text-base font-medium leading-relaxed text-center mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                 <MathText className={`text-base font-medium leading-relaxed text-center mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     {currentCard.question}
-                  </p>
+                  </MathText>
                   <div className="text-center">
                     <p className={`text-xs mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Think of the answer, then...</p>
                     <p className={`text-sm font-semibold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Tap to reveal →</p>
@@ -796,9 +797,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                   </div>
                 </div>
                 <div className={`p-6 flex flex-col min-h-[220px] ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
-                  <p className={`text-sm leading-relaxed text-center flex-1 flex items-center justify-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  <MathText className={`text-sm leading-relaxed text-center flex-1 flex items-center justify-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
                     {currentCard.answer}
-                  </p>
+                  </MathText>
                   
                   {/* Rating section */}
                   <div className={`mt-4 pt-4 border-t ${isDark ? 'border-white/10' : 'border-slate-100'}`}>

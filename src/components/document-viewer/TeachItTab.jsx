@@ -13,6 +13,7 @@ import XPGainToast from "@/components/gamification/XPGainToast";
 import TeachItSetsList from "./TeachItSetsList";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import MathText from "@/components/math/MathText";
 
 export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
@@ -699,9 +700,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       <HelpCircle className="w-2.5 h-2.5 mr-0.5" />
                       Explain
                     </Badge>
-                    <h3 className="text-sm font-bold text-white leading-snug break-words flex-1 min-w-0">
+                    <MathText className="text-sm font-bold text-white leading-snug break-words flex-1 min-w-0">
                       {currentCard.question}
-                    </h3>
+                    </MathText>
                   </div>
                 </div>
 
@@ -821,7 +822,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                           <Sparkles className={`w-3.5 h-3.5 md:w-4 md:h-4 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
                           Correct Answer
                         </h4>
-                        <p className={`text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{currentCard.model_answer}</p>
+                        <MathText className={`text-xs md:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{currentCard.model_answer}</MathText>
                       </div>
 
                       {/* 5. Feedback */}
