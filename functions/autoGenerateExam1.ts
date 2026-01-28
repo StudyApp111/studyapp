@@ -303,25 +303,13 @@ No extra text.`;
       user_answer: ""
     }));
 
-    // Create or update exam record
-    let exam;
-    if (existingExams.length > 0) {
-      exam = await base44.entities.Exam.update(existingExams[0].id, {
-        questions: questionsWithPlaceholder,
-        status: "not_started"
-      });
-    } else {
-      exam = await base44.entities.Exam.create({
-        lesson_id,
-        exam_number: 1,
-        exam_type: "official",
-        questions: questionsWithPlaceholder,
-        status: "not_started",
-        completed: false,
-        time_taken_seconds: 0,
-        question_time_laps: []
-      });
-    }
+    // Update the lock exam record with the generated questions
+    const exam = await base44.entities.Exam.update(lockExam.id, {
+      questions: questionsWithPlaceholder,
+      status: "not_started",
+      time_taken_seconds: 0,
+      question_time_laps: []
+    });
 
     console.log('Exam 1 generated successfully:', exam.id);
     return Response.json({ success: true, exam_id: exam.id, question_count: questionsWithPlaceholder.length });
