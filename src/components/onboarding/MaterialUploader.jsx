@@ -100,8 +100,8 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
 
   const tabs = [
     { id: "upload", label: "Upload", icon: Upload, emoji: "📄" },
-    { id: "paste", label: "Paste", icon: FileText, emoji: "📝" },
-    { id: "topic", label: "Topic", icon: Type, emoji: "💡" }
+    { id: "topic", label: "Topic", icon: Type, emoji: "💡" },
+    { id: "paste", label: "Paste", icon: FileText, emoji: "📝" }
   ];
 
   return (

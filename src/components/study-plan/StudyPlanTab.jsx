@@ -349,47 +349,66 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           animate={{ opacity: 1 }}
           className="space-y-4"
         >
-          {/* Grade Card Skeleton */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-300 to-slate-400 p-5 shadow-xl animate-pulse">
-            <div className="text-center mb-4">
-              <div className="h-3 w-32 bg-white/30 rounded mx-auto mb-2" />
-              <div className="h-12 w-20 bg-white/40 rounded-lg mx-auto" />
+          {/* Prediction Progress */}
+          <div className="flex flex-col items-center justify-center py-6">
+            <div className="relative w-24 h-24 mb-4">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" className={isDark ? 'stroke-slate-700' : 'stroke-slate-200'} />
+                <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" strokeLinecap="round" className="stroke-purple-500"
+                  style={{ 
+                    strokeDasharray: '264',
+                    strokeDashoffset: '132',
+                    animation: 'progress 2s ease-in-out infinite'
+                  }} />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-3xl">🧠</span>
+              </div>
             </div>
-            <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
-              <div className="h-4 w-40 bg-white/30 rounded" />
-            </div>
+            
+            <h3 className={`font-bold text-lg mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Building Your Study Plan</h3>
+            <p className={`text-sm text-center max-w-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Analyzing your diagnostic to create a personalized roadmap
+            </p>
           </div>
 
-          {/* Loading Message */}
-          <div className="text-center py-4">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-3" />
-            <p className={`font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Generating your study plan...</p>
-            <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Analyzing your diagnostic results</p>
-          </div>
-
-          {/* Task Skeletons */}
-          <div className="relative">
-            <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200" />
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="relative pl-1">
-                  <div className="absolute left-[14px] top-4 w-3 h-3 rounded-full bg-slate-200" />
-                  <div className="ml-8 pr-1">
-                    <div className="bg-slate-100 rounded-xl p-3 animate-pulse">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-slate-200" />
-                        <div className="flex-1">
-                          <div className="h-3 w-16 bg-slate-200 rounded mb-2" />
-                          <div className="h-4 w-32 bg-slate-200 rounded" />
-                        </div>
-                      </div>
-                    </div>
+          {/* Task Skeletons with Progress */}
+          <div className="space-y-2">
+            {[
+              { icon: '📊', label: 'Calculating grade prediction', delay: 0 },
+              { icon: '🎯', label: 'Finding weak spots', delay: 0.8 },
+              { icon: '📝', label: 'Creating study tasks', delay: 1.6 }
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: step.delay }}
+                className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}
+              >
+                <span className="text-2xl">{step.icon}</span>
+                <div className="flex-1">
+                  <p className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{step.label}</p>
+                  <div className={`h-1 mt-1.5 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
+                    <motion.div
+                      className="h-full bg-purple-500 rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: '100%' }}
+                      transition={{ duration: 2, delay: step.delay + 0.2 }}
+                    />
                   </div>
                 </div>
-              ))}
-            </div>
+              </motion.div>
+            ))}
           </div>
         </motion.div>
+        
+        <style>{`
+          @keyframes progress {
+            0%, 100% { stroke-dashoffset: 132; }
+            50% { stroke-dashoffset: 0; }
+          }
+        `}</style>
       </div>
     );
   }
