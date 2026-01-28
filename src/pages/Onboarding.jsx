@@ -91,31 +91,40 @@ export default function Onboarding() {
       
       try {
         const user = await base44.auth.me();
-        if (user && !user.onboarding_completed && window.ttq) {
+        if (user && !user.onboarding_completed) {
           hasTrackedRegistration.current = true;
           
-          // Hash user ID for privacy
-          const encoder = new TextEncoder();
-          const data = encoder.encode(user.id);
-          const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-          const hashArray = Array.from(new Uint8Array(hashBuffer));
-          const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-          
-          // Identify user
-          window.ttq.identify({
-            external_id: hashedId
+          // Track onboarding page view for funnel analytics
+          base44.analytics.track({
+            eventName: "onboarding_page_viewed",
+            properties: { user_id: user.id }
           });
           
-          // Track registration
-          window.ttq.track('CompleteRegistration', {
-            contents: [{
-              content_id: 'signup',
-              content_type: 'product',
-              content_name: 'StudyApp Registration'
-            }],
-            value: 0,
-            currency: 'USD'
-          });
+          // TikTok pixel tracking
+          if (window.ttq) {
+            // Hash user ID for privacy
+            const encoder = new TextEncoder();
+            const data = encoder.encode(user.id);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            // Identify user
+            window.ttq.identify({
+              external_id: hashedId
+            });
+            
+            // Track registration
+            window.ttq.track('CompleteRegistration', {
+              contents: [{
+                content_id: 'signup',
+                content_type: 'product',
+                content_name: 'StudyApp Registration'
+              }],
+              value: 0,
+              currency: 'USD'
+            });
+          }
         }
       } catch (err) {
         console.error('TikTok tracking error:', err);
@@ -306,6 +315,16 @@ export default function Onboarding() {
       const lesson = await base44.entities.Lesson.create(lessonData);
       setCreatedLessonId(lesson.id);
       console.log("✅ Lesson created:", lesson.id);
+
+      // Track first lesson creation for funnel analytics
+      base44.analytics.track({
+        eventName: "first_lesson_created",
+        properties: { 
+          lesson_id: lesson.id,
+          course_name: answers.course_name,
+          input_type: lessonData.input_type || "unknown"
+        }
+      });
 
       // 3. Fire-and-forget: Generate exam in background (content is already in lesson)
       console.log("🎯 Starting background exam generation...");
