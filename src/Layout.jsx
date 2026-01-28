@@ -123,6 +123,7 @@ function LayoutContent({ children, currentPageName }) {
   const isOnboardingPage = currentPath === onboardingPath || currentPageName === "Onboarding";
   
   const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname.includes("DocumentViewer");
+  const isHomePage = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
   
   // Show navigation if: user has completed onboarding OR user exists (even if onboarding_completed is undefined/null)
   // Only hide navigation if: we're actively on the onboarding page
@@ -134,7 +135,8 @@ function LayoutContent({ children, currentPageName }) {
   const showSidebar = showNavigation && userCompletedOnboarding;
   
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
-  const showMobileHeader = showNavigation && !isDocumentViewerPage;
+  // Hide mobile header on Home page (it has its own hero with logo) and DocumentViewer
+  const showMobileHeader = showNavigation && !isDocumentViewerPage && !isHomePage;
   const showMobileBottomNav = showNavigation && !pagesWithCustomNav.includes(currentPageName);
 
 

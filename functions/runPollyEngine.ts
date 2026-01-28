@@ -270,19 +270,20 @@ D. STUDY TASK RECOMMENDATION Identify 2 distinct Study Tasks (Flashcards, Teach-
                     estimated_hours_to_target: { type: "number" }
                   }
                 },
-                suggested_topics: {
+                suggested_tasks: {
                   type: "array",
                   items: {
                     type: "object",
                     properties: {
+                      task_type: { type: "string" },
                       topic_name: { type: "string" },
-                      topic_description: { type: "string" },
-                      topic_reason: { type: "string" }
+                      task_description: { type: "string" },
+                      task_reason: { type: "string" }
                     }
                   }
                 }
               },
-              required: ["engine_state", "behavioral_insights", "suggested_topics"]
+              required: ["engine_state", "behavioral_insights", "suggested_tasks"]
             }
           }
         })
@@ -358,7 +359,7 @@ D. STUDY TASK RECOMMENDATION Identify 2 distinct Study Tasks (Flashcards, Teach-
         current_confidence: pollyResponse.engine_state.prediction_confidence_percent,
         learning_velocity: pollyResponse.engine_state.learning_velocity,
         mastery_gap: pollyResponse.engine_state.current_mastery_gap,
-        suggested_topics: pollyResponse.suggested_topics || [],
+        suggested_tasks: pollyResponse.suggested_tasks || [],
         behavioral_insights: pollyResponse.behavioral_insights || {},
         last_polly_update: new Date().toISOString()
       });
