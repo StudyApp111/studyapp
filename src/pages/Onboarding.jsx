@@ -479,8 +479,8 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
           </div>
           {/* StudyApp branding */}
           <h1 className="text-2xl md:text-3xl font-black">
-            <span className="text-white">Study</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">App</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
+            <span className="text-white">App</span>
           </h1>
         </div>
 

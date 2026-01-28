@@ -77,9 +77,9 @@ export default function OnboardingQuestion({ question, value, onChange, prefetch
 
         {/* Location indicator */}
         {userLocation?.city && (
-          <div className="flex items-center justify-center gap-1.5 text-sm text-slate-400">
-            <MapPin className="w-4 h-4" />
-            <span>Showing schools near {userLocation.city}</span>
+          <div className="flex items-center justify-center gap-1.5 text-sm text-slate-400 max-w-full overflow-hidden">
+            <MapPin className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">Near {userLocation.city}</span>
           </div>
         )}
 
