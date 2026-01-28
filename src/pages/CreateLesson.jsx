@@ -209,43 +209,45 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-700 via-violet-600 to-indigo-600 flex items-center justify-center p-4 pb-28 md:pb-4">
-      <div className="w-full max-w-lg md:max-w-2xl relative z-10">
-        {/* Logo */}
-        <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden bg-white/10 backdrop-blur-sm border-2 border-white/20 shadow-xl">
-            <img 
-              src={LOGO_URL} 
-              alt="StudyApp" 
-              className="w-full h-full object-cover"
-            />
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 pb-28 md:pb-4">
+      <div className="w-full max-w-lg md:max-w-3xl relative z-10">
+        {/* Hero Header - Large like Onboarding */}
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-2">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
+            <span className="text-white">App</span>
+          </h1>
+          <p className="text-purple-200 text-lg md:text-xl">
+            Upload your materials 📚
+          </p>
         </div>
 
         <div className="text-center mb-4 md:mb-6">
-          <h1 className="text-xl md:text-2xl font-bold text-white mb-1">
-            StudyApp will predict your grade and help you study.
-          </h1>
-          <p className="text-white/70 text-xs md:text-sm">Upload your materials to get started</p>
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+            Create a new lesson
+          </h2>
+          <p className="text-purple-200 text-sm md:text-base">
+            We'll predict your grade and help you study
+          </p>
         </div>
 
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border border-white/20">
+        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border border-slate-700">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 text-red-300 rounded-xl text-sm">
               {error}
             </div>
           )}
 
           {/* Course Name Input */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               Course Name
             </label>
             <Input
               value={courseName}
               onChange={(e) => setCourseName(e.target.value)}
               placeholder="e.g., Biology 101, Calculus II, etc."
-              className="h-12 text-base border-2 border-slate-200 focus:border-purple-400 rounded-xl"
+              className="h-12 text-base bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-400 rounded-xl"
             />
           </div>
 
@@ -256,11 +258,11 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
             onMaterialReady={handleMaterialReady}
           />
 
-          <div className="mt-6 pt-4 border-t border-slate-100">
+          <div className="mt-6 pt-4 border-t border-slate-700">
             <Button
               onClick={handleSubmit}
               disabled={!canSubmit || isSubmitting}
-              className="w-full h-12 bg-gradient-to-r from-amber-400 to-orange-500 hover:opacity-90 text-white font-bold gap-2 shadow-lg rounded-xl text-base"
+              className="w-full h-12 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold gap-2 shadow-lg shadow-purple-500/30 rounded-xl text-base"
             >
               {isSubmitting ? (
                 <>
@@ -278,7 +280,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
         </div>
 
         <div className="text-center mt-6">
-          <p className="text-white/50 text-xs">Powered by StudyApp.AI</p>
+          <p className="text-slate-500 text-xs">Powered by StudyApp.AI</p>
         </div>
       </div>
     </div>
