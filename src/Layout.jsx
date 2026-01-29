@@ -96,7 +96,7 @@ function LayoutContent({ children, currentPageName }) {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
         
-        if (!currentUser.onboarding_completed && location.pathname !== createPageUrl("Onboarding")) {
+        if (!currentUser.onboarding_completed && location.pathname !== createPageUrl("Onboarding") && !location.pathname.includes("PredictedGradeDisplay")) {
           navigate(createPageUrl("Onboarding"), { replace: true });
           return;
         }
