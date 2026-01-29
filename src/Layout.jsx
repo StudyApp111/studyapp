@@ -124,14 +124,15 @@ function LayoutContent({ children, currentPageName }) {
   
   const isOnboardingPage = currentPath === onboardingPath || currentPageName === "Onboarding";
   const isPredictedGradePage = currentPath === predictedGradePath || currentPageName === "PredictedGradeDisplay" || location.pathname.includes("PredictedGradeDisplay");
+  const isDiagnosticQuizPage = currentPageName === "DiagnosticQuiz" || location.pathname.includes("DiagnosticQuiz");
   
   const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname.includes("DocumentViewer");
   const isHomePage = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
 
   const userIsAuthenticated = !!user;
 
-  // ALWAYS hide navigation on onboarding pages (Onboarding, PredictedGradeDisplay) - no exceptions
-  const showNavigation = userIsAuthenticated && !isOnboardingPage && !isPredictedGradePage;
+  // ALWAYS hide navigation on onboarding pages (Onboarding, DiagnosticQuiz, PredictedGradeDisplay) - no exceptions
+  const showNavigation = userIsAuthenticated && !isOnboardingPage && !isPredictedGradePage && !isDiagnosticQuizPage;
   const showSidebar = showNavigation;
   
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];

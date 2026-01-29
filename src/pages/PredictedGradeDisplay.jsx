@@ -33,77 +33,55 @@ export default function PredictedGradeDisplay() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const lessonId = queryParams.get("lessonId");
-  const { isPro, triggerUpgradeModal } = useSubscription();
+  
+  // New diagnostic quiz flow params
+  const grade = queryParams.get("grade");
+  const strongAreas = queryParams.get("strongAreas");
+  const weakAreas = queryParams.get("weakAreas");
+  const studyDays = queryParams.get("studyDays");
+  const subject = queryParams.get("subject");
+  const school = queryParams.get("school");
+  const courseCode = queryParams.get("courseCode");
+  
+  const { triggerUpgradeModal } = useSubscription();
 
-  const [lesson, setLesson] = useState(null);
-  const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!lessonId) {
-        navigate(createPageUrl("Home"), { replace: true });
-        return;
-      }
-      
+    const loadUser = async () => {
       try {
-        // Fetch lesson
-        const fetchedLesson = await base44.entities.Lesson.get(lessonId);
-        setLesson(fetchedLesson);
-
-        // Get user profile for context
+        // Try to get current user (may not be authenticated yet)
         const currentUser = await base44.auth.me();
         setUser(currentUser);
-        
-        // Extract first name
         const firstName = currentUser.full_name?.split(' ')[0] || 'Student';
         setUserName(firstName);
-        
-        const profile = currentUser.learning_profile_id 
-          ? await base44.entities.LearningProfile.get(currentUser.learning_profile_id)
-          : null;
-
-        // Generate AI insights
-        const result = await base44.functions.invoke('generateCourseInsights', {
-          course_name: fetchedLesson.course_name,
-          school: profile?.school,
-          grade: profile?.grade
-        });
-
-        if (result?.data?.success && result.data.insights) {
-          setInsights(result.data.insights);
-        } else {
-          throw new Error('Failed to generate insights');
-        }
       } catch (err) {
-        console.error("Error loading data:", err);
-        setError(err.message);
+        // User not authenticated - that's OK for this page
+        setUserName('Student');
       } finally {
-        // Minimum 2s loading for authenticity
+        // Minimum 2s loading for dramatic reveal
         setTimeout(() => setLoading(false), 2000);
       }
     };
     
-    fetchData();
-  }, [lessonId, navigate]);
+    loadUser();
+  }, []);
 
-  const handleUnlock = async () => {
-    // Check if already pro
-    if (isPro) {
-      // Already pro, go straight to upload materials
-      navigate(createPageUrl("CreateLesson") + `?lessonId=${lessonId}&courseName=${encodeURIComponent(lesson?.course_name || '')}`);
+  const handleGetStudyPlan = async () => {
+    // First check if user is authenticated
+    if (!user) {
+      // Redirect to login, then back here after auth
+      base44.auth.redirectToLogin(location.pathname + location.search);
       return;
     }
     
-    // Show upgrade modal as hard paywall
+    // User is authenticated - show upgrade modal (hard paywall)
     triggerUpgradeModal("unlock_study_plan", {
       onSuccess: () => {
-        // After successful payment/promo, navigate to CreateLesson with course name
-        navigate(createPageUrl("CreateLesson") + `?lessonId=${lessonId}&courseName=${encodeURIComponent(lesson?.course_name || '')}`);
+        // After successful payment/promo, navigate to CreateLesson with course name pre-filled
+        navigate(createPageUrl("CreateLesson") + `?courseName=${encodeURIComponent(courseCode || '')}`);
       }
     });
   };
@@ -130,26 +108,23 @@ export default function PredictedGradeDisplay() {
     );
   }
 
-  if (error || !insights) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
-        <Card className="bg-slate-800/60 backdrop-blur-xl border-red-500/30 text-white max-w-md">
-          <CardHeader>
-            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <CardTitle>Unable to Generate Insights</CardTitle>
-            <CardDescription className="text-slate-300">
-              {error || 'Something went wrong'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate(createPageUrl("Home"))} className="w-full">
-              Return Home
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Parse diagnostic results
+  const parsedStrongAreas = strongAreas ? JSON.parse(strongAreas) : [];
+  const parsedWeakAreas = weakAreas ? JSON.parse(weakAreas) : [];
+  
+  // Calculate score percentage from grade
+  const getScoreFromGrade = (grade) => {
+    const gradeMap = {
+      'A+': 97, 'A': 93, 'A-': 90,
+      'B+': 87, 'B': 83, 'B-': 80,
+      'C+': 77, 'C': 73, 'C-': 70,
+      'D+': 67, 'D': 63, 'D-': 60,
+      'F': 50
+    };
+    return gradeMap[grade] || 70;
+  };
+  
+  const scorePercentage = getScoreFromGrade(grade);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-y-auto pb-20">
@@ -179,12 +154,12 @@ export default function PredictedGradeDisplay() {
             {userName}'s Report Card
           </h2>
           <p className="text-purple-200/80 text-sm md:text-base">
-            {lesson?.course_name}
+            {courseCode} • {subject}
           </p>
         </div>
 
         {/* Main Grade Card - Colorful like Study Plan */}
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(insights.predicted_grade)} p-6 md:p-8 shadow-2xl`}>
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(grade)} p-6 md:p-8 shadow-2xl`}>
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
           
@@ -192,33 +167,21 @@ export default function PredictedGradeDisplay() {
             {/* Grade Display */}
             <div>
               <p className="text-white/80 text-xs md:text-sm font-bold uppercase tracking-wider mb-2">
-                Based on thousands of students like you, we think you'll get:
+                Your Predicted Exam Grade
               </p>
               <div className="flex items-center justify-center gap-4">
                 <span className="text-7xl md:text-8xl font-black text-white drop-shadow-2xl">
-                  {insights.predicted_grade}
+                  {grade}
                 </span>
                 <span className="text-4xl md:text-5xl font-black text-white/80">
-                  {insights.score_percentage}%
+                  {scorePercentage}%
                 </span>
               </div>
             </div>
 
-            {/* Quick Stats */}
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Badge className={`${getDifficultyColor(insights.course_difficulty)} border-2 px-4 py-2 text-sm`}>
-                <Target className="w-4 h-4 mr-2" />
-                {insights.course_difficulty} Course
-              </Badge>
-              <Badge className="bg-white/20 text-white border-2 border-white/30 px-4 py-2 text-sm">
-                <Clock className="w-4 h-4 mr-2" />
-                {insights.time_commitment} weekly
-              </Badge>
-            </div>
-
             {/* Motivational tagline */}
             <p className="text-white text-lg md:text-xl font-semibold max-w-lg mx-auto">
-              But you're not settling for a <span className="line-through opacity-60">{insights.predicted_grade}</span>. 
+              But you're not settling for a <span className="line-through opacity-60">{grade}</span>. 
               You want an <span className="text-emerald-300 font-black">A+</span>.
             </p>
           </div>
@@ -234,12 +197,22 @@ export default function PredictedGradeDisplay() {
             <h3 className="text-3xl md:text-4xl font-black text-white">
               Why {userName} Might Struggle
             </h3>
+            <p className="text-purple-200/80 text-sm">Based on your answers:</p>
             <div className="space-y-3 pt-2">
-              {insights.key_insights.map((insight, idx) => (
-                <div key={idx} className="bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-orange-500/30">
-                  <p className="text-sm md:text-base text-white/95 font-medium">{insight}</p>
+              {parsedWeakAreas.length > 0 ? (
+                parsedWeakAreas.map((area, idx) => (
+                  <div key={idx} className="bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-orange-500/30">
+                    <p className="text-sm md:text-base text-white/95 font-medium flex items-start gap-2">
+                      <span className="text-orange-400 mt-0.5">✗</span>
+                      {area}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-orange-500/30">
+                  <p className="text-sm md:text-base text-white/95 font-medium">Limited diagnostic data</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -254,15 +227,36 @@ export default function PredictedGradeDisplay() {
             <h3 className="text-3xl md:text-4xl font-black text-white">
               Do You Want an A+, {userName}?
             </h3>
+            <p className="text-purple-200/80 text-sm">To reach an A+:</p>
             <div className="space-y-3 pt-2">
-              {insights.success_strategies.map((strategy, idx) => (
-                <div key={idx} className="flex items-center gap-3 bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/30">
+              {parsedWeakAreas.length > 0 && (
+                <div className="flex items-center gap-3 bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/30">
                   <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
                     <CheckCircle2 className="w-5 h-5 text-white" />
                   </div>
-                  <span className="text-base md:text-lg font-semibold text-white">{strategy}</span>
+                  <span className="text-base md:text-lg font-semibold text-white">
+                    Focus on these {parsedWeakAreas.length} topic{parsedWeakAreas.length > 1 ? 's' : ''}
+                  </span>
                 </div>
-              ))}
+              )}
+              <div className="flex items-center gap-3 bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/30">
+                <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-base md:text-lg font-semibold text-white">
+                  Estimated study time: {studyDays} days
+                </span>
+              </div>
+              {parsedStrongAreas.length > 0 && (
+                <div className="flex items-center gap-3 bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/30">
+                  <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-base md:text-lg font-semibold text-white">
+                    Build on your strengths in {parsedStrongAreas.length} area{parsedStrongAreas.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -321,19 +315,16 @@ export default function PredictedGradeDisplay() {
           </CardContent>
         </Card>
 
-        {/* CTA - No escape route */}
+        {/* CTA - Single Button Only */}
         <div className="pt-4">
           <Button 
-            onClick={handleUnlock}
+            onClick={handleGetStudyPlan}
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-7 text-lg md:text-xl rounded-xl shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all hover:scale-[1.02] group"
           >
             <Sparkles className="h-6 w-6 mr-2 group-hover:rotate-12 transition-transform" />
-            Let's Do This, {userName}
+            Get My Free Study Plan
             <ArrowRight className="h-6 w-6 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
-          <p className="text-center text-xs text-purple-300/60 mt-3">
-            7-day free trial • No credit card • Cancel anytime
-          </p>
         </div>
 
         {/* Footer */}
