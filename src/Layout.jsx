@@ -124,14 +124,15 @@ function LayoutContent({ children, currentPageName }) {
   
   const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname.includes("DocumentViewer");
   const isHomePage = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
-  
+  const isPredictedGradePage = currentPageName === "PredictedGradeDisplay" || location.pathname.includes("PredictedGradeDisplay");
+
   // Show navigation if: user has completed onboarding OR user exists (even if onboarding_completed is undefined/null)
-  // Only hide navigation if: we're actively on the onboarding page
+  // Only hide navigation if: we're actively on the onboarding page OR on predicted grade display page
   const userIsAuthenticated = !!user;
   const userCompletedOnboarding = user?.onboarding_completed === true;
-  
-  // Navigation shows for all authenticated users EXCEPT when on onboarding page
-  const showNavigation = userIsAuthenticated && !isOnboardingPage;
+
+  // Navigation shows for all authenticated users EXCEPT when on onboarding page or predicted grade page
+  const showNavigation = userIsAuthenticated && !isOnboardingPage && !isPredictedGradePage;
   const showSidebar = showNavigation && userCompletedOnboarding;
   
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];

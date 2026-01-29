@@ -13,6 +13,15 @@ export default function MaterialUploadPrompt({ lesson, onComplete }) {
   const [uploading, setUploading] = useState(false);
   const [textInput, setTextInput] = useState("");
   const [urlInput, setUrlInput] = useState("");
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+    };
+    getUser();
+  }, []);
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -156,17 +165,19 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
     }
   };
 
+  const userName = user?.full_name?.split(' ')[0] || 'there';
+
   if (!uploadMethod) {
     return (
       <div className={`min-h-[60vh] flex items-center justify-center p-4 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
         <Card className={`w-full max-w-2xl ${isDark ? 'bg-[#12121a] border-purple-500/30' : 'bg-white border-purple-200'}`}>
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4 shadow-xl">
               <Upload className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-2xl">Upload Your Study Materials</CardTitle>
+            <CardTitle className="text-2xl md:text-3xl">Hey {userName}, Upload Your Materials</CardTitle>
             <CardDescription className={isDark ? 'text-purple-200/80' : 'text-slate-600'}>
-              Add your course materials to unlock AI-powered study tools
+              We'll analyze them and build your personalized study plan
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
