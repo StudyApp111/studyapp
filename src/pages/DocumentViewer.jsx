@@ -19,6 +19,8 @@ import ParsingLoader from "@/components/document-viewer/ParsingLoader";
 import NotesTab from "@/components/document-viewer/NotesTab";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
+import MaterialUploadPrompt from "@/components/document-viewer/MaterialUploadPrompt";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -51,6 +53,8 @@ export default function DocumentViewer() {
   const [userDailyXP, setUserDailyXP] = useState(0);
   const [isGeneratingStudyPlan, setIsGeneratingStudyPlan] = useState(false);
   const [pomodoroEnabled, setPomodoroEnabled] = useState(false);
+  const [showUploadPrompt, setShowUploadPrompt] = useState(false);
+  const { isPro } = useSubscription();
   
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
@@ -362,6 +366,11 @@ export default function DocumentViewer() {
       const lessonData = lessons[0];
       setLesson(lessonData);
       
+      // Check if lesson needs materials (Pro users only)
+      if (isPro && !lessonData.extracted_content && !lessonData.file_url) {
+        setShowUploadPrompt(true);
+      }
+      
       // Initialize study time from saved lesson data
       setStudyTime(lessonData.total_study_time_seconds || 0);
       
@@ -436,6 +445,19 @@ export default function DocumentViewer() {
           </Button>
         </div>
       </div>
+    );
+  }
+
+  // Show upload prompt if needed
+  if (showUploadPrompt && lesson) {
+    return (
+      <MaterialUploadPrompt 
+        lesson={lesson} 
+        onComplete={() => {
+          setShowUploadPrompt(false);
+          loadLesson(); // Reload to get updated lesson
+        }} 
+      />
     );
   }
 
