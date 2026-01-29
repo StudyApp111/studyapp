@@ -25,7 +25,10 @@ export default function DiagnosticQuiz() {
     const school = searchParams.get('school');
     const courseCode = searchParams.get('courseCode');
 
+    console.log('📋 DiagnosticQuiz params:', { subject, school, courseCode });
+
     if (!subject || !school || !courseCode) {
+      console.error('❌ Missing params, redirecting to onboarding');
       // Missing params - redirect back to onboarding
       setTimeout(() => {
         navigate(createPageUrl("Onboarding"), { replace: true });
@@ -40,6 +43,7 @@ export default function DiagnosticQuiz() {
   }, [location.search, navigate]);
 
   const generateQuestions = async (subject, school, courseCode) => {
+    console.log('🎯 Calling generateDiagnosticExam with:', { subject, school, courseCode });
     try {
       const result = await base44.functions.invoke('generateDiagnosticExam', {
         subject,
@@ -47,14 +51,19 @@ export default function DiagnosticQuiz() {
         courseCode
       });
 
+      console.log('📊 generateDiagnosticExam response:', result);
+
       if (result.data?.success && result.data?.questions) {
+        console.log('✅ Questions generated:', result.data.questions.length);
         setQuestions(result.data.questions);
       } else {
+        console.error('❌ Invalid response structure:', result.data);
         throw new Error('Failed to generate questions');
       }
     } catch (err) {
-      console.error('Error generating quiz:', err);
-      setError('Failed to generate your quiz. Please try again.');
+      console.error('❌ Error generating quiz:', err);
+      console.error('Error details:', err.message, err.response?.data);
+      setError(`Failed to generate your quiz: ${err.message}. Please try again.`);
     } finally {
       setIsLoading(false);
     }
@@ -77,12 +86,16 @@ export default function DiagnosticQuiz() {
     setIsGrading(true);
     setError('');
 
+    console.log('📝 Submitting quiz with answers:', userAnswers);
+
     try {
       // Format user answers for grading
       const formattedAnswers = Object.entries(userAnswers).map(([index, answer]) => ({
         question_index: parseInt(index),
         answer
       }));
+
+      console.log('🎯 Calling gradeDiagnosticExam with:', { params, formattedAnswers });
 
       // Grade the exam
       const result = await base44.functions.invoke('gradeDiagnosticExam', {
@@ -93,7 +106,10 @@ export default function DiagnosticQuiz() {
         userAnswers: formattedAnswers
       });
 
+      console.log('📊 gradeDiagnosticExam response:', result);
+
       if (result.data?.success) {
+        console.log('✅ Grading successful, navigating to results');
         // Navigate to PredictedGradeDisplay with results
         const queryParams = new URLSearchParams({
           grade: result.data.predicted_grade,
@@ -107,11 +123,13 @@ export default function DiagnosticQuiz() {
 
         navigate(createPageUrl('PredictedGradeDisplay') + `?${queryParams.toString()}`, { replace: true });
       } else {
+        console.error('❌ Invalid grading response:', result.data);
         throw new Error('Failed to grade exam');
       }
     } catch (err) {
-      console.error('Error grading quiz:', err);
-      setError('Failed to grade your quiz. Please try again.');
+      console.error('❌ Error grading quiz:', err);
+      console.error('Error details:', err.message, err.response?.data);
+      setError(`Failed to grade your quiz: ${err.message}. Please try again.`);
       setIsGrading(false);
     }
   };
