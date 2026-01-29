@@ -92,11 +92,13 @@ export default function PredictedGradeDisplay() {
   }, [lessonId, navigate]);
 
   const handleUnlock = () => {
-    if (!isPro) {
-      triggerUpgradeModal("unlock_study_plan");
-    } else {
-      navigate(createPageUrl("DocumentViewer") + `?lessonId=${lessonId}`);
-    }
+    // ALWAYS show upgrade modal as hard paywall - no way around it
+    triggerUpgradeModal("unlock_study_plan", {
+      onSuccess: () => {
+        // After successful payment/promo, navigate to CreateLesson with course name
+        navigate(createPageUrl("CreateLesson") + `?lessonId=${lessonId}&courseName=${encodeURIComponent(lesson?.course_name || '')}`);
+      }
+    });
   };
 
   if (loading) {
@@ -215,48 +217,50 @@ export default function PredictedGradeDisplay() {
           </div>
         </div>
 
-        {/* Why You Might Struggle - Compact 2 points */}
-        <Card className="bg-slate-800/60 backdrop-blur-xl border-slate-700/50 overflow-hidden">
-          <CardHeader className="text-center pb-3">
-            <div className="mx-auto w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-2 shadow-lg">
-              <AlertCircle className="h-6 w-6 text-white" />
+        {/* Why You Might Struggle - Visually Striking */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500/30 to-red-500/30 backdrop-blur-xl border-2 border-orange-500/60 p-6 md:p-8 shadow-2xl">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl" />
+          <div className="relative text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-3 shadow-xl">
+              <AlertCircle className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-lg md:text-xl text-white">
+            <h3 className="text-3xl md:text-4xl font-black text-white">
               Why {userName} Might Struggle
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-center">
-            {insights.key_insights.map((insight, idx) => (
-              <div key={idx} className="bg-slate-900/40 rounded-lg p-3 border border-orange-500/20">
-                <p className="text-xs md:text-sm text-white/90">{insight}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Success Path - BIG AND BOLD */}
-        <Card className="bg-gradient-to-br from-emerald-500/30 to-green-500/30 backdrop-blur-xl border-2 border-emerald-500/60 overflow-hidden shadow-2xl">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center mb-4 shadow-2xl">
-              <Trophy className="h-10 w-10 text-white" />
-            </div>
-            <CardTitle className="text-3xl md:text-4xl font-black text-white mb-2">
-              Do You Want an A+, {userName}?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {insights.success_strategies.map((strategy, idx) => (
-              <div key={idx} className="flex items-center gap-3 bg-slate-900/40 rounded-xl p-4 border border-emerald-500/30">
-                <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 className="w-5 h-5 text-white" />
+            </h3>
+            <div className="space-y-3 pt-2">
+              {insights.key_insights.map((insight, idx) => (
+                <div key={idx} className="bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-orange-500/30">
+                  <p className="text-sm md:text-base text-white/95 font-medium">{insight}</p>
                 </div>
-                <span className="text-base md:text-lg font-semibold text-white">{strategy}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              ))}
+            </div>
+          </div>
+        </div>
 
-        {/* How You Do It - Horizontal Layout */}
+        {/* Success Path - Visually Striking */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/30 to-green-500/30 backdrop-blur-xl border-2 border-emerald-500/60 p-6 md:p-8 shadow-2xl">
+          <div className="absolute top-0 left-0 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl" />
+          <div className="relative text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center mb-3 shadow-xl">
+              <Trophy className="h-8 w-8 text-white" />
+            </div>
+            <h3 className="text-3xl md:text-4xl font-black text-white">
+              Do You Want an A+, {userName}?
+            </h3>
+            <div className="space-y-3 pt-2">
+              {insights.success_strategies.map((strategy, idx) => (
+                <div key={idx} className="flex items-center gap-3 bg-slate-900/40 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/30">
+                  <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+                    <CheckCircle2 className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-base md:text-lg font-semibold text-white">{strategy}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* How You Do It - Colored Borders */}
         <Card className="bg-slate-800/60 backdrop-blur-xl border-purple-500/40 overflow-hidden">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl md:text-3xl font-bold text-white mb-1">
@@ -272,28 +276,32 @@ export default function PredictedGradeDisplay() {
                 icon: Target, 
                 title: "Find Your Weak Spots", 
                 desc: "AI diagnostic pinpoints what you don't know",
-                color: "from-pink-500 to-rose-600"
+                color: "from-pink-500 to-rose-600",
+                borderColor: "border-pink-500/60"
               },
               { 
                 icon: Zap, 
                 title: "Custom Practice", 
                 desc: "Questions targeting YOUR gaps",
-                color: "from-blue-500 to-indigo-600"
+                color: "from-blue-500 to-indigo-600",
+                borderColor: "border-blue-500/60"
               },
               { 
                 icon: Trophy, 
                 title: "Know Your Grade Early", 
                 desc: "Real-time predictions as you study",
-                color: "from-emerald-500 to-teal-600"
+                color: "from-emerald-500 to-teal-600",
+                borderColor: "border-emerald-500/60"
               },
               { 
                 icon: TrendingUp, 
                 title: "Clear Action Plan", 
                 desc: "Follow tasks, watch grade climb",
-                color: "from-amber-500 to-orange-600"
+                color: "from-amber-500 to-orange-600",
+                borderColor: "border-amber-500/60"
               }
             ].map((item, idx) => (
-              <div key={idx} className="flex items-start gap-4 bg-slate-900/40 rounded-xl p-4 border border-slate-700/50">
+              <div key={idx} className={`flex items-start gap-4 bg-slate-900/40 rounded-xl p-4 border-2 ${item.borderColor}`}>
                 <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center flex-shrink-0 shadow-md`}>
                   <item.icon className="w-6 h-6 text-white" />
                 </div>
@@ -306,26 +314,19 @@ export default function PredictedGradeDisplay() {
           </CardContent>
         </Card>
 
-        {/* CTA */}
-        <div className="space-y-3 pt-4">
+        {/* CTA - No escape route */}
+        <div className="pt-4">
           <Button 
             onClick={handleUnlock}
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-7 text-lg md:text-xl rounded-xl shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all hover:scale-[1.02] group"
           >
             <Sparkles className="h-6 w-6 mr-2 group-hover:rotate-12 transition-transform" />
-            {isPro ? `Let's Do This, ${userName}` : `Unlock ${userName}'s Study Plan`}
+            Let's Do This, {userName}
             <ArrowRight className="h-6 w-6 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
-          <p className="text-center text-xs text-purple-300/60">
-            {isPro ? "Start your personalized study plan" : "7-day free trial • No credit card • Cancel anytime"}
+          <p className="text-center text-xs text-purple-300/60 mt-3">
+            7-day free trial • No credit card • Cancel anytime
           </p>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate(createPageUrl("Home"))}
-            className="w-full text-purple-300/80 hover:text-white hover:bg-white/5 text-sm"
-          >
-            Maybe later
-          </Button>
         </div>
 
         {/* Footer */}
