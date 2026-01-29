@@ -23,6 +23,7 @@ export default function CreateLesson() {
   const [error, setError] = useState("");
   const [user, setUser] = useState(null);
   const [learningProfile, setLearningProfile] = useState(null);
+  const [stepStatuses, setStepStatuses] = useState({ extracted: false, compressed: false, examGenerated: false });
 
   useEffect(() => {
     loadUserData();
@@ -103,6 +104,9 @@ export default function CreateLesson() {
           extractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
           console.log("✅ Extracted content length:", extractedContent.length, "chars");
           
+          // Mark step 1 complete
+          setStepStatuses(prev => ({ ...prev, extracted: true }));
+          
           // Compress if needed
           if (extractedContent.length > 2500) {
             console.log("📦 Compressing content...");
@@ -117,10 +121,15 @@ export default function CreateLesson() {
             compressedContent = extractedContent;
           }
           
+          // Mark step 2 complete
+          setStepStatuses(prev => ({ ...prev, compressed: true }));
+          
           lessonData.extracted_content = extractedContent;
           lessonData.compressed_content = compressedContent;
         } catch (err) {
           console.error("❌ Content extraction error:", err);
+          // Still mark as done to progress the UI
+          setStepStatuses(prev => ({ ...prev, extracted: true, compressed: true }));
         }
       } else if (materialData?.type === "notes") {
         lessonData.description = materialData.content;
@@ -129,6 +138,8 @@ export default function CreateLesson() {
         lessonData.input_type = "description";
         extractedContent = materialData.content;
         compressedContent = materialData.content;
+        // Mark first two steps complete immediately for text input
+        setStepStatuses(prev => ({ ...prev, extracted: true, compressed: true }));
       } else if (materialData?.type === "topic") {
         lessonData.description = materialData.content;
         lessonData.extracted_content = materialData.content;
@@ -136,6 +147,8 @@ export default function CreateLesson() {
         lessonData.input_type = "description";
         extractedContent = materialData.content;
         compressedContent = materialData.content;
+        // Mark first two steps complete immediately for text input
+        setStepStatuses(prev => ({ ...prev, extracted: true, compressed: true }));
       }
 
       const lesson = await base44.entities.Lesson.create(lessonData);
@@ -151,12 +164,15 @@ export default function CreateLesson() {
         if (examResult?.data?.success) {
           console.log("✅ Exam 1 generated:", examResult.data.exam_id);
           examGenerated = true;
+          setStepStatuses(prev => ({ ...prev, examGenerated: true }));
         } else {
           console.warn("⚠️ Exam generation returned but no success flag");
+          setStepStatuses(prev => ({ ...prev, examGenerated: true }));
         }
       } catch (examErr) {
         console.error("❌ Exam generation error:", examErr.message);
         // Continue anyway - user can still view materials
+        setStepStatuses(prev => ({ ...prev, examGenerated: true }));
       }
 
       // Fire-and-forget: Curriculum mapping in background (not critical path)
@@ -198,17 +214,12 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
 
   // Show loader when processing
   if (showLoader) {
-    // Truncate long filenames to prevent overflow
-    let fileName = materialData?.type === "file" && materialData.files?.[0]?.name;
-    if (fileName && fileName.length > 30) {
-      const ext = fileName.split('.').pop();
-      fileName = fileName.substring(0, 25) + '...' + (ext ? `.${ext}` : '');
-    }
     return (
       <CreateLessonLoader 
-        fileName={fileName}
+        fileName={materialData?.type === "file" ? materialData.files?.[0]?.name : null}
         isComplete={loaderComplete}
         onAnimationComplete={handleLoaderComplete}
+        stepStatuses={stepStatuses}
       />
     );
   }
