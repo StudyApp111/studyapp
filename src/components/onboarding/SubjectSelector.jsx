@@ -30,8 +30,10 @@ export default function SubjectSelector({ value, onChange, onNext }) {
   };
 
   const handleNext = () => {
-    if (selectedSubject || customSubject.trim()) {
-      onNext();
+    const finalSubject = selectedSubject || customSubject.trim();
+    if (finalSubject) {
+      onChange(finalSubject); // Ensure parent state is updated
+      onNext(finalSubject);   // Pass value directly to avoid race condition
     }
   };
 
