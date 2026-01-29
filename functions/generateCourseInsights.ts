@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       }
     });
 
-    const prompt = `You are an expert academic advisor analyzing course difficulty and student performance patterns. Do a quick but thorough google search to get information specific to this course as defined below:
+    const prompt = `You are an expert academic advisor analyzing course difficulty and student performance patterns. Do a quick but thorough google search to get information specific to this course as defined below. Ensure STRICT adherence to the JSON output format.:
 
 Course: ${course_name}
 ${school ? `School: ${school}` : ''}
