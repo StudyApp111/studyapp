@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       }
     });
 
-    const prompt = `You are an expert academic advisor analyzing course difficulty and student performance patterns. Do a quick but thorough google search to get information specific to this course as defined below. Ensure STRICT adherence to the JSON output format.:
+    const prompt = `You are an expert academic advisor analyzing course difficulty and student performance patterns.
 
 Course: ${course_name}
 ${school ? `School: ${school}` : ''}
@@ -43,23 +43,18 @@ Generate a JSON response with the following structure:
   "confidence_level": "Medium" (Low/Medium/High),
   "course_difficulty": "Moderate" (Easy/Moderate/Challenging/Very Challenging),
   "key_insights": [
-    "3-4 insights about what makes this course difficult",
-    "Common struggles students face",
-    "What separates A students from B/C students"
+    "Brief struggle point 1 - one sentence max",
+    "Brief struggle point 2 - one sentence max"
   ],
   "success_strategies": [
-    "3-4 specific, actionable strategies to excel in this course",
-    "Study techniques that work best for this subject",
-    "Common mistakes to avoid"
+    "Brief actionable tip 1 - max 8 words",
+    "Brief actionable tip 2 - max 8 words",
+    "Brief actionable tip 3 - max 8 words"
   ],
-  "time_commitment": "8-12 hours/week" (realistic estimate),
-  "high_yield_topics": [
-    "3-5 most important topics that are frequently tested",
-    "Concepts students should master first"
-  ]
+  "time_commitment": "8-12 hours/week" (realistic estimate)
 }
 
-Be realistic, specific, and actionable. Use knowledge of typical course structures and student performance patterns.`;
+Be realistic, direct, and super concise. No fluff.`;
 
     const result = await model.generateContent(prompt);
     const response = result.response;
