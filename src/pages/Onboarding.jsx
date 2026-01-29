@@ -149,7 +149,11 @@ export default function Onboarding() {
   const totalSteps = visibleQuestions.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
+  // Store answers directly to avoid race conditions
+  const answersRef = useRef({});
+  
   const handleAnswer = (questionId, answer) => {
+    answersRef.current[questionId] = answer;
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
     setError("");
   };
@@ -161,11 +165,16 @@ export default function Onboarding() {
   };
 
   const handleNext = (valueFromComponent) => {
+    // Update ref immediately with passed value
+    if (valueFromComponent && currentQuestion) {
+      answersRef.current[currentQuestion.id] = valueFromComponent;
+    }
+    
     if (currentStep < visibleQuestions.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
-      // Pass the value directly to avoid race condition
-      handleSubmit(valueFromComponent);
+      // Use ref values for immediate access
+      handleSubmit();
     }
   };
 
@@ -184,19 +193,23 @@ export default function Onboarding() {
     }
   };
 
-  const handleSubmit = async (finalCourseCode) => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
     setError("");
 
     try {
-      // Use finalCourseCode passed directly from component, or fall back to state
-      const courseCode = finalCourseCode || answers.course_code || '';
+      // Use ref values for immediate access (avoids React state race condition)
+      const subject = answersRef.current.subject || answers.subject || '';
+      const school = answersRef.current.school || answers.school || '';
+      const courseCode = answersRef.current.course_code || answers.course_code || '';
+      
+      console.log('🚀 Submitting with:', { subject, school, courseCode });
       
       // Navigate to DiagnosticQuiz page with collected data
       const params = new URLSearchParams({
-        subject: answers.subject || '',
-        school: answers.school || '',
-        courseCode: courseCode
+        subject,
+        school,
+        courseCode
       });
       
       navigate(createPageUrl("DiagnosticQuiz") + `?${params.toString()}`, { replace: true });

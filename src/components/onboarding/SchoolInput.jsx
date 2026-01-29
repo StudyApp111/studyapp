@@ -6,9 +6,10 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
   const [school, setSchool] = useState(value || '');
 
   const handleNext = () => {
-    if (school.trim()) {
-      onChange(school.trim());
-      onNext();
+    const trimmedSchool = school.trim();
+    if (trimmedSchool) {
+      onChange(trimmedSchool);
+      onNext(trimmedSchool); // Pass value directly to avoid race condition
     }
   };
 
