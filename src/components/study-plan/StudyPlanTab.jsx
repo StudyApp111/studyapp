@@ -342,6 +342,19 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   // Show placeholder while generating study plan
   if (isGeneratingPlan) {
+    const [progress, setProgress] = useState(0);
+    
+    useEffect(() => {
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const newProgress = Math.min((elapsed / 12000) * 100, 95);
+        setProgress(newProgress);
+      }, 100);
+      
+      return () => clearInterval(interval);
+    }, []);
+    
     return (
       <div className={`px-3 md:px-6 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
         <motion.div
@@ -351,18 +364,25 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         >
           {/* Prediction Progress */}
           <div className="flex flex-col items-center justify-center py-6">
-            <div className="relative w-24 h-24 mb-4">
+            <div className="relative w-28 h-28 mb-4">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" className={isDark ? 'stroke-slate-700' : 'stroke-slate-200'} />
-                <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" strokeLinecap="round" className="stroke-purple-500"
+                <circle 
+                  cx="50" cy="50" r="42" 
+                  fill="none" 
+                  strokeWidth="8" 
+                  strokeLinecap="round" 
+                  className="stroke-purple-500 transition-all duration-300"
                   style={{ 
                     strokeDasharray: '264',
-                    strokeDashoffset: '132',
-                    animation: 'progress 2s ease-in-out infinite'
-                  }} />
+                    strokeDashoffset: 264 - (264 * progress / 100)
+                  }} 
+                />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-3xl">🧠</span>
+                <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {Math.round(progress)}%
+                </span>
               </div>
             </div>
             
@@ -372,43 +392,38 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             </p>
           </div>
 
-          {/* Task Skeletons with Progress */}
+          {/* Task Skeletons with Sequential Progress */}
           <div className="space-y-2">
             {[
-              { icon: '📊', label: 'Calculating grade prediction', delay: 0 },
-              { icon: '🎯', label: 'Finding weak spots', delay: 0.8 },
-              { icon: '📝', label: 'Creating study tasks', delay: 1.6 }
-            ].map((step, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: step.delay }}
-                className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}
-              >
-                <span className="text-2xl">{step.icon}</span>
-                <div className="flex-1">
-                  <p className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{step.label}</p>
-                  <div className={`h-1 mt-1.5 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                    <motion.div
-                      className="h-full bg-purple-500 rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: '100%' }}
-                      transition={{ duration: 2, delay: step.delay + 0.2 }}
-                    />
+              { icon: '📊', label: 'Calculating grade prediction', duration: 3000 },
+              { icon: '🎯', label: 'Finding weak spots', duration: 4000 },
+              { icon: '📝', label: 'Creating study tasks', duration: 5000 }
+            ].map((step, i) => {
+              const stepProgress = Math.max(0, Math.min(100, ((progress * 3) - (i * 100))));
+              
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}
+                >
+                  <span className="text-2xl">{step.icon}</span>
+                  <div className="flex-1">
+                    <p className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{step.label}</p>
+                    <div className={`h-1 mt-1.5 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
+                      <div
+                        className="h-full bg-purple-500 rounded-full transition-all duration-300"
+                        style={{ width: `${stepProgress}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
-        
-        <style>{`
-          @keyframes progress {
-            0%, 100% { stroke-dashoffset: 132; }
-            50% { stroke-dashoffset: 0; }
-          }
-        `}</style>
       </div>
     );
   }
@@ -610,7 +625,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               {/* Current Grade + Score + Velocity */}
               <div className="text-center md:text-left mb-4 md:mb-0 md:flex-1">
                 <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">StudyApp Predicted Grade</p>
-                <div className="flex items-baseline justify-center md:justify-start gap-3">
+                <div className="flex flex-col md:flex-row items-center md:items-baseline justify-center md:justify-start gap-2 md:gap-3">
                   <motion.span 
                     className="text-5xl md:text-6xl font-black text-white"
                     animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
@@ -620,11 +635,11 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                   </motion.span>
                   {currentScore && (
                     <motion.span 
-                      className="text-xl md:text-2xl font-bold text-white/90"
+                      className="text-2xl md:text-3xl font-bold text-white/90"
                       animate={gradeJustUpdated ? { scale: [1, 1.15, 1] } : {}}
                       transition={{ duration: 0.5, delay: 0.1 }}
                     >
-                      ({Math.round(currentScore)}%)
+                      {Math.round(currentScore)}%
                     </motion.span>
                   )}
                 </div>

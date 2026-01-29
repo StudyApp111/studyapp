@@ -22,93 +22,91 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Unified progress loader for exam generation
+// Unified progress loader for exam generation - with fun facts
 function ExamGeneratingLoader({ isPractice }) {
   const { isDark } = useTheme();
-  const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentFactIndex, setCurrentFactIndex] = useState(0);
   
-  const steps = isPractice 
-    ? ["Analyzing weak areas", "Creating questions", "Finalizing quiz"]
-    : ["Reading your material", "Building questions", "Calibrating difficulty"];
+  const funFacts = [
+    { text: "Your brain can process images in as little as 13 milliseconds", icon: "🧠" },
+    { text: "Learning is more effective when you take breaks every 25-50 minutes", icon: "⏰" },
+    { text: "Teaching others is one of the best ways to learn something", icon: "👥" },
+    { text: "Your brain uses 20% of your body's energy while only being 2% of its weight", icon: "⚡" },
+    { text: "Sleep helps consolidate memories and improve learning", icon: "💤" },
+    { text: "Walking can boost creative thinking by up to 60%", icon: "🚶" },
+    { text: "The average attention span is about 8 seconds - but deep focus can last hours", icon: "🎯" }
+  ];
   
   useEffect(() => {
-    const totalDuration = isPractice ? 8000 : 15000; // 8s for practice, 15s for diagnostic
-    const startTime = Date.now();
-    
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const newProgress = Math.min((elapsed / totalDuration) * 100, 95); // Cap at 95% until done
-      setProgress(newProgress);
-      
-      // Update current step based on progress
-      const stepIndex = Math.min(Math.floor((newProgress / 100) * steps.length), steps.length - 1);
-      setCurrentStep(stepIndex);
-    }, 50);
-    
-    return () => clearInterval(progressInterval);
-  }, [isPractice, steps.length]);
+    const interval = setInterval(() => {
+      setCurrentFactIndex(prev => (prev + 1) % funFacts.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, []);
   
   return (
-    <div className="flex flex-col items-center justify-center py-10 px-4">
-      {/* Main progress ring */}
-      <div className="relative w-28 h-28 mb-6">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-          <circle 
-            cx="50" cy="50" r="42" 
-            fill="none" 
-            strokeWidth="6" 
-            className={isDark ? 'stroke-slate-700' : 'stroke-slate-200'} 
-          />
-          <circle 
-            cx="50" cy="50" r="42" 
-            fill="none" 
-            strokeWidth="6" 
-            strokeLinecap="round" 
-            className="stroke-purple-500 transition-all duration-200"
-            style={{ 
-              strokeDasharray: '264',
-              strokeDashoffset: 264 - (264 * progress / 100)
-            }} 
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            {Math.round(progress)}%
-          </span>
-        </div>
-      </div>
-      
-      {/* Current step indicator */}
-      <motion.div 
-        key={currentStep}
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-4"
+    <div className="flex flex-col items-center justify-center py-10 px-4 min-h-[400px]">
+      {/* Animated icon with glow */}
+      <motion.div
+        className="relative mb-6"
+        animate={{ 
+          scale: [1, 1.05, 1],
+          rotate: [0, 5, -5, 0]
+        }}
+        transition={{ 
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
       >
-        <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>
-          {steps[currentStep]}
-        </h3>
+        <div className="absolute inset-0 bg-purple-500/30 blur-3xl rounded-full" />
+        <div className="relative w-24 h-24 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl">
+          <span className="text-5xl">✨</span>
+        </div>
       </motion.div>
       
-      {/* Step dots */}
-      <div className="flex items-center gap-2">
-        {steps.map((_, idx) => (
-          <div 
-            key={idx}
-            className={`w-2 h-2 rounded-full transition-all ${
-              idx <= currentStep 
-                ? 'bg-purple-500' 
-                : (isDark ? 'bg-slate-600' : 'bg-slate-300')
-            }`}
+      {/* Title */}
+      <h3 className={`font-bold text-xl mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+        {isPractice ? 'Creating Practice Quiz' : 'Generating Your Exam'}
+      </h3>
+      
+      {/* Fun fact rotator */}
+      <div className="h-16 flex items-center justify-center mb-4">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentFactIndex}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl max-w-md ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}
+          >
+            <span className="text-2xl flex-shrink-0">{funFacts[currentFactIndex].icon}</span>
+            <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+              {funFacts[currentFactIndex].text}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      
+      {/* Loading dots */}
+      <div className="flex items-center gap-1.5">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-2 h-2 rounded-full bg-purple-500"
+            animate={{ 
+              opacity: [0.3, 1, 0.3],
+              scale: [0.8, 1, 0.8]
+            }}
+            transition={{ 
+              duration: 1.5,
+              repeat: Infinity,
+              delay: i * 0.2
+            }}
           />
         ))}
       </div>
-      
-      {/* Subtle time estimate */}
-      <p className={`text-xs mt-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-        {isPractice ? "~5-10 seconds" : "~10-20 seconds"}
-      </p>
     </div>
   );
 }

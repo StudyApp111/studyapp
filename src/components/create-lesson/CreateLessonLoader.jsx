@@ -113,10 +113,10 @@ export default function CreateLessonLoader({ fileName, isComplete, onAnimationCo
           className="text-center mb-8"
         >
           <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
-            Preparing your lesson...
+            Setting up your course...
           </h2>
-          <p className="text-purple-200/70">
-            Building your personalized diagnostic
+          <p className="text-purple-200 text-sm md:text-base">
+            We're building your personalized diagnostic exam
           </p>
         </motion.div>
 
