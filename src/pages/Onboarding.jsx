@@ -9,44 +9,34 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { trackUserSession } from "../components/utils/userTracking";
 
 // Import onboarding components
-import StudyTypeSelector from "../components/onboarding/StudyTypeSelector";
-import UniversityYearSelector from "../components/onboarding/UniversityYearSelector";
-import SchoolSelector from "../components/onboarding/SchoolSelector";
-import CourseNameInput from "../components/onboarding/CourseNameInput";
+import SubjectSelector from "../components/onboarding/SubjectSelector";
+import SchoolInput from "../components/onboarding/SchoolInput";
+import CourseCodeInput from "../components/onboarding/CourseCodeInput";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
-// Question definitions - Streamlined for faster conversion
+// New Quiz-First Question Flow - 3 questions only
 const baseQuestions = [
   {
-    id: "study_type",
-    question: "What brings you here? 👋",
-    type: "study-type",
-    emoji: "🎯",
-    subtitle: "Pick your learning journey"
-  },
-  {
-    id: "university_year",
-    question: "What year are you in?",
-    type: "university-year",
-    emoji: "📅",
-    subtitle: "This helps us personalize your experience",
-    showIf: (answers) => answers.study_type === "university"
+    id: "subject",
+    question: "What subject are you studying?",
+    type: "subject-selector",
+    emoji: "📚",
+    subtitle: "Select from popular subjects or enter your own"
   },
   {
     id: "school",
-    question: "What's your school? 🏫",
-    type: "school-search",
-    emoji: "🎓",
-    subtitle: "Find classmates studying the same thing",
-    showIf: (answers) => ["university", "grad_school", "high_school", "med_school"].includes(answers.study_type)
+    question: "What school do you attend?",
+    type: "school-input",
+    emoji: "🏫",
+    subtitle: "This helps us tailor questions to your curriculum"
   },
   {
-    id: "course_name",
-    question: "Pick your first course 📚",
-    type: "course-name",
+    id: "course_code",
+    question: "What's your course name or code?",
+    type: "course-code",
     emoji: "✏️",
-    subtitle: "We'll show you your predicted grade!"
+    subtitle: "e.g., MATH 101, Calculus I, Introduction to Biology"
   }
 ];
 
@@ -194,63 +184,18 @@ export default function Onboarding() {
     setError("");
 
     try {
-      const user = await base44.auth.me();
-
-      // 1. Create/update learning profile
-      const profileData = {
-        school: answers.school || "",
-        grade: answers.university_year || answers.study_type || "",
-        study_type: answers.study_type
-      };
-
-      let profile;
-      if (user.learning_profile_id) {
-        profile = await base44.entities.LearningProfile.update(user.learning_profile_id, profileData);
-      } else {
-        profile = await base44.entities.LearningProfile.create(profileData);
-        await base44.auth.updateMe({ learning_profile_id: profile.id });
-      }
-
-      // 2. Create a minimal lesson (no materials yet - will be added later in DocumentViewer)
-      const lesson = await base44.entities.Lesson.create({
-        course_name: answers.course_name,
-        status: "created"
+      // Navigate to DiagnosticQuiz page with collected data
+      const params = new URLSearchParams({
+        subject: answers.subject || '',
+        school: answers.school || '',
+        courseCode: answers.course_code || ''
       });
-
-      console.log("✅ Lesson created:", lesson.id);
-
-      // Track first lesson creation
-      base44.analytics.track({
-        eventName: "first_lesson_created",
-        properties: { 
-          lesson_id: lesson.id,
-          course_name: answers.course_name
-        }
-      });
-
-      // 3. Mark onboarding complete
-      await base44.auth.updateMe({ onboarding_completed: true });
-
-      // Track session
-      await trackUserSession();
-
-      // Trigger welcome email
-      base44.functions.invoke('triggerAutomaticEmails', {
-        trigger_type: 'onboarding_completed',
-        user_email: user.email
-      }).catch(() => {});
-
-      // 4. Navigate to predicted grade display with simulated grade
-      // Simulated grades based on course difficulty patterns
-      const simulatedGrades = ['B-', 'C+', 'B', 'C'];
-      const simulatedGrade = simulatedGrades[Math.floor(Math.random() * simulatedGrades.length)];
-      const simulatedScore = simulatedGrade === 'B-' ? '78' : simulatedGrade === 'B' ? '82' : simulatedGrade === 'C+' ? '75' : '72';
-
-      navigate(createPageUrl("PredictedGradeDisplay") + `?lessonId=${lesson.id}&grade=${simulatedGrade}&score=${simulatedScore}`, { replace: true });
+      
+      navigate(createPageUrl("DiagnosticQuiz") + `?${params.toString()}`, { replace: true });
 
     } catch (error) {
-      console.error("Error completing onboarding:", error);
-      setError(error.message || "Failed to complete onboarding. Please try again.");
+      console.error("Error transitioning to diagnostic quiz:", error);
+      setError(error.message || "Failed to proceed. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -276,38 +221,32 @@ export default function Onboarding() {
     if (!currentQuestion) return null;
 
     switch (currentQuestion.type) {
-      case "study-type":
+      case "subject-selector":
         return (
-          <StudyTypeSelector
-            value={answers.study_type}
-            onChange={(val) => handleAnswer("study_type", val)}
+          <SubjectSelector
+            value={answers.subject}
+            onChange={(val) => handleAnswer("subject", val)}
+            onNext={handleNext}
           />
         );
       
-      case "university-year":
+      case "school-input":
         return (
-          <UniversityYearSelector
-            value={answers.university_year}
-            onChange={(val) => handleAnswer("university_year", val)}
-          />
-        );
-      
-      case "school-search":
-        return (
-          <SchoolSelector
+          <SchoolInput
             value={answers.school}
             onChange={(val) => handleAnswer("school", val)}
-            prefetchedData={prefetchedSchoolsRef.current}
+            onNext={handleNext}
+            onBack={handleBack}
           />
         );
       
-      case "course-name":
+      case "course-code":
         return (
-          <CourseNameInput
-            value={answers.course_name}
-            onChange={(val) => handleAnswer("course_name", val)}
-            school={answers.school}
-            year={answers.university_year}
+          <CourseCodeInput
+            value={answers.course_code}
+            onChange={(val) => handleAnswer("course_code", val)}
+            onNext={handleNext}
+            onBack={handleBack}
           />
         );
       
@@ -369,41 +308,15 @@ export default function Onboarding() {
             </div>
           </AnimatePresence>
 
-          <div className="flex justify-between mt-6 pt-5 border-t border-slate-700/50">
-            <Button
-              variant="ghost"
-              onClick={handleBack}
-              disabled={currentStep === 0 || isSubmitting}
-              className="gap-2 text-slate-400 hover:text-white hover:bg-white/10 px-4"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back
-            </Button>
-            <Button
-              onClick={handleNext}
-              disabled={!isCurrentAnswered() || isSubmitting}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold gap-2 px-8 py-3 text-base shadow-xl shadow-purple-500/30 disabled:opacity-40 transition-all hover:scale-[1.02]"
-            >
-              {currentStep === visibleQuestions.length - 1 ? (
-                isSubmitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Creating your lesson...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    Start Learning!
-                  </>
-                )
-              ) : (
-                <>
-                  Continue
-                  <ChevronRight className="w-5 h-5" />
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Navigation is handled by individual components */}
+          {currentStep === visibleQuestions.length - 1 && isSubmitting && (
+            <div className="flex justify-center mt-6 pt-5 border-t border-slate-700/50">
+              <div className="flex items-center gap-2 text-purple-300">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Preparing your quiz...</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer with logout option */}
