@@ -91,8 +91,8 @@ Deno.serve(async (req) => {
 
     console.log('Calling Gemini Flash with retry logic...');
 
-    // Using retry logic for rate limit handling with stable model
-    const resp = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey, {
+    // Using retry logic for rate limit handling
+    const resp = await fetchWithRetry('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' + apiKey, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

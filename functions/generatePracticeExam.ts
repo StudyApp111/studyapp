@@ -139,9 +139,9 @@ ALL question text and answers MUST be readable as plain text without any LaTeX r
       }
     };
 
-    // Use stable gemini-1.5-flash model
-    const modelName = 'gemini-1.5-flash';
-    console.log(`📝 generatePracticeExam: Using model ${modelName}`);
+    // Use gemini-flash-latest with global endpoint for better availability
+    const modelName = 'gemini-flash-latest';
+    console.log(`📝 generatePracticeExam: Using model ${modelName} (global endpoint)`);
     console.log(`📝 Content length: ${contentForExam.length} chars`);
     console.log(`📝 Focus topics: ${(focus_topics || []).join(', ') || 'None'}`);
     console.log(`📝 Target competency: ${target_competency || 'None'}`);
