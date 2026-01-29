@@ -215,125 +215,94 @@ export default function PredictedGradeDisplay() {
           </div>
         </div>
 
-        {/* Why You Might Struggle */}
+        {/* Why You Might Struggle - Compact 2 points */}
         <Card className="bg-slate-800/60 backdrop-blur-xl border-slate-700/50 overflow-hidden">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-3 shadow-lg">
-              <AlertCircle className="h-7 w-7 text-white" />
+          <CardHeader className="text-center pb-3">
+            <div className="mx-auto w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center mb-2 shadow-lg">
+              <AlertCircle className="h-6 w-6 text-white" />
             </div>
-            <CardTitle className="text-xl md:text-2xl text-white">
+            <CardTitle className="text-lg md:text-xl text-white">
               Why {userName} Might Struggle
             </CardTitle>
-            <CardDescription className="text-purple-200/80 text-sm">
-              The stuff that trips up most students in {lesson?.course_name}
-            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 text-center">
+          <CardContent className="space-y-2 text-center">
             {insights.key_insights.map((insight, idx) => (
-              <div key={idx} className="bg-slate-900/40 rounded-xl p-4 border border-orange-500/20">
-                <p className="text-sm md:text-base text-white/90">{insight}</p>
+              <div key={idx} className="bg-slate-900/40 rounded-lg p-3 border border-orange-500/20">
+                <p className="text-xs md:text-sm text-white/90">{insight}</p>
               </div>
             ))}
           </CardContent>
         </Card>
 
-        {/* Focus Topics */}
-        <Card className="bg-slate-800/60 backdrop-blur-xl border-slate-700/50 overflow-hidden">
+        {/* Success Path - BIG AND BOLD */}
+        <Card className="bg-gradient-to-br from-emerald-500/30 to-green-500/30 backdrop-blur-xl border-2 border-emerald-500/60 overflow-hidden shadow-2xl">
           <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
-              <Target className="h-7 w-7 text-white" />
+            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center mb-4 shadow-2xl">
+              <Trophy className="h-10 w-10 text-white" />
             </div>
-            <CardTitle className="text-xl md:text-2xl text-white">
-              Focus On These First, {userName}
-            </CardTitle>
-            <CardDescription className="text-purple-200/80 text-sm">
-              Master these and you'll be ahead of 80% of the class
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap justify-center gap-2">
-              {insights.high_yield_topics.map((topic, idx) => (
-                <Badge key={idx} className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 px-4 py-2 text-sm">
-                  {topic}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Success Path */}
-        <Card className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 backdrop-blur-xl border-emerald-500/40 overflow-hidden">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-14 h-14 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
-              <Trophy className="h-7 w-7 text-white" />
-            </div>
-            <CardTitle className="text-xl md:text-2xl text-white">
+            <CardTitle className="text-3xl md:text-4xl font-black text-white mb-2">
               Do You Want an A+, {userName}?
             </CardTitle>
-            <CardDescription className="text-emerald-200/90 text-sm">
-              Here's exactly what you need to do
-            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 text-center">
+          <CardContent className="space-y-3">
             {insights.success_strategies.map((strategy, idx) => (
-              <div key={idx} className="flex items-start gap-3 bg-slate-900/30 rounded-xl p-4 text-left">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-sm md:text-base text-white/95">{strategy}</span>
+              <div key={idx} className="flex items-center gap-3 bg-slate-900/40 rounded-xl p-4 border border-emerald-500/30">
+                <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-base md:text-lg font-semibold text-white">{strategy}</span>
               </div>
             ))}
           </CardContent>
         </Card>
 
-        {/* What You Get - Visual Grid */}
+        {/* How You Do It - Horizontal Layout */}
         <Card className="bg-slate-800/60 backdrop-blur-xl border-purple-500/40 overflow-hidden">
           <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mb-3 shadow-lg">
-              <Sparkles className="h-7 w-7 text-white" />
-            </div>
-            <CardTitle className="text-xl md:text-2xl text-white">
-              Here's What {userName} Gets
+            <CardTitle className="text-2xl md:text-3xl font-bold text-white mb-1">
+              Here's How You Do It:
             </CardTitle>
             <CardDescription className="text-purple-200/80 text-sm">
-              Your personal AI study coach, built for results
+              StudyApp learns from your mistakes and guides your studying
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                { 
-                  icon: Target, 
-                  title: "Find Your Weak Spots", 
-                  desc: "5-min AI diagnostic pinpoints exactly what you don't know",
-                  color: "from-pink-500 to-rose-600"
-                },
-                { 
-                  icon: Zap, 
-                  title: "Custom Practice", 
-                  desc: "Get questions targeting YOUR specific gaps, not random problems",
-                  color: "from-blue-500 to-indigo-600"
-                },
-                { 
-                  icon: Trophy, 
-                  title: "Know Your Grade Early", 
-                  desc: "See your predicted grade update in real-time as you study",
-                  color: "from-emerald-500 to-teal-600"
-                },
-                { 
-                  icon: TrendingUp, 
-                  title: "Clear Action Plan", 
-                  desc: "No guessing. Just follow the tasks and watch your grade climb",
-                  color: "from-amber-500 to-orange-600"
-                }
-              ].map((item, idx) => (
-                <div key={idx} className="bg-slate-900/40 rounded-xl p-4 border border-slate-700/50 hover:border-purple-500/50 transition-all">
-                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 shadow-md`}>
-                    <item.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <h4 className="text-white font-bold text-sm mb-1">{item.title}</h4>
-                  <p className="text-purple-200/70 text-xs">{item.desc}</p>
+          <CardContent className="space-y-4">
+            {[
+              { 
+                icon: Target, 
+                title: "Find Your Weak Spots", 
+                desc: "AI diagnostic pinpoints what you don't know",
+                color: "from-pink-500 to-rose-600"
+              },
+              { 
+                icon: Zap, 
+                title: "Custom Practice", 
+                desc: "Questions targeting YOUR gaps",
+                color: "from-blue-500 to-indigo-600"
+              },
+              { 
+                icon: Trophy, 
+                title: "Know Your Grade Early", 
+                desc: "Real-time predictions as you study",
+                color: "from-emerald-500 to-teal-600"
+              },
+              { 
+                icon: TrendingUp, 
+                title: "Clear Action Plan", 
+                desc: "Follow tasks, watch grade climb",
+                color: "from-amber-500 to-orange-600"
+              }
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-start gap-4 bg-slate-900/40 rounded-xl p-4 border border-slate-700/50">
+                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center flex-shrink-0 shadow-md`}>
+                  <item.icon className="w-6 h-6 text-white" />
                 </div>
-              ))}
-            </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-white font-bold text-base mb-1">{item.title}</h4>
+                  <p className="text-purple-200/70 text-sm">{item.desc}</p>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
 
