@@ -93,17 +93,32 @@ function LayoutContent({ children, currentPageName }) {
     let cleanup;
     (async () => {
       // Define onboarding flow pages - ONLY these are accessible without auth
+      // Use case-insensitive check for path matching
+      const pathLower = location.pathname.toLowerCase();
       const isOnboardingFlow = 
-        location.pathname.includes("Onboarding") || 
-        location.pathname.includes("DiagnosticQuiz") || 
-        location.pathname.includes("PredictedGradeDisplay");
+        pathLower.includes("onboarding") || 
+        pathLower.includes("diagnosticquiz") || 
+        pathLower.includes("predictedgradedisplay");
 
+      // CRITICAL: If on onboarding flow, do NOT run any auth redirects
+      // Just try to get user for display purposes but don't redirect
+      if (isOnboardingFlow) {
+        try {
+          const currentUser = await base44.auth.me();
+          setUser(currentUser);
+        } catch (error) {
+          // Not authenticated - that's fine for onboarding flow
+        }
+        return; // Don't run any redirect logic
+      }
+
+      // Not on onboarding flow - normal auth check
       try {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
 
         // User is authenticated
-        if (!currentUser.onboarding_completed && !isOnboardingFlow) {
+        if (!currentUser.onboarding_completed) {
           // Authenticated but incomplete onboarding - send to onboarding
           navigate(createPageUrl("Onboarding"), { replace: true });
           return;
@@ -112,12 +127,8 @@ function LayoutContent({ children, currentPageName }) {
         trackUserSession();
         cleanup = trackSessionDuration();
       } catch (error) {
-        // User is NOT authenticated
-        if (!isOnboardingFlow) {
-          // Trying to access protected page - redirect to onboarding
-          navigate(createPageUrl("Onboarding"), { replace: true });
-        }
-        // else: on onboarding flow - allow access
+        // User is NOT authenticated - redirect to onboarding
+        navigate(createPageUrl("Onboarding"), { replace: true });
       }
     })();
 
