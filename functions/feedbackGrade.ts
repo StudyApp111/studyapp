@@ -143,10 +143,25 @@ JSON Output (exact schema):
             }
         };
 
-        if (response_json_schema) {
-            requestBody.generationConfig.responseMimeType = "application/json";
-            requestBody.generationConfig.responseSchema = response_json_schema;
-        }
+        // Always use JSON schema for structured output
+        const feedbackSchema = response_json_schema || {
+            type: "object",
+            properties: {
+                feedback_session_title: { type: "string" },
+                predicted_exam_score_percentage: { type: "string" },
+                prediction_confidence_percentage: { type: "number" },
+                confidence_level: { type: "string" },
+                mastery_gap: { type: "string" },
+                mastery_gap_description: { type: "string" },
+                overall_performance_summary_text: { type: "string" },
+                identified_strengths_list: { type: "array", items: { type: "string" } },
+                key_areas_for_improvement_list: { type: "array", items: { type: "string" } }
+            },
+            required: ["predicted_exam_score_percentage", "prediction_confidence_percentage", "confidence_level"]
+        };
+        
+        requestBody.generationConfig.responseMimeType = "application/json";
+        requestBody.generationConfig.responseSchema = feedbackSchema;
 
         console.log('Calling Gemini API with retry logic...');
         const response = await fetchWithRetry(
@@ -166,24 +181,28 @@ JSON Output (exact schema):
         }
 
         const data = await response.json();
+        console.log('Gemini response candidates:', data.candidates?.length);
+        
         const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (!generatedText) {
-            return Response.json({ error: 'No content generated' }, { status: 500 });
+            console.error('No content in response. Full response:', JSON.stringify(data).substring(0, 500));
+            return Response.json({ error: 'No content generated', debug: data.candidates?.[0] }, { status: 500 });
         }
 
-        if (response_json_schema) {
-            try {
-                const parsed = JSON.parse(generatedText);
-                console.log('=== feedbackGrade Complete ===');
-                return Response.json(parsed);
-            } catch (e) {
-                console.error('JSON parse error:', e.message);
-                return Response.json({ error: 'Failed to parse response' }, { status: 500 });
-            }
-        }
+        console.log('Generated text length:', generatedText.length);
+        console.log('Generated text preview:', generatedText.substring(0, 200));
 
-        return Response.json({ text: generatedText });
+        try {
+            const parsed = JSON.parse(generatedText);
+            console.log('Parsed result - score:', parsed.predicted_exam_score_percentage, 'confidence:', parsed.prediction_confidence_percentage);
+            console.log('=== feedbackGrade Complete ===');
+            return Response.json(parsed);
+        } catch (e) {
+            console.error('JSON parse error:', e.message);
+            console.error('Raw text that failed to parse:', generatedText.substring(0, 300));
+            return Response.json({ error: 'Failed to parse response', raw: generatedText.substring(0, 200) }, { status: 500 });
+        }
 
     } catch (error) {
         console.error('Error:', error.message);

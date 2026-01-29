@@ -11,7 +11,7 @@ const steps = [
   },
   {
     id: "curriculum",
-    title: "Finding your weak spots",
+    title: "Mapping curriculum",
     icon: ListChecks,
     color: "indigo"
   },
@@ -23,9 +23,33 @@ const steps = [
   }
 ];
 
-export default function CreateLessonLoader({ fileName, isComplete, onAnimationComplete }) {
+export default function CreateLessonLoader({ fileName, isComplete, onAnimationComplete, stepStatuses }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
+
+  // Update steps based on actual progress from parent
+  useEffect(() => {
+    if (stepStatuses) {
+      const newCompleted = [];
+      let newCurrent = 0;
+      
+      if (stepStatuses.extracted) {
+        newCompleted.push(0);
+        newCurrent = 1;
+      }
+      if (stepStatuses.compressed) {
+        newCompleted.push(1);
+        newCurrent = 2;
+      }
+      if (stepStatuses.examGenerated) {
+        newCompleted.push(2);
+        newCurrent = 2;
+      }
+      
+      setCompletedSteps(newCompleted);
+      setCurrentStep(newCurrent);
+    }
+  }, [stepStatuses]);
 
   useEffect(() => {
     if (isComplete) {
@@ -33,25 +57,27 @@ export default function CreateLessonLoader({ fileName, isComplete, onAnimationCo
       setCompletedSteps([0, 1, 2]);
       setTimeout(() => {
         onAnimationComplete?.();
-      }, 1000);
+      }, 800);
       return;
     }
 
-    // Animate through steps
-    const timers = [];
-    
-    timers.push(setTimeout(() => {
-      setCompletedSteps([0]);
-      setCurrentStep(1);
-    }, 2000));
+    // Only use timers as fallback if no stepStatuses provided
+    if (!stepStatuses) {
+      const timers = [];
+      
+      timers.push(setTimeout(() => {
+        setCompletedSteps([0]);
+        setCurrentStep(1);
+      }, 3000));
 
-    timers.push(setTimeout(() => {
-      setCompletedSteps([0, 1]);
-      setCurrentStep(2);
-    }, 4000));
+      timers.push(setTimeout(() => {
+        setCompletedSteps([0, 1]);
+        setCurrentStep(2);
+      }, 6000));
 
-    return () => timers.forEach(t => clearTimeout(t));
-  }, [isComplete, onAnimationComplete]);
+      return () => timers.forEach(t => clearTimeout(t));
+    }
+  }, [isComplete, onAnimationComplete, stepStatuses]);
 
   const colorClasses = {
     purple: "from-purple-500 to-purple-600",
@@ -159,13 +185,13 @@ export default function CreateLessonLoader({ fileName, isComplete, onAnimationCo
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-3"
+            className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 flex items-center gap-3 max-w-full overflow-hidden"
           >
-            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
               <FileText className="w-5 h-5 text-purple-400" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white font-medium truncate">{fileName}</p>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <p className="text-white font-medium text-sm break-words" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{fileName}</p>
               <p className="text-slate-400 text-sm">Processing...</p>
             </div>
           </motion.div>
