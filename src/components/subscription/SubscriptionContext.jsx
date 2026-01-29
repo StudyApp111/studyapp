@@ -13,6 +13,7 @@ export function SubscriptionProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState('');
+  const [upgradeCallback, setUpgradeCallback] = useState(null);
 
   useEffect(() => {
     loadUser();
@@ -203,10 +204,13 @@ export function SubscriptionProvider({ children }) {
 
   const incrementAssignmentCount = async () => { /* No-op - hard paywall */ };
 
-  // Trigger upgrade modal
-  const triggerUpgradeModal = (reason) => {
+  // Trigger upgrade modal with optional callback
+  const triggerUpgradeModal = (reason, options = {}) => {
     setUpgradeReason(reason);
     setShowUpgradeModal(true);
+    if (options.onSuccess) {
+      setUpgradeCallback(() => options.onSuccess);
+    }
   };
 
   const value = {
@@ -228,6 +232,8 @@ export function SubscriptionProvider({ children }) {
     showUpgradeModal,
     setShowUpgradeModal,
     upgradeReason,
+    upgradeCallback,
+    setUpgradeCallback,
     FREE_TIER_LIMITS,
     getPromoRemainingDays
   };

@@ -77,7 +77,9 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
       
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: planType,
-        trial: true
+        trial: true,
+        success_url: window.location.href, // Return to current page after payment
+        cancel_url: window.location.href
       });
       
       console.log('Checkout response:', response);
@@ -110,7 +112,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
         setPromoResult({ success: true, message: response.data.message });
         await refreshUser();
         setTimeout(() => {
-          onOpenChange(false);
+          onOpenChange(true); // Pass true to trigger success callback
           setPromoCode('');
           setPromoResult(null);
           setShowPromoInput(false);

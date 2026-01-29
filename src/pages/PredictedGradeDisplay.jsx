@@ -91,8 +91,15 @@ export default function PredictedGradeDisplay() {
     fetchData();
   }, [lessonId, navigate]);
 
-  const handleUnlock = () => {
-    // ALWAYS show upgrade modal as hard paywall - no way around it
+  const handleUnlock = async () => {
+    // Check if already pro
+    if (isPro) {
+      // Already pro, go straight to upload materials
+      navigate(createPageUrl("CreateLesson") + `?lessonId=${lessonId}&courseName=${encodeURIComponent(lesson?.course_name || '')}`);
+      return;
+    }
+    
+    // Show upgrade modal as hard paywall
     triggerUpgradeModal("unlock_study_plan", {
       onSuccess: () => {
         // After successful payment/promo, navigate to CreateLesson with course name

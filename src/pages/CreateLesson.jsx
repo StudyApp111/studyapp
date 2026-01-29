@@ -27,6 +27,13 @@ export default function CreateLesson() {
 
   useEffect(() => {
     loadUserData();
+    
+    // Check for course name from URL (coming from PredictedGradeDisplay)
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseNameParam = urlParams.get('courseName');
+    if (courseNameParam) {
+      setCourseName(decodeURIComponent(courseNameParam));
+    }
   }, []);
 
   const loadUserData = async () => {
