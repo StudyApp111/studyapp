@@ -9,8 +9,8 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack }) {
     const trimmedCode = courseCode.trim();
     if (trimmedCode) {
       onChange(trimmedCode);
-      // Small delay to ensure parent state updates before navigation
-      setTimeout(() => onNext(), 50);
+      // Pass value directly to onNext to avoid race condition
+      onNext(trimmedCode);
     }
   };
 

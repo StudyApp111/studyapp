@@ -160,11 +160,12 @@ export default function Onboarding() {
     return answer !== undefined && answer !== "";
   };
 
-  const handleNext = () => {
+  const handleNext = (valueFromComponent) => {
     if (currentStep < visibleQuestions.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
-      handleSubmit();
+      // Pass the value directly to avoid race condition
+      handleSubmit(valueFromComponent);
     }
   };
 
@@ -183,16 +184,19 @@ export default function Onboarding() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (finalCourseCode) => {
     setIsSubmitting(true);
     setError("");
 
     try {
+      // Use finalCourseCode passed directly from component, or fall back to state
+      const courseCode = finalCourseCode || answers.course_code || '';
+      
       // Navigate to DiagnosticQuiz page with collected data
       const params = new URLSearchParams({
         subject: answers.subject || '',
         school: answers.school || '',
-        courseCode: answers.course_code || ''
+        courseCode: courseCode
       });
       
       navigate(createPageUrl("DiagnosticQuiz") + `?${params.toString()}`, { replace: true });
