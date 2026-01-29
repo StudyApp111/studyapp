@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 
 Deno.serve(async (req) => {
   try {
@@ -12,7 +13,40 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
-    // Use Gemini Flash Latest to generate 3 diagnostic questions
+    const apiKey = Deno.env.get('GEMINIAPIKEY');
+    if (!apiKey) {
+      return Response.json({ error: 'API key not configured' }, { status: 500 });
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.0-flash-exp',
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 8000,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            questions: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  question_text: { type: "string" },
+                  options: { type: "array", items: { type: "string" } },
+                  correct_answer: { type: "string" },
+                  assessed_competencies: { type: "array", items: { type: "string" } }
+                },
+                required: ["question_text", "options", "correct_answer", "assessed_competencies"]
+              }
+            }
+          },
+          required: ["questions"]
+        }
+      }
+    });
+
     const prompt = `You are an expert educational assessment designer. Generate exactly 3 diagnostic questions for a student studying "${courseCode}" (${subject}) at "${school}".
 
 REQUIREMENTS:
@@ -21,6 +55,7 @@ REQUIREMENTS:
 3. Questions should be multiple-choice with 4 options each
 4. Difficulty should range from medium to hard to properly assess understanding
 5. Each question should target a distinct core competency
+6. Use Google Search to find accurate, current information about this course
 
 OUTPUT FORMAT (strict JSON):
 {
@@ -36,36 +71,21 @@ OUTPUT FORMAT (strict JSON):
 
 Generate the 3 questions now.`;
 
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt,
-      model: "gemini-flash-latest",
-      add_context_from_internet: true,
-      temperature: 0.2,
-      max_tokens: 8000,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          questions: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                question_text: { type: "string" },
-                options: { type: "array", items: { type: "string" } },
-                correct_answer: { type: "string" },
-                assessed_competencies: { type: "array", items: { type: "string" } }
-              },
-              required: ["question_text", "options", "correct_answer", "assessed_competencies"]
-            }
-          }
-        },
-        required: ["questions"]
-      }
-    });
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", text);
+      return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
+    }
 
     return Response.json({
       success: true,
-      questions: result.questions || []
+      questions: parsed.questions || []
     });
 
   } catch (error) {

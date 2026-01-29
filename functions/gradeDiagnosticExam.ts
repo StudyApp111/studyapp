@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 
 Deno.serve(async (req) => {
   try {
@@ -10,6 +11,11 @@ Deno.serve(async (req) => {
 
     if (!subject || !school || !courseCode || !questions || !userAnswers) {
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
+    }
+
+    const apiKey = Deno.env.get('GEMINIAPIKEY');
+    if (!apiKey) {
+      return Response.json({ error: 'API key not configured' }, { status: 500 });
     }
 
     // Build grading context
@@ -24,10 +30,32 @@ Deno.serve(async (req) => {
       };
     }).map((q, idx) => `Q${idx + 1}: ${q.question}\nCorrect: ${q.correct_answer}\nUser: ${q.user_answer}\nResult: ${q.is_correct ? '✓' : '✗'}\nCompetencies: ${q.assessed_competencies.join(', ')}`).join('\n\n');
 
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-2.0-flash-exp',
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 8000,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            predicted_grade: { type: "string" },
+            strong_areas: { type: "array", items: { type: "string" } },
+            weak_areas: { type: "array", items: { type: "string" } },
+            estimated_study_time_days: { type: "number" }
+          },
+          required: ["predicted_grade", "strong_areas", "weak_areas", "estimated_study_time_days"]
+        }
+      }
+    });
+
     const prompt = `You are an expert educational grader. A student studying "${courseCode}" (${subject}) at "${school}" has completed a diagnostic assessment.
 
 STUDENT PERFORMANCE:
 ${questionContext}
+
+Use Google Search to understand the typical curriculum for this course and the expected competency levels.
 
 Based on this performance, provide:
 1. Predicted letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D+, D, F)
@@ -45,27 +73,21 @@ OUTPUT FORMAT (strict JSON):
 
 Provide your assessment now.`;
 
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt,
-      model: "gemini-2.0-flash-exp",
-      add_context_from_internet: true,
-      temperature: 0.2,
-      max_tokens: 8000,
-      response_json_schema: {
-        type: "object",
-        properties: {
-          predicted_grade: { type: "string" },
-          strong_areas: { type: "array", items: { type: "string" } },
-          weak_areas: { type: "array", items: { type: "string" } },
-          estimated_study_time_days: { type: "number" }
-        },
-        required: ["predicted_grade", "strong_areas", "weak_areas", "estimated_study_time_days"]
-      }
-    });
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", text);
+      return Response.json({ error: 'Failed to grade exam' }, { status: 500 });
+    }
 
     return Response.json({
       success: true,
-      ...result
+      ...parsed
     });
 
   } catch (error) {
