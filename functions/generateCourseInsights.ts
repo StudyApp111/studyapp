@@ -38,7 +38,7 @@ ${grade ? `Student Year: ${grade}` : ''}
 
 Generate a JSON response with the following structure:
 {
-  "predicted_grade": "B-" (realistic starting grade for average student - choose from: A+, A, A-, B+, B, B-, C+, C, C-, D, F),
+  "predicted_grade": "B-" (realistic starting grade for average student in ${school ? `School: ${school}` : ''} in ${grade ? `Student Year: ${grade}` : ''} taking Course: ${course_name} - choose from: A+, A, A-, B+, B, B-, C+, C, C-, D, F),
   "score_percentage": 78 (numeric score matching the grade),
   "confidence_level": "Medium" (Low/Medium/High),
   "course_difficulty": "Moderate" (Easy/Moderate/Challenging/Very Challenging),
@@ -54,7 +54,7 @@ Generate a JSON response with the following structure:
   "time_commitment": "8-12 hours/week" (realistic estimate)
 }
 
-Be realistic, direct, and super concise. No fluff.`;
+Be realistic based on google searching, direct, and super concise. No fluff.`;
 
     const result = await model.generateContent(prompt);
     const response = result.response;
