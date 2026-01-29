@@ -86,6 +86,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const [gradeJustUpdated, setGradeJustUpdated] = useState(false);
   const [previousGrade, setPreviousGrade] = useState(null);
   const [gradeChange, setGradeChange] = useState(null); // { from, to, scoreDiff }
+  const [generatingProgress, setGeneratingProgress] = useState(0);
   const ctaRef = useRef(null);
 
   const scrollToCTA = () => {
@@ -340,20 +341,25 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const completedTasks = studyPlan?.tasks?.filter(t => t.completed) || [];
   const totalTasks = studyPlan?.tasks?.length || 0;
 
+  // Progress animation for generating state
+  useEffect(() => {
+    if (!isGeneratingPlan) {
+      setGeneratingProgress(0);
+      return;
+    }
+    
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const newProgress = Math.min((elapsed / 12000) * 100, 95);
+      setGeneratingProgress(newProgress);
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, [isGeneratingPlan]);
+
   // Show placeholder while generating study plan
   if (isGeneratingPlan) {
-    const [progress, setProgress] = useState(0);
-    
-    useEffect(() => {
-      const startTime = Date.now();
-      const interval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const newProgress = Math.min((elapsed / 12000) * 100, 95);
-        setProgress(newProgress);
-      }, 100);
-      
-      return () => clearInterval(interval);
-    }, []);
     
     return (
       <div className={`px-3 md:px-6 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
@@ -375,13 +381,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                   className="stroke-purple-500 transition-all duration-300"
                   style={{ 
                     strokeDasharray: '264',
-                    strokeDashoffset: 264 - (264 * progress / 100)
+                    strokeDashoffset: 264 - (264 * generatingProgress / 100)
                   }} 
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  {Math.round(progress)}%
+                  {Math.round(generatingProgress)}%
                 </span>
               </div>
             </div>
@@ -399,7 +405,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               { icon: '🎯', label: 'Finding weak spots', duration: 4000 },
               { icon: '📝', label: 'Creating study tasks', duration: 5000 }
             ].map((step, i) => {
-              const stepProgress = Math.max(0, Math.min(100, ((progress * 3) - (i * 100))));
+              const stepProgress = Math.max(0, Math.min(100, ((generatingProgress * 3) - (i * 100))));
               
               return (
                 <motion.div
