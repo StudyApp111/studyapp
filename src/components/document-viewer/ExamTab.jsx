@@ -22,86 +22,94 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Animated step component for exam generation
-function GeneratingStep({ step, index, totalSteps }) {
+// Unified progress loader for exam generation
+function ExamGeneratingLoader({ isPractice }) {
   const { isDark } = useTheme();
   const [progress, setProgress] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
-  const [isActive, setIsActive] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  
+  const steps = isPractice 
+    ? ["Analyzing weak areas", "Creating questions", "Finalizing quiz"]
+    : ["Reading your material", "Building questions", "Calibrating difficulty"];
   
   useEffect(() => {
-    // Stagger the start of each step
-    const startDelay = index * 2500;
-    const duration = 2200;
+    const totalDuration = isPractice ? 8000 : 15000; // 8s for practice, 15s for diagnostic
+    const startTime = Date.now();
     
-    const startTimer = setTimeout(() => {
-      setIsActive(true);
-      const startTime = Date.now();
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const newProgress = Math.min((elapsed / totalDuration) * 100, 95); // Cap at 95% until done
+      setProgress(newProgress);
       
-      const progressInterval = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const newProgress = Math.min((elapsed / duration) * 100, 100);
-        setProgress(newProgress);
-        
-        if (newProgress >= 100) {
-          clearInterval(progressInterval);
-          setIsComplete(true);
-        }
-      }, 50);
-      
-      return () => clearInterval(progressInterval);
-    }, startDelay);
+      // Update current step based on progress
+      const stepIndex = Math.min(Math.floor((newProgress / 100) * steps.length), steps.length - 1);
+      setCurrentStep(stepIndex);
+    }, 50);
     
-    return () => clearTimeout(startTimer);
-  }, [index]);
+    return () => clearInterval(progressInterval);
+  }, [isPractice, steps.length]);
   
   return (
-    <motion.div
-      initial={{ opacity: 0.5, x: -10 }}
-      animate={{ opacity: isActive ? 1 : 0.5, x: 0 }}
-      className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
-        isComplete 
-          ? (isDark ? 'bg-emerald-500/15' : 'bg-emerald-50')
-          : isActive 
-            ? (isDark ? 'bg-purple-500/15' : 'bg-purple-50')
-            : (isDark ? 'bg-slate-800/30' : 'bg-slate-50')
-      }`}
-    >
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-lg ${
-        isComplete 
-          ? 'bg-emerald-500' 
-          : isActive 
-            ? 'bg-purple-500' 
-            : (isDark ? 'bg-slate-700' : 'bg-slate-200')
-      }`}>
-        {isComplete ? (
-          <Check className="w-4 h-4 text-white" />
-        ) : (
-          <span>{step.icon}</span>
-        )}
+    <div className="flex flex-col items-center justify-center py-10 px-4">
+      {/* Main progress ring */}
+      <div className="relative w-28 h-28 mb-6">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+          <circle 
+            cx="50" cy="50" r="42" 
+            fill="none" 
+            strokeWidth="6" 
+            className={isDark ? 'stroke-slate-700' : 'stroke-slate-200'} 
+          />
+          <circle 
+            cx="50" cy="50" r="42" 
+            fill="none" 
+            strokeWidth="6" 
+            strokeLinecap="round" 
+            className="stroke-purple-500 transition-all duration-200"
+            style={{ 
+              strokeDasharray: '264',
+              strokeDashoffset: 264 - (264 * progress / 100)
+            }} 
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            {Math.round(progress)}%
+          </span>
+        </div>
       </div>
       
-      <div className="flex-1">
-        <p className={`text-sm font-medium ${
-          isComplete 
-            ? (isDark ? 'text-emerald-300' : 'text-emerald-700')
-            : isActive 
-              ? (isDark ? 'text-white' : 'text-slate-900')
-              : (isDark ? 'text-slate-500' : 'text-slate-400')
-        }`}>
-          {step.label}
-        </p>
-        
-        {isActive && !isComplete && (
-          <div className={`h-1 mt-1.5 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
-            <motion.div
-              className="h-full bg-purple-500 rounded-full"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        )}
+      {/* Current step indicator */}
+      <motion.div 
+        key={currentStep}
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-4"
+      >
+        <h3 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          {steps[currentStep]}
+        </h3>
+      </motion.div>
+      
+      {/* Step dots */}
+      <div className="flex items-center gap-2">
+        {steps.map((_, idx) => (
+          <div 
+            key={idx}
+            className={`w-2 h-2 rounded-full transition-all ${
+              idx <= currentStep 
+                ? 'bg-purple-500' 
+                : (isDark ? 'bg-slate-600' : 'bg-slate-300')
+            }`}
+          />
+        ))}
       </div>
-    </motion.div>
+      
+      {/* Subtle time estimate */}
+      <p className={`text-xs mt-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+        {isPractice ? "~5-10 seconds" : "~10-20 seconds"}
+      </p>
+    </div>
   );
 }
 
@@ -1443,37 +1451,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
   }
 
   if (isGenerating) {
-    const isPracticeGeneration = practiceExamGeneratingRef.current;
-    const steps = isPracticeGeneration 
-      ? [
-          { label: "Analyzing weak areas", icon: "🎯" },
-          { label: "Creating questions", icon: "📝" },
-          { label: "Finalizing quiz", icon: "✨" }
-        ]
-      : [
-          { label: "Reading your material", icon: "📖" },
-          { label: "Building question bank", icon: "🧠" },
-          { label: "Calibrating difficulty", icon: "⚖️" },
-          { label: "Preparing exam", icon: "📋" }
-        ];
-
-    return (
-      <div className="flex flex-col items-center justify-center py-8 px-4">
-        <h2 className={`text-lg font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-          {isPracticeGeneration ? "Generating Practice Quiz" : "Creating Your Exam"}
-        </h2>
-        
-        <div className="w-full max-w-xs space-y-3">
-          {steps.map((step, i) => (
-            <GeneratingStep key={i} step={step} index={i} totalSteps={steps.length} />
-          ))}
-        </div>
-        
-        <p className={`text-xs mt-6 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-          {isPracticeGeneration ? "Usually takes 5-10 seconds" : "Usually takes 10-20 seconds"}
-        </p>
-      </div>
-    );
+    return <ExamGeneratingLoader isPractice={practiceExamGeneratingRef.current} />;
   }
 
   if (!exam) return null;
