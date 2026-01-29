@@ -26,14 +26,18 @@ export default function DiagnosticQuiz() {
     const courseCode = searchParams.get('courseCode');
 
     if (!subject || !school || !courseCode) {
-      setError('Missing required information. Please restart onboarding.');
+      // Missing params - redirect back to onboarding
+      setTimeout(() => {
+        navigate(createPageUrl("Onboarding"), { replace: true });
+      }, 2000);
+      setError('Missing required information. Redirecting to onboarding...');
       setIsLoading(false);
       return;
     }
 
     setParams({ subject, school, courseCode });
     generateQuestions(subject, school, courseCode);
-  }, [location.search]);
+  }, [location.search, navigate]);
 
   const generateQuestions = async (subject, school, courseCode) => {
     try {

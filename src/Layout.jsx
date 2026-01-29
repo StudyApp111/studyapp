@@ -92,17 +92,19 @@ function LayoutContent({ children, currentPageName }) {
 
     let cleanup;
     (async () => {
+      // Define onboarding flow pages - ONLY these are accessible without auth
+      const isOnboardingFlow = 
+        location.pathname.includes("Onboarding") || 
+        location.pathname.includes("DiagnosticQuiz") || 
+        location.pathname.includes("PredictedGradeDisplay");
+
       try {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
 
-        // Allow unauthenticated access to onboarding flow pages
-        const isOnboardingFlow = 
-          location.pathname.includes("Onboarding") || 
-          location.pathname.includes("DiagnosticQuiz") || 
-          location.pathname.includes("PredictedGradeDisplay");
-
+        // User is authenticated
         if (!currentUser.onboarding_completed && !isOnboardingFlow) {
+          // Authenticated but incomplete onboarding - send to onboarding
           navigate(createPageUrl("Onboarding"), { replace: true });
           return;
         }
@@ -110,20 +112,17 @@ function LayoutContent({ children, currentPageName }) {
         trackUserSession();
         cleanup = trackSessionDuration();
       } catch (error) {
-        // Allow unauthenticated access to onboarding flow pages
-        const isOnboardingFlow = 
-          location.pathname.includes("Onboarding") || 
-          location.pathname.includes("DiagnosticQuiz") || 
-          location.pathname.includes("PredictedGradeDisplay");
-
+        // User is NOT authenticated
         if (!isOnboardingFlow) {
-          base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+          // Trying to access protected page - redirect to onboarding
+          navigate(createPageUrl("Onboarding"), { replace: true });
         }
+        // else: on onboarding flow - allow access
       }
     })();
 
     return () => cleanup?.();
-  }, []);
+  }, [location.pathname]);
 
 
 

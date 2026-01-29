@@ -128,11 +128,13 @@ export default function Onboarding() {
     try {
       const user = await base44.auth.me();
       if (user && user.onboarding_completed) {
+        // User already completed onboarding - send to home
         navigate(createPageUrl("Home"), { replace: true });
         return;
       }
+      // User authenticated but onboarding incomplete - continue
     } catch {
-      // User not authenticated - that's OK, quiz flow works for unauthenticated users
+      // User not authenticated - that's OK, they can do the quiz then sign up
     }
     setIsLoading(false);
   };

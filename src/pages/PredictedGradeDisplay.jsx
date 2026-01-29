@@ -50,6 +50,13 @@ export default function PredictedGradeDisplay() {
   const [user, setUser] = useState(null);
   const [userName, setUserName] = useState("");
 
+  // Validate required params - redirect if missing
+  useEffect(() => {
+    if (!grade || !subject || !school || !courseCode) {
+      navigate(createPageUrl("Onboarding"), { replace: true });
+    }
+  }, [grade, subject, school, courseCode, navigate]);
+
   useEffect(() => {
     const loadUser = async () => {
       try {
