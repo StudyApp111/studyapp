@@ -38,7 +38,7 @@ Generate the 3 questions now.`;
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt,
-      model: "gemini-2.0-flash-exp",
+      model: "gemini-flash-latest",
       add_context_from_internet: true,
       temperature: 0.2,
       max_tokens: 8000,
