@@ -62,6 +62,7 @@ import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
 import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
+import PredictedGradeDisplay from './pages/PredictedGradeDisplay';
 import __Layout from './Layout.jsx';
 
 
@@ -81,6 +82,7 @@ export const PAGES = {
     "ProfileInformation": ProfileInformation,
     "Settings": Settings,
     "SmartGrader": SmartGrader,
+    "PredictedGradeDisplay": PredictedGradeDisplay,
 }
 
 export const pagesConfig = {

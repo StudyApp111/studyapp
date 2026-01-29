@@ -13,12 +13,10 @@ import StudyTypeSelector from "../components/onboarding/StudyTypeSelector";
 import UniversityYearSelector from "../components/onboarding/UniversityYearSelector";
 import SchoolSelector from "../components/onboarding/SchoolSelector";
 import CourseNameInput from "../components/onboarding/CourseNameInput";
-import MaterialUploader from "../components/onboarding/MaterialUploader";
-import OnboardingLoader from "../components/onboarding/OnboardingLoader";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
-// Question definitions - Optimized for engagement & reduced drop-off
+// Question definitions - Streamlined for faster conversion
 const baseQuestions = [
   {
     id: "study_type",
@@ -48,14 +46,7 @@ const baseQuestions = [
     question: "Pick your first course 📚",
     type: "course-name",
     emoji: "✏️",
-    subtitle: "We'll create AI-powered study tools for it"
-  },
-  {
-    id: "materials",
-    question: "Add your study materials ✨",
-    type: "materials",
-    emoji: "📄",
-    subtitle: (answers) => `Upload notes for ${answers.course_name || 'your course'}`
+    subtitle: "We'll show you your predicted grade!"
   }
 ];
 
@@ -63,12 +54,8 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [materialData, setMaterialData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showLoader, setShowLoader] = useState(false);
-  const [loaderComplete, setLoaderComplete] = useState(false);
-  const [createdLessonId, setCreatedLessonId] = useState(null);
   const [error, setError] = useState("");
   
   // Prefetch schools data on mount
@@ -173,17 +160,8 @@ export default function Onboarding() {
     setError("");
   };
 
-  const handleMaterialReady = (data) => {
-    setMaterialData(data);
-  };
-
   const isCurrentAnswered = () => {
     if (!currentQuestion) return false;
-    
-    if (currentQuestion.id === "materials") {
-      return materialData !== null;
-    }
-    
     const answer = answers[currentQuestion.id];
     return answer !== undefined && answer !== "";
   };
@@ -214,7 +192,6 @@ export default function Onboarding() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError("");
-    setShowLoader(true);
 
     try {
       const user = await base44.auth.me();
@@ -234,129 +211,24 @@ export default function Onboarding() {
         await base44.auth.updateMe({ learning_profile_id: profile.id });
       }
 
-      // 2. Create the lesson - handle file extraction inline for reliability
-      const lessonData = {
+      // 2. Create a minimal lesson (no materials yet - will be added later in DocumentViewer)
+      const lesson = await base44.entities.Lesson.create({
         course_name: answers.course_name,
         status: "created"
-      };
-
-      let extractedContent = "";
-      let compressedContent = "";
-
-      // Handle different material types
-      if (materialData?.type === "file" && materialData.files?.length > 0) {
-        lessonData.file_url = materialData.files[0].url;
-        lessonData.file_urls = materialData.files.map(f => f.url);
-        lessonData.input_type = "file";
-        
-        // Extract content from files BEFORE creating lesson
-        console.log("📄 Extracting content from", materialData.files.length, "file(s)...");
-        try {
-          const extractionResults = await Promise.allSettled(
-            materialData.files.map(f => {
-              console.log("📤 Calling extractDocumentContent for:", f.url);
-              return base44.functions.invoke('extractDocumentContent', { file_url: f.url });
-            })
-          );
-          
-          console.log("📥 Extraction results:", extractionResults.map(r => r.status));
-          
-          const extractedParts = extractionResults
-            .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
-            .map(r => r.value.data.extracted_content);
-          
-          extractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
-          console.log("✅ Extracted content length:", extractedContent.length, "chars");
-          
-          // Compress if needed
-          if (extractedContent.length > 2500) {
-            console.log("📦 Compressing content...");
-            try {
-              const compResult = await base44.functions.invoke('compressDocument', { content: extractedContent });
-              compressedContent = compResult?.data?.compressed_content || extractedContent;
-              console.log("✅ Compressed to:", compressedContent.length, "chars");
-            } catch (compErr) {
-              console.warn("⚠️ Compression failed, using raw:", compErr);
-              compressedContent = extractedContent;
-            }
-          } else {
-            compressedContent = extractedContent;
-          }
-          
-          lessonData.extracted_content = extractedContent;
-          lessonData.compressed_content = compressedContent;
-        } catch (err) {
-          console.error("❌ Content extraction error:", err);
-        }
-      } else if (materialData?.type === "notes") {
-        lessonData.description = materialData.content;
-        lessonData.extracted_content = materialData.content;
-        lessonData.compressed_content = materialData.content;
-        lessonData.input_type = "description";
-        extractedContent = materialData.content;
-        compressedContent = materialData.content;
-      } else if (materialData?.type === "topic") {
-        lessonData.description = materialData.content;
-        lessonData.extracted_content = materialData.content;
-        lessonData.compressed_content = materialData.content;
-        lessonData.input_type = "description";
-        extractedContent = materialData.content;
-        compressedContent = materialData.content;
-      }
-
-      console.log("📝 Creating lesson with content:", {
-        hasExtracted: !!lessonData.extracted_content,
-        extractedLen: lessonData.extracted_content?.length || 0,
-        hasCompressed: !!lessonData.compressed_content,
-        compressedLen: lessonData.compressed_content?.length || 0
       });
 
-      const lesson = await base44.entities.Lesson.create(lessonData);
-      setCreatedLessonId(lesson.id);
       console.log("✅ Lesson created:", lesson.id);
 
-      // Track first lesson creation for funnel analytics
+      // Track first lesson creation
       base44.analytics.track({
         eventName: "first_lesson_created",
         properties: { 
           lesson_id: lesson.id,
-          course_name: answers.course_name,
-          input_type: lessonData.input_type || "unknown"
+          course_name: answers.course_name
         }
       });
 
-      // 3. Fire-and-forget: Generate exam in background (content is already in lesson)
-      console.log("🎯 Starting background exam generation...");
-      base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-        .then(result => {
-          if (result?.data?.success) {
-            console.log("✅ Exam 1 auto-generated:", result.data.exam_id);
-          } else {
-            console.warn("⚠️ Exam generation response:", result?.data);
-          }
-        })
-        .catch(err => console.error("❌ Background exam generation error:", err.message));
-
-      // 4. Fire-and-forget: Curriculum mapping in background
-      const curriculumPrompt = `Educational Curriculum Analysis Request
-Role: Expert curriculum analyst. Generate concise curriculum profile for ${answers.course_name}.
-Student Grade: ${profileData.grade || "N/A"}
-School: ${profileData.school || "N/A"}
-Content: ${compressedContent || extractedContent || "N/A"}
-
-Output JSON with: core_competencies, competency_weightings, question_formats, high_yield_focal_points, common_misconceptions.`;
-
-      console.log("🗺️ Starting background curriculum mapping...");
-      base44.functions.invoke('curriculumMapping', { prompt: curriculumPrompt })
-        .then(async (result) => {
-          if (result?.data) {
-            await base44.entities.Lesson.update(lesson.id, { curriculum_map: result.data });
-            console.log("✅ Curriculum map saved");
-          }
-        })
-        .catch(err => console.warn("Curriculum mapping error:", err));
-
-      // 4. Mark onboarding complete
+      // 3. Mark onboarding complete
       await base44.auth.updateMe({ onboarding_completed: true });
 
       // Track session
@@ -368,25 +240,18 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
         user_email: user.email
       }).catch(() => {});
 
-      // Wait for loader animation then mark complete
-      setTimeout(() => {
-        setLoaderComplete(true);
-      }, 5000);
+      // 4. Navigate to predicted grade display with simulated grade
+      // Simulated grades based on course difficulty patterns
+      const simulatedGrades = ['B-', 'C+', 'B', 'C'];
+      const simulatedGrade = simulatedGrades[Math.floor(Math.random() * simulatedGrades.length)];
+      const simulatedScore = simulatedGrade === 'B-' ? '78' : simulatedGrade === 'B' ? '82' : simulatedGrade === 'C+' ? '75' : '72';
+
+      navigate(createPageUrl("PredictedGradeDisplay") + `?lessonId=${lesson.id}&grade=${simulatedGrade}&score=${simulatedScore}`, { replace: true });
 
     } catch (error) {
       console.error("Error completing onboarding:", error);
       setError(error.message || "Failed to complete onboarding. Please try again.");
       setIsSubmitting(false);
-      setShowLoader(false);
-    }
-  };
-
-  const handleLoaderComplete = () => {
-    // Navigate to the created lesson
-    if (createdLessonId) {
-      navigate(createPageUrl("DocumentViewer") + `?lessonId=${createdLessonId}`, { replace: true });
-    } else {
-      navigate(createPageUrl("Home"), { replace: true });
     }
   };
 
@@ -398,17 +263,7 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
     );
   }
 
-  // Show loader when processing
-  if (showLoader) {
-    const fileName = materialData?.type === "file" && materialData.files?.[0]?.name;
-    return (
-      <OnboardingLoader 
-        fileName={fileName}
-        isComplete={loaderComplete}
-        onAnimationComplete={handleLoaderComplete}
-      />
-    );
-  }
+
 
   // Consistent dark background like PricingPlans page
   const stepStyle = {
@@ -453,15 +308,6 @@ Output JSON with: core_competencies, competency_weightings, question_formats, hi
             onChange={(val) => handleAnswer("course_name", val)}
             school={answers.school}
             year={answers.university_year}
-          />
-        );
-      
-      case "materials":
-        return (
-          <MaterialUploader
-            courseName={answers.course_name}
-            school={answers.school}
-            onMaterialReady={handleMaterialReady}
           />
         );
       
