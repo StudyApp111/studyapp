@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 const TASK_TYPES = [
   { 
@@ -43,6 +44,7 @@ export default function PracticeTopicsPanel({
   onCreateTask 
 }) {
   const { isDark } = useTheme();
+  const { canDoTask, triggerUpgradeModal } = useSubscription();
   const [extractedTopics, setExtractedTopics] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -140,7 +142,14 @@ Return ONLY a JSON array with this exact format:
     }
   };
 
-  const handleTypeSelect = (type) => {
+  const handleTypeSelect = async (type) => {
+    // PAYWALL CHECK - user must be pro to create/start tasks
+    const taskCheck = await canDoTask();
+    if (!taskCheck.allowed) {
+      triggerUpgradeModal('tasks');
+      return;
+    }
+    
     onCreateTask({
       topic: selectedTopic,
       taskType: type.id,

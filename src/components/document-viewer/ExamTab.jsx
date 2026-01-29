@@ -183,6 +183,20 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         return;
       }
       
+      // Check if there's already an incomplete practice exam for this lesson we can resume
+      const existingPracticeExams = (exams || []).filter(e => 
+        e.exam_type === 'practice' && !e.completed
+      );
+      
+      if (existingPracticeExams.length > 0) {
+        console.log('📋 Found existing incomplete practice exam, loading instead of generating');
+        const examToResume = existingPracticeExams[0];
+        setExam(examToResume);
+        setCurrentQuestion(0);
+        hasAutoSelectedRef.current = true;
+        return;
+      }
+      
       console.log('🎯 Received practice exam generation request from study plan');
 
       // Clear any existing exam view state FIRST before generating
@@ -222,7 +236,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
 
     window.addEventListener('generatePracticeExamFromTask', handleGeneratePracticeExam);
     return () => window.removeEventListener('generatePracticeExamFromTask', handleGeneratePracticeExam);
-  }, [lesson?.id]);
+  }, [lesson?.id, exams]);
 
   useEffect(() => {
     if (!lesson?.id || exams === undefined || selectedExamNumber || hasAutoSelectedRef.current) return;

@@ -230,8 +230,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const handleTaskClick = async (task) => {
     const isComplete = task.completed || (task.target_count > 0 && (task.completed_count || 0) >= task.target_count);
     
-    // For incomplete tasks, check if user has tasks remaining (except practice_exam which has its own tracking)
-    if (!isComplete && task.task_type !== 'practice_exam') {
+    // PAYWALL CHECK FIRST - before ANY task action (except viewing completed)
+    if (!isComplete) {
       const taskCheck = await canDoTask();
       if (!taskCheck.allowed) {
         triggerUpgradeModal('tasks');
@@ -631,7 +631,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               {/* Current Grade + Score + Velocity */}
               <div className="text-center md:text-left mb-4 md:mb-0 md:flex-1">
                 <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">StudyApp Predicted Grade</p>
-                <div className="flex flex-col md:flex-row items-center md:items-baseline justify-center md:justify-start gap-2 md:gap-3">
+                <div className="flex items-center justify-center md:justify-start gap-3">
                   <motion.span 
                     className="text-5xl md:text-6xl font-black text-white"
                     animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
@@ -640,13 +640,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                     {currentGrade}
                   </motion.span>
                   {currentScore && (
-                    <motion.span 
-                      className="text-2xl md:text-3xl font-bold text-white/90"
-                      animate={gradeJustUpdated ? { scale: [1, 1.15, 1] } : {}}
+                    <motion.div
+                      className="flex flex-col"
+                      animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
                       transition={{ duration: 0.5, delay: 0.1 }}
                     >
-                      {Math.round(currentScore)}%
-                    </motion.span>
+                      <span className="text-3xl md:text-4xl font-black text-white">
+                        {Math.round(currentScore)}%
+                      </span>
+                    </motion.div>
                   )}
                 </div>
                 
