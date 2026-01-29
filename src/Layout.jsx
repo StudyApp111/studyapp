@@ -117,23 +117,21 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-  // ROBUST navigation visibility logic - only hide during actual onboarding
+  // Navigation visibility - CRITICAL: Hide on onboarding pages regardless of onboarding_completed status
   const currentPath = location.pathname.replace(/\/$/, '').toLowerCase();
   const onboardingPath = createPageUrl("Onboarding").replace(/\/$/, '').toLowerCase();
   const predictedGradePath = createPageUrl("PredictedGradeDisplay").replace(/\/$/, '').toLowerCase();
+  
   const isOnboardingPage = currentPath === onboardingPath || currentPageName === "Onboarding";
   const isPredictedGradePage = currentPath === predictedGradePath || currentPageName === "PredictedGradeDisplay" || location.pathname.includes("PredictedGradeDisplay");
   
   const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname.includes("DocumentViewer");
   const isHomePage = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
 
-  // Show navigation if: user has completed onboarding OR user exists (even if onboarding_completed is undefined/null)
-  // Only hide navigation if: we're actively on the onboarding page OR on predicted grade display page (treat as onboarding)
   const userIsAuthenticated = !!user;
-  const userCompletedOnboarding = user?.onboarding_completed === true;
 
-  // Navigation shows for all authenticated users EXCEPT when on onboarding page or predicted grade page (both are onboarding flow)
-  const showNavigation = userIsAuthenticated && !isOnboardingPage && !isPredictedGradePage && userCompletedOnboarding;
+  // ALWAYS hide navigation on onboarding pages (Onboarding, PredictedGradeDisplay) - no exceptions
+  const showNavigation = userIsAuthenticated && !isOnboardingPage && !isPredictedGradePage;
   const showSidebar = showNavigation;
   
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
