@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-flash-lite-latest',
       generationConfig: {
         temperature: 0.7,
         responseMimeType: "application/json"
