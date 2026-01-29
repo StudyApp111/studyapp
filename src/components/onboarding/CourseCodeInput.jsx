@@ -6,9 +6,11 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack }) {
   const [courseCode, setCourseCode] = useState(value || '');
 
   const handleNext = () => {
-    if (courseCode.trim()) {
-      onChange(courseCode.trim());
-      onNext();
+    const trimmedCode = courseCode.trim();
+    if (trimmedCode) {
+      onChange(trimmedCode);
+      // Small delay to ensure parent state updates before navigation
+      setTimeout(() => onNext(), 50);
     }
   };
 
