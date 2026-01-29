@@ -127,11 +127,13 @@ export default function Onboarding() {
   const checkExistingProfile = async () => {
     try {
       const user = await base44.auth.me();
-      if (user.onboarding_completed) {
+      if (user && user.onboarding_completed) {
         navigate(createPageUrl("Home"), { replace: true });
         return;
       }
-    } catch {}
+    } catch {
+      // User not authenticated - that's OK, quiz flow works for unauthenticated users
+    }
     setIsLoading(false);
   };
 

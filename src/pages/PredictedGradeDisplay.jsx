@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { base44 } from "@/api/base44Client";
+import { trackUserSession } from "@/components/utils/userTracking";
 
 const getGradeColor = (grade) => {
   if (!grade || grade === '—') return 'from-slate-500 to-slate-600';
@@ -72,12 +73,43 @@ export default function PredictedGradeDisplay() {
   const handleGetStudyPlan = async () => {
     // First check if user is authenticated
     if (!user) {
-      // Redirect to login, then back here after auth
+      // Store diagnostic data in sessionStorage for post-auth redirect
+      sessionStorage.setItem('onboarding_course', courseCode || '');
+      sessionStorage.setItem('onboarding_subject', subject || '');
+      sessionStorage.setItem('onboarding_school', school || '');
+      
+      // Redirect to login - after auth, user lands back on this page
       base44.auth.redirectToLogin(location.pathname + location.search);
       return;
     }
     
-    // User is authenticated - show upgrade modal (hard paywall)
+    // User is authenticated - complete onboarding then show upgrade modal
+    try {
+      // Create/update learning profile
+      const profileData = {
+        school: school || '',
+        study_type: 'university'
+      };
+      
+      let profile;
+      if (user.learning_profile_id) {
+        profile = await base44.entities.LearningProfile.update(user.learning_profile_id, profileData);
+      } else {
+        profile = await base44.entities.LearningProfile.create(profileData);
+        await base44.auth.updateMe({ learning_profile_id: profile.id });
+      }
+      
+      // Mark onboarding complete
+      await base44.auth.updateMe({ onboarding_completed: true });
+      
+      // Track session
+      await trackUserSession();
+      
+    } catch (err) {
+      console.error('Error completing onboarding:', err);
+    }
+    
+    // Show upgrade modal (hard paywall)
     triggerUpgradeModal("unlock_study_plan", {
       onSuccess: () => {
         // After successful payment/promo, navigate to CreateLesson with course name pre-filled

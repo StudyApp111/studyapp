@@ -89,25 +89,39 @@ function LayoutContent({ children, currentPageName }) {
   React.useEffect(() => {
     // Initialize TikTok Pixel
     initTikTokPixel();
-    
+
     let cleanup;
     (async () => {
       try {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
-        
-        if (!currentUser.onboarding_completed && location.pathname !== createPageUrl("Onboarding") && !location.pathname.includes("PredictedGradeDisplay")) {
+
+        // Allow unauthenticated access to onboarding flow pages
+        const isOnboardingFlow = 
+          location.pathname.includes("Onboarding") || 
+          location.pathname.includes("DiagnosticQuiz") || 
+          location.pathname.includes("PredictedGradeDisplay");
+
+        if (!currentUser.onboarding_completed && !isOnboardingFlow) {
           navigate(createPageUrl("Onboarding"), { replace: true });
           return;
         }
-        
+
         trackUserSession();
         cleanup = trackSessionDuration();
       } catch (error) {
-        base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+        // Allow unauthenticated access to onboarding flow pages
+        const isOnboardingFlow = 
+          location.pathname.includes("Onboarding") || 
+          location.pathname.includes("DiagnosticQuiz") || 
+          location.pathname.includes("PredictedGradeDisplay");
+
+        if (!isOnboardingFlow) {
+          base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+        }
       }
     })();
-    
+
     return () => cleanup?.();
   }, []);
 
