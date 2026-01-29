@@ -95,18 +95,21 @@ export default function PricingPlans() {
     setLoading(true);
     setCheckoutError(null);
     try {
+      const planType = isYearly ? 'yearly' : 'monthly';
+      console.log('Starting checkout with plan_type:', planType, 'isYearly:', isYearly);
+      
       // PricingPlans page = direct payment, NO trial
       const response = await base44.functions.invoke('createCheckoutSession', {
-        plan_type: isYearly ? 'yearly' : 'monthly',
+        plan_type: planType,
         trial: false,
-        success_url: `${window.location.origin}${createPageUrl("PricingPlans")}?success=true&plan=${isYearly ? 'yearly' : 'monthly'}`,
+        success_url: `${window.location.origin}${createPageUrl("PricingPlans")}?success=true&plan=${planType}`,
         cancel_url: `${window.location.origin}${createPageUrl("PricingPlans")}?canceled=true`
       });
 
       console.log('Checkout response:', response);
 
-      if (response.data?.checkout_url) {
-        window.location.href = response.data.checkout_url;
+      if (response.data?.checkout_url || response.data?.url) {
+        window.location.href = response.data.checkout_url || response.data.url;
       } else if (response.data?.error) {
         console.error('Checkout error details:', response.data);
         setCheckoutError(`${response.data.error}${response.data.details ? ` (${response.data.details})` : ''}`);

@@ -72,13 +72,21 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
   const handleStartTrial = async () => {
     setCheckoutLoading(true);
     try {
+      const planType = isYearly ? 'yearly' : 'monthly';
+      console.log('Starting checkout with plan_type:', planType);
+      
       const response = await base44.functions.invoke('createCheckoutSession', {
-        plan_type: isYearly ? 'yearly' : 'monthly',
+        plan_type: planType,
         trial: true
       });
       
+      console.log('Checkout response:', response);
+      
       if (response.data?.url || response.data?.checkout_url) {
         window.location.href = response.data.url || response.data.checkout_url;
+      } else if (response.data?.error) {
+        console.error('Checkout error:', response.data.error, response.data.details);
+        alert(`Error: ${response.data.error}${response.data.details ? ` (${response.data.details})` : ''}`);
       }
     } catch (error) {
       console.error('Checkout error:', error);
