@@ -384,8 +384,7 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.5,
-        maxOutputTokens: 16000,
-        responseMimeType: "application/json"
+        maxOutputTokens: 16000
       }
     });
 

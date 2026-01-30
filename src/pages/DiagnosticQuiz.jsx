@@ -560,7 +560,7 @@ export default function DiagnosticQuiz() {
                 }}
                 exit={{ opacity: 0, scale: 0.95, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className={`w-full max-w-2xl bg-slate-800/90 backdrop-blur-xl rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-500/10 overflow-hidden ${showWrongPulse ? 'ring-2 ring-red-400/60' : ''}`}
+                className={`w-full max-w-2xl bg-black backdrop-blur-xl rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-500/10 overflow-hidden ${showWrongPulse ? 'ring-2 ring-red-400/60' : ''}`}
               >
                 {/* Wrong answer flash overlay */}
                 <AnimatePresence>
@@ -574,9 +574,9 @@ export default function DiagnosticQuiz() {
                   )}
                 </AnimatePresence>
 
-                {/* Purple Gradient Header with Timer and Metadata */}
-                <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 p-4 md:p-5">
-                  <div className="flex items-center justify-between mb-3">
+                {/* Header with Timer and Difficulty */}
+                <div className="bg-black p-4 md:p-5">
+                  <div className="flex items-center justify-between">
                     {/* Timer */}
                     <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
                       <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -588,36 +588,30 @@ export default function DiagnosticQuiz() {
                       </span>
                     </div>
                     
-                    {/* Question Type */}
-                    <Badge className="text-xs px-2.5 py-1 bg-white/15 text-white border-white/30">
-                      {(currentQuestion.question_type || 'Multiple Choice').replace(/_/g, ' ')}
-                    </Badge>
-                  </div>
-                  
-                  {/* Difficulty and Competencies */}
-                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Difficulty - Color coded */}
                     {currentQuestion.difficulty_index && (
-                      <Badge className="text-xs px-2.5 py-1 bg-amber-500/30 text-amber-100 border-amber-400/30 font-medium">
+                      <Badge className={`text-xs px-2.5 py-1 font-medium ${
+                        currentQuestion.difficulty_index.toLowerCase().includes('easy') 
+                          ? 'bg-emerald-500/30 text-emerald-100 border-emerald-400/30'
+                          : currentQuestion.difficulty_index.toLowerCase().includes('moderate') || currentQuestion.difficulty_index.toLowerCase().includes('medium')
+                            ? 'bg-amber-500/30 text-amber-100 border-amber-400/30'
+                            : 'bg-red-500/30 text-red-100 border-red-400/30'
+                      }`}>
                         {currentQuestion.difficulty_index}
                       </Badge>
                     )}
-                    {currentQuestion.assessed_competencies?.slice(0, 2).map((comp, idx) => (
-                      <Badge key={idx} className="text-xs px-2.5 py-1 bg-emerald-500/30 text-emerald-100 border-emerald-400/30">
-                        {comp}
-                      </Badge>
-                    ))}
                   </div>
                 </div>
 
                 {/* Question Text */}
-                <div className="p-4 md:p-6 border-b border-white/10">
+                <div className="p-4 md:p-6 border-b border-white/10 bg-black">
                   <MathText className="text-base md:text-lg font-semibold text-white leading-relaxed">
                     {currentQuestion.question_text}
                   </MathText>
                 </div>
 
                 {/* Options */}
-                <div className="p-4 md:p-6 space-y-2 md:space-y-3">
+                <div className="p-4 md:p-6 space-y-2 md:space-y-3 bg-black">
                   {renderInput()}
                 </div>
 
@@ -696,12 +690,12 @@ export default function DiagnosticQuiz() {
                 )}
 
                 {/* Navigation Footer */}
-                <div className="p-4 md:p-6 border-t border-white/10 flex justify-end">
+                <div className="p-4 md:p-6 border-t border-white/10 bg-black">
                   {isLastQuestion ? (
                     <Button
                       onClick={handleSubmit}
                       disabled={!isAnswered}
-                      className="h-11 md:h-12 px-6 md:px-8 text-sm md:text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 shadow-lg shadow-purple-500/30"
+                      className="w-full h-12 md:h-14 text-base md:text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 shadow-lg shadow-purple-500/30"
                     >
                       Submit Quiz
                     </Button>
@@ -709,7 +703,7 @@ export default function DiagnosticQuiz() {
                     <Button
                       onClick={handleNext}
                       disabled={!isAnswered}
-                      className="h-11 md:h-12 px-6 md:px-8 text-sm md:text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 shadow-lg shadow-purple-500/30"
+                      className="w-full h-12 md:h-14 text-base md:text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 shadow-lg shadow-purple-500/30"
                     >
                       Next
                       <ChevronRight className="w-5 h-5 ml-1" />
