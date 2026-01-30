@@ -169,15 +169,16 @@ export default function DiagnosticQuiz() {
     }
   };
 
-  // Timer effect
+  // Timer effect - derive isAnswered from state directly
   useEffect(() => {
-    if (!isAnswered) {
+    const currentIsAnswered = !!answeredQuestions[currentQuestionIndex];
+    if (!currentIsAnswered) {
       const timer = setInterval(() => {
         setElapsedTime(Math.floor((Date.now() - questionStartTime) / 1000));
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [isAnswered, questionStartTime]);
+  }, [answeredQuestions, currentQuestionIndex, questionStartTime]);
 
   const handleSubmit = async () => {
     if (Object.keys(answeredQuestions).length !== questions.length) {
