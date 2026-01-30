@@ -40,7 +40,6 @@ export default function PredictedGradeDisplay() {
   const strongAreas = queryParams.get("strongAreas");
   const weakAreas = queryParams.get("weakAreas");
   const studyDays = queryParams.get("studyDays");
-  const subject = queryParams.get("subject");
   const school = queryParams.get("school");
   const courseCode = queryParams.get("courseCode");
   
@@ -52,10 +51,10 @@ export default function PredictedGradeDisplay() {
 
   // Validate required params - redirect if missing
   useEffect(() => {
-    if (!grade || !subject || !school || !courseCode) {
+    if (!grade || !school || !courseCode) {
       navigate(createPageUrl("Onboarding"), { replace: true });
     }
-  }, [grade, subject, school, courseCode, navigate]);
+  }, [grade, school, courseCode, navigate]);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -81,9 +80,8 @@ export default function PredictedGradeDisplay() {
     // First check if user is authenticated
     if (!user) {
       // Store diagnostic data in sessionStorage for post-auth redirect
-      sessionStorage.setItem('onboarding_course', courseCode || '');
-      sessionStorage.setItem('onboarding_subject', subject || '');
-      sessionStorage.setItem('onboarding_school', school || '');
+            sessionStorage.setItem('onboarding_course', courseCode || '');
+            sessionStorage.setItem('onboarding_school', school || '');
       
       // Redirect to login - after auth, user lands back on this page
       base44.auth.redirectToLogin(location.pathname + location.search);
@@ -193,7 +191,7 @@ export default function PredictedGradeDisplay() {
             {userName}'s Report Card
           </h2>
           <p className="text-purple-200/80 text-sm md:text-base">
-            {courseCode} • {subject}
+            {courseCode} • {school}
           </p>
         </div>
 

@@ -30,15 +30,13 @@ Deno.serve(async (req) => {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-flash-latest'
+      model: 'gemini-2.0-flash'
     });
 
-    const prompt = `You are an expert educational grader. A student studying "${courseCode}" (${subject}) at "${school}" has completed a diagnostic assessment.
+    const prompt = `You are an expert educational grader. A student studying "${courseCode}" at "${school}" has completed a diagnostic assessment.
 
 STUDENT PERFORMANCE:
 ${questionContext}
-
-Use Google Search to understand the typical curriculum for this course and the expected competency levels.
 
 Based on this performance, provide:
 1. Predicted letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D+, D, F)
@@ -46,11 +44,11 @@ Based on this performance, provide:
 3. Weak areas (what they need to improve)
 4. Estimated study time in days to reach A+ (realistic estimate)
 
-OUTPUT FORMAT (strict JSON):
+You MUST respond with ONLY valid JSON in this exact format (no markdown, no explanation):
 {
   "predicted_grade": "B-",
-  "strong_areas": ["Basic concepts (Q1 correct)", "Problem-solving (Q2 correct)"],
-  "weak_areas": ["Advanced calculus (Q3 incorrect)"],
+  "strong_areas": ["Basic concepts", "Problem-solving"],
+  "weak_areas": ["Advanced topics"],
   "estimated_study_time_days": 14
 }
 
@@ -58,32 +56,30 @@ Provide your assessment now.`;
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      tools: [{
-        googleSearch: {}
-      }],
       generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 8000,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "object",
-          properties: {
-            predicted_grade: { type: "string" },
-            strong_areas: { type: "array", items: { type: "string" } },
-            weak_areas: { type: "array", items: { type: "string" } },
-            estimated_study_time_days: { type: "number" }
-          },
-          required: ["predicted_grade", "strong_areas", "weak_areas", "estimated_study_time_days"]
-        }
+        temperature: 0.3,
+        maxOutputTokens: 2000
       }
     });
 
     const response = result.response;
     const text = response.text();
     
+    // Clean up the response - remove markdown code blocks if present
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.slice(7);
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.slice(3);
+    }
+    if (cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.slice(0, -3);
+    }
+    cleanedText = cleanedText.trim();
+    
     let parsed;
     try {
-      parsed = JSON.parse(text);
+      parsed = JSON.parse(cleanedText);
     } catch (parseError) {
       console.error("Failed to parse AI response:", text);
       return Response.json({ error: 'Failed to grade exam' }, { status: 500 });
