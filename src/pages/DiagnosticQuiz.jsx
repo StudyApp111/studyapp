@@ -219,18 +219,32 @@ export default function DiagnosticQuiz() {
         school: params.school,
         courseCode: params.courseCode,
         questions,
-        userAnswers: formattedAnswers
+        userAnswers: formattedAnswers,
+        studentName: params.name
       });
 
       if (result.data?.success) {
+        // Pass full report data to PredictedGradeDisplay
+        const reportData = {
+          predicted_grade: result.data.predicted_grade,
+          predicted_percentage: result.data.predicted_percentage,
+          confidence_level: result.data.confidence_level,
+          strong_areas: result.data.strong_areas,
+          weak_areas_detailed: result.data.weak_areas_detailed,
+          preview_question: result.data.preview_question,
+          estimated_study_time_days: result.data.estimated_study_time_days,
+          study_intensity: result.data.study_intensity,
+          grade_trajectory: result.data.grade_trajectory,
+          personalized_message: result.data.personalized_message,
+          urgency_message: result.data.urgency_message,
+          top_priority_action: result.data.top_priority_action
+        };
+
         const queryParams = new URLSearchParams({
           name: params.name || '',
-          grade: result.data.predicted_grade,
-          strongAreas: JSON.stringify(result.data.strong_areas || []),
-          weakAreas: JSON.stringify(result.data.weak_areas || []),
-          studyDays: result.data.estimated_study_time_days || '14',
           school: params.school,
-          courseCode: params.courseCode
+          courseCode: params.courseCode,
+          reportData: encodeURIComponent(JSON.stringify(reportData))
         });
 
         navigate(createPageUrl('PredictedGradeDisplay') + `?${queryParams.toString()}`, { replace: true });
