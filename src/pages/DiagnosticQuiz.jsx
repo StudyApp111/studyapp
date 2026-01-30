@@ -180,6 +180,32 @@ export default function DiagnosticQuiz() {
     }
   }, [answeredQuestions, currentQuestionIndex, questionStartTime]);
 
+  // Auto-submit for fill-blank and short-answer after typing
+  useEffect(() => {
+    const currentQuestion = questions[currentQuestionIndex];
+    if (!currentQuestion) return;
+    
+    const questionType = getQuestionType(currentQuestion);
+    const currentIsAnswered = !!answeredQuestions[currentQuestionIndex];
+    
+    if ((questionType === 'fillblank' || questionType === 'shortanswer') && !currentIsAnswered) {
+      const answer = userAnswers[currentQuestionIndex];
+      if (answer?.trim()) {
+        const timeout = setTimeout(() => {
+          if (questionType === 'fillblank') {
+            handleAnswerSelect(answer);
+          } else {
+            setAnsweredQuestions(prev => ({
+              ...prev,
+              [currentQuestionIndex]: { answer, isCorrect: null }
+            }));
+          }
+        }, 1500);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [userAnswers, currentQuestionIndex, answeredQuestions, questions]);
+
   const handleSubmit = async () => {
     if (Object.keys(answeredQuestions).length !== questions.length) {
       setError('Please answer all questions before submitting.');
