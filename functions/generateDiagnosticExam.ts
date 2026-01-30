@@ -109,7 +109,7 @@ No extra text.
   ]
 }
 
-Generate the 3 questions now.`;
+Generate the 5 questions now.`;
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
