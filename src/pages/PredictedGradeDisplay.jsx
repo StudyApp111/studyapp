@@ -119,7 +119,7 @@ export default function PredictedGradeDisplay() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 md:px-8 pt-8 space-y-8">
+      <div className="relative z-10 w-full max-w-3xl mx-auto px-4 md:px-8 pt-8 space-y-8">
         {/* Logo */}
         <div className="text-center mb-4">
           <h1 className="text-3xl md:text-4xl font-black">
@@ -165,22 +165,22 @@ export default function PredictedGradeDisplay() {
 
         {/* Biggest Opportunity Section */}
         {weakAreasDetailed.length > 0 && previewQuestion.topic && (
-          <div className="relative overflow-hidden rounded-2xl bg-black border-2 border-amber-500/60 p-6 md:p-8 shadow-2xl">
+          <div className="relative overflow-hidden rounded-2xl bg-black border-2 border-amber-500/60 p-4 sm:p-6 md:p-8 shadow-2xl w-full">
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl" />
             
             <div className="relative space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Target className="h-6 w-6 text-white" />
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <Target className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
-                <h3 className="text-2xl md:text-3xl font-black text-white">
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white break-words">
                   Your Biggest Opportunity
                 </h3>
               </div>
 
               <div className="space-y-2">
-                <p className="text-xl font-bold text-amber-400">{previewQuestion.topic}</p>
-                <p className="text-white/80">
+                <p className="text-lg sm:text-xl font-bold text-amber-400 break-words">{previewQuestion.topic}</p>
+                <p className="text-white/80 text-sm sm:text-base break-words">
                   This topic alone is costing you <span className="font-bold text-red-400">{weakAreasDetailed[0]?.grade_impact}</span> on your exam.
                 </p>
               </div>
@@ -188,21 +188,20 @@ export default function PredictedGradeDisplay() {
               <p className="text-purple-300 text-sm">Here's a sample question you need to master:</p>
 
               {/* Preview Question */}
-              <div className="bg-slate-900/80 rounded-xl p-5 border border-purple-500/30">
+              <div className="bg-slate-900/80 rounded-xl p-4 sm:p-5 border border-purple-500/30 w-full">
                 <p className="text-xs text-purple-400 uppercase tracking-wider mb-2">Question:</p>
-                <p className="text-white font-medium leading-relaxed">{previewQuestion.question_text}</p>
+                <p className="text-white font-medium leading-relaxed text-sm sm:text-base break-words">{previewQuestion.question_text}</p>
               </div>
 
               {/* Blurred Answer Section */}
-              <div className="relative bg-slate-900/80 rounded-xl p-5 border border-slate-700 overflow-hidden">
+              <div className="relative bg-slate-900/80 rounded-xl p-4 sm:p-5 border border-slate-700 overflow-hidden w-full min-h-[120px]">
                 <p className="text-xs text-emerald-400 uppercase tracking-wider mb-2">Answer:</p>
-                <p className="text-white/90 leading-relaxed">{answerPreview}</p>
+                <p className="text-white/90 leading-relaxed text-sm sm:text-base break-words blur-[3px]">{previewQuestion.correct_answer || ''}</p>
                 
-                {/* Blur overlay */}
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent flex items-end justify-center pb-4">
-                  <div className="flex items-center gap-2 text-purple-400">
-                    <Lock className="w-4 h-4" />
-                    <span className="text-sm font-medium">Continue reading blurred/locked</span>
+                {/* Blur overlay with lock icon only */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-slate-900/30 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-purple-600/80 rounded-full flex items-center justify-center shadow-lg">
+                    <Lock className="w-6 h-6 text-white" />
                   </div>
                 </div>
               </div>
@@ -219,13 +218,13 @@ export default function PredictedGradeDisplay() {
         )}
 
         {/* Unlock CTA Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-6 md:p-8 shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-4 sm:p-6 md:p-8 shadow-2xl w-full">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
           
           <div className="relative text-center space-y-5">
-            <div className="flex items-center justify-center gap-2">
-              <Lock className="w-6 h-6 text-white" />
-              <h3 className="text-2xl md:text-3xl font-black text-white">
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white text-center break-words">
                 Want to See the Full Answer?
               </h3>
             </div>
@@ -273,7 +272,7 @@ export default function PredictedGradeDisplay() {
 
           {/* Strong Areas */}
           {strongAreas.length > 0 && (
-            <div className="bg-black rounded-2xl p-6 border border-emerald-500/40">
+            <div className="bg-black rounded-2xl p-4 sm:p-6 border border-emerald-500/40 w-full">
               <h4 className="text-lg font-bold text-emerald-400 mb-4 flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5" />
                 What You're Already Good At
@@ -281,8 +280,8 @@ export default function PredictedGradeDisplay() {
               <div className="space-y-2">
                 {strongAreas.map((area, idx) => (
                   <div key={idx} className="flex items-start gap-2">
-                    <span className="text-emerald-400">✓</span>
-                    <span className="text-white/90">{area}</span>
+                    <span className="text-emerald-400 flex-shrink-0">✓</span>
+                    <span className="text-white/90 text-sm sm:text-base break-words">{area}</span>
                   </div>
                 ))}
               </div>
@@ -291,7 +290,7 @@ export default function PredictedGradeDisplay() {
 
           {/* Weak Areas */}
           {weakAreasDetailed.length > 0 && (
-            <div className="bg-black rounded-2xl p-6 border border-red-500/40">
+            <div className="bg-black rounded-2xl p-4 sm:p-6 border border-red-500/40 w-full">
               <h4 className="text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
                 <AlertCircle className="w-5 h-5" />
                 Where You're Losing Points
@@ -300,18 +299,18 @@ export default function PredictedGradeDisplay() {
                 {weakAreasDetailed.slice(0, 3).map((weak, idx) => {
                   const ToolIcon = getToolIcon(weak.recommended_tool);
                   return (
-                    <div key={idx} className="bg-slate-900/50 rounded-xl p-4 border border-slate-700">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <p className="font-bold text-white">{idx + 1}. {weak.topic}</p>
-                          <p className="text-red-400 text-sm mt-1">
+                    <div key={idx} className="bg-slate-900/50 rounded-xl p-3 sm:p-4 border border-slate-700 w-full">
+                      <div className="flex items-start justify-between gap-2 sm:gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-white text-sm sm:text-base break-words">{idx + 1}. {weak.topic}</p>
+                          <p className="text-red-400 text-xs sm:text-sm mt-1 break-words">
                             <span className="font-semibold">Impact:</span> Losing {weak.grade_impact} on your exam
                           </p>
-                          <div className="flex items-center gap-2 mt-2 text-purple-300 text-sm">
-                            <ToolIcon className="w-4 h-4" />
-                            <span><span className="font-semibold">Fix it with:</span> {weak.recommended_tool}</span>
+                          <div className="flex items-start gap-2 mt-2 text-purple-300 text-xs sm:text-sm">
+                            <ToolIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <span className="break-words"><span className="font-semibold">Fix it with:</span> {weak.recommended_tool}</span>
                           </div>
-                          <p className="text-slate-400 text-xs mt-1">{weak.tool_reason}</p>
+                          <p className="text-slate-400 text-xs mt-1 break-words">{weak.tool_reason}</p>
                         </div>
                       </div>
                     </div>
@@ -328,7 +327,7 @@ export default function PredictedGradeDisplay() {
         </div>
 
         {/* Timing Section */}
-        <div className="bg-black rounded-2xl p-6 border border-purple-500/40">
+        <div className="bg-black rounded-2xl p-4 sm:p-6 border border-purple-500/40 w-full">
           <h3 className="text-2xl font-black text-white mb-4 flex items-center gap-2">
             ⏰ Timing Matters
           </h3>
@@ -362,7 +361,7 @@ export default function PredictedGradeDisplay() {
         </div>
 
         {/* How StudyApp Works */}
-        <div className="bg-black rounded-2xl p-6 border border-purple-500/40">
+        <div className="bg-black rounded-2xl p-4 sm:p-6 border border-purple-500/40 w-full">
           <h3 className="text-2xl font-black text-white mb-4 flex items-center gap-2">
             🧠 How StudyApp Gets You There
           </h3>
@@ -397,10 +396,10 @@ export default function PredictedGradeDisplay() {
 
         {/* Footer */}
         <div className="text-center space-y-2 pb-8">
-          <div className="flex items-center justify-center gap-4 text-slate-400 text-xs">
-            <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> No credit card required</span>
-            <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Start in 30 seconds</span>
-            <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Used by 1,500+ students</span>
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-slate-400 text-xs">
+            <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 flex-shrink-0" /> No credit card</span>
+            <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 flex-shrink-0" /> Start in 30 seconds</span>
+            <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 flex-shrink-0" /> 1,500+ students</span>
           </div>
           <p className="text-slate-600 text-xs">Powered by StudyApp.AI</p>
         </div>
