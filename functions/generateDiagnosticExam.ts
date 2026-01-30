@@ -21,16 +21,88 @@ Deno.serve(async (req) => {
       model: 'gemini-flash-latest'
     });
 
-    const prompt = `You are an expert educational assessment designer. Generate exactly 3 diagnostic questions for a student studying "${courseCode}" at "${school}".
+    const prompt = `[Context]
+You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${lesson.course_name}. 
+This exam establishes an accurate learning baseline and must reflect how the course is ACTUALLY assessed.
 
-REQUIREMENTS:
-1. Questions must broadly assess key competencies for this course
-2. Use real-world context and application-based scenarios
-3. Questions should be multiple-choice with 4 options each
-4. Difficulty should range from medium to hard to properly assess understanding
-5. Each question should target a distinct core competency
+Do NOT rely on prior diagnostics.
 
-You MUST respond with ONLY valid JSON in this exact format (no markdown, no explanation):
+────────────────────────────
+Input Context
+
+Student Grade Level: ${learningProfile.grade || "N/A"}
+Course / Unit Name: ${lesson.course_name}
+School: ${learningProfile.school || "N/A"}
+
+Content Summary (OCR notes or user description):
+${contentDescription}
+
+────────────────────────────
+Internal Rules (Do NOT Output)
+
+• Topic Lock:
+If content specifies a concrete skill/topic (e.g., "factoring", "photosynthesis", "short story analysis"),
+ALL questions must stay strictly within it.
+Only broaden scope if the user explicitly requests review or exam prep.
+
+• TASK-FORM ENFORCEMENT (CRITICAL):
+Questions MUST require the student to PERFORM the skill, not describe it.
+
+Examples:
+- English / Humanities:
+  Use short passages, excerpts, scenarios, or claims.
+  Test analysis, interpretation, or argument by asking the student to respond TO the material.
+  DO NOT ask for definitions of literary or analytical terms.
+
+- Math / Sciences:
+  Use problems, data, equations, diagrams, or experimental setups.
+  DO NOT ask conceptual description-only questions unless the course explicitly assesses them.
+
+- Computer Science / Engineering:
+  Use code snippets, logic traces, outputs, or system behavior.
+  DO NOT ask “what is” or “explain the concept” unless required by curriculum.
+
+- Business / Economics:
+  Use case scenarios, numbers, or decisions.
+  DO NOT test abstract definitions without application.
+
+• Difficulty Progression:
+Q1: Moderate
+Q2: Challenging
+Q3: Challenging → High Challenge (depth, edge cases, or precision—not new content)
+
+────────────────────────────
+QUESTION-TYPE RULES (STRICT)
+
+Choose question_type for EACH question:
+Multiple Choice | True/False | Fill in the Blank | Short Answer
+
+• Multiple Choice → EXACTLY 4 options (A–D)
+• True/False → options = ["True","False"]
+• Fill in the Blank → ONE blank written as ____ , options = []
+• Short Answer → options = []
+
+MCQ cue phrases are FORBIDDEN in non-MCQ questions.
+If violated, auto-convert to Multiple Choice.
+
+CRITICAL ANSWER FORMAT:
+• For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
+• For True/False: correct_answer MUST be "True" or "False"
+
+────────────────────────────
+Output Requirements
+
+Generate EXACTLY 3 questions.
+Each must include:
+question_type, question_text, options, difficulty_index
+
+Then include an answer key with:
+correct_answer, explanation (2 sentences),
+assessed_competencies, targeted_misconception
+
+Output Format
+Return ONE valid JSON object matching the required schema.
+No extra text.
 {
   "questions": [
     {
@@ -38,6 +110,7 @@ You MUST respond with ONLY valid JSON in this exact format (no markdown, no expl
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "correct_answer": "Option A",
       "assessed_competencies": ["Competency 1", "Competency 2"]
+      "explanation" "
     },
     {
       "question_text": "Second question text",
