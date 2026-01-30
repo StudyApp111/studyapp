@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     });
 
     const prompt = `[Context]
-You are an expert assessment designer. Generate a 3-question exam-authentic DIAGNOSTIC worksheet for ${courseCode}. 
+You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${courseCode}. 
 This exam establishes an accurate learning baseline and must reflect how the course is ACTUALLY assessed.
 
 Do NOT rely on prior diagnostics.
@@ -62,19 +62,19 @@ Examples:
   DO NOT test abstract definitions without application.
 
 • Difficulty Progression:
-Q1: Moderate
-Q2: Challenging
-Q3: Challenging → High Challenge (depth, edge cases, or precision—not new content)
+Q1: Easy [MCQ]
+Q2: Moderate [Short Answer]
+Q2: Moderate - Challenging [MCQ]
+Q4: Challenging [MCQ]
+Q5: Challenging → High Challenge (depth, edge cases, or precision—not new content) [MCQ]
 
 ────────────────────────────
 QUESTION-TYPE RULES (STRICT)
 
 Choose question_type for EACH question:
-Multiple Choice | True/False | Fill in the Blank | Short Answer
+Multiple Choice | Short Answer
 
-• Multiple Choice → EXACTLY 4 options (A–D)
-• True/False → options = ["True","False"]
-• Fill in the Blank → ONE blank written as ____ , options = []
+• Multiple Choice → EXACTLY 4 options (A–D)]
 • Short Answer → options = []
 
 MCQ cue phrases are FORBIDDEN in non-MCQ questions.
@@ -82,14 +82,12 @@ If violated, auto-convert to Multiple Choice.
 
 CRITICAL ANSWER FORMAT:
 • For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
-• For True/False: correct_answer MUST be "True" or "False"
-• For Fill in the Blank: correct_answer MUST be the exact word/phrase that fills the blank
 • For Short Answer: correct_answer should be a model answer
 
 ────────────────────────────
 Output Requirements
 
-Generate EXACTLY 3 questions.
+Generate EXACTLY 5 questions.
 Each must include:
 question_type, question_text, options, difficulty_index, correct_answer, explanation, assessed_competencies, targeted_misconception
 
