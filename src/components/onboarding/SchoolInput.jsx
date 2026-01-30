@@ -61,7 +61,7 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
     : suggestions;
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 py-6">
+    <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 py-6 overflow-x-hidden">
       {/* Header */}
       <div className="text-center mb-6">
         <div className="text-5xl mb-4">🏫</div>
@@ -104,7 +104,7 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
 
       {/* Suggestions List */}
       {showSuggestions && (
-        <div className="mb-6 max-h-[300px] overflow-y-auto rounded-xl border border-slate-700 bg-slate-800/40">
+        <div className="mb-6 max-h-[300px] overflow-y-auto overflow-x-hidden rounded-xl border border-slate-700 bg-slate-800/40">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
@@ -116,18 +116,18 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
                 <button
                   key={idx}
                   onClick={() => handleSchoolSelect(s.name)}
-                  className="w-full flex items-center gap-3 p-4 hover:bg-purple-600/20 transition-colors text-left group"
+                  className="w-full flex items-center gap-3 p-3 sm:p-4 hover:bg-purple-600/20 transition-colors text-left group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-purple-600/20 flex items-center justify-center flex-shrink-0">
-                    <School className="w-5 h-5 text-purple-400" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-purple-600/20 flex items-center justify-center flex-shrink-0">
+                    <School className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white truncate">{s.name}</p>
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <p className="font-medium text-white text-sm sm:text-base truncate">{s.name}</p>
                     {s.distance && (
                       <p className="text-xs text-slate-500">{s.distance.toFixed(1)} km away</p>
                     )}
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-500 group-hover:text-purple-400 flex-shrink-0" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-hover:text-purple-400 flex-shrink-0" />
                 </button>
               ))}
             </div>

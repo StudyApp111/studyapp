@@ -117,8 +117,8 @@ export default function Onboarding() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-lg md:max-w-2xl relative z-10">
         {/* StudyApp Branding */}
-        <div className="text-center mb-4">
-          <h1 className="text-2xl md:text-3xl font-black">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-5xl font-black">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
             <span className="text-white">App</span>
           </h1>
