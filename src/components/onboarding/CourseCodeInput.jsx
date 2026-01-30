@@ -95,7 +95,7 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
           ) : suggestions.length > 0 && (
             <>
               <p className="text-xs text-slate-500 mb-3 uppercase tracking-wide">Popular courses at {school || 'your school'}</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 justify-center">
                 {suggestions.map((code, idx) => (
                   <button
                     key={idx}
