@@ -22,20 +22,15 @@ Deno.serve(async (req) => {
     });
 
     const prompt = `[Context]
-You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${lesson.course_name}. 
+You are an expert assessment designer. Generate a 3-question exam-authentic DIAGNOSTIC worksheet for ${lesson.course_name}. 
 This exam establishes an accurate learning baseline and must reflect how the course is ACTUALLY assessed.
 
 Do NOT rely on prior diagnostics.
 
 ────────────────────────────
 Input Context
-
-Student Grade Level: ${learningProfile.grade || "N/A"}
 Course / Unit Name: ${lesson.course_name}
 School: ${learningProfile.school || "N/A"}
-
-Content Summary (OCR notes or user description):
-${contentDescription}
 
 ────────────────────────────
 Internal Rules (Do NOT Output)
@@ -110,19 +105,21 @@ No extra text.
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "correct_answer": "Option A",
       "assessed_competencies": ["Competency 1", "Competency 2"]
-      "explanation" "
+      "explanation: [1-2 sentences as to why the answer is correct]
     },
     {
       "question_text": "Second question text",
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "correct_answer": "Option B",
       "assessed_competencies": ["Competency 3"]
+      "explanation: [1-2 sentences as to why the answer is correct]
     },
     {
       "question_text": "Third question text",
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "correct_answer": "Option C",
       "assessed_competencies": ["Competency 4"]
+      "explanation: [1-2 sentences as to why the answer is correct]
     }
   ]
 }
