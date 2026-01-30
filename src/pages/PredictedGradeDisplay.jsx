@@ -36,6 +36,7 @@ export default function PredictedGradeDisplay() {
   const queryParams = new URLSearchParams(location.search);
   
   // New diagnostic quiz flow params
+  const name = queryParams.get("name");
   const grade = queryParams.get("grade");
   const strongAreas = queryParams.get("strongAreas");
   const weakAreas = queryParams.get("weakAreas");
@@ -62,11 +63,11 @@ export default function PredictedGradeDisplay() {
         // Try to get current user (may not be authenticated yet)
         const currentUser = await base44.auth.me();
         setUser(currentUser);
-        const firstName = currentUser.full_name?.split(' ')[0] || 'Student';
+        const firstName = currentUser.full_name?.split(' ')[0] || name || 'Student';
         setUserName(firstName);
       } catch (err) {
-        // User not authenticated - that's OK for this page
-        setUserName('Student');
+        // User not authenticated - use name from onboarding if provided
+        setUserName(name || 'Student');
       } finally {
         // Minimum 2s loading for dramatic reveal
         setTimeout(() => setLoading(false), 2000);
@@ -74,7 +75,7 @@ export default function PredictedGradeDisplay() {
     };
     
     loadUser();
-  }, []);
+  }, [name]);
 
   const handleGetStudyPlan = async () => {
     // First check if user is authenticated

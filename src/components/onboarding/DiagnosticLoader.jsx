@@ -46,6 +46,14 @@ export default function DiagnosticLoader({ mode = 'generating' }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md text-center">
+        {/* StudyApp Branding */}
+        <div className="mb-8">
+          <h1 className="text-2xl md:text-3xl font-black">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
+            <span className="text-white">App</span>
+          </h1>
+        </div>
+
         {/* Animated Icon */}
         <div className="relative mb-8">
           <div className="absolute inset-0 flex items-center justify-center">

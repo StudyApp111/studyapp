@@ -33,6 +33,7 @@ export default function DiagnosticQuiz() {
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
+    const name = searchParams.get('name');
     const school = searchParams.get('school');
     const courseCode = searchParams.get('courseCode');
 
@@ -45,7 +46,7 @@ export default function DiagnosticQuiz() {
       return;
     }
 
-    setParams({ school, courseCode });
+    setParams({ name, school, courseCode });
     generateQuestions(school, courseCode);
   }, [location.search, navigate]);
 
@@ -199,6 +200,7 @@ export default function DiagnosticQuiz() {
 
       if (result.data?.success) {
         const queryParams = new URLSearchParams({
+          name: params.name || '',
           grade: result.data.predicted_grade,
           strongAreas: JSON.stringify(result.data.strong_areas || []),
           weakAreas: JSON.stringify(result.data.weak_areas || []),
