@@ -8,6 +8,7 @@ import { AlertCircle } from "lucide-react";
 import { trackUserSession } from "../components/utils/userTracking";
 
 // Import onboarding components
+import NameInput from "../components/onboarding/NameInput";
 import SchoolInput from "../components/onboarding/SchoolInput";
 import CourseCodeInput from "../components/onboarding/CourseCodeInput";
 
@@ -19,11 +20,11 @@ export default function Onboarding() {
   const [error, setError] = useState("");
   
   // Store answers in ref to avoid race conditions
-  const answersRef = useRef({ school: '', courseCode: '' });
-  const [answers, setAnswers] = useState({ school: '', courseCode: '' });
+  const answersRef = useRef({ name: '', school: '', courseCode: '' });
+  const [answers, setAnswers] = useState({ name: '', school: '', courseCode: '' });
 
-  // 2 questions only: School, Course Code
-  const totalSteps = 2;
+  // 3 questions: Name, School, Course Code
+  const totalSteps = 3;
 
   useEffect(() => {
     checkExistingProfile();
@@ -80,13 +81,14 @@ export default function Onboarding() {
     setError("");
 
     try {
+      const name = answersRef.current.name || '';
       const school = answersRef.current.school || '';
       const courseCode = answersRef.current.courseCode || '';
       
-      console.log('🚀 Submitting with:', { school, courseCode });
+      console.log('🚀 Submitting with:', { name, school, courseCode });
       
       // Navigate to DiagnosticQuiz with collected data
-      const params = new URLSearchParams({ school, courseCode });
+      const params = new URLSearchParams({ name, school, courseCode });
       navigate(createPageUrl("DiagnosticQuiz") + `?${params.toString()}`, { replace: true });
 
     } catch (error) {
@@ -102,9 +104,14 @@ export default function Onboarding() {
         <Loader2 className="w-12 h-12 animate-spin text-purple-400" />
       </div>
     );
-  }
+    }
 
-  const progress = ((currentStep + 1) / totalSteps) * 100;
+    // Calculate progress based on actual answered questions
+    let answeredCount = 0;
+    if (answersRef.current.name) answeredCount++;
+    if (answersRef.current.school) answeredCount++;
+    if (answersRef.current.courseCode) answeredCount++;
+    const progress = (answeredCount / totalSteps) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
@@ -139,18 +146,28 @@ export default function Onboarding() {
             </Alert>
           )}
 
-          {/* Step 1: School */}
+          {/* Step 1: Name */}
           {currentStep === 0 && (
-            <SchoolInput
-              value={answers.school}
-              onChange={(val) => handleAnswer("school", val)}
-              onNext={(val) => handleNext(val, "school")}
+            <NameInput
+              value={answers.name}
+              onChange={(val) => handleAnswer("name", val)}
+              onNext={(val) => handleNext(val, "name")}
               onBack={null}
             />
           )}
 
-          {/* Step 2: Course Code */}
+          {/* Step 2: School */}
           {currentStep === 1 && (
+            <SchoolInput
+              value={answers.school}
+              onChange={(val) => handleAnswer("school", val)}
+              onNext={(val) => handleNext(val, "school")}
+              onBack={handleBack}
+            />
+          )}
+
+          {/* Step 3: Course Code */}
+          {currentStep === 2 && (
             <CourseCodeInput
               value={answers.courseCode}
               onChange={(val) => handleAnswer("courseCode", val)}
@@ -175,10 +192,10 @@ export default function Onboarding() {
         <div className="text-center mt-6 space-y-2">
           <p className="text-slate-500 text-xs">Powered by StudyApp.AI</p>
           <button
-            onClick={handleLogout}
+            onClick={() => base44.auth.redirectToLogin()}
             className="text-slate-500 hover:text-slate-300 text-xs underline transition-colors"
           >
-            Sign out
+            Sign In
           </button>
         </div>
       </div>
