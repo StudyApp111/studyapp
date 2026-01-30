@@ -30,6 +30,8 @@ export default function DiagnosticQuiz() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showWrongPulse, setShowWrongPulse] = useState(false);
   const [showCorrectBurst, setShowCorrectBurst] = useState(false);
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -159,22 +161,44 @@ export default function DiagnosticQuiz() {
     }
   };
 
-  const handleShortAnswerSubmit = () => {
-    const answer = userAnswers[currentQuestionIndex];
-    if (!answer?.trim()) return;
-    
-    // For short answer, mark as answered but don't grade
-    setAnsweredQuestions(prev => ({
-      ...prev,
-      [currentQuestionIndex]: { answer, isCorrect: null }
-    }));
-  };
+  // Auto-submit for fill-blank and short-answer after typing
+  useEffect(() => {
+    const questionType = currentQuestion ? getQuestionType(currentQuestion) : 'mcq';
+    if ((questionType === 'fillblank' || questionType === 'shortanswer') && !isAnswered) {
+      const answer = userAnswers[currentQuestionIndex];
+      if (answer?.trim()) {
+        const timeout = setTimeout(() => {
+          if (questionType === 'fillblank') {
+            handleAnswerSelect(answer);
+          } else {
+            setAnsweredQuestions(prev => ({
+              ...prev,
+              [currentQuestionIndex]: { answer, isCorrect: null }
+            }));
+          }
+        }, 1500);
+        return () => clearTimeout(timeout);
+      }
+    }
+  }, [userAnswers[currentQuestionIndex], isAnswered, currentQuestion]);
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
+      setQuestionStartTime(Date.now());
+      setElapsedTime(0);
     }
   };
+
+  // Timer effect
+  useEffect(() => {
+    if (!isAnswered) {
+      const timer = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - questionStartTime) / 1000));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isAnswered, questionStartTime]);
 
   const handleSubmit = async () => {
     if (Object.keys(answeredQuestions).length !== questions.length) {
@@ -377,15 +401,6 @@ export default function DiagnosticQuiz() {
         disabled={isAnswered}
         className="h-14 text-lg bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
       />
-      {!isAnswered && (
-        <Button
-          onClick={() => handleAnswerSelect(userAnswers[currentQuestionIndex])}
-          disabled={!userAnswers[currentQuestionIndex]?.trim()}
-          className="w-full h-12 bg-purple-600 hover:bg-purple-700"
-        >
-          Submit Answer
-        </Button>
-      )}
     </div>
   );
 
@@ -402,15 +417,6 @@ export default function DiagnosticQuiz() {
         disabled={isAnswered}
         className="min-h-[120px] text-sm bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
       />
-      {!isAnswered && (
-        <Button
-          onClick={handleShortAnswerSubmit}
-          disabled={!userAnswers[currentQuestionIndex]?.trim()}
-          className="w-full h-12 bg-purple-600 hover:bg-purple-700"
-        >
-          Submit Answer
-        </Button>
-      )}
     </div>
   );
 
@@ -503,8 +509,8 @@ export default function DiagnosticQuiz() {
                 />
               ))}
             </div>
-            <p className="text-center text-slate-400 text-xs mt-2">
-              Question {currentQuestionIndex + 1} of {questions.length}
+            <p className="text-center text-purple-300 font-medium text-sm mt-2">
+              {questions.length - currentQuestionIndex} Question{questions.length - currentQuestionIndex !== 1 ? 's' : ''} Away From Predicted Grade...
             </p>
           </div>
         </div>
@@ -548,19 +554,35 @@ export default function DiagnosticQuiz() {
                   )}
                 </AnimatePresence>
 
-                {/* Purple Gradient Header with Competencies */}
-                <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 p-3 md:p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge className="text-[10px] px-2 py-0.5 bg-white/20 text-white border-white/30">
+                {/* Purple Gradient Header with Timer and Metadata */}
+                <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 p-4 md:p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    {/* Timer */}
+                    <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" />
+                      </svg>
+                      <span className="text-white font-mono text-sm font-semibold">
+                        {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
+                    
+                    {/* Question Type */}
+                    <Badge className="text-xs px-2.5 py-1 bg-white/15 text-white border-white/30">
                       {(currentQuestion.question_type || 'Multiple Choice').replace(/_/g, ' ')}
                     </Badge>
+                  </div>
+                  
+                  {/* Difficulty and Competencies */}
+                  <div className="flex flex-wrap items-center gap-2">
                     {currentQuestion.difficulty_index && (
-                      <Badge className="text-[10px] px-2 py-0.5 bg-white/20 text-white border-white/30">
+                      <Badge className="text-xs px-2.5 py-1 bg-amber-500/30 text-amber-100 border-amber-400/30 font-medium">
                         {currentQuestion.difficulty_index}
                       </Badge>
                     )}
                     {currentQuestion.assessed_competencies?.slice(0, 2).map((comp, idx) => (
-                      <Badge key={idx} className="text-[10px] px-2 py-0.5 bg-pink-500/30 text-pink-100 border-pink-400/30">
+                      <Badge key={idx} className="text-xs px-2.5 py-1 bg-emerald-500/30 text-emerald-100 border-emerald-400/30">
                         {comp}
                       </Badge>
                     ))}
