@@ -146,17 +146,20 @@ function LayoutContent({ children, currentPageName }) {
   const onboardingPath = createPageUrl("Onboarding").replace(/\/$/, '').toLowerCase();
   const predictedGradePath = createPageUrl("PredictedGradeDisplay").replace(/\/$/, '').toLowerCase();
   
-  const isOnboardingPage = currentPath === onboardingPath || currentPageName === "Onboarding";
-  const isPredictedGradePage = currentPath === predictedGradePath || currentPageName === "PredictedGradeDisplay" || location.pathname.includes("PredictedGradeDisplay");
-  const isDiagnosticQuizPage = currentPageName === "DiagnosticQuiz" || location.pathname.includes("DiagnosticQuiz");
+  const isOnboardingPage = currentPath === onboardingPath || currentPageName === "Onboarding" || location.pathname.toLowerCase().includes("onboarding");
+  const isPredictedGradePage = currentPath === predictedGradePath || currentPageName === "PredictedGradeDisplay" || location.pathname.toLowerCase().includes("predictedgradedisplay");
+  const isDiagnosticQuizPage = currentPageName === "DiagnosticQuiz" || location.pathname.toLowerCase().includes("diagnosticquiz");
+
+  // All onboarding flow pages - hide ALL navigation
+  const isOnboardingFlow = isOnboardingPage || isPredictedGradePage || isDiagnosticQuizPage;
   
   const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname.includes("DocumentViewer");
   const isHomePage = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
 
   const userIsAuthenticated = !!user;
 
-  // ALWAYS hide navigation on onboarding pages (Onboarding, DiagnosticQuiz, PredictedGradeDisplay) - no exceptions
-  const showNavigation = userIsAuthenticated && !isOnboardingPage && !isPredictedGradePage && !isDiagnosticQuizPage;
+  // ALWAYS hide navigation on onboarding flow pages - no exceptions
+  const showNavigation = userIsAuthenticated && !isOnboardingFlow;
   const showSidebar = showNavigation;
   
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];

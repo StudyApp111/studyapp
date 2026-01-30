@@ -423,7 +423,7 @@ export default function DiagnosticQuiz() {
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 z-[9999] overflow-y-auto">
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
       {/* Correct answer celebration overlay */}
@@ -433,7 +433,7 @@ export default function DiagnosticQuiz() {
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.2 }}
-            className="fixed inset-0 pointer-events-none z-[60] flex items-center justify-center"
+            className="fixed inset-0 pointer-events-none z-[10000] flex items-center justify-center"
           >
             <motion.div
               initial={{ scale: 0 }}
@@ -464,14 +464,20 @@ export default function DiagnosticQuiz() {
       </AnimatePresence>
 
       <div className="min-h-screen flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-white/10">
+        {/* Header with StudyApp branding */}
+        <div className="p-4 border-b border-white/10 bg-slate-900/80 backdrop-blur-sm">
           <div className="max-w-2xl mx-auto">
-            <div className="text-center mb-4">
-              <h1 className="text-xl md:text-2xl font-bold text-white">
-                Diagnostic Quiz
+            {/* StudyApp Logo */}
+            <div className="text-center mb-3">
+              <h1 className="text-xl md:text-2xl font-black">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
+                <span className="text-white">App</span>
               </h1>
-              <p className="text-slate-400 text-sm">
+            </div>
+            
+            <div className="text-center mb-3">
+              <p className="text-purple-300 font-medium text-sm">Diagnostic Quiz</p>
+              <p className="text-slate-400 text-xs">
                 {params.courseCode} • {params.school}
               </p>
             </div>
@@ -481,21 +487,21 @@ export default function DiagnosticQuiz() {
               {questions.map((_, idx) => (
                 <div
                   key={idx}
-                  className={`h-2 w-10 rounded-full transition-all ${
+                  className={`h-2 w-8 md:w-10 rounded-full transition-all ${
                     idx === currentQuestionIndex
-                      ? 'bg-purple-500 scale-110'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 scale-110'
                       : answeredQuestions[idx]
                       ? answeredQuestions[idx].isCorrect === true
                         ? 'bg-emerald-500'
                         : answeredQuestions[idx].isCorrect === false
                           ? 'bg-red-400'
-                          : 'bg-purple-400' // Short answer submitted
+                          : 'bg-purple-400'
                       : 'bg-slate-700'
                   }`}
                 />
               ))}
             </div>
-            <p className="text-center text-slate-400 text-sm mt-2">
+            <p className="text-center text-slate-400 text-xs mt-2">
               Question {currentQuestionIndex + 1} of {questions.length}
             </p>
           </div>
@@ -526,7 +532,7 @@ export default function DiagnosticQuiz() {
                 }}
                 exit={{ opacity: 0, scale: 0.95, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className={`w-full max-w-2xl bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden ${showWrongPulse ? 'ring-2 ring-red-400/60' : ''}`}
+                className={`w-full max-w-2xl bg-slate-800/90 backdrop-blur-xl rounded-2xl border border-purple-500/30 shadow-2xl shadow-purple-500/10 overflow-hidden ${showWrongPulse ? 'ring-2 ring-red-400/60' : ''}`}
               >
                 {/* Wrong answer flash overlay */}
                 <AnimatePresence>
@@ -540,25 +546,34 @@ export default function DiagnosticQuiz() {
                   )}
                 </AnimatePresence>
 
-                {/* Question Header */}
-                <div className="p-6 border-b border-white/10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge className="text-[10px] px-2 py-0.5 bg-purple-600/20 text-purple-300 border-purple-500/30">
+                {/* Purple Gradient Header with Competencies */}
+                <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 p-3 md:p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="text-[10px] px-2 py-0.5 bg-white/20 text-white border-white/30">
                       {(currentQuestion.question_type || 'Multiple Choice').replace(/_/g, ' ')}
                     </Badge>
                     {currentQuestion.difficulty_index && (
-                      <Badge className="text-[10px] px-2 py-0.5 bg-white/10 text-slate-300">
+                      <Badge className="text-[10px] px-2 py-0.5 bg-white/20 text-white border-white/30">
                         {currentQuestion.difficulty_index}
                       </Badge>
                     )}
+                    {currentQuestion.assessed_competencies?.slice(0, 2).map((comp, idx) => (
+                      <Badge key={idx} className="text-[10px] px-2 py-0.5 bg-pink-500/30 text-pink-100 border-pink-400/30">
+                        {comp}
+                      </Badge>
+                    ))}
                   </div>
-                  <MathText className="text-lg md:text-xl font-semibold text-white leading-relaxed">
+                </div>
+
+                {/* Question Text */}
+                <div className="p-4 md:p-6 border-b border-white/10">
+                  <MathText className="text-base md:text-lg font-semibold text-white leading-relaxed">
                     {currentQuestion.question_text}
                   </MathText>
                 </div>
 
                 {/* Options */}
-                <div className="p-6 space-y-3">
+                <div className="p-4 md:p-6 space-y-2 md:space-y-3">
                   {renderInput()}
                 </div>
 
@@ -637,12 +652,12 @@ export default function DiagnosticQuiz() {
                 )}
 
                 {/* Navigation Footer */}
-                <div className="p-6 border-t border-white/10 flex justify-end">
+                <div className="p-4 md:p-6 border-t border-white/10 flex justify-end">
                   {isLastQuestion ? (
                     <Button
                       onClick={handleSubmit}
                       disabled={!isAnswered}
-                      className="h-12 px-8 text-base bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
+                      className="h-11 md:h-12 px-6 md:px-8 text-sm md:text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 shadow-lg shadow-purple-500/30"
                     >
                       Submit Quiz
                     </Button>
@@ -650,7 +665,7 @@ export default function DiagnosticQuiz() {
                     <Button
                       onClick={handleNext}
                       disabled={!isAnswered}
-                      className="h-12 px-8 text-base bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
+                      className="h-11 md:h-12 px-6 md:px-8 text-sm md:text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 shadow-lg shadow-purple-500/30"
                     >
                       Next
                       <ChevronRight className="w-5 h-5 ml-1" />

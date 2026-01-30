@@ -126,7 +126,7 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
         <Button
           onClick={handleNext}
           disabled={!courseCode.trim()}
-          className="h-12 px-10 text-base bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
+          className="h-12 px-10 text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 shadow-lg shadow-purple-500/30"
         >
           Continue
         </Button>
