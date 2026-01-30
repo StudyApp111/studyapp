@@ -138,104 +138,135 @@ export default function PredictedGradeDisplay() {
           </p>
         </div>
 
-        {/* Main Grade Card */}
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(grade)} p-6 md:p-8 shadow-2xl`}>
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-          
-          <div className="relative text-center space-y-4">
-            <p className="text-white/80 text-sm font-bold uppercase tracking-wider">
+        {/* Main Grade Card - Neutral background with huge grade */}
+        <div className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-700 p-6 md:p-8 shadow-2xl w-full">
+          <div className="relative text-center space-y-6">
+            <p className="text-slate-400 text-sm font-bold uppercase tracking-wider">
               Your Predicted Exam Grade
             </p>
-            <div className="flex items-center justify-center gap-4">
-              <span className="text-7xl md:text-8xl font-black text-white drop-shadow-2xl">
+            
+            {/* HUGE Grade Display */}
+            <div className="flex flex-col items-center gap-2">
+              <span className={`text-7xl sm:text-8xl md:text-9xl font-black bg-gradient-to-br ${getGradeColor(grade)} bg-clip-text text-transparent drop-shadow-2xl`}>
                 {grade}
               </span>
-              <span className="text-4xl md:text-5xl font-black text-white/80">
+              <span className="text-2xl sm:text-3xl font-bold text-slate-300">
                 ({percentage}%)
               </span>
             </div>
+            
+            {/* Visual Grade Meter */}
+            <div className="w-full max-w-md mx-auto space-y-2">
+              <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className={`absolute left-0 top-0 h-full rounded-full bg-gradient-to-r ${getGradeColor(grade)}`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-slate-500 font-medium">
+                <span>F</span>
+                <span>D</span>
+                <span>C</span>
+                <span>B</span>
+                <span>A</span>
+                <span>A+</span>
+              </div>
+            </div>
+            
+            {/* Personalized Message - Better contrast */}
             {personalizedMessage && (
-              <p className="text-white/90 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-                {personalizedMessage}
-              </p>
+              <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                <p className="text-slate-200 text-sm sm:text-base leading-relaxed break-words">
+                  {personalizedMessage}
+                </p>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Biggest Opportunity Section */}
+        {/* Your #1 Priority Section - Cleaner design */}
         {weakAreasDetailed.length > 0 && previewQuestion.topic && (
-          <div className="relative overflow-hidden rounded-2xl bg-black border-2 border-amber-500/60 p-4 sm:p-6 md:p-8 shadow-2xl w-full">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl" />
-            
-            <div className="relative space-y-6">
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                  <Target className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          <div className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-700 p-4 sm:p-6 md:p-8 shadow-2xl w-full">
+            <div className="relative space-y-5">
+              {/* Header */}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <Target className="h-5 w-5 text-white" />
                 </div>
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white break-words">
-                  Your Biggest Opportunity
+                <h3 className="text-xl sm:text-2xl font-black text-white">
+                  Your #1 Priority
                 </h3>
               </div>
 
-              <div className="space-y-2">
-                <p className="text-lg sm:text-xl font-bold text-amber-400 break-words">{previewQuestion.topic}</p>
-                <p className="text-white/80 text-sm sm:text-base break-words">
-                  This topic alone is costing you <span className="font-bold text-red-400">{weakAreasDetailed[0]?.grade_impact}</span> on your exam.
+              {/* Topic + Impact */}
+              <div className="space-y-1">
+                <p className="text-lg sm:text-xl font-bold text-white break-words">{previewQuestion.topic}</p>
+                <p className="text-base sm:text-lg">
+                  This topic is worth <span className="font-bold text-red-400 text-lg sm:text-xl">{weakAreasDetailed[0]?.grade_impact}</span> of your grade
                 </p>
               </div>
 
-              <p className="text-purple-300 text-sm">Here's a sample question you need to master:</p>
-
-              {/* Preview Question */}
-              <div className="bg-slate-900/80 rounded-xl p-4 sm:p-5 border border-purple-500/30 w-full">
-                <p className="text-xs text-purple-400 uppercase tracking-wider mb-2">Question:</p>
-                <p className="text-white font-medium leading-relaxed text-sm sm:text-base break-words">{previewQuestion.question_text}</p>
-              </div>
-
-              {/* Blurred Answer Section */}
-              <div className="relative bg-slate-900/80 rounded-xl p-4 sm:p-5 border border-slate-700 overflow-hidden w-full min-h-[120px]">
-                <p className="text-xs text-emerald-400 uppercase tracking-wider mb-2">Answer:</p>
-                <p className="text-white/90 leading-relaxed text-sm sm:text-base break-words blur-[3px]">{previewQuestion.correct_answer || ''}</p>
-                
-                {/* Blur overlay with lock icon only */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-slate-900/30 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-purple-600/80 rounded-full flex items-center justify-center shadow-lg">
-                    <Lock className="w-6 h-6 text-white" />
-                  </div>
-                </div>
-              </div>
-
+              {/* Why this matters - Moved up for importance */}
               {previewQuestion.why_this_matters && (
-                <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/30">
-                  <p className="text-purple-200 text-sm">
-                    <span className="font-bold text-purple-400">Why this matters:</span> {previewQuestion.why_this_matters}
+                <div className="bg-amber-500/10 rounded-lg p-3 border border-amber-500/30">
+                  <p className="text-amber-200 text-sm break-words">
+                    <span className="font-bold">💡 Why it matters:</span> {previewQuestion.why_this_matters}
                   </p>
                 </div>
               )}
+
+              <div className="border-t border-slate-700 pt-5 space-y-4">
+                <p className="text-slate-300 font-semibold text-base">Sample Question:</p>
+
+                {/* Preview Question - Better readability */}
+                <div className="bg-slate-800 rounded-xl p-4 sm:p-5 border border-slate-600 w-full">
+                  <p className="text-white font-medium leading-relaxed text-base sm:text-lg break-words">{previewQuestion.question_text}</p>
+                </div>
+
+                {/* Blurred Answer Section - Enhanced blur effect */}
+                <div className="relative bg-slate-800 rounded-xl p-4 sm:p-5 border border-slate-600 overflow-hidden w-full min-h-[140px]">
+                  <p className="text-xs text-emerald-400 uppercase tracking-wider mb-3 font-semibold">Answer:</p>
+                  <div className="relative">
+                    <p className="text-white/90 leading-relaxed text-base break-words blur-[5px] select-none">{previewQuestion.correct_answer || ''}</p>
+                    
+                    {/* Gradient overlay */}
+                    <div 
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(to bottom, transparent 0%, rgba(15,23,42,0.3) 40%, rgba(15,23,42,0.8) 100%)'
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Lock overlay button */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="bg-purple-600/95 px-5 py-3 rounded-xl flex items-center gap-2 shadow-xl shadow-purple-500/30">
+                      <Lock className="w-5 h-5 text-white" />
+                      <span className="text-white font-bold text-sm sm:text-base">Unlock Answer</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Unlock CTA Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-4 sm:p-6 md:p-8 shadow-2xl w-full">
+        {/* Unlock CTA Section - Stronger hierarchy */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-5 sm:p-6 md:p-8 shadow-2xl w-full">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
           
           <div className="relative text-center space-y-5">
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0" />
-              <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white text-center break-words">
-                Want to See the Full Answer?
-              </h3>
-            </div>
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white">
+              Want to See the Full Answer?
+            </h3>
             
             <div className="text-left max-w-md mx-auto space-y-2">
-              <p className="text-white/90">We'll also show you:</p>
+              <p className="text-white/90 font-medium">We'll also show you:</p>
               <div className="space-y-1.5">
                 {[
                   "Your complete personalized study plan",
-                  "Which topics to study first (by priority)",
-                  "Exactly which learning tool fixes each weakness",
+                  "Which topics to study first",
+                  "Which tool fixes each weakness",
                   "Your week-by-week grade trajectory"
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-start gap-2">
@@ -246,41 +277,44 @@ export default function PredictedGradeDisplay() {
               </div>
             </div>
 
-            <Button 
-              onClick={handleCTA}
-              className="w-full max-w-md bg-white hover:bg-slate-100 text-purple-700 font-bold py-7 text-lg rounded-xl shadow-lg transition-all hover:scale-[1.02] group"
-            >
-              <Sparkles className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform" />
-              Unlock My Study Plan + Answer
-              <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
+            {/* Primary CTA - Larger, stronger */}
+            <div className="space-y-2 pt-2">
+              <Button 
+                onClick={handleCTA}
+                className="w-full bg-white hover:bg-slate-100 text-purple-700 font-black py-7 sm:py-8 text-lg sm:text-xl rounded-xl shadow-xl transition-all hover:scale-[1.02] group min-h-[56px]"
+              >
+                <Lock className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
+                Unlock Full Answer
+              </Button>
+              <p className="text-white/80 text-sm">+ See Your Complete Study Plan</p>
+            </div>
 
             <button 
               onClick={handleCTA}
-              className="text-white/70 hover:text-white text-sm underline transition-colors"
+              className="text-white/70 hover:text-white text-sm underline transition-colors pt-2"
             >
               Already have an account? Log in
             </button>
           </div>
         </div>
 
-        {/* Performance Breakdown */}
-        <div className="space-y-6">
-          <h3 className="text-2xl font-black text-white flex items-center gap-2">
+        {/* Performance Breakdown - Better visual hierarchy */}
+        <div className="space-y-5">
+          <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
             📊 Your Performance Breakdown
           </h3>
 
-          {/* Strong Areas */}
+          {/* Strong Areas - Scannable */}
           {strongAreas.length > 0 && (
-            <div className="bg-black rounded-2xl p-4 sm:p-6 border border-emerald-500/40 w-full">
-              <h4 className="text-lg font-bold text-emerald-400 mb-4 flex items-center gap-2">
+            <div className="bg-slate-900 rounded-2xl p-4 sm:p-5 border border-emerald-500/40 w-full">
+              <h4 className="text-base font-bold text-emerald-400 mb-3 flex items-center gap-2 uppercase tracking-wide">
                 <CheckCircle2 className="w-5 h-5" />
-                What You're Already Good At
+                Strong Areas
               </h4>
               <div className="space-y-2">
                 {strongAreas.map((area, idx) => (
                   <div key={idx} className="flex items-start gap-2">
-                    <span className="text-emerald-400 flex-shrink-0">✓</span>
+                    <span className="text-emerald-400 flex-shrink-0 font-bold">✓</span>
                     <span className="text-white/90 text-sm sm:text-base break-words">{area}</span>
                   </div>
                 ))}
@@ -288,37 +322,43 @@ export default function PredictedGradeDisplay() {
             </div>
           )}
 
-          {/* Weak Areas */}
+          {/* Weak Areas - Card-based with visual hierarchy */}
           {weakAreasDetailed.length > 0 && (
-            <div className="bg-black rounded-2xl p-4 sm:p-6 border border-red-500/40 w-full">
-              <h4 className="text-lg font-bold text-red-400 mb-4 flex items-center gap-2">
+            <div className="bg-slate-900 rounded-2xl p-4 sm:p-5 border border-red-500/40 w-full">
+              <h4 className="text-base font-bold text-red-400 mb-4 flex items-center gap-2 uppercase tracking-wide">
                 <AlertCircle className="w-5 h-5" />
                 Where You're Losing Points
               </h4>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {weakAreasDetailed.slice(0, 3).map((weak, idx) => {
                   const ToolIcon = getToolIcon(weak.recommended_tool);
                   return (
-                    <div key={idx} className="bg-slate-900/50 rounded-xl p-3 sm:p-4 border border-slate-700 w-full">
-                      <div className="flex items-start justify-between gap-2 sm:gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-bold text-white text-sm sm:text-base break-words">{idx + 1}. {weak.topic}</p>
-                          <p className="text-red-400 text-xs sm:text-sm mt-1 break-words">
-                            <span className="font-semibold">Impact:</span> Losing {weak.grade_impact} on your exam
-                          </p>
-                          <div className="flex items-start gap-2 mt-2 text-purple-300 text-xs sm:text-sm">
-                            <ToolIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                            <span className="break-words"><span className="font-semibold">Fix it with:</span> {weak.recommended_tool}</span>
-                          </div>
-                          <p className="text-slate-400 text-xs mt-1 break-words">{weak.tool_reason}</p>
-                        </div>
+                    <div key={idx} className="bg-slate-800 rounded-xl p-4 border border-slate-700 w-full">
+                      <p className="font-bold text-white text-base break-words mb-2">{idx + 1}. {weak.topic}</p>
+                      
+                      {/* Grade impact - Large and prominent */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-slate-400 text-sm">📉 Costing you:</span>
+                        <span className="font-black text-red-400 text-lg">{weak.grade_impact}</span>
                       </div>
+                      
+                      {/* Tool recommendation */}
+                      <div className="flex items-center gap-2 bg-purple-500/10 rounded-lg px-3 py-2 border border-purple-500/30">
+                        <ToolIcon className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                        <span className="text-purple-300 text-sm">
+                          <span className="font-semibold">Fix with:</span> {weak.recommended_tool}
+                        </span>
+                      </div>
+                      
+                      {weak.tool_reason && (
+                        <p className="text-slate-400 text-xs mt-2 break-words">{weak.tool_reason}</p>
+                      )}
                     </div>
                   );
                 })}
                 {weakAreasDetailed.length > 3 && (
-                  <p className="text-purple-400 text-sm font-medium">
-                    + {weakAreasDetailed.length - 3} more topics (see your full plan)
+                  <p className="text-purple-400 text-sm font-medium text-center pt-2">
+                    + {weakAreasDetailed.length - 3} more topics (unlock to see)
                   </p>
                 )}
               </div>
@@ -326,68 +366,130 @@ export default function PredictedGradeDisplay() {
           )}
         </div>
 
-        {/* Timing Section */}
-        <div className="bg-black rounded-2xl p-4 sm:p-6 border border-purple-500/40 w-full">
-          <h3 className="text-2xl font-black text-white mb-4 flex items-center gap-2">
-            ⏰ Timing Matters
+        {/* Timing Section - Visual timeline */}
+        <div className="bg-slate-900 rounded-2xl p-4 sm:p-6 border border-purple-500/40 w-full">
+          <h3 className="text-xl sm:text-2xl font-black text-white mb-4 flex items-center gap-2">
+            ⏰ Your Path to A+
           </h3>
           
-          {urgencyMessage && (
-            <p className="text-white/80 mb-4">{urgencyMessage}</p>
-          )}
-
           {gradeTrajectory.current && (
-            <div className="space-y-3">
-              <p className="text-purple-300 font-semibold">Your 21-day path:</p>
-              <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-4">
+              {/* Visual Timeline */}
+              <div className="space-y-4">
                 {[
-                  { label: 'Week 1', from: gradeTrajectory.current, to: gradeTrajectory.week_1_target },
-                  { label: 'Week 2', from: gradeTrajectory.week_1_target, to: gradeTrajectory.week_2_target },
-                  { label: 'Week 3', from: gradeTrajectory.week_2_target, to: gradeTrajectory.final_target }
+                  { label: 'Week 1', from: gradeTrajectory.current, to: gradeTrajectory.week_1_target, desc: 'Fix theoretical gaps' },
+                  { label: 'Week 2', from: gradeTrajectory.week_1_target, to: gradeTrajectory.week_2_target, desc: 'Master calculations' },
+                  { label: 'Week 3', from: gradeTrajectory.week_2_target, to: gradeTrajectory.final_target, desc: 'Practice & polish' }
                 ].map((week, idx) => (
-                  <div key={idx} className="bg-slate-900/50 rounded-lg p-3 text-center border border-slate-700">
-                    <p className="text-xs text-slate-400 mb-1">{week.label}</p>
-                    <p className="text-white font-bold">
-                      {week.from} → <span className="text-emerald-400">{week.to}</span>
-                    </p>
+                  <div key={idx} className="flex items-center gap-3">
+                    {/* Timeline dot and line */}
+                    <div className="flex flex-col items-center">
+                      <div className={`w-4 h-4 rounded-full ${idx === 2 ? 'bg-emerald-500' : 'bg-purple-500'} ring-4 ring-purple-500/20`} />
+                      {idx < 2 && <div className="w-0.5 h-8 bg-purple-500/30" />}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 bg-slate-800 rounded-lg p-3 border border-slate-700">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-slate-400 text-sm font-medium">{week.label}</span>
+                        <span className="text-white font-bold">
+                          {week.from} → <span className="text-emerald-400">{week.to}</span>
+                        </span>
+                      </div>
+                      <p className="text-slate-500 text-xs mt-1">{week.desc}</p>
+                    </div>
                   </div>
                 ))}
               </div>
-              <p className="text-slate-400 text-sm">
-                <span className="font-semibold text-white">Study time:</span> Just {studyIntensity}
-              </p>
+              
+              {/* Study time reassurance */}
+              <div className="bg-emerald-500/10 rounded-lg p-3 border border-emerald-500/30 text-center">
+                <p className="text-emerald-300 text-sm">
+                  <span className="font-bold">Study time:</span> Just {studyIntensity}
+                </p>
+              </div>
+              
+              {/* Urgency indicators */}
+              <div className="space-y-1.5 pt-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-emerald-400">✓</span>
+                  <span className="text-slate-300">Start today → <span className="font-bold text-emerald-400">A+ possible</span></span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-amber-400">⚠️</span>
+                  <span className="text-slate-300">Wait 5 days → <span className="font-bold text-amber-400">B+ max</span></span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-red-400">✗</span>
+                  <span className="text-slate-300">Wait 10 days → <span className="font-bold text-red-400">Stay at {grade}</span></span>
+                </div>
+              </div>
             </div>
           )}
         </div>
 
-        {/* How StudyApp Works */}
-        <div className="bg-black rounded-2xl p-4 sm:p-6 border border-purple-500/40 w-full">
-          <h3 className="text-2xl font-black text-white mb-4 flex items-center gap-2">
-            🧠 How StudyApp Gets You There
+        {/* Your Personalized Toolkit - Card-based with social proof */}
+        <div className="bg-slate-900 rounded-2xl p-4 sm:p-6 border border-purple-500/40 w-full">
+          <h3 className="text-xl sm:text-2xl font-black text-white mb-5 flex items-center gap-2">
+            🧠 Your Personalized Toolkit
           </h3>
           
-          <div className="space-y-3">
-            {[
-              { icon: BookOpen, title: weakAreasDetailed[0]?.recommended_tool || 'Teach It Cards', desc: weakAreasDetailed[0]?.tool_reason || 'Master concepts through active recall' },
-              { icon: Target, title: 'Practice Questions', desc: 'Adaptive questions on your weak spots' },
-              { icon: MessageSquare, title: 'AI Tutor', desc: '24/7 help when you\'re stuck' },
-              { icon: TrendingUp, title: 'Progress Tracking', desc: 'Watch your predicted grade climb daily' }
-            ].map((item, idx) => (
-              <div key={idx} className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <item.icon className="w-5 h-5 text-white" />
+          <div className="space-y-4">
+            {/* Teach It Cards */}
+            <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-6 h-6 text-white" />
                 </div>
-                <div>
-                  <p className="font-bold text-white">{item.title}</p>
-                  <p className="text-slate-400 text-sm">{item.desc}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-white text-base uppercase tracking-wide">Teach It Cards</p>
+                  <p className="text-slate-300 text-sm mt-1">Explain concepts back to AI. This fixes {weakAreasDetailed.length > 0 ? weakAreasDetailed.length : 3} of your weak spots.</p>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
+                    <span>👥 1,200+ students</span>
+                    <span>📈 Avg +12%</span>
+                  </div>
                 </div>
               </div>
-            ))}
+            </div>
+            
+            {/* Practice Questions */}
+            <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Target className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-white text-base uppercase tracking-wide">Practice Questions</p>
+                  <p className="text-slate-300 text-sm mt-1">Adaptive questions on YOUR weak spots. 15 min/day.</p>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
+                    <span>✓ Targets your gaps</span>
+                    <span>📈 Builds confidence</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* AI Tutor */}
+            <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-white text-base uppercase tracking-wide">AI Tutor</p>
+                  <p className="text-slate-300 text-sm mt-1">24/7 help when you're stuck. Ask anything.</p>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-400">
+                    <span>💬 Instant answers</span>
+                    <span>🎯 Course-specific</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <Button 
             onClick={handleCTA}
-            className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-6 text-lg rounded-xl shadow-lg transition-all hover:scale-[1.02] group"
+            className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black py-6 sm:py-7 text-lg rounded-xl shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02] group"
           >
             See My Free Study Plan
             <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
