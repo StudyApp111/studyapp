@@ -383,8 +383,8 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 8000
+        temperature: 0.5,
+        maxOutputTokens: 10000
       }
     });
 
