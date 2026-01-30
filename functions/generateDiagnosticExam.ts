@@ -18,19 +18,19 @@ Deno.serve(async (req) => {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-flash-latest'
+      model: 'gemini-2.0-flash'
     });
 
     const prompt = `[Context]
-You are an expert assessment designer. Generate a 3-question exam-authentic DIAGNOSTIC worksheet for ${lesson.course_name}. 
+You are an expert assessment designer. Generate a 3-question exam-authentic DIAGNOSTIC worksheet for ${courseCode}. 
 This exam establishes an accurate learning baseline and must reflect how the course is ACTUALLY assessed.
 
 Do NOT rely on prior diagnostics.
 
 ────────────────────────────
 Input Context
-Course / Unit Name: ${lesson.course_name}
-School: ${learningProfile.school || "N/A"}
+Course / Unit Name: ${courseCode}
+School: ${school}
 
 ────────────────────────────
 Internal Rules (Do NOT Output)
@@ -55,7 +55,7 @@ Examples:
 
 - Computer Science / Engineering:
   Use code snippets, logic traces, outputs, or system behavior.
-  DO NOT ask “what is” or “explain the concept” unless required by curriculum.
+  DO NOT ask "what is" or "explain the concept" unless required by curriculum.
 
 - Business / Economics:
   Use case scenarios, numbers, or decisions.
@@ -83,17 +83,15 @@ If violated, auto-convert to Multiple Choice.
 CRITICAL ANSWER FORMAT:
 • For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
 • For True/False: correct_answer MUST be "True" or "False"
+• For Fill in the Blank: correct_answer MUST be the exact word/phrase that fills the blank
+• For Short Answer: correct_answer should be a model answer
 
 ────────────────────────────
 Output Requirements
 
 Generate EXACTLY 3 questions.
 Each must include:
-question_type, question_text, options, difficulty_index
-
-Then include an answer key with:
-correct_answer, explanation (2 sentences),
-assessed_competencies, targeted_misconception
+question_type, question_text, options, difficulty_index, correct_answer, explanation, assessed_competencies, targeted_misconception
 
 Output Format
 Return ONE valid JSON object matching the required schema.
@@ -101,25 +99,14 @@ No extra text.
 {
   "questions": [
     {
+      "question_type": "Multiple Choice",
       "question_text": "Clear, concise question text",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correct_answer": "Option A",
-      "assessed_competencies": ["Competency 1", "Competency 2"]
-      "explanation: [1-2 sentences as to why the answer is correct]
-    },
-    {
-      "question_text": "Second question text",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correct_answer": "Option B",
-      "assessed_competencies": ["Competency 3"]
-      "explanation: [1-2 sentences as to why the answer is correct]
-    },
-    {
-      "question_text": "Third question text",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "correct_answer": "Option C",
-      "assessed_competencies": ["Competency 4"]
-      "explanation: [1-2 sentences as to why the answer is correct]
+      "options": ["A. Option text", "B. Option text", "C. Option text", "D. Option text"],
+      "difficulty_index": "Moderate",
+      "correct_answer": "A",
+      "explanation": "1-2 sentences explaining why this is correct",
+      "assessed_competencies": ["Competency 1", "Competency 2"],
+      "targeted_misconception": "Common misconception this question tests"
     }
   ]
 }

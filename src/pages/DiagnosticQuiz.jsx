@@ -4,12 +4,15 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { AlertCircle, ChevronRight, CheckCircle, Lightbulb, X } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { AlertCircle, ChevronRight, CheckCircle, Lightbulb, X, Star } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import DiagnosticLoader from '@/components/onboarding/DiagnosticLoader';
 import { motion, AnimatePresence } from 'framer-motion';
 import MathText from '@/components/math/MathText';
+import ConfettiEffect from '@/components/gamification/ConfettiEffect';
 
 export default function DiagnosticQuiz() {
   const navigate = useNavigate();
@@ -22,6 +25,11 @@ export default function DiagnosticQuiz() {
   const [answeredQuestions, setAnsweredQuestions] = useState({});
   const [error, setError] = useState('');
   const [params, setParams] = useState({});
+  
+  // Animation states
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showWrongPulse, setShowWrongPulse] = useState(false);
+  const [showCorrectBurst, setShowCorrectBurst] = useState(false);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -61,20 +69,103 @@ export default function DiagnosticQuiz() {
     }
   };
 
+  // Determine question type
+  const getQuestionType = (question) => {
+    const type = (question.question_type || '').toLowerCase();
+    if (type.includes('multiple choice') || type.includes('multiple_choice') || type.includes('mcq')) return 'mcq';
+    if (type.includes('true') && type.includes('false') || type.includes('true_false')) return 'truefalse';
+    if (type.includes('fill') && type.includes('blank') || type.includes('fill_blank')) return 'fillblank';
+    if (type.includes('short answer') || type.includes('short_answer')) return 'shortanswer';
+    // Default to MCQ if has options
+    if (question.options && question.options.length > 0) return 'mcq';
+    return 'shortanswer';
+  };
+
+  // Check if answer is correct
+  const checkAnswer = (question, userAnswer) => {
+    const questionType = getQuestionType(question);
+    const correctAnswer = question.correct_answer;
+    
+    if (!userAnswer || !correctAnswer) return false;
+    
+    if (questionType === 'mcq') {
+      // For MCQ, correct_answer should be just a letter (A, B, C, D)
+      // User answer is the full option text, we need to extract the letter
+      const userTrimmed = userAnswer.trim();
+      const correctTrimmed = correctAnswer.trim().toUpperCase();
+      
+      // If correct answer is just a letter
+      if (/^[A-D]$/i.test(correctTrimmed)) {
+        // Extract letter from user's selection
+        const letterMatch = userTrimmed.match(/^([A-D])[\.\)\s]/i);
+        if (letterMatch) {
+          return letterMatch[1].toUpperCase() === correctTrimmed;
+        }
+        // Find option index and compare
+        const optionIndex = question.options?.findIndex(opt => opt === userAnswer);
+        if (optionIndex !== -1) {
+          const userLetter = String.fromCharCode(65 + optionIndex);
+          return userLetter === correctTrimmed;
+        }
+      }
+      // Fallback: direct comparison
+      return userTrimmed.toLowerCase() === correctAnswer.toLowerCase();
+    }
+    
+    if (questionType === 'truefalse') {
+      return userAnswer.toLowerCase() === correctAnswer.toLowerCase();
+    }
+    
+    if (questionType === 'fillblank') {
+      return userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+    }
+    
+    // Short answer - don't auto-grade
+    return null;
+  };
+
   const handleAnswerSelect = (answer) => {
     if (answeredQuestions[currentQuestionIndex]) return; // Lock after answering
     
     const question = questions[currentQuestionIndex];
-    const isCorrect = answer === question.correct_answer;
+    const questionType = getQuestionType(question);
     
     setUserAnswers(prev => ({
       ...prev,
       [currentQuestionIndex]: answer
     }));
     
+    // For short answer, don't auto-grade
+    if (questionType === 'shortanswer') {
+      return;
+    }
+    
+    const isCorrect = checkAnswer(question, answer);
+    
     setAnsweredQuestions(prev => ({
       ...prev,
       [currentQuestionIndex]: { answer, isCorrect }
+    }));
+    
+    // Trigger animations
+    if (isCorrect) {
+      setShowConfetti(true);
+      setShowCorrectBurst(true);
+      setTimeout(() => setShowCorrectBurst(false), 1500);
+    } else {
+      setShowWrongPulse(true);
+      setTimeout(() => setShowWrongPulse(false), 800);
+    }
+  };
+
+  const handleShortAnswerSubmit = () => {
+    const answer = userAnswers[currentQuestionIndex];
+    if (!answer?.trim()) return;
+    
+    // For short answer, mark as answered but don't grade
+    setAnsweredQuestions(prev => ({
+      ...prev,
+      [currentQuestionIndex]: { answer, isCorrect: null }
     }));
   };
 
@@ -152,9 +243,226 @@ export default function DiagnosticQuiz() {
   const currentAnswerState = answeredQuestions[currentQuestionIndex];
   const isAnswered = !!currentAnswerState;
   const isCorrect = currentAnswerState?.isCorrect;
+  const questionType = currentQuestion ? getQuestionType(currentQuestion) : 'mcq';
+
+  // Get option style based on answer state
+  const getOptionStyle = (option, optionIndex) => {
+    const isSelected = userAnswers[currentQuestionIndex] === option;
+    
+    if (!isAnswered) {
+      return isSelected
+        ? 'border-purple-500 bg-purple-600/20'
+        : 'border-slate-600 bg-slate-700/30 hover:border-purple-500/50 hover:bg-purple-600/10';
+    }
+    
+    // After answering
+    const correctAnswer = currentQuestion.correct_answer?.trim().toUpperCase();
+    const optionLetter = String.fromCharCode(65 + optionIndex);
+    const isThisCorrect = optionLetter === correctAnswer;
+    
+    if (isThisCorrect) {
+      return 'border-emerald-500 bg-emerald-500/20';
+    }
+    if (isSelected && !isThisCorrect) {
+      return 'border-red-400 bg-red-500/20';
+    }
+    return 'border-slate-600 bg-slate-700/20 opacity-50';
+  };
+
+  const renderMCQOptions = () => (
+    <RadioGroup
+      value={userAnswers[currentQuestionIndex] || ''}
+      onValueChange={handleAnswerSelect}
+      className="space-y-3"
+    >
+      {currentQuestion.options.map((option, oIndex) => {
+        const optionLetter = String.fromCharCode(65 + oIndex);
+        const isSelected = userAnswers[currentQuestionIndex] === option;
+        const correctAnswer = currentQuestion.correct_answer?.trim().toUpperCase();
+        const isThisCorrect = optionLetter === correctAnswer;
+        
+        // Strip leading letter prefix if present
+        const displayText = option.replace(/^[A-D][\.\)\s]+/i, '').trim();
+
+        return (
+          <label
+            key={oIndex}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${getOptionStyle(option, oIndex)} ${isAnswered ? 'cursor-default' : ''}`}
+            onClick={(e) => {
+              e.preventDefault();
+              if (!isAnswered) handleAnswerSelect(option);
+            }}
+          >
+            <RadioGroupItem 
+              value={option} 
+              id={`q${currentQuestionIndex}-o${oIndex}`} 
+              disabled={isAnswered}
+              className="pointer-events-none"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start gap-2">
+                <span className="font-bold text-slate-300 text-sm">{optionLetter}.</span>
+                <MathText className="text-sm text-white leading-relaxed">{displayText}</MathText>
+              </div>
+            </div>
+            {isAnswered && isThisCorrect && (
+              <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+            )}
+            {isAnswered && isSelected && !isThisCorrect && (
+              <X className="w-5 h-5 text-red-400 flex-shrink-0" />
+            )}
+          </label>
+        );
+      })}
+    </RadioGroup>
+  );
+
+  const renderTrueFalseOptions = () => (
+    <RadioGroup
+      value={userAnswers[currentQuestionIndex] || ''}
+      onValueChange={handleAnswerSelect}
+      className="space-y-3"
+    >
+      {["True", "False"].map((option, oIndex) => {
+        const isSelected = userAnswers[currentQuestionIndex] === option;
+        const isThisCorrect = option.toLowerCase() === currentQuestion.correct_answer?.toLowerCase();
+
+        return (
+          <label
+            key={option}
+            className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+              !isAnswered
+                ? isSelected
+                  ? 'border-purple-500 bg-purple-600/20'
+                  : 'border-slate-600 bg-slate-700/30 hover:border-purple-500/50'
+                : isThisCorrect
+                  ? 'border-emerald-500 bg-emerald-500/20'
+                  : isSelected
+                    ? 'border-red-400 bg-red-500/20'
+                    : 'border-slate-600 bg-slate-700/20 opacity-50'
+            } ${isAnswered ? 'cursor-default' : ''}`}
+            onClick={(e) => {
+              e.preventDefault();
+              if (!isAnswered) handleAnswerSelect(option);
+            }}
+          >
+            <RadioGroupItem value={option} id={`tf-${option}`} disabled={isAnswered} className="pointer-events-none" />
+            <span className="text-sm text-white font-medium">{option}</span>
+            {isAnswered && isThisCorrect && <CheckCircle className="w-5 h-5 text-emerald-400 ml-auto" />}
+            {isAnswered && isSelected && !isThisCorrect && <X className="w-5 h-5 text-red-400 ml-auto" />}
+          </label>
+        );
+      })}
+    </RadioGroup>
+  );
+
+  const renderFillBlankInput = () => (
+    <div className="space-y-3">
+      <Input
+        type="text"
+        value={userAnswers[currentQuestionIndex] || ''}
+        onChange={(e) => {
+          if (!isAnswered) {
+            setUserAnswers(prev => ({ ...prev, [currentQuestionIndex]: e.target.value }));
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !isAnswered && userAnswers[currentQuestionIndex]?.trim()) {
+            handleAnswerSelect(userAnswers[currentQuestionIndex]);
+          }
+        }}
+        placeholder="Type your answer..."
+        disabled={isAnswered}
+        className="h-14 text-lg bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+      />
+      {!isAnswered && (
+        <Button
+          onClick={() => handleAnswerSelect(userAnswers[currentQuestionIndex])}
+          disabled={!userAnswers[currentQuestionIndex]?.trim()}
+          className="w-full h-12 bg-purple-600 hover:bg-purple-700"
+        >
+          Submit Answer
+        </Button>
+      )}
+    </div>
+  );
+
+  const renderShortAnswerInput = () => (
+    <div className="space-y-3">
+      <Textarea
+        value={userAnswers[currentQuestionIndex] || ''}
+        onChange={(e) => {
+          if (!isAnswered) {
+            setUserAnswers(prev => ({ ...prev, [currentQuestionIndex]: e.target.value }));
+          }
+        }}
+        placeholder="Type your answer..."
+        disabled={isAnswered}
+        className="min-h-[120px] text-sm bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500"
+      />
+      {!isAnswered && (
+        <Button
+          onClick={handleShortAnswerSubmit}
+          disabled={!userAnswers[currentQuestionIndex]?.trim()}
+          className="w-full h-12 bg-purple-600 hover:bg-purple-700"
+        >
+          Submit Answer
+        </Button>
+      )}
+    </div>
+  );
+
+  const renderInput = () => {
+    switch (questionType) {
+      case 'mcq': return renderMCQOptions();
+      case 'truefalse': return renderTrueFalseOptions();
+      case 'fillblank': return renderFillBlankInput();
+      case 'shortanswer': return renderShortAnswerInput();
+      default: return renderMCQOptions();
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 z-50 overflow-y-auto">
+      <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
+      {/* Correct answer celebration overlay */}
+      <AnimatePresence>
+        {showCorrectBurst && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.2 }}
+            className="fixed inset-0 pointer-events-none z-[60] flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: [0, 1.2, 1], rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full p-6 shadow-2xl shadow-emerald-500/50"
+            >
+              <CheckCircle className="w-12 h-12 text-white" />
+            </motion.div>
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: 0, y: 0 }}
+                animate={{ 
+                  opacity: [0, 1, 0],
+                  x: Math.cos(i * 60 * Math.PI / 180) * 100,
+                  y: Math.sin(i * 60 * Math.PI / 180) * 100,
+                  scale: [0, 1, 0.5]
+                }}
+                transition={{ duration: 0.8, delay: 0.1 * i }}
+                className="absolute"
+              >
+                <Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="min-h-screen flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-white/10">
@@ -177,9 +485,11 @@ export default function DiagnosticQuiz() {
                     idx === currentQuestionIndex
                       ? 'bg-purple-500 scale-110'
                       : answeredQuestions[idx]
-                      ? answeredQuestions[idx].isCorrect
+                      ? answeredQuestions[idx].isCorrect === true
                         ? 'bg-emerald-500'
-                        : 'bg-red-400'
+                        : answeredQuestions[idx].isCorrect === false
+                          ? 'bg-red-400'
+                          : 'bg-purple-400' // Short answer submitted
                       : 'bg-slate-700'
                   }`}
                 />
@@ -201,20 +511,47 @@ export default function DiagnosticQuiz() {
           </div>
         )}
 
-        {/* Question Card - Modal Style like ExamQuestion */}
+        {/* Question Card */}
         <div className="flex-1 flex items-center justify-center p-4">
           <AnimatePresence mode="wait">
             {currentQuestion && (
               <motion.div
                 key={currentQuestionIndex}
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: 1, 
+                  y: 0,
+                  x: showWrongPulse ? [0, -8, 8, -8, 8, -4, 4, 0] : 0
+                }}
                 exit={{ opacity: 0, scale: 0.95, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="w-full max-w-2xl bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+                className={`w-full max-w-2xl bg-slate-800/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden ${showWrongPulse ? 'ring-2 ring-red-400/60' : ''}`}
               >
+                {/* Wrong answer flash overlay */}
+                <AnimatePresence>
+                  {showWrongPulse && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0, 0.15, 0] }}
+                      transition={{ duration: 0.5 }}
+                      className="absolute inset-0 bg-red-500 rounded-2xl pointer-events-none z-10"
+                    />
+                  )}
+                </AnimatePresence>
+
                 {/* Question Header */}
                 <div className="p-6 border-b border-white/10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge className="text-[10px] px-2 py-0.5 bg-purple-600/20 text-purple-300 border-purple-500/30">
+                      {(currentQuestion.question_type || 'Multiple Choice').replace(/_/g, ' ')}
+                    </Badge>
+                    {currentQuestion.difficulty_index && (
+                      <Badge className="text-[10px] px-2 py-0.5 bg-white/10 text-slate-300">
+                        {currentQuestion.difficulty_index}
+                      </Badge>
+                    )}
+                  </div>
                   <MathText className="text-lg md:text-xl font-semibold text-white leading-relaxed">
                     {currentQuestion.question_text}
                   </MathText>
@@ -222,61 +559,7 @@ export default function DiagnosticQuiz() {
 
                 {/* Options */}
                 <div className="p-6 space-y-3">
-                  <RadioGroup
-                    value={userAnswers[currentQuestionIndex] || ''}
-                    onValueChange={handleAnswerSelect}
-                    className="space-y-3"
-                  >
-                    {currentQuestion.options.map((option, oIndex) => {
-                      const optionLetter = String.fromCharCode(65 + oIndex);
-                      const isSelected = userAnswers[currentQuestionIndex] === option;
-                      const isThisCorrect = option === currentQuestion.correct_answer;
-                      
-                      let optionStyle = 'border-slate-600 bg-slate-700/30 hover:border-purple-500/50 hover:bg-purple-600/10';
-                      
-                      if (isAnswered) {
-                        if (isThisCorrect) {
-                          optionStyle = 'border-emerald-500 bg-emerald-500/20';
-                        } else if (isSelected && !isThisCorrect) {
-                          optionStyle = 'border-red-400 bg-red-500/20';
-                        } else {
-                          optionStyle = 'border-slate-600 bg-slate-700/20 opacity-50';
-                        }
-                      } else if (isSelected) {
-                        optionStyle = 'border-purple-500 bg-purple-600/20';
-                      }
-
-                      return (
-                        <label
-                          key={oIndex}
-                          className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${optionStyle} ${isAnswered ? 'cursor-default' : ''}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (!isAnswered) handleAnswerSelect(option);
-                          }}
-                        >
-                          <RadioGroupItem 
-                            value={option} 
-                            id={`q${currentQuestionIndex}-o${oIndex}`} 
-                            disabled={isAnswered}
-                            className="pointer-events-none"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start gap-2">
-                              <span className="font-bold text-slate-300 text-sm">{optionLetter}.</span>
-                              <MathText className="text-sm text-white leading-relaxed">{option}</MathText>
-                            </div>
-                          </div>
-                          {isAnswered && isThisCorrect && (
-                            <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                          )}
-                          {isAnswered && isSelected && !isThisCorrect && (
-                            <X className="w-5 h-5 text-red-400 flex-shrink-0" />
-                          )}
-                        </label>
-                      );
-                    })}
-                  </RadioGroup>
+                  {renderInput()}
                 </div>
 
                 {/* Feedback Section - Shows after answering */}
@@ -286,24 +569,60 @@ export default function DiagnosticQuiz() {
                     animate={{ opacity: 1, height: 'auto' }}
                     className="border-t border-white/10"
                   >
-                    <div className={`p-6 ${isCorrect ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+                    <div className={`p-6 ${
+                      isCorrect === true 
+                        ? 'bg-emerald-500/10' 
+                        : isCorrect === false 
+                          ? 'bg-amber-500/10' 
+                          : 'bg-purple-500/10' // Short answer
+                    }`}>
                       <div className="flex items-start gap-3">
-                        {isCorrect ? (
+                        {isCorrect === true ? (
                           <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                             <CheckCircle className="w-5 h-5 text-white" />
                           </div>
-                        ) : (
+                        ) : isCorrect === false ? (
                           <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
                             <Lightbulb className="w-5 h-5 text-white" />
                           </div>
+                        ) : (
+                          <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <CheckCircle className="w-5 h-5 text-white" />
+                          </div>
                         )}
                         <div className="flex-1">
-                          <p className={`font-bold text-sm ${isCorrect ? 'text-emerald-400' : 'text-amber-400'}`}>
-                            {isCorrect ? '🎉 Excellent!' : 'Keep learning!'}
+                          <p className={`font-bold text-sm ${
+                            isCorrect === true 
+                              ? 'text-emerald-400' 
+                              : isCorrect === false 
+                                ? 'text-amber-400' 
+                                : 'text-purple-400'
+                          }`}>
+                            {isCorrect === true 
+                              ? '🎉 Excellent!' 
+                              : isCorrect === false 
+                                ? 'Keep learning!' 
+                                : 'Answer submitted!'
+                            }
                           </p>
-                          {!isCorrect && (
+                          {isCorrect === false && currentQuestion.correct_answer && (
                             <p className="text-emerald-300 text-sm mt-1">
-                              Correct answer: {currentQuestion.correct_answer}
+                              <span className="font-medium">Correct answer:</span>{' '}
+                              {questionType === 'mcq' && /^[A-D]$/i.test(currentQuestion.correct_answer.trim())
+                                ? (() => {
+                                    const letter = currentQuestion.correct_answer.trim().toUpperCase();
+                                    const idx = letter.charCodeAt(0) - 65;
+                                    const optText = currentQuestion.options?.[idx];
+                                    const cleanText = optText ? optText.replace(/^[A-D][\.\)\s]+/i, '').trim() : '';
+                                    return `${letter}. ${cleanText}`;
+                                  })()
+                                : currentQuestion.correct_answer
+                              }
+                            </p>
+                          )}
+                          {questionType === 'shortanswer' && currentQuestion.correct_answer && (
+                            <p className="text-purple-300 text-sm mt-1">
+                              <span className="font-medium">Model answer:</span> {currentQuestion.correct_answer}
                             </p>
                           )}
                           {currentQuestion.explanation && (
