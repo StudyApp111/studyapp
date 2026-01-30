@@ -130,7 +130,7 @@ Generate the 3 questions now.`;
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 4000
+        maxOutputTokens: 6000
       }
     });
 
