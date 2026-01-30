@@ -5,9 +5,10 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, ChevronRight, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import DiagnosticLoader from '@/components/onboarding/DiagnosticLoader';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DiagnosticQuiz() {
   const navigate = useNavigate();
@@ -15,38 +16,36 @@ export default function DiagnosticQuiz() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGrading, setIsGrading] = useState(false);
   const [questions, setQuestions] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
   const [error, setError] = useState('');
   const [params, setParams] = useState({});
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const subject = searchParams.get('subject');
     const school = searchParams.get('school');
     const courseCode = searchParams.get('courseCode');
 
-    console.log('📋 DiagnosticQuiz params:', { subject, school, courseCode });
+    console.log('📋 DiagnosticQuiz params:', { school, courseCode });
 
-    if (!subject || !school || !courseCode) {
+    if (!school || !courseCode) {
       console.error('❌ Missing params, redirecting to onboarding');
-      // Missing params - redirect back to onboarding
+      setError('Missing required information. Redirecting to onboarding...');
       setTimeout(() => {
         navigate(createPageUrl("Onboarding"), { replace: true });
       }, 2000);
-      setError('Missing required information. Redirecting to onboarding...');
       setIsLoading(false);
       return;
     }
 
-    setParams({ subject, school, courseCode });
-    generateQuestions(subject, school, courseCode);
+    setParams({ school, courseCode });
+    generateQuestions(school, courseCode);
   }, [location.search, navigate]);
 
-  const generateQuestions = async (subject, school, courseCode) => {
-    console.log('🎯 Calling generateDiagnosticExam with:', { subject, school, courseCode });
+  const generateQuestions = async (school, courseCode) => {
+    console.log('🎯 Calling generateDiagnosticExam with:', { school, courseCode });
     try {
       const result = await base44.functions.invoke('generateDiagnosticExam', {
-        subject,
         school,
         courseCode
       });
@@ -58,26 +57,30 @@ export default function DiagnosticQuiz() {
         setQuestions(result.data.questions);
       } else {
         console.error('❌ Invalid response structure:', result.data);
-        throw new Error('Failed to generate questions');
+        throw new Error(result.data?.error || 'Failed to generate questions');
       }
     } catch (err) {
       console.error('❌ Error generating quiz:', err);
-      console.error('Error details:', err.message, err.response?.data);
       setError(`Failed to generate your quiz: ${err.message}. Please try again.`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAnswerChange = (questionIndex, answer) => {
+  const handleAnswerChange = (answer) => {
     setUserAnswers(prev => ({
       ...prev,
-      [questionIndex]: answer
+      [currentQuestionIndex]: answer
     }));
   };
 
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
   const handleSubmit = async () => {
-    // Validate all questions are answered
     if (Object.keys(userAnswers).length !== questions.length) {
       setError('Please answer all questions before submitting.');
       return;
@@ -86,49 +89,35 @@ export default function DiagnosticQuiz() {
     setIsGrading(true);
     setError('');
 
-    console.log('📝 Submitting quiz with answers:', userAnswers);
-
     try {
-      // Format user answers for grading
       const formattedAnswers = Object.entries(userAnswers).map(([index, answer]) => ({
         question_index: parseInt(index),
         answer
       }));
 
-      console.log('🎯 Calling gradeDiagnosticExam with:', { params, formattedAnswers });
-
-      // Grade the exam
       const result = await base44.functions.invoke('gradeDiagnosticExam', {
-        subject: params.subject,
         school: params.school,
         courseCode: params.courseCode,
         questions,
         userAnswers: formattedAnswers
       });
 
-      console.log('📊 gradeDiagnosticExam response:', result);
-
       if (result.data?.success) {
-        console.log('✅ Grading successful, navigating to results');
-        // Navigate to PredictedGradeDisplay with results
         const queryParams = new URLSearchParams({
           grade: result.data.predicted_grade,
-          strongAreas: JSON.stringify(result.data.strong_areas),
-          weakAreas: JSON.stringify(result.data.weak_areas),
-          studyDays: result.data.estimated_study_time_days,
-          subject: params.subject,
+          strongAreas: JSON.stringify(result.data.strong_areas || []),
+          weakAreas: JSON.stringify(result.data.weak_areas || []),
+          studyDays: result.data.estimated_study_time_days || '14',
           school: params.school,
           courseCode: params.courseCode
         });
 
         navigate(createPageUrl('PredictedGradeDisplay') + `?${queryParams.toString()}`, { replace: true });
       } else {
-        console.error('❌ Invalid grading response:', result.data);
         throw new Error('Failed to grade exam');
       }
     } catch (err) {
       console.error('❌ Error grading quiz:', err);
-      console.error('Error details:', err.message, err.response?.data);
       setError(`Failed to grade your quiz: ${err.message}. Please try again.`);
       setIsGrading(false);
     }
@@ -142,37 +131,52 @@ export default function DiagnosticQuiz() {
     return <DiagnosticLoader mode="grading" />;
   }
 
-  const allAnswered = Object.keys(userAnswers).length === questions.length;
+  if (error && questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const isAnswered = userAnswers[currentQuestionIndex] !== undefined;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            Your Diagnostic Quiz
+        <div className="text-center mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            Diagnostic Quiz
           </h1>
-          <p className="text-slate-300">
-            {params.courseCode} • {params.subject}
+          <p className="text-slate-400 text-sm">
+            {params.courseCode} • {params.school}
           </p>
         </div>
 
         {/* Progress indicator */}
         <div className="mb-6">
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 mb-2">
             {questions.map((_, idx) => (
               <div
                 key={idx}
                 className={`h-2 w-12 rounded-full transition-all ${
-                  userAnswers[idx]
-                    ? 'bg-purple-500'
+                  idx === currentQuestionIndex
+                    ? 'bg-purple-500 scale-110'
+                    : userAnswers[idx]
+                    ? 'bg-purple-500/50'
                     : 'bg-slate-700'
                 }`}
               />
             ))}
           </div>
-          <p className="text-center text-slate-400 text-sm mt-2">
-            {Object.keys(userAnswers).length} of {questions.length} answered
+          <p className="text-center text-slate-400 text-sm">
+            Question {currentQuestionIndex + 1} of {questions.length}
           </p>
         </div>
 
@@ -184,36 +188,39 @@ export default function DiagnosticQuiz() {
           </Alert>
         )}
 
-        {/* Questions */}
-        <div className="space-y-6 mb-8">
-          {questions.map((question, qIndex) => (
-            <div
-              key={qIndex}
-              className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-700/50"
+        {/* Question Card - Single Question View */}
+        <AnimatePresence mode="wait">
+          {currentQuestion && (
+            <motion.div
+              key={currentQuestionIndex}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-slate-700/50"
             >
-              <h3 className="text-lg md:text-xl font-semibold text-white mb-4">
-                Question {qIndex + 1}
+              <h3 className="text-lg md:text-xl font-semibold text-white mb-6">
+                {currentQuestion.question_text}
               </h3>
-              <p className="text-slate-200 mb-4 text-base md:text-lg">
-                {question.question_text}
-              </p>
 
               <RadioGroup
-                value={userAnswers[qIndex] || ''}
-                onValueChange={(value) => handleAnswerChange(qIndex, value)}
+                value={userAnswers[currentQuestionIndex] || ''}
+                onValueChange={handleAnswerChange}
+                className="space-y-3"
               >
-                {question.options.map((option, oIndex) => (
+                {currentQuestion.options.map((option, oIndex) => (
                   <div
                     key={oIndex}
                     className={`flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                      userAnswers[qIndex] === option
+                      userAnswers[currentQuestionIndex] === option
                         ? 'border-purple-500 bg-purple-600/20'
                         : 'border-slate-600 hover:border-slate-500 bg-slate-700/30'
                     }`}
+                    onClick={() => handleAnswerChange(option)}
                   >
-                    <RadioGroupItem value={option} id={`q${qIndex}-o${oIndex}`} />
+                    <RadioGroupItem value={option} id={`q${currentQuestionIndex}-o${oIndex}`} />
                     <Label
-                      htmlFor={`q${qIndex}-o${oIndex}`}
+                      htmlFor={`q${currentQuestionIndex}-o${oIndex}`}
                       className="flex-1 text-white cursor-pointer text-sm md:text-base"
                     >
                       {option}
@@ -221,20 +228,31 @@ export default function DiagnosticQuiz() {
                   </div>
                 ))}
               </RadioGroup>
-            </div>
-          ))}
-        </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-center">
-          <Button
-            onClick={handleSubmit}
-            disabled={!allAnswered}
-            className="h-14 px-12 text-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
-          >
-            Submit Quiz
-          </Button>
-        </div>
+              {/* Navigation */}
+              <div className="flex justify-end mt-8">
+                {isLastQuestion ? (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!isAnswered}
+                    className="h-12 px-8 text-base bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
+                  >
+                    Submit Quiz
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleNext}
+                    disabled={!isAnswered}
+                    className="h-12 px-8 text-base bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
+                  >
+                    Next
+                    <ChevronRight className="w-5 h-5 ml-1" />
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

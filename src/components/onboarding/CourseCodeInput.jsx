@@ -1,37 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { base44 } from '@/api/base44Client';
+import { Loader2, BookOpen, ChevronRight } from 'lucide-react';
 
-export default function CourseCodeInput({ value, onChange, onNext, onBack }) {
+export default function CourseCodeInput({ value, onChange, onNext, onBack, school }) {
   const [courseCode, setCourseCode] = useState(value || '');
+  const [suggestions, setSuggestions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+
+  // Load course suggestions on mount
+  useEffect(() => {
+    if (school) {
+      loadCourseSuggestions();
+    }
+  }, [school]);
+
+  const loadCourseSuggestions = async () => {
+    setLoading(true);
+    try {
+      const result = await base44.functions.invoke('generateCourseCodes', { 
+        school: school || '',
+        year: null 
+      });
+      if (result?.data?.codes) {
+        setSuggestions(result.data.codes);
+      }
+    } catch (error) {
+      console.error('Error loading course codes:', error);
+      // Fallback suggestions
+      setSuggestions(['MATH 101', 'ECON 201', 'PSYC 200', 'BIOL 241', 'CHEM 201', 'POLI 200']);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCourseSelect = (code) => {
+    setCourseCode(code);
+    setShowSuggestions(false);
+    onChange(code);
+    onNext(code);
+  };
 
   const handleNext = () => {
     const trimmedCode = courseCode.trim();
     if (trimmedCode) {
       onChange(trimmedCode);
-      // Pass value directly to onNext to avoid race condition
       onNext(trimmedCode);
     }
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-          What's your course name or code?
+    <div className="w-full max-w-2xl mx-auto px-4 py-6">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <div className="text-5xl mb-4">📚</div>
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+          What course are you studying?
         </h2>
-        <p className="text-slate-400 text-lg">
-          e.g., MATH 101, Calculus I, Introduction to Biology
+        <p className="text-slate-400 text-sm md:text-base">
+          Enter your course name or code (e.g., MATH 101, Calculus I)
         </p>
       </div>
 
-      <div className="mb-8">
+      {/* Search Input */}
+      <div className="mb-4">
         <Input
           type="text"
           placeholder="e.g., MATH 265, Calculus II..."
           value={courseCode}
-          onChange={(e) => setCourseCode(e.target.value)}
-          className="h-14 text-lg bg-white/5 border-white/10 text-white placeholder:text-slate-500"
+          onChange={(e) => {
+            setCourseCode(e.target.value);
+            setShowSuggestions(true);
+          }}
+          className="h-14 text-lg bg-slate-800/60 border-slate-600 text-white placeholder:text-slate-500 rounded-xl"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && courseCode.trim()) {
               handleNext();
@@ -41,12 +84,41 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack }) {
         />
       </div>
 
+      {/* Suggestions */}
+      {showSuggestions && (
+        <div className="mb-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+              <span className="ml-2 text-slate-400 text-sm">Loading suggestions...</span>
+            </div>
+          ) : suggestions.length > 0 && (
+            <>
+              <p className="text-xs text-slate-500 mb-3 uppercase tracking-wide">Popular courses at {school || 'your school'}</p>
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((code, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleCourseSelect(code)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/60 border border-slate-600 hover:border-purple-500 hover:bg-purple-600/20 transition-all text-white text-sm font-medium"
+                  >
+                    <BookOpen className="w-4 h-4 text-purple-400" />
+                    {code}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Navigation Buttons */}
       <div className="flex gap-4 justify-center">
         {onBack && (
           <Button
             onClick={onBack}
             variant="outline"
-            className="h-14 px-8 text-lg border-white/10 hover:bg-white/5"
+            className="h-12 px-6 text-base border-slate-600 hover:bg-slate-700 text-white"
           >
             Back
           </Button>
@@ -54,7 +126,7 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack }) {
         <Button
           onClick={handleNext}
           disabled={!courseCode.trim()}
-          className="h-14 px-12 text-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-12 px-10 text-base bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50"
         >
           Continue
         </Button>

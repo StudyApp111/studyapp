@@ -5,9 +5,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    const { subject, school, courseCode, questions, userAnswers } = await req.json();
+    const { school, courseCode, questions, userAnswers } = await req.json();
 
-    if (!subject || !school || !courseCode || !questions || !userAnswers) {
+    if (!school || !courseCode || !questions || !userAnswers) {
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
