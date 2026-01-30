@@ -291,26 +291,6 @@ export default function DiagnosticQuiz() {
   const isCorrect = currentAnswerState?.isCorrect;
   const questionType = currentQuestion ? getQuestionType(currentQuestion) : 'mcq';
 
-  // Auto-submit for fill-blank and short-answer after typing
-  useEffect(() => {
-    if ((questionType === 'fillblank' || questionType === 'shortanswer') && !isAnswered) {
-      const answer = userAnswers[currentQuestionIndex];
-      if (answer?.trim()) {
-        const timeout = setTimeout(() => {
-          if (questionType === 'fillblank') {
-            handleAnswerSelect(answer);
-          } else {
-            setAnsweredQuestions(prev => ({
-              ...prev,
-              [currentQuestionIndex]: { answer, isCorrect: null }
-            }));
-          }
-        }, 1500);
-        return () => clearTimeout(timeout);
-      }
-    }
-  }, [userAnswers[currentQuestionIndex], isAnswered, questionType]);
-
   // Get option style based on answer state
   const getOptionStyle = (option, optionIndex) => {
     const isSelected = userAnswers[currentQuestionIndex] === option;
