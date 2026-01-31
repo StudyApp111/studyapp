@@ -228,15 +228,18 @@ export default function DiagnosticQuiz() {
     setError('');
 
     try {
-      const formattedAnswers = Object.entries(userAnswers).map(([index, answer]) => ({
+      // Build formattedAnswers from answeredQuestions (which contains the actual answers)
+      const formattedAnswers = Object.entries(answeredQuestions).map(([index, answerData]) => ({
         question_index: parseInt(index),
-        answer
+        answer: answerData.answer
       }));
 
       console.log('=== SUBMITTING TO gradeDiagnosticExam ===');
-      console.log('Formatted answers:', JSON.stringify(formattedAnswers, null, 2));
-      console.log('Total answers:', formattedAnswers.length);
       console.log('Questions:', questions.length);
+      console.log('Answered questions:', Object.keys(answeredQuestions).length);
+      console.log('Formatted answers:', JSON.stringify(formattedAnswers, null, 2));
+      console.log('User answers state:', JSON.stringify(userAnswers, null, 2));
+      console.log('Answered questions state:', JSON.stringify(answeredQuestions, null, 2));
 
       const result = await base44.functions.invoke('gradeDiagnosticExam', {
         school: params.school,

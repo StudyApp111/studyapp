@@ -169,7 +169,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         <button
           onClick={onBack}
           disabled={isLoading}
-          className="text-purple-600 hover:text-purple-700 text-sm transition-colors font-medium"
+          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm transition-colors font-medium rounded-lg"
         >
           ← Back
         </button>

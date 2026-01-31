@@ -40,7 +40,7 @@ export default function Home() {
         const currentUser = resetResult.user || await base44.auth.me();
         setUser(currentUser);
 
-        // Check if user is coming from onboarding report card
+        // Check if user is coming from onboarding flow
         const urlParams = new URLSearchParams(window.location.search);
         const fromOnboarding = urlParams.get('fromOnboarding') === 'true';
         const pendingDataStr = sessionStorage.getItem('pendingOnboardingData');
@@ -50,35 +50,42 @@ export default function Home() {
             const pendingData = JSON.parse(pendingDataStr);
             sessionStorage.removeItem('pendingOnboardingData');
             
-            // Create lesson from onboarding data
-            const lessonData = {
-              course_name: pendingData.courseCode,
-              description: `Course at ${pendingData.school}`,
-              status: 'diagnostic_completed'
-            };
-            
-            // If there was uploaded material, include it
-            if (pendingData.fileUrl) {
-              lessonData.file_url = pendingData.fileUrl;
-              lessonData.file_urls = [pendingData.fileUrl];
-              lessonData.input_type = 'file';
+            // Check if this is from the report card (completed diagnostic) or just sign-in during questions
+            if (pendingData.fromReportCard && pendingData.reportData) {
+              // User completed diagnostic and is coming from report card - create lesson
+              const lessonData = {
+                course_name: pendingData.courseCode,
+                description: `Course at ${pendingData.school}`,
+                status: 'diagnostic_completed'
+              };
+              
+              if (pendingData.fileUrl) {
+                lessonData.file_url = pendingData.fileUrl;
+                lessonData.file_urls = [pendingData.fileUrl];
+                lessonData.input_type = 'file';
+              }
+              if (pendingData.extractedContent) {
+                lessonData.extracted_content = pendingData.extractedContent;
+              }
+              if (pendingData.compressedContent) {
+                lessonData.compressed_content = pendingData.compressedContent;
+              }
+              
+              const newLesson = await base44.entities.Lesson.create(lessonData);
+              
+              // Mark user as onboarding completed
+              await base44.auth.updateMe({ onboarding_completed: true });
+              
+              // Navigate to DocumentViewer with study plan tab and report data
+              const reportDataStr = encodeURIComponent(JSON.stringify(pendingData.reportData || {}));
+              navigate(`${createPageUrl("DocumentViewer")}?id=${newLesson.id}&tab=study-plan&fromOnboarding=true&reportData=${reportDataStr}`, { replace: true });
+              return;
+            } else {
+              // User signed in during onboarding questions (before diagnostic) - just stay on Home
+              // Mark onboarding complete and clear the redirect
+              await base44.auth.updateMe({ onboarding_completed: true });
+              window.history.replaceState({}, '', createPageUrl("Home"));
             }
-            if (pendingData.extractedContent) {
-              lessonData.extracted_content = pendingData.extractedContent;
-            }
-            if (pendingData.compressedContent) {
-              lessonData.compressed_content = pendingData.compressedContent;
-            }
-            
-            const newLesson = await base44.entities.Lesson.create(lessonData);
-            
-            // Mark user as onboarding completed
-            await base44.auth.updateMe({ onboarding_completed: true });
-            
-            // Navigate to DocumentViewer with study plan tab and report data
-            const reportDataStr = encodeURIComponent(JSON.stringify(pendingData.reportData || {}));
-            navigate(`${createPageUrl("DocumentViewer")}?id=${newLesson.id}&tab=study-plan&fromOnboarding=true&reportData=${reportDataStr}`, { replace: true });
-            return;
           } catch (err) {
             console.error("Error processing onboarding data:", err);
             sessionStorage.removeItem('pendingOnboardingData');

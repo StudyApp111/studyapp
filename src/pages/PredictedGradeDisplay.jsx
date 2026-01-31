@@ -71,35 +71,83 @@ export default function PredictedGradeDisplay() {
     setTimeout(() => setLoading(false), 2000);
   }, [name, school, courseCode, reportDataParam, navigate]);
 
-  const handleCTA = () => {
-    // Get document data from URL if available
-    const documentDataStr = queryParams.get("documentData");
-    let documentData = null;
-    if (documentDataStr) {
-      try {
-        documentData = JSON.parse(decodeURIComponent(documentDataStr));
-      } catch (e) {
-        console.error("Failed to parse document data:", e);
+  const handleCTA = async () => {
+    // Check if user is already authenticated
+    try {
+      const isAuth = await base44.auth.isAuthenticated();
+      
+      if (isAuth) {
+        // User is logged in - create lesson and navigate directly
+        const user = await base44.auth.me();
+        
+        // Get document data from URL if available
+        const documentDataStr = queryParams.get("documentData");
+        let documentData = null;
+        if (documentDataStr) {
+          try {
+            documentData = JSON.parse(decodeURIComponent(documentDataStr));
+          } catch (e) {
+            console.error("Failed to parse document data:", e);
+          }
+        }
+        
+        // Create lesson
+        const lessonData = {
+          course_name: courseCode,
+          description: `Course at ${school}`,
+          status: 'diagnostic_completed'
+        };
+        
+        if (documentData?.fileUrl) {
+          lessonData.file_url = documentData.fileUrl;
+          lessonData.file_urls = [documentData.fileUrl];
+          lessonData.input_type = 'file';
+        }
+        if (documentData?.extractedContent) {
+          lessonData.extracted_content = documentData.extractedContent;
+        }
+        if (documentData?.compressedContent) {
+          lessonData.compressed_content = documentData.compressedContent;
+        }
+        
+        const newLesson = await base44.entities.Lesson.create(lessonData);
+        
+        // Mark onboarding as complete
+        await base44.auth.updateMe({ onboarding_completed: true });
+        
+        // Navigate to study plan with report data
+        const reportDataStr = encodeURIComponent(JSON.stringify(reportData || {}));
+        navigate(`${createPageUrl("DocumentViewer")}?id=${newLesson.id}&tab=study-plan&fromOnboarding=true&reportData=${reportDataStr}`, { replace: true });
+      } else {
+        // User not logged in - store data and redirect to login
+        const documentDataStr = queryParams.get("documentData");
+        let documentData = null;
+        if (documentDataStr) {
+          try {
+            documentData = JSON.parse(decodeURIComponent(documentDataStr));
+          } catch (e) {
+            console.error("Failed to parse document data:", e);
+          }
+        }
+        
+        const onboardingData = {
+          courseCode: courseCode || '',
+          school: school || '',
+          studentName: name || '',
+          reportData: reportData || {},
+          fileUrl: documentData?.fileUrl || null,
+          extractedContent: documentData?.extractedContent || null,
+          compressedContent: documentData?.compressedContent || null,
+          fromReportCard: true
+        };
+        
+        sessionStorage.setItem('pendingOnboardingData', JSON.stringify(onboardingData));
+        const redirectUrl = `${createPageUrl("Home")}?fromOnboarding=true`;
+        base44.auth.redirectToLogin(redirectUrl);
       }
+    } catch (error) {
+      console.error("Error in handleCTA:", error);
     }
-    
-    // Build complete onboarding data to pass through login
-    const onboardingData = {
-      courseCode: courseCode || '',
-      school: school || '',
-      studentName: name || '',
-      reportData: reportData || {},
-      fileUrl: documentData?.fileUrl || null,
-      extractedContent: documentData?.extractedContent || null,
-      compressedContent: documentData?.compressedContent || null,
-      fromOnboarding: true
-    };
-    
-    // Store in sessionStorage for retrieval after login
-    sessionStorage.setItem('pendingOnboardingData', JSON.stringify(onboardingData));
-    
-    const redirectUrl = `${createPageUrl("Home")}?fromOnboarding=true`;
-    base44.auth.redirectToLogin(redirectUrl);
   };
 
   if (loading) {
@@ -195,14 +243,15 @@ export default function PredictedGradeDisplay() {
             {/* Visual Grade Meter */}
             <div className="w-full max-w-md mx-auto space-y-2">
               <div className="relative h-3 sm:h-4 bg-white/20 rounded-full overflow-hidden">
+                {/* Background fill showing progress */}
                 <div 
-                  className="absolute left-0 top-0 h-full rounded-full bg-white/90 transition-all duration-1000"
+                  className="absolute left-0 top-0 h-full rounded-full bg-white/30 transition-all duration-1000"
                   style={{ width: `${percentage}%` }}
                 />
-                {/* Position indicator */}
+                {/* Position indicator - centered on percentage */}
                 <div 
                   className="absolute top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full border-2 border-white shadow-lg transition-all duration-1000"
-                  style={{ left: `calc(${percentage}% - 8px)` }}
+                  style={{ left: `calc(${percentage}% - 10px)` }}
                 />
               </div>
               <div className="flex justify-between text-xs sm:text-sm text-white/70 font-medium px-1">

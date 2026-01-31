@@ -40,13 +40,19 @@ export default function Onboarding() {
 
   const checkExistingProfile = async () => {
     try {
-      const user = await base44.auth.me();
-      if (user && user.onboarding_completed) {
-        navigate(createPageUrl("Home"), { replace: true });
-        return;
+      const isAuth = await base44.auth.isAuthenticated();
+      if (isAuth) {
+        const user = await base44.auth.me();
+        // If user is authenticated and completed onboarding, send to Home
+        if (user && user.onboarding_completed) {
+          navigate(createPageUrl("Home"), { replace: true });
+          return;
+        }
+        // If authenticated but incomplete onboarding, let them continue
       }
+      // Not authenticated - allow them to proceed with onboarding
     } catch {
-      // User not authenticated - that's OK for onboarding
+      // Error checking auth - allow onboarding
     }
     setIsLoading(false);
   };
@@ -259,7 +265,18 @@ export default function Onboarding() {
         {/* Footer */}
         <div className="text-center mt-6 space-y-3">
           <button
-            onClick={() => base44.auth.redirectToLogin()}
+            onClick={async () => {
+              // Store current progress before redirecting to login
+              // This way, if user signs in during onboarding, we know they haven't done diagnostic yet
+              const progressData = {
+                name: answersRef.current.name,
+                school: answersRef.current.school,
+                courseCode: answersRef.current.courseCode,
+                fromReportCard: false // User signing in during questions, not from report card
+              };
+              sessionStorage.setItem('pendingOnboardingData', JSON.stringify(progressData));
+              base44.auth.redirectToLogin(createPageUrl("Home") + "?fromOnboarding=true");
+            }}
             className="text-slate-400 hover:text-slate-200 text-sm underline transition-colors"
           >
             Already a user? Sign In
