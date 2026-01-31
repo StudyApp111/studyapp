@@ -25,10 +25,8 @@ Deno.serve(async (req) => {
         const prompt = `Role: Curriculum Analyst
 Task: Generate a JSON curriculum profile for the course defined below.
 Input Context:
-- Grade Level: ${learningProfile?.grade || "Post-Secondary"}
 - Course: ${courseName}
 - School: ${learningProfile?.school || "Not specified"}
-- Location: ${learningProfile?.city || "Not specified"}
 - User Notes: ${extractedContent || "None provided"}
 
 Directives:
