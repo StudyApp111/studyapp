@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function NameInput({ value, onChange, onNext, onBack }) {
   const [name, setName] = useState(value || '');
@@ -25,16 +26,35 @@ export default function NameInput({ value, onChange, onNext, onBack }) {
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-6 bg-white rounded-2xl shadow-2xl">
+    <div className="relative p-6 md:p-8 space-y-6 bg-white rounded-2xl shadow-2xl overflow-hidden">
+      {/* Animated Background Sparkles */}
+      {[...Array(8)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 bg-purple-400/40 rounded-full"
+          initial={{ opacity: 0, x: Math.random() * 400, y: Math.random() * 300 }}
+          animate={{
+            opacity: [0, 1, 0],
+            x: Math.random() * 400,
+            y: Math.random() * 300,
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Infinity,
+            delay: Math.random() * 2,
+          }}
+        />
+      ))}
+      
       {/* Header */}
-      <div className="text-center space-y-3">
+      <div className="text-center space-y-3 relative z-10">
         <div className="text-6xl mb-2">👋</div>
         <h2 className="text-2xl md:text-3xl font-bold text-slate-900">What's your name?</h2>
         <p className="text-slate-600 text-sm">We'll personalize your learning experience</p>
       </div>
 
       {/* Input */}
-      <div className="space-y-3">
+      <div className="space-y-3 relative z-10">
         <Input
           type="text"
           placeholder="Enter your first name"
@@ -47,7 +67,7 @@ export default function NameInput({ value, onChange, onNext, onBack }) {
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex gap-4 justify-center pt-2">
+      <div className="flex gap-4 justify-center pt-2 relative z-10">
         {onBack && (
           <Button
             onClick={onBack}
