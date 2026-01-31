@@ -104,7 +104,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       
       if (fromOnboarding && reportDataStr) {
         try {
-          const reportData = JSON.parse(decodeURIComponent(reportDataStr));
+          // reportDataStr is already encoded once from the URL, just parse it
+          const reportData = JSON.parse(reportDataStr);
           
           // Trigger study plan generation with diagnostic data
           window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));

@@ -238,8 +238,14 @@ export default function DiagnosticQuiz() {
       console.log('Questions:', questions.length);
       console.log('Answered questions:', Object.keys(answeredQuestions).length);
       console.log('Formatted answers:', JSON.stringify(formattedAnswers, null, 2));
-      console.log('User answers state:', JSON.stringify(userAnswers, null, 2));
-      console.log('Answered questions state:', JSON.stringify(answeredQuestions, null, 2));
+      console.log('Sample question correct_answer:', questions[0]?.correct_answer);
+      console.log('Sample formatted answer:', formattedAnswers[0]);
+      
+      // CRITICAL DEBUG: Log each answer with its question for verification
+      formattedAnswers.forEach((ans, i) => {
+        const question = questions[ans.question_index];
+        console.log(`Question ${ans.question_index}: Correct="${question?.correct_answer}" | User="${ans.answer}"`);
+      });
 
       const result = await base44.functions.invoke('gradeDiagnosticExam', {
         school: params.school,

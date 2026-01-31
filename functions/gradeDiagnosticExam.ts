@@ -8,9 +8,16 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     
     const body = await req.json();
-    console.log("Request body:", JSON.stringify(body, null, 2));
-    
+    console.log("=== RECEIVED gradeDiagnosticExam REQUEST ===");
+    console.log("Total questions:", body.questions?.length);
+    console.log("Total userAnswers:", body.userAnswers?.length);
+
     const { school, courseCode, questions, userAnswers, studentName, curriculumData } = body;
+
+    // CRITICAL DEBUG: Log what we received
+    console.log("First question correct_answer:", questions[0]?.correct_answer);
+    console.log("First userAnswer:", JSON.stringify(userAnswers[0], null, 2));
+    console.log("All userAnswers:", JSON.stringify(userAnswers, null, 2));
 
     if (!school || !courseCode || !questions || !userAnswers) {
       console.error("Missing required parameters:", { school, courseCode, hasQuestions: !!questions, hasUserAnswers: !!userAnswers });
