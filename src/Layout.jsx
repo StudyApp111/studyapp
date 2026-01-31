@@ -92,43 +92,39 @@ function LayoutContent({ children, currentPageName }) {
 
     let cleanup;
     (async () => {
-      // Define onboarding flow pages - ONLY these are accessible without auth
-      // Use case-insensitive check for path matching
+      // Define onboarding flow pages - accessible without auth
       const pathLower = location.pathname.toLowerCase();
       const isOnboardingFlow = 
         pathLower.includes("onboarding") || 
         pathLower.includes("diagnosticquiz") || 
         pathLower.includes("predictedgradedisplay");
 
-      // CRITICAL: If on onboarding flow, do NOT run any auth redirects
-      // Just try to get user for display purposes but don't redirect
-      if (isOnboardingFlow) {
-        try {
-          const currentUser = await base44.auth.me();
-          setUser(currentUser);
-        } catch (error) {
-          // Not authenticated - that's fine for onboarding flow
-        }
-        return; // Don't run any redirect logic
+      // Check authentication status first
+      let currentUser = null;
+      try {
+        currentUser = await base44.auth.me();
+        setUser(currentUser);
+      } catch (error) {
+        // Not authenticated
+        setUser(null);
       }
 
-      // Not on onboarding flow - normal auth check
-      try {
-        const currentUser = await base44.auth.me();
-        setUser(currentUser);
+      // If NOT authenticated and NOT already on onboarding → redirect to onboarding
+      if (!currentUser && !isOnboardingFlow) {
+        navigate(createPageUrl("Onboarding"), { replace: true });
+        return;
+      }
 
-        // User is authenticated
-        if (!currentUser.onboarding_completed) {
-          // Authenticated but incomplete onboarding - send to onboarding
-          navigate(createPageUrl("Onboarding"), { replace: true });
-          return;
-        }
+      // If authenticated but onboarding incomplete → redirect to onboarding
+      if (currentUser && !currentUser.onboarding_completed && !isOnboardingFlow) {
+        navigate(createPageUrl("Onboarding"), { replace: true });
+        return;
+      }
 
+      // If authenticated and onboarding complete → track session
+      if (currentUser && currentUser.onboarding_completed) {
         trackUserSession();
         cleanup = trackSessionDuration();
-      } catch (error) {
-        // User is NOT authenticated - redirect to onboarding
-        navigate(createPageUrl("Onboarding"), { replace: true });
       }
     })();
 
