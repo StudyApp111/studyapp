@@ -94,9 +94,49 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   };
 
   useEffect(() => {
-    if (lesson?.id && !isGeneratingPlan) {
-      loadStudyPlan();
-    }
+    const checkAndLoadPlan = async () => {
+      if (!lesson?.id || isGeneratingPlan) return;
+      
+      // Check if coming from onboarding with report data
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromOnboarding = urlParams.get('fromOnboarding') === 'true';
+      const reportDataStr = urlParams.get('reportData');
+      
+      if (fromOnboarding && reportDataStr) {
+        try {
+          const reportData = JSON.parse(decodeURIComponent(reportDataStr));
+          
+          // Trigger study plan generation with diagnostic data
+          window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
+          
+          const result = await base44.functions.invoke('generateStudyPlan', {
+            lessonId: lesson.id,
+            diagnosticData: {
+              predicted_grade: reportData.predicted_grade,
+              predicted_percentage: reportData.predicted_percentage,
+              confidence_level: reportData.confidence_level,
+              weak_areas_detailed: reportData.weak_areas_detailed
+            }
+          });
+          
+          if (result.data?.success) {
+            // Reload study plan
+            await loadStudyPlan();
+            window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
+            
+            // Clean URL params
+            window.history.replaceState({}, '', `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=study-plan`);
+          }
+        } catch (error) {
+          console.error("Error generating study plan from onboarding:", error);
+          window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
+        }
+      } else {
+        await loadStudyPlan();
+      }
+    };
+    
+    checkAndLoadPlan();
   }, [lesson?.id, isGeneratingPlan]);
 
   // Subscribe to study plan updates for real-time grade changes
