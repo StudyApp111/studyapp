@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 
 Deno.serve(async (req) => {
     try {
@@ -15,9 +16,9 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Course name is required' }, { status: 400 });
         }
 
-        const grokApiKey = Deno.env.get("GROK_API_KEY");
-        if (!grokApiKey) {
-            return Response.json({ error: 'GROK_API_KEY not configured' }, { status: 500 });
+        const apiKey = Deno.env.get("GEMINIAPIKEY");
+        if (!apiKey) {
+            return Response.json({ error: 'GEMINIAPIKEY not configured' }, { status: 500 });
         }
 
         // Build the prompt with user's context
@@ -126,7 +127,6 @@ Generate 6-10 core_competencies, 5-8 competency_weightings that sum to ~100%, 3-
             required: ["core_competencies", "competency_weightings", "assessment_formats", "high_yield_focal_points", "common_misconceptions"]
         };
 
-        // Enhanced prompt with explicit JSON schema instructions
         const jsonSchemaString = JSON.stringify(response_json_schema, null, 2);
         const enhancedPrompt = `${prompt}
 
@@ -145,56 +145,32 @@ IMPORTANT FORMATTING RULES:
 
 Your response must be valid, parseable JSON that exactly matches the schema above.`;
 
-        // Prepare the request body for Grok-3
-        const requestBody = {
-            messages: [{
-                role: "user",
-                content: enhancedPrompt
-            }],
-            model: "grok-3",
-            temperature: 0.3,
-            max_tokens: 8192,
-            response_format: {
-                type: "json_object"
+        console.log('Calling Gemini Flash Lite for curriculum mapping...');
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ 
+            model: 'gemini-2.0-flash-lite-latest',
+            generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 8192,
+                responseMimeType: "application/json"
             }
-        };
+        });
 
-        console.log('Calling Grok-3 API for curriculum mapping...');
+        const result = await model.generateContent({
+            contents: [{ 
+                role: 'user', 
+                parts: [{ text: enhancedPrompt }] 
+            }]
+        });
 
-        // Call Grok-3 API
-        const response = await fetch(
-            'https://api.x.ai/v1/chat/completions',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${grokApiKey}`
-                },
-                body: JSON.stringify(requestBody)
-            }
-        );
+        const response = result.response;
+        const generatedText = response.text();
 
-        if (!response.ok) {
-            const errorData = await response.text();
-            console.error('Grok API Error:', errorData);
-            return Response.json({ 
-                error: 'Grok API request failed', 
-                details: errorData,
-                status: response.status
-            }, { status: response.status });
-        }
-
-        const data = await response.json();
-        console.log('Grok-3 response received');
-        
-        // Extract the generated content
-        const generatedText = data.choices?.[0]?.message?.content;
-        
         if (!generatedText) {
-            console.error('No content generated:', JSON.stringify(data, null, 2));
+            console.error('No content generated');
             return Response.json({ 
-                error: 'No content generated from AI', 
-                details: data 
+                error: 'No content generated from AI'
             }, { status: 500 });
         }
 
@@ -204,22 +180,21 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
         let parsedResponse;
         let cleanedText = generatedText.trim();
         
-        // Attempt 1: Remove markdown code blocks
+        // Remove markdown code blocks if present
         if (cleanedText.startsWith('```json')) {
             cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
         } else if (cleanedText.startsWith('```')) {
             cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
         }
         
-        // Attempt 2: Try parsing
         try {
             parsedResponse = JSON.parse(cleanedText);
-            console.log('Successfully parsed curriculum map with Grok-3');
+            console.log('Successfully parsed curriculum map with Gemini');
             return Response.json(parsedResponse);
         } catch (parseError) {
             console.error('First parse attempt failed:', parseError.message);
             
-            // Attempt 3: Find JSON object in text
+            // Find JSON object in text
             const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 try {
@@ -231,7 +206,6 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
                 }
             }
             
-            // Final attempt failed
             console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
             return Response.json({ 
                 error: 'Failed to parse AI response as JSON', 

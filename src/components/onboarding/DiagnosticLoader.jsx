@@ -27,10 +27,19 @@ export default function DiagnosticLoader({ mode = 'generating' }) {
       setMessageIndex((prev) => (prev + 1) % messages.length);
     }, 3000);
 
+    // Smooth progress that accelerates to 90% then slows down
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 95) return 95;
-        return prev + 2;
+        if (prev >= 90) {
+          // Slow down significantly after 90%
+          return Math.min(prev + 0.3, 95);
+        } else if (prev >= 70) {
+          // Medium speed 70-90%
+          return prev + 1;
+        } else {
+          // Fast initial progress 0-70%
+          return prev + 2;
+        }
       });
     }, 200);
 
