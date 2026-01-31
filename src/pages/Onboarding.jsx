@@ -166,33 +166,40 @@ export default function Onboarding() {
     const progress = (answeredCount / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background orbs */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      </div>
+
       <div className="w-full max-w-lg md:max-w-2xl relative z-10">
         {/* StudyApp Branding */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-black">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
+          <h1 className="text-4xl md:text-5xl font-black text-white drop-shadow-lg">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">Study</span>
             <span className="text-white">App</span>
           </h1>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-6">
+        <div className="mb-6 bg-white/20 backdrop-blur-sm rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-purple-300 font-medium">Step {currentStep + 1} of {totalSteps}</span>
-            <span className="text-sm text-purple-300">{Math.round(progress)}% complete</span>
+            <span className="text-sm text-white font-semibold">Step {currentStep + 1} of {totalSteps}</span>
+            <span className="text-sm text-white/90">{Math.round(progress)}% complete</span>
           </div>
-          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+          <div className="h-2 bg-white/30 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-yellow-400 to-pink-400 rounded-full transition-all duration-500 ease-out shadow-lg"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
-        <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden">
+        <div className="rounded-2xl shadow-2xl overflow-hidden">
           {error && (
-            <Alert variant="destructive" className="m-4">
+            <Alert variant="destructive" className="m-4 bg-red-50 border-red-200">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
@@ -255,13 +262,13 @@ export default function Onboarding() {
         <div className="text-center mt-6 space-y-3">
           <button
             onClick={() => base44.auth.redirectToLogin()}
-            className="text-slate-400 hover:text-slate-200 text-sm underline transition-colors"
+            className="text-white/80 hover:text-white text-sm underline transition-colors font-medium"
           >
             Already a user? Sign In
           </button>
-          <p className="text-slate-500 text-xs">Powered by StudyApp.AI</p>
+          <p className="text-white/60 text-xs">Powered by StudyApp.AI</p>
         </div>
-      </div>
-    </div>
-  );
+        </div>
+        </div>
+        );
 }

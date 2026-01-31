@@ -52,14 +52,14 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 py-6">
+    <div className="w-full max-w-2xl mx-auto px-4 py-6 bg-white rounded-2xl shadow-2xl">
       {/* Header */}
       <div className="text-center mb-6">
         <div className="text-5xl mb-4">📚</div>
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
           What course are you studying?
         </h2>
-        <p className="text-slate-400 text-sm md:text-base">
+        <p className="text-slate-600 text-sm md:text-base">
           Enter your course name or code (e.g., MATH 101, Calculus I)
         </p>
       </div>
@@ -74,7 +74,7 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
             setCourseCode(e.target.value);
             setShowSuggestions(true);
           }}
-          className="h-14 text-lg bg-slate-800/60 border-slate-600 text-white placeholder:text-slate-500 rounded-xl"
+          className="h-14 text-lg bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:border-purple-500 focus:ring-purple-100"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && courseCode.trim()) {
               handleNext();
@@ -89,20 +89,20 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
         <div className="mb-6">
           {loading ? (
             <div className="flex items-center justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
-              <span className="ml-2 text-slate-400 text-sm">Loading suggestions...</span>
+              <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+              <span className="ml-2 text-slate-600 text-sm">Loading suggestions...</span>
             </div>
           ) : suggestions.length > 0 && (
             <>
-              <p className="text-xs text-slate-500 mb-3 uppercase tracking-wide text-center">Popular courses at {school || 'your school'}</p>
+              <p className="text-xs text-slate-500 mb-3 uppercase tracking-wide text-center font-medium">Popular courses at {school || 'your school'}</p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {suggestions.map((code, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleCourseSelect(code)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/60 border border-slate-600 hover:border-purple-500 hover:bg-purple-600/20 transition-all text-white text-sm font-medium"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50 border border-purple-200 hover:border-purple-400 hover:bg-purple-100 transition-all text-slate-900 text-sm font-medium"
                   >
-                    <BookOpen className="w-4 h-4 text-purple-400" />
+                    <BookOpen className="w-4 h-4 text-purple-600" />
                     {code}
                   </button>
                 ))}
@@ -113,12 +113,12 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex gap-4 justify-center">
+      <div className="flex gap-4 justify-center pt-2">
         {onBack && (
           <Button
             onClick={onBack}
             variant="outline"
-            className="h-12 px-6 text-base border-slate-600 hover:bg-slate-700 text-white"
+            className="h-12 px-6 text-base border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl"
           >
             Back
           </Button>
@@ -126,7 +126,7 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
         <Button
           onClick={handleNext}
           disabled={!courseCode.trim()}
-          className="h-12 px-10 text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 shadow-lg shadow-purple-500/30"
+          className="h-12 px-10 text-base font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50 shadow-lg shadow-purple-500/30 rounded-xl"
         >
           Continue
         </Button>
