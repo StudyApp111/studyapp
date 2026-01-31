@@ -77,34 +77,34 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
   const isLoading = uploading || processing;
 
   return (
-    <div className="p-6 sm:p-8 space-y-6">
+    <div className="p-6 sm:p-8 space-y-6 bg-white rounded-2xl shadow-2xl">
       {/* Header */}
       <div className="text-center space-y-3">
-        <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto">
-          <FileText className="w-8 h-8 text-white" />
+        <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto">
+          <FileText className="w-8 h-8 text-purple-600" />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-white">
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
           🎯 Want More Accurate Results {userName}?
         </h2>
       </div>
 
       {/* Info card */}
-      <div className="bg-slate-700/30 rounded-xl p-5 border border-slate-600 space-y-3">
-        <p className="text-slate-300 text-base leading-relaxed">
-          We generated questions based on typical <span className="font-semibold text-white">{courseName}</span> topics.
+      <div className="bg-purple-50 rounded-xl p-5 border border-purple-100 space-y-3">
+        <p className="text-slate-700 text-base leading-relaxed">
+          We generated questions based on typical <span className="font-semibold text-slate-900">{courseName}</span> topics.
         </p>
-        <p className="text-slate-300 text-base leading-relaxed">
-          Upload your notes for questions tailored to <span className="font-semibold text-purple-300">YOUR</span> class.
+        <p className="text-slate-700 text-base leading-relaxed">
+          Upload your notes for questions tailored to <span className="font-semibold text-purple-600">YOUR</span> class.
         </p>
         
         {/* Benefits */}
-        <div className="flex items-center gap-2 text-emerald-400 text-sm pt-2">
+        <div className="flex items-center gap-2 text-emerald-600 text-sm pt-2">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span>35% more accurate predictions</span>
+          <span className="font-medium">35% more accurate predictions</span>
         </div>
-        <div className="flex items-center gap-2 text-emerald-400 text-sm">
+        <div className="flex items-center gap-2 text-emerald-600 text-sm">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span>Takes 30 seconds</span>
+          <span className="font-medium">Takes 30 seconds</span>
         </div>
       </div>
 
@@ -112,13 +112,13 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       <div>
         <label 
           htmlFor="file-upload"
-          className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-purple-500/50 rounded-xl cursor-pointer bg-purple-500/5 hover:bg-purple-500/10 transition-all"
+          className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-purple-300 rounded-xl cursor-pointer bg-purple-50 hover:bg-purple-100 transition-all"
         >
-          <Upload className="w-12 h-12 text-purple-400 mb-3" />
-          <span className="text-white font-semibold text-base mb-1">
+          <Upload className="w-12 h-12 text-purple-600 mb-3" />
+          <span className="text-slate-900 font-semibold text-base mb-1">
             {file ? file.name : 'Click to upload document'}
           </span>
-          <span className="text-slate-400 text-sm">PDF, DOCX, PNG, JPG (Max 5MB)</span>
+          <span className="text-slate-600 text-sm">PDF, DOCX, PNG, JPG (Max 5MB)</span>
           <input
             id="file-upload"
             type="file"
@@ -132,15 +132,15 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
 
       {/* Error */}
       {error && (
-        <p className="text-red-400 text-sm text-center">{error}</p>
+        <p className="text-red-600 text-sm text-center font-medium">{error}</p>
       )}
 
       {/* Actions */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 pt-2">
         {file && !isLoading && (
           <Button
             onClick={handleUpload}
-            className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-base"
+            className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-base rounded-xl"
           >
             Upload & Continue
             <ArrowRight className="w-5 h-5 ml-2" />
@@ -148,9 +148,9 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         )}
 
         {isLoading && (
-          <div className="flex items-center justify-center gap-2 text-purple-300 py-3">
+          <div className="flex items-center justify-center gap-2 text-purple-600 py-3">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>{uploading ? 'Uploading...' : 'Processing document...'}</span>
+            <span className="font-medium">{uploading ? 'Uploading...' : 'Processing document...'}</span>
           </div>
         )}
 
@@ -159,7 +159,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
           onClick={onSkip}
           disabled={isLoading}
           variant="ghost"
-          className="w-full h-12 text-slate-400 hover:text-white font-medium"
+          className="w-full h-12 text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium rounded-xl"
         >
           Continue with current results →
         </Button>
@@ -168,7 +168,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         <button
           onClick={onBack}
           disabled={isLoading}
-          className="text-slate-500 hover:text-slate-300 text-sm transition-colors"
+          className="text-slate-500 hover:text-slate-700 text-sm transition-colors font-medium"
         >
           ← Back
         </button>
