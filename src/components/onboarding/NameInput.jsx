@@ -28,9 +28,7 @@ export default function NameInput({ value, onChange, onNext, onBack }) {
     <div className="p-6 md:p-8 space-y-6 bg-white rounded-2xl shadow-2xl">
       {/* Header */}
       <div className="text-center space-y-3">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-pink-100 mb-2">
-          <User className="w-8 h-8 text-purple-600" />
-        </div>
+        <div className="text-6xl mb-2">👋</div>
         <h2 className="text-2xl md:text-3xl font-bold text-slate-900">What's your name?</h2>
         <p className="text-slate-600 text-sm">We'll personalize your learning experience</p>
       </div>

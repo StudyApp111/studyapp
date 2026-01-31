@@ -49,46 +49,48 @@ Use this curriculum to:
       model: 'gemini-flash-lite-latest'
     });
 
-    const prompt = `You are an expert educational analyst. Analyze this diagnostic quiz and return ONLY valid JSON (no markdown, no tables, no extra text).
+    const actualPercentage = Math.round((correctCount / totalQuestions) * 100);
+    
+    const prompt = `CRITICAL: You are grading a REAL student's diagnostic exam. Analyze their ACTUAL performance data below. DO NOT use placeholder values or generic examples.
 
-STUDENT: ${studentName || 'Student'}
-COURSE: ${courseCode} at ${school}
-SCORE: ${correctCount}/${totalQuestions} correct
+STUDENT INFORMATION:
+- Name: ${studentName || 'Student'}
+- Course: ${courseCode} at ${school}
+- Actual Score: ${correctCount} out of ${totalQuestions} questions correct
+- Actual Percentage: ${actualPercentage}%
+
 ${curriculumContext}
 
-PERFORMANCE DATA:
+ACTUAL STUDENT RESPONSES (ANALYZE THESE EXACTLY):
 ${questionContext}
 
-ANALYSIS RULES:
+YOUR TASK: Analyze the ACTUAL performance data above and return ONLY valid JSON (no markdown, no tables, no extra text).
 
-1. PREDICTED GRADE CALCULATION:
-   - Calculate percentage: (correct/total) × 100
-   - Map to letter grade: A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59)
-   - Confidence: High if answered all, Medium otherwise
+CRITICAL RULES:
+1. Use the ACTUAL percentage (${actualPercentage}%) - DO NOT use 80% or any other placeholder
+2. Identify weak areas from the ACTUAL wrong answers in the performance data above
+3. Strong areas must come from ACTUAL correct answers
+4. All data MUST be based on THIS student's ACTUAL responses
 
-2. WEAK AREAS (from WRONG answers only):
-   - Identify 3 specific topics from incorrect responses
-   - Match to curriculum competencies if available
-   - Calculate realistic grade impact (total should not exceed 50%)
-   - Assign tool: Conceptual → "Teach It Cards", Application → "Practice Questions", Complex → "AI Tutor"
+GRADING ALGORITHM:
+1. ACTUAL Grade: ${actualPercentage}% maps to letter grade:
+   A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59)
 
-3. PREVIEW QUESTION:
-   - Create ONE new question testing the #1 weak area
-   - Match course assessment format if curriculum available
-   - Provide complete correct answer
+2. WEAK AREAS - Identify 3 topics from the questions marked ✗ above:
+   - Use the ACTUAL question topics from wrong answers
+   - Calculate realistic grade impact
+   - Assign tool: Conceptual → "Teach It Cards", Application → "Practice Questions"
 
-4. REALISTIC TRAJECTORY:
-   Starting at 0-30% (F): Week1→D-, Week2→D+, Week3→C (max +12% per week)
-   Starting at 31-50% (F/D): Week1→D, Week2→C-, Week3→C+ (max +15% per week)
-   Starting at 51-70% (D/C): Week1→C+, Week2→B-, Week3→B (max +12% per week)
-   Starting at 71-85% (C/B): Week1→B, Week2→B+, Week3→A- (max +10% per week)
-   Starting at 86-95% (B/A): Week1→A-, Week2→A, Week3→A+ (max +5% per week)
-   DO NOT promise unrealistic improvements.
+3. STRONG AREAS - From questions marked ✓ above
 
-5. PERSONALIZED MESSAGE:
-   - Line 1: Use actual percentage, student name
-   - Line 2: Reference realistic target based on starting grade
-   - Line 3: Positive reframe appropriate to situation
+4. REALISTIC TRAJECTORY based on ACTUAL ${actualPercentage}%:
+   0-30% (F): Week1→D-, Week2→D+, Week3→C
+   31-50% (F/D): Week1→D, Week2→C-, Week3→C+
+   51-70% (D/C): Week1→C+, Week2→B-, Week3→B
+   71-85% (C/B): Week1→B, Week2→B+, Week3→A-
+   86-95% (B/A): Week1→A-, Week2→A, Week3→A+
+
+5. PERSONALIZED MESSAGE using ${studentName || 'Student'} and ${actualPercentage}%
 
 REQUIRED JSON OUTPUT (respond with ONLY this JSON, nothing else):
 

@@ -80,16 +80,14 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
     <div className="p-6 sm:p-8 space-y-6 bg-white rounded-2xl shadow-2xl">
       {/* Header */}
       <div className="text-center space-y-3">
-        <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center mx-auto">
-          <FileText className="w-8 h-8 text-purple-600" />
-        </div>
+        <div className="text-6xl mb-2">📄</div>
         <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-          🎯 Want More Accurate Results {userName}?
+          Want More Accurate Results {userName}?
         </h2>
       </div>
 
       {/* Info card */}
-      <div className="bg-purple-50 rounded-xl p-5 border border-purple-100 space-y-3">
+      <div className="bg-purple-50 rounded-xl p-5 border border-purple-100 space-y-3 text-center">
         <p className="text-slate-700 text-base leading-relaxed">
           We generated questions based on typical <span className="font-semibold text-slate-900">{courseName}</span> topics.
         </p>
@@ -140,7 +138,8 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         {file && !isLoading && (
           <Button
             onClick={handleUpload}
-            className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold text-base rounded-xl"
+            variant="outline"
+            className="w-full h-12 border-purple-300 hover:bg-purple-50 text-slate-900 font-medium text-base rounded-xl"
           >
             Upload & Continue
             <ArrowRight className="w-5 h-5 ml-2" />
@@ -154,14 +153,13 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
           </div>
         )}
 
-        {/* Skip button */}
+        {/* Skip button - Now primary style */}
         <Button
           onClick={onSkip}
           disabled={isLoading}
-          variant="ghost"
-          className="w-full h-12 text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium rounded-xl"
+          className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold text-base rounded-xl shadow-lg shadow-purple-500/30"
         >
-          Continue with current results →
+          Continue without uploading
         </Button>
 
         {/* Back button */}

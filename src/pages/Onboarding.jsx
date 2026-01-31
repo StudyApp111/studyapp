@@ -166,32 +166,30 @@ export default function Onboarding() {
     const progress = (answeredCount / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated background orbs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-400/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-lg md:max-w-2xl relative z-10">
-        {/* StudyApp Branding */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-black text-white drop-shadow-lg">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-300">Study</span>
+        {/* StudyApp Branding - Logo + Text */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ab568e731_LogoOnly.png"
+            alt="StudyApp Logo"
+            className="w-10 h-10 md:w-12 md:h-12"
+          />
+          <h1 className="text-3xl md:text-4xl font-black">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
             <span className="text-white">App</span>
           </h1>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-6 bg-white/20 backdrop-blur-sm rounded-xl p-4">
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-white font-semibold">Step {currentStep + 1} of {totalSteps}</span>
-            <span className="text-sm text-white/90">{Math.round(progress)}% complete</span>
+            <span className="text-sm text-purple-300 font-medium">Step {currentStep + 1} of {totalSteps}</span>
+            <span className="text-sm text-purple-300">{Math.round(progress)}% complete</span>
           </div>
-          <div className="h-2 bg-white/30 rounded-full overflow-hidden">
+          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-yellow-400 to-pink-400 rounded-full transition-all duration-500 ease-out shadow-lg"
+              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -262,11 +260,11 @@ export default function Onboarding() {
         <div className="text-center mt-6 space-y-3">
           <button
             onClick={() => base44.auth.redirectToLogin()}
-            className="text-white/80 hover:text-white text-sm underline transition-colors font-medium"
+            className="text-slate-400 hover:text-slate-200 text-sm underline transition-colors"
           >
             Already a user? Sign In
           </button>
-          <p className="text-white/60 text-xs">Powered by StudyApp.AI</p>
+          <p className="text-slate-500 text-xs">Powered by StudyApp.AI</p>
         </div>
         </div>
         </div>
