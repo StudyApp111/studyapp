@@ -1,39 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Zap, BookOpen, Target } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const loadingMessages = [
-  { icon: Sparkles, text: "Crafting your personalized quiz..." },
-  { icon: BookOpen, text: "Analyzing your profile..." },
-  { icon: Target, text: "Selecting key concepts..." },
-  { icon: Zap, text: "Almost ready..." }
+  { icon: Sparkles, text: "Crafting your personalized quiz...", subtext: "Analyzing course requirements" },
+  { icon: BookOpen, text: "Analyzing your profile...", subtext: "Matching questions to your level" },
+  { icon: Target, text: "Selecting key concepts...", subtext: "Finding high-impact topics" },
+  { icon: Zap, text: "Almost ready...", subtext: "Finalizing your diagnostic" }
 ];
 
 const gradingMessages = [
-  { icon: Sparkles, text: "Analyzing your answers..." },
-  { icon: Target, text: "Calculating predicted grade..." },
-  { icon: BookOpen, text: "Identifying weak topics..." },
-  { icon: Zap, text: "Almost ready..." }
+  { icon: Sparkles, text: "Analyzing your answers...", subtext: "Evaluating your responses" },
+  { icon: Target, text: "Calculating predicted grade...", subtext: "Using advanced AI algorithms" },
+  { icon: BookOpen, text: "Identifying weak topics...", subtext: "Building your study plan" },
+  { icon: Zap, text: "Almost ready...", subtext: "Preparing your report" }
 ];
 
 export default function DiagnosticLoader({ mode = 'generating' }) {
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [messageIndex, setMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
 
   const messages = mode === 'grading' ? gradingMessages : loadingMessages;
 
   useEffect(() => {
-    // Cycle through messages every 3 seconds
     const messageInterval = setInterval(() => {
-      setCurrentMessageIndex((prev) => (prev + 1) % messages.length);
+      setMessageIndex((prev) => (prev + 1) % messages.length);
     }, 3000);
 
-    // Progress bar animation
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 95) return 95; // Cap at 95% until actual completion
-        return prev + 1;
+        if (prev >= 95) return 95;
+        return prev + 2;
       });
-    }, 150);
+    }, 200);
 
     return () => {
       clearInterval(messageInterval);
@@ -41,52 +40,95 @@ export default function DiagnosticLoader({ mode = 'generating' }) {
     };
   }, [messages.length]);
 
-  const CurrentIcon = messages[currentMessageIndex].icon;
+  const currentMessage = messages[messageIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md text-center">
-        {/* StudyApp Branding - Larger and Higher */}
-        <div className="mb-12 -mt-20">
-          <h1 className="text-4xl md:text-5xl font-black">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+      <div className="text-center space-y-8 max-w-md">
+        {/* Brand logo - HIGHER UP */}
+        <div className="mb-8">
+          <h1 className="text-5xl md:text-6xl font-black mb-4">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
             <span className="text-white">App</span>
           </h1>
         </div>
 
-        {/* Animated Icon */}
-        <div className="relative mb-8">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-32 h-32 bg-purple-500/20 rounded-full animate-pulse" />
-          </div>
-          <div className="relative flex items-center justify-center">
-            <CurrentIcon className="w-16 h-16 text-purple-400 animate-bounce" />
-          </div>
-        </div>
-
-        {/* Message */}
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {messages[currentMessageIndex].text}
-        </h2>
-
-        {/* Progress Bar */}
-        <div className="mt-8 mx-auto max-w-sm">
-          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
+        {/* Sleek animated icon with modern gradient orb */}
+        <motion.div
+          animate={{
+            scale: [1, 1.05, 1],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="relative inline-block"
+        >
+          {/* Gradient orb background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full blur-3xl opacity-30 animate-pulse" />
+          
+          {/* Icon container */}
+          <div className="relative w-24 h-24 mx-auto">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+              className="absolute inset-0 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full opacity-20"
+            />
+            <currentMessage.icon 
+              className="relative w-full h-full text-white p-5" 
+              strokeWidth={1.5} 
             />
           </div>
-          <p className="text-purple-300 text-sm mt-3">{Math.round(progress)}%</p>
+        </motion.div>
+
+        {/* Dynamic message with fade animation */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={messageIndex}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.4 }}
+            className="space-y-2"
+          >
+            <p className="text-xl md:text-2xl font-bold text-white">{currentMessage.text}</p>
+            <p className="text-slate-400 text-sm">{currentMessage.subtext}</p>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Sleek progress bar */}
+        <div className="w-full max-w-xs mx-auto space-y-2">
+          <div className="h-2 bg-slate-800/50 rounded-full overflow-hidden backdrop-blur-sm">
+            <motion.div
+              className="h-full bg-gradient-to-r from-purple-500 via-purple-400 to-pink-500 rounded-full shadow-lg shadow-purple-500/50"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+          <p className="text-slate-500 text-xs font-medium">{progress}% complete</p>
         </div>
 
-        {/* Sparkle effects */}
-        <div className="mt-8 flex justify-center gap-2">
-          {[...Array(3)].map((_, i) => (
-            <div
+        {/* Subtle sparkle animations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
               key={i}
-              className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"
-              style={{ animationDelay: `${i * 200}ms` }}
+              className="absolute w-1.5 h-1.5 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full"
+              style={{
+                left: `${20 + i * 15}%`,
+                top: `${30 + (i % 3) * 20}%`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0, 1.5, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: i * 0.3,
+              }}
             />
           ))}
         </div>

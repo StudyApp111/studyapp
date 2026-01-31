@@ -16,13 +16,20 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'API key not configured' }, { status: 500 });
     }
 
+    // Calculate correct/total for context
+    const totalQuestions = questions.length;
+    let correctCount = 0;
+    
     // Build grading context
     const questionContext = questions.map((q, idx) => {
       const userAnswer = userAnswers.find(a => a.question_index === idx);
+      const isCorrect = userAnswer?.answer === q.correct_answer;
+      if (isCorrect) correctCount++;
+      
       return `Q${idx + 1}: ${q.question_text}
 Correct: ${q.correct_answer}
 User: ${userAnswer?.answer || 'Not answered'}
-Result: ${userAnswer?.answer === q.correct_answer ? '✓' : '✗'}
+Result: ${isCorrect ? '✓' : '✗'}
 Competencies: ${(q.assessed_competencies || []).join(', ')}`;
     }).join('\n\n');
 
@@ -31,194 +38,162 @@ Competencies: ${(q.assessed_competencies || []).join(', ')}`;
       model: 'gemini-flash-latest'
     });
 
-    const prompt = `You are an expert educational assessment analyst. A student named "${studentName || 'Student'}" studying "${courseCode}" at "${school}" has completed a diagnostic assessment.
+    const prompt = `Expert educator for ${courseCode} at ${school}. Analyze diagnostic performance using curriculum map to predict grade as if you were teaching this course.
+
+Input: ${courseCode}, ${school}, Student: ${studentName}
+Curriculum: ${curriculumData ? JSON.stringify(curriculumData) : 'Not available'}
+Performance: ${questionContext}
+
+Data Points:
+- Questions answered: ${correctCount}/${totalQuestions}
+- Competencies from curriculum: ${curriculumData?.core_competencies?.length || 0}
+
+Prediction Algorithm:
+1) Per-item scoring: base=1.0(correct) or 0.0(wrong). Apply difficulty: Easy×1.0, Moderate×1.2, Challenging×1.5.
+2) Calculate: (total_weighted_correct / total_weighted_possible) × 100 = percentage.
+3) Map to grade: A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59).
+4) Confidence: (answered/total × 50) + 30. Range: [30,80]. Level: <50="Medium", ≥50="High".
 
 ${curriculumData ? `
-COURSE CURRICULUM PROFILE:
-Use this curriculum profile to inform your analysis and recommendations.
-
-Core Competencies:
-${JSON.stringify(curriculumData.core_competencies || [], null, 2)}
-
-Competency Weightings:
-${JSON.stringify(curriculumData.competency_weightings || [], null, 2)}
-
-Assessment Formats:
-${JSON.stringify(curriculumData.assessment_formats || [], null, 2)}
-
-High Yield Topics:
-${JSON.stringify(curriculumData.high_yield_focal_points || [], null, 2)}
-
-Common Misconceptions:
-${JSON.stringify(curriculumData.common_misconceptions || [], null, 2)}
-
-IMPORTANT: Use this curriculum data to:
-- Identify weak areas that match actual course competencies
-- Calculate grade impact based on competency weightings
-- Select preview questions that match actual assessment formats
-- Reference common misconceptions in your analysis
+Competency Analysis (use curriculum map):
+- Map wrong answers to curriculum competencies
+- Weight by assessment_weightings (e.g., "Final Paper - 40%" = higher impact)
+- Match preview question to assessment_formats style
+- Reference high_yield_focal_points for weak areas
 ` : ''}
 
-STUDENT PERFORMANCE:
-${questionContext}
+Weak Areas Requirements:
+- Identify 3 specific topics from WRONG answers
+- Align with curriculum competencies if available
+- Calculate grade_impact based on assessment weights
+- Assign tool: Conceptual→"Teach It Cards", Application→"Practice Questions", Complex→"AI Tutor"
 
-ANALYSIS REQUIREMENTS:
+Preview Question:
+- Test the #1 weak area (highest impact)
+- Match course assessment format if curriculum available
+- Different question than diagnostic
+- Include complete model answer
 
-1. PREDICTED GRADE CALCULATION
-   - Analyze performance across all questions
-   - Calculate predicted letter grade (A+, A, A-, B+, B, B-, C+, C, C-, D+, D, F)
-   - Calculate predicted percentage (0-100)
-   - Consider difficulty weighting of questions
+Grade Trajectory Rules (CRITICAL - MUST BE REALISTIC):
+Based on starting percentage, calculate realistic weekly improvements:
+- If 0-30% (F): +8-12% per week max (Week 1→D-, Week 2→D+, Week 3→C)
+- If 31-50% (F/D): +10-15% per week (Week 1→D, Week 2→C-, Week 3→C+)
+- If 51-70% (D/C): +8-12% per week (Week 1→C+, Week 2→B-, Week 3→B)
+- If 71-85% (C/B): +5-10% per week (Week 1→B, Week 2→B+, Week 3→A-)
+- If 86-95% (B/A): +3-5% per week (Week 1→A-, Week 2→A, Week 3→A+)
+- If 96-100% (A+): Already at peak, focus on maintenance
 
-2. WEAK AREAS ANALYSIS (Critical - This drives the entire report)
-   - Identify 3-5 specific weak topics (not generic statements)
-   - Rank by severity and impact on grade
-   - Calculate realistic grade impact for each (as percentage points)
-   - Select which learning tool will fix each weakness
+DO NOT promise A+ from F in 3 weeks. Be realistic based on ACTUAL starting grade.
 
-3. PREVIEW QUESTION SELECTION
-   - Choose THE MOST IMPACTFUL weak topic (highest grade impact)
-   - Generate ONE preview question for this topic that:
-     * Tests the specific skill they're missing
-     * Is authentic to ${courseCode} at ${school}
-     * Has a clear correct answer
-     * Would appear on their actual exam
-   - Provide the correct answer (will be shown after signup)
+Personalized Message Rules:
+- Line 1: Use ACTUAL calculated percentage (not placeholder)
+- Line 2: Reference realistic target based on starting grade (if F→aim for C, not A+)
+- Line 3: Encouraging reframe appropriate to their situation
 
-4. PERSONALIZATION
-   - Write a brief, encouraging message about their performance in EXACTLY 3 SHORT LINES
-   - Format: Line 1: "[Name], you're starting at [percentage]."
-             Line 2: "[Hope statement with specific improvement timeline]."
-             Line 3: "[Reframe from 'behind' to 'catching up' or similar positive spin]."
-   - Reference their actual quiz performance, not generic statements
-   - Create urgency based on realistic exam timeline
-
-LEARNING TOOLS AVAILABLE:
-- "Teach It Cards": Student explains concepts back to AI (best for theories, frameworks, conceptual understanding)
-- "Practice Questions": Adaptive questions targeting weak spots (best for calculations, problem-solving, application)
-- "AI Tutor": 24/7 chat support (best for getting unstuck, clarifying confusion)
-- "Note Generator": Creates comprehensive notes (best for organizing information)
-
-TOOL SELECTION LOGIC:
-- If weakness is conceptual/theoretical → "Teach It Cards"
-- If weakness is calculation/problem-solving → "Practice Questions"  
-- If weakness is application/analysis → "Practice Questions"
-- If weakness is understanding complex topics → "AI Tutor"
-- Default to "Teach It Cards" when uncertain (it's most effective)
-
-OUTPUT FORMAT:
-You MUST respond with ONLY valid JSON (no markdown, no backticks, no explanation):
-
+JSON Output (exact schema):
 {
-  "predicted_grade": "B-",
-  "predicted_percentage": 80,
-  "confidence_level": "high",
-  "strong_areas": [
-    "Basic understanding of IPE institutions",
-    "Identifying major economic theories"
-  ],
+  "predicted_grade": "F",
+  "predicted_percentage": 21,
+  "confidence_level": "High",
+  "strong_areas": ["Topic from correct answer (or 'Limited correct responses' if score very low)"],
   "weak_areas_detailed": [
     {
-      "topic": "Core IPE theoretical motivations (realism vs liberalism)",
+      "topic": "Specific topic from wrong answer",
+      "related_competency": ${curriculumData ? '"Curriculum competency name"' : 'null'},
+      "severity": "critical",
+      "grade_impact": "20%",
+      "assessment_context": ${curriculumData ? '"Final Paper - 40%"' : '"General exam"'},
+      "recommended_tool": "Teach It Cards",
+      "tool_reason": "Under 15 words",
+      "specific_fix": "2-3 subtopics"
+    },
+    {
+      "topic": "Second weak topic",
+      "related_competency": ${curriculumData ? '"Another competency"' : 'null'},
+      "severity": "high",
+      "grade_impact": "18%",
+      "assessment_context": ${curriculumData ? '"Midterm - 25%"' : '"General exam"'},
+      "recommended_tool": "Practice Questions",
+      "tool_reason": "Under 15 words",
+      "specific_fix": "2-3 subtopics"
+    },
+    {
+      "topic": "Third weak topic",
+      "related_competency": ${curriculumData ? '"Third competency"' : 'null'},
       "severity": "high",
       "grade_impact": "15%",
-      "recommended_tool": "Teach It Cards",
-      "tool_reason": "Explaining theoretical differences solidifies conceptual understanding",
-      "specific_fix": "Division of Powers, Oakes Test, Charter Application"
-    },
-    {
-      "topic": "IMF lending practice calculations",
-      "severity": "high",
-      "grade_impact": "12%",
-      "recommended_tool": "Practice Questions",
-      "tool_reason": "Calculation problems require repetition to master",
-      "specific_fix": "Fiscal Federalism calculations, Institutional analysis"
-    },
-    {
-      "topic": "Applying Hegemonic Stability Theory to current geopolitics",
-      "severity": "medium",
-      "grade_impact": "8%",
-      "recommended_tool": "Practice Questions",
-      "tool_reason": "Application scenarios need practice with feedback",
-      "specific_fix": "Theory application to real-world events"
+      "assessment_context": ${curriculumData ? '"Participation - 20%"' : '"General"'},
+      "recommended_tool": "AI Tutor",
+      "tool_reason": "Under 15 words",
+      "specific_fix": "2-3 subtopics"
     }
   ],
   "preview_question": {
-    "topic": "Core IPE theoretical motivations (realism vs liberalism)",
-    "question_text": "Explain how realist theory would view the IMF's role in the 2008 financial crisis, focusing on state-centric motivations.",
+    "topic": "Same as first weak area",
+    "related_competency": ${curriculumData ? '"Competency name"' : 'null'},
+    "assessment_format": ${curriculumData ? '"Course format"' : '"Short Answer"'},
+    "question_text": "New question testing same concept",
     "question_type": "Short Answer",
-    "correct_answer": "Realists would argue that the IMF serves the interests of powerful states (particularly the US) rather than being a neutral institution. In the 2008 crisis, realist theory would emphasize how dominant states used the IMF to protect their own economic interests and maintain hegemonic power, with lending conditions designed to preserve the existing global power structure rather than purely economic recovery.",
-    "why_this_matters": "This concept appears in 15% of exam questions and tests your ability to apply theory to real-world scenarios",
-    "impact_statement": "This single topic is the difference between B- and B+"
+    "correct_answer": "Complete model answer",
+    "why_this_matters": "Appears in X% of assessments",
+    "impact_statement": "Affects [assessment] worth [%]"
   },
   "estimated_study_time_days": 21,
   "study_intensity": "30-45 min/day",
   "grade_trajectory": {
-    "current": "B-",
-    "week_1_target": "B",
-    "week_1_percentage": 85,
-    "week_1_description": "Fix theoretical gaps",
-    "week_2_target": "B+",
-    "week_2_percentage": 88,
-    "week_2_description": "Master calculations",
-    "week_3_target": "A+",
-    "week_3_percentage": 95,
-    "week_3_description": "Practice and polish",
-    "final_target": "A+"
+    "current": "F",
+    "week_1_target": "D-",
+    "week_1_percentage": 32,
+    "week_1_description": "Master fundamental concepts",
+    "week_2_target": "D+",
+    "week_2_percentage": 45,
+    "week_2_description": "Build on basics",
+    "week_3_target": "C",
+    "week_3_percentage": 58,
+    "week_3_description": "Reach passing grade",
+    "final_target": "B"
   },
-  "personalized_message_line1": "${studentName || 'Student'}, you're starting at 80%.",
-  "personalized_message_line2": "Students at your level who use StudyApp reach B+ in 2 weeks.",
-  "personalized_message_line3": "You're not behind—you're about to catch up fast.",
+  "personalized_message_line1": "${studentName}, you're starting at 21%.",
+  "personalized_message_line2": "With focused practice, students at F reach passing (C) in 3 weeks.",
+  "personalized_message_line3": "This is fixable—let's get you to solid ground first.",
   "urgency_timeline": {
-    "start_today": "A+ is realistic",
-    "wait_5_days": "B+ is your ceiling",
-    "wait_10_days": "You'll stay at B-"
+    "start_today": "C is achievable",
+    "wait_5_days": "D+ is more realistic",
+    "wait_10_days": "You'll stay at F"
   },
-  "top_priority_action": "Start with 'Core IPE theoretical motivations' - this single topic is worth 15% of your grade and can be mastered in 3 days with Teach It Cards.",
+  "top_priority_action": "Start with '[First weak topic]' - this is foundational and worth [%]% of your grade.",
   "toolkit_social_proof": {
     "teach_it_cards": {
-      "testimonial": "This tool took me from C to A in 2 weeks",
+      "testimonial": "Took me from C to A in 2 weeks",
       "testimonial_author": "Sarah, UBC",
-      "stats": "1,200+ students • Avg improvement: +12%"
+      "stats": "1,200+ students • +12% avg"
     },
     "practice_questions": {
-      "testimonial": "15 min/day for a week and I finally understood it",
+      "testimonial": "15 min/day and I finally got it",
       "testimonial_author": "Marcus, McGill",
-      "stats": "Avg improvement: +18% in 2 weeks"
+      "stats": "+18% in 2 weeks"
     },
     "ai_tutor": {
-      "testimonial": "24/7 help meant I never stayed stuck",
+      "testimonial": "24/7 help kept me unstuck",
       "testimonial_author": "Priya, UofT",
-      "stats": "Course-specific • Instant answers"
+      "stats": "Instant answers"
     }
   }
 }
 
-VALIDATION CHECKLIST:
-□ Predicted grade matches percentage (80% = B-)
-□ Weak areas are SPECIFIC (not "needs improvement in general")
-□ Grade impacts add up to reasonable total (not exceeding 50%)
-□ Preview question is course-authentic and tests the #1 weakness
-□ Personalized message is EXACTLY 3 lines, uses student's name
-□ Tool recommendations match weakness type
-□ Timeline is realistic (not overpromising)
-□ Each weak area has "specific_fix" field populated
-□ Grade trajectory includes percentages and descriptions for each week
-□ Urgency timeline uses actual grade variables
-□ Toolkit testimonials are realistic and varied
+Critical Rules:
+- Use ACTUAL score for percentage (don't default to 80%)
+- Grade trajectory MUST be realistic based on starting grade
+- Week-to-week improvements follow the ranges above
+- If starting F (0-59%), target C or B max (not A+)
+- If starting D (60-69%), target B or B+ max
+- If starting C (70-79%), target A- or A max
+- Personalized message line 2 must reference realistic target
+- Severity levels: "critical" (for F/D students), "high", "medium", "low"
+- Weak areas must match WRONG answers
+- Use curriculum competencies if available
 
-CRITICAL FORMATTING RULES:
-- personalized_message must be split into 3 separate fields (line1, line2, line3)
-- Each line should be a complete sentence
-- Line 1 MUST include student name and percentage
-- Line 2 MUST include specific improvement timeline
-- Line 3 MUST reframe positively
-- study_intensity must show "30-45 min/day" format
-- All grade_impact values must include "%" symbol
-- All tool_reason must be single sentence under 15 words
-- specific_fix should list 2-3 concrete topics this tool will address
-
-Generate the comprehensive assessment now.`;
+Generate assessment now.`;
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
