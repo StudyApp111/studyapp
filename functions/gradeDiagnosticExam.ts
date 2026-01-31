@@ -12,13 +12,6 @@ Deno.serve(async (req) => {
     
     const { school, courseCode, questions, userAnswers, studentName, curriculumData } = body;
 
-    console.log("=== RECEIVED DATA ===");
-    console.log("School:", school);
-    console.log("CourseCode:", courseCode);
-    console.log("Questions count:", questions?.length);
-    console.log("UserAnswers count:", userAnswers?.length);
-    console.log("UserAnswers raw:", JSON.stringify(userAnswers, null, 2));
-
     if (!school || !courseCode || !questions || !userAnswers) {
       console.error("Missing required parameters:", { school, courseCode, hasQuestions: !!questions, hasUserAnswers: !!userAnswers });
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -36,44 +29,15 @@ Deno.serve(async (req) => {
     
     console.log(`Total questions: ${totalQuestions}`);
     
-    // Build grading context - handle MCQ answer comparison properly
+    // Build grading context
     const questionContext = questions.map((q, idx) => {
       const userAnswer = userAnswers.find(a => a.question_index === idx);
-      const userAnswerText = userAnswer?.answer || '';
-      
-      // For MCQ, correct_answer is often just "A", "B", etc.
-      // User answer might be full option text like "A. Some text"
-      let isCorrect = false;
-      const correctAnswer = (q.correct_answer || '').trim();
-      
-      if (q.question_type?.toLowerCase().includes('multiple')) {
-        // Extract letter from user's answer if it's in format "A. text" or "A) text"
-        const userLetterMatch = userAnswerText.match(/^([A-D])[\.\)\s]/i);
-        if (userLetterMatch && /^[A-D]$/i.test(correctAnswer)) {
-          isCorrect = userLetterMatch[1].toUpperCase() === correctAnswer.toUpperCase();
-        } else if (q.options) {
-          // Find which option was selected by matching against options array
-          const optionIndex = q.options.findIndex(opt => opt === userAnswerText);
-          if (optionIndex !== -1 && /^[A-D]$/i.test(correctAnswer)) {
-            const userLetter = String.fromCharCode(65 + optionIndex);
-            isCorrect = userLetter === correctAnswer.toUpperCase();
-          } else {
-            // Fallback: direct comparison
-            isCorrect = userAnswerText.toLowerCase() === correctAnswer.toLowerCase();
-          }
-        }
-      } else {
-        // For other types, direct comparison
-        isCorrect = userAnswerText.trim().toLowerCase() === correctAnswer.toLowerCase();
-      }
-      
+      const isCorrect = userAnswer?.answer === q.correct_answer;
       if (isCorrect) correctCount++;
       
-      console.log(`Q${idx + 1} - Type: ${q.question_type}, Correct: ${correctAnswer}, User: ${userAnswerText}, Match: ${isCorrect}`);
-      
       return `Q${idx + 1}: ${q.question_text}
-Correct: ${correctAnswer}
-User: ${userAnswerText || 'Not answered'}
+Correct: ${q.correct_answer}
+User: ${userAnswer?.answer || 'Not answered'}
 Result: ${isCorrect ? '✓' : '✗'}
 Competencies: ${(q.assessed_competencies || []).join(', ')}`;
     }).join('\n\n');
@@ -120,6 +84,7 @@ Prediction Algorithm:
 3) Map to grade: A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59).
 4) Confidence: (answered/total × 50) + 30. Range: [30,80]. Level: <50="Medium", ≥50="High".
 5) Users should never get 0% or 100%. Grade the work as if you were a teacher at their school. 
+6) Round to the nearest whole number, no decimals. 
 
 Confidence Level: Given users are only given 5 questions and relevancy is dependant on type of course and if they uploaded material. We need to be careful with confidence. 
 Confidence should be outputted as a percentage between 20-65%. Put yourself in the shoes of a teacher for ${courseCode} at ${school}. 
