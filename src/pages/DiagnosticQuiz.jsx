@@ -261,14 +261,25 @@ export default function DiagnosticQuiz() {
           grade_trajectory: result.data.grade_trajectory,
           personalized_message: result.data.personalized_message,
           urgency_message: result.data.urgency_message,
-          top_priority_action: result.data.top_priority_action
+          urgency_timeline: result.data.urgency_timeline,
+          top_priority_action: result.data.top_priority_action,
+          toolkit_social_proof: result.data.toolkit_social_proof,
+          personalized_message_line1: result.data.personalized_message_line1,
+          personalized_message_line2: result.data.personalized_message_line2,
+          personalized_message_line3: result.data.personalized_message_line3
         };
+        
+        // Include document data if available (from onboarding)
+        const documentData = params.documentContent ? {
+          compressedContent: params.documentContent
+        } : null;
 
         const queryParams = new URLSearchParams({
           name: params.name || '',
           school: params.school,
           courseCode: params.courseCode,
-          reportData: encodeURIComponent(JSON.stringify(reportData))
+          reportData: encodeURIComponent(JSON.stringify(reportData)),
+          ...(documentData && { documentData: encodeURIComponent(JSON.stringify(documentData)) })
         });
 
         navigate(createPageUrl('PredictedGradeDisplay') + `?${queryParams.toString()}`, { replace: true });

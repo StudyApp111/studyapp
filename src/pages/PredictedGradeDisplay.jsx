@@ -72,12 +72,26 @@ export default function PredictedGradeDisplay() {
   }, [name, school, courseCode, reportDataParam, navigate]);
 
   const handleCTA = () => {
+    // Get document data from URL if available
+    const documentDataStr = queryParams.get("documentData");
+    let documentData = null;
+    if (documentDataStr) {
+      try {
+        documentData = JSON.parse(decodeURIComponent(documentDataStr));
+      } catch (e) {
+        console.error("Failed to parse document data:", e);
+      }
+    }
+    
     // Build complete onboarding data to pass through login
     const onboardingData = {
       courseCode: courseCode || '',
       school: school || '',
       studentName: name || '',
       reportData: reportData || {},
+      fileUrl: documentData?.fileUrl || null,
+      extractedContent: documentData?.extractedContent || null,
+      compressedContent: documentData?.compressedContent || null,
       fromOnboarding: true
     };
     
