@@ -28,7 +28,7 @@ Competencies: ${(q.assessed_competencies || []).join(', ')}`;
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash'
+      model: 'gemini-flash-latest'
     });
 
     const prompt = `You are an expert educational assessment analyst. A student named "${studentName || 'Student'}" studying "${courseCode}" at "${school}" has completed a diagnostic assessment.
@@ -147,7 +147,7 @@ Generate the comprehensive assessment now.`;
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 4000
+        maxOutputTokens: 6000
       }
     });
 
