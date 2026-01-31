@@ -81,17 +81,15 @@ Q5: Challenging → High Challenge (depth, edge cases, or precision—not new co
 QUESTION-TYPE RULES (STRICT)
 
 Choose question_type for EACH question:
-Multiple Choice| Short Answer
+Multiple Choice
 
 • Multiple Choice → EXACTLY 4 options (A–D)
-• Short Answer → options = []
 
 MCQ cue phrases are FORBIDDEN in non-MCQ questions.
 If violated, auto-convert to Multiple Choice.
 
 CRITICAL ANSWER FORMAT:
 • For Multiple Choice: correct_answer MUST be ONLY the letter (A, B, C, or D) - NOT the full option text
-• For True/False: correct_answer MUST be "True" or "False"
 
 ────────────────────────────
 Output Requirements
