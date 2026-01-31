@@ -149,7 +149,7 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ 
-            model: 'gemini-2.0-flash-lite-latest',
+            model: 'gemini-flash-lite-latest',
             generationConfig: {
                 temperature: 0.3,
                 maxOutputTokens: 8192,
