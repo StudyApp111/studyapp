@@ -9,12 +9,12 @@ import {
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-const getGradeColor = (grade) => {
-  if (!grade || grade === '—') return 'from-slate-500 to-slate-600';
-  if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
-  if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
-  if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
-  return 'from-red-500 to-rose-600';
+const getGradeColor = (grade, percentage) => {
+  // Use percentage-based coloring: 90+ green, 80+ blue, 70+ purple, 0-60 orange
+  if (percentage >= 90) return 'from-emerald-500 to-teal-600';
+  if (percentage >= 80) return 'from-blue-500 to-indigo-600';
+  if (percentage >= 70) return 'from-purple-500 to-violet-600';
+  return 'from-orange-500 to-amber-600';
 };
 
 const getToolIcon = (tool) => {
@@ -147,7 +147,7 @@ export default function PredictedGradeDisplay() {
             
             {/* HUGE Grade Display */}
             <div className="flex flex-col items-center gap-2">
-              <span className={`text-7xl sm:text-8xl md:text-9xl font-black bg-gradient-to-br ${getGradeColor(grade)} bg-clip-text text-transparent drop-shadow-2xl`}>
+              <span className={`text-7xl sm:text-8xl md:text-9xl font-black bg-gradient-to-br ${getGradeColor(grade, percentage)} bg-clip-text text-transparent drop-shadow-2xl`}>
                 {grade}
               </span>
               <span className="text-2xl sm:text-3xl font-bold text-slate-300">
@@ -159,7 +159,7 @@ export default function PredictedGradeDisplay() {
             <div className="w-full max-w-md mx-auto space-y-2">
               <div className="relative h-3 bg-slate-800 rounded-full overflow-hidden">
                 <div 
-                  className={`absolute left-0 top-0 h-full rounded-full bg-gradient-to-r ${getGradeColor(grade)}`}
+                  className={`absolute left-0 top-0 h-full rounded-full bg-gradient-to-r ${getGradeColor(grade, percentage)}`}
                   style={{ width: `${percentage}%` }}
                 />
               </div>
@@ -173,10 +173,10 @@ export default function PredictedGradeDisplay() {
               </div>
             </div>
             
-            {/* Personalized Message - Better contrast */}
+            {/* Personalized Message - Better contrast & readability */}
             {personalizedMessage && (
               <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-                <p className="text-slate-200 text-sm sm:text-base leading-relaxed break-words">
+                <p className="text-slate-200 text-base sm:text-lg leading-relaxed break-words">
                   {personalizedMessage}
                 </p>
               </div>
@@ -329,30 +329,32 @@ export default function PredictedGradeDisplay() {
                 <AlertCircle className="w-5 h-5" />
                 Where You're Losing Points
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {weakAreasDetailed.slice(0, 3).map((weak, idx) => {
                   const ToolIcon = getToolIcon(weak.recommended_tool);
                   return (
-                    <div key={idx} className="bg-slate-800 rounded-xl p-4 border border-slate-700 w-full">
-                      <p className="font-bold text-white text-base break-words mb-2">{idx + 1}. {weak.topic}</p>
+                    <div key={idx} className="bg-slate-800 rounded-xl p-4 sm:p-5 border border-slate-700 w-full">
+                      <p className="font-bold text-white text-base sm:text-lg break-words mb-3">{idx + 1}. {weak.topic}</p>
                       
-                      {/* Grade impact - Large and prominent */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-slate-400 text-sm">📉 Costing you:</span>
-                        <span className="font-black text-red-400 text-lg">{weak.grade_impact}</span>
+                      {/* Grade impact - LARGE and prominent */}
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="text-2xl">📉</span>
+                        <span className="text-slate-300 text-base font-medium">Costing you:</span>
+                        <span className="font-black text-red-400 text-xl sm:text-2xl">{weak.grade_impact}</span>
                       </div>
                       
-                      {/* Tool recommendation */}
-                      <div className="flex items-center gap-2 bg-purple-500/10 rounded-lg px-3 py-2 border border-purple-500/30">
-                        <ToolIcon className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                        <span className="text-purple-300 text-sm">
-                          <span className="font-semibold">Fix with:</span> {weak.recommended_tool}
-                        </span>
+                      {/* Tool recommendation - More prominent badge */}
+                      <div className="flex items-center gap-3 bg-purple-500/15 rounded-xl px-4 py-3 border border-purple-500/30">
+                        <div className="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <ToolIcon className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <div>
+                          <span className="text-purple-300 font-bold text-base block">{weak.recommended_tool}</span>
+                          {weak.tool_reason && (
+                            <p className="text-slate-400 text-sm mt-0.5 break-words">{weak.tool_reason}</p>
+                          )}
+                        </div>
                       </div>
-                      
-                      {weak.tool_reason && (
-                        <p className="text-slate-400 text-xs mt-2 break-words">{weak.tool_reason}</p>
-                      )}
                     </div>
                   );
                 })}
@@ -366,61 +368,83 @@ export default function PredictedGradeDisplay() {
           )}
         </div>
 
-        {/* Timing Section - Visual timeline */}
+        {/* Timing Section - Visual timeline with color-coded progression */}
         <div className="bg-slate-900 rounded-2xl p-4 sm:p-6 border border-purple-500/40 w-full">
-          <h3 className="text-xl sm:text-2xl font-black text-white mb-4 flex items-center gap-2">
-            ⏰ Your Path to A+
+          <h3 className="text-xl sm:text-2xl font-black text-white mb-5 flex items-center gap-2">
+            📅 Your Path to A+
           </h3>
           
           {gradeTrajectory.current && (
-            <div className="space-y-4">
-              {/* Visual Timeline */}
-              <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Visual Timeline with color progression */}
+              <div className="space-y-0">
                 {[
-                  { label: 'Week 1', from: gradeTrajectory.current, to: gradeTrajectory.week_1_target, desc: 'Fix theoretical gaps' },
-                  { label: 'Week 2', from: gradeTrajectory.week_1_target, to: gradeTrajectory.week_2_target, desc: 'Master calculations' },
-                  { label: 'Week 3', from: gradeTrajectory.week_2_target, to: gradeTrajectory.final_target, desc: 'Practice & polish' }
+                  { label: 'Week 1', from: gradeTrajectory.current, to: gradeTrajectory.week_1_target, desc: 'Fix theoretical gaps', color: 'orange', pct: '70%' },
+                  { label: 'Week 2', from: gradeTrajectory.week_1_target, to: gradeTrajectory.week_2_target, desc: 'Master calculations', color: 'amber', pct: '85%' },
+                  { label: 'Week 3', from: gradeTrajectory.week_2_target, to: gradeTrajectory.final_target, desc: 'Practice & polish', color: 'emerald', pct: '95%' }
                 ].map((week, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    {/* Timeline dot and line */}
+                  <div key={idx} className="flex gap-4">
+                    {/* Timeline line and dot */}
                     <div className="flex flex-col items-center">
-                      <div className={`w-4 h-4 rounded-full ${idx === 2 ? 'bg-emerald-500' : 'bg-purple-500'} ring-4 ring-purple-500/20`} />
-                      {idx < 2 && <div className="w-0.5 h-8 bg-purple-500/30" />}
+                      <div className={`w-5 h-5 rounded-full flex-shrink-0 ring-4 ${
+                        week.color === 'orange' ? 'bg-orange-500 ring-orange-500/20' :
+                        week.color === 'amber' ? 'bg-amber-500 ring-amber-500/20' :
+                        'bg-emerald-500 ring-emerald-500/20'
+                      }`} />
+                      {idx < 2 && (
+                        <div className={`w-1 h-16 sm:h-14 ${
+                          week.color === 'orange' ? 'bg-gradient-to-b from-orange-500 to-amber-500' :
+                          'bg-gradient-to-b from-amber-500 to-emerald-500'
+                        }`} />
+                      )}
                     </div>
                     
-                    {/* Content */}
-                    <div className="flex-1 bg-slate-800 rounded-lg p-3 border border-slate-700">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-slate-400 text-sm font-medium">{week.label}</span>
-                        <span className="text-white font-bold">
-                          {week.from} → <span className="text-emerald-400">{week.to}</span>
-                        </span>
+                    {/* Content card */}
+                    <div className={`flex-1 bg-slate-800 rounded-xl p-4 border mb-3 ${
+                      week.color === 'orange' ? 'border-orange-500/30' :
+                      week.color === 'amber' ? 'border-amber-500/30' :
+                      'border-emerald-500/30'
+                    }`}>
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-1">
+                        <span className={`text-sm font-bold ${
+                          week.color === 'orange' ? 'text-orange-400' :
+                          week.color === 'amber' ? 'text-amber-400' :
+                          'text-emerald-400'
+                        }`}>{week.label}</span>
+                        <span className="text-slate-400 text-xs">({week.pct})</span>
                       </div>
-                      <p className="text-slate-500 text-xs mt-1">{week.desc}</p>
+                      <p className="text-white font-bold text-lg">
+                        {week.from} → <span className={`${
+                          week.color === 'orange' ? 'text-orange-400' :
+                          week.color === 'amber' ? 'text-amber-400' :
+                          'text-emerald-400'
+                        }`}>{week.to}</span>
+                      </p>
+                      <p className="text-slate-400 text-sm mt-1">{week.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
               
               {/* Study time reassurance */}
-              <div className="bg-emerald-500/10 rounded-lg p-3 border border-emerald-500/30 text-center">
-                <p className="text-emerald-300 text-sm">
+              <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/30 text-center">
+                <p className="text-emerald-300 text-base">
                   <span className="font-bold">Study time:</span> Just {studyIntensity}
                 </p>
               </div>
               
               {/* Urgency indicators */}
-              <div className="space-y-1.5 pt-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-emerald-400">✓</span>
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center gap-3 text-base">
+                  <span className="text-emerald-400 text-lg">✓</span>
                   <span className="text-slate-300">Start today → <span className="font-bold text-emerald-400">A+ possible</span></span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-amber-400">⚠️</span>
+                <div className="flex items-center gap-3 text-base">
+                  <span className="text-amber-400 text-lg">⚠️</span>
                   <span className="text-slate-300">Wait 5 days → <span className="font-bold text-amber-400">B+ max</span></span>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-red-400">✗</span>
+                <div className="flex items-center gap-3 text-base">
+                  <span className="text-red-400 text-lg">✗</span>
                   <span className="text-slate-300">Wait 10 days → <span className="font-bold text-red-400">Stay at {grade}</span></span>
                 </div>
               </div>
