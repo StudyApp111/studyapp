@@ -147,7 +147,7 @@ Generate the comprehensive assessment now.`;
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 6000
+        maxOutputTokens: 16000
       }
     });
 
