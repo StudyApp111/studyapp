@@ -184,14 +184,7 @@ export default function DiagnosticQuiz() {
     }
   };
 
-  // Timer effect - Reset on question change
-  useEffect(() => {
-    // Reset timer when question changes
-    setQuestionStartTime(Date.now());
-    setElapsedTime(0);
-  }, [currentQuestionIndex]);
-
-  // Timer tick effect
+  // Timer tick effect - only runs when not answered
   useEffect(() => {
     const currentIsAnswered = !!answeredQuestions[currentQuestionIndex];
     if (!currentIsAnswered) {

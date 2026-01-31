@@ -109,40 +109,26 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       </div>
 
       {/* File Upload Section */}
-      {!file ? (
-        <div>
-          <label 
-            htmlFor="file-upload"
-            className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-purple-500/50 rounded-xl cursor-pointer bg-purple-500/5 hover:bg-purple-500/10 transition-all"
-          >
-            <Upload className="w-12 h-12 text-purple-400 mb-3" />
-            <span className="text-white font-semibold text-base mb-1">Click to upload document</span>
-            <span className="text-slate-400 text-sm">PDF, DOCX, PNG, JPG (Max 5MB)</span>
-            <input
-              id="file-upload"
-              type="file"
-              className="hidden"
-              onChange={handleFileChange}
-              accept=".pdf,.docx,.doc,.png,.jpg,.jpeg"
-            />
-          </label>
-        </div>
-      ) : (
-        <div className="bg-slate-800 rounded-xl p-4 border border-slate-600">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FileText className="w-5 h-5 text-purple-400" />
-              <span className="text-white text-sm">{file.name}</span>
-            </div>
-            <button
-              onClick={() => setFile(null)}
-              className="text-slate-400 hover:text-white text-xs"
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      )}
+      <div>
+        <label 
+          htmlFor="file-upload"
+          className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-purple-500/50 rounded-xl cursor-pointer bg-purple-500/5 hover:bg-purple-500/10 transition-all"
+        >
+          <Upload className="w-12 h-12 text-purple-400 mb-3" />
+          <span className="text-white font-semibold text-base mb-1">
+            {file ? file.name : 'Click to upload document'}
+          </span>
+          <span className="text-slate-400 text-sm">PDF, DOCX, PNG, JPG (Max 5MB)</span>
+          <input
+            id="file-upload"
+            type="file"
+            className="hidden"
+            onChange={handleFileChange}
+            accept=".pdf,.docx,.doc,.png,.jpg,.jpeg"
+            disabled={isLoading}
+          />
+        </label>
+      </div>
 
       {/* Error */}
       {error && (
