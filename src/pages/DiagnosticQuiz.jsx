@@ -164,12 +164,21 @@ export default function DiagnosticQuiz() {
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      setQuestionStartTime(Date.now());
+      // Reset timer for next question
+      const newStartTime = Date.now();
+      setQuestionStartTime(newStartTime);
       setElapsedTime(0);
     }
   };
 
-  // Timer effect - derive isAnswered from state directly
+  // Timer effect - Reset on question change
+  useEffect(() => {
+    // Reset timer when question changes
+    setQuestionStartTime(Date.now());
+    setElapsedTime(0);
+  }, [currentQuestionIndex]);
+
+  // Timer tick effect
   useEffect(() => {
     const currentIsAnswered = !!answeredQuestions[currentQuestionIndex];
     if (!currentIsAnswered) {
@@ -574,11 +583,11 @@ export default function DiagnosticQuiz() {
                   )}
                 </AnimatePresence>
 
-                {/* Header with Timer and Difficulty */}
-                <div className="bg-black p-4 md:p-5">
+                {/* Header - Purple gradient banner with Timer and Difficulty */}
+                <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 md:p-5">
                   <div className="flex items-center justify-between">
                     {/* Timer */}
-                    <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
+                    <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5">
                       <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <circle cx="12" cy="12" r="10" strokeWidth="2" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" />
