@@ -46,7 +46,7 @@ Use this curriculum to:
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-flash-latest'
+      model: 'gemini-flash-lite-latest'
     });
 
     const prompt = `You are an expert educational analyst. Analyze this diagnostic quiz and return ONLY valid JSON (no markdown, no tables, no extra text).
