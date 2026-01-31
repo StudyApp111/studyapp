@@ -63,7 +63,7 @@ Use this curriculum to:
       model: 'gemini-flash-latest'
     });
 
-    const prompt = `CRITICAL: You are grading a REAL student's diagnostic exam. Analyze their ACTUAL performance data below. DO NOT use placeholder values or generic examples.
+    const prompt = `Expert educator for ${courseCode} at ${school}. Analyze diagnostic performance using curriculum map to predict grade as if you were teaching this course.
 
 STUDENT INFORMATION:
 - Name: ${studentName || 'Student'}
@@ -78,31 +78,48 @@ ${questionContext}
 
 YOUR TASK: Analyze the ACTUAL performance data above and return ONLY valid JSON (no markdown, no tables, no extra text).
 
-CRITICAL RULES:
-1. Use the ACTUAL percentage (${actualPercentage}%) - DO NOT use 80% or any other placeholder
-2. Identify weak areas from the ACTUAL wrong answers in the performance data above
-3. Strong areas must come from ACTUAL correct answers
-4. All data MUST be based on THIS student's ACTUAL responses
+Prediction Algorithm:
+1) Per-item scoring: base=1.0(correct) or 0.0(wrong). Apply difficulty: Easy×1.0, Moderate×1.2, Challenging×1.5.
+2) Calculate: (total_weighted_correct / total_weighted_possible) × 100 = percentage.
+3) Map to grade: A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59).
+4) Confidence: (answered/total × 50) + 30. Range: [30,80]. Level: <50="Medium", ≥50="High".
+5) Users should never get 0% or 100%. Grade the work as if you were a teacher at their school. 
 
-GRADING ALGORITHM:
-1. ACTUAL Grade: ${actualPercentage}% maps to letter grade:
-   A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59)
 
-2. WEAK AREAS - Identify 3 topics from the questions marked ✗ above:
-   - Use the ACTUAL question topics from wrong answers
-   - Calculate realistic grade impact
-   - Assign tool: Conceptual → "Teach It Cards", Application → "Practice Questions"
+Competency Analysis (use curriculum map[${curriculumContext}]):
+- Map wrong answers to curriculum competencies
+- Weight by assessment_weightings (e.g., "Final Paper - 40%" = higher impact)
+- Match preview question to assessment_formats style
+- Reference high_yield_focal_points for weak areas
 
-3. STRONG AREAS - From questions marked ✓ above
+Weak Areas Requirements:
+- Identify 3 specific topics from WRONG answers
+- Align with curriculum competencies if available
+- Calculate grade_impact based on assessment weights
+- Assign tool: Conceptual→"Teach It Cards", Application→"Practice Questions", Complex→"AI Tutor"
 
-4. REALISTIC TRAJECTORY based on ACTUAL ${actualPercentage}%:
-   0-30% (F): Week1→D-, Week2→D+, Week3→C
-   31-50% (F/D): Week1→D, Week2→C-, Week3→C+
-   51-70% (D/C): Week1→C+, Week2→B-, Week3→B
-   71-85% (C/B): Week1→B, Week2→B+, Week3→A-
-   86-95% (B/A): Week1→A-, Week2→A, Week3→A+
+Preview Question:
+- Test the #1 weak area (highest impact)
+- Match course assessment format if curriculum available
+- Different question than diagnostic
+- Include complete model answer
 
-5. PERSONALIZED MESSAGE using ${studentName || 'Student'} and ${actualPercentage}%
+Grade Trajectory Rules (CRITICAL - MUST BE REALISTIC):
+Based on starting percentage, calculate realistic weekly improvements:
+- If 0-30% (F): +8-12% per week max (Week 1→D-, Week 2→D+, Week 3→C)
+- If 31-50% (F/D): +10-15% per week (Week 1→D, Week 2→C-, Week 3→C+)
+- If 51-70% (D/C): +8-12% per week (Week 1→C+, Week 2→B-, Week 3→B)
+- If 71-85% (C/B): +5-10% per week (Week 1→B, Week 2→B+, Week 3→A-)
+- If 86-95% (B/A): +3-5% per week (Week 1→A-, Week 2→A, Week 3→A+)
+- If 96-100% (A+): Already at peak, focus on maintenance
+
+DO NOT promise A+ from F in 3 weeks. Be realistic based on ACTUAL starting grade.
+
+Personalized Message Rules:
+- Line 1: Use ACTUAL calculated percentage (not placeholder)
+- Line 2: Reference realistic target based on starting grade (if F→aim for C, not A+)
+- Line 3: Encouraging reframe appropriate to their situation
+
 
 REQUIRED JSON OUTPUT (respond with ONLY this JSON, nothing else):
 
@@ -176,7 +193,17 @@ REQUIRED JSON OUTPUT (respond with ONLY this JSON, nothing else):
   }
 }
 
-CRITICAL: Respond with ONLY the JSON object above. No markdown, no code blocks, no explanatory text before or after.`;
+Critical Rules:
+- Use ACTUAL score for percentage (don't default to 80%)
+- Grade trajectory MUST be realistic based on starting grade
+- Week-to-week improvements follow the ranges above
+- If starting F (0-59%), target C or B max (not A+)
+- If starting D (60-69%), target B or B+ max
+- If starting C (70-79%), target A- or A max
+- Personalized message line 2 must reference realistic target
+- Severity levels: "critical" (for F/D students), "high", "medium", "low"
+- Weak areas must match WRONG answers
+- Use curriculum competencies if available`;
 
     console.log("Sending request to Gemini...");
     const result = await model.generateContent({
