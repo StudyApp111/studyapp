@@ -104,13 +104,30 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       
       if (fromOnboarding && reportDataStr) {
         try {
-          // reportDataStr is already encoded once from the URL, just parse it
-          const reportData = JSON.parse(reportDataStr);
+          // URLSearchParams.get() automatically decodes, so just parse
+          let reportData;
+          try {
+            reportData = JSON.parse(reportDataStr);
+          } catch (parseErr) {
+            // If parse fails, try decoding first (safety fallback)
+            reportData = JSON.parse(decodeURIComponent(reportDataStr));
+          }
           
-          // Trigger study plan generation with diagnostic data
-          window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
+          // Show generating state immediately with report data visible
+          setLoading(false);
+          setStudyPlan({
+            initial_predicted_grade: reportData.predicted_grade,
+            current_predicted_grade: reportData.predicted_grade,
+            initial_score: reportData.predicted_percentage,
+            current_score: reportData.predicted_percentage,
+            initial_confidence: parseInt(reportData.confidence_level) || 45,
+            current_confidence: parseInt(reportData.confidence_level) || 45,
+            tasks: [],
+            status: 'active'
+          });
           
-          const result = await base44.functions.invoke('generateStudyPlan', {
+          // Trigger background study plan generation
+          base44.functions.invoke('generateStudyPlan', {
             lessonId: lesson.id,
             diagnosticData: {
               predicted_grade: reportData.predicted_grade,
@@ -118,19 +135,18 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               confidence_level: reportData.confidence_level,
               weak_areas_detailed: reportData.weak_areas_detailed
             }
+          }).then(result => {
+            if (result.data?.success) {
+              loadStudyPlan();
+              window.history.replaceState({}, '', `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=study-plan`);
+            }
+          }).catch(err => {
+            console.error("Error generating study plan:", err);
+            loadStudyPlan();
           });
-          
-          if (result.data?.success) {
-            // Reload study plan
-            await loadStudyPlan();
-            window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
-            
-            // Clean URL params
-            window.history.replaceState({}, '', `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=study-plan`);
-          }
         } catch (error) {
-          console.error("Error generating study plan from onboarding:", error);
-          window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
+          console.error("Error parsing report data:", error);
+          await loadStudyPlan();
         }
       } else {
         await loadStudyPlan();

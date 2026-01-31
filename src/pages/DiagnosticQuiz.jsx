@@ -228,11 +228,25 @@ export default function DiagnosticQuiz() {
     setError('');
 
     try {
-      // Build formattedAnswers from answeredQuestions (which contains the actual answers)
-      const formattedAnswers = Object.entries(answeredQuestions).map(([index, answerData]) => ({
-        question_index: parseInt(index),
-        answer: answerData.answer
-      }));
+      // Build formattedAnswers from answeredQuestions
+      const formattedAnswers = Object.entries(answeredQuestions).map(([index, answerData]) => {
+        const question = questions[parseInt(index)];
+        const questionType = getQuestionType(question);
+        let cleanAnswer = answerData.answer;
+        
+        // For MCQ, extract just the letter (A, B, C, D) for accurate grading
+        if (questionType === 'mcq' && question.options) {
+          const optionIndex = question.options.findIndex(opt => opt === answerData.answer);
+          if (optionIndex !== -1) {
+            cleanAnswer = String.fromCharCode(65 + optionIndex); // Convert to A, B, C, D
+          }
+        }
+        
+        return {
+          question_index: parseInt(index),
+          answer: cleanAnswer
+        };
+      });
 
       console.log('=== SUBMITTING TO gradeDiagnosticExam ===');
       console.log('Questions:', questions.length);

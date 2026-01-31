@@ -33,24 +33,39 @@ Deno.serve(async (req) => {
     // Calculate correct/total for context
     const totalQuestions = questions.length;
     let correctCount = 0;
-    
+
     console.log(`Total questions: ${totalQuestions}`);
-    
-    // Build grading context
+
+    // Build grading context with proper answer comparison
     const questionContext = questions.map((q, idx) => {
       const userAnswer = userAnswers.find(a => a.question_index === idx);
-      const isCorrect = userAnswer?.answer === q.correct_answer;
+      const userAnswerText = userAnswer?.answer || 'Not answered';
+      const correctAnswerText = q.correct_answer?.trim().toUpperCase() || '';
+
+      // For MCQ, compare letters (A, B, C, D)
+      let isCorrect = false;
+      if (userAnswerText && correctAnswerText) {
+        if (q.question_type?.toLowerCase().includes('multiple') || q.options?.length > 0) {
+          // MCQ - compare just letters
+          const userLetter = userAnswerText.trim().toUpperCase();
+          isCorrect = userLetter === correctAnswerText;
+        } else {
+          // Other types - direct comparison
+          isCorrect = userAnswerText.trim().toLowerCase() === correctAnswerText.toLowerCase();
+        }
+      }
+
       if (isCorrect) correctCount++;
-      
+
       return `Q${idx + 1}: ${q.question_text}
-Correct: ${q.correct_answer}
-User: ${userAnswer?.answer || 'Not answered'}
-Result: ${isCorrect ? '✓' : '✗'}
-Competencies: ${(q.assessed_competencies || []).join(', ')}`;
+    Correct: ${correctAnswerText}
+    User: ${userAnswerText}
+    Result: ${isCorrect ? '✓' : '✗'}
+    Competencies: ${(q.assessed_competencies || []).join(', ')}`;
     }).join('\n\n');
 
     console.log(`Correct answers: ${correctCount}/${totalQuestions}`);
-    
+
     const actualPercentage = Math.round((correctCount / totalQuestions) * 100);
     console.log(`Calculated percentage: ${actualPercentage}%`);
 
