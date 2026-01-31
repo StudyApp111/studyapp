@@ -219,6 +219,12 @@ export default function DiagnosticQuiz() {
   }, [userAnswers, currentQuestionIndex, answeredQuestions, questions]);
 
   const handleSubmit = async () => {
+    console.log('=== SUBMIT CLICKED ===');
+    console.log('answeredQuestions state:', JSON.stringify(answeredQuestions, null, 2));
+    console.log('userAnswers state:', JSON.stringify(userAnswers, null, 2));
+    console.log('answeredQuestions keys:', Object.keys(answeredQuestions));
+    console.log('questions.length:', questions.length);
+    
     if (Object.keys(answeredQuestions).length !== questions.length) {
       setError('Please answer all questions before submitting.');
       return;
@@ -234,11 +240,15 @@ export default function DiagnosticQuiz() {
         const questionType = getQuestionType(question);
         let cleanAnswer = answerData.answer;
         
+        console.log(`Processing answer ${index}: original="${cleanAnswer}", type=${questionType}`);
+        
         // For MCQ, extract just the letter (A, B, C, D) for accurate grading
         if (questionType === 'mcq' && question.options) {
           const optionIndex = question.options.findIndex(opt => opt === answerData.answer);
+          console.log(`MCQ optionIndex=${optionIndex} for answer="${cleanAnswer}"`);
           if (optionIndex !== -1) {
             cleanAnswer = String.fromCharCode(65 + optionIndex); // Convert to A, B, C, D
+            console.log(`Converted to letter: ${cleanAnswer}`);
           }
         }
         
@@ -248,17 +258,12 @@ export default function DiagnosticQuiz() {
         };
       });
 
-      console.log('=== SUBMITTING TO gradeDiagnosticExam ===');
-      console.log('Questions:', questions.length);
-      console.log('Answered questions:', Object.keys(answeredQuestions).length);
-      console.log('Formatted answers:', JSON.stringify(formattedAnswers, null, 2));
-      console.log('Sample question correct_answer:', questions[0]?.correct_answer);
-      console.log('Sample formatted answer:', formattedAnswers[0]);
+      console.log('=== FINAL PAYLOAD TO gradeDiagnosticExam ===');
+      console.log('formattedAnswers:', JSON.stringify(formattedAnswers, null, 2));
       
-      // CRITICAL DEBUG: Log each answer with its question for verification
-      formattedAnswers.forEach((ans, i) => {
+      formattedAnswers.forEach((ans) => {
         const question = questions[ans.question_index];
-        console.log(`Question ${ans.question_index}: Correct="${question?.correct_answer}" | User="${ans.answer}"`);
+        console.log(`Q${ans.question_index}: User="${ans.answer}" vs Correct="${question?.correct_answer}"`);
       });
 
       const result = await base44.functions.invoke('gradeDiagnosticExam', {
