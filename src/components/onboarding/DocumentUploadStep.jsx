@@ -96,11 +96,11 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         </p>
         
         {/* Benefits */}
-        <div className="flex items-center gap-2 text-emerald-600 text-sm pt-2">
+        <div className="flex items-center justify-center gap-2 text-emerald-600 text-sm pt-2">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
           <span className="font-medium">35% more accurate predictions</span>
         </div>
-        <div className="flex items-center gap-2 text-emerald-600 text-sm">
+        <div className="flex items-center justify-center gap-2 text-emerald-600 text-sm">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
           <span className="font-medium">Takes 30 seconds</span>
         </div>

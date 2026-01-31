@@ -2,23 +2,32 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 
 Deno.serve(async (req) => {
+  console.log("=== gradeDiagnosticExam FUNCTION INVOKED ===");
+  
   try {
     const base44 = createClientFromRequest(req);
     
-    const { school, courseCode, questions, userAnswers, studentName, curriculumData } = await req.json();
+    const body = await req.json();
+    console.log("Request body:", JSON.stringify(body, null, 2));
+    
+    const { school, courseCode, questions, userAnswers, studentName, curriculumData } = body;
 
     if (!school || !courseCode || !questions || !userAnswers) {
+      console.error("Missing required parameters:", { school, courseCode, hasQuestions: !!questions, hasUserAnswers: !!userAnswers });
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
     const apiKey = Deno.env.get('GEMINIAPIKEY');
     if (!apiKey) {
+      console.error("GEMINIAPIKEY not configured");
       return Response.json({ error: 'API key not configured' }, { status: 500 });
     }
 
     // Calculate correct/total for context
     const totalQuestions = questions.length;
     let correctCount = 0;
+    
+    console.log(`Total questions: ${totalQuestions}`);
     
     // Build grading context
     const questionContext = questions.map((q, idx) => {
@@ -33,6 +42,11 @@ Result: ${isCorrect ? '✓' : '✗'}
 Competencies: ${(q.assessed_competencies || []).join(', ')}`;
     }).join('\n\n');
 
+    console.log(`Correct answers: ${correctCount}/${totalQuestions}`);
+    
+    const actualPercentage = Math.round((correctCount / totalQuestions) * 100);
+    console.log(`Calculated percentage: ${actualPercentage}%`);
+
     const curriculumContext = curriculumData ? `
 CURRICULUM MAP DATA:
 ${JSON.stringify(curriculumData, null, 2)}
@@ -46,11 +60,9 @@ Use this curriculum to:
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-flash-lite-latest'
+      model: 'gemini-flash-latest'
     });
 
-    const actualPercentage = Math.round((correctCount / totalQuestions) * 100);
-    
     const prompt = `CRITICAL: You are grading a REAL student's diagnostic exam. Analyze their ACTUAL performance data below. DO NOT use placeholder values or generic examples.
 
 STUDENT INFORMATION:
@@ -96,7 +108,7 @@ REQUIRED JSON OUTPUT (respond with ONLY this JSON, nothing else):
 
 {
   "predicted_grade": "string (e.g. B-, A, F)",
-  "predicted_percentage": number,
+  "predicted_percentage": ${actualPercentage},
   "confidence_level": "string (High or Medium)",
   "strong_areas": ["array of strings from correct answers"],
   "weak_areas_detailed": [
@@ -166,6 +178,7 @@ REQUIRED JSON OUTPUT (respond with ONLY this JSON, nothing else):
 
 CRITICAL: Respond with ONLY the JSON object above. No markdown, no code blocks, no explanatory text before or after.`;
 
+    console.log("Sending request to Gemini...");
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
@@ -177,6 +190,7 @@ CRITICAL: Respond with ONLY the JSON object above. No markdown, no code blocks, 
 
     const response = result.response;
     const text = response.text();
+    console.log("Raw Gemini response (first 500 chars):", text.substring(0, 500));
     
     // Clean up the response - remove markdown code blocks if present
     let cleanedText = text.trim();
@@ -193,8 +207,12 @@ CRITICAL: Respond with ONLY the JSON object above. No markdown, no code blocks, 
     let parsed;
     try {
       parsed = JSON.parse(cleanedText);
+      console.log("Successfully parsed JSON response");
+      console.log("Predicted grade:", parsed.predicted_grade);
+      console.log("Predicted percentage:", parsed.predicted_percentage);
     } catch (parseError) {
-      console.error("Failed to parse AI response:", text);
+      console.error("Failed to parse AI response:", parseError.message);
+      console.error("Raw text:", text.substring(0, 500));
       return Response.json({ 
         error: 'Failed to parse grading response', 
         details: parseError.message,
@@ -202,13 +220,16 @@ CRITICAL: Respond with ONLY the JSON object above. No markdown, no code blocks, 
       }, { status: 500 });
     }
 
+    console.log("=== gradeDiagnosticExam COMPLETED SUCCESSFULLY ===");
     return Response.json({
       success: true,
       ...parsed
     });
 
   } catch (error) {
-    console.error('Error grading diagnostic exam:', error);
+    console.error('=== ERROR in gradeDiagnosticExam ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     return Response.json({ 
       error: error.message || 'Failed to grade diagnostic exam' 
     }, { status: 500 });
