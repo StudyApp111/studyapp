@@ -38,6 +38,8 @@ export default function DiagnosticQuiz() {
     const name = searchParams.get('name');
     const school = searchParams.get('school');
     const courseCode = searchParams.get('courseCode');
+    const documentContent = searchParams.get('documentContent');
+    const curriculumDataStr = searchParams.get('curriculumData');
 
     if (!school || !courseCode) {
       setError('Missing required information. Redirecting...');
@@ -48,15 +50,26 @@ export default function DiagnosticQuiz() {
       return;
     }
 
-    setParams({ name, school, courseCode });
-    generateQuestions(school, courseCode);
+    let curriculumData = null;
+    if (curriculumDataStr) {
+      try {
+        curriculumData = JSON.parse(curriculumDataStr);
+      } catch (e) {
+        console.error('Failed to parse curriculum data:', e);
+      }
+    }
+
+    setParams({ name, school, courseCode, documentContent, curriculumData });
+    generateQuestions(school, courseCode, documentContent, curriculumData);
   }, [location.search, navigate]);
 
-  const generateQuestions = async (school, courseCode) => {
+  const generateQuestions = async (school, courseCode, documentContent, curriculumData) => {
     try {
       const result = await base44.functions.invoke('generateDiagnosticExam', {
         school,
-        courseCode
+        courseCode,
+        documentContent: documentContent || null,
+        curriculumData: curriculumData || null
       });
 
       if (result.data?.success && result.data?.questions) {
@@ -235,7 +248,8 @@ export default function DiagnosticQuiz() {
         courseCode: params.courseCode,
         questions,
         userAnswers: formattedAnswers,
-        studentName: params.name
+        studentName: params.name,
+        curriculumData: params.curriculumData || null
       });
 
       if (result.data?.success) {

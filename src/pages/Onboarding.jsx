@@ -11,6 +11,7 @@ import { trackUserSession } from "../components/utils/userTracking";
 import NameInput from "../components/onboarding/NameInput";
 import SchoolInput from "../components/onboarding/SchoolInput";
 import CourseCodeInput from "../components/onboarding/CourseCodeInput";
+import DocumentUploadStep from "../components/onboarding/DocumentUploadStep";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -20,11 +21,18 @@ export default function Onboarding() {
   const [error, setError] = useState("");
   
   // Store answers in ref to avoid race conditions
-  const answersRef = useRef({ name: '', school: '', courseCode: '' });
+  const answersRef = useRef({ 
+    name: '', 
+    school: '', 
+    courseCode: '', 
+    documentData: null, 
+    curriculumData: null 
+  });
   const [answers, setAnswers] = useState({ name: '', school: '', courseCode: '' });
+  const [isMappingCurriculum, setIsMappingCurriculum] = useState(false);
 
-  // 3 questions: Name, School, Course Code
-  const totalSteps = 3;
+  // 4 steps: Name, School, Course Code, Optional Document Upload
+  const totalSteps = 4;
 
   useEffect(() => {
     checkExistingProfile();
@@ -49,10 +57,36 @@ export default function Onboarding() {
     setError("");
   };
 
-  const handleNext = (valueFromComponent, key) => {
+  const handleNext = async (valueFromComponent, key) => {
     // Update ref immediately with passed value
     if (valueFromComponent && key) {
       answersRef.current[key] = valueFromComponent;
+    }
+    
+    // After course code (step 2), trigger curriculum mapping in background
+    if (currentStep === 2 && key === 'courseCode') {
+      setIsMappingCurriculum(true);
+      
+      // Run curriculum mapping in background (don't await)
+      base44.functions.invoke('curriculumMapping', {
+        courseName: valueFromComponent,
+        learningProfile: {
+          school: answersRef.current.school,
+          grade: 'Post-Secondary'
+        },
+        extractedContent: null
+      })
+        .then(result => {
+          if (result.data) {
+            answersRef.current.curriculumData = result.data;
+          }
+        })
+        .catch(err => {
+          console.error('Curriculum mapping failed:', err);
+        })
+        .finally(() => {
+          setIsMappingCurriculum(false);
+        });
     }
     
     if (currentStep < totalSteps - 1) {
@@ -76,6 +110,15 @@ export default function Onboarding() {
     }
   };
 
+  const handleDocumentUpload = (documentData) => {
+    answersRef.current.documentData = documentData;
+    handleSubmit();
+  };
+
+  const handleSkipDocument = () => {
+    handleSubmit();
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError("");
@@ -84,11 +127,19 @@ export default function Onboarding() {
       const name = answersRef.current.name || '';
       const school = answersRef.current.school || '';
       const courseCode = answersRef.current.courseCode || '';
+      const documentData = answersRef.current.documentData;
+      const curriculumData = answersRef.current.curriculumData;
       
-      console.log('🚀 Submitting with:', { name, school, courseCode });
+      console.log('🚀 Submitting with:', { name, school, courseCode, hasDocument: !!documentData, hasCurriculum: !!curriculumData });
       
       // Navigate to DiagnosticQuiz with collected data
-      const params = new URLSearchParams({ name, school, courseCode });
+      const params = new URLSearchParams({ 
+        name, 
+        school, 
+        courseCode,
+        ...(documentData?.compressedContent && { documentContent: documentData.compressedContent }),
+        ...(curriculumData && { curriculumData: JSON.stringify(curriculumData) })
+      });
       navigate(createPageUrl("DiagnosticQuiz") + `?${params.toString()}`, { replace: true });
 
     } catch (error) {
@@ -111,6 +162,7 @@ export default function Onboarding() {
     if (answersRef.current.name) answeredCount++;
     if (answersRef.current.school) answeredCount++;
     if (answersRef.current.courseCode) answeredCount++;
+    if (currentStep >= 3) answeredCount++; // Document step (can be skipped)
     const progress = (answeredCount / totalSteps) * 100;
 
   return (
@@ -177,12 +229,23 @@ export default function Onboarding() {
             />
           )}
 
+          {/* Step 4: Optional Document Upload */}
+          {currentStep === 3 && (
+            <DocumentUploadStep
+              userName={answersRef.current.name}
+              courseName={answersRef.current.courseCode}
+              onNext={handleDocumentUpload}
+              onBack={handleBack}
+              onSkip={handleSkipDocument}
+            />
+          )}
+
           {/* Loading state */}
-          {isSubmitting && (
+          {(isSubmitting || isMappingCurriculum) && (
             <div className="flex justify-center py-8">
               <div className="flex items-center gap-2 text-purple-300">
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Preparing your quiz...</span>
+                <span>{isMappingCurriculum ? 'Analyzing course...' : 'Preparing your quiz...'}</span>
               </div>
             </div>
           )}

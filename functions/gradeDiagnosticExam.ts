@@ -5,7 +5,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    const { school, courseCode, questions, userAnswers, studentName } = await req.json();
+    const { school, courseCode, questions, userAnswers, studentName, curriculumData } = await req.json();
 
     if (!school || !courseCode || !questions || !userAnswers) {
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -32,6 +32,32 @@ Competencies: ${(q.assessed_competencies || []).join(', ')}`;
     });
 
     const prompt = `You are an expert educational assessment analyst. A student named "${studentName || 'Student'}" studying "${courseCode}" at "${school}" has completed a diagnostic assessment.
+
+${curriculumData ? `
+COURSE CURRICULUM PROFILE:
+Use this curriculum profile to inform your analysis and recommendations.
+
+Core Competencies:
+${JSON.stringify(curriculumData.core_competencies || [], null, 2)}
+
+Competency Weightings:
+${JSON.stringify(curriculumData.competency_weightings || [], null, 2)}
+
+Assessment Formats:
+${JSON.stringify(curriculumData.assessment_formats || [], null, 2)}
+
+High Yield Topics:
+${JSON.stringify(curriculumData.high_yield_focal_points || [], null, 2)}
+
+Common Misconceptions:
+${JSON.stringify(curriculumData.common_misconceptions || [], null, 2)}
+
+IMPORTANT: Use this curriculum data to:
+- Identify weak areas that match actual course competencies
+- Calculate grade impact based on competency weightings
+- Select preview questions that match actual assessment formats
+- Reference common misconceptions in your analysis
+` : ''}
 
 STUDENT PERFORMANCE:
 ${questionContext}

@@ -5,7 +5,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    const { school, courseCode } = await req.json();
+    const { school, courseCode, documentContent, curriculumData } = await req.json();
 
     if (!school || !courseCode) {
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -23,6 +23,14 @@ Deno.serve(async (req) => {
 
     const prompt = `You are generating a diagnostic exam for ${courseCode} at ${school}.
 
+${curriculumData ? `
+CURRICULUM PROFILE (Use this as PRIMARY source):
+Core Competencies: ${JSON.stringify(curriculumData.core_competencies || [])}
+Competency Weightings: ${JSON.stringify(curriculumData.competency_weightings || [])}
+Assessment Formats: ${JSON.stringify(curriculumData.assessment_formats || [])}
+High Yield Topics: ${JSON.stringify(curriculumData.high_yield_focal_points || [])}
+Common Misconceptions: ${JSON.stringify(curriculumData.common_misconceptions || [])}
+` : `
 CRITICAL FIRST STEP - RESEARCH:
 Before generating ANY questions, you MUST search for:
 1. "${courseCode} ${school} syllabus" OR "${courseCode} syllabus"
@@ -36,6 +44,14 @@ Use search results to identify:
 - Key competencies tested
 
 If you cannot find ${school}-specific information, use general ${courseCode} curriculum but note this in output.
+`}
+
+${documentContent ? `
+STUDENT'S UPLOADED NOTES/MATERIALS:
+${documentContent}
+
+IMPORTANT: Generate questions based on topics covered in these uploaded materials. This represents what their specific class is studying.
+` : ''}
 
 ────────────────────────────
 QUESTION DESIGN RULES
