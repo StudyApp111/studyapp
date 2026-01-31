@@ -37,8 +37,7 @@ export default function Home() {
         }
 
         const resetResult = await handleDailyReset();
-        const currentUser = resetResult.user || await base44.auth.me();
-        setUser(currentUser);
+        let currentUser = resetResult.user || await base44.auth.me();
 
         // Check if user is coming from onboarding flow
         const urlParams = new URLSearchParams(window.location.search);
@@ -81,9 +80,11 @@ export default function Home() {
               navigate(`${createPageUrl("DocumentViewer")}?id=${newLesson.id}&tab=study-plan&fromOnboarding=true&reportData=${reportDataStr}`, { replace: true });
               return;
             } else {
-              // User signed in during onboarding questions (before diagnostic) - just stay on Home
-              // Mark onboarding complete and clear the redirect
+              // User signed in during onboarding questions (before diagnostic) - stay on Home
+              // Mark onboarding complete
               await base44.auth.updateMe({ onboarding_completed: true });
+              // Refetch user to get updated onboarding_completed flag
+              currentUser = await base44.auth.me();
               window.history.replaceState({}, '', createPageUrl("Home"));
             }
           } catch (err) {
@@ -92,6 +93,7 @@ export default function Home() {
           }
         }
 
+        setUser(currentUser);
         setDailyXP(resetResult.dailyXP ?? currentUser.daily_xp ?? 0);
         setStudyMinutesToday(resetResult.studyMinutesToday ?? currentUser.study_minutes_today ?? 0);
         setQuestionsToday(resetResult.questionsToday ?? currentUser.questions_today ?? 0);

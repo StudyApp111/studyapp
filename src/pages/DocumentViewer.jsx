@@ -366,8 +366,11 @@ export default function DocumentViewer() {
       const lessonData = lessons[0];
       setLesson(lessonData);
       
-      // Check if lesson needs materials (Pro users only)
-      if (isPro && !lessonData.extracted_content && !lessonData.file_url) {
+      // Check if lesson needs materials - SKIP if coming from onboarding
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromOnboarding = urlParams.get('fromOnboarding') === 'true';
+      
+      if (!fromOnboarding && isPro && !lessonData.extracted_content && !lessonData.file_url) {
         setShowUploadPrompt(true);
       }
       
