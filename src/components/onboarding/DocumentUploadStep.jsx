@@ -84,26 +84,25 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
   return (
     <div className="relative p-6 sm:p-8 space-y-6 bg-white rounded-2xl shadow-2xl overflow-hidden">
       {/* Animated Background Sparkles */}
-      {[...Array(8)].map((_, i) => (
+      {[...Array(6)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-1 h-1 bg-purple-400/40 rounded-full"
+          className="absolute w-1 h-1 bg-purple-400/30 rounded-full"
           initial={{ opacity: 0, x: Math.random() * 500, y: Math.random() * 400 }}
           animate={{
-            opacity: [0, 1, 0],
+            opacity: [0, 0.8, 0],
             x: Math.random() * 500,
             y: Math.random() * 400,
           }}
           transition={{
-            duration: 3 + Math.random() * 2,
+            duration: 4 + Math.random() * 2,
             repeat: Infinity,
             delay: Math.random() * 2,
           }}
         />
       ))}
-      
       {/* Header */}
-      <div className="text-center space-y-3 relative z-10">
+      <div className="text-center space-y-3">
         <div className="text-6xl mb-2">📄</div>
         <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
           Want More Accurate Results {userName}?
@@ -111,7 +110,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       </div>
 
       {/* Info card */}
-      <div className="bg-purple-50 rounded-xl p-5 border border-purple-100 space-y-3 text-center relative z-10">
+      <div className="bg-purple-50 rounded-xl p-5 border border-purple-100 space-y-3 text-center">
         <p className="text-slate-700 text-base leading-relaxed">
           We generated questions based on typical <span className="font-semibold text-slate-900">{courseName}</span> topics.
         </p>
@@ -131,7 +130,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       </div>
 
       {/* File Upload Section */}
-      <div className="relative z-10">
+      <div>
         <label 
           htmlFor="file-upload"
           className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-purple-300 rounded-xl cursor-pointer bg-purple-50 hover:bg-purple-100 transition-all"
@@ -158,7 +157,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       )}
 
       {/* Actions */}
-      <div className="flex flex-col gap-3 pt-2 relative z-10">
+      <div className="flex flex-col gap-3 pt-2">
         {file && !isLoading && (
             <Button
               onClick={handleUpload}
@@ -172,7 +171,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         {isLoading && (
           <div className="flex items-center justify-center gap-2 text-purple-600 py-3">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="font-medium">{uploading ? 'Uploading...' : 'Processing document...'}</span>
+            <span className="font-medium">{uploading ? 'Uploading...' : 'Processing...'}</span>
           </div>
         )}
 
