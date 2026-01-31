@@ -367,7 +367,6 @@ export default function DocumentViewer() {
       setLesson(lessonData);
       
       // Check if lesson needs materials - SKIP if coming from onboarding
-      const urlParams = new URLSearchParams(window.location.search);
       const fromOnboarding = urlParams.get('fromOnboarding') === 'true';
       
       if (!fromOnboarding && isPro && !lessonData.extracted_content && !lessonData.file_url) {
