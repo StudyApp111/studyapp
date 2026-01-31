@@ -127,9 +127,9 @@ export default function PredictedGradeDisplay() {
       </div>
 
       <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-8 pt-8 space-y-12">
-        {/* Logo */}
-        <div className="text-center mb-4">
-          <h1 className="text-3xl md:text-4xl font-black">
+        {/* Logo - HUGE */}
+        <div className="text-center mb-6">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
             <span className="text-white">App</span>
           </h1>
@@ -415,19 +415,24 @@ export default function PredictedGradeDisplay() {
           )}
         </div>
 
-        {/* ========== 5. SECOND CTA - Different copy ========== */}
-        <div className="relative overflow-hidden rounded-2xl bg-slate-900 border border-purple-500/40 p-6 sm:p-8 shadow-2xl w-full text-center">
-          <h3 className="text-xl sm:text-2xl font-black text-white mb-4">
-            Ready to Fix These Weaknesses?
-          </h3>
-          <Button 
-            onClick={handleCTA}
-            className="w-full max-w-md mx-auto bg-white hover:bg-slate-100 text-purple-700 font-black py-4 sm:py-5 text-lg rounded-xl shadow-xl transition-all hover:scale-[1.02] min-h-[56px]"
-          >
-            See My Free Study Plan
-            <ArrowRight className="h-5 w-5 ml-2" />
-          </Button>
-          <p className="text-slate-400 text-sm mt-3">No credit card • Start in 30 seconds</p>
+        {/* ========== 5. SECOND CTA - Purple gradient, eye-catching ========== */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-6 sm:p-8 shadow-2xl w-full text-center">
+          <div className="absolute top-0 left-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
+          
+          <div className="relative">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-5">
+              Ready to Fix These Weaknesses?
+            </h3>
+            <Button 
+              onClick={handleCTA}
+              className="w-full max-w-md mx-auto bg-white hover:bg-slate-100 text-purple-700 font-black py-4 sm:py-5 text-lg rounded-xl shadow-xl shadow-black/20 transition-all hover:scale-[1.02] min-h-[56px]"
+            >
+              See My Free Study Plan
+              <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
+            <p className="text-white/80 text-sm mt-3">No credit card • Start in 30 seconds</p>
+          </div>
         </div>
 
         {/* ========== 6. YOUR PATH TO A+ - Visual Timeline ========== */}
