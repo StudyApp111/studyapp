@@ -62,8 +62,12 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       const compressed = compressResult.data.compressed_content;
       setCompressedContent(compressed);
 
-      // Pass data to parent
-      onNext({ fileUrl, extractedContent: extracted, compressedContent: compressed });
+      // Pass data to parent - include all data for post-login flow
+      onNext({ 
+        fileUrl, 
+        extractedContent: extracted, 
+        compressedContent: compressed 
+      });
 
     } catch (err) {
       console.error("Upload error:", err);
@@ -136,15 +140,14 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       {/* Actions */}
       <div className="flex flex-col gap-3 pt-2">
         {file && !isLoading && (
-          <Button
-            onClick={handleUpload}
-            variant="outline"
-            className="w-full h-12 border-purple-300 hover:bg-purple-50 text-slate-900 font-medium text-base rounded-xl"
-          >
-            Upload & Continue
-            <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-        )}
+            <Button
+              onClick={handleUpload}
+              className="w-full h-12 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-base rounded-xl"
+            >
+              Upload & Continue
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          )}
 
         {isLoading && (
           <div className="flex items-center justify-center gap-2 text-purple-600 py-3">
@@ -166,7 +169,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         <button
           onClick={onBack}
           disabled={isLoading}
-          className="text-slate-500 hover:text-slate-700 text-sm transition-colors font-medium"
+          className="text-purple-600 hover:text-purple-700 text-sm transition-colors font-medium"
         >
           ← Back
         </button>

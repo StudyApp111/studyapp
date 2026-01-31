@@ -12,6 +12,13 @@ Deno.serve(async (req) => {
     
     const { school, courseCode, questions, userAnswers, studentName, curriculumData } = body;
 
+    console.log("=== RECEIVED DATA ===");
+    console.log("School:", school);
+    console.log("CourseCode:", courseCode);
+    console.log("Questions count:", questions?.length);
+    console.log("UserAnswers count:", userAnswers?.length);
+    console.log("UserAnswers raw:", JSON.stringify(userAnswers, null, 2));
+
     if (!school || !courseCode || !questions || !userAnswers) {
       console.error("Missing required parameters:", { school, courseCode, hasQuestions: !!questions, hasUserAnswers: !!userAnswers });
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });

@@ -72,8 +72,20 @@ export default function PredictedGradeDisplay() {
   }, [name, school, courseCode, reportDataParam, navigate]);
 
   const handleCTA = () => {
-    const signInUrl = `?from=report&course=${encodeURIComponent(courseCode || '')}&grade=${encodeURIComponent(reportData?.predicted_grade || '')}`;
-    base44.auth.redirectToLogin(createPageUrl("Home") + signInUrl);
+    // Build complete onboarding data to pass through login
+    const onboardingData = {
+      courseCode: courseCode || '',
+      school: school || '',
+      studentName: name || '',
+      reportData: reportData || {},
+      fromOnboarding: true
+    };
+    
+    // Store in sessionStorage for retrieval after login
+    sessionStorage.setItem('pendingOnboardingData', JSON.stringify(onboardingData));
+    
+    const redirectUrl = `${createPageUrl("Home")}?fromOnboarding=true`;
+    base44.auth.redirectToLogin(redirectUrl);
   };
 
   if (loading) {
