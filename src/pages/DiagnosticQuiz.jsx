@@ -240,15 +240,20 @@ export default function DiagnosticQuiz() {
         const questionType = getQuestionType(question);
         let cleanAnswer = answerData.answer;
         
-        console.log(`Processing answer ${index}: original="${cleanAnswer}", type=${questionType}`);
+        console.log(`Q${index} BEFORE: original="${cleanAnswer}", type=${questionType}`);
         
-        // For MCQ, extract just the letter (A, B, C, D) for accurate grading
+        // For MCQ, extract just the letter (A, B, C, D) for accurate backend grading
         if (questionType === 'mcq' && question.options) {
+          // Find which option was selected
           const optionIndex = question.options.findIndex(opt => opt === answerData.answer);
-          console.log(`MCQ optionIndex=${optionIndex} for answer="${cleanAnswer}"`);
+          console.log(`Q${index} MCQ: optionIndex=${optionIndex}, options count=${question.options.length}`);
+          
           if (optionIndex !== -1) {
-            cleanAnswer = String.fromCharCode(65 + optionIndex); // Convert to A, B, C, D
-            console.log(`Converted to letter: ${cleanAnswer}`);
+            // Convert index to letter (0→A, 1→B, 2→C, 3→D)
+            cleanAnswer = String.fromCharCode(65 + optionIndex);
+            console.log(`Q${index} AFTER: Converted to letter="${cleanAnswer}"`);
+          } else {
+            console.error(`Q${index} ERROR: Could not find option in list. Selected="${answerData.answer}"`);
           }
         }
         
@@ -508,7 +513,26 @@ export default function DiagnosticQuiz() {
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 z-[9999] overflow-y-auto">
+    <div className="relative fixed inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 z-[9999] overflow-y-auto">
+      {/* Animated Background Sparkles */}
+      {[...Array(12)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1.5 h-1.5 bg-purple-400/20 rounded-full"
+          initial={{ opacity: 0, x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight }}
+          animate={{
+            opacity: [0, 0.6, 0],
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+          }}
+          transition={{
+            duration: 4 + Math.random() * 2,
+            repeat: Infinity,
+            delay: Math.random() * 3,
+          }}
+        />
+      ))}
+      
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
       
       {/* Correct answer celebration overlay */}

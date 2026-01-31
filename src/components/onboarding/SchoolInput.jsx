@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
 import { Loader2, MapPin, School, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function SchoolInput({ value, onChange, onNext, onBack }) {
   const [school, setSchool] = useState(value || '');
@@ -61,7 +62,25 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
     : suggestions;
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 py-6 overflow-x-hidden bg-white rounded-2xl shadow-2xl">
+    <div className="relative w-full max-w-2xl mx-auto px-3 sm:px-4 py-6 overflow-hidden bg-white rounded-2xl shadow-2xl">
+      {/* Animated Background Sparkles */}
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 bg-purple-400/30 rounded-full"
+          initial={{ opacity: 0, x: Math.random() * 600, y: Math.random() * 400 }}
+          animate={{
+            opacity: [0, 0.7, 0],
+            x: Math.random() * 600,
+            y: Math.random() * 400,
+          }}
+          transition={{
+            duration: 3.5 + Math.random() * 1.5,
+            repeat: Infinity,
+            delay: Math.random() * 2,
+          }}
+        />
+      ))}
       {/* Header */}
       <div className="text-center mb-6">
         <div className="text-5xl mb-4">🏫</div>

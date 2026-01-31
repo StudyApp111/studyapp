@@ -104,14 +104,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       
       if (fromOnboarding && reportDataStr) {
         try {
-          // URLSearchParams.get() automatically decodes, so just parse
-          let reportData;
-          try {
-            reportData = JSON.parse(reportDataStr);
-          } catch (parseErr) {
-            // If parse fails, try decoding first (safety fallback)
-            reportData = JSON.parse(decodeURIComponent(reportDataStr));
-          }
+          // URLSearchParams.get() already returns decoded string, so just parse JSON
+          const reportData = JSON.parse(reportDataStr);
           
           // Show generating state immediately with report data visible
           setLoading(false);
