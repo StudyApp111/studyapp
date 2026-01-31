@@ -29,15 +29,44 @@ Deno.serve(async (req) => {
     
     console.log(`Total questions: ${totalQuestions}`);
     
-    // Build grading context
+    // Build grading context - handle MCQ answer comparison properly
     const questionContext = questions.map((q, idx) => {
       const userAnswer = userAnswers.find(a => a.question_index === idx);
-      const isCorrect = userAnswer?.answer === q.correct_answer;
+      const userAnswerText = userAnswer?.answer || '';
+      
+      // For MCQ, correct_answer is often just "A", "B", etc.
+      // User answer might be full option text like "A. Some text"
+      let isCorrect = false;
+      const correctAnswer = (q.correct_answer || '').trim();
+      
+      if (q.question_type?.toLowerCase().includes('multiple')) {
+        // Extract letter from user's answer if it's in format "A. text" or "A) text"
+        const userLetterMatch = userAnswerText.match(/^([A-D])[\.\)\s]/i);
+        if (userLetterMatch && /^[A-D]$/i.test(correctAnswer)) {
+          isCorrect = userLetterMatch[1].toUpperCase() === correctAnswer.toUpperCase();
+        } else if (q.options) {
+          // Find which option was selected by matching against options array
+          const optionIndex = q.options.findIndex(opt => opt === userAnswerText);
+          if (optionIndex !== -1 && /^[A-D]$/i.test(correctAnswer)) {
+            const userLetter = String.fromCharCode(65 + optionIndex);
+            isCorrect = userLetter === correctAnswer.toUpperCase();
+          } else {
+            // Fallback: direct comparison
+            isCorrect = userAnswerText.toLowerCase() === correctAnswer.toLowerCase();
+          }
+        }
+      } else {
+        // For other types, direct comparison
+        isCorrect = userAnswerText.trim().toLowerCase() === correctAnswer.toLowerCase();
+      }
+      
       if (isCorrect) correctCount++;
       
+      console.log(`Q${idx + 1} - Type: ${q.question_type}, Correct: ${correctAnswer}, User: ${userAnswerText}, Match: ${isCorrect}`);
+      
       return `Q${idx + 1}: ${q.question_text}
-Correct: ${q.correct_answer}
-User: ${userAnswer?.answer || 'Not answered'}
+Correct: ${correctAnswer}
+User: ${userAnswerText || 'Not answered'}
 Result: ${isCorrect ? '✓' : '✗'}
 Competencies: ${(q.assessed_competencies || []).join(', ')}`;
     }).join('\n\n');

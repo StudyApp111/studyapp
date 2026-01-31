@@ -32,13 +32,13 @@ export default function DiagnosticLoader({ mode = 'generating' }) {
       setProgress((prev) => {
         if (prev >= 90) {
           // Slow down significantly after 90%
-          return Math.min(prev + 0.3, 95);
+          return Math.min(Math.round(prev + 0.5), 95);
         } else if (prev >= 70) {
           // Medium speed 70-90%
-          return prev + 1;
+          return Math.round(prev + 1);
         } else {
           // Fast initial progress 0-70%
-          return prev + 2;
+          return Math.round(prev + 2);
         }
       });
     }, 200);

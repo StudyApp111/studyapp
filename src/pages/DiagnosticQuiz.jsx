@@ -30,8 +30,8 @@ export default function DiagnosticQuiz() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showWrongPulse, setShowWrongPulse] = useState(false);
   const [showCorrectBurst, setShowCorrectBurst] = useState(false);
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [totalStartTime, setTotalStartTime] = useState(null);
+  const [totalElapsedTime, setTotalElapsedTime] = useState(0);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -74,6 +74,8 @@ export default function DiagnosticQuiz() {
 
       if (result.data?.success && result.data?.questions) {
         setQuestions(result.data.questions);
+        // Start total timer when questions load
+        setTotalStartTime(Date.now());
       } else {
         throw new Error(result.data?.error || 'Failed to generate questions');
       }
@@ -177,23 +179,18 @@ export default function DiagnosticQuiz() {
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
-      // Reset timer for next question
-      const newStartTime = Date.now();
-      setQuestionStartTime(newStartTime);
-      setElapsedTime(0);
     }
   };
 
-  // Timer tick effect - only runs when not answered
+  // Total timer tick effect - counts up for entire quiz
   useEffect(() => {
-    const currentIsAnswered = !!answeredQuestions[currentQuestionIndex];
-    if (!currentIsAnswered) {
+    if (totalStartTime && !isGrading) {
       const timer = setInterval(() => {
-        setElapsedTime(Math.floor((Date.now() - questionStartTime) / 1000));
+        setTotalElapsedTime(Math.floor((Date.now() - totalStartTime) / 1000));
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [answeredQuestions, currentQuestionIndex, questionStartTime]);
+  }, [totalStartTime, isGrading]);
 
   // Auto-submit for fill-blank and short-answer after typing
   useEffect(() => {
@@ -600,7 +597,7 @@ export default function DiagnosticQuiz() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2" />
                       </svg>
                       <span className="text-white font-mono text-sm font-semibold">
-                        {Math.floor(elapsedTime / 60)}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                        {Math.floor(totalElapsedTime / 60)}:{(totalElapsedTime % 60).toString().padStart(2, '0')}
                       </span>
                     </div>
                     
