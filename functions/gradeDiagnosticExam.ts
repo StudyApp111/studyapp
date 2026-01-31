@@ -60,8 +60,11 @@ ANALYSIS REQUIREMENTS:
    - Provide the correct answer (will be shown after signup)
 
 4. PERSONALIZATION
-   - Write a brief, encouraging message about their performance
-   - Reference their specific strengths and ONE key weakness
+   - Write a brief, encouraging message about their performance in EXACTLY 3 SHORT LINES
+   - Format: Line 1: "[Name], you're starting at [percentage]."
+             Line 2: "[Hope statement with specific improvement timeline]."
+             Line 3: "[Reframe from 'behind' to 'catching up' or similar positive spin]."
+   - Reference their actual quiz performance, not generic statements
    - Create urgency based on realistic exam timeline
 
 LEARNING TOOLS AVAILABLE:
@@ -94,21 +97,24 @@ You MUST respond with ONLY valid JSON (no markdown, no backticks, no explanation
       "severity": "high",
       "grade_impact": "15%",
       "recommended_tool": "Teach It Cards",
-      "tool_reason": "Explaining theoretical differences solidifies conceptual understanding"
+      "tool_reason": "Explaining theoretical differences solidifies conceptual understanding",
+      "specific_fix": "Division of Powers, Oakes Test, Charter Application"
     },
     {
       "topic": "IMF lending practice calculations",
       "severity": "high",
       "grade_impact": "12%",
       "recommended_tool": "Practice Questions",
-      "tool_reason": "Calculation problems require repetition to master"
+      "tool_reason": "Calculation problems require repetition to master",
+      "specific_fix": "Fiscal Federalism calculations, Institutional analysis"
     },
     {
       "topic": "Applying Hegemonic Stability Theory to current geopolitics",
       "severity": "medium",
       "grade_impact": "8%",
       "recommended_tool": "Practice Questions",
-      "tool_reason": "Application scenarios need practice with feedback"
+      "tool_reason": "Application scenarios need practice with feedback",
+      "specific_fix": "Theory application to real-world events"
     }
   ],
   "preview_question": {
@@ -116,20 +122,50 @@ You MUST respond with ONLY valid JSON (no markdown, no backticks, no explanation
     "question_text": "Explain how realist theory would view the IMF's role in the 2008 financial crisis, focusing on state-centric motivations.",
     "question_type": "Short Answer",
     "correct_answer": "Realists would argue that the IMF serves the interests of powerful states (particularly the US) rather than being a neutral institution. In the 2008 crisis, realist theory would emphasize how dominant states used the IMF to protect their own economic interests and maintain hegemonic power, with lending conditions designed to preserve the existing global power structure rather than purely economic recovery.",
-    "why_this_matters": "This concept appears in 15% of exam questions and tests your ability to apply theory to real-world scenarios"
+    "why_this_matters": "This concept appears in 15% of exam questions and tests your ability to apply theory to real-world scenarios",
+    "impact_statement": "This single topic is the difference between B- and B+"
   },
   "estimated_study_time_days": 21,
-  "study_intensity": "15-20 min/day",
+  "study_intensity": "30-45 min/day",
   "grade_trajectory": {
     "current": "B-",
     "week_1_target": "B",
+    "week_1_percentage": 85,
+    "week_1_description": "Fix theoretical gaps",
     "week_2_target": "B+",
-    "week_3_target": "A-",
+    "week_2_percentage": 88,
+    "week_2_description": "Master calculations",
+    "week_3_target": "A+",
+    "week_3_percentage": 95,
+    "week_3_description": "Practice and polish",
     "final_target": "A+"
   },
-  "personalized_message": "You have a solid foundation in IPE concepts and can identify major institutions and theories. Your main challenge is applying theoretical frameworks to real-world scenarios and performing calculations. The good news: these are skills that improve quickly with targeted practice.",
-  "urgency_message": "Based on typical ${courseCode} schedules, your exam is likely 3-4 weeks away. Starting today gives you a realistic path to A+. Waiting just 5 days makes B+ more realistic.",
-  "top_priority_action": "Start with 'Core IPE theoretical motivations' - this single topic is worth 15% of your grade and can be mastered in 3 days with Teach It Cards."
+  "personalized_message_line1": "${studentName || 'Student'}, you're starting at 80%.",
+  "personalized_message_line2": "Students at your level who use StudyApp reach B+ in 2 weeks.",
+  "personalized_message_line3": "You're not behind—you're about to catch up fast.",
+  "urgency_timeline": {
+    "start_today": "A+ is realistic",
+    "wait_5_days": "B+ is your ceiling",
+    "wait_10_days": "You'll stay at B-"
+  },
+  "top_priority_action": "Start with 'Core IPE theoretical motivations' - this single topic is worth 15% of your grade and can be mastered in 3 days with Teach It Cards.",
+  "toolkit_social_proof": {
+    "teach_it_cards": {
+      "testimonial": "This tool took me from C to A in 2 weeks",
+      "testimonial_author": "Sarah, UBC",
+      "stats": "1,200+ students • Avg improvement: +12%"
+    },
+    "practice_questions": {
+      "testimonial": "15 min/day for a week and I finally understood it",
+      "testimonial_author": "Marcus, McGill",
+      "stats": "Avg improvement: +18% in 2 weeks"
+    },
+    "ai_tutor": {
+      "testimonial": "24/7 help meant I never stayed stuck",
+      "testimonial_author": "Priya, UofT",
+      "stats": "Course-specific • Instant answers"
+    }
+  }
 }
 
 VALIDATION CHECKLIST:
@@ -137,9 +173,24 @@ VALIDATION CHECKLIST:
 □ Weak areas are SPECIFIC (not "needs improvement in general")
 □ Grade impacts add up to reasonable total (not exceeding 50%)
 □ Preview question is course-authentic and tests the #1 weakness
-□ Personalized message references their ACTUAL performance
+□ Personalized message is EXACTLY 3 lines, uses student's name
 □ Tool recommendations match weakness type
 □ Timeline is realistic (not overpromising)
+□ Each weak area has "specific_fix" field populated
+□ Grade trajectory includes percentages and descriptions for each week
+□ Urgency timeline uses actual grade variables
+□ Toolkit testimonials are realistic and varied
+
+CRITICAL FORMATTING RULES:
+- personalized_message must be split into 3 separate fields (line1, line2, line3)
+- Each line should be a complete sentence
+- Line 1 MUST include student name and percentage
+- Line 2 MUST include specific improvement timeline
+- Line 3 MUST reframe positively
+- study_intensity must show "30-45 min/day" format
+- All grade_impact values must include "%" symbol
+- All tool_reason must be single sentence under 15 words
+- specific_fix should list 2-3 concrete topics this tool will address
 
 Generate the comprehensive assessment now.`;
 
