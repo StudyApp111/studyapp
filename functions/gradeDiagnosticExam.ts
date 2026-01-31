@@ -35,13 +35,27 @@ Competencies: ${(q.assessed_competencies || []).join(', ')}`;
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-flash-latest'
+      model: 'gemini-flash-latest',
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
     });
+
+    const curriculumContext = curriculumData ? `
+Competency Analysis (use curriculum map):
+- Map wrong answers to curriculum competencies
+- Weight by assessment_weightings (e.g., "Final Paper - 40%" = higher impact)
+- Match preview question to assessment_formats style
+- Reference high_yield_focal_points for weak areas
+
+Curriculum Data:
+${JSON.stringify(curriculumData, null, 2)}
+` : '';
 
     const prompt = `Expert educator for ${courseCode} at ${school}. Analyze diagnostic performance using curriculum map to predict grade as if you were teaching this course.
 
-Input: ${courseCode}, ${school}, Student: ${studentName}
-Curriculum: ${curriculumData ? JSON.stringify(curriculumData) : 'Not available'}
+Input: ${courseCode}, ${school}, Student: ${studentName || 'Student'}
+Curriculum: ${curriculumData ? 'Available (see below)' : 'Not available'}
 Performance: ${questionContext}
 
 Data Points:
@@ -54,13 +68,7 @@ Prediction Algorithm:
 3) Map to grade: A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59).
 4) Confidence: (answered/total × 50) + 30. Range: [30,80]. Level: <50="Medium", ≥50="High".
 
-${curriculumData ? `
-Competency Analysis (use curriculum map):
-- Map wrong answers to curriculum competencies
-- Weight by assessment_weightings (e.g., "Final Paper - 40%" = higher impact)
-- Match preview question to assessment_formats style
-- Reference high_yield_focal_points for weak areas
-` : ''}
+${curriculumContext}
 
 Weak Areas Requirements:
 - Identify 3 specific topics from WRONG answers
@@ -92,76 +100,76 @@ Personalized Message Rules:
 
 JSON Output (exact schema):
 {
-  "predicted_grade": "F",
-  "predicted_percentage": 21,
+  "predicted_grade": "B-",
+  "predicted_percentage": 80,
   "confidence_level": "High",
-  "strong_areas": ["Topic from correct answer (or 'Limited correct responses' if score very low)"],
+  "strong_areas": ["Specific topic from correct answer", "Another strength"],
   "weak_areas_detailed": [
     {
       "topic": "Specific topic from wrong answer",
-      "related_competency": ${curriculumData ? '"Curriculum competency name"' : 'null'},
+      "related_competency": "Curriculum competency name or null",
       "severity": "critical",
       "grade_impact": "20%",
-      "assessment_context": ${curriculumData ? '"Final Paper - 40%"' : '"General exam"'},
+      "assessment_context": "Final Paper - 40% or General exam",
       "recommended_tool": "Teach It Cards",
-      "tool_reason": "Under 15 words",
-      "specific_fix": "2-3 subtopics"
+      "tool_reason": "Short explanation under 15 words",
+      "specific_fix": "Subtopic 1, Subtopic 2, Subtopic 3"
     },
     {
       "topic": "Second weak topic",
-      "related_competency": ${curriculumData ? '"Another competency"' : 'null'},
+      "related_competency": "Another competency or null",
       "severity": "high",
       "grade_impact": "18%",
-      "assessment_context": ${curriculumData ? '"Midterm - 25%"' : '"General exam"'},
+      "assessment_context": "Midterm - 25% or General exam",
       "recommended_tool": "Practice Questions",
-      "tool_reason": "Under 15 words",
-      "specific_fix": "2-3 subtopics"
+      "tool_reason": "Short explanation under 15 words",
+      "specific_fix": "Subtopic A, Subtopic B"
     },
     {
       "topic": "Third weak topic",
-      "related_competency": ${curriculumData ? '"Third competency"' : 'null'},
+      "related_competency": "Third competency or null",
       "severity": "high",
       "grade_impact": "15%",
-      "assessment_context": ${curriculumData ? '"Participation - 20%"' : '"General"'},
+      "assessment_context": "Participation - 20% or General",
       "recommended_tool": "AI Tutor",
-      "tool_reason": "Under 15 words",
-      "specific_fix": "2-3 subtopics"
+      "tool_reason": "Short explanation under 15 words",
+      "specific_fix": "Concept X, Concept Y"
     }
   ],
   "preview_question": {
     "topic": "Same as first weak area",
-    "related_competency": ${curriculumData ? '"Competency name"' : 'null'},
-    "assessment_format": ${curriculumData ? '"Course format"' : '"Short Answer"'},
+    "related_competency": "Competency name or null",
+    "assessment_format": "Short Answer or Multiple Choice",
     "question_text": "New question testing same concept",
     "question_type": "Short Answer",
-    "correct_answer": "Complete model answer",
-    "why_this_matters": "Appears in X% of assessments",
-    "impact_statement": "Affects [assessment] worth [%]"
+    "correct_answer": "Complete model answer with explanation",
+    "why_this_matters": "Appears in X% of assessments or similar",
+    "impact_statement": "Affects Final Paper worth 40% or similar"
   },
   "estimated_study_time_days": 21,
   "study_intensity": "30-45 min/day",
   "grade_trajectory": {
-    "current": "F",
-    "week_1_target": "D-",
-    "week_1_percentage": 32,
-    "week_1_description": "Master fundamental concepts",
-    "week_2_target": "D+",
-    "week_2_percentage": 45,
-    "week_2_description": "Build on basics",
-    "week_3_target": "C",
-    "week_3_percentage": 58,
-    "week_3_description": "Reach passing grade",
-    "final_target": "B"
+    "current": "B-",
+    "week_1_target": "B",
+    "week_1_percentage": 85,
+    "week_1_description": "Fix theoretical gaps",
+    "week_2_target": "B+",
+    "week_2_percentage": 88,
+    "week_2_description": "Master calculations",
+    "week_3_target": "A-",
+    "week_3_percentage": 92,
+    "week_3_description": "Practice and polish",
+    "final_target": "A"
   },
-  "personalized_message_line1": "${studentName}, you're starting at 21%.",
-  "personalized_message_line2": "With focused practice, students at F reach passing (C) in 3 weeks.",
-  "personalized_message_line3": "This is fixable—let's get you to solid ground first.",
+  "personalized_message_line1": "${studentName || 'Student'}, you're starting at 80%.",
+  "personalized_message_line2": "Students at your level who use StudyApp reach B+ in 2 weeks.",
+  "personalized_message_line3": "You're not behind—you're about to catch up fast.",
   "urgency_timeline": {
-    "start_today": "C is achievable",
-    "wait_5_days": "D+ is more realistic",
-    "wait_10_days": "You'll stay at F"
+    "start_today": "A is realistic",
+    "wait_5_days": "B+ is your ceiling",
+    "wait_10_days": "You'll stay at B-"
   },
-  "top_priority_action": "Start with '[First weak topic]' - this is foundational and worth [%]% of your grade.",
+  "top_priority_action": "Start with Core IPE Theory - this is worth 20% of your grade.",
   "toolkit_social_proof": {
     "teach_it_cards": {
       "testimonial": "Took me from C to A in 2 weeks",
@@ -223,7 +231,7 @@ Generate assessment now.`;
       parsed = JSON.parse(cleanedText);
     } catch (parseError) {
       console.error("Failed to parse AI response:", text);
-      return Response.json({ error: 'Failed to grade exam' }, { status: 500 });
+      return Response.json({ error: 'Failed to grade exam', details: parseError.message }, { status: 500 });
     }
 
     return Response.json({
