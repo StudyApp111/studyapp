@@ -101,6 +101,7 @@ export default function PredictedGradeDisplay() {
 
   const grade = reportData?.predicted_grade || 'B';
   const percentage = reportData?.predicted_percentage || 80;
+  const confidenceLevel = reportData?.confidence_level || 'Medium';
   const strongAreas = reportData?.strong_areas || [];
   const weakAreasDetailed = reportData?.weak_areas_detailed || [];
   const previewQuestion = reportData?.preview_question || {};
@@ -185,6 +186,18 @@ export default function PredictedGradeDisplay() {
                 <span>B</span>
                 <span>A</span>
                 <span>A+</span>
+              </div>
+              
+              {/* Confidence Level Badge */}
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold ${
+                  confidenceLevel === 'High' 
+                    ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30' 
+                    : 'bg-amber-500/20 text-amber-200 border border-amber-400/30'
+                }`}>
+                  <span className="text-base">{confidenceLevel === 'High' ? '🎯' : '📊'}</span>
+                  <span>{confidenceLevel} Confidence</span>
+                </div>
               </div>
             </div>
             
@@ -653,9 +666,8 @@ export default function PredictedGradeDisplay() {
         {/* Footer */}
         <div className="text-center space-y-3 pb-8">
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-slate-400 text-sm sm:text-base">
-            <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 flex-shrink-0" /> No credit card</span>
             <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 flex-shrink-0" /> Start in 30 seconds</span>
-            <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 flex-shrink-0" /> 1,500+ students</span>
+            <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 flex-shrink-0" /> Trusted by 10,000+ students</span>
           </div>
           <p className="text-slate-600 text-sm">Powered by StudyApp.AI</p>
         </div>
