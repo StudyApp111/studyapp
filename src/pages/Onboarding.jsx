@@ -252,14 +252,14 @@ export default function Onboarding() {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-6 space-y-2">
-          <p className="text-slate-500 text-xs">Powered by StudyApp.AI</p>
+        <div className="text-center mt-6 space-y-3">
           <button
             onClick={() => base44.auth.redirectToLogin()}
-            className="text-slate-500 hover:text-slate-300 text-xs underline transition-colors"
+            className="text-slate-400 hover:text-slate-200 text-sm underline transition-colors"
           >
-            Sign In
+            Already a user? Sign In
           </button>
+          <p className="text-slate-500 text-xs">Powered by StudyApp.AI</p>
         </div>
       </div>
     </div>

@@ -5,7 +5,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    const { school, courseCode, documentContent, curriculumData } = await req.json();
+    const { school, courseCode, documentContent } = await req.json();
 
     if (!school || !courseCode) {
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
@@ -33,7 +33,7 @@ Course / Unit Name: ${courseCode}
 School: ${school}
 
 Content Summary (OCR notes):
-${contentDescription}
+${documentContent || 'Not provided'}
 
 
 IF Content Summary is EMPTY, conduct the following first research step. If Content Summary is NOT empty then all questions MUST be grounded in that. 
