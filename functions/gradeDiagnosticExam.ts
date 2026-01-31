@@ -85,6 +85,8 @@ Prediction Algorithm:
 4) Confidence: (answered/total × 50) + 30. Range: [30,80]. Level: <50="Medium", ≥50="High".
 5) Users should never get 0% or 100%. Grade the work as if you were a teacher at their school. 
 
+Confidence Level: Given users are only given 5 questions and relevancy is dependant on type of course and if they uploaded material. We need to be careful with confidence. 
+Confidence should be outputted as a percentage between 20-65%. Put yourself in the shoes of a teacher for ${courseCode} at ${school}. 
 
 Competency Analysis (use curriculum map[${curriculumContext}]):
 - Map wrong answers to curriculum competencies
@@ -121,12 +123,13 @@ Personalized Message Rules:
 - Line 3: Encouraging reframe appropriate to their situation
 
 
+
 REQUIRED JSON OUTPUT (respond with ONLY this JSON, nothing else):
 
 {
   "predicted_grade": "string (e.g. B-, A, F)",
   "predicted_percentage": ${actualPercentage},
-  "confidence_level": "string (High or Medium)",
+  "confidence_level": "string with % (e.g. 60%)",
   "strong_areas": ["array of strings from correct answers"],
   "weak_areas_detailed": [
     {
