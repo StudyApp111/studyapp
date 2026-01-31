@@ -233,6 +233,11 @@ export default function DiagnosticQuiz() {
         answer
       }));
 
+      console.log('=== SUBMITTING TO gradeDiagnosticExam ===');
+      console.log('Formatted answers:', JSON.stringify(formattedAnswers, null, 2));
+      console.log('Total answers:', formattedAnswers.length);
+      console.log('Questions:', questions.length);
+
       const result = await base44.functions.invoke('gradeDiagnosticExam', {
         school: params.school,
         courseCode: params.courseCode,
