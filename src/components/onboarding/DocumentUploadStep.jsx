@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Loader2, CheckCircle2, ArrowRight, FileText, AlertCircle } from "lucide-react";
+import { Upload, Loader2, CheckCircle2, ArrowRight, FileText, AlertCircle, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { generateFingerprint } from "@/components/utils/browserFingerprint";
@@ -16,6 +16,9 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
   const [compressedContent, setCompressedContent] = useState("");
   const [honeypot, setHoneypot] = useState(""); // Hidden field for bot detection
 
+  const [uploadComplete, setUploadComplete] = useState(false);
+  const [processingStep, setProcessingStep] = useState(""); // "", "uploading", "extracting", "compressing"
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
@@ -28,6 +31,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
 
     setFile(selectedFile);
     setError("");
+    setUploadComplete(false);
   };
 
   const handleUpload = async () => {
@@ -37,6 +41,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
     }
 
     setUploading(true);
+    setProcessingStep("uploading");
     setError("");
 
     try {
@@ -51,6 +56,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       if (!abuseCheck.data?.allowed) {
         setError(abuseCheck.data?.reason || "Upload limit reached. Please sign in to continue.");
         setUploading(false);
+        setProcessingStep("");
         return;
       }
 
@@ -60,6 +66,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       setUploadedFileUrl(fileUrl);
 
       // Extract content
+      setProcessingStep("extracting");
       setProcessing(true);
       const extractResult = await base44.functions.invoke('extractDocumentContent', { file_url: fileUrl });
 
@@ -71,6 +78,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       setExtractedContent(extracted);
 
       // Compress content
+      setProcessingStep("compressing");
       const compressResult = await base44.functions.invoke('compressDocument', { content: extracted });
 
       if (!compressResult.data?.compressed_content) {
@@ -79,6 +87,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
 
       const compressed = compressResult.data.compressed_content;
       setCompressedContent(compressed);
+      setUploadComplete(true);
 
       // Pass data to parent - include all data for post-login flow
       onNext({ 
@@ -93,6 +102,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
     } finally {
       setUploading(false);
       setProcessing(false);
+      setProcessingStep("");
     }
   };
 
@@ -162,13 +172,32 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       <div>
         <label 
           htmlFor="file-upload"
-          className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-purple-300 rounded-xl cursor-pointer bg-purple-50 hover:bg-purple-100 transition-all"
+          className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl cursor-pointer transition-all ${
+            file 
+              ? 'border-emerald-400 bg-emerald-50 hover:bg-emerald-100' 
+              : 'border-purple-300 bg-purple-50 hover:bg-purple-100'
+          }`}
         >
-          <Upload className="w-12 h-12 text-purple-600 mb-3" />
-          <span className="text-slate-900 font-semibold text-base mb-1">
-            {file ? file.name : 'Click to upload document'}
-          </span>
-          <span className="text-slate-600 text-sm">PDF, DOCX, PNG, JPG (Max 5MB)</span>
+          {file ? (
+            <>
+              <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+                <FileText className="w-7 h-7 text-emerald-600" />
+              </div>
+              <span className="text-emerald-700 font-bold text-base mb-1 px-4 text-center">
+                {file.name}
+              </span>
+              <span className="text-emerald-600 text-sm font-medium">✓ File selected</span>
+              <span className="text-slate-500 text-xs mt-1">Click to change</span>
+            </>
+          ) : (
+            <>
+              <Upload className="w-12 h-12 text-purple-600 mb-3" />
+              <span className="text-slate-900 font-semibold text-base mb-1">
+                Click to upload document
+              </span>
+              <span className="text-slate-600 text-sm">PDF, DOCX, PNG, JPG (Max 5MB)</span>
+            </>
+          )}
           <input
             id="file-upload"
             type="file"
@@ -201,9 +230,38 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
           )}
 
         {isLoading && (
-          <div className="flex items-center justify-center gap-2 text-purple-600 py-3">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="font-medium">{uploading ? 'Uploading...' : 'Processing...'}</span>
+          <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+              </div>
+              <div>
+                <p className="font-bold text-purple-700 text-sm">
+                  {processingStep === "uploading" && "Uploading your file..."}
+                  {processingStep === "extracting" && "Reading your document..."}
+                  {processingStep === "compressing" && "Analyzing content..."}
+                </p>
+                <p className="text-purple-600 text-xs">This may take up to 15 seconds</p>
+              </div>
+            </div>
+            
+            {/* Progress steps */}
+            <div className="flex items-center gap-2 justify-center">
+              <div className={`flex items-center gap-1 ${processingStep === "uploading" ? 'text-purple-600' : (processingStep === "extracting" || processingStep === "compressing") ? 'text-emerald-600' : 'text-slate-400'}`}>
+                <div className={`w-2 h-2 rounded-full ${processingStep === "uploading" ? 'bg-purple-600 animate-pulse' : (processingStep === "extracting" || processingStep === "compressing") ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <span className="text-[10px] font-medium">Upload</span>
+              </div>
+              <div className="w-4 h-0.5 bg-slate-200" />
+              <div className={`flex items-center gap-1 ${processingStep === "extracting" ? 'text-purple-600' : processingStep === "compressing" ? 'text-emerald-600' : 'text-slate-400'}`}>
+                <div className={`w-2 h-2 rounded-full ${processingStep === "extracting" ? 'bg-purple-600 animate-pulse' : processingStep === "compressing" ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                <span className="text-[10px] font-medium">Extract</span>
+              </div>
+              <div className="w-4 h-0.5 bg-slate-200" />
+              <div className={`flex items-center gap-1 ${processingStep === "compressing" ? 'text-purple-600' : 'text-slate-400'}`}>
+                <div className={`w-2 h-2 rounded-full ${processingStep === "compressing" ? 'bg-purple-600 animate-pulse' : 'bg-slate-300'}`} />
+                <span className="text-[10px] font-medium">Analyze</span>
+              </div>
+            </div>
           </div>
         )}
 

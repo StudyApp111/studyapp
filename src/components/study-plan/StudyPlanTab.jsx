@@ -108,8 +108,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       
       if (fromOnboarding && reportDataStr) {
         try {
-          // URLSearchParams.get() already returns decoded string, so just parse JSON
-          const reportData = JSON.parse(decodeURIComponent(reportDataStr));
+          // URLSearchParams.get() already returns decoded string - try parsing directly first
+          let reportData;
+          try {
+            reportData = JSON.parse(reportDataStr);
+          } catch {
+            // If that fails, try decoding first (in case it was double-encoded)
+            reportData = JSON.parse(decodeURIComponent(reportDataStr));
+          }
           console.log('📊 Parsed report data for study plan:', reportData);
           
           // Show a placeholder with the predicted grade while generating
