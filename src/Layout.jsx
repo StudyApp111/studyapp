@@ -99,29 +99,42 @@ function LayoutContent({ children, currentPageName }) {
         pathLower.includes("diagnosticquiz") || 
         pathLower.includes("predictedgradedisplay");
 
-      // Check authentication status first
+      // CRITICAL: If on onboarding flow pages, skip all auth logic
+      if (isOnboardingFlow) {
+        // Try to get user for display purposes but don't redirect
+        try {
+          const currentUser = await base44.auth.me();
+          setUser(currentUser);
+          // If authenticated and onboarding complete, they shouldn't be here
+          if (currentUser?.onboarding_completed) {
+            navigate(createPageUrl("Home"), { replace: true });
+          }
+        } catch (error) {
+          // Not authenticated - perfectly fine for onboarding
+          setUser(null);
+        }
+        return;
+      }
+
+      // Not on onboarding flow - check auth
       let currentUser = null;
       try {
         currentUser = await base44.auth.me();
         setUser(currentUser);
       } catch (error) {
-        // Not authenticated
+        // Not authenticated - redirect to onboarding
         setUser(null);
-      }
-
-      // If NOT authenticated and NOT already on onboarding → redirect to onboarding
-      if (!currentUser && !isOnboardingFlow) {
         navigate(createPageUrl("Onboarding"), { replace: true });
         return;
       }
 
-      // If authenticated but onboarding incomplete → redirect to onboarding
-      if (currentUser && !currentUser.onboarding_completed && !isOnboardingFlow) {
+      // Authenticated but onboarding incomplete → redirect to onboarding
+      if (currentUser && !currentUser.onboarding_completed) {
         navigate(createPageUrl("Onboarding"), { replace: true });
         return;
       }
 
-      // If authenticated and onboarding complete → track session
+      // Authenticated and onboarding complete → track session
       if (currentUser && currentUser.onboarding_completed) {
         trackUserSession();
         cleanup = trackSessionDuration();
