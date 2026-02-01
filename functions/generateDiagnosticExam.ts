@@ -18,7 +18,10 @@ Deno.serve(async (req) => {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-flash-latest'
+      model: 'gemini-flash-latest',
+      tools: [{
+        googleSearch: {}
+      }]
     });
 
     const prompt = `You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${courseCode}. 
@@ -128,7 +131,8 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.5,
-        maxOutputTokens: 16000
+        maxOutputTokens: 16000,
+        responseMimeType: "application/json"
       }
     });
 
