@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
             console.log('No user authentication - proceeding for onboarding flow');
         }
 
-        const { courseName, learningProfile, extractedContent } = await req.json();
+        const { courseName, learningProfile, extractedContent, lessonId } = await req.json();
 
         if (!courseName) {
             return Response.json({ error: 'Course name is required' }, { status: 400 });
@@ -192,7 +192,6 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
         try {
             parsedResponse = JSON.parse(cleanedText);
             console.log('Successfully parsed curriculum map with Gemini');
-            return Response.json(parsedResponse);
         } catch (parseError) {
             console.error('First parse attempt failed:', parseError.message);
             
@@ -202,19 +201,75 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
                 try {
                     parsedResponse = JSON.parse(jsonMatch[0]);
                     console.log('Successfully parsed curriculum map (extracted from text)');
-                    return Response.json(parsedResponse);
                 } catch (extractError) {
                     console.error('Extract parse failed:', extractError.message);
+                    console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
+                    return Response.json({ 
+                        error: 'Failed to parse AI response as JSON', 
+                        details: parseError.message,
+                        raw_text_preview: cleanedText.substring(0, 500)
+                    }, { status: 500 });
                 }
+            } else {
+                console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
+                return Response.json({ 
+                    error: 'Failed to parse AI response as JSON', 
+                    details: parseError.message,
+                    raw_text_preview: cleanedText.substring(0, 500)
+                }, { status: 500 });
             }
-            
-            console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
-            return Response.json({ 
-                error: 'Failed to parse AI response as JSON', 
-                details: parseError.message,
-                raw_text_preview: cleanedText.substring(0, 500)
-            }, { status: 500 });
         }
+
+        // Transform the parsed response into the Lesson schema format
+        const safeArray = (arr) => Array.isArray(arr) ? arr : [];
+        const curriculumMap = {
+            core_competencies: safeArray(parsedResponse?.core_competencies).map(c => ({
+                name: String(c?.competency || c?.name || ""),
+                description: String(c?.description || "")
+            })),
+            competency_weightings: safeArray(parsedResponse?.competency_weightings).map(w => ({
+                competency_name: String(w?.topic || w?.competency_name || ""),
+                weight_percentage: String(w?.weight_percentage || "0%")
+            })),
+            question_formats: safeArray(parsedResponse?.assessment_formats || parsedResponse?.question_formats).map(q => ({
+                type: String(q?.type || ""),
+                frequency: String(q?.frequency || ""),
+                examples: safeArray(q?.examples || [q?.example_question]).filter(Boolean).map(e => String(e || ""))
+            })),
+            high_yield_focal_points: safeArray(parsedResponse?.high_yield_focal_points).map(p => 
+                typeof p === 'object' ? String(p?.concept || p?.name || p?.description || "") : String(p || "")
+            ),
+            common_misconceptions: safeArray(parsedResponse?.common_misconceptions).map(m => String(m || ""))
+        };
+
+        // If user is authenticated, save to database
+        if (user) {
+            try {
+                // Save to CurriculumMap entity
+                await base44.asServiceRole.entities.CurriculumMap.create({
+                    course_name: courseName.trim(),
+                    school: learningProfile?.school || "",
+                    grade: learningProfile?.grade || "",
+                    city: learningProfile?.city || "",
+                    source: lessonId ? "create_lesson" : "onboarding",
+                    curriculum_data: curriculumMap
+                });
+                console.log('✅ Saved to CurriculumMap entity');
+
+                // If lessonId provided, update the lesson
+                if (lessonId) {
+                    await base44.asServiceRole.entities.Lesson.update(lessonId, {
+                        curriculum_map: curriculumMap
+                    });
+                    console.log('✅ Updated Lesson with curriculum_map');
+                }
+            } catch (dbError) {
+                console.error('Database save error:', dbError);
+                // Don't fail the request if DB save fails, just log it
+            }
+        }
+
+        return Response.json(curriculumMap);
 
     } catch (error) {
         console.error('Error in curriculumMapping function:', error);
