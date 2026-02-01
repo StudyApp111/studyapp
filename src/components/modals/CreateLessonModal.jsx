@@ -224,7 +224,9 @@ export default function CreateLessonModal({ open, onOpenChange }) {
               window.dispatchEvent(new Event('reloadLesson'));
             }
           })
-          .catch(err => console.warn("⚠️ Background exam generation:", err.message)),
+          .catch(err => {
+            console.error("⚠️ Background exam generation error:", err);
+          }),
         
         base44.functions.invoke('curriculumMapping', {
           courseName: courseName.trim(),
@@ -232,11 +234,13 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           extractedContent: compressedForPrompts,
           lessonId: lesson.id
         })
-          .then(() => {
-            console.log("✅ Curriculum map saved");
+          .then((result) => {
+            console.log("✅ Curriculum map saved:", result);
             window.dispatchEvent(new Event('reloadLesson'));
           })
-          .catch(err => console.warn("⚠️ Background curriculum mapping:", err.message))
+          .catch(err => {
+            console.error("⚠️ Background curriculum mapping error:", err);
+          })
       ]);
 
       // Ensure minimum 2s loading for UX, but cap at 5s total
