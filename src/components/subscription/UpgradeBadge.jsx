@@ -1,12 +1,31 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Zap, Crown } from 'lucide-react';
+import { Zap, Crown, Gift } from 'lucide-react';
 import { useSubscription } from './SubscriptionContext';
 
 // Compact badge for sidebar/nav
 export function UpgradeNavBadge() {
-  const { isPro } = useSubscription();
+  const { isPro, getPromoRemainingDays } = useSubscription();
+  
+  const promoDaysLeft = getPromoRemainingDays?.();
+  const hasActivePromo = promoDaysLeft !== null && promoDaysLeft >= 0;
+  
+  // Show promo countdown if active promo
+  if (hasActivePromo) {
+    return (
+      <Link
+        to={createPageUrl("Settings")}
+        className="relative w-full aspect-square rounded-xl flex items-center justify-center transition-all bg-gradient-to-br from-purple-600/30 to-pink-600/30 border border-purple-500/50 hover:border-purple-500 group"
+        title={`Promo: ${promoDaysLeft} days left`}
+      >
+        <div className="flex flex-col items-center gap-0.5">
+          <Gift className="w-4 h-4 text-purple-300" />
+          <span className="text-[8px] font-black text-purple-200">{promoDaysLeft}d</span>
+        </div>
+      </Link>
+    );
+  }
   
   if (isPro()) {
     return (
