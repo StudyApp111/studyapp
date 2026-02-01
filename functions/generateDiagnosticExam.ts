@@ -36,7 +36,7 @@ Content Summary (OCR notes):
 ${documentContent || 'Not provided'}
 
 
-IF Content Summary is EMPTY, conduct the following first research step. If Content Summary is NOT empty then all questions MUST be grounded in that. 
+IF Content Summary is EMPTY, conduct the following first research step. If Content Summary is NOT empty then all questions MUST be grounded in Content Summary and skip the following google searches.
 
 IF Content Summary is EMPTY, you MUST search for:
 1. "${courseCode} ${school} syllabus" OR "${courseCode} syllabus"
