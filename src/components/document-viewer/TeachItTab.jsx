@@ -117,7 +117,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const generateCards = async () => {
     if (isGeneratingRef.current) return;
     
-    // Check subscription limit for teach it generation
+    // Check task limit
     const taskCheck = await canDoTask();
     if (!taskCheck.allowed) {
       triggerUpgradeModal('tasks');
@@ -126,9 +126,6 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
     
     isGeneratingRef.current = true;
     setIsGenerating(true);
-    
-    // Increment task count BEFORE generating
-    await incrementTaskCount();
     
     try {
       const user = await base44.auth.me();
@@ -260,16 +257,13 @@ Return exactly 5 cards with question and model_answer fields, each based on spec
 
     setIsGrading(true);
     try {
-      // Check subscription limit for tasks using context
+      // Check task limit - already checked on generation
       const taskCheck = await canDoTask();
       if (!taskCheck.allowed) {
         triggerUpgradeModal('tasks');
         setIsGrading(false);
         return;
       }
-      
-      // Increment task counter
-      await incrementTaskCount();
       
       const currentCard = cards[currentCardIndex];
 
