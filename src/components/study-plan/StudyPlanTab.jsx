@@ -588,7 +588,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             transition={{ delay: 0.2 }}
           >
             <Button 
-              onClick={() => onNavigate('exam')}
+              onClick={() => {
+                // Navigate to exam tab AND auto-start Exam 1
+                onNavigate('exam');
+                setTimeout(() => {
+                  window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
+                }, 100);
+              }}
               className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:via-indigo-700 hover:to-purple-800 text-white font-bold py-5 text-base rounded-2xl shadow-xl shadow-purple-500/30 relative overflow-hidden group"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />

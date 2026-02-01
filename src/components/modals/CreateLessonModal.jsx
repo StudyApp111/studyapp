@@ -212,16 +212,84 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
       console.log("✅ Lesson created:", lesson.id);
 
-      // Fire-and-forget exam generation - don't block navigation
-      console.log("🎯 Starting Exam 1 auto-generation (background)...");
-      base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-        .then(result => {
-          if (result?.data?.success) {
-            console.log("✅ Exam 1 auto-generated:", result.data.exam_id);
-            window.dispatchEvent(new Event('reloadLesson'));
-          }
+      // Fire-and-forget exam generation AND curriculum mapping in parallel - don't block navigation
+      console.log("🎯 Starting Exam 1 auto-generation and curriculum mapping (background)...");
+      
+      const learningProfile = {
+        grade: userGrade,
+        school: userSchool,
+        city: ""
+      };
+      
+      // Start both in parallel
+      Promise.all([
+        base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+          .then(result => {
+            if (result?.data?.success) {
+              console.log("✅ Exam 1 auto-generated:", result.data.exam_id);
+              window.dispatchEvent(new Event('reloadLesson'));
+            }
+          })
+          .catch(err => console.warn("⚠️ Background exam generation:", err.message)),
+        
+        base44.functions.invoke('curriculumMapping', {
+          courseName: courseName.trim(),
+          learningProfile: learningProfile,
+          extractedContent: compressedForPrompts
         })
-        .catch(err => console.warn("⚠️ Background exam generation:", err.message));
+          .then(async ({ data: generatedMap }) => {
+            // Unwrap and normalize the response
+            let mapData = generatedMap;
+            if (!mapData?.core_competencies) {
+              const wrapperKeys = ['course_profile', 'curriculum_profile', 'profile', 'data', 'result'];
+              for (const key of wrapperKeys) {
+                const innerObj = mapData?.[key];
+                if (innerObj && typeof innerObj === 'object') {
+                  mapData = innerObj;
+                  break;
+                }
+              }
+            }
+            
+            const safeArray = (arr) => Array.isArray(arr) ? arr : [];
+            const curriculumMap = {
+              core_competencies: safeArray(mapData?.core_competencies).map(c => ({
+                name: String(c?.competency || c?.name || ""),
+                description: String(c?.description || "")
+              })),
+              competency_weightings: safeArray(mapData?.competency_weightings).map(w => ({
+                competency_name: String(w?.topic || w?.competency_name || ""),
+                weight_percentage: String(w?.weight_percentage || "0%")
+              })),
+              question_formats: safeArray(mapData?.assessment_formats || mapData?.question_formats).map(q => ({
+                type: String(q?.type || ""),
+                frequency: String(q?.frequency || ""),
+                examples: safeArray(q?.examples || [q?.example_question]).filter(Boolean).map(e => String(e || ""))
+              })),
+              high_yield_focal_points: safeArray(mapData?.high_yield_focal_points).map(p => 
+                typeof p === 'object' ? String(p?.concept || p?.name || p?.description || "") : String(p || "")
+              ),
+              common_misconceptions: safeArray(mapData?.common_misconceptions).map(m => String(m || ""))
+            };
+            
+            await Promise.all([
+              base44.entities.CurriculumMap.create({
+                course_name: courseName.trim(),
+                school: learningProfile.school || "",
+                grade: learningProfile.grade || "",
+                city: learningProfile.city || "",
+                source: "create_lesson",
+                curriculum_data: curriculumMap
+              }),
+              base44.entities.Lesson.update(lesson.id, {
+                curriculum_map: curriculumMap
+              })
+            ]);
+            
+            console.log("✅ Curriculum map saved");
+          })
+          .catch(err => console.warn("⚠️ Background curriculum mapping:", err.message))
+      ]);
 
       // Ensure minimum 2s loading for UX, but cap at 5s total
       const elapsedMs = Date.now() - loadingStartTime;
@@ -237,231 +305,6 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       // Close modal and navigate (client-side to avoid white flash)
       onOpenChange(false);
       navigate(`${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=studyplan`);
-
-      // === BACKGROUND TASKS (curriculum mapping only; extraction/compression handled above) ===
-      (async () => {
-        try {
-          console.log("🔄 Starting background curriculum mapping...");
-          const curriculumPrompt = `Educational Curriculum Analysis Request
-
-Role:
-You are an expert curriculum analyst. Generate a concise (<2000 characters), exam-relevant curriculum profile to support personalized content generation.
-
-Input Context:
-- Student Grade Level: ${learningProfile.grade || "N/A"}
-- Course / Unit Name: ${courseName}
-- School: ${learningProfile.school || "N/A"}
-- Location: ${learningProfile.city || "N/A"}
-- Student-Provided Content:
-${compressedForPrompts || extractedContent}
-
-Analysis Priority (STRICT ORDER):
-1. Use the student-provided content as the PRIMARY source of truth.
-2. Use official school or course information ONLY to validate or fill clear gaps.
-3. Use regional or professional standards ONLY if essential and obvious.
-
-DO NOT perform broad academic research or exhaustive searches.
-
-────────────────────────────
-
-Task:
-Produce a compact curriculum profile focused ONLY on material that is likely to appear on assessments.
-
-Strict Required Output (JSON):
-
-A. core_competencies
-- List 6–8 core competencies.
-- Each: 1 concise sentence describing what the student must be able to do.
-- Prefer synthesis over granularity.
-
-B. competency_weightings
-- Assign a weight_percentage to each competency.
-- MUST sum to "100%".
-- Use strings only (e.g., "20%").
-- Base emphasis primarily on student content.
-
-C. question_formats
-- List the most common assessment formats (e.g., Multiple Choice, Short Answer, Essay).
-- For the top 3–4 formats:
-  - frequency (string, e.g., "Common", "30%")
-  - one short illustrative example (exam-style, not verbose).
-
-D. high_yield_focal_points
-- Identify 3–5 topics or skills most likely to be tested.
-- Focus on difficulty, recurrence, or conceptual importance.
-- Mention key figures, formulas, concepts, or texts ONLY if clearly relevant.
-
-E. common_misconceptions
-- List 3–4 common misconceptions or failure points students encounter.
-- Tie them directly to the competencies above.
-
-────────────────────────────
-
-Formatting Rules (STRICT):
-- weight_percentage MUST be a string with "%"
-- frequency MUST be a string
-- Do NOT use numeric values anywhere
-- Output ONLY valid JSON matching the expected schema
-
-Constraints:
-- Be concise, not exhaustive.
-- Prioritize exam relevance over completeness.
-- Do not introduce content not supported by the inputs.`;
-
-                const curriculumResponseJsonSchema = {
-        type: "object",
-        properties: {
-          core_competencies: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                name: { type: "string" },
-                description: { type: "string" }
-              },
-              required: ["name", "description"]
-            }
-          },
-          competency_weightings: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                competency_name: { type: "string" },
-                weight_percentage: { 
-                  type: "string",
-                  description: "Must be a string with % symbol, e.g., '20%' or '15%'"
-                }
-              },
-              required: ["competency_name", "weight_percentage"]
-            }
-          },
-          question_formats: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                type: { type: "string" },
-                frequency: { 
-                  type: "string",
-                  description: "Must be a string, e.g., '30%', 'Common', or 'Rare'"
-                },
-                examples: {
-                  type: "array",
-                  items: { type: "string" }
-                }
-              },
-              required: ["type", "frequency", "examples"]
-            }
-          },
-          high_yield_focal_points: {
-            type: "array",
-            items: { type: "string" }
-          },
-          common_misconceptions: {
-            type: "array",
-            items: { type: "string" }
-          }
-        },
-        required: [
-          "core_competencies",
-          "competency_weightings",
-          "question_formats",
-          "high_yield_focal_points",
-          "common_misconceptions"
-        ]
-        };
-
-        const { data: generatedMap } = await base44.functions.invoke('curriculumMapping', {
-          prompt: curriculumPrompt,
-          response_json_schema: curriculumResponseJsonSchema
-        });
-
-      // Handle wrapped responses (e.g., { course_profile: {...} } or { curriculum_profile: {...} })
-      let mapData = generatedMap;
-      
-      // First, try to unwrap from common wrapper keys
-      if (!mapData?.core_competencies) {
-        const wrapperKeys = ['course_profile', 'curriculum_profile', 'profile', 'data', 'result'];
-        for (const key of wrapperKeys) {
-          const innerObj = mapData?.[key];
-          if (innerObj && typeof innerObj === 'object') {
-            mapData = innerObj;
-            console.log(`Unwrapped curriculum data from "${key}"`);
-            break;
-          }
-        }
-      }
-      
-      // Normalize keys if they have prefixes like "A. Core Competencies..."
-      if (!mapData?.core_competencies && mapData && typeof mapData === 'object') {
-        const keyMapping = {
-          'core_competencies': ['core competencies', 'learning outcomes', 'a.'],
-          'competency_weightings': ['competency weightings', 'emphasis', 'b.'],
-          'question_formats': ['question formats', 'assessment', 'c.'],
-          'high_yield_focal_points': ['high-yield', 'focal points', 'key topics', 'd.'],
-          'common_misconceptions': ['misconceptions', 'difficulties', 'e.']
-        };
-        
-        for (const [targetKey, searchTerms] of Object.entries(keyMapping)) {
-          if (mapData[targetKey]) continue; // Already has correct key
-          for (const originalKey of Object.keys(mapData)) {
-            const lowerKey = originalKey.toLowerCase();
-            if (searchTerms.some(term => lowerKey.includes(term))) {
-              mapData[targetKey] = mapData[originalKey];
-              console.log(`Mapped "${originalKey}" to "${targetKey}"`);
-              break;
-            }
-          }
-        }
-      }
-
-      // Ensure arrays exist
-      const safeArray = (arr) => Array.isArray(arr) ? arr : [];
-
-      const curriculumMap = {
-        core_competencies: safeArray(mapData?.core_competencies).map(c => ({
-          name: String(c?.name || ""),
-          description: String(c?.description || "")
-        })),
-        competency_weightings: safeArray(mapData?.competency_weightings).map(w => ({
-          competency_name: String(w?.competency_name || ""),
-          weight_percentage: String(w?.weight_percentage || "0%")
-        })),
-        question_formats: safeArray(mapData?.question_formats).map(q => ({
-          type: String(q?.type || ""),
-          frequency: String(q?.frequency || ""),
-          examples: safeArray(q?.examples).map(e => String(e || ""))
-        })),
-        high_yield_focal_points: safeArray(mapData?.high_yield_focal_points).map(p => 
-          typeof p === 'object' ? String(p?.name || p?.topic || p?.description || JSON.stringify(p)) : String(p || "")
-        ),
-        common_misconceptions: safeArray(mapData?.common_misconceptions).map(m => 
-          typeof m === 'object' ? String(m?.misconception || m?.description || m?.name || JSON.stringify(m)) : String(m || "")
-        )
-        };
-
-        console.log("✅ Curriculum map generated");
-
-        // Save curriculum map
-        await base44.entities.CurriculumMap.create({
-        course_name: courseName.trim(),
-        school: learningProfile.school || "",
-        grade: learningProfile.grade || "",
-        city: learningProfile.city || "",
-        source: "create_lesson",
-        curriculum_data: curriculumMap
-        });
-
-        await base44.entities.Lesson.update(lesson.id, {
-        curriculum_map: curriculumMap
-        });
-
-        console.log("✅ Curriculum map saved");
-        } catch (err) {
-        console.error("❌ Background curriculum mapping error:", err);
-        }
-        })();
     } catch (err) {
       setError(err.message || "Failed to create lesson. Please try again.");
       setIsProcessing(false);

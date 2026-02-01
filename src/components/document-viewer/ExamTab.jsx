@@ -163,8 +163,20 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       }
     };
     
+    const handleStartDiagnostic = (e) => {
+      const { examNumber } = e.detail;
+      setViewingCompletedExam(null);
+      setExam(null);
+      setSelectedExamNumber(examNumber);
+      hasAutoSelectedRef.current = true;
+    };
+    
     window.addEventListener('viewExamResults', handleViewExamResults);
-    return () => window.removeEventListener('viewExamResults', handleViewExamResults);
+    window.addEventListener('startDiagnosticExam', handleStartDiagnostic);
+    return () => {
+      window.removeEventListener('viewExamResults', handleViewExamResults);
+      window.removeEventListener('startDiagnosticExam', handleStartDiagnostic);
+    };
   }, [exams]);
 
   useEffect(() => {
