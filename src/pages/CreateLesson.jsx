@@ -189,19 +189,19 @@ export default function CreateLesson() {
       }
 
       // Fire-and-forget: Curriculum mapping in background (not critical path)
-      const curriculumPrompt = `Educational Curriculum Analysis Request
-Role: Expert curriculum analyst. Generate concise curriculum profile for ${courseName}.
-Student Grade: ${learningProfile?.grade || "N/A"}
-School: ${learningProfile?.school || "N/A"}
-Content: ${compressedContent || extractedContent || "N/A"}
-
-Output JSON with: core_competencies, competency_weightings, question_formats, high_yield_focal_points, common_misconceptions.`;
-
-      base44.functions.invoke('curriculumMapping', { prompt: curriculumPrompt })
-        .then(async (result) => {
+      console.log('🗺️ Triggering curriculum mapping for lesson:', lesson.id);
+      base44.functions.invoke('curriculumMapping', {
+        courseName: courseName.trim(),
+        learningProfile: {
+          school: learningProfile?.school || "N/A",
+          grade: learningProfile?.grade || "N/A"
+        },
+        extractedContent: compressedContent || extractedContent || null,
+        lessonId: lesson.id
+      })
+        .then((result) => {
           if (result?.data) {
-            await base44.entities.Lesson.update(lesson.id, { curriculum_map: result.data });
-            console.log("✅ Curriculum map saved");
+            console.log("✅ Curriculum map generated and saved automatically");
           }
         })
         .catch(err => console.warn("Curriculum mapping error:", err));

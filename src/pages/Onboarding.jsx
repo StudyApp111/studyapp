@@ -74,6 +74,7 @@ export default function Onboarding() {
       setIsMappingCurriculum(true);
       
       // Run curriculum mapping in background (don't await)
+      console.log('🗺️ Triggering curriculum mapping for course:', valueFromComponent);
       base44.functions.invoke('curriculumMapping', {
         courseName: valueFromComponent,
         learningProfile: {
@@ -81,9 +82,11 @@ export default function Onboarding() {
           grade: 'Post-Secondary'
         },
         extractedContent: null
+        // No lessonId yet - onboarding flow
       })
         .then(result => {
           if (result.data) {
+            console.log('✅ Curriculum mapping completed for onboarding');
             answersRef.current.curriculumData = result.data;
           }
         })
