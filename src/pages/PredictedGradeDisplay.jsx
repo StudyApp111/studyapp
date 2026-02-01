@@ -161,6 +161,12 @@ export default function PredictedGradeDisplay() {
           compressedContent: documentData?.compressedContent || null,
           fromReportCard: true
         };
+
+        console.log('Storing onboarding data for post-login:', { 
+          hasFile: !!onboardingData.fileUrl, 
+          hasExtracted: !!onboardingData.extractedContent,
+          hasCompressed: !!onboardingData.compressedContent 
+        });
         
         sessionStorage.setItem('pendingOnboardingData', JSON.stringify(onboardingData));
         const redirectUrl = `${createPageUrl("Home")}?fromOnboarding=true`;

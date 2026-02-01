@@ -96,7 +96,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   useEffect(() => {
     const checkAndLoadPlan = async () => {
-      if (!lesson?.id || isGeneratingPlan) return;
+      if (!lesson?.id) return;
+      
+      // If already generating from parent, don't do anything
+      if (isGeneratingPlan) return;
       
       // Check if coming from onboarding with report data
       const urlParams = new URLSearchParams(window.location.search);
@@ -106,10 +109,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       if (fromOnboarding && reportDataStr) {
         try {
           // URLSearchParams.get() already returns decoded string, so just parse JSON
-          const reportData = JSON.parse(reportDataStr);
+          const reportData = JSON.parse(decodeURIComponent(reportDataStr));
+          console.log('📊 Parsed report data for study plan:', reportData);
           
-          // Show generating state immediately with report data visible
-          setLoading(false);
+          // Show a placeholder with the predicted grade while generating
           setStudyPlan({
             initial_predicted_grade: reportData.predicted_grade,
             current_predicted_grade: reportData.predicted_grade,
@@ -120,8 +123,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             tasks: [],
             status: 'active'
           });
+          setLoading(false);
           
           // Set generating state and trigger study plan generation
+          setGeneratingProgress(0);
           window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
           
           base44.functions.invoke('generateStudyPlan', {
@@ -135,8 +140,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           }).then(result => {
             window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
             if (result.data?.success) {
+              console.log('✅ Study plan generated successfully');
               loadStudyPlan();
+              // Clean URL
               window.history.replaceState({}, '', `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=studyplan`);
+            } else {
+              console.error('Study plan generation returned error:', result.data?.error);
+              loadStudyPlan();
             }
           }).catch(err => {
             window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
