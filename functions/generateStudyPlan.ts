@@ -29,15 +29,43 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { exam_id, lesson_id } = await req.json();
+    const body = await req.json();
+    const { exam_id, lesson_id, diagnosticData } = body;
 
-    // Get the exam data
-    const exams = await base44.entities.Exam.filter({ id: exam_id });
-    const exam = exams[0];
-    console.log(`⏱️ [generateStudyPlan] Exam fetch: ${Date.now() - startTime}ms`);
+    // Handle two scenarios: 
+    // 1. Called from onboarding with diagnosticData (no exam_id yet)
+    // 2. Called from in-app with exam_id
+    let exam = null;
+    let examQuestions = [];
+    let predictedGrade = '';
+    let totalScore = 0;
+    let initialConfidence = 45;
     
-    if (!exam || !exam.completed) {
-      return Response.json({ error: 'Exam not found or not completed' }, { status: 400 });
+    if (exam_id) {
+      // In-app flow: fetch existing exam
+      const exams = await base44.entities.Exam.filter({ id: exam_id });
+      exam = exams[0];
+      console.log(`⏱️ [generateStudyPlan] Exam fetch: ${Date.now() - startTime}ms`);
+      
+      if (!exam || !exam.completed) {
+        return Response.json({ error: 'Exam not found or not completed' }, { status: 400 });
+      }
+      
+      examQuestions = exam.questions || [];
+      predictedGrade = exam.predicted_grade;
+      totalScore = exam.total_score;
+      initialConfidence = exam.prediction_confidence || exam.ai_feedback?.prediction_confidence_percentage || 45;
+    } else if (diagnosticData) {
+      // Onboarding flow: use diagnosticData directly
+      predictedGrade = diagnosticData.predicted_grade;
+      totalScore = diagnosticData.predicted_percentage || 0;
+      initialConfidence = parseInt(diagnosticData.confidence_level) || 45;
+      
+      // Extract weak areas as pseudo-competencies
+      examQuestions = [];
+      console.log(`⏱️ [generateStudyPlan] Using diagnostic data from onboarding`);
+    } else {
+      return Response.json({ error: 'Either exam_id or diagnosticData required' }, { status: 400 });
     }
 
     // Get lesson data
@@ -55,8 +83,8 @@ Deno.serve(async (req) => {
     const misconceptions = [];
     const wrongQuestions = [];
     
-    if (exam.questions) {
-      exam.questions.forEach((q, idx) => {
+    if (examQuestions && examQuestions.length > 0) {
+      examQuestions.forEach((q, idx) => {
         // Track competency performance
         if (q.assessed_competencies) {
           q.assessed_competencies.forEach(comp => {
@@ -107,19 +135,16 @@ Deno.serve(async (req) => {
     // Get top 3 weakest competencies
     const weakestCompetencies = rankedCompetencies.slice(0, 3);
     
-    // Extract mastery_gap from AI feedback (or use weakest competency)
-    const masteryGap = exam.ai_feedback?.mastery_gap || 
+    // Extract mastery_gap from AI feedback (or diagnosticData or use weakest competency)
+    const masteryGap = exam?.ai_feedback?.mastery_gap || 
+                       (diagnosticData?.weak_areas_detailed?.[0]) ||
                        (weakestCompetencies[0]?.name) || 
                        'General Understanding';
     
-    // Get confidence from exam
-    const initialConfidence = exam.prediction_confidence || 
-                              exam.ai_feedback?.prediction_confidence_percentage || 
-                              45; // Default low confidence for diagnostic
-    
-    // Extract weak areas and strengths from AI feedback
-    const weakAreas = exam.ai_feedback?.key_areas_for_improvement_list || [];
-    const strengths = exam.ai_feedback?.identified_strengths_list || [];
+    // Extract weak areas and strengths from AI feedback or diagnosticData
+    const weakAreas = exam?.ai_feedback?.key_areas_for_improvement_list || 
+                      diagnosticData?.weak_areas_detailed || [];
+    const strengths = exam?.ai_feedback?.identified_strengths_list || [];
 
     // Get content summary for context
     const contentSummary = lesson.compressed_content || 
@@ -133,8 +158,8 @@ Use ONLY the data below. Be specific, practical, and realistic.
 
 STUDENT PERFORMANCE DATA:
 - Course: ${lesson.course_name}
-- Exam Score: ${exam.total_score}%
-- Predicted Grade: ${exam.predicted_grade}
+- Exam Score: ${totalScore}%
+- Predicted Grade: ${predictedGrade}
 
 COMPETENCY BREAKDOWN (ranked by weakness):
 ${rankedCompetencies.map(c => `- ${c.name}: ${c.score}% (${c.correct}/${c.total} correct)`).join('\n')}
@@ -347,10 +372,10 @@ Return JSON:
     // Create new study plan with enriched data
     const studyPlan = await base44.entities.StudyPlan.create({
       lesson_id,
-      generated_from_exam_id: exam_id,
+      generated_from_exam_id: exam_id || null,
       cycle_number: cycleNumber,
-      initial_predicted_grade: exam.predicted_grade,
-      initial_score: exam.total_score,
+      initial_predicted_grade: predictedGrade,
+      initial_score: totalScore,
       initial_confidence: initialConfidence,
       mastery_gap: masteryGap,
       target_grade: "A+",
@@ -359,10 +384,11 @@ Return JSON:
       competency_progress: competencyProgress,
       grade_history: [{
         date: new Date().toISOString(),
-        exam_id: exam_id,
-        predicted_grade: exam.predicted_grade,
-        score: exam.total_score,
-        confidence: initialConfidence
+        exam_id: exam_id || null,
+        predicted_grade: predictedGrade,
+        score: totalScore,
+        confidence: initialConfidence,
+        source: exam_id ? 'in_app_exam' : 'onboarding_diagnostic'
       }],
       plan_rationale: response.plan_rationale,
       priority_focus: response.priority_focus,

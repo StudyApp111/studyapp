@@ -150,7 +150,7 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-  // Navigation visibility - CRITICAL: Hide on onboarding pages regardless of onboarding_completed status
+  // Navigation visibility - CRITICAL: Hide ONLY on onboarding flow pages
   const currentPath = location.pathname.replace(/\/$/, '').toLowerCase();
   const onboardingPath = createPageUrl("Onboarding").replace(/\/$/, '').toLowerCase();
   const predictedGradePath = createPageUrl("PredictedGradeDisplay").replace(/\/$/, '').toLowerCase();
@@ -167,7 +167,7 @@ function LayoutContent({ children, currentPageName }) {
 
   const userIsAuthenticated = !!user;
 
-  // ALWAYS hide navigation on onboarding flow pages - no exceptions
+  // Show navigation for ALL authenticated users EXCEPT on onboarding flow
   const showNavigation = userIsAuthenticated && !isOnboardingFlow;
   const showSidebar = showNavigation;
   

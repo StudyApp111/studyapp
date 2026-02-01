@@ -159,15 +159,14 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex gap-4 justify-center pt-2">
+      <div className="flex gap-4 justify-center pt-2 relative z-10">
         {onBack && (
-          <Button
+          <button
             onClick={onBack}
-            variant="outline"
-            className="h-12 px-6 text-base border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl"
+            className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm transition-colors font-medium rounded-lg"
           >
-            Back
-          </Button>
+            ← Back
+          </button>
         )}
         <Button
           onClick={handleNext}
