@@ -40,9 +40,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import FeedbackModal from "@/components/feedback/FeedbackModal";
+import PromoCodeGenerator from "@/components/admin/PromoCodeGenerator";
+import PromoCodeRedeem from "@/components/subscription/PromoCodeRedeem";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { refreshUser, getPromoRemainingDays } = useSubscription();
   const [user, setUser] = useState(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,14 +58,25 @@ export default function Settings() {
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
-    base44.auth.me()
-      .then(currentUser => {
-        setUser(currentUser);
-        setNotificationsEnabled(currentUser.notifications_enabled !== false);
-      })
-      .catch(console.error)
-      .finally(() => setIsLoading(false));
+    loadUser();
   }, []);
+
+  const loadUser = async () => {
+    try {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+      setNotificationsEnabled(currentUser.notifications_enabled !== false);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePromoRedeemed = async () => {
+    await refreshUser();
+    await loadUser();
+  };
 
   const handleNotificationsToggle = async (enabled) => {
     setNotificationsEnabled(enabled);
@@ -175,7 +190,40 @@ export default function Settings() {
               label="Pricing Plans"
               onClick={() => navigate(createPageUrl("PricingPlans"))}
             />
-            {/* Show subscription status */}
+            
+            {/* Promo Access Status - Show if active */}
+            {(() => {
+              const promoEndDate = user?.promo_access_until ? new Date(user.promo_access_until) : null;
+              const now = new Date();
+              const hasActivePromo = promoEndDate && promoEndDate > now && user?.subscription_tier === 'pro';
+              const promoDaysLeft = getPromoRemainingDays?.();
+              
+              if (hasActivePromo && promoDaysLeft !== null) {
+                return (
+                  <div className="p-4 rounded-lg border-2 border-purple-400 bg-gradient-to-br from-purple-100 to-pink-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                        <Gift className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-purple-900">Promo Access Active</p>
+                        <p className="text-sm text-purple-700">
+                          {promoDaysLeft > 0 
+                            ? `${promoDaysLeft} day${promoDaysLeft !== 1 ? 's' : ''} remaining`
+                            : 'Expires today'}
+                        </p>
+                        <p className="text-xs text-purple-600 mt-0.5">
+                          Until {promoEndDate.toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Sparkles className="w-6 h-6 text-purple-600" />
+                    </div>
+                  </div>
+                );
+              }
+            })()}
+            
+            {/* Standard subscription status */}
             {(() => {
               const isActivePro = user?.subscription_tier === 'pro' && user?.subscription_status === 'active';
               const endDate = user?.subscription_end_date ? new Date(user.subscription_end_date) : null;
@@ -184,7 +232,10 @@ export default function Settings() {
               const isExpired = (endDate && endDate < now) || (promoEndDate && promoEndDate < now && !endDate);
               const activeEndDate = promoEndDate || endDate;
               
-              if (isActivePro && !isExpired) {
+              // Only show paid subscription status if no active promo
+              const hasActivePromo = promoEndDate && promoEndDate > now;
+              
+              if (isActivePro && !isExpired && !hasActivePromo) {
                 return (
                   <div className="p-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10">
                     <div className="flex items-center gap-3">
@@ -194,9 +245,7 @@ export default function Settings() {
                       <div className="flex-1">
                         <p className="font-semibold text-emerald-300">Pro Active</p>
                         <p className="text-xs text-emerald-400">
-                          {promoEndDate ? `Promo until ${promoEndDate.toLocaleDateString()}` :
-                           endDate ? `${user.subscription_plan_type === 'yearly' ? 'Yearly' : 'Monthly'} • Renews ${endDate.toLocaleDateString()}` :
-                           'Active subscription'}
+                          {endDate ? `${user.subscription_plan_type === 'yearly' ? 'Yearly' : 'Monthly'} • Renews ${endDate.toLocaleDateString()}` : 'Active subscription'}
                         </p>
                       </div>
                       <Button
@@ -241,11 +290,18 @@ export default function Settings() {
               label="History"
               onClick={() => navigate(createPageUrl("LessonHistory"))}
             />
+            
+            {/* Promo Code Redemption - For all users */}
+            {user?.subscription_tier !== 'pro' && (
+              <div className="mt-4">
+                <PromoCodeRedeem onSuccess={handlePromoRedeemed} />
+              </div>
+            )}
             </SettingsSection>
 
             <Separator className="my-6" />
 
-            {user?.email === 'kartikeya2159@gmail.com' && (
+            {user?.role === 'admin' && (
               <>
                 <SettingsSection title="Admin">
                   <SettingsItem
@@ -253,6 +309,11 @@ export default function Settings() {
                     label="Email Manager"
                     onClick={() => navigate(createPageUrl("EmailManager"))}
                   />
+                  
+                  {/* Promo Code Generator */}
+                  <div className="mt-4">
+                    <PromoCodeGenerator />
+                  </div>
                 </SettingsSection>
                 <Separator className="my-6" />
               </>
