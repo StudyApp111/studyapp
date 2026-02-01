@@ -131,8 +131,23 @@ function LayoutContent({ children, currentPageName }) {
         }
       }
     })();
+    
+    // Listen for subscription updates
+    const handleSubscriptionUpdate = async () => {
+      try {
+        const refreshedUser = await base44.auth.me();
+        setUser(refreshedUser);
+      } catch (error) {
+        console.error('Error refreshing user:', error);
+      }
+    };
+    
+    window.addEventListener('userSubscriptionUpdated', handleSubscriptionUpdate);
 
-    return () => cleanup?.();
+    return () => {
+      cleanup?.();
+      window.removeEventListener('userSubscriptionUpdated', handleSubscriptionUpdate);
+    };
   }, [location.pathname, navigate]);
 
 

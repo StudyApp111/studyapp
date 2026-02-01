@@ -195,19 +195,41 @@ Deno.serve(async (req) => {
 
         // Update status based on subscription state
         if (subscription.status === 'active') {
-          // Trial ended, now active paying customer
-          await base44.asServiceRole.entities.User.update(user.id, {
+          // Trial ended, now active paying customer OR user resubscribed after cancellation
+          const updates = {
             subscription_status: 'active',
-            trial_end_date: null // Clear trial date
-          });
-          console.log(`User ${user.email} trial ended, now active`);
-        } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
-          await base44.asServiceRole.entities.User.update(user.id, {
-            subscription_tier: 'free',
-            subscription_status: 'canceled',
+            subscription_tier: 'pro',
             trial_end_date: null
-          });
-          console.log(`User ${user.email} subscription canceled`);
+          };
+          
+          // Update subscription end date
+          if (subscription.current_period_end) {
+            updates.subscription_end_date = new Date(subscription.current_period_end * 1000).toISOString();
+          }
+          
+          await base44.asServiceRole.entities.User.update(user.id, updates);
+          console.log(`User ${user.email} status: active, end: ${updates.subscription_end_date}`);
+        } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+          // Only downgrade to free if current_period_end has passed
+          const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : new Date();
+          const now = new Date();
+          
+          if (periodEnd <= now) {
+            // Grace period over - downgrade to free
+            await base44.asServiceRole.entities.User.update(user.id, {
+              subscription_tier: 'free',
+              subscription_status: 'canceled',
+              trial_end_date: null
+            });
+            console.log(`User ${user.email} subscription ended - downgraded to free`);
+          } else {
+            // Still in grace period - keep pro tier but mark as cancelled
+            await base44.asServiceRole.entities.User.update(user.id, {
+              subscription_status: 'cancelled',
+              subscription_end_date: periodEnd.toISOString()
+            });
+            console.log(`User ${user.email} cancelled - grace period until ${periodEnd.toISOString()}`);
+          }
         } else if (subscription.status === 'trialing') {
           // Still in trial
           const trialEnd = subscription.trial_end 
@@ -221,7 +243,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Handle subscription deleted
+    // Handle subscription deleted (final removal after grace period)
     if (event.type === 'customer.subscription.deleted') {
       const subscription = event.data.object;
 
@@ -230,12 +252,14 @@ Deno.serve(async (req) => {
       });
 
       if (users.length > 0) {
+        // Subscription fully deleted - downgrade to free
         await base44.asServiceRole.entities.User.update(users[0].id, {
           subscription_tier: 'free',
           subscription_status: 'canceled',
-          trial_end_date: null
+          trial_end_date: null,
+          subscription_end_date: null
         });
-        console.log(`User ${users[0].email} subscription deleted`);
+        console.log(`User ${users[0].email} subscription fully deleted - downgraded to free`);
       }
     }
 

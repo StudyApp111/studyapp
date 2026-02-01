@@ -26,6 +26,10 @@ export default function PromoCodeRedeem({ onSuccess }) {
       if (data?.success) {
         toast.success(data.message || "Promo code activated!");
         setCode("");
+        
+        // Trigger global refresh
+        window.dispatchEvent(new Event('userSubscriptionUpdated'));
+        
         if (onSuccess) onSuccess();
       } else {
         toast.error(data?.error || "Invalid promo code");

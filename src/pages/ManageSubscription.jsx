@@ -44,9 +44,12 @@ export default function ManageSubscription() {
       
       if (response.data.success) {
         setCancelSuccess(true);
-        // Refresh user data
+        // Refresh user data immediately
         const updatedUser = await base44.auth.me();
         setUser(updatedUser);
+        
+        // Trigger global refresh for nav/layout
+        window.dispatchEvent(new Event('userSubscriptionUpdated'));
       } else {
         alert(response.data.error || 'Failed to cancel subscription');
       }
@@ -69,6 +72,7 @@ export default function ManageSubscription() {
     (user?.subscription_status === 'active' || user?.subscription_status === 'trialing');
   const isTrialing = user?.subscription_status === 'trialing';
   const isCancelled = user?.subscription_status === 'cancelled';
+  const hasGracePeriod = isCancelled && user?.subscription_end_date && new Date(user.subscription_end_date) > new Date();
 
   return (
     <div className="min-h-screen dark:bg-gradient-to-br dark:from-purple-900/20 dark:via-purple-800/10 dark:to-purple-900/20 bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40 p-4 md:p-10 pb-28 md:pb-10">
@@ -98,15 +102,23 @@ export default function ManageSubscription() {
               </div>
               <div className="flex-1">
                 <h2 className="text-xl font-bold dark:text-slate-100 text-slate-900">
-                  {isPro ? (isTrialing ? 'Pro Plan (Trial)' : 'Pro Plan') : 'Free Plan'}
+                  {isCancelled 
+                    ? (hasGracePeriod ? 'Pro Plan (Ending Soon)' : 'Free Plan')
+                    : isPro 
+                      ? (isTrialing ? 'Pro Plan (Trial)' : 'Pro Plan') 
+                      : 'Free Plan'}
                 </h2>
                 <p className="dark:text-slate-300 text-slate-600">
-                  {isPro 
-                    ? (isTrialing ? '7-day free trial active' : 'Unlimited access to all features')
-                    : 'Limited access with daily quotas'}
+                  {isCancelled 
+                    ? (hasGracePeriod 
+                        ? `Access until ${new Date(user.subscription_end_date).toLocaleDateString()}` 
+                        : 'Limited access with daily quotas')
+                    : isPro 
+                      ? (isTrialing ? '7-day free trial active' : 'Unlimited access to all features')
+                      : 'Limited access with daily quotas'}
                 </p>
               </div>
-              {isPro && !isTrialing && (
+              {isPro && !isTrialing && !isCancelled && (
                 <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
                   Active
                 </span>
@@ -116,9 +128,14 @@ export default function ManageSubscription() {
                   Trial
                 </span>
               )}
-              {isCancelled && (
+              {hasGracePeriod && (
                 <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
-                  Cancelled
+                  Ending
+                </span>
+              )}
+              {isCancelled && !hasGracePeriod && (
+                <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+                  Expired
                 </span>
               )}
             </div>
@@ -170,7 +187,7 @@ export default function ManageSubscription() {
                   )}
                 </div>
 
-                {/* Cancel Button */}
+                {/* Cancel Button - Only show if NOT already cancelled */}
                 {!isCancelled && (
                   <Button
                     variant="outline"
@@ -181,17 +198,15 @@ export default function ManageSubscription() {
                   </Button>
                 )}
 
-                {isCancelled && (
+                {/* Cancelled State Messages */}
+                {isCancelled && hasGracePeriod && (
                   <div className="dark:bg-amber-500/10 dark:border-amber-500/30 bg-amber-50 border border-amber-200 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                       <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium dark:text-amber-300 text-amber-800">Subscription Cancelled</p>
                         <p className="text-sm dark:text-amber-200 text-amber-700 mt-1">
-                          Your subscription will remain active until {user.subscription_end_date 
-                            ? new Date(user.subscription_end_date).toLocaleDateString() 
-                            : 'the end of your billing period'}. 
-                          After that, you'll be moved to the free plan.
+                          You won't be billed again. Your Pro access continues until <strong>{new Date(user.subscription_end_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</strong>.
                         </p>
                         <Button
                           variant="link"
@@ -199,6 +214,26 @@ export default function ManageSubscription() {
                           onClick={() => navigate(createPageUrl("PricingPlans"))}
                         >
                           Resubscribe →
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {isCancelled && !hasGracePeriod && (
+                  <div className="dark:bg-red-500/10 dark:border-red-500/30 bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium dark:text-red-300 text-red-800">Subscription Expired</p>
+                        <p className="text-sm dark:text-red-200 text-red-700 mt-1">
+                          Your Pro access has ended. Upgrade again to unlock all features.
+                        </p>
+                        <Button
+                          className="mt-3 bg-purple-600 hover:bg-purple-700 text-white"
+                          onClick={() => navigate(createPageUrl("PricingPlans"))}
+                        >
+                          Upgrade Again
                         </Button>
                       </div>
                     </div>
@@ -241,8 +276,8 @@ export default function ManageSubscription() {
                   <Button onClick={() => {
                     setCancelDialogOpen(false);
                     setCancelSuccess(false);
-                    // Refresh the page to show updated status
-                    window.location.reload();
+                    // Navigate back to settings (user data already refreshed)
+                    navigate(createPageUrl("Settings"));
                   }}>
                     Got it
                   </Button>

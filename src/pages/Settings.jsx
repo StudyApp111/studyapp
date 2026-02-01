@@ -226,14 +226,42 @@ export default function Settings() {
             {/* Standard subscription status */}
             {(() => {
               const isActivePro = user?.subscription_tier === 'pro' && user?.subscription_status === 'active';
+              const isCancelled = user?.subscription_status === 'cancelled';
               const endDate = user?.subscription_end_date ? new Date(user.subscription_end_date) : null;
               const promoEndDate = user?.promo_access_until ? new Date(user.promo_access_until) : null;
               const now = new Date();
+              const hasGracePeriod = isCancelled && endDate && endDate > now;
               const isExpired = (endDate && endDate < now) || (promoEndDate && promoEndDate < now && !endDate);
-              const activeEndDate = promoEndDate || endDate;
               
               // Only show paid subscription status if no active promo
               const hasActivePromo = promoEndDate && promoEndDate > now;
+              
+              // Cancelled but still has access (grace period)
+              if (isCancelled && hasGracePeriod && !hasActivePromo) {
+                return (
+                  <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
+                        <AlertTriangle className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-amber-300">Cancelled - Ends {endDate.toLocaleDateString()}</p>
+                        <p className="text-xs text-amber-400">
+                          Pro access until then, no future billing
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(createPageUrl("ManageSubscription"))}
+                        className="text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
+                      >
+                        Details
+                      </Button>
+                    </div>
+                  </div>
+                );
+              }
               
               if (isActivePro && !isExpired && !hasActivePromo) {
                 return (
@@ -259,17 +287,17 @@ export default function Settings() {
                     </div>
                   </div>
                 );
-              } else if (isExpired || user?.subscription_status === 'canceled') {
+              } else if ((isCancelled && !hasGracePeriod) || isExpired) {
                 return (
-                  <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/10">
+                  <div className="p-4 rounded-lg border border-red-500/30 bg-red-500/10">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
-                        <AlertTriangle className="w-5 h-5 text-amber-400" />
+                      <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                        <AlertTriangle className="w-5 h-5 text-red-400" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-semibold text-amber-300">Subscription Expired</p>
-                        <p className="text-xs text-amber-400">
-                          {activeEndDate ? `Ended ${activeEndDate.toLocaleDateString()}` : 'Your subscription has ended'}
+                        <p className="font-semibold text-red-300">Subscription Expired</p>
+                        <p className="text-xs text-red-400">
+                          Your Pro access has ended
                         </p>
                       </div>
                       <Button
