@@ -996,15 +996,11 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
         } : null
       }));
 
-      let currentLesson = lesson;
-      if (!lesson.curriculum_map || !lesson.curriculum_map.core_competencies) {
-        const refreshedLessons = await base44.entities.Lesson.filter({ id: lesson.id });
-        if (refreshedLessons.length > 0 && refreshedLessons[0].curriculum_map?.core_competencies) {
-          currentLesson = refreshedLessons[0];
-        } else {
-          throw new Error("Curriculum analysis not ready. Please wait and try submitting again.");
-        }
-      }
+      // Always refresh lesson to get latest curriculum_map if available
+      const refreshedLessons = await base44.entities.Lesson.filter({ id: lesson.id });
+      let currentLesson = refreshedLessons.length > 0 ? refreshedLessons[0] : lesson;
+      
+      // Note: curriculum_map is optional - feedbackGrade will handle missing data gracefully
 
 // NOTE: Grading is done via feedbackGrade backend function ONLY
       // This prompt is NOT used - it's passed to feedbackGrade which handles it
