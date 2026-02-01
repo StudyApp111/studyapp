@@ -73,7 +73,7 @@ export default function Onboarding() {
     if (currentStep === 2 && key === 'courseCode') {
       setIsMappingCurriculum(true);
       
-      // Run curriculum mapping in background (don't await)
+      // Run curriculum mapping in background (don't await - it's optional)
       base44.functions.invoke('curriculumMapping', {
         courseName: valueFromComponent,
         learningProfile: {
@@ -83,12 +83,14 @@ export default function Onboarding() {
         extractedContent: null
       })
         .then(result => {
+          console.log('Curriculum mapping completed:', result.data);
           if (result.data) {
             answersRef.current.curriculumData = result.data;
           }
         })
         .catch(err => {
-          console.error('Curriculum mapping failed:', err);
+          console.error('Curriculum mapping failed (non-blocking):', err);
+          // Non-blocking - diagnostic can proceed without curriculum data
         })
         .finally(() => {
           setIsMappingCurriculum(false);
