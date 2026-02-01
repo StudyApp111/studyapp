@@ -8,6 +8,7 @@ import {
   Lock, MessageSquare, FileText
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { generateFingerprint } from "@/components/utils/browserFingerprint";
 
 // Grade color based on percentage: 90+ green, 80+ blue, 70+ purple, 0-69 orange/gray
 const getGradeColor = (percentage) => {
@@ -51,6 +52,7 @@ export default function PredictedGradeDisplay() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("");
   const [reportData, setReportData] = useState(null);
+  const [ctaLoading, setCTALoading] = useState(false);
 
   useEffect(() => {
     if (!school || !courseCode) {
@@ -70,6 +72,98 @@ export default function PredictedGradeDisplay() {
     setUserName(name || 'Student');
     setTimeout(() => setLoading(false), 2000);
   }, [name, school, courseCode, reportDataParam, navigate]);
+
+  const handleCTA = async () => {
+    setCTALoading(true);
+    
+    try {
+      // ABUSE PROTECTION - Track report view
+      const fingerprint = await generateFingerprint();
+      await base44.functions.invoke('checkAbuseProtection', {
+        action_type: 'report_view',
+        fingerprint,
+        honeypot_value: ''
+      }).catch(err => {
+        console.warn('Abuse check failed (non-blocking):', err);
+      });
+
+      // Check if user is authenticated
+      const isAuth = await base44.auth.isAuthenticated();
+      
+      if (isAuth) {
+        // User is logged in - create lesson and navigate
+        const user = await base44.auth.me();
+        
+        // Get document data from URL if available
+        const documentDataStr = queryParams.get("documentData");
+        let documentData = null;
+        if (documentDataStr) {
+          try {
+            documentData = JSON.parse(decodeURIComponent(documentDataStr));
+          } catch (e) {
+            console.error("Failed to parse document data:", e);
+          }
+        }
+        
+        // Create lesson
+        const lessonData = {
+          course_name: courseCode,
+          description: `Course at ${school}`,
+          status: 'diagnostic_completed'
+        };
+        
+        if (documentData?.fileUrl) {
+          lessonData.file_url = documentData.fileUrl;
+          lessonData.file_urls = [documentData.fileUrl];
+          lessonData.input_type = 'file';
+        }
+        if (documentData?.extractedContent) {
+          lessonData.extracted_content = documentData.extractedContent;
+        }
+        if (documentData?.compressedContent) {
+          lessonData.compressed_content = documentData.compressedContent;
+        }
+        
+        const newLesson = await base44.entities.Lesson.create(lessonData);
+        
+        // Mark onboarding as complete
+        await base44.auth.updateMe({ onboarding_completed: true });
+        
+        // Navigate to study plan with report data
+        const reportDataStr = encodeURIComponent(JSON.stringify(reportData || {}));
+        navigate(`${createPageUrl("DocumentViewer")}?id=${newLesson.id}&tab=studyplan&fromOnboarding=true&reportData=${reportDataStr}`, { replace: true });
+      } else {
+        // User not logged in - store data and redirect to login
+        const documentDataStr = queryParams.get("documentData");
+        let documentData = null;
+        if (documentDataStr) {
+          try {
+            documentData = JSON.parse(decodeURIComponent(documentDataStr));
+          } catch (e) {
+            console.error("Failed to parse document data:", e);
+          }
+        }
+        
+        const onboardingData = {
+          courseCode: courseCode || '',
+          school: school || '',
+          studentName: name || '',
+          reportData: reportData || {},
+          fileUrl: documentData?.fileUrl || null,
+          extractedContent: documentData?.extractedContent || null,
+          compressedContent: documentData?.compressedContent || null,
+          fromReportCard: true
+        };
+        
+        sessionStorage.setItem('pendingOnboardingData', JSON.stringify(onboardingData));
+        const redirectUrl = `${createPageUrl("Home")}?fromOnboarding=true`;
+        base44.auth.redirectToLogin(redirectUrl);
+      }
+    } catch (error) {
+      console.error("Error in handleCTA:", error);
+      setCTALoading(false);
+    }
+  };
 
   const handleCTA = async () => {
     // Check if user is already authenticated
@@ -408,10 +502,17 @@ export default function PredictedGradeDisplay() {
             <div className="space-y-2 pt-3">
               <Button 
                 onClick={handleCTA}
+                disabled={ctaLoading}
                 className="w-full bg-white hover:bg-slate-100 text-purple-700 font-black py-4 sm:py-5 text-lg sm:text-xl rounded-xl shadow-xl shadow-black/20 transition-all hover:scale-[1.02] min-h-[56px]"
               >
-                <Lock className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
-                Unlock Full Answer
+                {ctaLoading ? (
+                  <>Loading...</>
+                ) : (
+                  <>
+                    <Lock className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
+                    Unlock Full Answer
+                  </>
+                )}
               </Button>
               <p className="text-white/80 text-sm sm:text-base">+ See Your Complete Study Plan</p>
             </div>
@@ -731,10 +832,15 @@ export default function PredictedGradeDisplay() {
 
           <Button 
             onClick={handleCTA}
+            disabled={ctaLoading}
             className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black py-5 sm:py-6 text-lg sm:text-xl rounded-xl shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02] min-h-[56px]"
           >
-            See My Free Study Plan
-            <ArrowRight className="h-5 w-5 ml-2" />
+            {ctaLoading ? 'Loading...' : (
+              <>
+                See My Free Study Plan
+                <ArrowRight className="h-5 w-5 ml-2" />
+              </>
+            )}
           </Button>
         </div>
 
