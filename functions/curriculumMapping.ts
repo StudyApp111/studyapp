@@ -4,10 +4,14 @@ import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
-        const user = await base44.auth.me();
-
-        if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        
+        // Try to get user but don't require authentication (onboarding flow)
+        let user = null;
+        try {
+            user = await base44.auth.me();
+            console.log('User authenticated:', user?.email);
+        } catch (authError) {
+            console.log('No user authentication - proceeding for onboarding flow');
         }
 
         const { courseName, learningProfile, extractedContent } = await req.json();
