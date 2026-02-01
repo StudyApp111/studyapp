@@ -27,7 +27,9 @@ import {
   AlertTriangle,
   Loader2,
   Moon,
-  Sun
+  Sun,
+  Gift,
+  Sparkles
 } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import {
