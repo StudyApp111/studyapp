@@ -212,20 +212,52 @@ No extra text.`;
       properties: {
         exam_questions: {
           type: "array",
+          description: "Array of 5 exam questions",
           items: {
             type: "object",
             properties: {
-              question_number: { type: "integer" },
-              question_type: { type: "string", enum: ["Multiple Choice", "True/False", "Fill in the Blank", "Short Answer"] },
-              difficulty_index: { type: "string", enum: ["Moderate", "Challenging", "High Challenge"] },
-              question_text: { type: "string" },
-              options: { type: "array", items: { type: "string" } },
-              correct_answer: { type: "string" },
-              explanation: { type: "string" },
-              assessed_competencies: { type: "array", items: { type: "string" } },
-              targeted_misconception: { type: "string" }
+              question_number: { 
+                type: "integer",
+                description: "Question number (1-5)"
+              },
+              question_type: { 
+                type: "string", 
+                enum: ["Multiple Choice", "True/False", "Fill in the Blank", "Short Answer"],
+                description: "Type of question"
+              },
+              difficulty_index: { 
+                type: "string", 
+                enum: ["Moderate", "Challenging", "High Challenge"],
+                description: "Difficulty level"
+              },
+              question_text: { 
+                type: "string",
+                description: "The actual question text"
+              },
+              options: { 
+                type: "array", 
+                items: { type: "string" },
+                description: "Answer options (4 for MCQ, 2 for T/F, empty for others)"
+              },
+              correct_answer: { 
+                type: "string",
+                description: "For MCQ: single letter (A, B, C, D). For T/F: 'True' or 'False'. For others: the answer."
+              },
+              explanation: { 
+                type: "string",
+                description: "2-3 sentence explanation of the correct answer"
+              },
+              assessed_competencies: { 
+                type: "array", 
+                items: { type: "string" },
+                description: "List of competencies this question assesses"
+              },
+              targeted_misconception: { 
+                type: "string",
+                description: "Common misconception this question targets"
+              }
             },
-            required: ["question_number", "question_type", "question_text", "correct_answer", "explanation"]
+            required: ["question_number", "question_type", "difficulty_index", "question_text", "options", "correct_answer", "explanation", "assessed_competencies", "targeted_misconception"]
           }
         }
       },
