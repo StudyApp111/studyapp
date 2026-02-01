@@ -99,50 +99,41 @@ function LayoutContent({ children, currentPageName }) {
         pathLower.includes("diagnosticquiz") || 
         pathLower.includes("predictedgradedisplay");
 
-      // CRITICAL: If on onboarding flow pages, skip all auth logic
-      if (isOnboardingFlow) {
-        // Try to get user for display purposes but don't redirect
-        try {
-          const currentUser = await base44.auth.me();
-          setUser(currentUser);
-          // If authenticated and onboarding complete, they shouldn't be here
-          if (currentUser?.onboarding_completed) {
-            navigate(createPageUrl("Home"), { replace: true });
-          }
-        } catch (error) {
-          // Not authenticated - perfectly fine for onboarding
-          setUser(null);
-        }
-        return;
-      }
-
-      // Not on onboarding flow - check auth
-      let currentUser = null;
+      // Try to get user regardless of page
       try {
-        currentUser = await base44.auth.me();
+        const currentUser = await base44.auth.me();
         setUser(currentUser);
+        
+        // If on onboarding flow and onboarding is complete, redirect home
+        if (isOnboardingFlow && currentUser?.onboarding_completed) {
+          navigate(createPageUrl("Home"), { replace: true });
+          return;
+        }
+        
+        // If NOT on onboarding flow and onboarding incomplete, redirect to onboarding
+        if (!isOnboardingFlow && currentUser && !currentUser.onboarding_completed) {
+          navigate(createPageUrl("Onboarding"), { replace: true });
+          return;
+        }
+        
+        // Track session for authenticated users with completed onboarding
+        if (currentUser?.onboarding_completed && !isOnboardingFlow) {
+          trackUserSession();
+          cleanup = trackSessionDuration();
+        }
       } catch (error) {
-        // Not authenticated - redirect to onboarding
+        // Not authenticated
         setUser(null);
-        navigate(createPageUrl("Onboarding"), { replace: true });
-        return;
-      }
-
-      // Authenticated but onboarding incomplete → redirect to onboarding
-      if (currentUser && !currentUser.onboarding_completed) {
-        navigate(createPageUrl("Onboarding"), { replace: true });
-        return;
-      }
-
-      // Authenticated and onboarding complete → track session
-      if (currentUser && currentUser.onboarding_completed) {
-        trackUserSession();
-        cleanup = trackSessionDuration();
+        
+        // If not on onboarding flow and not authenticated, redirect to onboarding
+        if (!isOnboardingFlow) {
+          navigate(createPageUrl("Onboarding"), { replace: true });
+        }
       }
     })();
 
     return () => cleanup?.();
-  }, [location.pathname]);
+  }, [location.pathname, navigate]);
 
 
 
@@ -150,29 +141,21 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-  // Navigation visibility - CRITICAL: Hide ONLY on onboarding flow pages
-  const currentPath = location.pathname.replace(/\/$/, '').toLowerCase();
-  const onboardingPath = createPageUrl("Onboarding").replace(/\/$/, '').toLowerCase();
-  const predictedGradePath = createPageUrl("PredictedGradeDisplay").replace(/\/$/, '').toLowerCase();
+  // Navigation visibility
+  const pathLower = location.pathname.toLowerCase();
+  const isOnboardingFlow = 
+    pathLower.includes("onboarding") || 
+    pathLower.includes("diagnosticquiz") || 
+    pathLower.includes("predictedgradedisplay");
   
-  const isOnboardingPage = currentPath === onboardingPath || currentPageName === "Onboarding" || location.pathname.toLowerCase().includes("onboarding");
-  const isPredictedGradePage = currentPath === predictedGradePath || currentPageName === "PredictedGradeDisplay" || location.pathname.toLowerCase().includes("predictedgradedisplay");
-  const isDiagnosticQuizPage = currentPageName === "DiagnosticQuiz" || location.pathname.toLowerCase().includes("diagnosticquiz");
-
-  // All onboarding flow pages - hide ALL navigation
-  const isOnboardingFlow = isOnboardingPage || isPredictedGradePage || isDiagnosticQuizPage;
-  
-  const isDocumentViewerPage = currentPageName === "DocumentViewer" || location.pathname.includes("DocumentViewer");
+  const isDocumentViewerPage = currentPageName === "DocumentViewer" || pathLower.includes("documentviewer");
   const isHomePage = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
 
-  const userIsAuthenticated = !!user;
-
-  // Show navigation for ALL authenticated users EXCEPT on onboarding flow
-  const showNavigation = userIsAuthenticated && !isOnboardingFlow;
+  // Show navigation ONLY if user exists AND not on onboarding flow
+  const showNavigation = !!user && !isOnboardingFlow;
   const showSidebar = showNavigation;
   
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
-  // Hide mobile header on Home page (it has its own hero with logo) and DocumentViewer
   const showMobileHeader = showNavigation && !isDocumentViewerPage && !isHomePage;
   const showMobileBottomNav = showNavigation && !pagesWithCustomNav.includes(currentPageName);
 
