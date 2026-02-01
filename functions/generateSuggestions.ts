@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     const prompt = `You are a curriculum expert. Generate 4 concise, specific study topic suggestions for a student taking "${courseName}" ${grade ? `in grade ${grade}` : ''} ${school ? `at ${school}` : ''}.
 
 REQUIREMENTS:
-- Each topic should be 30-80 characters
+- Each topic should be 100-200 characters
 - Be specific to likely course content (chapters, units, key concepts)
 - Focus on testable material
 - Use academic language appropriate for the level
