@@ -260,21 +260,19 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
       {/* Input with Quick Action Pills */}
       <div className={`p-3 border-t rounded-b-xl flex-shrink-0 space-y-2 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
         {/* Quick Actions Pills - Always visible */}
-        {hasDocument && (
-          <div className="flex flex-wrap gap-1.5">
-            {quickActions.map((action) => (
-              <button
-                key={action.label}
-                onClick={() => handleSend(action.prompt)}
-                disabled={isLoading}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all text-[10px] font-medium whitespace-nowrap ${isDark ? 'bg-purple-600/20 border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 text-purple-300' : 'bg-purple-100 border-purple-200 hover:bg-purple-200 text-purple-700'}`}
-              >
-                <action.icon className="w-3 h-3" />
-                {action.label}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-wrap gap-1.5">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              onClick={() => handleSend(action.prompt)}
+              disabled={isLoading}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all text-[10px] font-medium whitespace-nowrap ${isDark ? 'bg-purple-600/20 border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 text-purple-300' : 'bg-purple-100 border-purple-200 hover:bg-purple-200 text-purple-700'}`}
+            >
+              <action.icon className="w-3 h-3" />
+              {action.label}
+            </button>
+          ))}
+        </div>
         
         <div className="flex gap-2">
           <Input
