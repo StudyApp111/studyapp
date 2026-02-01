@@ -142,6 +142,9 @@ export default function PricingPlans() {
         const updatedUser = await base44.auth.me();
         setUser(updatedUser);
         
+        // Trigger global refresh
+        window.dispatchEvent(new Event('userSubscriptionUpdated'));
+        
         if (response.data.type === 'free_access') {
           setShowSuccess(true);
         }
@@ -226,7 +229,11 @@ export default function PricingPlans() {
             </span>
           </div>
           <Button
-            onClick={() => navigate(createPageUrl("Home"))}
+            onClick={() => {
+              // Trigger refresh before navigating
+              window.dispatchEvent(new Event('userSubscriptionUpdated'));
+              navigate(createPageUrl("Home"));
+            }}
             className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 py-6 text-lg"
           >
             Start Studying
