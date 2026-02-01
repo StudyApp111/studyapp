@@ -3,9 +3,11 @@ import { base44 } from '@/api/base44Client';
 
 const SubscriptionContext = createContext(null);
 
-// Only AI messages remain limited for non-pro users (hard paywall for everything else)
+// Free tier limits - daily rolling window
 export const FREE_TIER_LIMITS = {
-  ai_messages_per_day: 10  // 10 AI messages per 24h rolling window - ONLY limit kept
+  lessons_per_day: 3,  // 3 lesson uploads/creations per day
+  diagnostic_exams_per_day: 3,  // 3 diagnostic exams per day
+  ai_messages_per_day: 10  // 10 AI messages per day
 };
 
 export function SubscriptionProvider({ children }) {
@@ -119,7 +121,7 @@ export function SubscriptionProvider({ children }) {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  // Check and reset AI message counter (only counter kept)
+  // Check and reset counters - 24h rolling window
   const checkAndResetCounters = async () => {
     let currentUser;
     try {
@@ -134,15 +136,19 @@ export function SubscriptionProvider({ children }) {
     let updates = {};
     let needsUpdate = false;
 
-    // Daily AI message counter - 24h rolling window
+    // Daily counter reset - 24h rolling window
     const dailyResetTime = currentUser.daily_reset_timestamp ? new Date(currentUser.daily_reset_timestamp) : null;
     
     if (!dailyResetTime) {
       updates.daily_reset_timestamp = now.toISOString();
       updates.daily_ai_messages_count = 0;
+      updates.daily_lessons_count = 0;
+      updates.daily_diagnostic_exams_count = 0;
       needsUpdate = true;
     } else if ((now.getTime() - dailyResetTime.getTime()) >= 24 * 60 * 60 * 1000) {
       updates.daily_ai_messages_count = 0;
+      updates.daily_lessons_count = 0;
+      updates.daily_diagnostic_exams_count = 0;
       updates.daily_reset_timestamp = now.toISOString();
       needsUpdate = true;
     }
@@ -154,17 +160,45 @@ export function SubscriptionProvider({ children }) {
     return currentUser;
   };
 
-  // HARD PAYWALL: Everything requires Pro except AI messages (which have a limit)
+  // Upload/Create Lesson - 3 per day for free, unlimited for pro
   const canUpload = async () => {
     if (isPro()) return { allowed: true };
-    // Hard paywall - must be pro to upload
-    return { allowed: false, requiresPro: true };
+    const currentUser = await checkAndResetCounters();
+    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.lessons_per_day, remaining: 0 };
+    
+    const count = currentUser.daily_lessons_count || 0;
+    const allowed = count < FREE_TIER_LIMITS.lessons_per_day;
+    
+    return {
+      allowed,
+      current: count,
+      limit: FREE_TIER_LIMITS.lessons_per_day,
+      remaining: Math.max(0, FREE_TIER_LIMITS.lessons_per_day - count)
+    };
   };
 
+  // Tasks - NO access for free users (Notes, Teach It, Flashcards, Practice Exams)
   const canDoTask = async () => {
     if (isPro()) return { allowed: true };
-    // Hard paywall - must be pro to do tasks
+    // Free users cannot do tasks at all
     return { allowed: false, requiresPro: true };
+  };
+  
+  // Diagnostic Exams - 3 per day for free, unlimited for pro
+  const canTakeDiagnostic = async () => {
+    if (isPro()) return { allowed: true };
+    const currentUser = await checkAndResetCounters();
+    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.diagnostic_exams_per_day, remaining: 0 };
+    
+    const count = currentUser.daily_diagnostic_exams_count || 0;
+    const allowed = count < FREE_TIER_LIMITS.diagnostic_exams_per_day;
+    
+    return {
+      allowed,
+      current: count,
+      limit: FREE_TIER_LIMITS.diagnostic_exams_per_day,
+      remaining: Math.max(0, FREE_TIER_LIMITS.diagnostic_exams_per_day - count)
+    };
   };
 
   const canSendAIMessage = async () => {
@@ -189,9 +223,26 @@ export function SubscriptionProvider({ children }) {
     return { allowed: false, requiresPro: true };
   };
 
-  // Keep increment functions but they only matter for AI messages now
-  const incrementUploadCount = async () => { /* No-op - hard paywall */ };
-  const incrementTaskCount = async () => { /* No-op - hard paywall */ };
+  // Increment counters
+  const incrementUploadCount = async () => {
+    if (isPro()) return;
+    const freshUser = await checkAndResetCounters();
+    if (!freshUser) return;
+    const newCount = (freshUser.daily_lessons_count || 0) + 1;
+    await base44.auth.updateMe({ daily_lessons_count: newCount });
+    await refreshUser();
+  };
+  
+  const incrementDiagnosticCount = async () => {
+    if (isPro()) return;
+    const freshUser = await checkAndResetCounters();
+    if (!freshUser) return;
+    const newCount = (freshUser.daily_diagnostic_exams_count || 0) + 1;
+    await base44.auth.updateMe({ daily_diagnostic_exams_count: newCount });
+    await refreshUser();
+  };
+
+  const incrementTaskCount = async () => { /* No-op - tasks blocked for free users */ };
   
   const incrementAIMessageCount = async () => {
     if (isPro()) return;
@@ -222,9 +273,11 @@ export function SubscriptionProvider({ children }) {
     refreshUser,
     canUpload,
     canDoTask,
+    canTakeDiagnostic,
     canSendAIMessage,
     canGradeAssignment,
     incrementUploadCount,
+    incrementDiagnosticCount,
     incrementTaskCount,
     incrementAIMessageCount,
     incrementAssignmentCount,

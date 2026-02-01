@@ -234,11 +234,7 @@ export default function DiagnosticQuiz() {
   }, [userAnswers, currentQuestionIndex, answeredQuestions, questions]);
 
   const handleSubmit = async () => {
-    console.log('=== SUBMIT CLICKED ===');
-    console.log('answeredQuestions state:', JSON.stringify(answeredQuestions, null, 2));
-    console.log('userAnswers state:', JSON.stringify(userAnswers, null, 2));
-    console.log('answeredQuestions keys:', Object.keys(answeredQuestions));
-    console.log('questions.length:', questions.length);
+
     
     if (Object.keys(answeredQuestions).length !== questions.length) {
       setError('Please answer all questions before submitting.');
@@ -255,20 +251,11 @@ export default function DiagnosticQuiz() {
         const questionType = getQuestionType(question);
         let cleanAnswer = answerData.answer;
         
-        console.log(`Q${index} BEFORE: original="${cleanAnswer}", type=${questionType}`);
-        
         // For MCQ, extract just the letter (A, B, C, D) for accurate backend grading
         if (questionType === 'mcq' && question.options) {
-          // Find which option was selected
           const optionIndex = question.options.findIndex(opt => opt === answerData.answer);
-          console.log(`Q${index} MCQ: optionIndex=${optionIndex}, options count=${question.options.length}`);
-          
           if (optionIndex !== -1) {
-            // Convert index to letter (0→A, 1→B, 2→C, 3→D)
             cleanAnswer = String.fromCharCode(65 + optionIndex);
-            console.log(`Q${index} AFTER: Converted to letter="${cleanAnswer}"`);
-          } else {
-            console.error(`Q${index} ERROR: Could not find option in list. Selected="${answerData.answer}"`);
           }
         }
         
@@ -278,13 +265,7 @@ export default function DiagnosticQuiz() {
         };
       });
 
-      console.log('=== FINAL PAYLOAD TO gradeDiagnosticExam ===');
-      console.log('formattedAnswers:', JSON.stringify(formattedAnswers, null, 2));
-      
-      formattedAnswers.forEach((ans) => {
-        const question = questions[ans.question_index];
-        console.log(`Q${ans.question_index}: User="${ans.answer}" vs Correct="${question?.correct_answer}"`);
-      });
+
 
       const result = await base44.functions.invoke('gradeDiagnosticExam', {
         school: params.school,
