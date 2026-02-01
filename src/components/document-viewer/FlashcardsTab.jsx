@@ -14,77 +14,7 @@ import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import MathText from "@/components/math/MathText";
 
-// Sound effects helper
-const playSound = (type) => {
-  try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    // Different sounds for different actions
-    switch (type) {
-      case 'flip':
-        // Subtle whoosh
-        oscillator.frequency.value = 400;
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
-        break;
-      case 'bad':
-        // Subdued low tone
-        oscillator.frequency.value = 200;
-        gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.15);
-        break;
-      case 'okay':
-        // Neutral beep
-        oscillator.frequency.value = 440;
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
-        break;
-      case 'good':
-        // Pleasant chime
-        oscillator.frequency.value = 523;
-        gainNode.gain.setValueAtTime(0.12, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.2);
-        break;
-      case 'excellent':
-        // Triumphant sound (two-note)
-        oscillator.frequency.value = 659;
-        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.3);
-        break;
-      case 'celebration':
-        // Upward arpeggio for milestones
-        [523, 659, 784].forEach((freq, i) => {
-          const osc = audioContext.createOscillator();
-          const gain = audioContext.createGain();
-          osc.connect(gain);
-          gain.connect(audioContext.destination);
-          osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.12, audioContext.currentTime + i * 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.08 + 0.2);
-          osc.start(audioContext.currentTime + i * 0.08);
-          osc.stop(audioContext.currentTime + i * 0.08 + 0.2);
-        });
-        break;
-    }
-  } catch (e) {
-    // Silently fail if audio not supported
-  }
-};
+// Sound effects removed per user request
 
 export default function FlashcardsTab({ lesson, extractedContent, focusTopics }) {
   const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
@@ -239,9 +169,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   const handleFlip = () => {
-    if (!isFlipped) {
-      playSound('flip');
-    }
     setIsFlipped(!isFlipped);
   };
 
@@ -267,9 +194,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     // rating: 'bad', 'okay', 'good', 'excellent'
     const currentCard = cards[currentIndex];
     setLastRating(rating);
-    
-    // Play sound based on rating
-    playSound(rating);
     
     // Check subscription limit
     const wasReviewed = currentCard.review_count > 0;
@@ -360,7 +284,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       
       // Check for milestone celebrations (every 5 cards)
       if ((sessionStats.total + 1) % 5 === 0) {
-        playSound('celebration');
         setCelebrationMessage('Great job! Keep going!');
         setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 2000);
@@ -373,7 +296,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         const good = sessionStats.good + (rating === 'good' ? 1 : 0);
         const okay = sessionStats.okay + (rating === 'okay' ? 1 : 0);
         
-        playSound('celebration');
         setCelebrationMessage(`✨ Session Complete! ${total} cards reviewed • ${excellent} Excellent • ${good} Good • ${okay} Okay`);
         setShowCelebration(true);
       }
@@ -663,12 +585,11 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 0.3 }}
           key={currentIndex}
-          className="flex items-center gap-2"
+          className="flex items-center justify-center gap-2 flex-1"
         >
           <span className={`text-sm font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-            Card {currentIndex + 1}
+            Card {currentIndex + 1} of {cards.length}
           </span>
-          <span className={`text-xs ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>of {cards.length}</span>
         </motion.div>
         <button
           onClick={() => setShowHowTo(true)}
@@ -715,7 +636,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           animate={{ rotateY: isFlipped ? 180 : 0 }}
           transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
           style={{ transformStyle: 'preserve-3d' }}
-          className="relative min-h-[320px]"
+          className="relative min-h-[280px]"
         >
           {/* Question Side */}
           <Card 
@@ -731,7 +652,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                 {currentCard.difficulty}
               </Badge>
             </div>
-            <div className="p-6 flex flex-col items-center justify-center min-h-[260px]">
+            <div className="p-6 flex flex-col items-center justify-center min-h-[220px]">
               <MathText className={`text-lg font-medium leading-relaxed text-center mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {currentCard.question}
               </MathText>
@@ -750,129 +671,161 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
             <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-3">
               <span className="font-semibold text-sm text-white">Answer</span>
             </div>
-            <div className="p-5 flex flex-col min-h-[260px]">
-              <MathText className={`text-base leading-relaxed text-center flex-1 flex items-center justify-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <div className="p-6 flex items-center justify-center min-h-[220px]">
+              <MathText className={`text-base leading-relaxed text-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {currentCard.answer}
               </MathText>
-              
-              {/* Rating Buttons - Anki Style */}
-              <div className={`mt-4 pt-4 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
-                <p className={`text-xs text-center mb-3 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>How well did you know this?</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <motion.button
-                    onClick={(e) => { e.stopPropagation(); handleRating('bad'); }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={lastRating === 'bad' ? { scale: [1, 0.9, 1] } : {}}
-                    className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl py-2.5 px-3 shadow-lg transition-all relative overflow-hidden"
-                  >
-                    {lastRating === 'bad' && (
-                      <motion.div
-                        className="absolute inset-0 bg-white/20"
-                        initial={{ scale: 0, opacity: 1 }}
-                        animate={{ scale: 2, opacity: 0 }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    )}
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-base">❌</span>
-                      <div className="font-bold text-sm">Bad</div>
-                      <div className="text-[9px] opacity-80">Show again</div>
-                    </div>
-                  </motion.button>
-                  
-                  <motion.button
-                    onClick={(e) => { e.stopPropagation(); handleRating('okay'); }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={lastRating === 'okay' ? { scale: [1, 1.05, 1] } : {}}
-                    className="bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl py-2.5 px-3 shadow-lg transition-all relative overflow-hidden"
-                  >
-                    {lastRating === 'okay' && (
-                      <motion.div
-                        className="absolute inset-0 bg-white/20"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: [0, 1, 0] }}
-                        transition={{ duration: 0.4 }}
-                      />
-                    )}
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-base">😐</span>
-                      <div className="font-bold text-sm">Okay</div>
-                      <div className="text-[9px] opacity-80">1 day</div>
-                    </div>
-                  </motion.button>
-                  
-                  <motion.button
-                    onClick={(e) => { e.stopPropagation(); handleRating('good'); }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={lastRating === 'good' ? { 
-                      boxShadow: ['0 0 0 0 rgba(16, 185, 129, 0.7)', '0 0 0 10px rgba(16, 185, 129, 0)']
-                    } : {}}
-                    className="bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl py-2.5 px-3 shadow-lg transition-all relative overflow-hidden"
-                  >
-                    {lastRating === 'good' && (
-                      <motion.div
-                        className="absolute inset-0 bg-emerald-300/30"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: [0, 1, 0] }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    )}
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-base">✅</span>
-                      <div className="font-bold text-sm">Good</div>
-                      <div className="text-[9px] opacity-80">Few days</div>
-                    </div>
-                  </motion.button>
-                  
-                  <motion.button
-                    onClick={(e) => { e.stopPropagation(); handleRating('excellent'); }}
-                    whileTap={{ scale: 0.95 }}
-                    animate={lastRating === 'excellent' ? {
-                      scale: [1, 1.1, 1],
-                      boxShadow: ['0 0 0 0 rgba(234, 179, 8, 0.7)', '0 0 0 15px rgba(234, 179, 8, 0)']
-                    } : {}}
-                    className="bg-gradient-to-br from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white rounded-xl py-2.5 px-3 shadow-lg transition-all relative overflow-hidden"
-                  >
-                    {lastRating === 'excellent' && (
-                      <>
-                        {/* Gold sparkle burst */}
-                        {[...Array(8)].map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className="absolute w-1 h-1 bg-yellow-300 rounded-full"
-                            style={{
-                              left: '50%',
-                              top: '50%'
-                            }}
-                            initial={{ scale: 0, x: 0, y: 0 }}
-                            animate={{
-                              scale: [0, 1, 0],
-                              x: Math.cos((i / 8) * Math.PI * 2) * 40,
-                              y: Math.sin((i / 8) * Math.PI * 2) * 40
-                            }}
-                            transition={{ duration: 0.6 }}
-                          />
-                        ))}
-                        <motion.div
-                          className="absolute inset-0 bg-yellow-300/40"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: [0, 1, 0] }}
-                          transition={{ duration: 0.5 }}
-                        />
-                      </>
-                    )}
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-base">⭐</span>
-                      <div className="font-bold text-sm">Excellent</div>
-                      <div className="text-[9px] opacity-80">Mastered</div>
-                    </div>
-                  </motion.button>
-                </div>
-              </div>
             </div>
           </Card>
         </motion.div>
       </div>
+
+      {/* Rating Buttons - Below Card */}
+      {isFlipped && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4"
+        >
+          <p className={`text-xs text-center mb-3 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>How well did you know this?</p>
+          <div className="grid grid-cols-2 gap-2">
+            <motion.button
+              onClick={() => handleRating('bad')}
+              whileTap={{ scale: 0.95 }}
+              animate={lastRating === 'bad' ? { 
+                scale: [1, 0.95, 1.05, 1],
+                rotate: [0, -5, 5, 0]
+              } : {}}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl py-3 px-3 shadow-lg transition-all relative overflow-hidden"
+            >
+              {lastRating === 'bad' && (
+                <motion.div
+                  className="absolute inset-0 bg-white/30"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 2, opacity: 0 }}
+                  transition={{ duration: 0.6 }}
+                />
+              )}
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xl">❌</span>
+                <div className="font-bold text-sm">Bad</div>
+                <div className="text-[10px] opacity-80">Show again</div>
+              </div>
+            </motion.button>
+            
+            <motion.button
+              onClick={() => handleRating('okay')}
+              whileTap={{ scale: 0.95 }}
+              animate={lastRating === 'okay' ? { 
+                scale: [1, 1.05, 1],
+                y: [0, -5, 0]
+              } : {}}
+              transition={{ duration: 0.4 }}
+              className="bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl py-3 px-3 shadow-lg transition-all relative overflow-hidden"
+            >
+              {lastRating === 'okay' && (
+                <motion.div
+                  className="absolute inset-0 bg-white/30"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 0.4 }}
+                />
+              )}
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xl">😐</span>
+                <div className="font-bold text-sm">Okay</div>
+                <div className="text-[10px] opacity-80">1 day</div>
+              </div>
+            </motion.button>
+            
+            <motion.button
+              onClick={() => handleRating('good')}
+              whileTap={{ scale: 0.95 }}
+              animate={lastRating === 'good' ? { 
+                scale: [1, 1.1, 1],
+                boxShadow: ['0 0 0 0 rgba(16, 185, 129, 0.7)', '0 0 0 15px rgba(16, 185, 129, 0)']
+              } : {}}
+              transition={{ duration: 0.5 }}
+              className="bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl py-3 px-3 shadow-lg transition-all relative overflow-hidden"
+            >
+              {lastRating === 'good' && (
+                <>
+                  <motion.div
+                    className="absolute inset-0 bg-emerald-300/40"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 0.5 }}
+                  />
+                  {/* Checkmark particles */}
+                  {[...Array(6)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-1.5 h-1.5 bg-emerald-200 rounded-full"
+                      style={{ left: '50%', top: '50%' }}
+                      initial={{ scale: 0, x: 0, y: 0 }}
+                      animate={{
+                        scale: [0, 1, 0],
+                        x: Math.cos((i / 6) * Math.PI * 2) * 30,
+                        y: Math.sin((i / 6) * Math.PI * 2) * 30
+                      }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  ))}
+                </>
+              )}
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xl">✅</span>
+                <div className="font-bold text-sm">Good</div>
+                <div className="text-[10px] opacity-80">Few days</div>
+              </div>
+            </motion.button>
+            
+            <motion.button
+              onClick={() => handleRating('excellent')}
+              whileTap={{ scale: 0.95 }}
+              animate={lastRating === 'excellent' ? {
+                scale: [1, 1.15, 1],
+                rotate: [0, -5, 5, 0],
+                boxShadow: ['0 0 0 0 rgba(234, 179, 8, 0.7)', '0 0 0 20px rgba(234, 179, 8, 0)']
+              } : {}}
+              transition={{ duration: 0.6 }}
+              className="bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl py-3 px-3 shadow-lg transition-all relative overflow-hidden"
+            >
+              {lastRating === 'excellent' && (
+                <>
+                  {/* Star burst effect */}
+                  {[...Array(12)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-2 h-2 bg-yellow-300 rounded-full"
+                      style={{ left: '50%', top: '50%' }}
+                      initial={{ scale: 0, x: 0, y: 0 }}
+                      animate={{
+                        scale: [0, 1.5, 0],
+                        x: Math.cos((i / 12) * Math.PI * 2) * 50,
+                        y: Math.sin((i / 12) * Math.PI * 2) * 50
+                      }}
+                      transition={{ duration: 0.7, delay: i * 0.02 }}
+                    />
+                  ))}
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-br from-yellow-300/50 to-purple-300/50"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 0.6 }}
+                  />
+                </>
+              )}
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-xl">⭐</span>
+                <div className="font-bold text-sm">Excellent</div>
+                <div className="text-[10px] opacity-80">Mastered</div>
+              </div>
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Navigation */}
       <div className="flex items-center justify-between">

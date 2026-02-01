@@ -366,16 +366,7 @@ export default function DocumentViewer() {
       const lessonData = lessons[0];
       setLesson(lessonData);
       
-      // Check if lesson needs materials
-      // SKIP upload prompt if:
-      // - Coming from onboarding (fromOnboarding=true)
-      // - OR lesson already has materials (file_url, extracted_content, or compressed_content)
-      const fromOnboarding = urlParams.get('fromOnboarding') === 'true';
-      const hasMaterials = lessonData.file_url || lessonData.extracted_content || lessonData.compressed_content;
-      
-      if (!fromOnboarding && isPro && !hasMaterials) {
-        setShowUploadPrompt(true);
-      }
+      // Upload prompt removed - users can upload via doc tab if needed
       
       // Initialize study time from saved lesson data
       setStudyTime(lessonData.total_study_time_seconds || 0);
