@@ -76,9 +76,8 @@ export default function Home() {
               await base44.auth.updateMe({ onboarding_completed: true });
               
               // Navigate to DocumentViewer with study plan tab and report data
-              // Pass reportData as JSON string (will be URI encoded by navigate automatically)
               const reportDataStr = JSON.stringify(pendingData.reportData || {});
-              navigate(`${createPageUrl("DocumentViewer")}?id=${newLesson.id}&tab=study-plan&fromOnboarding=true&reportData=${encodeURIComponent(reportDataStr)}`, { replace: true });
+              navigate(`${createPageUrl("DocumentViewer")}?id=${newLesson.id}&tab=studyplan&fromOnboarding=true&reportData=${encodeURIComponent(reportDataStr)}`, { replace: true });
               return;
             } else {
               // User signed in during onboarding questions (before diagnostic) - stay on Home

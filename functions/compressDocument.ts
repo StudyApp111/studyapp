@@ -7,12 +7,13 @@ Deno.serve(async (req) => {
         const base44 = createClientFromRequest(req);
         console.log('✅ Base44 client created');
         
-        const user = await base44.auth.me();
-        console.log('✅ User authenticated:', user?.email);
-
-        if (!user) {
-            console.error('❌ Authentication failed - no user');
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        // Try to get user but don't require authentication (onboarding flow)
+        let user = null;
+        try {
+            user = await base44.auth.me();
+            console.log('✅ User authenticated:', user?.email);
+        } catch (authError) {
+            console.log('ℹ️ No user authentication - proceeding for onboarding flow');
         }
 
         const { content } = await req.json();
