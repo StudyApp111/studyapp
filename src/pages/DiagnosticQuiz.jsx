@@ -66,16 +66,17 @@ export default function DiagnosticQuiz() {
 
   const generateQuestions = async (school, courseCode, documentContent, curriculumData) => {
     try {
-      // ABUSE PROTECTION - Check if user can generate exam
+      // ABUSE PROTECTION - Check both IP and fingerprint limits
       const fingerprint = await generateFingerprint();
       const abuseCheck = await base44.functions.invoke('checkAbuseProtection', {
         action_type: 'diagnostic_exam',
         fingerprint,
-        honeypot_value: '' // No honeypot on this page, but pass empty
+        honeypot_value: '',
+        metadata: { source: 'onboarding', courseCode }
       });
 
       if (!abuseCheck.data?.allowed) {
-        setError(abuseCheck.data?.reason || 'Exam limit reached. Please sign in to continue.');
+        setError(abuseCheck.data?.reason || 'Daily diagnostic limit reached. Please sign in to continue.');
         setIsLoading(false);
         return;
       }

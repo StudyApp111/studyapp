@@ -143,7 +143,7 @@ Return ONLY a JSON array with this exact format:
   };
 
   const handleTypeSelect = async (type) => {
-    // PAYWALL CHECK - user must be pro to create/start tasks
+    // Check task limit
     const taskCheck = await canDoTask();
     if (!taskCheck.allowed) {
       triggerUpgradeModal('tasks');
