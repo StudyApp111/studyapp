@@ -137,13 +137,13 @@ Deno.serve(async (req) => {
     
     // Extract mastery_gap from AI feedback (or diagnosticData or use weakest competency)
     const masteryGap = exam?.ai_feedback?.mastery_gap || 
-                       (diagnosticData?.weak_areas_detailed?.[0]) ||
+                       (diagnosticData?.weak_areas_detailed?.[0]?.topic) ||
                        (weakestCompetencies[0]?.name) || 
                        'General Understanding';
     
     // Extract weak areas and strengths from AI feedback or diagnosticData
     const weakAreas = exam?.ai_feedback?.key_areas_for_improvement_list || 
-                      diagnosticData?.weak_areas_detailed || [];
+                      (diagnosticData?.weak_areas_detailed?.map(w => w.topic) || []);
     const strengths = exam?.ai_feedback?.identified_strengths_list || [];
 
     // Get content summary for context
@@ -151,8 +151,9 @@ Deno.serve(async (req) => {
       (lesson.extracted_content ? lesson.extracted_content.substring(0, 3000) : lesson.description) || 
       lesson.description || '';
 
-    // Generate intelligent study plan
-    const planPrompt = `You are an expert learning scientist designing a HIGHLY TARGETED, exam-focused study plan that will measurably improve the student’s grade from ${exam.predicted_grade} to an A+/90% .
+    // Generate intelligent study plan - use predictedGrade which is always set
+    const gradeForPrompt = predictedGrade || 'current level';
+    const planPrompt = `You are an expert learning scientist designing a HIGHLY TARGETED, exam-focused study plan that will measurably improve the student's grade from ${gradeForPrompt} to an A+/90%.
 
 Use ONLY the data below. Be specific, practical, and realistic.
 
