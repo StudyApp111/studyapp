@@ -194,8 +194,8 @@ Each must include:
 question_type, question_text, options, difficulty_index
 
 Then include an answer key with:
-correct_answer, explanation (2–3 sentences),
-assessed_competencies, targeted_misconception
+correct_answer, explanation (2 sentences MAX),
+assessed_competencies (2 MAX), targeted_misconception (2 MAX)
 
 Output Format
 Return ONE valid JSON object matching the required schema.
@@ -245,7 +245,7 @@ No extra text.`;
               },
               explanation: { 
                 type: "string",
-                description: "2-3 sentence explanation of the correct answer"
+                description: "2 sentence explanation of the correct answer"
               },
               assessed_competencies: { 
                 type: "array", 
@@ -269,8 +269,8 @@ No extra text.`;
         parts: [{ text: aiPrompt }]
       }],
       generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 16000,
+        temperature: 0.4,
+        maxOutputTokens: 20000,
         responseMimeType: "application/json",
         responseSchema: responseSchema
       }
@@ -278,7 +278,7 @@ No extra text.`;
 
     console.log('Calling Gemini with retry logic for exam generation...');
     const resp = await fetchWithRetry(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
