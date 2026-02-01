@@ -229,58 +229,12 @@ export default function CreateLessonModal({ open, onOpenChange }) {
         base44.functions.invoke('curriculumMapping', {
           courseName: courseName.trim(),
           learningProfile: learningProfile,
-          extractedContent: compressedForPrompts
+          extractedContent: compressedForPrompts,
+          lessonId: lesson.id
         })
-          .then(async ({ data: generatedMap }) => {
-            // Unwrap and normalize the response
-            let mapData = generatedMap;
-            if (!mapData?.core_competencies) {
-              const wrapperKeys = ['course_profile', 'curriculum_profile', 'profile', 'data', 'result'];
-              for (const key of wrapperKeys) {
-                const innerObj = mapData?.[key];
-                if (innerObj && typeof innerObj === 'object') {
-                  mapData = innerObj;
-                  break;
-                }
-              }
-            }
-            
-            const safeArray = (arr) => Array.isArray(arr) ? arr : [];
-            const curriculumMap = {
-              core_competencies: safeArray(mapData?.core_competencies).map(c => ({
-                name: String(c?.competency || c?.name || ""),
-                description: String(c?.description || "")
-              })),
-              competency_weightings: safeArray(mapData?.competency_weightings).map(w => ({
-                competency_name: String(w?.topic || w?.competency_name || ""),
-                weight_percentage: String(w?.weight_percentage || "0%")
-              })),
-              question_formats: safeArray(mapData?.assessment_formats || mapData?.question_formats).map(q => ({
-                type: String(q?.type || ""),
-                frequency: String(q?.frequency || ""),
-                examples: safeArray(q?.examples || [q?.example_question]).filter(Boolean).map(e => String(e || ""))
-              })),
-              high_yield_focal_points: safeArray(mapData?.high_yield_focal_points).map(p => 
-                typeof p === 'object' ? String(p?.concept || p?.name || p?.description || "") : String(p || "")
-              ),
-              common_misconceptions: safeArray(mapData?.common_misconceptions).map(m => String(m || ""))
-            };
-            
-            await Promise.all([
-              base44.entities.CurriculumMap.create({
-                course_name: courseName.trim(),
-                school: learningProfile.school || "",
-                grade: learningProfile.grade || "",
-                city: learningProfile.city || "",
-                source: "create_lesson",
-                curriculum_data: curriculumMap
-              }),
-              base44.entities.Lesson.update(lesson.id, {
-                curriculum_map: curriculumMap
-              })
-            ]);
-            
+          .then(() => {
             console.log("✅ Curriculum map saved");
+            window.dispatchEvent(new Event('reloadLesson'));
           })
           .catch(err => console.warn("⚠️ Background curriculum mapping:", err.message))
       ]);
