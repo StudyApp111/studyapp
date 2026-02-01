@@ -17,12 +17,24 @@ Deno.serve(async (req) => {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-flash-latest',
-      tools: [{
-        googleSearch: {}
-      }]
-    });
+    
+    // Conditional model configuration based on whether document content exists
+    const hasDocumentContent = documentContent && documentContent.trim().length > 0;
+    
+    const modelConfig = hasDocumentContent 
+      ? {
+          model: 'gemini-flash-latest'
+          // No tools - using JSON mode instead
+        }
+      : {
+          model: 'gemini-flash-latest',
+          tools: [{
+            googleSearch: {}
+          }]
+          // No responseMimeType - can't combine with google search
+        };
+    
+    const model = genAI.getGenerativeModel(modelConfig);
 
     const prompt = `You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${courseCode}. 
 This exam establishes an accurate learning baseline and must reflect how the course is ACTUALLY assessed.
@@ -127,13 +139,22 @@ No extra text.
 ────────────────────────────
 Generate 5 authentic ${courseCode} diagnostic questions now.`;
 
+    // Conditional generation config
+    const generationConfig = hasDocumentContent
+      ? {
+          temperature: 0.5,
+          maxOutputTokens: 16000,
+          responseMimeType: "application/json"
+        }
+      : {
+          temperature: 0.5,
+          maxOutputTokens: 16000
+          // No responseMimeType when using google search
+        };
+    
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.5,
-        maxOutputTokens: 16000,
-        responseMimeType: "application/json"
-      }
+      generationConfig
     });
 
     const response = result.response;
