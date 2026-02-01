@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -120,9 +121,11 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             status: 'active'
           });
           
-          // Trigger background study plan generation
+          // Set generating state and trigger study plan generation
+          window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
+          
           base44.functions.invoke('generateStudyPlan', {
-            lessonId: lesson.id,
+            lesson_id: lesson.id,
             diagnosticData: {
               predicted_grade: reportData.predicted_grade,
               predicted_percentage: reportData.predicted_percentage,
@@ -130,11 +133,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               weak_areas_detailed: reportData.weak_areas_detailed
             }
           }).then(result => {
+            window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
             if (result.data?.success) {
               loadStudyPlan();
-              window.history.replaceState({}, '', `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=study-plan`);
+              window.history.replaceState({}, '', `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=studyplan`);
             }
           }).catch(err => {
+            window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
             console.error("Error generating study plan:", err);
             loadStudyPlan();
           });

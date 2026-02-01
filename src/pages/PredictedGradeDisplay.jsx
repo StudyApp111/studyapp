@@ -112,6 +112,7 @@ export default function PredictedGradeDisplay() {
           status: 'diagnostic_completed'
         };
         
+        // Get file data from URL params (stored during onboarding)
         if (documentData?.fileUrl) {
           lessonData.file_url = documentData.fileUrl;
           lessonData.file_urls = [documentData.fileUrl];
@@ -123,6 +124,12 @@ export default function PredictedGradeDisplay() {
         if (documentData?.compressedContent) {
           lessonData.compressed_content = documentData.compressedContent;
         }
+
+        console.log('Creating lesson with data:', { 
+          hasFile: !!lessonData.file_url, 
+          hasExtracted: !!lessonData.extracted_content,
+          hasCompressed: !!lessonData.compressed_content 
+        });
         
         const newLesson = await base44.entities.Lesson.create(lessonData);
         
