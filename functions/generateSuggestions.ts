@@ -15,14 +15,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Course name required' }, { status: 400 });
     }
 
-    const prompt = `You are an expert educator. Generate exactly 4 high-quality study topics for this course by doing a quick google search.
+    const prompt = `You are a curriculum expert. Generate 4 concise, specific study topic suggestions for a student taking "${courseName}" ${grade ? `in grade ${grade}` : ''} ${school ? `at ${school}` : ''}.
 
-Course: ${courseName}
-${school ? `School context: ${school}` : ''}
-
-Return ONLY a JSON array with 4 specific, actionable study topics. Each topic should be 10-20 words describing a key concept or unit from this course.
-
-Output only the JSON array, no other text:
+REQUIREMENTS:
+- Each topic should be 100-200 characters
+- Be specific to likely course content (chapters, units, key concepts)
+- Focus on testable material
+- Use academic language appropriate for the level
+- Make them diverse (cover different course areas if possible)
 
 Return ONLY the 4 topics as a JSON array of strings. Example format:
 ["Topic 1 description", "Topic 2 description", "Topic 3 description", "Topic 4 description"]`;
