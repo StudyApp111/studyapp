@@ -221,15 +221,7 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       setIsGenerating(true);
 
       try {
-        // Check subscription before generating
-        const { canDoTask, triggerUpgradeModal } = await import('@/components/subscription/SubscriptionContext').then(m => m.useSubscription());
-        const taskCheck = await canDoTask();
-        if (!taskCheck.allowed) {
-          triggerUpgradeModal('tasks');
-          setIsGenerating(false);
-          practiceExamGeneratingRef.current = false;
-          return;
-        }
+        // Subscription check removed - handled in generatePracticeExam function
         
         const { data } = await base44.functions.invoke('generatePracticeExam', {
           lesson_id: lesson.id,

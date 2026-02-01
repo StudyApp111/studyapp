@@ -207,6 +207,7 @@ IMPORTANT:
 - For flashcards, set target_count between 10-20 (the number of cards to master)
 - For practice_exam, set target_count to 1 (one quiz to complete)
 - Create 3-5 total tasks maximum
+- NEVER use "Diagnostic Quiz" or "Diagnostic" in practice exam titles - use "Practice Quiz", "Quick Practice", "Focus Practice" or similar
 
 CRITICAL: Each task's "focus_topics" array must contain SPECIFIC concepts from the course material that relate to the weak competency. These will be used to generate targeted content.
 
