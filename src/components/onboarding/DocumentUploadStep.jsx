@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, Loader2, CheckCircle2, ArrowRight, FileText } from "lucide-react";
+import { Upload, Loader2, CheckCircle2, ArrowRight, FileText, AlertCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
+import { generateFingerprint } from "@/components/utils/browserFingerprint";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function DocumentUploadStep({ userName, courseName, onNext, onBack, onSkip }) {
   const [file, setFile] = useState(null);
@@ -12,6 +14,7 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
   const [uploadedFileUrl, setUploadedFileUrl] = useState("");
   const [extractedContent, setExtractedContent] = useState("");
   const [compressedContent, setCompressedContent] = useState("");
+  const [honeypot, setHoneypot] = useState(""); // Hidden field for bot detection
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0];
@@ -37,6 +40,20 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
     setError("");
 
     try {
+      // ABUSE PROTECTION CHECK
+      const fingerprint = await generateFingerprint();
+      const abuseCheck = await base44.functions.invoke('checkAbuseProtection', {
+        action_type: 'ocr_upload',
+        fingerprint,
+        honeypot_value: honeypot
+      });
+
+      if (!abuseCheck.data?.allowed) {
+        setError(abuseCheck.data?.reason || "Upload limit reached. Please sign in to continue.");
+        setUploading(false);
+        return;
+      }
+
       // Upload file
       const uploadResult = await base44.integrations.Core.UploadFile({ file });
       const fileUrl = uploadResult.file_url;
@@ -83,6 +100,18 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
 
   return (
     <div className="relative p-6 sm:p-8 space-y-6 bg-white rounded-2xl shadow-2xl overflow-hidden">
+      {/* HONEYPOT - Hidden field to catch bots */}
+      <input
+        type="text"
+        name="website"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
+
       {/* Animated Background Sparkles */}
       {[...Array(6)].map((_, i) => (
         <motion.div
@@ -151,9 +180,12 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         </label>
       </div>
 
-      {/* Error */}
+      {/* Error - More prominent for rate limit messages */}
       {error && (
-        <p className="text-red-600 text-sm text-center font-medium">{error}</p>
+        <Alert variant="destructive" className="bg-red-50 border-red-200">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Actions */}

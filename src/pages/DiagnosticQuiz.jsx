@@ -13,6 +13,7 @@ import DiagnosticLoader from '@/components/onboarding/DiagnosticLoader';
 import { motion, AnimatePresence } from 'framer-motion';
 import MathText from '@/components/math/MathText';
 import ConfettiEffect from '@/components/gamification/ConfettiEffect';
+import { generateFingerprint } from '@/components/utils/browserFingerprint';
 
 export default function DiagnosticQuiz() {
   const navigate = useNavigate();
@@ -65,6 +66,20 @@ export default function DiagnosticQuiz() {
 
   const generateQuestions = async (school, courseCode, documentContent, curriculumData) => {
     try {
+      // ABUSE PROTECTION - Check if user can generate exam
+      const fingerprint = await generateFingerprint();
+      const abuseCheck = await base44.functions.invoke('checkAbuseProtection', {
+        action_type: 'diagnostic_exam',
+        fingerprint,
+        honeypot_value: '' // No honeypot on this page, but pass empty
+      });
+
+      if (!abuseCheck.data?.allowed) {
+        setError(abuseCheck.data?.reason || 'Exam limit reached. Please sign in to continue.');
+        setIsLoading(false);
+        return;
+      }
+
       const result = await base44.functions.invoke('generateDiagnosticExam', {
         school,
         courseCode,
