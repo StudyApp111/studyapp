@@ -14,11 +14,13 @@ Deno.serve(async (req) => {
             console.log('No user authentication - proceeding for onboarding flow');
         }
 
-        const { courseName, learningProfile, extractedContent } = await req.json();
+        const { courseName, learningProfile, extractedContent, lessonId } = await req.json();
 
         if (!courseName) {
             return Response.json({ error: 'Course name is required' }, { status: 400 });
         }
+
+        console.log('Request params:', { courseName, lessonId, hasLearningProfile: !!learningProfile, hasExtractedContent: !!extractedContent });
 
         const apiKey = Deno.env.get("GEMINIAPIKEY");
         if (!apiKey) {
@@ -192,7 +194,6 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
         try {
             parsedResponse = JSON.parse(cleanedText);
             console.log('Successfully parsed curriculum map with Gemini');
-            return Response.json(parsedResponse);
         } catch (parseError) {
             console.error('First parse attempt failed:', parseError.message);
             
@@ -202,19 +203,40 @@ Your response must be valid, parseable JSON that exactly matches the schema abov
                 try {
                     parsedResponse = JSON.parse(jsonMatch[0]);
                     console.log('Successfully parsed curriculum map (extracted from text)');
-                    return Response.json(parsedResponse);
                 } catch (extractError) {
                     console.error('Extract parse failed:', extractError.message);
+                    console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
+                    return Response.json({ 
+                        error: 'Failed to parse AI response as JSON', 
+                        details: parseError.message,
+                        raw_text_preview: cleanedText.substring(0, 500)
+                    }, { status: 500 });
                 }
+            } else {
+                console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
+                return Response.json({ 
+                    error: 'Failed to parse AI response as JSON', 
+                    details: parseError.message,
+                    raw_text_preview: cleanedText.substring(0, 500)
+                }, { status: 500 });
             }
-            
-            console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
-            return Response.json({ 
-                error: 'Failed to parse AI response as JSON', 
-                details: parseError.message,
-                raw_text_preview: cleanedText.substring(0, 500)
-            }, { status: 500 });
         }
+
+        // If lessonId provided and user authenticated, save to lesson
+        if (lessonId && user) {
+            console.log('Saving curriculum map to lesson:', lessonId);
+            try {
+                await base44.entities.Lesson.update(lessonId, {
+                    curriculum_map: parsedResponse
+                });
+                console.log('✅ Curriculum map saved to Lesson entity');
+            } catch (saveError) {
+                console.error('Failed to save curriculum map to lesson:', saveError.message);
+                // Don't fail the request, just log the error
+            }
+        }
+
+        return Response.json(parsedResponse);
 
     } catch (error) {
         console.error('Error in curriculumMapping function:', error);
