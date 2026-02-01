@@ -57,7 +57,7 @@ export default function NotesTab({ lesson }) {
   };
 
   const generateNotes = async (currentSettings = settings) => {
-    // Check subscription limit for note generation
+    // Check task limit
     const taskCheck = await canDoTask();
     if (!taskCheck.allowed) {
       triggerUpgradeModal('tasks');
@@ -73,9 +73,6 @@ export default function NotesTab({ lesson }) {
         setIsLoading(false);
         return;
       }
-      
-      // Increment task count BEFORE generating (to prevent bypass)
-      await incrementTaskCount();
 
       const { data } = await base44.functions.invoke('generateLessonNotes', {
         lesson_content: content,
