@@ -235,11 +235,14 @@ export default function CreateLessonModal({ open, onOpenChange }) {
           lessonId: lesson.id
         })
           .then((result) => {
-            console.log("✅ Curriculum map saved:", result);
+            console.log("✅ Curriculum mapping completed successfully");
+            console.log("Result data:", result?.data);
             window.dispatchEvent(new Event('reloadLesson'));
           })
           .catch(err => {
-            console.error("⚠️ Background curriculum mapping error:", err);
+            console.error("❌ Curriculum mapping FAILED");
+            console.error("Error:", err);
+            console.error("Error response:", err.response?.data);
           })
       ]);
 
