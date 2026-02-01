@@ -215,12 +215,6 @@ export default function CreateLessonModal({ open, onOpenChange }) {
       // Fire-and-forget exam generation AND curriculum mapping in parallel - don't block navigation
       console.log("🎯 Starting Exam 1 auto-generation and curriculum mapping (background)...");
       
-      const learningProfile = {
-        grade: userGrade,
-        school: userSchool,
-        city: ""
-      };
-      
       // Start both in parallel
       Promise.all([
         base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
