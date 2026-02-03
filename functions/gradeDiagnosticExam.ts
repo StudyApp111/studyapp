@@ -105,7 +105,7 @@ Prediction Algorithm:
 2) Calculate: (total_weighted_correct / total_weighted_possible) × 100 = percentage.
 3) Map to grade: A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59).
 4) Confidence: (answered/total × 50) + 30. Range: [30,80]. Level: <50="Medium", ≥50="High".
-5) Users should never get 0% or 100%. Grade the work as if you were a teacher at their school. 
+5) EDGE CASES: If 0/5 correct→cap at 15% max (never 0%). If 5/5 correct→cap at 92% max (never 95%+, account for untested material).
 6) Round to the nearest whole number, no decimals. 
 
 Confidence Level: Given users are only given 5 questions and relevancy is dependant on type of course and if they uploaded material. We need to be careful with confidence. 
@@ -118,9 +118,10 @@ Competency Analysis (use curriculum map[${curriculumContext}]):
 - Reference high_yield_focal_points for weak areas
 
 Weak Areas Requirements:
-- Identify 3 specific topics from WRONG answers
-- Align with curriculum competencies if available
-- Calculate grade_impact based on assessment weights
+- If 0-2 correct: Identify fundamental competencies missing from wrong answers
+- If 3-4 correct: Identify specific topics from wrong answers
+- If 5/5 correct: Identify 3 high-yield untested topics from curriculum map
+- grade_impact: If score >90%→max 10% per weak area. If score <30%→20-25% per area.
 - Assign tool: Conceptual→"Teach It Cards", Application→"Practice Questions", Complex→"AI Tutor"
 
 Preview Question:
@@ -131,19 +132,19 @@ Preview Question:
 
 Grade Trajectory Rules (CRITICAL - MUST BE REALISTIC):
 Based on starting percentage, calculate realistic weekly improvements:
-- If 0-30% (F): +8-12% per week max (Week 1→D-, Week 2→D+, Week 3→C)
-- If 31-50% (F/D): +10-15% per week (Week 1→D, Week 2→C-, Week 3→C+)
-- If 51-70% (D/C): +8-12% per week (Week 1→C+, Week 2→B-, Week 3→B)
-- If 71-85% (C/B): +5-10% per week (Week 1→B, Week 2→B+, Week 3→A-)
-- If 86-95% (B/A): +3-5% per week (Week 1→A-, Week 2→A, Week 3→A+)
-- If 96-100% (A+): Already at peak, focus on maintenance
+- If 0-30%: +8-12%/week (Week3→C max)
+- If 31-50%: +10-15%/week (Week3→C+ max)
+- If 51-70%: +8-12%/week (Week3→B max)
+- If 71-85%: +5-10%/week (Week3→A- max)
+- If 86-95%: +3-5%/week (Week3→A+ max)
+- If 96-100%: Should not occur (capped at 92%). If happens, maintain A- (descriptions focus on untested topics).
 
 DO NOT promise A+ from F in 3 weeks. Be realistic based on ACTUAL starting grade.
 
 Personalized Message Rules:
 - Line 1: Use ACTUAL calculated percentage (not placeholder)
-- Line 2: Reference realistic target based on starting grade (if F→aim for C, not A+)
-- Line 3: Encouraging reframe appropriate to their situation
+- Line 2: If 0-30%→"reach C", 31-70%→"reach B", 71-92%→"reach A", 86-92%→"maintain mastery by studying untested topics"
+- Line 3: If low→"This is fixable", if high→"Stay sharp on untested material"
 
 
 
