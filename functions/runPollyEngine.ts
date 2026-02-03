@@ -32,7 +32,41 @@ Deno.serve(async (req) => {
     console.log(`🔮 [runPollyEngine] Trigger: ${trigger_event}, Lesson: ${lesson_id}`);
 
     // Check if user is on free tier - skip advanced Polly analysis
-    if (user.subscription_tier !== 'pro' || user.subscription_status !== 'active') {
+    // Must handle promo access properly
+    const isPro = () => {
+      if (user.subscription_tier !== 'pro') return false;
+      
+      const now = new Date();
+      
+      // Cancelled users immediately lose access unless in grace period
+      if (user.subscription_status === 'cancelled') {
+        if (user.subscription_end_date) {
+          const endDate = new Date(user.subscription_end_date);
+          if (endDate > now) return true;
+        }
+        return false;
+      }
+      
+      // Check active status
+      if (user.subscription_status !== 'active') return false;
+      
+      // Check promo expiry
+      if (user.promo_access_until) {
+        const promoExpiry = new Date(user.promo_access_until);
+        if (promoExpiry < now) return false;
+        return true;
+      }
+      
+      // Check subscription expiry
+      if (user.subscription_end_date) {
+        const subExpiry = new Date(user.subscription_end_date);
+        if (subExpiry < now) return false;
+      }
+      
+      return true;
+    };
+    
+    if (!isPro()) {
       console.log(`🔮 [runPollyEngine] User is on free tier, skipping advanced analysis`);
       return Response.json({
         success: false,
