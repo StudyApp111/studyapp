@@ -238,159 +238,40 @@ Critical Rules:
       generationConfig: {
         temperature: 0.2,
         maxOutputTokens: 16000,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "object",
-          properties: {
-            predicted_grade: { type: "string" },
-            predicted_percentage: { type: "number" },
-            confidence_level: { type: "string" },
-            strong_areas: { type: "array", items: { type: "string" } },
-            weak_areas_detailed: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  topic: { type: "string" },
-                  related_competency: { type: "string" },
-                  severity: { type: "string" },
-                  grade_impact: { type: "string" },
-                  assessment_context: { type: "string" },
-                  recommended_tool: { type: "string" },
-                  tool_reason: { type: "string" },
-                  specific_fix: { type: "string" }
-                }
-              }
-            },
-            preview_question: {
-              type: "object",
-              properties: {
-                topic: { type: "string" },
-                related_competency: { type: "string" },
-                assessment_format: { type: "string" },
-                question_text: { type: "string" },
-                question_type: { type: "string" },
-                correct_answer: { type: "string" },
-                why_this_matters: { type: "string" },
-                impact_statement: { type: "string" }
-              }
-            },
-            estimated_study_time_days: { type: "number" },
-            study_intensity: { type: "string" },
-            grade_trajectory: {
-              type: "object",
-              properties: {
-                current: { type: "string" },
-                week_1_target: { type: "string" },
-                week_1_percentage: { type: "number" },
-                week_1_description: { type: "string" },
-                week_2_target: { type: "string" },
-                week_2_percentage: { type: "number" },
-                week_2_description: { type: "string" },
-                week_3_target: { type: "string" },
-                week_3_percentage: { type: "number" },
-                week_3_description: { type: "string" },
-                final_target: { type: "string" }
-              }
-            },
-            personalized_message_line1: { type: "string" },
-            personalized_message_line2: { type: "string" },
-            personalized_message_line3: { type: "string" },
-            urgency_timeline: {
-              type: "object",
-              properties: {
-                start_today: { type: "string" },
-                wait_5_days: { type: "string" },
-                wait_10_days: { type: "string" }
-              }
-            },
-            top_priority_action: { type: "string" },
-            toolkit_social_proof: {
-              type: "object",
-              properties: {
-                teach_it_cards: {
-                  type: "object",
-                  properties: {
-                    testimonial: { type: "string" },
-                    testimonial_author: { type: "string" },
-                    stats: { type: "string" }
-                  }
-                },
-                practice_questions: {
-                  type: "object",
-                  properties: {
-                    testimonial: { type: "string" },
-                    testimonial_author: { type: "string" },
-                    stats: { type: "string" }
-                  }
-                },
-                ai_tutor: {
-                  type: "object",
-                  properties: {
-                    testimonial: { type: "string" },
-                    testimonial_author: { type: "string" },
-                    stats: { type: "string" }
-                  }
-                }
-              }
-            }
-          },
-          required: ["predicted_grade", "predicted_percentage", "confidence_level"]
-        }
+        responseMimeType: "application/json"
       }
     });
 
     const response = result.response;
     const text = response.text();
-    console.log("Raw Gemini response (first 1000 chars):", text.substring(0, 1000));
-    console.log("Response length:", text.length);
+    console.log("Raw Gemini response (first 500 chars):", text.substring(0, 500));
+    
+    // Clean up the response - remove markdown code blocks if present
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText.slice(7);
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.slice(3);
+    }
+    if (cleanedText.endsWith('```')) {
+      cleanedText = cleanedText.slice(0, -3);
+    }
+    cleanedText = cleanedText.trim();
     
     let parsed;
     try {
-      // Try parsing directly - responseSchema should handle formatting
-      parsed = JSON.parse(text);
+      parsed = JSON.parse(cleanedText);
       console.log("Successfully parsed JSON response");
       console.log("Predicted grade:", parsed.predicted_grade);
       console.log("Predicted percentage:", parsed.predicted_percentage);
     } catch (parseError) {
       console.error("Failed to parse AI response:", parseError.message);
-      console.error("Error position:", parseError.message.match(/position (\d+)/)?.[1]);
-      console.error("Full raw text length:", text.length);
-      console.error("Sample around error:", text.substring(Math.max(0, parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) - 100), parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) + 100));
-      
-      // Attempt to fix common JSON issues
-      let fixedText = text
-        .replace(/\n/g, ' ')  // Remove newlines within strings
-        .replace(/\r/g, '')   // Remove carriage returns
-        .replace(/\t/g, ' ')  // Replace tabs with spaces
-        .replace(/\\'/g, "'") // Fix escaped single quotes
-        .replace(/([^\\])"/g, '$1\\"') // Escape unescaped quotes
-        .replace(/^"/g, '\\"') // Escape quotes at start
-        .trim();
-      
-      // Try one more time with cleaned text
-      try {
-        // Use a more aggressive cleaning approach
-        // Extract JSON from text if it's malformed
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          const extractedJson = jsonMatch[0];
-          parsed = JSON.parse(extractedJson);
-          console.log("Successfully parsed JSON after extraction");
-        } else {
-          throw new Error("No JSON object found in response");
-        }
-      } catch (secondError) {
-        console.error("Second parse attempt failed:", secondError.message);
-        
-        // Last resort: return partial response
-        return Response.json({ 
-          error: 'Failed to parse grading response - JSON formatting error from AI',
-          details: `${parseError.message}. This is likely due to special characters in the AI response.`,
-          raw_response_preview: text.substring(0, 1000),
-          suggestion: 'Please try again. The AI occasionally generates malformed JSON.'
-        }, { status: 500 });
-      }
+      console.error("Raw text:", text.substring(0, 500));
+      return Response.json({ 
+        error: 'Failed to parse grading response', 
+        details: parseError.message,
+        raw_response: text.substring(0, 500)
+      }, { status: 500 });
     }
 
     console.log("=== gradeDiagnosticExam COMPLETED SUCCESSFULLY ===");
