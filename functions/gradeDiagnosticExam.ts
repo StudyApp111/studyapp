@@ -238,7 +238,105 @@ Critical Rules:
       generationConfig: {
         temperature: 0.2,
         maxOutputTokens: 16000,
-        responseMimeType: "application/json"
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "object",
+          properties: {
+            predicted_grade: { type: "string" },
+            predicted_percentage: { type: "number" },
+            confidence_level: { type: "string" },
+            strong_areas: { type: "array", items: { type: "string" } },
+            weak_areas_detailed: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  topic: { type: "string" },
+                  related_competency: { type: "string" },
+                  severity: { type: "string" },
+                  grade_impact: { type: "string" },
+                  assessment_context: { type: "string" },
+                  recommended_tool: { type: "string" },
+                  tool_reason: { type: "string" },
+                  specific_fix: { type: "string" }
+                }
+              }
+            },
+            preview_question: {
+              type: "object",
+              properties: {
+                topic: { type: "string" },
+                related_competency: { type: "string" },
+                assessment_format: { type: "string" },
+                question_text: { type: "string" },
+                question_type: { type: "string" },
+                correct_answer: { type: "string" },
+                why_this_matters: { type: "string" },
+                impact_statement: { type: "string" }
+              }
+            },
+            estimated_study_time_days: { type: "number" },
+            study_intensity: { type: "string" },
+            grade_trajectory: {
+              type: "object",
+              properties: {
+                current: { type: "string" },
+                week_1_target: { type: "string" },
+                week_1_percentage: { type: "number" },
+                week_1_description: { type: "string" },
+                week_2_target: { type: "string" },
+                week_2_percentage: { type: "number" },
+                week_2_description: { type: "string" },
+                week_3_target: { type: "string" },
+                week_3_percentage: { type: "number" },
+                week_3_description: { type: "string" },
+                final_target: { type: "string" }
+              }
+            },
+            personalized_message_line1: { type: "string" },
+            personalized_message_line2: { type: "string" },
+            personalized_message_line3: { type: "string" },
+            urgency_timeline: {
+              type: "object",
+              properties: {
+                start_today: { type: "string" },
+                wait_5_days: { type: "string" },
+                wait_10_days: { type: "string" }
+              }
+            },
+            top_priority_action: { type: "string" },
+            toolkit_social_proof: {
+              type: "object",
+              properties: {
+                teach_it_cards: {
+                  type: "object",
+                  properties: {
+                    testimonial: { type: "string" },
+                    testimonial_author: { type: "string" },
+                    stats: { type: "string" }
+                  }
+                },
+                practice_questions: {
+                  type: "object",
+                  properties: {
+                    testimonial: { type: "string" },
+                    testimonial_author: { type: "string" },
+                    stats: { type: "string" }
+                  }
+                },
+                ai_tutor: {
+                  type: "object",
+                  properties: {
+                    testimonial: { type: "string" },
+                    testimonial_author: { type: "string" },
+                    stats: { type: "string" }
+                  }
+                }
+              }
+            }
+          },
+          required: ["predicted_grade", "predicted_percentage", "confidence_level"]
+        }
       }
     });
 
