@@ -46,12 +46,6 @@ Deno.serve(async (req) => {
     const curriculumContext = curriculumData ? `
 CURRICULUM MAP DATA:
 ${JSON.stringify(curriculumData, null, 2)}
-
-Use this curriculum to:
-- Identify weak areas matching actual course competencies
-- Calculate grade impact based on competency weightings
-- Select preview questions matching assessment formats
-- Reference common misconceptions
 ` : '';
 
     const genAI = new GoogleGenerativeAI(apiKey);
