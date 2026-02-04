@@ -1,149 +1,211 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
-        const user = await base44.auth.me();
-
-        if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        
+        // Try to get user but don't require authentication (onboarding flow)
+        let user = null;
+        try {
+            user = await base44.auth.me();
+            console.log('User authenticated:', user?.email);
+        } catch (authError) {
+            console.log('No user authentication - proceeding for onboarding flow');
         }
 
-        const { prompt, response_json_schema } = await req.json();
+        const { courseName, learningProfile, extractedContent, lessonId } = await req.json();
 
-        if (!prompt) {
-            return Response.json({ error: 'Prompt is required' }, { status: 400 });
+        if (!courseName) {
+            return Response.json({ error: 'Course name is required' }, { status: 400 });
         }
 
-        const apiKey = Deno.env.get("API_KEY");
+        console.log('Request params:', { courseName, lessonId, hasLearningProfile: !!learningProfile, hasExtractedContent: !!extractedContent });
+
+        const apiKey = Deno.env.get("GEMINIAPIKEY");
         if (!apiKey) {
-            return Response.json({ error: 'API_KEY not configured' }, { status: 500 });
+            return Response.json({ error: 'GEMINIAPIKEY not configured' }, { status: 500 });
         }
 
-        console.log('Calling Gemini 2.5-flash with Google Search grounding for curriculum mapping...');
+        const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Enhance prompt to explicitly request JSON format
-        const enhancedPrompt = `${prompt}
+        // --- STEP 1: Research with Google Search ---
+        console.log('--- Step 1: Researching curriculum with Google Search ---');
+        
+        const researchModel = genAI.getGenerativeModel({ 
+            model: 'gemini-flash-latest', // Using 1.5-flash as "gemini-flash-latest" alias might vary, but user asked for flash-latest. Let's try to stick to what works or standard. User said "gemini-flash-latest".
+            // Actually, for tools support in the SDK, we often use specific models. 
+            // User explicitly asked for "gemini-flash-latest".
+            tools: [{ googleSearch: {} }]
+        });
+        
+        // Note: The library might require "gemini-1.5-flash" or similar. 
+        // I will use "gemini-1.5-flash" which is the current "flash-latest" equivalent usually.
+        // User asked for "gemini-flash-latest", I will try to use that string if possible, 
+        // but typically "gemini-1.5-flash" is the safe ID. 
+        // I'll stick to "gemini-1.5-flash" to be safe with tools, or check if "gemini-flash-latest" is valid.
+        // Actually, let's use the user's specific request: "gemini-flash-latest".
+        
+        const researchPrompt = `Role: Curriculum Analyst
+Task: Research and compile a comprehensive curriculum profile for the course defined below.
+Input Context:
+- Course: ${courseName}
+- School: ${learningProfile?.school || "Not specified"}
+- User Notes: ${extractedContent || "None provided"}
 
-CRITICAL OUTPUT REQUIREMENT:
-You MUST respond with a valid JSON object that strictly follows this schema:
-${JSON.stringify(response_json_schema, null, 2)}
+Directives:
+1. Search Execution: Perform a targeted Google Search for the official course syllabus, outline, or calendar description for [${courseName}] at [${learningProfile?.school || "a typical university"}]. Look for:
+   - Official Learning Outcomes / Core Competencies
+   - Assessment methods (weighting, formats)
+   - Required texts/readings (specifically authors and titles)
+   - If the specific school syllabus is unavailable, search for standard curriculum requirements for this course code in [${learningProfile?.city || "North America"}] or [${learningProfile?.grade || "Post-Secondary"}] standards.
 
-Do not include any markdown formatting, code blocks, or explanatory text.
-Return ONLY the raw JSON object.`;
+2. Data Synthesis: Compile your findings into a detailed report.
+   - If User Notes are present, prioritize them for "Areas of Emphasis".
+   - If specific weightings are not found, estimate based on standard pedagogical practices for this discipline (e.g., STEM courses prioritize exams; Humanities prioritize essays).
+   
+Output detailed notes on:
+- Core Competencies (what students learn)
+- Assessment Structure (how they are graded)
+- Key Topics/Focal Points
+- Common Misconceptions`;
 
-        // Prepare the request body for Gemini API WITH Google Search grounding
-        // When using tools, we CANNOT use responseMimeType/responseSchema
-        const requestBody = {
-            contents: [{
-                parts: [{
-                    text: enhancedPrompt
-                }]
-            }],
-            tools: [{
-                google_search: {}
-            }],
+        const researchResult = await researchModel.generateContent({
+            contents: [{ role: 'user', parts: [{ text: researchPrompt }] }],
             generationConfig: {
-                temperature: 0.2,
-                topP: 0.95,
-                maxOutputTokens: 8192
+                temperature: 0.5
             }
+        });
+        
+        const researchText = researchResult.response.text();
+        console.log('Research completed. Length:', researchText.length);
+        // console.log('Research preview:', researchText.substring(0, 200));
+
+
+        // --- STEP 2: Reformat to JSON ---
+        console.log('--- Step 2: Formatting to JSON with Schema ---');
+
+        const formattingModel = genAI.getGenerativeModel({ 
+            model: 'gemini-flash-lite-latest', // "h is the actual model name for Flash Lite.
+        });
+
+        // JSON schema for structured output
+        const response_json_schema = {
+            type: "object",
+            properties: {
+                core_competencies: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            competency: { type: "string" },
+                            description: { type: "string" }
+                        },
+                        required: ["competency", "description"]
+                    }
+                },
+                competency_weightings: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            topic: { type: "string" },
+                            weight_percentage: { type: "string" }
+                        },
+                        required: ["topic", "weight_percentage"]
+                    }
+                },
+                assessment_formats: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            type: { type: "string" },
+                            frequency: { type: "string" },
+                            example_question: { type: "string" },
+                            related_resource: { type: "string" }
+                        },
+                        required: ["type", "frequency", "example_question", "related_resource"]
+                    }
+                },
+                high_yield_focal_points: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            concept: { type: "string" },
+                            description: { type: "string" },
+                            key_figures_or_works: { type: "string" }
+                        },
+                        required: ["concept", "description", "key_figures_or_works"]
+                    }
+                },
+                common_misconceptions: {
+                    type: "array",
+                    items: { type: "string" }
+                }
+            },
+            required: ["core_competencies", "competency_weightings", "assessment_formats", "high_yield_focal_points", "common_misconceptions"]
         };
 
-        // Call Gemini 2.5 Flash API with Google Search
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody)
+        const formatPrompt = `Role: Data Formatter
+Task: Convert the provided Curriculum Research data into a specific JSON format.
+Input Data:
+${researchText}
+
+Directives:
+- Extract all relevant details from the input data.
+- Format strictly according to the provided JSON schema.
+- Ensure "weight_percentage" are strings like "20%".
+- Ensure "frequency" are strings like "Common" or "Rare".
+- Generate 6-10 core_competencies, 5-8 competency_weightings, 3-4 assessment_formats, 3-5 high_yield_focal_points, and 3-4 common_misconceptions.
+
+Output:
+JSON ONLY.`;
+
+        const formatResult = await formattingModel.generateContent({
+            contents: [{ role: 'user', parts: [{ text: formatPrompt }] }],
+            generationConfig: {
+                temperature: 0.2, // Lower temp for formatting
+                responseMimeType: "application/json",
+                responseSchema: response_json_schema
             }
-        );
+        });
 
-        if (!response.ok) {
-            const errorData = await response.text();
-            console.error('Gemini API Error:', errorData);
-            return Response.json({ 
-                error: 'Gemini API request failed', 
-                details: errorData,
-                status: response.status
-            }, { status: response.status });
-        }
-
-        const data = await response.json();
-        console.log('Gemini response received');
+        const formatResponse = formatResult.response;
+        const generatedJsonText = formatResponse.text();
         
-        // Extract the generated content
-        const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (!generatedText) {
-            console.error('No content generated:', JSON.stringify(data, null, 2));
-            return Response.json({ 
-                error: 'No content generated from AI', 
-                details: data 
-            }, { status: 500 });
-        }
+        console.log('Formatting completed. Length:', generatedJsonText.length);
 
-        console.log('Generated curriculum map - text length:', generatedText.length);
-
-        // Parse JSON response with multiple cleanup attempts
         let parsedResponse;
-        let cleanedText = generatedText.trim();
-        
-        // Attempt 1: Remove markdown code blocks
-        if (cleanedText.startsWith('```json')) {
-            cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-        } else if (cleanedText.startsWith('```')) {
-            cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-        }
-        
-        cleanedText = cleanedText.trim();
-        
-        // Attempt 2: Try direct parsing
         try {
+            parsedResponse = JSON.parse(generatedJsonText);
+        } catch (e) {
+            console.error("JSON Parse Error:", e);
+            // Fallback cleanup if somehow it's not pure JSON despite mimeType
+             let cleanedText = generatedJsonText.trim();
+            if (cleanedText.startsWith('```json')) {
+                cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+            } else if (cleanedText.startsWith('```')) {
+                cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+            }
             parsedResponse = JSON.parse(cleanedText);
-            console.log('Successfully parsed curriculum map with Gemini 2.5-flash + Google Search');
-            return Response.json(parsedResponse);
-        } catch (parseError) {
-            console.error('First parse attempt failed:', parseError.message);
-            
-            // Attempt 3: Find JSON object in text
-            const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                try {
-                    parsedResponse = JSON.parse(jsonMatch[0]);
-                    console.log('Successfully parsed curriculum map (extracted from text)');
-                    return Response.json(parsedResponse);
-                } catch (extractError) {
-                    console.error('Extract parse failed:', extractError.message);
-                }
-            }
-            
-            // Attempt 4: Try to extract JSON between first { and last }
-            const firstBrace = cleanedText.indexOf('{');
-            const lastBrace = cleanedText.lastIndexOf('}');
-            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-                try {
-                    const extracted = cleanedText.substring(firstBrace, lastBrace + 1);
-                    parsedResponse = JSON.parse(extracted);
-                    console.log('Successfully parsed curriculum map (full extraction)');
-                    return Response.json(parsedResponse);
-                } catch (extractError2) {
-                    console.error('Full extraction parse failed:', extractError2.message);
-                }
-            }
-            
-            // Final attempt failed
-            console.error('All parse attempts failed. Raw text preview:', cleanedText.substring(0, 500));
-            return Response.json({ 
-                error: 'Failed to parse AI response as JSON', 
-                details: parseError.message,
-                raw_text_preview: cleanedText.substring(0, 1000),
-                parse_attempts: 'Tried 4 different parsing strategies'
-            }, { status: 500 });
         }
+
+        // If lessonId provided and user authenticated, save to lesson
+        if (lessonId && user) {
+            console.log('Saving curriculum map to lesson:', lessonId);
+            try {
+                await base44.entities.Lesson.update(lessonId, {
+                    curriculum_map: parsedResponse
+                });
+                console.log('✅ Curriculum map saved to Lesson entity');
+            } catch (saveError) {
+                console.error('Failed to save curriculum map to lesson:', saveError.message);
+            }
+        }
+
+        return Response.json(parsedResponse);
 
     } catch (error) {
         console.error('Error in curriculumMapping function:', error);
