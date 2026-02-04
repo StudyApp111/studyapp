@@ -30,44 +30,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'API key not configured' }, { status: 500 });
     }
 
-    // Calculate correct/total for context
     const totalQuestions = questions.length;
-    let correctCount = 0;
-
     console.log(`Total questions: ${totalQuestions}`);
 
-    // Build grading context with proper answer comparison
+    // Build raw context for AI to grade
     const questionContext = questions.map((q, idx) => {
       const userAnswer = userAnswers.find(a => a.question_index === idx);
-      const userAnswerText = userAnswer?.answer || 'Not answered';
-      const correctAnswerText = q.correct_answer?.trim().toUpperCase() || '';
-
-      // For MCQ, compare letters (A, B, C, D)
-      let isCorrect = false;
-      if (userAnswerText && correctAnswerText) {
-        if (q.question_type?.toLowerCase().includes('multiple') || q.options?.length > 0) {
-          // MCQ - compare just letters
-          const userLetter = userAnswerText.trim().toUpperCase();
-          isCorrect = userLetter === correctAnswerText;
-        } else {
-          // Other types - direct comparison
-          isCorrect = userAnswerText.trim().toLowerCase() === correctAnswerText.toLowerCase();
-        }
-      }
-
-      if (isCorrect) correctCount++;
-
       return `Q${idx + 1}: ${q.question_text}
-    Correct: ${correctAnswerText}
-    User: ${userAnswerText}
-    Result: ${isCorrect ? '✓' : '✗'}
+    Question Type: ${q.question_type || 'unknown'}
+    Correct Answer: ${q.correct_answer}
+    User Answer: ${userAnswer?.answer || 'Not answered'}
     Competencies: ${(q.assessed_competencies || []).join(', ')}`;
     }).join('\n\n');
-
-    console.log(`Correct answers: ${correctCount}/${totalQuestions}`);
-
-    const actualPercentage = Math.round((correctCount / totalQuestions) * 100);
-    console.log(`Calculated percentage: ${actualPercentage}%`);
 
     const curriculumContext = curriculumData ? `
 CURRICULUM MAP DATA:
@@ -209,23 +183,24 @@ Use this curriculum to:
 STUDENT INFORMATION:
 - Name: ${studentName || 'Student'}
 - Course: ${courseCode} at ${school}
-- Actual Score: ${correctCount} out of ${totalQuestions} questions correct
-- Actual Percentage: ${actualPercentage}%
 
 ${curriculumContext}
 
-ACTUAL STUDENT RESPONSES (ANALYZE THESE EXACTLY):
+STUDENT RESPONSES (Grade these first):
 ${questionContext}
 
-YOUR TASK: Analyze the ACTUAL performance data above and return ONLY valid JSON matching the provided schema.
+YOUR TASK:
+1. First, GRADE the student's responses above against the Correct Answers provided. Count the number of correct answers.
+2. Calculate the raw percentage (Correct / Total * 100).
+3. Then, using that calculated performance, analyze the data and return ONLY valid JSON matching the provided schema.
 
 Prediction Algorithm:
-1) Per-item scoring: base=1.0(correct) or 0.0(wrong). Apply difficulty: Easy×1.0, Moderate×1.2, Challenging×1.5.
-2) Calculate: (total_weighted_correct / total_weighted_possible) × 100 = percentage.
+1) Calculate Score: Compare User Answer to Correct Answer.
+2) Calculate Percentage: (Correct / Total) * 100.
 3) Map to grade: A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59).
 4) Confidence: (answered/total × 50) + 30. Range: [30,80]. Level: <50="Medium", ≥50="High".
-5) EDGE CASES: If 0/5 correct→cap at 15% max (never 0%). If 5/5 correct→cap at 92% max (never 95%+, account for untested material).
-6) Round to the nearest whole number, no decimals. 
+5) EDGE CASES: If 0 correct→cap at 15% max (never 0%). If all correct→cap at 92% max (never 95%+, account for untested material).
+6) Round to the nearest whole number, no decimals.
 
 Confidence Level: Given users are only given 5 questions and relevancy is dependant on type of course and if they uploaded material. We need to be careful with confidence. 
 Confidence should be outputted as a percentage between 20-65%. Put yourself in the shoes of a teacher for ${courseCode} at ${school}. 
@@ -266,7 +241,7 @@ Personalized Message Rules:
 - Line 3: If low→"This is fixable", if high→"Stay sharp on untested material"
 
 Critical Rules:
-- Use ACTUAL score for percentage (don't default to 80%)
+- Use calculated score for percentage (don't default to 80%)
 - Grade trajectory MUST be realistic based on starting grade
 - Week-to-week improvements follow the ranges above
 - If starting F (0-59%), target C or B max (not A+)
