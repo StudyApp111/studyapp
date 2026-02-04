@@ -342,34 +342,55 @@ Critical Rules:
 
     const response = result.response;
     const text = response.text();
-    console.log("Raw Gemini response (first 500 chars):", text.substring(0, 500));
-    
-    // Clean up the response - remove markdown code blocks if present
-    let cleanedText = text.trim();
-    if (cleanedText.startsWith('```json')) {
-      cleanedText = cleanedText.slice(7);
-    } else if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.slice(3);
-    }
-    if (cleanedText.endsWith('```')) {
-      cleanedText = cleanedText.slice(0, -3);
-    }
-    cleanedText = cleanedText.trim();
+    console.log("Raw Gemini response (first 1000 chars):", text.substring(0, 1000));
+    console.log("Response length:", text.length);
     
     let parsed;
     try {
-      parsed = JSON.parse(cleanedText);
+      // Try parsing directly - responseSchema should handle formatting
+      parsed = JSON.parse(text);
       console.log("Successfully parsed JSON response");
       console.log("Predicted grade:", parsed.predicted_grade);
       console.log("Predicted percentage:", parsed.predicted_percentage);
     } catch (parseError) {
       console.error("Failed to parse AI response:", parseError.message);
-      console.error("Raw text:", text.substring(0, 500));
-      return Response.json({ 
-        error: 'Failed to parse grading response', 
-        details: parseError.message,
-        raw_response: text.substring(0, 500)
-      }, { status: 500 });
+      console.error("Error position:", parseError.message.match(/position (\d+)/)?.[1]);
+      console.error("Full raw text length:", text.length);
+      console.error("Sample around error:", text.substring(Math.max(0, parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) - 100), parseInt(parseError.message.match(/position (\d+)/)?.[1] || 0) + 100));
+      
+      // Attempt to fix common JSON issues
+      let fixedText = text
+        .replace(/\n/g, ' ')  // Remove newlines within strings
+        .replace(/\r/g, '')   // Remove carriage returns
+        .replace(/\t/g, ' ')  // Replace tabs with spaces
+        .replace(/\\'/g, "'") // Fix escaped single quotes
+        .replace(/([^\\])"/g, '$1\\"') // Escape unescaped quotes
+        .replace(/^"/g, '\\"') // Escape quotes at start
+        .trim();
+      
+      // Try one more time with cleaned text
+      try {
+        // Use a more aggressive cleaning approach
+        // Extract JSON from text if it's malformed
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const extractedJson = jsonMatch[0];
+          parsed = JSON.parse(extractedJson);
+          console.log("Successfully parsed JSON after extraction");
+        } else {
+          throw new Error("No JSON object found in response");
+        }
+      } catch (secondError) {
+        console.error("Second parse attempt failed:", secondError.message);
+        
+        // Last resort: return partial response
+        return Response.json({ 
+          error: 'Failed to parse grading response - JSON formatting error from AI',
+          details: `${parseError.message}. This is likely due to special characters in the AI response.`,
+          raw_response_preview: text.substring(0, 1000),
+          suggestion: 'Please try again. The AI occasionally generates malformed JSON.'
+        }, { status: 500 });
+      }
     }
 
     console.log("=== gradeDiagnosticExam COMPLETED SUCCESSFULLY ===");
