@@ -189,7 +189,8 @@ PHASE 1: PROBABILITY-BASED SCORING ALGORITHM
 1. Initialize Per-Question Score: For each question in the diagnostic: Base Score: IF Correct: 0.90 (High mastery probability). IF Incorrect: 0.20 (Low mastery, but acknowledges exposure).
 2. Adjust for Difficulty (The Rigor Factor): Modify the Base Score using the question's difficulty level: IF CORRECT: "High Challenge": Score × 1.05 (Max 0.98). "Challenging": Score × 1.02. "Moderate": Score × 1.01. IF INCORRECT: "High Challenge": Score × 0.90 (Min 0.18). "Challenging": Score × 0.80. "Moderate": Score × 0.70 (Min 0.14 - Severe penalty for missing basics).
 3. Weighted Competency Calculation: Group questions by their Competency (from Curriculum). Calculate the Average Adjusted Score for each competency. Final Prediction Formula: Predicted % = Sum(Competency Score × Competency Weight) × 100
-4. Confidence Calculation (20-65%): Base: 20%.
+4. Round predicted grade to the nearest percent. No decimals. 
+5. Confidence Calculation (20-65%): Base: 20%.
   - Coverage: (+1% per 10% of curriculum weighted coverage).
   - Consistency: (+10% if scores across competencies are standard deviation < 0.15).
   - Niche Penalty: (-5% if questions are all from the same narrow topic). Cap: Strictly max 65%.
