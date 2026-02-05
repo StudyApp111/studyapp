@@ -250,7 +250,7 @@ PHASE 8: CRITICAL VALIDATION RULES
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.2,
+        temperature: 0.5,
         maxOutputTokens: 16000,
         responseMimeType: "application/json",
         responseSchema: responseSchema
