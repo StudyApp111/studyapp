@@ -160,23 +160,33 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
     const response = result.response;
     const text = response.text();
     
-    // Clean up the response - remove markdown code blocks if present
+    // Extract JSON from response (handles preamble text and markdown blocks)
     let cleanedText = text.trim();
-    if (cleanedText.startsWith('```json')) {
-      cleanedText = cleanedText.slice(7);
-    } else if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.slice(3);
+    
+    // Find JSON object boundaries
+    const jsonStart = cleanedText.indexOf('{');
+    const jsonEnd = cleanedText.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
+    } else {
+      // Fallback: try to remove markdown code blocks
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.slice(7);
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.slice(3);
+      }
+      if (cleanedText.endsWith('```')) {
+        cleanedText = cleanedText.slice(0, -3);
+      }
+      cleanedText = cleanedText.trim();
     }
-    if (cleanedText.endsWith('```')) {
-      cleanedText = cleanedText.slice(0, -3);
-    }
-    cleanedText = cleanedText.trim();
     
     let parsed;
     try {
       parsed = JSON.parse(cleanedText);
     } catch (parseError) {
-      console.error("Failed to parse AI response:", text);
+      console.error("Failed to parse AI response:", text.substring(0, 500));
       return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
     }
 
