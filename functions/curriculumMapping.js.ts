@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
         // Actually, let's use the user's specific request: "gemini-flash-latest".
         
         const researchPrompt = `Role: Curriculum Analyst
-Task: Research and compile a comprehensive curriculum profile for the course defined below.
+Task: Research and compile a comprehensive curriculum profile for the course defined below. The max length for the curriculum is 2000 characters. 
 Input Context:
 - Course: ${courseName}
 - School: ${learningProfile?.school || "Not specified"}
@@ -65,7 +65,7 @@ Directives:
    - If specific weightings are not found, estimate based on similar courses at local universities around ${learningProfile?.school || "Not specified"}.
    
 
-Output detailed notes on:
+Output a curriculum (max 2000 characters) that includes:
 - Core Competencies (what students learn)
 - Assessment Structure (how they are graded)
 - Key Topics/Focal Points
