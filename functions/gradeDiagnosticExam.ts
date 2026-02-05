@@ -38,7 +38,6 @@ Deno.serve(async (req) => {
       const userAnswer = userAnswers.find(a => a.question_index === idx);
       return `Q${idx + 1}: ${q.question_text}
     Question Type: ${q.question_type || 'unknown'}
-    Options: ${(q.options || []).join(', ')}
     Correct Answer: ${q.correct_answer}
     User Answer: ${userAnswer?.answer || 'Not answered'}
     Competencies: ${(q.assessed_competencies || []).join(', ')}`;
@@ -184,42 +183,43 @@ ${curriculumContext}
 STUDENT RESPONSES (Grade these first):
 ${questionContext}
 
-YOUR TASK:
-1. First, GRADE the student's responses above against the Correct Answers provided. Count the number of correct answers.
-2. Calculate the raw percentage (Correct / Total * 100).
-3. Then, using that calculated performance, analyze the data and return ONLY valid JSON matching the provided schema.
+YOUR OVERALL TASK: Analyze the student's diagnostic performance by following the phases below. Ensure all outputs strictly adhere to the provided JSON schema.
 
-Prediction Algorithm:
-1) Calculate Score: Compare User Answer to Correct Answer.
-2) Calculate Percentage: (Correct / Total) * 100.
-3) Map to grade: A+(97-100), A(93-96), A-(90-92), B+(87-89), B(83-86), B-(80-82), C+(77-79), C(73-76), C-(70-72), D+(67-69), D(63-66), D-(60-62), F(0-59).
-4) Confidence: (answered/total × 50) + 30. Range: [30,80]. Level: <50="Medium", ≥50="High".
-5) EDGE CASES: If 0 correct→cap at 15% max (never 0%). If all correct→cap at 92% max (never 95%+, account for untested material).
-6) Round to the nearest whole number, no decimals.
+PHASE 1: PROBABILITY-BASED SCORING ALGORITHM
+1. Initialize Per-Question Score: For each question in the diagnostic: Base Score: IF Correct: 0.90 (High mastery probability). IF Incorrect: 0.20 (Low mastery, but acknowledges exposure).
+2. Adjust for Difficulty (The Rigor Factor): Modify the Base Score using the question's difficulty level: IF CORRECT: "High Challenge": Score × 1.05 (Max 0.98). "Challenging": Score × 1.02. "Moderate": Score × 1.01. IF INCORRECT: "High Challenge": Score × 0.90 (Min 0.18). "Challenging": Score × 0.80. "Moderate": Score × 0.70 (Min 0.14 - Severe penalty for missing basics).
+3. Weighted Competency Calculation: Group questions by their Competency (from Curriculum). Calculate the Average Adjusted Score for each competency. Final Prediction Formula: Predicted % = Sum(Competency Score × Competency Weight) × 100
+4. Confidence Calculation (20-65%): Base: 20%.
+  - Coverage: (+1% per 10% of curriculum weighted coverage).
+  - Consistency: (+10% if scores across competencies are standard deviation < 0.15).
+  - Niche Penalty: (-5% if questions are all from the same narrow topic). Cap: Strictly max 65%.
 
-Confidence Level: Given users are only given 5 questions and relevancy is dependant on type of course and if they uploaded material. We need to be careful with confidence. 
-Confidence should be outputted as a percentage between 20-65%. Put yourself in the shoes of a teacher for ${courseCode} at ${school}. 
+PHASE 2: TRAJECTORY & SEVERITY MAPPING
+Trajectory: Score < 40%: "Rescue Mission" (+5-8%/week). 
+Score 40-70%: "Reconstruction" (+8-12%/week). 
+Score > 70%: "Optimization" (+3-5%/week).
+Weakness Severity: Critical: Failed a "High Weight" competency. High: Failed a "Moderate Weight" competency. Medium: Missed "High Challenge" questions only.
 
-Competency Analysis (use curriculum map[${curriculumContext}]):
+PHASE 3: COMPETENCY ANALYSIS
 - Map wrong answers to curriculum competencies
 - Weight by assessment_weightings (e.g., "Final Paper - 40%" = higher impact)
 - Match preview question to assessment_formats style
 - Reference high_yield_focal_points for weak areas
 
-Weak Areas Requirements:
+PHASE 4: WEAK AREAS REQUIREMENTS
 - If 0-2 correct: Identify fundamental competencies missing from wrong answers
 - If 3-4 correct: Identify specific topics from wrong answers
 - If 5/5 correct: Identify 3 high-yield untested topics from curriculum map
 - grade_impact: If score >90%→max 10% per weak area. If score <30%→20-25% per area.
 - Assign tool: Conceptual→"Teach It Cards", Application→"Practice Questions", Complex→"AI Tutor"
 
-Preview Question:
+PHASE 5: PREVIEW QUESTION GENERATION
 - Test the #1 weak area (highest impact)
 - Match course assessment format if curriculum available
 - Different question than diagnostic
 - Include complete model answer
 
-Grade Trajectory Rules (CRITICAL - MUST BE REALISTIC):
+PHASE 6: GRADE TRAJECTORY RULES & CONSTRAINTS (CRITICAL - MUST BE REALISTIC)
 Based on starting percentage, calculate realistic weekly improvements:
 - If 0-30%: +8-12%/week (Week3→C max)
 - If 31-50%: +10-15%/week (Week3→C+ max)
@@ -227,15 +227,14 @@ Based on starting percentage, calculate realistic weekly improvements:
 - If 71-85%: +5-10%/week (Week3→A- max)
 - If 86-95%: +3-5%/week (Week3→A+ max)
 - If 96-100%: Should not occur (capped at 92%). If happens, maintain A- (descriptions focus on untested topics).
-
 DO NOT promise A+ from F in 3 weeks. Be realistic based on ACTUAL starting grade.
 
-Personalized Message Rules:
+PHASE 7: PERSONALIZED MESSAGE RULES
 - Line 1: Use ACTUAL calculated percentage (not placeholder)
 - Line 2: If 0-30%→"reach C", 31-70%→"reach B", 71-92%→"reach A", 86-92%→"maintain mastery by studying untested topics"
 - Line 3: If low→"This is fixable", if high→"Stay sharp on untested material"
 
-Critical Rules:
+PHASE 8: CRITICAL VALIDATION RULES
 - Use calculated score for percentage (don't default to 80%)
 - Grade trajectory MUST be realistic based on starting grade
 - Week-to-week improvements follow the ranges above
@@ -245,7 +244,7 @@ Critical Rules:
 - Personalized message line 2 must reference realistic target
 - Severity levels: "critical" (for F/D students), "high", "medium", "low"
 - Weak areas must match WRONG answers
-- Use curriculum competencies if available`;
+- You MUST use curriculum competencies `;
 
     console.log("Sending request to Gemini...");
     const result = await model.generateContent({
