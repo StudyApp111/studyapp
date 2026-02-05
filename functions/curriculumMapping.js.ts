@@ -62,8 +62,9 @@ Directives:
 
 2. Data Synthesis: Compile your findings into a detailed report.
    - If User Notes are present, prioritize them for "Areas of Emphasis".
-   - If specific weightings are not found, estimate based on standard pedagogical practices for this discipline (e.g., STEM courses prioritize exams; Humanities prioritize essays).
+   - If specific weightings are not found, estimate based on similar courses at local universities around ${learningProfile?.school || "Not specified"}.
    
+
 Output detailed notes on:
 - Core Competencies (what students learn)
 - Assessment Structure (how they are graded)
@@ -158,7 +159,6 @@ Directives:
 - Format strictly according to the provided JSON schema.
 - Ensure "weight_percentage" are strings like "20%".
 - Ensure "frequency" are strings like "Common" or "Rare".
-- Generate 6-10 core_competencies, 5-8 competency_weightings, 3-4 assessment_formats, 3-5 high_yield_focal_points, and 3-4 common_misconceptions.
 
 Output:
 JSON ONLY.`;
