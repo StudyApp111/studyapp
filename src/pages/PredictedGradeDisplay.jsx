@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { 
   Trophy, Target, BookOpen, 
   TrendingUp, CheckCircle2, AlertCircle, ArrowRight,
-  Lock, MessageSquare, FileText
+  Lock, MessageSquare, FileText, Eye
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { generateFingerprint } from "@/components/utils/browserFingerprint";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Grade color based on percentage: 90+ green, 80+ blue, 70+ purple, 0-69 orange/gray
 const getGradeColor = (percentage) => {
@@ -38,6 +39,68 @@ const getToolColor = (tool) => {
     default: return { bg: 'from-purple-600 to-pink-600', border: 'border-purple-500' };
   }
 };
+
+// Answer Reveal Component
+function AnswerRevealSection({ answer }) {
+  const [revealed, setRevealed] = useState(false);
+
+  return (
+    <div className="relative bg-slate-800 rounded-xl p-5 sm:p-6 border border-slate-600 overflow-hidden min-h-[180px]">
+      <p className="text-emerald-400 uppercase tracking-wider text-sm font-bold mb-3">Answer:</p>
+      
+      <AnimatePresence mode="wait">
+        {!revealed ? (
+          <motion.div
+            key="locked"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative"
+          >
+            {/* First 2 lines visible, rest blurred */}
+            <div className="relative">
+              <p className="text-white/90 leading-relaxed text-base">
+                {answer?.split('.').slice(0, 1).join('.')}...
+              </p>
+              
+              <div className="mt-2 relative">
+                <p className="text-white/90 leading-relaxed text-base blur-[6px] select-none">
+                  {answer?.split('.').slice(1).join('.')}
+                </p>
+                
+                <div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(to bottom, transparent 0%, rgba(30,41,59,0.5) 30%, rgba(30,41,59,0.9) 100%)'
+                  }}
+                />
+              </div>
+            </div>
+            
+            {/* Click to reveal button */}
+            <button
+              onClick={() => setRevealed(true)}
+              className="absolute inset-0 flex items-center justify-center bg-slate-900/60 hover:bg-slate-900/70 transition-colors group"
+            >
+              <div className="bg-purple-600 hover:bg-purple-500 px-6 py-4 rounded-xl flex items-center gap-3 shadow-2xl shadow-purple-500/40 transition-all group-hover:scale-105">
+                <Eye className="w-6 h-6 text-white" />
+                <span className="text-white font-bold text-base sm:text-lg">Click to Reveal Answer</span>
+              </div>
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="revealed"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <p className="text-white/90 leading-relaxed text-base">{answer}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function PredictedGradeDisplay() {
   const navigate = useNavigate();
@@ -185,7 +248,12 @@ export default function PredictedGradeDisplay() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 p-4">
         <div className="text-center space-y-6">
-          <div className="mb-8">
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+              alt="StudyApp Logo"
+              className="w-10 h-10 md:w-12 md:h-12"
+            />
             <h1 className="text-4xl md:text-5xl font-black">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
               <span className="text-white">App</span>
@@ -234,7 +302,12 @@ export default function PredictedGradeDisplay() {
 
       <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-8 pt-8 space-y-12">
         {/* Logo - HUGE */}
-        <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+            alt="StudyApp Logo"
+            className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20"
+          />
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-black">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
             <span className="text-white">App</span>
@@ -286,12 +359,12 @@ export default function PredictedGradeDisplay() {
                 />
               </div>
               <div className="flex justify-between text-xs sm:text-sm text-white/70 font-medium px-1">
-                <span>F</span>
-                <span>D</span>
-                <span>C</span>
-                <span>B</span>
-                <span>A</span>
-                <span>A+</span>
+                <span style={{ marginLeft: '0%' }}>F</span>
+                <span style={{ marginLeft: '-2%' }}>D</span>
+                <span style={{ marginLeft: '-2%' }}>C</span>
+                <span style={{ marginLeft: '-2%' }}>B</span>
+                <span style={{ marginLeft: '-2%' }}>A</span>
+                <span style={{ marginLeft: '-3%' }}>A+</span>
               </div>
               
               {/* Confidence Level Badge */}
@@ -371,41 +444,10 @@ export default function PredictedGradeDisplay() {
               <p className="text-white font-medium leading-relaxed text-base sm:text-lg">{previewQuestion.question_text}</p>
             </div>
 
-            {/* Answer Section with blur + lock */}
-            <div className="relative bg-slate-800 rounded-xl p-5 sm:p-6 border border-slate-600 overflow-hidden min-h-[180px]">
-              <p className="text-emerald-400 uppercase tracking-wider text-sm font-bold mb-3">Answer:</p>
-              
-              {/* First 2 lines visible, rest blurred */}
-              <div className="relative">
-                {/* Visible portion */}
-                <p className="text-white/90 leading-relaxed text-base">
-                  {previewQuestion.correct_answer?.split('.').slice(0, 1).join('.')}...
-                </p>
-                
-                {/* Blurred portion */}
-                <div className="mt-2 relative">
-                  <p className="text-white/90 leading-relaxed text-base blur-[6px] select-none">
-                    {previewQuestion.correct_answer?.split('.').slice(1).join('.')}
-                  </p>
-                  
-                  {/* Gradient overlay */}
-                  <div 
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(to bottom, transparent 0%, rgba(30,41,59,0.5) 30%, rgba(30,41,59,0.9) 100%)'
-                    }}
-                  />
-                </div>
-              </div>
-              
-              {/* Lock overlay - Prominent */}
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-900/40">
-                <div className="bg-purple-600 px-6 py-4 rounded-xl flex items-center gap-3 shadow-2xl shadow-purple-500/40">
-                  <Lock className="w-6 h-6 text-white" />
-                  <span className="text-white font-bold text-base sm:text-lg">Unlock Full Answer + Study Plan</span>
-                </div>
-              </div>
-            </div>
+            {/* Answer Section - Interactive */}
+            <AnswerRevealSection 
+              answer={previewQuestion.correct_answer}
+            />
           </div>
         )}
 
@@ -414,8 +456,8 @@ export default function PredictedGradeDisplay() {
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
           
           <div className="relative text-center space-y-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white">
-              Want to See the Full Answer?
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-white">
+              Ready to Fix Your Weak Spots?
             </h3>
             
             {/* 3 items max, 12px spacing */}
@@ -446,12 +488,11 @@ export default function PredictedGradeDisplay() {
                   <>Loading...</>
                 ) : (
                   <>
-                    <Lock className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
-                    Unlock Full Answer
+                    See My Free Study Plan
                   </>
                 )}
               </Button>
-              <p className="text-white/80 text-sm sm:text-base">+ See Your Complete Study Plan</p>
+              <p className="text-white/80 text-sm sm:text-base">+ Get access to all study tools</p>
             </div>
 
             <button 

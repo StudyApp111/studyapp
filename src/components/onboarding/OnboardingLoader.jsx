@@ -64,8 +64,13 @@ export default function OnboardingLoader({ fileName, isComplete, onAnimationComp
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="flex items-center justify-center gap-3 mb-8"
         >
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+            alt="StudyApp Logo"
+            className="w-10 h-10"
+          />
           <h1 className="text-3xl md:text-4xl font-black">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
             <span className="text-white">App</span>

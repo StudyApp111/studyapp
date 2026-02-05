@@ -55,8 +55,13 @@ export default function DiagnosticLoader({ mode = 'generating' }) {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
       <div className="text-center space-y-8 max-w-md">
         {/* Brand logo - HIGHER UP */}
-        <div className="mb-8">
-          <h1 className="text-5xl md:text-6xl font-black mb-4">
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+            alt="StudyApp Logo"
+            className="w-12 h-12 md:w-14 md:h-14"
+          />
+          <h1 className="text-5xl md:text-6xl font-black">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
             <span className="text-white">App</span>
           </h1>
