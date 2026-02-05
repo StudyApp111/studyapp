@@ -38,6 +38,7 @@ Deno.serve(async (req) => {
       const userAnswer = userAnswers.find(a => a.question_index === idx);
       return `Q${idx + 1}: ${q.question_text}
     Question Type: ${q.question_type || 'unknown'}
+    Options: ${(q.options || []).join(', ')}
     Correct Answer: ${q.correct_answer}
     User Answer: ${userAnswer?.answer || 'Not answered'}
     Competencies: ${(q.assessed_competencies || []).join(', ')}`;
