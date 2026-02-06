@@ -218,17 +218,17 @@ Return JSON:
   "tasks": [
     {
       "task_type": "flashcards" | "teach_it" | "review_notes" | "practice_exam",
-      "title": "Clear action title (e.g., 'Master Key Terms for X')",
-      "description": "What this helps with and why",
+      "title": "Clear action title (max 100 chars)",
+      "description": "What this helps with and why (max 300 chars)",
       "target_count": number (10-20 for flashcards, 3-5 for teach_it, 1 for practice_exam/review_notes),
-      "target_competency": "The specific competency being addressed",
+      "target_competency": "Single competency name only (max 150 chars - NO explanations or notes)",
       "focus_topics": ["specific topic 1", "specific topic 2", "specific topic 3"],
-      "misconception_addressed": "The specific misconception this task addresses (if any)",
+      "misconception_addressed": "Single misconception only (max 150 chars)",
       "is_focus_factor": boolean (true if this task directly addresses the mastery_gap "${masteryGap}")
     }
   ],
-  "plan_rationale": "2-3 sentences explaining why this plan was designed this way",
-  "priority_focus": "The single most important thing to improve"
+  "plan_rationale": "2-3 sentences only (max 500 chars)",
+  "priority_focus": "Single sentence only (max 150 chars)"
 }`;
 
     console.log(`⏱️ [generateStudyPlan] Pre-LLM prep: ${Date.now() - startTime}ms`);
@@ -261,20 +261,20 @@ Return JSON:
                   items: {
                     type: "object",
                     properties: {
-                      task_type: { type: "string" },
-                      title: { type: "string" },
-                      description: { type: "string" },
-                      target_count: { type: "integer" },
-                      target_competency: { type: "string" },
-                      focus_topics: { type: "array", items: { type: "string" } },
-                      misconception_addressed: { type: "string" },
-                      is_focus_factor: { type: "boolean" }
+                     task_type: { type: "string" },
+                     title: { type: "string", maxLength: 100 },
+                     description: { type: "string", maxLength: 300 },
+                     target_count: { type: "integer" },
+                     target_competency: { type: "string", maxLength: 150 },
+                     focus_topics: { type: "array", items: { type: "string" } },
+                     misconception_addressed: { type: "string", maxLength: 150 },
+                     is_focus_factor: { type: "boolean" }
                     },
                     required: ["task_type", "title", "target_count"]
                   }
                 },
-                plan_rationale: { type: "string" },
-                priority_focus: { type: "string" }
+                plan_rationale: { type: "string", maxLength: 500 },
+                priority_focus: { type: "string", maxLength: 150 }
               },
               required: ["tasks", "plan_rationale", "priority_focus"]
             }
