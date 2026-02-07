@@ -62,6 +62,7 @@ const getGradeColor = (grade) => {
   if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
   if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
   if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
+  if (grade.startsWith('D') || grade.startsWith('F')) return 'from-slate-400 to-slate-500';
   return 'from-red-500 to-rose-600';
 };
 
@@ -717,17 +718,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                   >
                     {currentGrade}
                   </motion.span>
-                  {currentScore && (
-                    <motion.div
-                      className="flex flex-col"
-                      animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
-                      transition={{ duration: 0.5, delay: 0.1 }}
-                    >
-                      <span className="text-3xl md:text-4xl font-black text-white">
-                        {Math.round(currentScore)}%
-                      </span>
-                    </motion.div>
-                  )}
+                  <motion.div
+                    className="flex flex-col"
+                    animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                  >
+                    <span className="text-3xl md:text-4xl font-black text-white">
+                      {currentScore ? Math.round(currentScore) : '—'}%
+                    </span>
+                  </motion.div>
                 </div>
                 
                 {/* Learning Velocity - Integrated */}
