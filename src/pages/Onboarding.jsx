@@ -43,8 +43,11 @@ export default function Onboarding() {
       const isAuth = await base44.auth.isAuthenticated();
       if (isAuth) {
         const user = await base44.auth.me();
-        // If user is authenticated and completed onboarding, send to Home
-        if (user && user.onboarding_completed) {
+        // If user just logged in (fromOnboarding param) OR has completed onboarding, send to Home
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromOnboarding = urlParams.get('fromOnboarding');
+        
+        if (user && (user.onboarding_completed || fromOnboarding === 'true')) {
           navigate(createPageUrl("Home"), { replace: true });
           return;
         }
