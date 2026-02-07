@@ -88,11 +88,20 @@ Deno.serve(async (req) => {
                 console.log('📧 User has no learning_profile_id');
             }
 
-            // Get all lessons for this user - use list and filter in JS for reliability
+            // Get all lessons for this user - use service role list without RLS
             console.log('📧 Looking for lessons by:', targetUser.email);
-            const allLessons = await base44.asServiceRole.entities.Lesson.list('-created_date', 500);
-            const userLessons = allLessons.filter(l => l.created_by === targetUser.email);
-            console.log('📧 Found', userLessons.length, 'lessons for user (from', allLessons.length, 'total)');
+            let userLessons = [];
+            try {
+                // Try filter first (should work with service role bypassing RLS)
+                userLessons = await base44.asServiceRole.entities.Lesson.filter({ created_by: targetUser.email });
+                console.log('📧 Filter found', userLessons.length, 'lessons for user');
+            } catch (filterErr) {
+                console.log('📧 Filter failed, trying list:', filterErr.message);
+                // Fallback to list and filter in JS
+                const allLessons = await base44.asServiceRole.entities.Lesson.list('-created_date', 500);
+                userLessons = allLessons.filter(l => l.created_by === targetUser.email);
+                console.log('📧 List found', userLessons.length, 'lessons for user (from', allLessons.length, 'total)');
+            }
             
             if (userLessons.length === 0) {
                 console.log('📧 No lessons found, returning defaults');
@@ -119,11 +128,20 @@ Deno.serve(async (req) => {
                 data.first_lesson_date = new Date(firstLesson.created_date).toLocaleDateString();
                 data.first_time_spent_minutes = Math.round((firstLesson.total_study_time_seconds || 0) / 60);
 
-                // Get all exams for first lesson - use list and filter for reliability
+                // Get all exams for first lesson
                 console.log('📧 Looking for exams for first lesson:', firstLesson.id);
-                const allExams = await base44.asServiceRole.entities.Exam.list('-created_date', 500);
-                const firstLessonExams = allExams.filter(e => e.lesson_id === firstLesson.id);
-                console.log('📧 Found', firstLessonExams.length, 'exams for first lesson');
+                let allExams = [];
+                let firstLessonExams = [];
+                try {
+                    allExams = await base44.asServiceRole.entities.Exam.filter({ lesson_id: firstLesson.id });
+                    firstLessonExams = allExams;
+                    console.log('📧 Filter found', firstLessonExams.length, 'exams for first lesson');
+                } catch (examFilterErr) {
+                    console.log('📧 Exam filter failed, trying list:', examFilterErr.message);
+                    allExams = await base44.asServiceRole.entities.Exam.list('-created_date', 500);
+                    firstLessonExams = allExams.filter(e => e.lesson_id === firstLesson.id);
+                    console.log('📧 List found', firstLessonExams.length, 'exams for first lesson (from', allExams.length, 'total)');
+                }
                 
                 if (firstLessonExams.length > 0) {
                     firstLessonExams.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
@@ -138,11 +156,18 @@ Deno.serve(async (req) => {
                     data.first_predicted_percentage = firstExam.total_score ? Math.round(firstExam.total_score) : 'N/A';
                 }
 
-                // Get first study plan - use list and filter for reliability
+                // Get first study plan
                 console.log('📧 Looking for study plans for first lesson');
-                const allPlans = await base44.asServiceRole.entities.StudyPlan.list('-created_date', 200);
-                const firstLessonPlans = allPlans.filter(p => p.lesson_id === firstLesson.id);
-                console.log('📧 Found', firstLessonPlans.length, 'study plans for first lesson');
+                let firstLessonPlans = [];
+                try {
+                    firstLessonPlans = await base44.asServiceRole.entities.StudyPlan.filter({ lesson_id: firstLesson.id });
+                    console.log('📧 Filter found', firstLessonPlans.length, 'study plans for first lesson');
+                } catch (planFilterErr) {
+                    console.log('📧 Plan filter failed, trying list:', planFilterErr.message);
+                    const allPlans = await base44.asServiceRole.entities.StudyPlan.list('-created_date', 200);
+                    firstLessonPlans = allPlans.filter(p => p.lesson_id === firstLesson.id);
+                    console.log('📧 List found', firstLessonPlans.length, 'study plans for first lesson');
+                }
                 
                 if (firstLessonPlans.length > 0) {
                     firstLessonPlans.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
@@ -161,8 +186,16 @@ Deno.serve(async (req) => {
             if (latestLesson && latestLesson.id !== firstLesson.id) {
                 data.latest_lesson_name = latestLesson.course_name || 'N/A';
 
-                // Reuse allExams from earlier
-                const latestLessonExams = allExams.filter(e => e.lesson_id === latestLesson.id);
+                // Fetch exams for latest lesson
+                let latestLessonExams = [];
+                try {
+                    latestLessonExams = await base44.asServiceRole.entities.Exam.filter({ lesson_id: latestLesson.id });
+                } catch (e) {
+                    // Use allExams if already fetched
+                    if (allExams && allExams.length > 0) {
+                        latestLessonExams = allExams.filter(ex => ex.lesson_id === latestLesson.id);
+                    }
+                }
                 console.log('📧 Found', latestLessonExams.length, 'exams for latest lesson');
                 
                 if (latestLessonExams.length > 0) {
@@ -191,9 +224,18 @@ Deno.serve(async (req) => {
                 }
             }
 
-            // Get all exam grades for progression tracking - reuse allExams
+            // Get all exam grades for progression tracking
             const lessonIds = userLessons.map(l => l.id);
-            const userExams = allExams.filter(e => lessonIds.includes(e.lesson_id) && e.completed);
+            let userExams = [];
+            try {
+                // Fetch all completed exams for user's lessons
+                const allUserExams = await Promise.all(
+                    lessonIds.map(lid => base44.asServiceRole.entities.Exam.filter({ lesson_id: lid, completed: true }).catch(() => []))
+                );
+                userExams = allUserExams.flat();
+            } catch (e) {
+                console.log('📧 Error fetching user exams:', e.message);
+            }
             console.log('📧 Found', userExams.length, 'completed exams for user');
             
             data.total_exams_completed = userExams.length;
