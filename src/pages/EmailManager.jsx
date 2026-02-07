@@ -34,6 +34,7 @@ export default function EmailManager() {
   // Test email state
   const [testRecipient, setTestRecipient] = useState("");
   const [allUsers, setAllUsers] = useState([]);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
   
   // Automatic email state
   const [automaticEmails, setAutomaticEmails] = useState([]);
@@ -64,7 +65,13 @@ export default function EmailManager() {
         try {
           const { data } = await base44.functions.invoke('getUserCount', {});
           setUserCount(data.count || 0);
-          setAllUsers(data.users || []);
+          // Sort users by first name
+          const sortedUsers = (data.users || []).sort((a, b) => {
+            const nameA = a.full_name || a.email;
+            const nameB = b.full_name || b.email;
+            return nameA.localeCompare(nameB);
+          });
+          setAllUsers(sortedUsers);
         } catch (error) {
           console.error("Error refreshing user count:", error);
         }
@@ -88,7 +95,13 @@ export default function EmailManager() {
       // Get user count and all users
       const { data } = await base44.functions.invoke('getUserCount', {});
       setUserCount(data.count || 0);
-      setAllUsers(data.users || []);
+      // Sort users by first name
+      const sortedUsers = (data.users || []).sort((a, b) => {
+        const nameA = a.full_name || a.email;
+        const nameB = b.full_name || b.email;
+        return nameA.localeCompare(nameB);
+      });
+      setAllUsers(sortedUsers);
       
       setLoading(false);
     } catch (error) {
@@ -499,13 +512,17 @@ export default function EmailManager() {
                     placeholder="Write your email here... Use {{name}}, {{school}}, {{grade}}, etc. for dynamic content"
                     modules={{
                       toolbar: [
-                        [{ 'header': [1, 2, 3, false] }],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'font': [] }],
                         [{ 'size': ['small', false, 'large', 'huge'] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],
                         [{ 'indent': '-1'}, { 'indent': '+1' }],
+                        [{ 'direction': 'rtl' }],
                         [{ 'align': [] }],
-                        ['link', 'image'],
+                        ['link', 'image', 'video'],
                         ['clean']
                       ]
                     }}
@@ -517,19 +534,34 @@ export default function EmailManager() {
                 </p>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-3">
-                <div className="flex-1 space-y-2">
-                  <Label htmlFor="testRecipient">Test Email (Optional)</Label>
+              <div className="space-y-2">
+                <Label htmlFor="testRecipient">Test Email (Optional)</Label>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Search users by name or email..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="w-full"
+                  />
                   <Select value={testRecipient} onValueChange={setTestRecipient}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a user to test email" />
                     </SelectTrigger>
                     <SelectContent>
-                      {allUsers.map(u => (
-                        <SelectItem key={u.email} value={u.email}>
-                          {u.full_name} ({u.email})
-                        </SelectItem>
-                      ))}
+                      {allUsers
+                        .filter(u => {
+                          if (!userSearchQuery) return true;
+                          const query = userSearchQuery.toLowerCase();
+                          return (
+                            (u.full_name && u.full_name.toLowerCase().includes(query)) ||
+                            u.email.toLowerCase().includes(query)
+                          );
+                        })
+                        .map(u => (
+                          <SelectItem key={u.email} value={u.email}>
+                            {u.full_name || 'Unknown'} ({u.email})
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -722,13 +754,17 @@ export default function EmailManager() {
                             onChange={(value) => setEditingTemplate({...editingTemplate, body: value})}
                             modules={{
                               toolbar: [
-                                [{ 'header': [1, 2, 3, false] }],
+                                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                                [{ 'font': [] }],
                                 [{ 'size': ['small', false, 'large', 'huge'] }],
-                                ['bold', 'italic', 'underline', 'strike'],
-                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                ['bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block'],
+                                [{ 'color': [] }, { 'background': [] }],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
+                                [{ 'script': 'sub'}, { 'script': 'super' }],
                                 [{ 'indent': '-1'}, { 'indent': '+1' }],
+                                [{ 'direction': 'rtl' }],
                                 [{ 'align': [] }],
-                                ['link', 'image'],
+                                ['link', 'image', 'video'],
                                 ['clean']
                               ]
                             }}
@@ -989,13 +1025,17 @@ export default function EmailManager() {
                   placeholder="Write your email here..."
                   modules={{
                     toolbar: [
-                      [{ 'header': [1, 2, 3, false] }],
+                      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                      [{ 'font': [] }],
                       [{ 'size': ['small', false, 'large', 'huge'] }],
-                      ['bold', 'italic', 'underline', 'strike'],
-                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                      ['bold', 'italic', 'underline', 'strike', 'blockquote', 'code-block'],
+                      [{ 'color': [] }, { 'background': [] }],
+                      [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
+                      [{ 'script': 'sub'}, { 'script': 'super' }],
                       [{ 'indent': '-1'}, { 'indent': '+1' }],
+                      [{ 'direction': 'rtl' }],
                       [{ 'align': [] }],
-                      ['link', 'image'],
+                      ['link', 'image', 'video'],
                       ['clean']
                     ]
                   }}
