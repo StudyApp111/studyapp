@@ -66,27 +66,30 @@ Deno.serve(async (req) => {
                 all_predicted_grades: 'N/A'
             };
 
-            // Get learning profile - use list since filter by id may not work with service role
-            if (targetUser.learning_profile_id) {
+            // Get learning profile - use get by id
+            const profileId = targetUser.learning_profile_id;
+            if (profileId) {
                 try {
-                    const allProfiles = await base44.asServiceRole.entities.LearningProfile.list('-created_date', 500);
-                    const profile = allProfiles.find(p => p.id === targetUser.learning_profile_id);
-                    if (profile) {
-                        data.school = profile.school || 'your school';
-                        data.grade = profile.grade || 'your grade';
+                    // Service role bypasses RLS - use list() and filter in JS
+                    const allProfiles = await base44.asServiceRole.entities.LearningProfile.list();
+                    const matchedProfile = allProfiles.find(p => p.id === profileId);
+                    if (matchedProfile) {
+                        data.school = matchedProfile.school || 'your school';
+                        data.grade = matchedProfile.grade || 'your grade';
                     }
                 } catch (profileError) {
-                    // Silently ignore profile errors
+                    // Ignore
                 }
             }
 
-            // Get all lessons for this user - use list and filter in JS for reliability
+            // Get all lessons for this user - service role bypasses RLS
+            const userEmail = targetUser.email;
             let userLessons = [];
             try {
-                const allLessons = await base44.asServiceRole.entities.Lesson.list('-created_date', 500);
-                userLessons = allLessons.filter(l => l.created_by === targetUser.email);
+                const allLessons = await base44.asServiceRole.entities.Lesson.list();
+                userLessons = allLessons.filter(l => l.created_by === userEmail);
             } catch (filterErr) {
-                // Silently ignore
+                // Ignore
             }
             
             if (!userLessons || userLessons.length === 0) {
@@ -113,13 +116,14 @@ Deno.serve(async (req) => {
                 data.first_lesson_date = new Date(firstLesson.created_date).toLocaleDateString();
                 data.first_time_spent_minutes = Math.round((firstLesson.total_study_time_seconds || 0) / 60);
 
-                // Get all exams for first lesson - use list and filter in JS
+                // Get all exams for first lesson
+                const firstLessonId = firstLesson.id;
                 let firstLessonExams = [];
                 try {
-                    const allExams = await base44.asServiceRole.entities.Exam.list('-created_date', 500);
-                    firstLessonExams = allExams.filter(e => e.lesson_id === firstLesson.id);
+                    const allExams = await base44.asServiceRole.entities.Exam.list();
+                    firstLessonExams = allExams.filter(e => e.lesson_id === firstLessonId);
                 } catch (examFilterErr) {
-                    // Silently ignore
+                    // Ignore
                 }
                 
                 if (firstLessonExams && firstLessonExams.length > 0) {
@@ -130,13 +134,13 @@ Deno.serve(async (req) => {
                     data.first_predicted_percentage = firstExam.total_score ? Math.round(firstExam.total_score) : 'N/A';
                 }
 
-                // Get first study plan - use list and filter in JS
+                // Get first study plan
                 let firstLessonPlans = [];
                 try {
-                    const allPlans = await base44.asServiceRole.entities.StudyPlan.list('-created_date', 500);
-                    firstLessonPlans = allPlans.filter(p => p.lesson_id === firstLesson.id);
+                    const allPlans = await base44.asServiceRole.entities.StudyPlan.list();
+                    firstLessonPlans = allPlans.filter(p => p.lesson_id === firstLessonId);
                 } catch (planFilterErr) {
-                    // Silently ignore
+                    // Ignore
                 }
                 
                 if (firstLessonPlans && firstLessonPlans.length > 0) {
@@ -152,13 +156,14 @@ Deno.serve(async (req) => {
             if (latestLesson && latestLesson.id !== firstLesson.id) {
                 data.latest_lesson_name = latestLesson.course_name || 'N/A';
 
-                // Fetch exams for latest lesson - use list and filter in JS
+                // Fetch exams for latest lesson
+                const latestLessonId = latestLesson.id;
                 let latestLessonExams = [];
                 try {
-                    const allExams = await base44.asServiceRole.entities.Exam.list('-created_date', 500);
-                    latestLessonExams = allExams.filter(e => e.lesson_id === latestLesson.id);
+                    const allExams = await base44.asServiceRole.entities.Exam.list();
+                    latestLessonExams = allExams.filter(e => e.lesson_id === latestLessonId);
                 } catch (e) {
-                    // Silently ignore
+                    // Ignore
                 }
                 
                 if (latestLessonExams && latestLessonExams.length > 0) {
@@ -187,14 +192,14 @@ Deno.serve(async (req) => {
                 }
             }
 
-            // Get all exam grades for progression tracking - use list and filter
+            // Get all exam grades for progression tracking
             const lessonIds = userLessons.map(l => l.id);
             let userExams = [];
             try {
-                const allExams = await base44.asServiceRole.entities.Exam.list('-created_date', 500);
-                userExams = allExams.filter(e => lessonIds.includes(e.lesson_id) && e.completed);
+                const allExams = await base44.asServiceRole.entities.Exam.list();
+                userExams = allExams.filter(e => lessonIds.includes(e.lesson_id) && e.completed === true);
             } catch (e) {
-                // Silently ignore
+                // Ignore
             }
             
             data.total_exams_completed = userExams?.length || 0;
