@@ -402,9 +402,15 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     .filter(e => e.completed && e.predicted_grade && e.exam_type !== 'practice')
     .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
 
+  // Priority: study plan current > exam > study plan initial
   const currentGrade = studyPlan?.current_predicted_grade || latestOfficialExam?.predicted_grade || studyPlan?.initial_predicted_grade || '—';
-  const currentScore = studyPlan?.current_score || studyPlan?.initial_score || null;
-  const currentConfidence = studyPlan?.current_confidence || studyPlan?.initial_confidence || 45;
+  const currentScore = studyPlan?.current_score || latestOfficialExam?.total_score || studyPlan?.initial_score || null;
+  // Get confidence from the same source as the grade to keep them consistent
+  const currentConfidence = studyPlan?.current_confidence || 
+                           latestOfficialExam?.prediction_confidence || 
+                           latestOfficialExam?.ai_feedback?.prediction_confidence_percentage ||
+                           studyPlan?.initial_confidence || 
+                           50;
   const learningVelocity = studyPlan?.learning_velocity;
   const velocityConfig = getVelocityConfig(learningVelocity);
   const behavioralInsights = studyPlan?.behavioral_insights;
