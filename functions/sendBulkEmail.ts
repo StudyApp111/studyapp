@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
     try {
@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
         
         // Verify admin access
         const user = await base44.auth.me();
-        if (!user || user.email !== 'kartikeya2159@gmail.com') {
+        if (!user || user.role !== 'admin') {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -21,198 +21,41 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Resend API key not configured' }, { status: 500 });
         }
 
-        // Get ALL users using service role (no limit)
+        // Fetch ALL data ONCE upfront (not per-user)
         const allUsers = await base44.asServiceRole.entities.User.list('-created_date');
+        const allLessons = await base44.asServiceRole.entities.Lesson.list('-created_date');
+        const allExams = await base44.asServiceRole.entities.Exam.list('-created_date');
+        const allStudyPlans = await base44.asServiceRole.entities.StudyPlan.list('-created_date');
 
-        // Helper function to get comprehensive user data for email personalization
-        async function getUserEmailData(targetUser) {
-            const data = {
-                name: targetUser.full_name || 'there',
-                email: targetUser.email,
-                school: 'your school',
-                grade: 'your grade',
-                level: targetUser.level || 1,
-                total_points: targetUser.total_points || 0,
-                current_streak: targetUser.current_streak || 0,
-                questions_completed: targetUser.questions_completed || 0,
-                
-                // First lesson data
-                first_lesson_name: 'N/A',
-                first_lesson_date: 'N/A',
-                first_predicted_grade: 'N/A',
-                first_predicted_percentage: 'N/A',
-                first_weak_area_count: 0,
-                first_task_count: 0,
-                first_time_spent_minutes: 0,
-                
-                // Current/latest lesson data
-                latest_lesson_name: 'N/A',
-                latest_predicted_grade: 'N/A',
-                latest_predicted_percentage: 'N/A',
-                
-                // Overall stats
-                total_lessons: 0,
-                total_exams_completed: 0,
-                total_time_spent_minutes: 0,
-                
-                // Grade progression
-                grade_improvement: 'N/A',
-                all_predicted_grades: 'N/A'
-            };
-
-            // Get learning profile
-            if (targetUser.learning_profile_id) {
-                const profiles = await base44.asServiceRole.entities.LearningProfile.filter({
-                    id: targetUser.learning_profile_id
-                });
-                if (profiles.length > 0) {
-                    data.school = profiles[0].school || 'your school';
-                    data.grade = profiles[0].grade || 'your grade';
-                }
+        // Pre-index learning profiles we'll need
+        const profileIds = [...new Set(allUsers.map(u => u.learning_profile_id).filter(Boolean))];
+        const profileMap = {};
+        if (profileIds.length > 0) {
+            const allProfiles = await base44.asServiceRole.entities.LearningProfile.list();
+            for (const p of allProfiles) {
+                profileMap[p.id] = p;
             }
-
-            // Get all lessons for this user
-            const allLessons = await base44.asServiceRole.entities.Lesson.list();
-            const userLessons = allLessons.filter(l => l.created_by === targetUser.email);
-            
-            if (userLessons.length === 0) {
-                return data;
-            }
-
-            // Sort lessons by creation date
-            userLessons.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-            
-            data.total_lessons = userLessons.length;
-            const firstLesson = userLessons[0];
-            const latestLesson = userLessons[userLessons.length - 1];
-
-            // Calculate total time spent across all lessons
-            let totalSeconds = 0;
-            for (const lesson of userLessons) {
-                totalSeconds += lesson.total_study_time_seconds || 0;
-            }
-            data.total_time_spent_minutes = Math.round(totalSeconds / 60);
-
-            // Process FIRST lesson
-            if (firstLesson) {
-                data.first_lesson_name = firstLesson.course_name || 'N/A';
-                data.first_lesson_date = new Date(firstLesson.created_date).toLocaleDateString();
-                data.first_time_spent_minutes = Math.round((firstLesson.total_study_time_seconds || 0) / 60);
-
-                // Get all exams for first lesson
-                const allExams = await base44.asServiceRole.entities.Exam.list();
-                const firstLessonExams = allExams.filter(e => e.lesson_id === firstLesson.id);
-                
-                if (firstLessonExams.length > 0) {
-                    firstLessonExams.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-                    const firstExam = firstLessonExams[0];
-                    
-                    data.first_predicted_grade = firstExam.predicted_grade || 'N/A';
-                    data.first_predicted_percentage = firstExam.total_score ? Math.round(firstExam.total_score) : 'N/A';
-                }
-
-                // Get first study plan
-                const allStudyPlans = await base44.asServiceRole.entities.StudyPlan.list();
-                const firstLessonPlans = allStudyPlans.filter(p => p.lesson_id === firstLesson.id);
-                
-                if (firstLessonPlans.length > 0) {
-                    firstLessonPlans.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-                    const firstPlan = firstLessonPlans[0];
-                    
-                    data.first_weak_area_count = firstPlan.weak_competencies?.length || 0;
-                    data.first_task_count = firstPlan.tasks?.length || 0;
-                }
-            }
-
-            // Process LATEST lesson (if different from first)
-            if (latestLesson && latestLesson.id !== firstLesson.id) {
-                data.latest_lesson_name = latestLesson.course_name || 'N/A';
-
-                const allExams = await base44.asServiceRole.entities.Exam.list();
-                const latestLessonExams = allExams.filter(e => e.lesson_id === latestLesson.id);
-                
-                if (latestLessonExams.length > 0) {
-                    latestLessonExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-                    const latestExam = latestLessonExams[0];
-                    
-                    data.latest_predicted_grade = latestExam.predicted_grade || 'N/A';
-                    data.latest_predicted_percentage = latestExam.total_score ? Math.round(latestExam.total_score) : 'N/A';
-                }
-            } else {
-                // Latest is same as first
-                data.latest_lesson_name = data.first_lesson_name;
-                data.latest_predicted_grade = data.first_predicted_grade;
-                data.latest_predicted_percentage = data.first_predicted_percentage;
-            }
-
-            // Calculate grade improvement
-            if (data.first_predicted_percentage !== 'N/A' && data.latest_predicted_percentage !== 'N/A') {
-                const improvement = data.latest_predicted_percentage - data.first_predicted_percentage;
-                if (improvement > 0) {
-                    data.grade_improvement = `+${improvement}%`;
-                } else if (improvement < 0) {
-                    data.grade_improvement = `${improvement}%`;
-                } else {
-                    data.grade_improvement = 'No change';
-                }
-            }
-
-            // Get all exam grades for progression tracking
-            const allExams = await base44.asServiceRole.entities.Exam.list();
-            const userExams = allExams.filter(e => {
-                const lessonIds = userLessons.map(l => l.id);
-                return lessonIds.includes(e.lesson_id) && e.completed;
-            });
-            
-            data.total_exams_completed = userExams.length;
-
-            if (userExams.length > 0) {
-                userExams.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-                const grades = userExams
-                    .filter(e => e.predicted_grade)
-                    .map(e => e.predicted_grade);
-                data.all_predicted_grades = grades.join(' → ') || 'N/A';
-            }
-
-            return data;
         }
 
         let sent = 0;
         let failed = 0;
 
-        // Send emails to all users via Resend
         for (const targetUser of allUsers) {
             try {
-                // Get comprehensive user data
-                const userData = await getUserEmailData(targetUser);
+                // Build user data from pre-fetched entities
+                const userData = buildUserData(targetUser, allLessons, allExams, allStudyPlans);
+
+                // Add learning profile
+                if (targetUser.learning_profile_id && profileMap[targetUser.learning_profile_id]) {
+                    const profile = profileMap[targetUser.learning_profile_id];
+                    userData.school = profile.school || 'your school';
+                    userData.grade = profile.grade || 'your grade';
+                }
 
                 // Replace all dynamic fields
-                let personalizedBody = body
-                    .replace(/\{\{name\}\}/g, userData.name)
-                    .replace(/\{\{email\}\}/g, userData.email)
-                    .replace(/\{\{school\}\}/g, userData.school)
-                    .replace(/\{\{grade\}\}/g, userData.grade)
-                    .replace(/\{\{level\}\}/g, userData.level)
-                    .replace(/\{\{total_points\}\}/g, userData.total_points)
-                    .replace(/\{\{current_streak\}\}/g, userData.current_streak)
-                    .replace(/\{\{questions_completed\}\}/g, userData.questions_completed)
-                    .replace(/\{\{first_lesson_name\}\}/g, userData.first_lesson_name)
-                    .replace(/\{\{first_lesson_date\}\}/g, userData.first_lesson_date)
-                    .replace(/\{\{first_predicted_grade\}\}/g, userData.first_predicted_grade)
-                    .replace(/\{\{first_predicted_percentage\}\}/g, userData.first_predicted_percentage)
-                    .replace(/\{\{first_weak_area_count\}\}/g, userData.first_weak_area_count)
-                    .replace(/\{\{first_task_count\}\}/g, userData.first_task_count)
-                    .replace(/\{\{first_time_spent_minutes\}\}/g, userData.first_time_spent_minutes)
-                    .replace(/\{\{latest_lesson_name\}\}/g, userData.latest_lesson_name)
-                    .replace(/\{\{latest_predicted_grade\}\}/g, userData.latest_predicted_grade)
-                    .replace(/\{\{latest_predicted_percentage\}\}/g, userData.latest_predicted_percentage)
-                    .replace(/\{\{total_lessons\}\}/g, userData.total_lessons)
-                    .replace(/\{\{total_exams_completed\}\}/g, userData.total_exams_completed)
-                    .replace(/\{\{total_time_spent_minutes\}\}/g, userData.total_time_spent_minutes)
-                    .replace(/\{\{grade_improvement\}\}/g, userData.grade_improvement)
-                    .replace(/\{\{all_predicted_grades\}\}/g, userData.all_predicted_grades);
+                const personalizedBody = replaceFields(body, userData);
+                const personalizedSubject = replaceFields(subject, userData);
 
-                // Send via Resend API
                 const resendResponse = await fetch('https://api.resend.com/emails', {
                     method: 'POST',
                     headers: {
@@ -223,18 +66,8 @@ Deno.serve(async (req) => {
                         from: 'StudyApp.AI <updates@updates.studyappai.com>',
                         reply_to: 'info@studyappai.com',
                         to: targetUser.email,
-                        subject: subject,
-                        html: `<style>
-                            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #000; }
-                            p { margin: 0 0 15px 0; }
-                            h1 { font-size: 2em; font-weight: normal; margin: 0.67em 0; }
-                            h2 { font-size: 1.5em; font-weight: normal; margin: 0.75em 0; }
-                            h3 { font-size: 1.17em; font-weight: normal; margin: 0.83em 0; }
-                            h4, h5, h6 { font-weight: normal; margin: 1em 0; }
-                            .ql-size-small { font-size: 0.75em; }
-                            .ql-size-large { font-size: 1.5em; }
-                            .ql-size-huge { font-size: 2.5em; }
-                        </style>${personalizedBody}`
+                        subject: personalizedSubject,
+                        html: wrapInTemplate(personalizedBody)
                     })
                 });
 
@@ -250,14 +83,200 @@ Deno.serve(async (req) => {
             }
         }
 
-        return Response.json({ 
-            success: true, 
-            sent, 
-            failed,
-            total: allUsers.length 
-        });
+        return Response.json({ success: true, sent, failed, total: allUsers.length });
     } catch (error) {
         console.error('Bulk email error:', error);
         return Response.json({ error: error.message }, { status: 500 });
     }
 });
+
+function buildUserData(targetUser, allLessons, allExams, allStudyPlans) {
+    const data = {
+        name: targetUser.full_name || 'there',
+        first_name: (targetUser.full_name || 'there').split(' ')[0],
+        email: targetUser.email,
+        school: 'your school',
+        grade: 'your grade',
+        level: targetUser.level || 1,
+        total_points: targetUser.total_points || 0,
+        current_streak: targetUser.current_streak || 0,
+        questions_completed: targetUser.questions_completed || 0,
+        first_lesson_name: 'N/A',
+        first_lesson_date: 'N/A',
+        first_predicted_grade: 'N/A',
+        first_predicted_percentage: 'N/A',
+        first_weak_area_count: 0,
+        first_task_count: 0,
+        first_time_spent_minutes: 0,
+        latest_lesson_name: 'N/A',
+        latest_predicted_grade: 'N/A',
+        latest_predicted_percentage: 'N/A',
+        total_lessons: 0,
+        total_exams_completed: 0,
+        total_time_spent_minutes: 0,
+        grade_improvement: 'N/A',
+        all_predicted_grades: 'N/A',
+        best_grade: 'N/A',
+        worst_grade: 'N/A',
+        all_course_names: 'N/A',
+        mastery_gap: 'N/A',
+        weak_areas: 'N/A'
+    };
+
+    const userLessons = allLessons.filter(l => l.created_by === targetUser.email);
+    if (userLessons.length === 0) return data;
+
+    userLessons.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    data.total_lessons = userLessons.length;
+    
+    const lessonIds = userLessons.map(l => l.id);
+    const userExams = allExams.filter(e => lessonIds.includes(e.lesson_id));
+    const userPlans = allStudyPlans.filter(p => lessonIds.includes(p.lesson_id));
+
+    let totalSeconds = 0;
+    for (const lesson of userLessons) {
+        totalSeconds += lesson.total_study_time_seconds || 0;
+    }
+    data.total_time_spent_minutes = Math.round(totalSeconds / 60);
+
+    const courseNames = [...new Set(userLessons.map(l => l.course_name).filter(Boolean))];
+    data.all_course_names = courseNames.join(', ') || 'N/A';
+
+    const firstLesson = userLessons[0];
+    data.first_lesson_name = firstLesson.course_name || 'N/A';
+    data.first_lesson_date = new Date(firstLesson.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    data.first_time_spent_minutes = Math.round((firstLesson.total_study_time_seconds || 0) / 60);
+
+    const firstLessonExams = userExams
+        .filter(e => e.lesson_id === firstLesson.id)
+        .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    
+    if (firstLessonExams.length > 0) {
+        data.first_predicted_grade = firstLessonExams[0].predicted_grade || 'N/A';
+        data.first_predicted_percentage = firstLessonExams[0].total_score ? `${Math.round(firstLessonExams[0].total_score)}%` : 'N/A';
+    }
+
+    const firstLessonPlans = userPlans
+        .filter(p => p.lesson_id === firstLesson.id)
+        .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    
+    if (firstLessonPlans.length > 0) {
+        data.first_weak_area_count = firstLessonPlans[0].weak_competencies?.length || 0;
+        data.first_task_count = firstLessonPlans[0].tasks?.length || 0;
+        data.mastery_gap = firstLessonPlans[0].mastery_gap || 'N/A';
+        data.weak_areas = (firstLessonPlans[0].weak_competencies || []).join(', ') || 'N/A';
+    }
+
+    const latestLesson = userLessons[userLessons.length - 1];
+    data.latest_lesson_name = latestLesson.course_name || 'N/A';
+
+    const completedExams = userExams
+        .filter(e => e.completed && e.predicted_grade)
+        .sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    
+    if (completedExams.length > 0) {
+        data.latest_predicted_grade = completedExams[0].predicted_grade || 'N/A';
+        data.latest_predicted_percentage = completedExams[0].total_score ? `${Math.round(completedExams[0].total_score)}%` : 'N/A';
+    }
+
+    data.total_exams_completed = completedExams.length;
+
+    if (completedExams.length > 0) {
+        const allGrades = completedExams.map(e => e.predicted_grade).filter(Boolean);
+        const allScores = completedExams.map(e => e.total_score).filter(s => s != null);
+        
+        const chronoGrades = [...completedExams].reverse().map(e => e.predicted_grade).filter(Boolean);
+        data.all_predicted_grades = chronoGrades.join(' → ') || 'N/A';
+
+        if (allScores.length > 0) {
+            const bestIdx = allScores.indexOf(Math.max(...allScores));
+            const worstIdx = allScores.indexOf(Math.min(...allScores));
+            data.best_grade = allGrades[bestIdx] || 'N/A';
+            data.worst_grade = allGrades[worstIdx] || 'N/A';
+        }
+
+        if (completedExams.length >= 2) {
+            const oldest = [...completedExams].reverse()[0];
+            const newest = completedExams[0];
+            if (oldest.total_score != null && newest.total_score != null) {
+                const improvement = Math.round(newest.total_score - oldest.total_score);
+                if (improvement > 0) data.grade_improvement = `+${improvement}%`;
+                else if (improvement < 0) data.grade_improvement = `${improvement}%`;
+                else data.grade_improvement = 'No change';
+            }
+        }
+    }
+
+    const activePlans = userPlans.filter(p => p.status === 'active');
+    if (activePlans.length > 0) {
+        const latestPlan = activePlans.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+        if (latestPlan.mastery_gap) data.mastery_gap = latestPlan.mastery_gap;
+        if (latestPlan.weak_competencies?.length > 0) data.weak_areas = latestPlan.weak_competencies.join(', ');
+    }
+
+    return data;
+}
+
+function replaceFields(text, data) {
+    let result = text;
+    for (const [key, value] of Object.entries(data)) {
+        result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), String(value));
+    }
+    return result;
+}
+
+function wrapInTemplate(bodyHtml) {
+    return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f1fa; color: #1a1a2e; }
+  .email-wrapper { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .email-header { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #4f46e5 100%); padding: 32px 32px 28px; text-align: center; }
+  .email-header img { width: 48px; height: 48px; margin-bottom: 8px; }
+  .email-header h1 { color: #ffffff; font-size: 22px; font-weight: 800; margin: 0; letter-spacing: -0.3px; }
+  .email-body { padding: 32px; font-size: 15px; line-height: 1.7; color: #334155; }
+  .email-body p { margin: 0 0 16px; }
+  .email-body h1 { font-size: 24px; font-weight: 700; color: #1e1b4b; margin: 0 0 16px; }
+  .email-body h2 { font-size: 20px; font-weight: 700; color: #1e1b4b; margin: 0 0 14px; }
+  .email-body h3 { font-size: 17px; font-weight: 600; color: #1e1b4b; margin: 0 0 12px; }
+  .email-body a { color: #7c3aed; text-decoration: underline; }
+  .email-body ul, .email-body ol { margin: 0 0 16px; padding-left: 24px; }
+  .email-body li { margin-bottom: 6px; }
+  .email-body strong { color: #1e1b4b; }
+  .email-body img { max-width: 100%; height: auto; border-radius: 8px; }
+  .ql-size-small { font-size: 0.8em; }
+  .ql-size-large { font-size: 1.4em; }
+  .ql-size-huge { font-size: 2em; }
+  .email-footer { padding: 24px 32px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; }
+  .email-footer p { margin: 0 0 6px; font-size: 12px; color: #94a3b8; }
+  .email-footer a { color: #7c3aed; text-decoration: none; }
+  .cta-button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #ffffff !important; text-decoration: none !important; border-radius: 12px; font-weight: 700; font-size: 15px; margin: 8px 0; }
+  @media (max-width: 640px) {
+    .email-wrapper { margin: 0; border-radius: 0; }
+    .email-body { padding: 24px 20px; }
+    .email-header { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+<div style="padding: 24px 16px; background-color: #f4f1fa;">
+  <div class="email-wrapper">
+    <div class="email-header">
+      <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ab568e731_LogoOnly.png" alt="StudyApp" />
+      <h1>StudyApp</h1>
+    </div>
+    <div class="email-body">
+      ${bodyHtml}
+    </div>
+    <div class="email-footer">
+      <p>Made with 💜 by <a href="https://studyappai.com">StudyApp.AI</a></p>
+      <p>Questions? Reply to this email or reach out at <a href="mailto:info@studyappai.com">info@studyappai.com</a></p>
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+}
