@@ -54,9 +54,7 @@ Deno.serve(async (req) => {
       examQuestions = exam.questions || [];
       predictedGrade = exam.predicted_grade;
       totalScore = exam.total_score;
-      // Use AI feedback confidence if available, otherwise use exam's prediction_confidence
-      initialConfidence = exam.ai_feedback?.prediction_confidence_percentage || exam.prediction_confidence || 50;
-      console.log(`⏱️ [generateStudyPlan] Using exam data: grade=${predictedGrade}, score=${totalScore}, confidence=${initialConfidence}`);
+      initialConfidence = exam.prediction_confidence || exam.ai_feedback?.prediction_confidence_percentage || 45;
     } else if (diagnosticData) {
       // Onboarding flow: use diagnosticData directly
       predictedGrade = diagnosticData.predicted_grade;

@@ -1054,8 +1054,6 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
       }).then(async ({ data: feedbackData }) => {
         if (feedbackData?.predicted_exam_score_percentage) {
           const aiScore = parseInt(feedbackData.predicted_exam_score_percentage);
-          const aiConfidence = feedbackData.prediction_confidence_percentage || 50;
-          
           if (!isNaN(aiScore) && aiScore > 0) {
             let aiGrade = "F";
             if (aiScore >= 90) aiGrade = "A+";
@@ -1069,19 +1067,19 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
             else if (aiScore >= 60) aiGrade = "C-";
             else if (aiScore >= 50) aiGrade = "D";
             
-            console.log(`📊 AI Feedback: Score=${aiScore}%, Grade=${aiGrade}, Confidence=${aiConfidence}%`);
+            console.log(`📊 AI Feedback: Score=${aiScore}%, Grade=${aiGrade}, Confidence=${feedbackData.prediction_confidence_percentage}`);
             
-            // Update exam with AI feedback - store the AI confidence directly
+            // Update exam with AI feedback
             await base44.entities.Exam.update(exam.id, {
               total_score: aiScore,
               predicted_grade: aiGrade,
-              prediction_confidence: aiConfidence,
-              confidence_level: feedbackData.confidence_level || (aiConfidence >= 50 ? 'Medium' : 'Low'),
+              prediction_confidence: feedbackData.prediction_confidence_percentage || 45,
+              confidence_level: feedbackData.confidence_level || 'Low',
               mastery_gap: feedbackData.mastery_gap || null,
               ai_feedback: feedbackData
             });
             
-            // Also update study plan initial values if it exists - USE THE SAME CONFIDENCE
+            // Also update study plan initial values if it exists (fire-and-forget)
             base44.entities.StudyPlan.filter({ lesson_id: lesson.id, status: 'active' })
               .then(async (plans) => {
                 if (plans.length > 0) {
@@ -1089,13 +1087,13 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
                   await base44.entities.StudyPlan.update(plan.id, {
                     initial_predicted_grade: aiGrade,
                     initial_score: aiScore,
-                    initial_confidence: aiConfidence,
+                    initial_confidence: feedbackData.prediction_confidence_percentage || 45,
                     current_predicted_grade: aiGrade,
                     current_score: aiScore,
-                    current_confidence: aiConfidence,
+                    current_confidence: feedbackData.prediction_confidence_percentage || 45,
                     mastery_gap: feedbackData.mastery_gap || plan.mastery_gap
                   });
-                  console.log(`📊 Study plan updated: Grade=${aiGrade}, Score=${aiScore}%, Confidence=${aiConfidence}%`);
+                  console.log(`📊 Study plan updated with AI predicted grade: ${aiGrade}`);
                 }
               }).catch(err => console.warn("Study plan update error:", err.message));
           }
