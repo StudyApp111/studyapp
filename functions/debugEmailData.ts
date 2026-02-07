@@ -38,12 +38,13 @@ Deno.serve(async (req) => {
         const plans = parseSafe(rawPlans);
         
         return Response.json({
-            lessons_count: lessons.length,
-            exams_count: exams.length,
-            plans_count: plans.length,
+            raw_type: typeof rawLessons,
+            is_array: Array.isArray(rawLessons),
+            parsed_lessons: lessons.length,
+            parsed_exams: exams.length,
+            parsed_plans: plans.length,
             lesson_names: lessons.slice(0, 5).map(l => l.course_name),
-            first_exam_grade: exams.length > 0 ? exams[0].predicted_grade : null,
-            raw_type_lessons: typeof userLessons,
+            exam_grades: exams.filter(e => e.predicted_grade).slice(0, 5).map(e => ({ grade: e.predicted_grade, score: e.total_score })),
         });
     } catch (error) {
         console.error('Debug error:', error);
