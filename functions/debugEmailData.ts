@@ -10,30 +10,34 @@ Deno.serve(async (req) => {
 
         const { email } = await req.json();
 
-        // Test different approaches to get lessons
-        const allLessons = await base44.asServiceRole.entities.Lesson.list();
+        // Try multiple approaches
+        const listResult = await base44.asServiceRole.entities.Lesson.list('-created_date');
+        const filterAll = await base44.asServiceRole.entities.Lesson.filter({});
+        const filterByEmail = await base44.asServiceRole.entities.Lesson.filter({ created_by: email });
         
-        // Log a sample lesson to see the structure
-        if (allLessons.length > 0) {
-            const sample = allLessons[0];
-            console.log('Sample lesson keys:', Object.keys(sample));
-            console.log('Sample lesson created_by:', sample.created_by);
-            console.log('Sample lesson course_name:', sample.course_name);
-            console.log('Full sample:', JSON.stringify(sample).substring(0, 500));
+        // Also try user-scoped (not service role)
+        let userScoped = [];
+        try {
+            userScoped = await base44.entities.Lesson.list('-created_date');
+        } catch (e) {
+            console.log('User scoped error:', e.message);
         }
-
-        const userLessons = allLessons.filter(l => l.created_by === email);
         
-        // Also try filter method
-        const filteredLessons = await base44.asServiceRole.entities.Lesson.filter({ created_by: email });
+        console.log('list() count:', listResult.length);
+        console.log('filter({}) count:', filterAll.length);
+        console.log('filter by email count:', filterByEmail.length);
+        console.log('user scoped count:', userScoped.length);
+        
+        if (userScoped.length > 0) {
+            console.log('User scoped sample:', JSON.stringify(userScoped[0]).substring(0, 300));
+        }
         
         return Response.json({
-            total_lessons_in_db: allLessons.length,
-            user_lessons_by_filter_js: userLessons.length,
-            user_lessons_by_sdk_filter: filteredLessons.length,
-            target_email: email,
-            sample_created_by: allLessons.length > 0 ? allLessons[0].created_by : 'no lessons',
-            filtered_names: filteredLessons.map(l => l.course_name)
+            list_count: listResult.length,
+            filter_all_count: filterAll.length,
+            filter_by_email_count: filterByEmail.length,
+            user_scoped_count: userScoped.length,
+            user_scoped_names: userScoped.map(l => ({ name: l.course_name, created_by: l.created_by })),
         });
     } catch (error) {
         console.error('Debug error:', error);
