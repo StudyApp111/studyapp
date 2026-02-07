@@ -10,23 +10,32 @@ Deno.serve(async (req) => {
 
         const { email } = await req.json();
 
-        // Service role list returns character count (not array) - RLS "read: true" makes
-        // service role return raw data differently. Let's use user-scoped calls.
-        const userLessons = await base44.entities.Lesson.list('-created_date');
-        const userExams = await base44.entities.Exam.list('-created_date');
-        const userStudyPlans = await base44.entities.StudyPlan.list('-created_date');
+        // Test per-user filtering with service role (after read:true RLS)
+        const rawLessons = await base44.asServiceRole.entities.Lesson.filter({ created_by: email });
+        const rawExams = await base44.asServiceRole.entities.Exam.filter({ created_by: email });
+        const rawPlans = await base44.asServiceRole.entities.StudyPlan.filter({ created_by: email });
+        const rawProfiles = await base44.asServiceRole.entities.LearningProfile.filter({ created_by: email });
         
-        // Parse if string
+        console.log('rawLessons type:', typeof rawLessons, 'isArray:', Array.isArray(rawLessons));
+        if (typeof rawLessons === 'string') {
+            console.log('rawLessons first 200 chars:', rawLessons.substring(0, 200));
+            console.log('rawLessons length:', rawLessons.length);
+        }
+        
         const parseSafe = (val) => {
+            if (Array.isArray(val)) return val;
             if (typeof val === 'string') {
-                try { return JSON.parse(val); } catch { return []; }
+                try { return JSON.parse(val); } catch (e) { 
+                    console.log('Parse error:', e.message, 'for string of length', val.length);
+                    return []; 
+                }
             }
-            return Array.isArray(val) ? val : [];
+            return [];
         };
         
-        const lessons = parseSafe(userLessons);
-        const exams = parseSafe(userExams);
-        const plans = parseSafe(userStudyPlans);
+        const lessons = parseSafe(rawLessons);
+        const exams = parseSafe(rawExams);
+        const plans = parseSafe(rawPlans);
         
         return Response.json({
             lessons_count: lessons.length,
