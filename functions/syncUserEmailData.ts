@@ -179,7 +179,8 @@ Deno.serve(async (req) => {
 
         // Manual single-user sync (user syncs their own data)
         // This runs as the user themselves, so RLS allows reading their own entities
-        const myLessons = await base44.entities.Lesson.list('-created_date', 500);
+        let myLessons = await base44.entities.Lesson.list('-created_date', 500);
+        if (!Array.isArray(myLessons)) myLessons = [];
         
         const emailData = {
             total_lessons: myLessons.length,
