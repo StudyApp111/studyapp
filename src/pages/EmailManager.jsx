@@ -410,7 +410,7 @@ export default function EmailManager() {
               <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm font-semibold text-blue-900 mb-2">Dynamic Fields:</p>
                 <div className="flex flex-wrap gap-2">
-                  {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                  {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed', 'predicted_grade', 'predicted_percentage', 'weak_area_count', 'task_count'].map(field => (
                     <Button
                       key={field}
                       size="sm"
@@ -422,7 +422,7 @@ export default function EmailManager() {
                     </Button>
                   ))}
                 </div>
-                <p className="text-xs text-blue-700 mt-2">Click to insert into email body</p>
+                <p className="text-xs text-blue-700 mt-2">Click to insert - First lesson data: predicted_grade, predicted_percentage, weak_area_count, task_count</p>
               </div>
 
               <div className="space-y-2">
@@ -565,7 +565,7 @@ export default function EmailManager() {
                       <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
                         <p className="text-xs font-semibold text-blue-900 mb-2">Dynamic Fields:</p>
                         <div className="flex flex-wrap gap-2">
-                          {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                          {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed', 'predicted_grade', 'predicted_percentage', 'weak_area_count', 'task_count'].map(field => (
                             <Button
                               key={field}
                               size="sm"
@@ -782,7 +782,7 @@ export default function EmailManager() {
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-xs font-semibold text-blue-900 mb-2">Dynamic Fields:</p>
               <div className="flex flex-wrap gap-2">
-                {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed', 'predicted_grade', 'predicted_percentage', 'weak_area_count', 'task_count'].map(field => (
                   <Button
                     key={field}
                     size="sm"

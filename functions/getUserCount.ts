@@ -10,8 +10,8 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Get user count using service role
-        const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 1000);
+        // Get ALL users using service role (no limit)
+        const allUsers = await base44.asServiceRole.entities.User.list('-created_date');
 
         return Response.json({ 
             count: allUsers.length,
