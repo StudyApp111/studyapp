@@ -22,13 +22,21 @@ Deno.serve(async (req) => {
         }
 
         // Get the target user to personalize the email
+        console.log('📧 Fetching user:', recipient);
         const targetUsers = await base44.asServiceRole.entities.User.filter({ email: recipient });
+        console.log('📧 User fetch result:', targetUsers?.length, 'users found');
         
-        if (targetUsers.length === 0) {
+        if (!targetUsers || targetUsers.length === 0) {
             return Response.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const targetUser = targetUsers[0];
+        // Log the raw user object to see structure
+        const rawUser = targetUsers[0];
+        console.log('📧 Raw user keys:', Object.keys(rawUser));
+        
+        // Handle both flat structure and nested data structure
+        const targetUser = rawUser.data ? { ...rawUser, ...rawUser.data } : rawUser;
+        console.log('📧 Final targetUser keys:', Object.keys(targetUser));
         
         // Helper function to get comprehensive user data for email personalization
         async function getUserEmailData(targetUser) {
