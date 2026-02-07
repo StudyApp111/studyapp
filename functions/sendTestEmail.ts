@@ -239,7 +239,8 @@ Deno.serve(async (req) => {
         const allStudyPlans = parseSafe(rawStudyPlans);
         const allProfiles = parseSafe(rawProfiles);
 
-        console.log(`Data for ${targetUser.email}: ${allLessons.length} lessons, ${allExams.length} exams, ${allStudyPlans.length} plans, ${allProfiles.length} profiles`);
+        console.log('Raw types:', typeof rawLessons, typeof rawExams, typeof rawStudyPlans, typeof rawProfiles);
+        console.log(`Parsed data for ${targetUser.email}: ${allLessons.length} lessons, ${allExams.length} exams, ${allStudyPlans.length} plans, ${allProfiles.length} profiles`);
 
         // Build comprehensive user data
         const userData = buildUserEmailData(targetUser, allLessons, allExams, allStudyPlans, allProfiles);
