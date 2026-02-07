@@ -52,7 +52,6 @@ import ChangePassword from './pages/ChangePassword';
 import CreateLesson from './pages/CreateLesson';
 import DiagnosticQuiz from './pages/DiagnosticQuiz';
 import DocumentViewer from './pages/DocumentViewer';
-import EmailManager from './pages/EmailManager';
 import Feedback from './pages/Feedback';
 import GradeResults from './pages/GradeResults';
 import Home from './pages/Home';
@@ -62,8 +61,9 @@ import Onboarding from './pages/Onboarding';
 import PredictedGradeDisplay from './pages/PredictedGradeDisplay';
 import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
-import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
+import EmailManager from './pages/EmailManager';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -73,7 +73,6 @@ export const PAGES = {
     "CreateLesson": CreateLesson,
     "DiagnosticQuiz": DiagnosticQuiz,
     "DocumentViewer": DocumentViewer,
-    "EmailManager": EmailManager,
     "Feedback": Feedback,
     "GradeResults": GradeResults,
     "Home": Home,
@@ -83,8 +82,9 @@ export const PAGES = {
     "PredictedGradeDisplay": PredictedGradeDisplay,
     "PricingPlans": PricingPlans,
     "ProfileInformation": ProfileInformation,
-    "Settings": Settings,
     "SmartGrader": SmartGrader,
+    "EmailManager": EmailManager,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {
