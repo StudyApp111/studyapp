@@ -193,31 +193,13 @@ Deno.serve(async (req) => {
                 // Get comprehensive user data
                 const userData = await getUserEmailData(targetUser);
 
-                // Replace all dynamic fields
-                let personalizedBody = body
-                    .replace(/\{\{name\}\}/g, userData.name)
-                    .replace(/\{\{email\}\}/g, userData.email)
-                    .replace(/\{\{school\}\}/g, userData.school)
-                    .replace(/\{\{grade\}\}/g, userData.grade)
-                    .replace(/\{\{level\}\}/g, userData.level)
-                    .replace(/\{\{total_points\}\}/g, userData.total_points)
-                    .replace(/\{\{current_streak\}\}/g, userData.current_streak)
-                    .replace(/\{\{questions_completed\}\}/g, userData.questions_completed)
-                    .replace(/\{\{first_lesson_name\}\}/g, userData.first_lesson_name)
-                    .replace(/\{\{first_lesson_date\}\}/g, userData.first_lesson_date)
-                    .replace(/\{\{first_predicted_grade\}\}/g, userData.first_predicted_grade)
-                    .replace(/\{\{first_predicted_percentage\}\}/g, userData.first_predicted_percentage)
-                    .replace(/\{\{first_weak_area_count\}\}/g, userData.first_weak_area_count)
-                    .replace(/\{\{first_task_count\}\}/g, userData.first_task_count)
-                    .replace(/\{\{first_time_spent_minutes\}\}/g, userData.first_time_spent_minutes)
-                    .replace(/\{\{latest_lesson_name\}\}/g, userData.latest_lesson_name)
-                    .replace(/\{\{latest_predicted_grade\}\}/g, userData.latest_predicted_grade)
-                    .replace(/\{\{latest_predicted_percentage\}\}/g, userData.latest_predicted_percentage)
-                    .replace(/\{\{total_lessons\}\}/g, userData.total_lessons)
-                    .replace(/\{\{total_exams_completed\}\}/g, userData.total_exams_completed)
-                    .replace(/\{\{total_time_spent_minutes\}\}/g, userData.total_time_spent_minutes)
-                    .replace(/\{\{grade_improvement\}\}/g, userData.grade_improvement)
-                    .replace(/\{\{all_predicted_grades\}\}/g, userData.all_predicted_grades);
+                // Replace all dynamic fields - convert to strings to ensure replacement works
+                let personalizedBody = body;
+                Object.keys(userData).forEach(key => {
+                    const value = String(userData[key]);
+                    const regex = new RegExp(`{{${key}}}`, 'gi');
+                    personalizedBody = personalizedBody.replace(regex, value);
+                });
 
                 // Send via Resend API
                 const resendResponse = await fetch('https://api.resend.com/emails', {

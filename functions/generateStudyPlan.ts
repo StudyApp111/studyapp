@@ -52,9 +52,11 @@ Deno.serve(async (req) => {
       }
       
       examQuestions = exam.questions || [];
-      predictedGrade = exam.predicted_grade;
-      totalScore = exam.total_score;
+      predictedGrade = exam.predicted_grade || '—';
+      totalScore = exam.total_score || 0;
       initialConfidence = exam.prediction_confidence || exam.ai_feedback?.prediction_confidence_percentage || 45;
+      
+      console.log(`📊 Exam data: grade=${predictedGrade}, score=${totalScore}%, confidence=${initialConfidence}%`);
     } else if (diagnosticData) {
       // Onboarding flow: use diagnosticData directly
       predictedGrade = diagnosticData.predicted_grade;
@@ -379,6 +381,9 @@ Return JSON:
       initial_predicted_grade: predictedGrade,
       initial_score: totalScore,
       initial_confidence: initialConfidence,
+      current_predicted_grade: predictedGrade,
+      current_score: totalScore,
+      current_confidence: initialConfidence,
       mastery_gap: masteryGap,
       target_grade: "A+",
       weak_competencies: weakestCompetencies.map(c => c.name),

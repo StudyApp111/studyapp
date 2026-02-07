@@ -98,13 +98,10 @@ Deno.serve(async (req) => {
             ...rows.map(row => row.join(','))
         ].join('\n');
 
-        // Return CSV file
-        return new Response(csvContent, {
-            status: 200,
-            headers: {
-                'Content-Type': 'text/csv',
-                'Content-Disposition': `attachment; filename="users_export_${new Date().toISOString().split('T')[0]}.csv"`
-            }
+        // Return CSV as data in JSON response (for frontend to handle as blob)
+        return Response.json({ 
+            success: true,
+            data: csvContent 
         });
 
     } catch (error) {
