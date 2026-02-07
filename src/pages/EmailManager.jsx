@@ -835,52 +835,18 @@ export default function EmailManager() {
           <div className="space-y-4 py-4">
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
               <div>
-                <p className="text-xs font-semibold text-blue-900 mb-1">User Profile</p>
+                <p className="text-xs font-semibold text-blue-900 mb-1">User</p>
                 <div className="flex flex-wrap gap-1">
-                  {['name', 'email', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
-                    <Button
-                      key={field}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => insertAutoDynamicField(field)}
-                      className="text-xs"
-                    >
-                      {`{{${field}}}`}
-                    </Button>
+                  {['name', 'first_name', 'email', 'school', 'grade', 'current_streak'].map(f => (
+                    <Button key={f} size="sm" variant="outline" onClick={() => insertAutoDynamicField(f)} className="text-xs">{`{{${f}}}`}</Button>
                   ))}
                 </div>
               </div>
-              
               <div>
-                <p className="text-xs font-semibold text-blue-900 mb-1">First Lesson</p>
+                <p className="text-xs font-semibold text-blue-900 mb-1">Lesson & Grades</p>
                 <div className="flex flex-wrap gap-1">
-                  {['first_lesson_name', 'first_predicted_grade', 'first_predicted_percentage', 'first_weak_area_count', 'first_task_count', 'first_time_spent_minutes'].map(field => (
-                    <Button
-                      key={field}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => insertAutoDynamicField(field)}
-                      className="text-xs"
-                    >
-                      {`{{${field}}}`}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <p className="text-xs font-semibold text-blue-900 mb-1">Progress</p>
-                <div className="flex flex-wrap gap-1">
-                  {['latest_predicted_grade', 'total_lessons', 'total_exams_completed', 'grade_improvement', 'all_predicted_grades'].map(field => (
-                    <Button
-                      key={field}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => insertAutoDynamicField(field)}
-                      className="text-xs"
-                    >
-                      {`{{${field}}}`}
-                    </Button>
+                  {['first_lesson_name', 'first_predicted_grade', 'latest_predicted_grade', 'grade_improvement', 'mastery_gap', 'weak_areas', 'all_predicted_grades'].map(f => (
+                    <Button key={f} size="sm" variant="outline" onClick={() => insertAutoDynamicField(f)} className="text-xs">{`{{${f}}}`}</Button>
                   ))}
                 </div>
               </div>
