@@ -10,35 +10,31 @@ Deno.serve(async (req) => {
 
         const { email } = await req.json();
 
-        // Try multiple approaches
-        const listResult = await base44.asServiceRole.entities.Lesson.list('-created_date');
-        const filterAll = await base44.asServiceRole.entities.Lesson.filter({});
-        const filterByEmail = await base44.asServiceRole.entities.Lesson.filter({ created_by: email });
+        // Service role list returns character count (not array) - RLS "read: true" makes
+        // service role return raw data differently. Let's use user-scoped calls.
+        const userLessons = await base44.entities.Lesson.list('-created_date');
+        const userExams = await base44.entities.Exam.list('-created_date');
+        const userStudyPlans = await base44.entities.StudyPlan.list('-created_date');
         
-        // Also try user-scoped (not service role)
-        let userScoped = [];
-        try {
-            userScoped = await base44.entities.Lesson.list('-created_date');
-        } catch (e) {
-            console.log('User scoped error:', e.message);
-        }
+        // Parse if string
+        const parseSafe = (val) => {
+            if (typeof val === 'string') {
+                try { return JSON.parse(val); } catch { return []; }
+            }
+            return Array.isArray(val) ? val : [];
+        };
         
-        console.log('list() count:', listResult.length);
-        console.log('filter({}) count:', filterAll.length);
-        console.log('filter by email count:', filterByEmail.length);
-        console.log('user scoped count:', userScoped.length);
-        
-        if (userScoped.length > 0) {
-            console.log('User scoped sample:', JSON.stringify(userScoped[0]).substring(0, 300));
-        }
+        const lessons = parseSafe(userLessons);
+        const exams = parseSafe(userExams);
+        const plans = parseSafe(userStudyPlans);
         
         return Response.json({
-            list_count: listResult.length,
-            filter_all_count: filterAll.length,
-            filter_by_email_count: filterByEmail.length,
-            user_scoped_count: Array.isArray(userScoped) ? userScoped.length : 'not array',
-            user_scoped_type: typeof userScoped,
-            user_scoped_sample: Array.isArray(userScoped) ? userScoped.slice(0, 2).map(l => l.course_name) : JSON.stringify(userScoped).substring(0, 200),
+            lessons_count: lessons.length,
+            exams_count: exams.length,
+            plans_count: plans.length,
+            lesson_names: lessons.slice(0, 5).map(l => l.course_name),
+            first_exam_grade: exams.length > 0 ? exams[0].predicted_grade : null,
+            raw_type_lessons: typeof userLessons,
         });
     } catch (error) {
         console.error('Debug error:', error);
