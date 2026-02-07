@@ -98,20 +98,35 @@ export default function Settings() {
     
     setIsDeleting(true);
     try {
-      // Delete user's data - lessons, exams, flashcards, etc.
+      // Delete all user's data
       const lessons = await base44.entities.Lesson.filter({});
-      for (const lesson of lessons) {
-        await base44.entities.Lesson.delete(lesson.id);
-      }
+      const exams = await base44.entities.Exam.filter({});
+      const flashcards = await base44.entities.Flashcard.filter({});
+      const studyPlans = await base44.entities.StudyPlan.filter({});
+      const annotations = await base44.entities.Annotation.filter({});
+      const lessonNotes = await base44.entities.LessonNote.filter({});
+      const teachItCards = await base44.entities.TeachItCard.filter({});
+      const courses = await base44.entities.Course.filter({});
+      const gradedAssignments = await base44.entities.GradedAssignment.filter({});
       
-      // Log the user out after deletion request
-      alert("Your account deletion request has been submitted. You will be logged out now. Please contact support@study-app.ai if you need further assistance.");
+      // Delete all data
+      for (const lesson of lessons) await base44.entities.Lesson.delete(lesson.id);
+      for (const exam of exams) await base44.entities.Exam.delete(exam.id);
+      for (const flashcard of flashcards) await base44.entities.Flashcard.delete(flashcard.id);
+      for (const plan of studyPlans) await base44.entities.StudyPlan.delete(plan.id);
+      for (const annotation of annotations) await base44.entities.Annotation.delete(annotation.id);
+      for (const note of lessonNotes) await base44.entities.LessonNote.delete(note.id);
+      for (const card of teachItCards) await base44.entities.TeachItCard.delete(card.id);
+      for (const course of courses) await base44.entities.Course.delete(course.id);
+      for (const assignment of gradedAssignments) await base44.entities.GradedAssignment.delete(assignment.id);
+      
+      // Log out immediately
       base44.auth.logout();
     } catch (error) {
       console.error("Error deleting account:", error);
-      alert("There was an error processing your request. Please contact support@study-app.ai");
+      alert("There was an error deleting your data. Please contact info@studyappai.com");
+      setIsDeleting(false);
     }
-    setIsDeleting(false);
   };
 
   if (isLoading) {
@@ -456,9 +471,10 @@ export default function Settings() {
                       </DialogHeader>
                       <Input
                         value={deleteConfirmText}
-                        onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
                         placeholder="Type DELETE to confirm"
                         className="border-red-200 focus:border-red-400"
+                        autoComplete="off"
                       />
                       <DialogFooter className="gap-2 sm:gap-0">
                         <Button variant="outline" onClick={() => {
