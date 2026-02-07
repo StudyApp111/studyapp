@@ -28,26 +28,10 @@ Deno.serve(async (req) => {
         }
         const targetUser = targetUsers[0];
 
-        // Fetch ALL related data upfront (single query each)
-        const allLessons = await base44.asServiceRole.entities.Lesson.list('-created_date');
-        const allExams = await base44.asServiceRole.entities.Exam.list('-created_date');
-        const allStudyPlans = await base44.asServiceRole.entities.StudyPlan.list('-created_date');
+        // Build user data by querying per-user
+        const userData = await buildUserDataForUser(base44, targetUser);
 
-        // Build user email data
-        const userData = buildUserData(targetUser, allLessons, allExams, allStudyPlans);
-
-        // Get learning profile
-        if (targetUser.learning_profile_id) {
-            const profiles = await base44.asServiceRole.entities.LearningProfile.filter({
-                id: targetUser.learning_profile_id
-            });
-            if (profiles.length > 0) {
-                userData.school = profiles[0].school || 'your school';
-                userData.grade = profiles[0].grade || 'your grade';
-            }
-        }
-
-        // Replace all dynamic fields
+        // Replace all dynamic fields in body AND subject
         const personalizedBody = replaceFields(body, userData);
         const personalizedSubject = replaceFields(subject, userData);
 
@@ -83,8 +67,56 @@ Deno.serve(async (req) => {
     }
 });
 
-function buildUserData(targetUser, allLessons, allExams, allStudyPlans) {
-    const data = {
+async function buildUserDataForUser(base44, targetUser) {
+    const data = getDefaultData(targetUser);
+
+    // Get learning profile
+    if (targetUser.learning_profile_id) {
+        try {
+            const profiles = await base44.asServiceRole.entities.LearningProfile.filter({ id: targetUser.learning_profile_id });
+            if (profiles.length > 0) {
+                data.school = profiles[0].school || 'your school';
+                data.grade = profiles[0].grade || 'your grade';
+            }
+        } catch (e) { console.error('Profile fetch error:', e.message); }
+    }
+
+    // Get user's lessons directly via filter (bypasses any list limits)
+    let userLessons = [];
+    try {
+        userLessons = await base44.asServiceRole.entities.Lesson.filter({ created_by: targetUser.email }, '-created_date', 500);
+    } catch (e) { console.error('Lesson fetch error:', e.message); }
+
+    console.log(`User ${targetUser.email}: found ${userLessons.length} lessons`);
+
+    if (userLessons.length === 0) return data;
+
+    userLessons.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    data.total_lessons = userLessons.length;
+    const lessonIds = userLessons.map(l => l.id);
+
+    // Get exams and study plans for user's lessons
+    let userExams = [];
+    let userPlans = [];
+    
+    for (const lessonId of lessonIds) {
+        try {
+            const exams = await base44.asServiceRole.entities.Exam.filter({ lesson_id: lessonId }, '-created_date', 100);
+            userExams.push(...exams);
+        } catch (e) { /* skip */ }
+        try {
+            const plans = await base44.asServiceRole.entities.StudyPlan.filter({ lesson_id: lessonId }, '-created_date', 50);
+            userPlans.push(...plans);
+        } catch (e) { /* skip */ }
+    }
+
+    console.log(`User ${targetUser.email}: found ${userExams.length} exams, ${userPlans.length} plans`);
+
+    return populateData(data, userLessons, userExams, userPlans);
+}
+
+function getDefaultData(targetUser) {
+    return {
         name: targetUser.full_name || 'there',
         first_name: (targetUser.full_name || 'there').split(' ')[0],
         email: targetUser.email,
@@ -115,19 +147,10 @@ function buildUserData(targetUser, allLessons, allExams, allStudyPlans) {
         mastery_gap: 'N/A',
         weak_areas: 'N/A'
     };
+}
 
-    // Filter to this user's data
-    const userLessons = allLessons.filter(l => l.created_by === targetUser.email);
-    if (userLessons.length === 0) return data;
-
-    userLessons.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-    data.total_lessons = userLessons.length;
-    
-    const lessonIds = userLessons.map(l => l.id);
-    const userExams = allExams.filter(e => lessonIds.includes(e.lesson_id));
-    const userPlans = allStudyPlans.filter(p => lessonIds.includes(p.lesson_id));
-
-    // Total time
+function populateData(data, userLessons, userExams, userPlans) {
+    // Total time across all lessons
     let totalSeconds = 0;
     for (const lesson of userLessons) {
         totalSeconds += lesson.total_study_time_seconds || 0;
@@ -144,26 +167,26 @@ function buildUserData(targetUser, allLessons, allExams, allStudyPlans) {
     data.first_lesson_date = new Date(firstLesson.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     data.first_time_spent_minutes = Math.round((firstLesson.total_study_time_seconds || 0) / 60);
 
+    // First lesson exams
     const firstLessonExams = userExams
         .filter(e => e.lesson_id === firstLesson.id)
         .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
     
     if (firstLessonExams.length > 0) {
-        const firstExam = firstLessonExams[0];
-        data.first_predicted_grade = firstExam.predicted_grade || 'N/A';
-        data.first_predicted_percentage = firstExam.total_score ? `${Math.round(firstExam.total_score)}%` : 'N/A';
+        data.first_predicted_grade = firstLessonExams[0].predicted_grade || 'N/A';
+        data.first_predicted_percentage = firstLessonExams[0].total_score ? `${Math.round(firstLessonExams[0].total_score)}%` : 'N/A';
     }
 
+    // First lesson study plans
     const firstLessonPlans = userPlans
         .filter(p => p.lesson_id === firstLesson.id)
         .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
     
     if (firstLessonPlans.length > 0) {
-        const firstPlan = firstLessonPlans[0];
-        data.first_weak_area_count = firstPlan.weak_competencies?.length || 0;
-        data.first_task_count = firstPlan.tasks?.length || 0;
-        data.mastery_gap = firstPlan.mastery_gap || 'N/A';
-        data.weak_areas = (firstPlan.weak_competencies || []).join(', ') || 'N/A';
+        data.first_weak_area_count = firstLessonPlans[0].weak_competencies?.length || 0;
+        data.first_task_count = firstLessonPlans[0].tasks?.length || 0;
+        data.mastery_gap = firstLessonPlans[0].mastery_gap || 'N/A';
+        data.weak_areas = (firstLessonPlans[0].weak_competencies || []).join(', ') || 'N/A';
     }
 
     // LATEST lesson
@@ -180,18 +203,15 @@ function buildUserData(targetUser, allLessons, allExams, allStudyPlans) {
         data.latest_predicted_percentage = completedExams[0].total_score ? `${Math.round(completedExams[0].total_score)}%` : 'N/A';
     }
 
-    // Exam stats
     data.total_exams_completed = completedExams.length;
 
     if (completedExams.length > 0) {
         const allGrades = completedExams.map(e => e.predicted_grade).filter(Boolean);
         const allScores = completedExams.map(e => e.total_score).filter(s => s != null);
         
-        // Chronological order for progression display
         const chronoGrades = [...completedExams].reverse().map(e => e.predicted_grade).filter(Boolean);
         data.all_predicted_grades = chronoGrades.join(' → ') || 'N/A';
 
-        // Best/worst by score
         if (allScores.length > 0) {
             const bestIdx = allScores.indexOf(Math.max(...allScores));
             const worstIdx = allScores.indexOf(Math.min(...allScores));
@@ -199,7 +219,6 @@ function buildUserData(targetUser, allLessons, allExams, allStudyPlans) {
             data.worst_grade = allGrades[worstIdx] || 'N/A';
         }
 
-        // Grade improvement (first vs latest)
         if (completedExams.length >= 2) {
             const oldest = [...completedExams].reverse()[0];
             const newest = completedExams[0];
@@ -212,7 +231,7 @@ function buildUserData(targetUser, allLessons, allExams, allStudyPlans) {
         }
     }
 
-    // Latest study plan for mastery gap
+    // Latest active study plan
     const activePlans = userPlans.filter(p => p.status === 'active');
     if (activePlans.length > 0) {
         const latestPlan = activePlans.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
@@ -259,7 +278,6 @@ function wrapInTemplate(bodyHtml) {
   .email-footer { padding: 24px 32px; background: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; }
   .email-footer p { margin: 0 0 6px; font-size: 12px; color: #94a3b8; }
   .email-footer a { color: #7c3aed; text-decoration: none; }
-  .cta-button { display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #ffffff !important; text-decoration: none !important; border-radius: 12px; font-weight: 700; font-size: 15px; margin: 8px 0; }
   @media (max-width: 640px) {
     .email-wrapper { margin: 0; border-radius: 0; }
     .email-body { padding: 24px 20px; }
