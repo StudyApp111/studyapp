@@ -66,27 +66,27 @@ Deno.serve(async (req) => {
                 all_predicted_grades: 'N/A'
             };
 
-            // Get learning profile
+            // Get learning profile - use list since filter by id may not work with service role
             if (targetUser.learning_profile_id) {
                 try {
-                    const profiles = await base44.asServiceRole.entities.LearningProfile.filter({ id: targetUser.learning_profile_id });
-                    if (profiles && profiles.length > 0) {
-                        data.school = profiles[0].school || 'your school';
-                        data.grade = profiles[0].grade || 'your grade';
+                    const allProfiles = await base44.asServiceRole.entities.LearningProfile.list('-created_date', 500);
+                    const profile = allProfiles.find(p => p.id === targetUser.learning_profile_id);
+                    if (profile) {
+                        data.school = profile.school || 'your school';
+                        data.grade = profile.grade || 'your grade';
                     }
                 } catch (profileError) {
                     // Silently ignore profile errors
                 }
             }
 
-            // Get all lessons for this user
+            // Get all lessons for this user - use list and filter in JS for reliability
             let userLessons = [];
             try {
-                userLessons = await base44.asServiceRole.entities.Lesson.filter({ created_by: targetUser.email });
-            } catch (filterErr) {
-                // Fallback to list and filter in JS
                 const allLessons = await base44.asServiceRole.entities.Lesson.list('-created_date', 500);
                 userLessons = allLessons.filter(l => l.created_by === targetUser.email);
+            } catch (filterErr) {
+                // Silently ignore
             }
             
             if (!userLessons || userLessons.length === 0) {
@@ -113,13 +113,13 @@ Deno.serve(async (req) => {
                 data.first_lesson_date = new Date(firstLesson.created_date).toLocaleDateString();
                 data.first_time_spent_minutes = Math.round((firstLesson.total_study_time_seconds || 0) / 60);
 
-                // Get all exams for first lesson
+                // Get all exams for first lesson - use list and filter in JS
                 let firstLessonExams = [];
                 try {
-                    firstLessonExams = await base44.asServiceRole.entities.Exam.filter({ lesson_id: firstLesson.id });
-                } catch (examFilterErr) {
                     const allExams = await base44.asServiceRole.entities.Exam.list('-created_date', 500);
                     firstLessonExams = allExams.filter(e => e.lesson_id === firstLesson.id);
+                } catch (examFilterErr) {
+                    // Silently ignore
                 }
                 
                 if (firstLessonExams && firstLessonExams.length > 0) {
@@ -130,13 +130,13 @@ Deno.serve(async (req) => {
                     data.first_predicted_percentage = firstExam.total_score ? Math.round(firstExam.total_score) : 'N/A';
                 }
 
-                // Get first study plan
+                // Get first study plan - use list and filter in JS
                 let firstLessonPlans = [];
                 try {
-                    firstLessonPlans = await base44.asServiceRole.entities.StudyPlan.filter({ lesson_id: firstLesson.id });
-                } catch (planFilterErr) {
-                    const allPlans = await base44.asServiceRole.entities.StudyPlan.list('-created_date', 200);
+                    const allPlans = await base44.asServiceRole.entities.StudyPlan.list('-created_date', 500);
                     firstLessonPlans = allPlans.filter(p => p.lesson_id === firstLesson.id);
+                } catch (planFilterErr) {
+                    // Silently ignore
                 }
                 
                 if (firstLessonPlans && firstLessonPlans.length > 0) {
@@ -152,10 +152,11 @@ Deno.serve(async (req) => {
             if (latestLesson && latestLesson.id !== firstLesson.id) {
                 data.latest_lesson_name = latestLesson.course_name || 'N/A';
 
-                // Fetch exams for latest lesson
+                // Fetch exams for latest lesson - use list and filter in JS
                 let latestLessonExams = [];
                 try {
-                    latestLessonExams = await base44.asServiceRole.entities.Exam.filter({ lesson_id: latestLesson.id });
+                    const allExams = await base44.asServiceRole.entities.Exam.list('-created_date', 500);
+                    latestLessonExams = allExams.filter(e => e.lesson_id === latestLesson.id);
                 } catch (e) {
                     // Silently ignore
                 }
@@ -186,15 +187,12 @@ Deno.serve(async (req) => {
                 }
             }
 
-            // Get all exam grades for progression tracking
+            // Get all exam grades for progression tracking - use list and filter
             const lessonIds = userLessons.map(l => l.id);
             let userExams = [];
             try {
-                // Fetch all completed exams for user's lessons
-                const allUserExams = await Promise.all(
-                    lessonIds.map(lid => base44.asServiceRole.entities.Exam.filter({ lesson_id: lid, completed: true }).catch(() => []))
-                );
-                userExams = allUserExams.flat();
+                const allExams = await base44.asServiceRole.entities.Exam.list('-created_date', 500);
+                userExams = allExams.filter(e => lessonIds.includes(e.lesson_id) && e.completed);
             } catch (e) {
                 // Silently ignore
             }
