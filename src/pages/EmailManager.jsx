@@ -520,22 +520,18 @@ export default function EmailManager() {
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="flex-1 space-y-2">
                   <Label htmlFor="testRecipient">Test Email (Optional)</Label>
-                  <Input
-                    id="testRecipient"
-                    value={testRecipient}
-                    onChange={(e) => setTestRecipient(e.target.value)}
-                    placeholder="Search by name or email..."
-                    list="user-list"
-                  />
-                  <datalist id="user-list">
-                    {allUsers
-                      .sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''))
-                      .map(u => (
-                        <option key={u.email} value={u.email}>
+                  <Select value={testRecipient} onValueChange={setTestRecipient}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a user to test email" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allUsers.map(u => (
+                        <SelectItem key={u.email} value={u.email}>
                           {u.full_name} ({u.email})
-                        </option>
+                        </SelectItem>
                       ))}
-                  </datalist>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -782,23 +778,22 @@ export default function EmailManager() {
                         <div className="flex flex-col gap-2">
                           <Label className="text-xs">Test Email</Label>
                           <div className="flex gap-2">
-                            <Input
-                              value={autoTestRecipient}
-                              onChange={(e) => setAutoTestRecipient(e.target.value)}
-                              placeholder="Search by name or email..."
-                              list="auto-user-list"
-                              className="flex-1"
+                            <Select 
+                              value={autoTestRecipient} 
+                              onValueChange={setAutoTestRecipient}
                               disabled={testingAutoEmail === email.id}
-                            />
-                            <datalist id="auto-user-list">
-                              {allUsers
-                                .sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''))
-                                .map(u => (
-                                  <option key={u.email} value={u.email}>
+                            >
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Select user" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {allUsers.map(u => (
+                                  <SelectItem key={u.email} value={u.email}>
                                     {u.full_name} ({u.email})
-                                  </option>
+                                  </SelectItem>
                                 ))}
-                            </datalist>
+                              </SelectContent>
+                            </Select>
                             <Button
                               size="sm"
                               variant="outline"
