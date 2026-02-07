@@ -15,7 +15,6 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import UserSearchSelect from "@/components/admin/UserSearchSelect";
 
 export default function EmailManager() {
   const navigate = useNavigate();
@@ -521,12 +520,18 @@ export default function EmailManager() {
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="flex-1 space-y-2">
                   <Label htmlFor="testRecipient">Test Email (Optional)</Label>
-                  <UserSearchSelect
-                    users={allUsers}
-                    value={testRecipient}
-                    onChange={setTestRecipient}
-                    placeholder="Search by name or email..."
-                  />
+                  <Select value={testRecipient} onValueChange={setTestRecipient}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a user to test email" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allUsers.map(u => (
+                        <SelectItem key={u.email} value={u.email}>
+                          {u.full_name} ({u.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -772,16 +777,23 @@ export default function EmailManager() {
                         
                         <div className="flex flex-col gap-2">
                           <Label className="text-xs">Test Email</Label>
-                          <div className="flex gap-2 items-end">
-                            <div className="flex-1">
-                              <UserSearchSelect
-                                users={allUsers}
-                                value={autoTestRecipient}
-                                onChange={setAutoTestRecipient}
-                                placeholder="Search user..."
-                                disabled={testingAutoEmail === email.id}
-                              />
-                            </div>
+                          <div className="flex gap-2">
+                            <Select 
+                              value={autoTestRecipient} 
+                              onValueChange={setAutoTestRecipient}
+                              disabled={testingAutoEmail === email.id}
+                            >
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Select user" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {allUsers.map(u => (
+                                  <SelectItem key={u.email} value={u.email}>
+                                    {u.full_name} ({u.email})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             <Button
                               size="sm"
                               variant="outline"
