@@ -407,22 +407,74 @@ export default function EmailManager() {
               )}
 
               {/* Dynamic Fields Helper */}
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm font-semibold text-blue-900 mb-2">Dynamic Fields:</p>
-                <div className="flex flex-wrap gap-2">
-                  {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed', 'predicted_grade', 'predicted_percentage', 'weak_area_count', 'task_count'].map(field => (
-                    <Button
-                      key={field}
-                      size="sm"
-                      variant="outline"
-                      onClick={() => insertDynamicField(field)}
-                      className="text-xs"
-                    >
-                      {`{{${field}}}`}
-                    </Button>
-                  ))}
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-blue-900 mb-2">User Profile</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['name', 'email', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                      <Button
+                        key={field}
+                        size="sm"
+                        variant="outline"
+                        onClick={() => insertDynamicField(field)}
+                        className="text-xs"
+                      >
+                        {`{{${field}}}`}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-xs text-blue-700 mt-2">Click to insert - First lesson data: predicted_grade, predicted_percentage, weak_area_count, task_count</p>
+                
+                <div>
+                  <p className="text-xs font-semibold text-blue-900 mb-2">First Lesson Data</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['first_lesson_name', 'first_lesson_date', 'first_predicted_grade', 'first_predicted_percentage', 'first_weak_area_count', 'first_task_count', 'first_time_spent_minutes'].map(field => (
+                      <Button
+                        key={field}
+                        size="sm"
+                        variant="outline"
+                        onClick={() => insertDynamicField(field)}
+                        className="text-xs"
+                      >
+                        {`{{${field}}}`}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs font-semibold text-blue-900 mb-2">Latest Lesson Data</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['latest_lesson_name', 'latest_predicted_grade', 'latest_predicted_percentage'].map(field => (
+                      <Button
+                        key={field}
+                        size="sm"
+                        variant="outline"
+                        onClick={() => insertDynamicField(field)}
+                        className="text-xs"
+                      >
+                        {`{{${field}}}`}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs font-semibold text-blue-900 mb-2">Overall Progress</p>
+                  <div className="flex flex-wrap gap-2">
+                    {['total_lessons', 'total_exams_completed', 'total_time_spent_minutes', 'grade_improvement', 'all_predicted_grades'].map(field => (
+                      <Button
+                        key={field}
+                        size="sm"
+                        variant="outline"
+                        onClick={() => insertDynamicField(field)}
+                        className="text-xs"
+                      >
+                        {`{{${field}}}`}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -562,20 +614,56 @@ export default function EmailManager() {
                 <CardContent>
                   {editingTemplate?.id === email.id ? (
                     <div className="space-y-4">
-                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs font-semibold text-blue-900 mb-2">Dynamic Fields:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed', 'predicted_grade', 'predicted_percentage', 'weak_area_count', 'task_count'].map(field => (
-                            <Button
-                              key={field}
-                              size="sm"
-                              variant="outline"
-                              onClick={() => insertAutoDynamicField(field)}
-                              className="text-xs"
-                            >
-                              {`{{${field}}}`}
-                            </Button>
-                          ))}
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
+                        <div>
+                          <p className="text-xs font-semibold text-blue-900 mb-1">User Profile</p>
+                          <div className="flex flex-wrap gap-1">
+                            {['name', 'email', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                              <Button
+                                key={field}
+                                size="sm"
+                                variant="outline"
+                                onClick={() => insertAutoDynamicField(field)}
+                                className="text-xs"
+                              >
+                                {`{{${field}}}`}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-xs font-semibold text-blue-900 mb-1">First Lesson</p>
+                          <div className="flex flex-wrap gap-1">
+                            {['first_lesson_name', 'first_predicted_grade', 'first_predicted_percentage', 'first_weak_area_count', 'first_task_count', 'first_time_spent_minutes'].map(field => (
+                              <Button
+                                key={field}
+                                size="sm"
+                                variant="outline"
+                                onClick={() => insertAutoDynamicField(field)}
+                                className="text-xs"
+                              >
+                                {`{{${field}}}`}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-xs font-semibold text-blue-900 mb-1">Progress</p>
+                          <div className="flex flex-wrap gap-1">
+                            {['latest_predicted_grade', 'total_lessons', 'total_exams_completed', 'grade_improvement', 'all_predicted_grades'].map(field => (
+                              <Button
+                                key={field}
+                                size="sm"
+                                variant="outline"
+                                onClick={() => insertAutoDynamicField(field)}
+                                className="text-xs"
+                              >
+                                {`{{${field}}}`}
+                              </Button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -779,20 +867,56 @@ export default function EmailManager() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs font-semibold text-blue-900 mb-2">Dynamic Fields:</p>
-              <div className="flex flex-wrap gap-2">
-                {['name', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed', 'predicted_grade', 'predicted_percentage', 'weak_area_count', 'task_count'].map(field => (
-                  <Button
-                    key={field}
-                    size="sm"
-                    variant="outline"
-                    onClick={() => insertAutoDynamicField(field)}
-                    className="text-xs"
-                  >
-                    {`{{${field}}}`}
-                  </Button>
-                ))}
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
+              <div>
+                <p className="text-xs font-semibold text-blue-900 mb-1">User Profile</p>
+                <div className="flex flex-wrap gap-1">
+                  {['name', 'email', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                    <Button
+                      key={field}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => insertAutoDynamicField(field)}
+                      className="text-xs"
+                    >
+                      {`{{${field}}}`}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-xs font-semibold text-blue-900 mb-1">First Lesson</p>
+                <div className="flex flex-wrap gap-1">
+                  {['first_lesson_name', 'first_predicted_grade', 'first_predicted_percentage', 'first_weak_area_count', 'first_task_count', 'first_time_spent_minutes'].map(field => (
+                    <Button
+                      key={field}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => insertAutoDynamicField(field)}
+                      className="text-xs"
+                    >
+                      {`{{${field}}}`}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-xs font-semibold text-blue-900 mb-1">Progress</p>
+                <div className="flex flex-wrap gap-1">
+                  {['latest_predicted_grade', 'total_lessons', 'total_exams_completed', 'grade_improvement', 'all_predicted_grades'].map(field => (
+                    <Button
+                      key={field}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => insertAutoDynamicField(field)}
+                      className="text-xs"
+                    >
+                      {`{{${field}}}`}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
             
