@@ -36,8 +36,9 @@ Deno.serve(async (req) => {
             list_count: listResult.length,
             filter_all_count: filterAll.length,
             filter_by_email_count: filterByEmail.length,
-            user_scoped_count: userScoped.length,
-            user_scoped_names: userScoped.map(l => ({ name: l.course_name, created_by: l.created_by })),
+            user_scoped_count: Array.isArray(userScoped) ? userScoped.length : 'not array',
+            user_scoped_type: typeof userScoped,
+            user_scoped_sample: Array.isArray(userScoped) ? userScoped.slice(0, 2).map(l => l.course_name) : JSON.stringify(userScoped).substring(0, 200),
         });
     } catch (error) {
         console.error('Debug error:', error);
