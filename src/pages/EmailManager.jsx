@@ -322,8 +322,9 @@ export default function EmailManager() {
 
   const handleExportUsers = async () => {
     try {
-      const { data } = await base44.functions.invoke('exportUsers', {});
-      const blob = new Blob([data], { type: 'text/csv' });
+      const response = await base44.functions.invoke('exportUsers', {});
+      const csvContent = response.data.csv;
+      const blob = new Blob([csvContent], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
         // Return CSV as data in JSON response (for frontend to handle as blob)
         return Response.json({ 
             success: true,
-            data: csvContent 
+            csv: csvContent 
         });
 
     } catch (error) {
