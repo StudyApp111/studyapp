@@ -411,70 +411,55 @@ export default function EmailManager() {
                 <div>
                   <p className="text-xs font-semibold text-blue-900 mb-2">User Profile</p>
                   <div className="flex flex-wrap gap-2">
-                    {['name', 'email', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
-                      <Button
-                        key={field}
-                        size="sm"
-                        variant="outline"
-                        onClick={() => insertDynamicField(field)}
-                        className="text-xs"
-                      >
+                    {['name', 'first_name', 'email', 'school', 'grade', 'level', 'total_points', 'current_streak', 'questions_completed'].map(field => (
+                      <Button key={field} size="sm" variant="outline" onClick={() => insertDynamicField(field)} className="text-xs">
                         {`{{${field}}}`}
                       </Button>
                     ))}
                   </div>
                 </div>
-                
                 <div>
-                  <p className="text-xs font-semibold text-blue-900 mb-2">First Lesson Data</p>
+                  <p className="text-xs font-semibold text-blue-900 mb-2">First Lesson</p>
                   <div className="flex flex-wrap gap-2">
                     {['first_lesson_name', 'first_lesson_date', 'first_predicted_grade', 'first_predicted_percentage', 'first_weak_area_count', 'first_task_count', 'first_time_spent_minutes'].map(field => (
-                      <Button
-                        key={field}
-                        size="sm"
-                        variant="outline"
-                        onClick={() => insertDynamicField(field)}
-                        className="text-xs"
-                      >
+                      <Button key={field} size="sm" variant="outline" onClick={() => insertDynamicField(field)} className="text-xs">
                         {`{{${field}}}`}
                       </Button>
                     ))}
                   </div>
                 </div>
-                
                 <div>
-                  <p className="text-xs font-semibold text-blue-900 mb-2">Latest Lesson Data</p>
+                  <p className="text-xs font-semibold text-blue-900 mb-2">Latest / Overall</p>
                   <div className="flex flex-wrap gap-2">
-                    {['latest_lesson_name', 'latest_predicted_grade', 'latest_predicted_percentage'].map(field => (
-                      <Button
-                        key={field}
-                        size="sm"
-                        variant="outline"
-                        onClick={() => insertDynamicField(field)}
-                        className="text-xs"
-                      >
+                    {['latest_lesson_name', 'latest_predicted_grade', 'latest_predicted_percentage', 'total_lessons', 'total_exams_completed', 'total_time_spent_minutes', 'all_course_names'].map(field => (
+                      <Button key={field} size="sm" variant="outline" onClick={() => insertDynamicField(field)} className="text-xs">
                         {`{{${field}}}`}
                       </Button>
                     ))}
                   </div>
                 </div>
-                
                 <div>
-                  <p className="text-xs font-semibold text-blue-900 mb-2">Overall Progress</p>
+                  <p className="text-xs font-semibold text-blue-900 mb-2">Grades & Weak Areas</p>
                   <div className="flex flex-wrap gap-2">
-                    {['total_lessons', 'total_exams_completed', 'total_time_spent_minutes', 'grade_improvement', 'all_predicted_grades'].map(field => (
-                      <Button
-                        key={field}
-                        size="sm"
-                        variant="outline"
-                        onClick={() => insertDynamicField(field)}
-                        className="text-xs"
-                      >
+                    {['grade_improvement', 'all_predicted_grades', 'best_grade', 'worst_grade', 'mastery_gap', 'weak_areas'].map(field => (
+                      <Button key={field} size="sm" variant="outline" onClick={() => insertDynamicField(field)} className="text-xs">
                         {`{{${field}}}`}
                       </Button>
                     ))}
                   </div>
                 </div>
+                <div>
+                  <p className="text-xs font-semibold text-blue-900 mb-2">Insert Elements</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="default" onClick={() => insertCTAButton()} className="text-xs bg-purple-600 hover:bg-purple-700 text-white">
+                      + CTA Button
+                    </Button>
+                    <Button size="sm" variant="default" onClick={() => insertDivider()} className="text-xs bg-slate-600 hover:bg-slate-700 text-white">
+                      + Divider
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-blue-600">Dynamic fields also work in the subject line. Fields show "N/A" if user has no data.</p>
               </div>
 
               <div className="space-y-2">
