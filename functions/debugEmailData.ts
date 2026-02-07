@@ -18,8 +18,10 @@ Deno.serve(async (req) => {
         
         console.log('rawLessons type:', typeof rawLessons, 'isArray:', Array.isArray(rawLessons));
         if (typeof rawLessons === 'string') {
-            console.log('rawLessons first 200 chars:', rawLessons.substring(0, 200));
+            console.log('rawLessons first 500 chars:', rawLessons.substring(0, 500));
             console.log('rawLessons length:', rawLessons.length);
+            // Check if it starts with [ or {
+            console.log('rawLessons starts with:', rawLessons.charAt(0));
         }
         
         const parseSafe = (val) => {
