@@ -77,9 +77,10 @@ Deno.serve(async (req) => {
                 }
             }
 
-            // Get all lessons for this user
-            const allLessons = await base44.asServiceRole.entities.Lesson.list();
-            const userLessons = allLessons.filter(l => l.created_by === targetUser.email);
+            // Get all lessons for this user (filter at DB level for performance)
+            const userLessons = await base44.asServiceRole.entities.Lesson.filter({
+                created_by: targetUser.email
+            });
             
             if (userLessons.length === 0) {
                 return data;
@@ -106,8 +107,9 @@ Deno.serve(async (req) => {
                 data.first_time_spent_minutes = Math.round((firstLesson.total_study_time_seconds || 0) / 60);
 
                 // Get all exams for first lesson
-                const allExams = await base44.asServiceRole.entities.Exam.list();
-                const firstLessonExams = allExams.filter(e => e.lesson_id === firstLesson.id);
+                const firstLessonExams = await base44.asServiceRole.entities.Exam.filter({
+                    lesson_id: firstLesson.id
+                });
                 
                 if (firstLessonExams.length > 0) {
                     firstLessonExams.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
@@ -118,8 +120,9 @@ Deno.serve(async (req) => {
                 }
 
                 // Get first study plan
-                const allStudyPlans = await base44.asServiceRole.entities.StudyPlan.list();
-                const firstLessonPlans = allStudyPlans.filter(p => p.lesson_id === firstLesson.id);
+                const firstLessonPlans = await base44.asServiceRole.entities.StudyPlan.filter({
+                    lesson_id: firstLesson.id
+                });
                 
                 if (firstLessonPlans.length > 0) {
                     firstLessonPlans.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
@@ -134,8 +137,9 @@ Deno.serve(async (req) => {
             if (latestLesson && latestLesson.id !== firstLesson.id) {
                 data.latest_lesson_name = latestLesson.course_name || 'N/A';
 
-                const allExams = await base44.asServiceRole.entities.Exam.list();
-                const latestLessonExams = allExams.filter(e => e.lesson_id === latestLesson.id);
+                const latestLessonExams = await base44.asServiceRole.entities.Exam.filter({
+                    lesson_id: latestLesson.id
+                });
                 
                 if (latestLessonExams.length > 0) {
                     latestLessonExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
@@ -164,11 +168,14 @@ Deno.serve(async (req) => {
             }
 
             // Get all exam grades for progression tracking
-            const allExams = await base44.asServiceRole.entities.Exam.list();
-            const userExams = allExams.filter(e => {
-                const lessonIds = userLessons.map(l => l.id);
-                return lessonIds.includes(e.lesson_id) && e.completed;
-            });
+            const lessonIds = userLessons.map(l => l.id);
+            const allExamsForUser = await Promise.all(
+                lessonIds.map(lid => base44.asServiceRole.entities.Exam.filter({
+                    lesson_id: lid,
+                    completed: true
+                }))
+            );
+            const userExams = allExamsForUser.flat();
             
             data.total_exams_completed = userExams.length;
 
