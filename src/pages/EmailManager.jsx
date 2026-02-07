@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import UserSearchSelect from "@/components/admin/UserSearchSelect";
 
 export default function EmailManager() {
   const navigate = useNavigate();
@@ -520,18 +521,12 @@ export default function EmailManager() {
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="flex-1 space-y-2">
                   <Label htmlFor="testRecipient">Test Email (Optional)</Label>
-                  <Select value={testRecipient} onValueChange={setTestRecipient}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a user to test email" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allUsers.map(u => (
-                        <SelectItem key={u.email} value={u.email}>
-                          {u.full_name} ({u.email})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <UserSearchSelect
+                    users={allUsers}
+                    value={testRecipient}
+                    onChange={setTestRecipient}
+                    placeholder="Search by name or email..."
+                  />
                 </div>
               </div>
 
