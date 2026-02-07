@@ -1,5 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+function parseSafe(val) {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+        try { return JSON.parse(val); } catch { return []; }
+    }
+    return [];
+}
+
 function buildUserEmailData(targetUser, allLessons, allExams, allStudyPlans, allProfiles) {
     const data = {
         name: targetUser.full_name || 'there',
@@ -214,12 +222,18 @@ Deno.serve(async (req) => {
         const allUsers = await base44.asServiceRole.entities.User.list('-created_date');
 
         // Pre-fetch ALL entity data ONCE (4 API calls total, not per-user)
-        const [allLessons, allExams, allStudyPlans, allProfiles] = await Promise.all([
+        const [rawLessons, rawExams, rawStudyPlans, rawProfiles] = await Promise.all([
             base44.asServiceRole.entities.Lesson.list(),
             base44.asServiceRole.entities.Exam.list(),
             base44.asServiceRole.entities.StudyPlan.list(),
             base44.asServiceRole.entities.LearningProfile.list()
         ]);
+
+        // SDK may return strings instead of arrays - parse safely
+        const allLessons = parseSafe(rawLessons);
+        const allExams = parseSafe(rawExams);
+        const allStudyPlans = parseSafe(rawStudyPlans);
+        const allProfiles = parseSafe(rawProfiles);
 
         console.log(`Sending to ${allUsers.length} users. Data: ${allLessons.length} lessons, ${allExams.length} exams, ${allStudyPlans.length} plans, ${allProfiles.length} profiles`);
 

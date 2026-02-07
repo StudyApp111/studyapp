@@ -1,5 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+function parseSafe(val) {
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+        try { return JSON.parse(val); } catch { return []; }
+    }
+    return [];
+}
+
 function buildUserEmailData(targetUser, allLessons, allExams, allStudyPlans, allProfiles) {
     const data = {
         name: targetUser.full_name || 'there',
@@ -217,13 +225,21 @@ Deno.serve(async (req) => {
         }
         const targetUser = targetUsers[0];
 
-        // Pre-fetch all data in parallel (4 API calls)
-        const [allLessons, allExams, allStudyPlans, allProfiles] = await Promise.all([
-            base44.asServiceRole.entities.Lesson.list(),
-            base44.asServiceRole.entities.Exam.list(),
-            base44.asServiceRole.entities.StudyPlan.list(),
-            base44.asServiceRole.entities.LearningProfile.list()
+        // Pre-fetch all data in parallel using filter by user email for proper scoping
+        const [rawLessons, rawExams, rawStudyPlans, rawProfiles] = await Promise.all([
+            base44.asServiceRole.entities.Lesson.filter({ created_by: targetUser.email }),
+            base44.asServiceRole.entities.Exam.filter({ created_by: targetUser.email }),
+            base44.asServiceRole.entities.StudyPlan.filter({ created_by: targetUser.email }),
+            base44.asServiceRole.entities.LearningProfile.filter({ created_by: targetUser.email })
         ]);
+
+        // SDK may return strings instead of arrays - parse safely
+        const allLessons = parseSafe(rawLessons);
+        const allExams = parseSafe(rawExams);
+        const allStudyPlans = parseSafe(rawStudyPlans);
+        const allProfiles = parseSafe(rawProfiles);
+
+        console.log(`Data for ${targetUser.email}: ${allLessons.length} lessons, ${allExams.length} exams, ${allStudyPlans.length} plans, ${allProfiles.length} profiles`);
 
         // Build comprehensive user data
         const userData = buildUserEmailData(targetUser, allLessons, allExams, allStudyPlans, allProfiles);
