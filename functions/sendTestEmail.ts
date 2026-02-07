@@ -67,22 +67,38 @@ Deno.serve(async (req) => {
             };
 
             console.log('📧 Getting email data for user:', targetUser.email);
+            console.log('📧 Target user data:', JSON.stringify({
+                email: targetUser.email,
+                learning_profile_id: targetUser.learning_profile_id,
+                level: targetUser.level,
+                total_points: targetUser.total_points
+            }));
 
-            // Get learning profile - try direct list if filter by id doesn't work
+            // Get learning profile
             if (targetUser.learning_profile_id) {
                 console.log('📧 Looking for learning profile:', targetUser.learning_profile_id);
                 try {
-                    const allProfiles = await base44.asServiceRole.entities.LearningProfile.list();
-                    const profile = allProfiles.find(p => p.id === targetUser.learning_profile_id);
-                    if (profile) {
-                        data.school = profile.school || 'your school';
-                        data.grade = profile.grade || 'your grade';
+                    const profiles = await base44.asServiceRole.entities.LearningProfile.filter({ id: targetUser.learning_profile_id });
+                    console.log('📧 Profile filter returned', profiles?.length, 'results');
+                    if (profiles && profiles.length > 0) {
+                        data.school = profiles[0].school || 'your school';
+                        data.grade = profiles[0].grade || 'your grade';
                         console.log('📧 Found profile:', { school: data.school, grade: data.grade });
-                    } else {
-                        console.log('📧 Profile not found in list of', allProfiles.length, 'profiles');
                     }
                 } catch (profileError) {
                     console.error('📧 Error fetching profile:', profileError.message);
+                    // Fallback to list
+                    try {
+                        const allProfiles = await base44.asServiceRole.entities.LearningProfile.list('-created_date', 100);
+                        const profile = allProfiles.find(p => p.id === targetUser.learning_profile_id);
+                        if (profile) {
+                            data.school = profile.school || 'your school';
+                            data.grade = profile.grade || 'your grade';
+                            console.log('📧 Found profile via list:', { school: data.school, grade: data.grade });
+                        }
+                    } catch (listErr) {
+                        console.error('📧 List also failed:', listErr.message);
+                    }
                 }
             } else {
                 console.log('📧 User has no learning_profile_id');
