@@ -66,23 +66,36 @@ Deno.serve(async (req) => {
                 all_predicted_grades: 'N/A'
             };
 
-            // Get learning profile
+            console.log('📧 Getting email data for user:', targetUser.email);
+
+            // Get learning profile - try direct list if filter by id doesn't work
             if (targetUser.learning_profile_id) {
-                const profiles = await base44.asServiceRole.entities.LearningProfile.filter({
-                    id: targetUser.learning_profile_id
-                });
-                if (profiles.length > 0) {
-                    data.school = profiles[0].school || 'your school';
-                    data.grade = profiles[0].grade || 'your grade';
+                console.log('📧 Looking for learning profile:', targetUser.learning_profile_id);
+                try {
+                    const allProfiles = await base44.asServiceRole.entities.LearningProfile.list();
+                    const profile = allProfiles.find(p => p.id === targetUser.learning_profile_id);
+                    if (profile) {
+                        data.school = profile.school || 'your school';
+                        data.grade = profile.grade || 'your grade';
+                        console.log('📧 Found profile:', { school: data.school, grade: data.grade });
+                    } else {
+                        console.log('📧 Profile not found in list of', allProfiles.length, 'profiles');
+                    }
+                } catch (profileError) {
+                    console.error('📧 Error fetching profile:', profileError.message);
                 }
+            } else {
+                console.log('📧 User has no learning_profile_id');
             }
 
-            // Get all lessons for this user (filter at DB level for performance)
-            const userLessons = await base44.asServiceRole.entities.Lesson.filter({
-                created_by: targetUser.email
-            });
+            // Get all lessons for this user - use list and filter in JS for reliability
+            console.log('📧 Looking for lessons by:', targetUser.email);
+            const allLessons = await base44.asServiceRole.entities.Lesson.list('-created_date', 500);
+            const userLessons = allLessons.filter(l => l.created_by === targetUser.email);
+            console.log('📧 Found', userLessons.length, 'lessons for user (from', allLessons.length, 'total)');
             
             if (userLessons.length === 0) {
+                console.log('📧 No lessons found, returning defaults');
                 return data;
             }
 
@@ -106,27 +119,38 @@ Deno.serve(async (req) => {
                 data.first_lesson_date = new Date(firstLesson.created_date).toLocaleDateString();
                 data.first_time_spent_minutes = Math.round((firstLesson.total_study_time_seconds || 0) / 60);
 
-                // Get all exams for first lesson
-                const firstLessonExams = await base44.asServiceRole.entities.Exam.filter({
-                    lesson_id: firstLesson.id
-                });
+                // Get all exams for first lesson - use list and filter for reliability
+                console.log('📧 Looking for exams for first lesson:', firstLesson.id);
+                const allExams = await base44.asServiceRole.entities.Exam.list('-created_date', 500);
+                const firstLessonExams = allExams.filter(e => e.lesson_id === firstLesson.id);
+                console.log('📧 Found', firstLessonExams.length, 'exams for first lesson');
                 
                 if (firstLessonExams.length > 0) {
                     firstLessonExams.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
                     const firstExam = firstLessonExams[0];
+                    console.log('📧 First exam data:', { 
+                        predicted_grade: firstExam.predicted_grade, 
+                        total_score: firstExam.total_score,
+                        completed: firstExam.completed
+                    });
                     
                     data.first_predicted_grade = firstExam.predicted_grade || 'N/A';
                     data.first_predicted_percentage = firstExam.total_score ? Math.round(firstExam.total_score) : 'N/A';
                 }
 
-                // Get first study plan
-                const firstLessonPlans = await base44.asServiceRole.entities.StudyPlan.filter({
-                    lesson_id: firstLesson.id
-                });
+                // Get first study plan - use list and filter for reliability
+                console.log('📧 Looking for study plans for first lesson');
+                const allPlans = await base44.asServiceRole.entities.StudyPlan.list('-created_date', 200);
+                const firstLessonPlans = allPlans.filter(p => p.lesson_id === firstLesson.id);
+                console.log('📧 Found', firstLessonPlans.length, 'study plans for first lesson');
                 
                 if (firstLessonPlans.length > 0) {
                     firstLessonPlans.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
                     const firstPlan = firstLessonPlans[0];
+                    console.log('📧 First plan data:', {
+                        weak_competencies: firstPlan.weak_competencies?.length,
+                        tasks: firstPlan.tasks?.length
+                    });
                     
                     data.first_weak_area_count = firstPlan.weak_competencies?.length || 0;
                     data.first_task_count = firstPlan.tasks?.length || 0;
@@ -137,9 +161,9 @@ Deno.serve(async (req) => {
             if (latestLesson && latestLesson.id !== firstLesson.id) {
                 data.latest_lesson_name = latestLesson.course_name || 'N/A';
 
-                const latestLessonExams = await base44.asServiceRole.entities.Exam.filter({
-                    lesson_id: latestLesson.id
-                });
+                // Reuse allExams from earlier
+                const latestLessonExams = allExams.filter(e => e.lesson_id === latestLesson.id);
+                console.log('📧 Found', latestLessonExams.length, 'exams for latest lesson');
                 
                 if (latestLessonExams.length > 0) {
                     latestLessonExams.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
@@ -167,15 +191,10 @@ Deno.serve(async (req) => {
                 }
             }
 
-            // Get all exam grades for progression tracking
+            // Get all exam grades for progression tracking - reuse allExams
             const lessonIds = userLessons.map(l => l.id);
-            const allExamsForUser = await Promise.all(
-                lessonIds.map(lid => base44.asServiceRole.entities.Exam.filter({
-                    lesson_id: lid,
-                    completed: true
-                }))
-            );
-            const userExams = allExamsForUser.flat();
+            const userExams = allExams.filter(e => lessonIds.includes(e.lesson_id) && e.completed);
+            console.log('📧 Found', userExams.length, 'completed exams for user');
             
             data.total_exams_completed = userExams.length;
 
@@ -185,8 +204,10 @@ Deno.serve(async (req) => {
                     .filter(e => e.predicted_grade)
                     .map(e => e.predicted_grade);
                 data.all_predicted_grades = grades.join(' → ') || 'N/A';
+                console.log('📧 All predicted grades:', data.all_predicted_grades);
             }
 
+            console.log('📧 Final email data:', JSON.stringify(data, null, 2));
             return data;
         }
         
