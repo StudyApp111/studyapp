@@ -98,18 +98,62 @@ export default function Settings() {
     
     setIsDeleting(true);
     try {
-      // Delete user's data - lessons, exams, flashcards, etc.
-      const lessons = await base44.entities.Lesson.filter({});
-      for (const lesson of lessons) {
-        await base44.entities.Lesson.delete(lesson.id);
+      // Delete all user data in parallel batches
+      const [lessons, exams, flashcards, studyPlans, annotations, lessonNotes, teachItCards, chatHistories, gradedAssignments] = await Promise.all([
+        base44.entities.Lesson.filter({}),
+        base44.entities.Exam.filter({}),
+        base44.entities.Flashcard.filter({}),
+        base44.entities.StudyPlan.filter({}),
+        base44.entities.Annotation.filter({}),
+        base44.entities.LessonNote.filter({}),
+        base44.entities.TeachItCard.filter({}),
+        base44.entities.PollyChatHistory.filter({}),
+        base44.entities.GradedAssignment.filter({}),
+      ]);
+
+      // Delete all entities
+      const deleteAll = async (items, entity) => {
+        for (const item of items) {
+          try { await entity.delete(item.id); } catch (e) { /* continue */ }
+        }
+      };
+
+      await Promise.all([
+        deleteAll(lessons, base44.entities.Lesson),
+        deleteAll(exams, base44.entities.Exam),
+        deleteAll(flashcards, base44.entities.Flashcard),
+        deleteAll(studyPlans, base44.entities.StudyPlan),
+        deleteAll(annotations, base44.entities.Annotation),
+        deleteAll(lessonNotes, base44.entities.LessonNote),
+        deleteAll(teachItCards, base44.entities.TeachItCard),
+        deleteAll(chatHistories, base44.entities.PollyChatHistory),
+        deleteAll(gradedAssignments, base44.entities.GradedAssignment),
+      ]);
+
+      // Delete learning profile if exists
+      if (user?.learning_profile_id) {
+        try { await base44.entities.LearningProfile.delete(user.learning_profile_id); } catch (e) { /* ok */ }
       }
-      
-      // Log the user out after deletion request
-      alert("Your account deletion request has been submitted. You will be logged out now. Please contact support@study-app.ai if you need further assistance.");
+
+      // Clear user custom data
+      await base44.auth.updateMe({
+        onboarding_completed: false,
+        learning_profile_id: null,
+        level: null,
+        total_points: null,
+        current_streak: null,
+        questions_completed: null,
+        daily_xp: null,
+        study_minutes_today: null,
+        questions_today: null,
+        flashcards_today: null,
+        session_count: null,
+      });
+
       base44.auth.logout();
     } catch (error) {
       console.error("Error deleting account:", error);
-      alert("There was an error processing your request. Please contact support@study-app.ai");
+      alert("There was an error deleting your data. Please contact info@studyappai.com");
     }
     setIsDeleting(false);
   };
@@ -457,8 +501,13 @@ export default function Settings() {
                       <Input
                         value={deleteConfirmText}
                         onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+                        onSelect={(e) => e.preventDefault()}
                         placeholder="Type DELETE to confirm"
                         className="border-red-200 focus:border-red-400"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
                       />
                       <DialogFooter className="gap-2 sm:gap-0">
                         <Button variant="outline" onClick={() => {
