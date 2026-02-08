@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { AlertTriangle, ExternalLink, X } from "lucide-react";
+import { Smartphone, MoreVertical, ExternalLink, X } from "lucide-react";
 
 // Check for required browser features
 const checkBrowserCompatibility = () => {
@@ -178,19 +178,12 @@ export default function BrowserCompatibilityBanner() {
     sessionStorage.setItem('browser_warning_dismissed', 'true');
   };
 
-  const handleOpenInBrowser = () => {
-    // Try to open in external browser
-    const url = window.location.href;
-    
-    // For Android
-    if (navigator.userAgent.includes('Android')) {
-      window.location.href = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
-    }
-    // For iOS - suggest copying link
-    else {
-      navigator.clipboard?.writeText(url);
-      alert('Link copied! Please paste it in Safari or Chrome.');
-    }
+  // Export function to check if TikTok/Instagram browser
+  const isInAppBrowser = () => {
+    const ua = navigator.userAgent;
+    return ua.includes('BytedanceWebview') || 
+           ua.includes('musical_ly') || 
+           ua.includes('Instagram');
   };
 
   if (!showBanner || dismissed) return null;
@@ -199,8 +192,8 @@ export default function BrowserCompatibilityBanner() {
     <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-300">
         <div className="flex items-start justify-between mb-4">
-          <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-amber-600" />
+          <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+            <Smartphone className="w-6 h-6 text-purple-600" />
           </div>
           <button
             onClick={handleDismiss}
@@ -211,14 +204,14 @@ export default function BrowserCompatibilityBanner() {
         </div>
 
         <h3 className="text-lg font-bold text-slate-900 mb-2">
-          {browserInfo?.isInApp ? 'Open in Browser' : 'Browser Update Needed'}
+          {browserInfo?.isInApp ? 'For the Best Experience' : 'Browser Update Needed'}
         </h3>
 
         <p className="text-sm text-slate-600 mb-4">
           {browserInfo?.isInApp ? (
             <>
-              You're using <strong>{browserInfo.name}</strong> which may not work properly with StudyApp. 
-              For the best experience, please open this page in Chrome, Safari, or your regular browser.
+              StudyApp works best in your regular browser. 
+              To open in your default browser, tap the <strong className="inline-flex items-center gap-0.5"><MoreVertical className="w-3 h-3 inline" /> menu</strong> button (usually top-right) and select <strong>"Open in Browser"</strong>.
             </>
           ) : browserInfo?.isOutdated ? (
             <>
@@ -234,33 +227,45 @@ export default function BrowserCompatibilityBanner() {
           )}
         </p>
 
+        {browserInfo?.isInApp && (
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 mb-4 border border-purple-200">
+            <div className="flex items-start gap-3">
+              <div className="bg-white rounded-lg p-2 shadow-sm">
+                <MoreVertical className="w-5 h-5 text-purple-600" />
+              </div>
+              <div className="flex-1 text-sm">
+                <p className="font-semibold text-slate-900 mb-1">Quick tip:</p>
+                <p className="text-slate-600">Look for the three dots <MoreVertical className="w-3 h-3 inline" /> or share icon at the top, then tap <strong>"Open in Browser"</strong> or <strong>"Open in Safari/Chrome"</strong></p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
-          {browserInfo?.isInApp && (
-            <button
-              onClick={handleOpenInBrowser}
-              className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Open in Browser
-            </button>
-          )}
-          
           <button
             onClick={handleDismiss}
-            className={`w-full py-3 px-4 rounded-xl font-medium transition-colors ${
+            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors ${
               browserInfo?.isInApp 
-                ? 'text-slate-600 hover:bg-slate-100' 
+                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
                 : 'bg-purple-600 hover:bg-purple-700 text-white'
             }`}
           >
-            {browserInfo?.isInApp ? 'Continue Anyway' : 'I Understand'}
+            {browserInfo?.isInApp ? 'Continue Here' : 'I Understand'}
           </button>
         </div>
 
-        <p className="text-xs text-slate-400 mt-4 text-center">
-          Some features may not work correctly
+        <p className="text-xs text-slate-500 mt-4 text-center">
+          {browserInfo?.isInApp ? '✨ All your progress will be saved' : 'Some features may not work correctly'}
         </p>
       </div>
     </div>
   );
 }
+
+// Export helper function for use in other components
+export const checkIsInAppBrowser = () => {
+  const ua = navigator.userAgent;
+  return ua.includes('BytedanceWebview') || 
+         ua.includes('musical_ly') || 
+         ua.includes('Instagram');
+};

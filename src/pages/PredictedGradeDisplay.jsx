@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { 
   Trophy, Target, BookOpen, 
   TrendingUp, CheckCircle2, AlertCircle, ArrowRight,
-  Lock, MessageSquare, FileText, Eye
+  Lock, MessageSquare, FileText, Eye, Smartphone, MoreVertical, X
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { generateFingerprint } from "@/components/utils/browserFingerprint";
 import { motion, AnimatePresence } from "framer-motion";
+import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
 
 // Grade color based on percentage: 90+ green, 80+ blue, 70+ purple, 0-69 orange/gray
 const getGradeColor = (percentage) => {
@@ -116,6 +117,7 @@ export default function PredictedGradeDisplay() {
   const [userName, setUserName] = useState("");
   const [reportData, setReportData] = useState(null);
   const [ctaLoading, setCTALoading] = useState(false);
+  const [showBrowserModal, setShowBrowserModal] = useState(false);
 
   useEffect(() => {
     if (!school || !courseCode) {
@@ -137,6 +139,15 @@ export default function PredictedGradeDisplay() {
   }, [name, school, courseCode, reportDataParam, navigate]);
 
   const handleCTA = async () => {
+    // Check if in-app browser and show modal
+    if (checkIsInAppBrowser()) {
+      const dismissed = sessionStorage.getItem('report_browser_warning_dismissed');
+      if (!dismissed) {
+        setShowBrowserModal(true);
+        return;
+      }
+    }
+    
     setCTALoading(true);
     
     try {
@@ -844,6 +855,60 @@ export default function PredictedGradeDisplay() {
           <p className="text-slate-600 text-sm">Powered by StudyApp.AI</p>
         </div>
       </div>
+
+      {/* Browser Compatibility Modal */}
+      {showBrowserModal && (
+        <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-300">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <Smartphone className="w-6 h-6 text-purple-600" />
+              </div>
+              <button
+                onClick={handleDismissBrowserModal}
+                className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            <h3 className="text-lg font-bold text-slate-900 mb-2">
+              For the Best Experience
+            </h3>
+
+            <p className="text-sm text-slate-600 mb-4">
+              StudyApp works best in your regular browser. 
+              To open in your default browser, tap the <strong className="inline-flex items-center gap-0.5"><MoreVertical className="w-3 h-3 inline" /> menu</strong> button (usually top-right) and select <strong>"Open in Browser"</strong>.
+            </p>
+
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 mb-4 border border-purple-200">
+              <div className="flex items-start gap-3">
+                <div className="bg-white rounded-lg p-2 shadow-sm">
+                  <MoreVertical className="w-5 h-5 text-purple-600" />
+                </div>
+                <div className="flex-1 text-sm">
+                  <p className="font-semibold text-slate-900 mb-1">Quick tip:</p>
+                  <p className="text-slate-600">Look for the three dots <MoreVertical className="w-3 h-3 inline" /> or share icon at the top, then tap <strong>"Open in Browser"</strong> or <strong>"Open in Safari/Chrome"</strong></p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                onClick={handleContinueFromModal}
+                disabled={ctaLoading}
+                className="w-full py-3 px-4 rounded-xl font-semibold transition-colors bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                {ctaLoading ? 'Loading...' : 'Continue Here'}
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mt-4 text-center">
+              ✨ All your progress will be saved
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
