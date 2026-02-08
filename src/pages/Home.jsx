@@ -48,7 +48,7 @@ export default function Home() {
           try {
             const pendingData = JSON.parse(pendingDataStr);
             sessionStorage.removeItem('pendingOnboardingData');
-            
+
             console.log('📥 Processing pending onboarding data:', {
               fromReportCard: pendingData.fromReportCard,
               hasReportData: !!pendingData.reportData,
@@ -56,7 +56,7 @@ export default function Home() {
               hasExtracted: !!pendingData.extractedContent,
               hasCompressed: !!pendingData.compressedContent
             });
-            
+
             // Check if this is from the report card (completed diagnostic) or just sign-in during questions
             if (pendingData.fromReportCard && pendingData.reportData) {
               // User completed diagnostic and is coming from report card - create lesson
@@ -65,7 +65,7 @@ export default function Home() {
                 description: `Course at ${pendingData.school}`,
                 status: 'diagnostic_completed'
               };
-              
+
               if (pendingData.fileUrl) {
                 lessonData.file_url = pendingData.fileUrl;
                 lessonData.file_urls = [pendingData.fileUrl];
@@ -77,20 +77,33 @@ export default function Home() {
               if (pendingData.compressedContent) {
                 lessonData.compressed_content = pendingData.compressedContent;
               }
-              
+
               console.log('📝 Creating lesson with data:', {
                 course_name: lessonData.course_name,
                 hasFile: !!lessonData.file_url,
                 hasExtracted: !!lessonData.extracted_content,
                 hasCompressed: !!lessonData.compressed_content
               });
-              
+
               const newLesson = await base44.entities.Lesson.create(lessonData);
               console.log('✅ Lesson created:', newLesson.id);
-              
+
+              // Track Submit Application TikTok event (user signed up from report card and successfully logged in)
+              try {
+                if (window.ttq) {
+                  window.ttq.track('SubmitApplication', {
+                    content_name: pendingData.courseCode,
+                    content_category: pendingData.school
+                  });
+                  console.log('📊 TikTok SubmitApplication event sent (from Home after login)');
+                }
+              } catch (ttqError) {
+                console.error('TikTok tracking error (non-blocking):', ttqError);
+              }
+
               // Mark user as onboarding completed
               await base44.auth.updateMe({ onboarding_completed: true });
-              
+
               // Navigate to DocumentViewer with study plan tab and report data
               const reportDataStr = JSON.stringify(pendingData.reportData || {});
               console.log('🚀 Navigating to DocumentViewer with reportData');

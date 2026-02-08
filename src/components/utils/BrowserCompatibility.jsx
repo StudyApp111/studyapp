@@ -191,10 +191,7 @@ export default function BrowserCompatibilityBanner() {
   return (
     <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-300">
-        <div className="flex items-start justify-between mb-4">
-          <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-            <Smartphone className="w-6 h-6 text-purple-600" />
-          </div>
+        <div className="flex justify-end mb-2">
           <button
             onClick={handleDismiss}
             className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
@@ -203,60 +200,52 @@ export default function BrowserCompatibilityBanner() {
           </button>
         </div>
 
-        <h3 className="text-lg font-bold text-slate-900 mb-2">
-          {browserInfo?.isInApp ? 'For the Best Experience' : 'Browser Update Needed'}
-        </h3>
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto">
+            <Smartphone className="w-8 h-8 text-purple-600" />
+          </div>
 
-        <p className="text-sm text-slate-600 mb-4">
-          {browserInfo?.isInApp ? (
-            <>
-              StudyApp works best in your regular browser. 
-              To open in your default browser, tap the <strong className="inline-flex items-center gap-0.5"><MoreVertical className="w-3 h-3 inline" /> menu</strong> button (usually top-right) and select <strong>"Open in Browser"</strong>.
-            </>
-          ) : browserInfo?.isOutdated ? (
-            <>
-              Your browser (<strong>{browserInfo.name} {browserInfo.version}</strong>) is outdated. 
-              StudyApp requires {browserInfo.name} {browserInfo.minVersion}+ for all features to work properly.
-              Please update your browser.
-            </>
-          ) : (
-            <>
-              Your browser may not support all features. 
-              Please update to the latest version for the best experience.
-            </>
-          )}
-        </p>
+          <h3 className="text-xl font-bold text-slate-900">
+            {browserInfo?.isInApp ? 'Open in Your Browser' : 'Browser Update Needed'}
+          </h3>
 
-        {browserInfo?.isInApp && (
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 mb-4 border border-purple-200">
-            <div className="flex items-start gap-3">
-              <div className="bg-white rounded-lg p-2 shadow-sm">
-                <MoreVertical className="w-5 h-5 text-purple-600" />
-              </div>
-              <div className="flex-1 text-sm">
-                <p className="font-semibold text-slate-900 mb-1">Quick tip:</p>
-                <p className="text-slate-600">Look for the three dots <MoreVertical className="w-3 h-3 inline" /> or share icon at the top, then tap <strong>"Open in Browser"</strong> or <strong>"Open in Safari/Chrome"</strong></p>
+          <p className="text-sm text-slate-600">
+            {browserInfo?.isInApp ? (
+              <>For the best experience, open this in your regular browser</>
+            ) : browserInfo?.isOutdated ? (
+              <>Your browser is outdated. Please update for the best experience.</>
+            ) : (
+              <>Your browser may not support all features.</>
+            )}
+          </p>
+
+          {browserInfo?.isInApp && (
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className="bg-white rounded-lg p-2 shadow-sm">
+                  <MoreVertical className="w-6 h-6 text-purple-600" />
+                </div>
+                <p className="text-sm text-slate-700 font-medium">
+                  Tap the <MoreVertical className="w-3 h-3 inline" /> menu at the top
+                </p>
+                <p className="text-xs text-slate-600">
+                  Then select <strong>"Open in Browser"</strong>
+                </p>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        <div className="space-y-2">
           <button
             onClick={handleDismiss}
-            className={`w-full py-3 px-4 rounded-xl font-semibold transition-colors ${
-              browserInfo?.isInApp 
-                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                : 'bg-purple-600 hover:bg-purple-700 text-white'
-            }`}
+            className="w-full py-3 px-4 rounded-xl font-semibold transition-colors bg-purple-600 hover:bg-purple-700 text-white"
           >
-            {browserInfo?.isInApp ? 'Continue Here' : 'I Understand'}
+            {browserInfo?.isInApp ? 'Continue Anyway' : 'I Understand'}
           </button>
-        </div>
 
-        <p className="text-xs text-slate-500 mt-4 text-center">
-          {browserInfo?.isInApp ? '✨ All your progress will be saved' : 'Some features may not work correctly'}
-        </p>
+          <p className="text-xs text-slate-400">
+            {browserInfo?.isInApp ? 'Your progress will be saved' : 'Some features may not work'}
+          </p>
+        </div>
       </div>
     </div>
   );

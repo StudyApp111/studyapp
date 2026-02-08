@@ -12,13 +12,13 @@ import { generateFingerprint } from "@/components/utils/browserFingerprint";
 import { motion, AnimatePresence } from "framer-motion";
 import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
 
-// Grade color based on percentage: 90+ green, 80+ blue, 70+ purple, 0-69 orange/gray
+// Grade color based on percentage: 90+ green, 80+ blue, 70+ purple, 60+ orange, below 60 blue-gray (more appealing)
 const getGradeColor = (percentage) => {
   if (percentage >= 90) return { bg: 'from-emerald-500 to-teal-600', text: 'text-emerald-400', border: 'border-emerald-500/40' };
   if (percentage >= 80) return { bg: 'from-blue-500 to-indigo-600', text: 'text-blue-400', border: 'border-blue-500/40' };
   if (percentage >= 70) return { bg: 'from-purple-500 to-violet-600', text: 'text-purple-400', border: 'border-purple-500/40' };
   if (percentage >= 60) return { bg: 'from-orange-500 to-amber-600', text: 'text-orange-400', border: 'border-orange-500/40' };
-  return { bg: 'from-slate-500 to-slate-600', text: 'text-slate-400', border: 'border-slate-500/40' };
+  return { bg: 'from-slate-600 to-blue-700', text: 'text-blue-300', border: 'border-blue-500/40' };
 };
 
 const getToolIcon = (tool) => {
@@ -207,19 +207,6 @@ export default function PredictedGradeDisplay() {
         
         const newLesson = await base44.entities.Lesson.create(lessonData);
         
-        // Track Submit Application TikTok event (user signed up from report card)
-        try {
-          if (window.ttq) {
-            window.ttq.track('SubmitApplication', {
-              content_name: courseCode,
-              content_category: school
-            });
-            console.log('📊 TikTok SubmitApplication event sent');
-          }
-        } catch (ttqError) {
-          console.error('TikTok tracking error (non-blocking):', ttqError);
-        }
-        
         // Mark onboarding as complete
         await base44.auth.updateMe({ onboarding_completed: true });
         
@@ -376,19 +363,19 @@ export default function PredictedGradeDisplay() {
                   className="absolute left-0 top-0 h-full rounded-full bg-white/30 transition-all duration-1000"
                   style={{ width: `${percentage}%` }}
                 />
-                {/* Position indicator - centered on percentage */}
+                {/* Position indicator - accurately positioned */}
                 <div 
-                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full border-2 border-white shadow-lg transition-all duration-1000"
-                  style={{ left: `calc(${percentage}% - 10px)` }}
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full border-2 border-white shadow-lg transition-all duration-1000"
+                  style={{ left: `${percentage}%` }}
                 />
               </div>
               <div className="flex justify-between text-xs sm:text-sm text-white/70 font-medium px-1">
-                <span style={{ marginLeft: '0%' }}>F</span>
-                <span style={{ marginLeft: '-2%' }}>D</span>
-                <span style={{ marginLeft: '-2%' }}>C</span>
-                <span style={{ marginLeft: '-2%' }}>B</span>
-                <span style={{ marginLeft: '-2%' }}>A</span>
-                <span style={{ marginLeft: '-3%' }}>A+</span>
+                <span>F</span>
+                <span>D</span>
+                <span>C</span>
+                <span>B</span>
+                <span>A</span>
+                <span>A+</span>
               </div>
               
               {/* Confidence Level Badge */}
@@ -860,10 +847,7 @@ export default function PredictedGradeDisplay() {
       {showBrowserModal && (
         <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in fade-in zoom-in duration-300">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <Smartphone className="w-6 h-6 text-purple-600" />
-              </div>
+            <div className="flex justify-end mb-2">
               <button
                 onClick={handleDismissBrowserModal}
                 className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
@@ -872,24 +856,30 @@ export default function PredictedGradeDisplay() {
               </button>
             </div>
 
-            <h3 className="text-lg font-bold text-slate-900 mb-2">
-              For the Best Experience
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto">
+                <Smartphone className="w-8 h-8 text-purple-600" />
+              </div>
+
+            <h3 className="text-xl font-bold text-slate-900">
+              Open in Your Browser
             </h3>
 
             <p className="text-sm text-slate-600 mb-4">
-              StudyApp works best in your regular browser. 
-              To open in your default browser, tap the <strong className="inline-flex items-center gap-0.5"><MoreVertical className="w-3 h-3 inline" /> menu</strong> button (usually top-right) and select <strong>"Open in Browser"</strong>.
+              For the best experience, open this in your regular browser
             </p>
 
             <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-4 mb-4 border border-purple-200">
-              <div className="flex items-start gap-3">
+              <div className="flex flex-col items-center gap-2 text-center">
                 <div className="bg-white rounded-lg p-2 shadow-sm">
-                  <MoreVertical className="w-5 h-5 text-purple-600" />
+                  <MoreVertical className="w-6 h-6 text-purple-600" />
                 </div>
-                <div className="flex-1 text-sm">
-                  <p className="font-semibold text-slate-900 mb-1">Quick tip:</p>
-                  <p className="text-slate-600">Look for the three dots <MoreVertical className="w-3 h-3 inline" /> or share icon at the top, then tap <strong>"Open in Browser"</strong> or <strong>"Open in Safari/Chrome"</strong></p>
-                </div>
+                <p className="text-sm text-slate-700 font-medium">
+                  Tap the <MoreVertical className="w-3 h-3 inline" /> menu at the top
+                </p>
+                <p className="text-xs text-slate-600">
+                  Then select <strong>"Open in Browser"</strong>
+                </p>
               </div>
             </div>
 
@@ -899,12 +889,12 @@ export default function PredictedGradeDisplay() {
                 disabled={ctaLoading}
                 className="w-full py-3 px-4 rounded-xl font-semibold transition-colors bg-purple-600 hover:bg-purple-700 text-white"
               >
-                {ctaLoading ? 'Loading...' : 'Continue Here'}
+                {ctaLoading ? 'Loading...' : 'Continue Anyway'}
               </button>
             </div>
 
-            <p className="text-xs text-slate-500 mt-4 text-center">
-              ✨ All your progress will be saved
+            <p className="text-xs text-slate-400 mt-4 text-center">
+              Your progress will be saved
             </p>
           </div>
         </div>
