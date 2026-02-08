@@ -30,6 +30,8 @@ export default function NotesTab({ lesson }) {
     customInstructions: ""
   });
   const [copied, setCopied] = useState(false);
+  const [highlightMode, setHighlightMode] = useState(false);
+  const [fontSize, setFontSize] = useState('base'); // 'sm', 'base', 'lg'
 
   // Track if notes have been loaded to prevent redundant calls
   const [notesLoaded, setNotesLoaded] = useState(false);
