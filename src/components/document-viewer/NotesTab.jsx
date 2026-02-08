@@ -215,22 +215,45 @@ export default function NotesTab({ lesson }) {
           {/* Content */}
           <div className={`overflow-y-auto p-3 sm:p-6 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
             <div className="w-full max-w-full md:max-w-4xl mx-auto" style={{ boxSizing: 'border-box' }}>
-              <Card className={`p-4 sm:p-8 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'}`}>
-                <div className="prose prose-slate max-w-none 
-                  prose-headings:font-bold prose-headings:text-slate-900 
-                  prose-h1:text-3xl prose-h1:border-b prose-h1:border-slate-100 prose-h1:pb-4 prose-h1:mb-6
-                  prose-h2:text-2xl prose-h2:text-violet-700 prose-h2:mt-8 prose-h2:mb-4
-                  prose-h3:text-xl prose-h3:text-slate-800 prose-h3:mt-6 prose-h3:mb-3
-                  prose-p:text-slate-700 prose-p:leading-relaxed prose-p:text-base
-                  prose-li:text-slate-700 prose-li:marker:text-violet-400 prose-li:text-base
-                  prose-strong:text-slate-900 prose-strong:font-bold
-                  prose-em:text-slate-700 prose-em:italic
-                  prose-ul:my-4 prose-ol:my-4
-                  prose-blockquote:border-l-4 prose-blockquote:border-violet-500 prose-blockquote:bg-violet-50 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:text-violet-800 prose-blockquote:not-italic
-                  prose-code:bg-slate-100 prose-code:text-slate-700 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-code:font-mono prose-code:text-sm
-                  prose-pre:bg-slate-900 prose-pre:text-slate-50 prose-pre:rounded-xl prose-pre:shadow-lg prose-pre:p-4
-                  prose-hr:border-slate-200 prose-hr:my-8
-                  prose-table:text-sm
+              <Card className={`p-6 sm:p-12 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'}`}>
+                <div className={`prose prose-slate max-w-none
+                  ${isDark ? `
+                    prose-headings:text-white
+                    prose-h1:text-4xl prose-h1:font-black prose-h1:border-b prose-h1:pb-6 prose-h1:mb-8 prose-h1:border-white/10
+                    prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-4 prose-h2:text-purple-300
+                    prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-200
+                    prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-slate-300
+                    prose-p:text-slate-300 prose-p:leading-relaxed prose-p:text-base prose-p:my-4
+                    prose-li:text-slate-300 prose-li:marker:text-purple-400 prose-li:text-base prose-li:my-2
+                    prose-strong:text-white prose-strong:font-bold
+                    prose-em:text-slate-300 prose-em:italic
+                    prose-ul:my-6 prose-ul:space-y-2 prose-ol:my-6 prose-ol:space-y-2
+                    prose-blockquote:border-l-4 prose-blockquote:border-purple-500 prose-blockquote:bg-purple-500/10 prose-blockquote:py-3 prose-blockquote:px-5 prose-blockquote:rounded-r-lg prose-blockquote:text-purple-200 prose-blockquote:not-italic prose-blockquote:my-6
+                    prose-code:bg-slate-800 prose-code:text-purple-300 prose-code:px-2 prose-code:py-1 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-code:font-mono prose-code:text-sm
+                    prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:rounded-xl prose-pre:shadow-2xl prose-pre:p-6 prose-pre:my-6
+                    prose-hr:border-white/10 prose-hr:my-10
+                    prose-table:text-sm prose-table:border-white/10
+                    prose-th:bg-purple-500/10 prose-th:text-purple-300 prose-th:font-bold prose-th:border-white/10
+                    prose-td:border-white/10 prose-td:text-slate-300
+                  ` : `
+                    prose-headings:text-slate-900
+                    prose-h1:text-4xl prose-h1:font-black prose-h1:border-b prose-h1:pb-6 prose-h1:mb-8 prose-h1:border-slate-200
+                    prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-4 prose-h2:text-purple-700
+                    prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-800
+                    prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-slate-700
+                    prose-p:text-slate-700 prose-p:leading-relaxed prose-p:text-base prose-p:my-4
+                    prose-li:text-slate-700 prose-li:marker:text-purple-500 prose-li:text-base prose-li:my-2
+                    prose-strong:text-slate-900 prose-strong:font-bold
+                    prose-em:text-slate-700 prose-em:italic
+                    prose-ul:my-6 prose-ul:space-y-2 prose-ol:my-6 prose-ol:space-y-2
+                    prose-blockquote:border-l-4 prose-blockquote:border-purple-500 prose-blockquote:bg-purple-50 prose-blockquote:py-3 prose-blockquote:px-5 prose-blockquote:rounded-r-lg prose-blockquote:text-purple-800 prose-blockquote:not-italic prose-blockquote:my-6
+                    prose-code:bg-slate-100 prose-code:text-purple-700 prose-code:px-2 prose-code:py-1 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-code:font-mono prose-code:text-sm
+                    prose-pre:bg-slate-900 prose-pre:text-slate-50 prose-pre:rounded-xl prose-pre:shadow-2xl prose-pre:p-6 prose-pre:my-6
+                    prose-hr:border-slate-200 prose-hr:my-10
+                    prose-table:text-sm prose-table:border-slate-200
+                    prose-th:bg-purple-50 prose-th:text-purple-700 prose-th:font-bold prose-th:border-slate-200
+                    prose-td:border-slate-200 prose-td:text-slate-700
+                  `}
                 ">
                   <ReactMarkdown
                     components={{
