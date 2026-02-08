@@ -144,26 +144,23 @@ export default function NotesTab({ lesson }) {
     }
   };
 
-  const downloadAsMarkdown = () => {
-    if (note?.content) {
-      const blob = new Blob([note.content], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${lesson.course_name}_${note.note_type.replace(/\s/g, '_')}.md`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Downloaded as Markdown");
-    }
+  const extractTableOfContents = (content) => {
+    if (!content) return [];
+    const lines = content.split('\n');
+    const toc = [];
+    lines.forEach((line, idx) => {
+      const h1Match = line.match(/^#\s+(.+)$/);
+      const h2Match = line.match(/^##\s+(.+)$/);
+      const h3Match = line.match(/^###\s+(.+)$/);
+      
+      if (h1Match) toc.push({ level: 1, text: h1Match[1], id: `heading-${idx}` });
+      else if (h2Match) toc.push({ level: 2, text: h2Match[1], id: `heading-${idx}` });
+      else if (h3Match) toc.push({ level: 3, text: h3Match[1], id: `heading-${idx}` });
+    });
+    return toc;
   };
 
-  const getFontSizeClass = () => {
-    if (fontSize === 'sm') return 'prose-sm';
-    if (fontSize === 'lg') return 'prose-lg';
-    return 'prose-base';
-  };
+  const tableOfContents = note ? extractTableOfContents(note.content) : [];
 
   const activeConfig = TYPE_CONFIG[note?.note_type] || TYPE_CONFIG["default"];
   const ActiveIcon = activeConfig.icon;
