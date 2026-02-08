@@ -144,6 +144,27 @@ export default function NotesTab({ lesson }) {
     }
   };
 
+  const downloadAsMarkdown = () => {
+    if (note?.content) {
+      const blob = new Blob([note.content], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${lesson.course_name}_${note.note_type.replace(/\s/g, '_')}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Downloaded as Markdown");
+    }
+  };
+
+  const getFontSizeClass = () => {
+    if (fontSize === 'sm') return 'prose-sm';
+    if (fontSize === 'lg') return 'prose-lg';
+    return 'prose-base';
+  };
+
   const activeConfig = TYPE_CONFIG[note?.note_type] || TYPE_CONFIG["default"];
   const ActiveIcon = activeConfig.icon;
 
