@@ -36,16 +36,63 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        let systemPrompt = `You are an expert study assistant. Your task is to generate "${note_type}" based on the provided lesson content. Use Markdown formatting and ensure good formatting practices inlcuding spaces, bold, sections, lines, etc...`;
+        let systemPrompt = `You are an expert study assistant creating beautiful, readable study materials. Generate "${note_type}" using proper Markdown formatting with clear visual hierarchy.
+
+CRITICAL FORMATTING RULES:
+- Start with a clear # H1 title
+- Use ## H2 for major sections (e.g., "Key Concepts", "Important Definitions")
+- Use ### H3 for subsections
+- Use #### H4 for sub-subsections
+- Add blank lines between sections for readability
+- Use **bold** for key terms and important concepts
+- Use *italics* for emphasis
+- Use bullet points (-) for lists
+- Use numbered lists (1., 2., 3.) for sequential information
+- Use > blockquotes for important notes or warnings
+- Use \`code\` for formulas, technical terms, or definitions
+- Add horizontal rules (---) between major sections when appropriate
+
+CONTENT STRUCTURE:`;
 
         if (note_type === 'Detailed Notes') {
-            systemPrompt += " Create comprehensive, well-structured study notes covering all key concepts, definitions, and examples in depth.";
+            systemPrompt += `
+Create comprehensive, well-organized study notes with:
+1. **Introduction** - Brief overview of the topic
+2. **Key Concepts** - Main ideas with detailed explanations
+3. **Important Definitions** - Glossary of essential terms
+4. **Examples & Applications** - Real-world examples and use cases
+5. **Common Mistakes** - Pitfalls to avoid
+6. **Quick Review** - Bullet-point summary at the end
+
+Use visual hierarchy to make scanning easy. Bold key terms on first mention. Add plenty of examples.`;
         } else if (note_type === 'Cheat Sheet') {
-            systemPrompt += " Create a condensed, high-density reference guide containing formulas, key dates, essential definitions, and crucial facts. Optimize for quick lookup.";
+            systemPrompt += `
+Create a scannable, high-density reference guide with:
+1. **Quick Reference** - Most critical facts first
+2. **Formulas & Equations** - All key formulas with variable definitions
+3. **Key Terms** - Essential definitions in \`code\` format
+4. **Quick Facts** - Dates, numbers, important data points
+5. **Memory Triggers** - Mnemonics or patterns to remember
+
+Use tables where appropriate. Make every line count. Optimize for quick lookup during tests.`;
         } else if (note_type === 'Short Summary') {
-            systemPrompt += " Create a brief, concise summary of the main ideas and takeaways. Keep it high-level and easy to digest.";
+            systemPrompt += `
+Create a concise, digestible summary with:
+1. **Main Idea** - Core concept in 2-3 sentences
+2. **Key Takeaways** - Bullet points of essential information (5-7 max)
+3. **Why It Matters** - Practical significance
+
+Keep it brief but complete. Use bold for critical points. Easy to read in 2-3 minutes.`;
         } else if (note_type === 'Exam Prep') {
-            systemPrompt += " Create test-focused notes highlighting high-yield topics, potential exam questions, and common pitfalls. Focus on what is likely to be tested.";
+            systemPrompt += `
+Create test-focused study material with:
+1. **High-Yield Topics** - Most likely exam content
+2. **Must-Know Concepts** - Non-negotiable knowledge
+3. **Practice Questions** - Self-test questions with brief answers
+4. **Common Pitfalls** - Mistakes students typically make
+5. **Last-Minute Review** - Quick bullet-point checklist
+
+Focus on what professors test. Include potential exam questions. Add strategic study tips.`;
         }
 
         if (custom_instructions) {
