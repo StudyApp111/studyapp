@@ -305,67 +305,11 @@ export default function NotesTab({ lesson }) {
             <div className={`flex-1 overflow-y-auto p-3 sm:p-6 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden', maxHeight: 'calc(100vh - 140px)' }}>
               <div className="w-full max-w-full md:max-w-4xl mx-auto" style={{ boxSizing: 'border-box' }}>
                 <Card className={`p-6 sm:p-12 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'} ${highlightMode ? 'selection:bg-yellow-300 selection:text-slate-900' : ''}`}>
-                  <div 
-                    className={`prose max-w-none ${isDark ? 'prose-invert' : ''}`}
-                    style={{
-                      fontSize: fontSize === 'sm' ? '15px' : fontSize === 'lg' ? '19px' : '17px',
-                      lineHeight: '1.8'
-                    }}
-                  >
-                    <style jsx>{`
-                      .prose :where(h1):not(:where([class~="not-prose"] *)) {
-                        font-size: 2.5em;
-                        font-weight: 900;
-                        line-height: 1.2;
-                        margin-top: 0;
-                        margin-bottom: 1em;
-                        padding-bottom: 0.5em;
-                        border-bottom: 2px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'};
-                        color: ${isDark ? '#fff' : '#0f172a'};
-                      }
-                      .prose :where(h2):not(:where([class~="not-prose"] *)) {
-                        font-size: 1.8em;
-                        font-weight: 800;
-                        line-height: 1.3;
-                        margin-top: 2em;
-                        margin-bottom: 0.75em;
-                        color: ${isDark ? '#c084fc' : '#7c3aed'};
-                      }
-                      .prose :where(h3):not(:where([class~="not-prose"] *)) {
-                        font-size: 1.4em;
-                        font-weight: 700;
-                        line-height: 1.4;
-                        margin-top: 1.5em;
-                        margin-bottom: 0.5em;
-                        color: ${isDark ? '#e2e8f0' : '#334155'};
-                      }
-                      .prose :where(h4):not(:where([class~="not-prose"] *)) {
-                        font-size: 1.15em;
-                        font-weight: 600;
-                        margin-top: 1.25em;
-                        margin-bottom: 0.5em;
-                        color: ${isDark ? '#cbd5e1' : '#475569'};
-                      }
-                      .prose :where(p):not(:where([class~="not-prose"] *)) {
-                        margin-top: 1.25em;
-                        margin-bottom: 1.25em;
-                        line-height: 1.8;
-                      }
-                      .prose :where(strong):not(:where([class~="not-prose"] *)) {
-                        font-weight: 700;
-                        color: ${isDark ? '#fff' : '#0f172a'};
-                      }
-                      .prose :where(ul, ol):not(:where([class~="not-prose"] *)) {
-                        margin-top: 1.25em;
-                        margin-bottom: 1.25em;
-                        padding-left: 1.75em;
-                      }
-                      .prose :where(li):not(:where([class~="not-prose"] *)) {
-                        margin-top: 0.5em;
-                        margin-bottom: 0.5em;
-                        line-height: 1.75;
-                      }
-                    `}</style>
+                  <div className={`prose max-w-none ${isDark ? 'prose-invert' : ''} ${
+                    fontSize === 'sm' ? '[&_h1]:text-3xl [&_h2]:text-xl [&_h3]:text-lg [&_h4]:text-base [&_p]:text-sm [&_li]:text-sm' :
+                    fontSize === 'lg' ? '[&_h1]:!text-5xl [&_h2]:!text-3xl [&_h3]:!text-2xl [&_h4]:!text-xl [&_p]:!text-lg [&_li]:!text-lg' :
+                    '[&_h1]:!text-4xl [&_h2]:!text-2xl [&_h3]:!text-xl [&_h4]:!text-lg [&_p]:!text-base [&_li]:!text-base'
+                  } [&_h1]:!font-black [&_h1]:!border-b [&_h1]:!pb-4 [&_h1]:!mb-6 [&_h2]:!font-bold [&_h2]:!mt-8 [&_h2]:!mb-3 ${isDark ? '[&_h2]:!text-purple-400' : '[&_h2]:!text-purple-700'} [&_h3]:!font-semibold [&_h3]:!mt-6 [&_h3]:!mb-2 [&_p]:!leading-relaxed [&_p]:!my-3 [&_li]:!my-1 [&_strong]:!font-bold ${isDark ? '[&_strong]:!text-white' : '[&_strong]:!text-slate-900'} [&_ul]:!my-4 [&_ol]:!my-4 [&_ul]:!space-y-1 [&_ol]:!space-y-1`}>
                     <ReactMarkdown
                       components={{
                         h1: ({ children }) => <h1 id={`heading-${children}`}>{children}</h1>,
