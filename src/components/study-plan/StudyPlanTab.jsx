@@ -62,7 +62,7 @@ const getGradeColor = (grade) => {
   if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
   if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
   if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
-  if (grade.startsWith('D') || grade.startsWith('F')) return 'from-slate-400 to-slate-500';
+  if (grade.startsWith('D') || grade.startsWith('F')) return 'from-slate-600 to-blue-700';
   return 'from-red-500 to-rose-600';
 };
 
