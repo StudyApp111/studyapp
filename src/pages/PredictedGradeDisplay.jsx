@@ -196,6 +196,19 @@ export default function PredictedGradeDisplay() {
         
         const newLesson = await base44.entities.Lesson.create(lessonData);
         
+        // Track Submit Application TikTok event (user signed up from report card)
+        try {
+          if (window.ttq) {
+            window.ttq.track('SubmitApplication', {
+              content_name: courseCode,
+              content_category: school
+            });
+            console.log('📊 TikTok SubmitApplication event sent');
+          }
+        } catch (ttqError) {
+          console.error('TikTok tracking error (non-blocking):', ttqError);
+        }
+        
         // Mark onboarding as complete
         await base44.auth.updateMe({ onboarding_completed: true });
         

@@ -144,6 +144,19 @@ export default function Onboarding() {
       
       console.log('🚀 Submitting with:', { name, school, courseCode, hasDocument: !!documentData, hasCurriculum: !!curriculumData });
       
+      // Track Complete Registration TikTok event (user finished onboarding questions)
+      try {
+        if (window.ttq) {
+          window.ttq.track('CompleteRegistration', {
+            content_name: courseCode,
+            content_category: school
+          });
+          console.log('📊 TikTok CompleteRegistration event sent');
+        }
+      } catch (ttqError) {
+        console.error('TikTok tracking error (non-blocking):', ttqError);
+      }
+      
       // Navigate to DiagnosticQuiz with collected data
       const params = new URLSearchParams({ 
         name, 
