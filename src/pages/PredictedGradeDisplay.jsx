@@ -896,6 +896,7 @@ export default function PredictedGradeDisplay() {
             <p className="text-xs text-slate-400 mt-4 text-center">
               Your progress will be saved
             </p>
+            </div>
           </div>
         </div>
       )}
