@@ -144,23 +144,26 @@ export default function NotesTab({ lesson }) {
     }
   };
 
-  const extractTableOfContents = (content) => {
-    if (!content) return [];
-    const lines = content.split('\n');
-    const toc = [];
-    lines.forEach((line, idx) => {
-      const h1Match = line.match(/^#\s+(.+)$/);
-      const h2Match = line.match(/^##\s+(.+)$/);
-      const h3Match = line.match(/^###\s+(.+)$/);
-      
-      if (h1Match) toc.push({ level: 1, text: h1Match[1], id: `heading-${idx}` });
-      else if (h2Match) toc.push({ level: 2, text: h2Match[1], id: `heading-${idx}` });
-      else if (h3Match) toc.push({ level: 3, text: h3Match[1], id: `heading-${idx}` });
-    });
-    return toc;
+  const downloadAsMarkdown = () => {
+    if (note?.content) {
+      const blob = new Blob([note.content], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${lesson.course_name}_${note.note_type.replace(/\s/g, '_')}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Downloaded as Markdown");
+    }
   };
 
-  const tableOfContents = note ? extractTableOfContents(note.content) : [];
+  const getFontSizeClass = () => {
+    if (fontSize === 'sm') return 'prose-sm';
+    if (fontSize === 'lg') return 'prose-lg';
+    return 'prose-base';
+  };
 
   const activeConfig = TYPE_CONFIG[note?.note_type] || TYPE_CONFIG["default"];
   const ActiveIcon = activeConfig.icon;
@@ -202,32 +205,77 @@ export default function NotesTab({ lesson }) {
               </div>
             </div>
             
-            <div className="flex items-center gap-2 sm:self-auto self-end">
+            <div className="flex items-center gap-2 sm:self-auto self-end flex-wrap">
+              {/* Font Size Toggle (Desktop) */}
+              <div className="hidden md:flex items-center gap-1 px-2 py-1 rounded-lg border border-white/10">
+                <button 
+                  onClick={() => setFontSize('sm')} 
+                  className={`px-2 py-1 rounded text-xs transition-colors ${fontSize === 'sm' ? 'bg-purple-600 text-white' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  A
+                </button>
+                <button 
+                  onClick={() => setFontSize('base')} 
+                  className={`px-2 py-1 rounded text-sm transition-colors ${fontSize === 'base' ? 'bg-purple-600 text-white' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  A
+                </button>
+                <button 
+                  onClick={() => setFontSize('lg')} 
+                  className={`px-2 py-1 rounded text-base transition-colors ${fontSize === 'lg' ? 'bg-purple-600 text-white' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  A
+                </button>
+              </div>
+
+              {/* Highlight Mode Toggle */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setHighlightMode(!highlightMode)} 
+                className={`${highlightMode ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-600' : isDark ? 'text-slate-300 border-white/20 hover:bg-white/10 hover:text-white' : 'text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <Highlighter className="w-4 h-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Highlight</span>
+              </Button>
+
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={copyToClipboard} 
                 className={`${isDark ? 'text-slate-300 border-white/20 hover:bg-white/10 hover:text-white' : 'text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
               >
-                {copied ? <Check className="w-4 h-4 mr-1.5 text-emerald-500" /> : <Copy className="w-4 h-4 mr-1.5" />}
-                {copied ? "Copied" : "Copy"}
+                {copied ? <Check className="w-4 h-4 sm:mr-1.5 text-emerald-500" /> : <Copy className="w-4 h-4 sm:mr-1.5" />}
+                <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
               </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={downloadAsMarkdown} 
+                className={`hidden md:flex ${isDark ? 'text-slate-300 border-white/20 hover:bg-white/10 hover:text-white' : 'text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <Download className="w-4 h-4 mr-1.5" />
+                Download
+              </Button>
+
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSettingsOpen(true)} 
                 className={`${isDark ? 'text-purple-300 border-purple-500/30 hover:bg-purple-500/20 hover:text-purple-200' : 'text-purple-700 border-purple-200 hover:bg-purple-50 hover:text-purple-900 hover:border-purple-300'} transition-all`}
               >
-                <Settings2 className="w-4 h-4 mr-1.5" />
-                Customize
+                <Settings2 className="w-4 h-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Customize</span>
               </Button>
+
               <Button 
                 size="sm" 
                 onClick={() => generateNotes(settings)} 
                 className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-500/30 transition-all"
               >
-                <RefreshCw className="w-4 h-4 mr-1.5" />
-                Regenerate
+                <RefreshCw className="w-4 h-4 sm:mr-1.5" />
+                <span className="hidden sm:inline">Regenerate</span>
               </Button>
             </div>
           </div>
