@@ -144,26 +144,23 @@ export default function NotesTab({ lesson }) {
     }
   };
 
-  const downloadAsMarkdown = () => {
-    if (note?.content) {
-      const blob = new Blob([note.content], { type: 'text/markdown' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${lesson.course_name}_${note.note_type.replace(/\s/g, '_')}.md`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Downloaded as Markdown");
-    }
+  const extractTableOfContents = (content) => {
+    if (!content) return [];
+    const lines = content.split('\n');
+    const toc = [];
+    lines.forEach((line, idx) => {
+      const h1Match = line.match(/^#\s+(.+)$/);
+      const h2Match = line.match(/^##\s+(.+)$/);
+      const h3Match = line.match(/^###\s+(.+)$/);
+      
+      if (h1Match) toc.push({ level: 1, text: h1Match[1], id: `heading-${idx}` });
+      else if (h2Match) toc.push({ level: 2, text: h2Match[1], id: `heading-${idx}` });
+      else if (h3Match) toc.push({ level: 3, text: h3Match[1], id: `heading-${idx}` });
+    });
+    return toc;
   };
 
-  const getFontSizeClass = () => {
-    if (fontSize === 'sm') return 'prose-sm';
-    if (fontSize === 'lg') return 'prose-lg';
-    return 'prose-base';
-  };
+  const tableOfContents = note ? extractTableOfContents(note.content) : [];
 
   const activeConfig = TYPE_CONFIG[note?.note_type] || TYPE_CONFIG["default"];
   const ActiveIcon = activeConfig.icon;
@@ -206,106 +203,119 @@ export default function NotesTab({ lesson }) {
             </div>
             
             <div className="flex items-center gap-2 sm:self-auto self-end flex-wrap">
-              {/* Font Size Toggle (Desktop) */}
-              <div className="hidden md:flex items-center gap-1 px-2 py-1 rounded-lg border border-white/10">
+              {/* Font Size Controls */}
+              <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg border ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'}`}>
                 <button 
                   onClick={() => setFontSize('sm')} 
-                  className={`px-2 py-1 rounded text-xs transition-colors ${fontSize === 'sm' ? 'bg-purple-600 text-white' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${fontSize === 'sm' ? (isDark ? 'bg-purple-600 text-white' : 'bg-purple-600 text-white') : (isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')}`}
                 >
                   A
                 </button>
                 <button 
                   onClick={() => setFontSize('base')} 
-                  className={`px-2 py-1 rounded text-sm transition-colors ${fontSize === 'base' ? 'bg-purple-600 text-white' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+                  className={`px-2 py-1 rounded text-sm font-medium transition-colors ${fontSize === 'base' ? (isDark ? 'bg-purple-600 text-white' : 'bg-purple-600 text-white') : (isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')}`}
                 >
                   A
                 </button>
                 <button 
                   onClick={() => setFontSize('lg')} 
-                  className={`px-2 py-1 rounded text-base transition-colors ${fontSize === 'lg' ? 'bg-purple-600 text-white' : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+                  className={`px-2 py-1 rounded text-base font-medium transition-colors ${fontSize === 'lg' ? (isDark ? 'bg-purple-600 text-white' : 'bg-purple-600 text-white') : (isDark ? 'text-slate-400 hover:text-white' : 'text-slate-600 hover:text-slate-900')}`}
                 >
                   A
                 </button>
               </div>
 
-              {/* Highlight Mode Toggle */}
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => setHighlightMode(!highlightMode)} 
-                className={`${highlightMode ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-600' : isDark ? 'text-slate-300 border-white/20 hover:bg-white/10 hover:text-white' : 'text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
+                onClick={() => setHighlightMode(!highlightMode)}
+                className={`${highlightMode ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-600' : (isDark ? 'text-slate-300 border-white/20 hover:bg-white/10' : 'text-slate-600 border-slate-200 hover:bg-slate-50')}`}
               >
-                <Highlighter className="w-4 h-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Highlight</span>
+                <Highlighter className="w-4 h-4" />
               </Button>
-
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={copyToClipboard} 
                 className={`${isDark ? 'text-slate-300 border-white/20 hover:bg-white/10 hover:text-white' : 'text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
               >
-                {copied ? <Check className="w-4 h-4 sm:mr-1.5 text-emerald-500" /> : <Copy className="w-4 h-4 sm:mr-1.5" />}
-                <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </Button>
-
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={downloadAsMarkdown} 
-                className={`hidden md:flex ${isDark ? 'text-slate-300 border-white/20 hover:bg-white/10 hover:text-white' : 'text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
-              >
-                <Download className="w-4 h-4 mr-1.5" />
-                Download
-              </Button>
-
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setSettingsOpen(true)} 
                 className={`${isDark ? 'text-purple-300 border-purple-500/30 hover:bg-purple-500/20 hover:text-purple-200' : 'text-purple-700 border-purple-200 hover:bg-purple-50 hover:text-purple-900 hover:border-purple-300'} transition-all`}
               >
-                <Settings2 className="w-4 h-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Customize</span>
+                <Settings2 className="w-4 h-4" />
               </Button>
-
               <Button 
                 size="sm" 
                 onClick={() => generateNotes(settings)} 
                 className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-500/30 transition-all"
               >
-                <RefreshCw className="w-4 h-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Regenerate</span>
+                <RefreshCw className="w-4 h-4" />
               </Button>
             </div>
           </div>
 
           {/* Content */}
-          <div className={`overflow-y-auto p-3 sm:p-6 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
-            <div className="w-full max-w-full md:max-w-4xl mx-auto" style={{ boxSizing: 'border-box' }}>
-              <Card className={`p-6 sm:p-12 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'} ${highlightMode ? (isDark ? 'bg-[#1a1a22]' : 'bg-amber-50/30') : ''} transition-colors duration-300`}>
-                <div className={`${getFontSizeClass()} ${isDark 
-                  ? 'prose prose-slate max-w-none prose-headings:text-white prose-h1:text-4xl prose-h1:font-black prose-h1:border-b prose-h1:pb-6 prose-h1:mb-8 prose-h1:border-white/10 prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-4 prose-h2:text-purple-300 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-200 prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-slate-300 prose-p:text-slate-300 prose-p:leading-relaxed prose-p:text-base prose-p:my-4 prose-li:text-slate-300 prose-li:marker:text-purple-400 prose-li:text-base prose-li:my-2 prose-strong:text-white prose-strong:font-bold prose-em:text-slate-300 prose-em:italic prose-ul:my-6 prose-ul:space-y-2 prose-ol:my-6 prose-ol:space-y-2 prose-blockquote:border-l-4 prose-blockquote:border-purple-500 prose-blockquote:bg-purple-500/10 prose-blockquote:py-3 prose-blockquote:px-5 prose-blockquote:rounded-r-lg prose-blockquote:text-purple-200 prose-blockquote:not-italic prose-blockquote:my-6 prose-code:bg-slate-800 prose-code:text-purple-300 prose-code:px-2 prose-code:py-1 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-code:font-mono prose-code:text-sm prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:rounded-xl prose-pre:shadow-2xl prose-pre:p-6 prose-pre:my-6 prose-hr:border-white/10 prose-hr:my-10 prose-table:text-sm prose-table:border-white/10 prose-th:bg-purple-500/10 prose-th:text-purple-300 prose-th:font-bold prose-th:border-white/10 prose-td:border-white/10 prose-td:text-slate-300'
-                  : 'prose prose-slate max-w-none prose-headings:text-slate-900 prose-h1:text-4xl prose-h1:font-black prose-h1:border-b prose-h1:pb-6 prose-h1:mb-8 prose-h1:border-slate-200 prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-4 prose-h2:text-purple-700 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-800 prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-slate-700 prose-p:text-slate-700 prose-p:leading-relaxed prose-p:text-base prose-p:my-4 prose-li:text-slate-700 prose-li:marker:text-purple-500 prose-li:text-base prose-li:my-2 prose-strong:text-slate-900 prose-strong:font-bold prose-em:text-slate-700 prose-em:italic prose-ul:my-6 prose-ul:space-y-2 prose-ol:my-6 prose-ol:space-y-2 prose-blockquote:border-l-4 prose-blockquote:border-purple-500 prose-blockquote:bg-purple-50 prose-blockquote:py-3 prose-blockquote:px-5 prose-blockquote:rounded-r-lg prose-blockquote:text-purple-800 prose-blockquote:not-italic prose-blockquote:my-6 prose-code:bg-slate-100 prose-code:text-purple-700 prose-code:px-2 prose-code:py-1 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-code:font-mono prose-code:text-sm prose-pre:bg-slate-900 prose-pre:text-slate-50 prose-pre:rounded-xl prose-pre:shadow-2xl prose-pre:p-6 prose-pre:my-6 prose-hr:border-slate-200 prose-hr:my-10 prose-table:text-sm prose-table:border-slate-200 prose-th:bg-purple-50 prose-th:text-purple-700 prose-th:font-bold prose-th:border-slate-200 prose-td:border-slate-200 prose-td:text-slate-700'
-                } ${highlightMode ? '[&_strong]:bg-yellow-400/30 [&_strong]:px-1 [&_strong]:rounded [&_code]:bg-yellow-400/20 [&_h2]:bg-purple-500/10 [&_h2]:px-3 [&_h2]:py-1 [&_h2]:rounded-lg [&_h3]:bg-slate-500/5 [&_h3]:px-2 [&_h3]:py-0.5 [&_h3]:rounded' : ''} select-text`}>
-                  <ReactMarkdown
-                    components={{
-                      p: ({ children }) => {
-                        const text = typeof children === 'string' ? children : 
-                          (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
-                        return <p dangerouslySetInnerHTML={{ __html: renderMathText(text) }} />;
-                      },
-                      li: ({ children }) => {
-                        const text = typeof children === 'string' ? children : 
-                          (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
-                        return <li dangerouslySetInnerHTML={{ __html: renderMathText(text) }} />;
-                      }
-                    }}
-                  >
-                    {note.content}
-                  </ReactMarkdown>
+          <div className="flex gap-0 overflow-hidden">
+            {/* Table of Contents - Desktop Only */}
+            {tableOfContents.length > 0 && (
+              <div className={`hidden lg:block w-64 border-r overflow-y-auto ${isDark ? 'bg-[#0a0a12] border-white/10' : 'bg-slate-50 border-slate-200'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
+                <div className="p-4 sticky top-0">
+                  <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contents</h3>
+                  <nav className="space-y-1">
+                    {tableOfContents.map((item, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          const element = document.getElementById(item.id);
+                          element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }}
+                        className={`block w-full text-left text-sm py-1.5 px-2 rounded transition-colors ${
+                          item.level === 1 ? 'font-bold' : item.level === 2 ? 'font-semibold pl-3' : 'pl-5'
+                        } ${isDark ? 'text-slate-300 hover:bg-purple-500/10 hover:text-purple-300' : 'text-slate-700 hover:bg-purple-50 hover:text-purple-700'}`}
+                      >
+                        {item.text}
+                      </button>
+                    ))}
+                  </nav>
                 </div>
-              </Card>
+              </div>
+            )}
+
+            {/* Main Content */}
+            <div className={`flex-1 overflow-y-auto p-3 sm:p-6 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden', maxHeight: 'calc(100vh - 140px)' }}>
+              <div className="w-full max-w-full md:max-w-4xl mx-auto" style={{ boxSizing: 'border-box' }}>
+                <Card className={`p-6 sm:p-12 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'} ${highlightMode ? 'selection:bg-yellow-300 selection:text-slate-900' : ''}`}>
+                  <div className={`${isDark 
+                    ? 'prose prose-slate max-w-none prose-headings:text-white prose-h1:text-4xl prose-h1:font-black prose-h1:border-b prose-h1:pb-6 prose-h1:mb-8 prose-h1:border-white/10 prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-4 prose-h2:text-purple-300 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-200 prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-slate-300 prose-p:text-slate-300 prose-p:leading-relaxed prose-p:my-4 prose-li:text-slate-300 prose-li:marker:text-purple-400 prose-li:my-2 prose-strong:text-white prose-strong:font-bold prose-em:text-slate-300 prose-em:italic prose-ul:my-6 prose-ul:space-y-2 prose-ol:my-6 prose-ol:space-y-2 prose-blockquote:border-l-4 prose-blockquote:border-purple-500 prose-blockquote:bg-purple-500/10 prose-blockquote:py-3 prose-blockquote:px-5 prose-blockquote:rounded-r-lg prose-blockquote:text-purple-200 prose-blockquote:not-italic prose-blockquote:my-6 prose-code:bg-slate-800 prose-code:text-purple-300 prose-code:px-2 prose-code:py-1 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-code:font-mono prose-code:text-sm prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:rounded-xl prose-pre:shadow-2xl prose-pre:p-6 prose-pre:my-6 prose-hr:border-white/10 prose-hr:my-10 prose-table:text-sm prose-table:border-white/10 prose-th:bg-purple-500/10 prose-th:text-purple-300 prose-th:font-bold prose-th:border-white/10 prose-td:border-white/10 prose-td:text-slate-300'
+                    : 'prose prose-slate max-w-none prose-headings:text-slate-900 prose-h1:text-4xl prose-h1:font-black prose-h1:border-b prose-h1:pb-6 prose-h1:mb-8 prose-h1:border-slate-200 prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-4 prose-h2:text-purple-700 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-800 prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-slate-700 prose-p:text-slate-700 prose-p:leading-relaxed prose-p:my-4 prose-li:text-slate-700 prose-li:marker:text-purple-500 prose-li:my-2 prose-strong:text-slate-900 prose-strong:font-bold prose-em:text-slate-700 prose-em:italic prose-ul:my-6 prose-ul:space-y-2 prose-ol:my-6 prose-ol:space-y-2 prose-blockquote:border-l-4 prose-blockquote:border-purple-500 prose-blockquote:bg-purple-50 prose-blockquote:py-3 prose-blockquote:px-5 prose-blockquote:rounded-r-lg prose-blockquote:text-purple-800 prose-blockquote:not-italic prose-blockquote:my-6 prose-code:bg-slate-100 prose-code:text-purple-700 prose-code:px-2 prose-code:py-1 prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-code:font-mono prose-code:text-sm prose-pre:bg-slate-900 prose-pre:text-slate-50 prose-pre:rounded-xl prose-pre:shadow-2xl prose-pre:p-6 prose-pre:my-6 prose-hr:border-slate-200 prose-hr:my-10 prose-table:text-sm prose-table:border-slate-200 prose-th:bg-purple-50 prose-th:text-purple-700 prose-th:font-bold prose-th:border-slate-200 prose-td:border-slate-200 prose-td:text-slate-700'
+                  } ${fontSize === 'sm' ? 'prose-sm' : fontSize === 'lg' ? 'prose-lg' : ''}`}>
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ children }) => <h1 id={`heading-${children}`}>{children}</h1>,
+                        h2: ({ children }) => <h2 id={`heading-${children}`}>{children}</h2>,
+                        h3: ({ children }) => <h3 id={`heading-${children}`}>{children}</h3>,
+                        p: ({ children }) => {
+                          const text = typeof children === 'string' ? children : 
+                            (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                          return <p dangerouslySetInnerHTML={{ __html: renderMathText(text) }} />;
+                        },
+                        li: ({ children }) => {
+                          const text = typeof children === 'string' ? children : 
+                            (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
+                          return <li dangerouslySetInnerHTML={{ __html: renderMathText(text) }} />;
+                        }
+                      }}
+                    >
+                      {note.content}
+                    </ReactMarkdown>
+                  </div>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
