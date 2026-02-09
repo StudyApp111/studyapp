@@ -55,32 +55,19 @@ function AnswerRevealSection({ answer }) {
             key="locked"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative"
+            className="relative min-h-[120px]"
           >
-            {/* First 2 lines visible, rest blurred */}
+            {/* Fully hidden answer with overlay */}
             <div className="relative">
-              <p className="text-white/90 leading-relaxed text-base">
-                {answer?.split('.').slice(0, 1).join('.')}...
+              <p className="text-transparent select-none leading-relaxed text-base blur-md">
+                {answer}
               </p>
-              
-              <div className="mt-2 relative">
-                <p className="text-white/90 leading-relaxed text-base blur-[6px] select-none">
-                  {answer?.split('.').slice(1).join('.')}
-                </p>
-                
-                <div 
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: 'linear-gradient(to bottom, transparent 0%, rgba(30,41,59,0.5) 30%, rgba(30,41,59,0.9) 100%)'
-                  }}
-                />
-              </div>
             </div>
             
-            {/* Click to reveal button */}
+            {/* Click to reveal button - covers entire area */}
             <button
               onClick={() => setRevealed(true)}
-              className="absolute inset-0 flex items-center justify-center bg-slate-900/60 hover:bg-slate-900/70 transition-colors group"
+              className="absolute inset-0 flex items-center justify-center bg-slate-900/90 hover:bg-slate-900/95 transition-colors group"
             >
               <div className="bg-purple-600 hover:bg-purple-500 px-6 py-4 rounded-xl flex items-center gap-3 shadow-2xl shadow-purple-500/40 transition-all group-hover:scale-105">
                 <Eye className="w-6 h-6 text-white" />
@@ -137,6 +124,17 @@ export default function PredictedGradeDisplay() {
     setUserName(name || 'Student');
     setTimeout(() => setLoading(false), 2000);
   }, [name, school, courseCode, reportDataParam, navigate]);
+
+  const handleDismissBrowserModal = () => {
+    sessionStorage.setItem('report_browser_warning_dismissed', 'true');
+    setShowBrowserModal(false);
+  };
+
+  const handleContinueFromModal = async () => {
+    sessionStorage.setItem('report_browser_warning_dismissed', 'true');
+    setShowBrowserModal(false);
+    await handleCTA();
+  };
 
   const handleCTA = async () => {
     // Check if in-app browser and show modal
@@ -363,10 +361,19 @@ export default function PredictedGradeDisplay() {
                   className="absolute left-0 top-0 h-full rounded-full bg-white/30 transition-all duration-1000"
                   style={{ width: `${percentage}%` }}
                 />
-                {/* Position indicator - accurately positioned */}
+                {/* Position indicator - accurately positioned based on grade scale */}
                 <div 
                   className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full border-2 border-white shadow-lg transition-all duration-1000"
-                  style={{ left: `${percentage}%` }}
+                  style={{ 
+                    left: `${
+                      percentage < 50 ? (percentage / 50) * 16.67 :
+                      percentage < 60 ? 16.67 + ((percentage - 50) / 10) * 16.67 :
+                      percentage < 70 ? 33.34 + ((percentage - 60) / 10) * 16.67 :
+                      percentage < 80 ? 50.01 + ((percentage - 70) / 10) * 16.67 :
+                      percentage < 90 ? 66.68 + ((percentage - 80) / 10) * 16.67 :
+                      83.35 + ((percentage - 90) / 10) * 16.65
+                    }%`
+                  }}
                 />
               </div>
               <div className="flex justify-between text-xs sm:text-sm text-white/70 font-medium px-1">
@@ -378,26 +385,31 @@ export default function PredictedGradeDisplay() {
                 <span>A+</span>
               </div>
               
-              {/* Confidence Level Badge */}
-              <div className="flex items-center justify-center gap-2 pt-2">
-                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold ${
+              {/* Prediction Confidence Box */}
+              <div className="flex items-center justify-center pt-3">
+                <div className={`inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl border-2 shadow-lg ${
                   confidenceLevel === 'High' 
-                    ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30' 
-                    : 'bg-amber-500/20 text-amber-200 border border-amber-400/30'
+                    ? 'bg-emerald-500/20 text-emerald-100 border-emerald-400/40' 
+                    : confidenceLevel === 'Medium'
+                    ? 'bg-amber-500/20 text-amber-100 border-amber-400/40'
+                    : 'bg-slate-500/20 text-slate-100 border-slate-400/40'
                 }`}>
-                  <span className="text-base">{confidenceLevel === 'High' ? '🎯' : '📊'}</span>
-                  <span>{confidenceLevel} Confidence</span>
+                  <span className="text-xl">{confidenceLevel === 'High' ? '🎯' : confidenceLevel === 'Medium' ? '📊' : '📈'}</span>
+                  <div className="text-left">
+                    <div className="text-white/60 text-xs font-medium uppercase tracking-wider">Prediction Confidence</div>
+                    <div className="text-white font-bold text-base">{confidenceLevel}</div>
+                  </div>
                 </div>
               </div>
             </div>
             
-            {/* Personalized Message - 3 lines, 16-18px, line-height 1.6 */}
-            <div className="max-w-lg mx-auto space-y-1">
+            {/* Personalized Message - Only first and third line, with visual separator */}
+            <div className="max-w-lg mx-auto space-y-3">
               {hasNewFormat ? (
                 <>
                   <p className="text-white text-base sm:text-lg leading-relaxed">{personalizedLine1}</p>
-                  <p className="text-white text-base sm:text-lg leading-relaxed">{personalizedLine2}</p>
-                  <p className="text-white text-base sm:text-lg leading-relaxed font-semibold">{personalizedLine3}</p>
+                  <div className="border-t-2 border-white/20 my-3" />
+                  <p className="text-white text-lg sm:text-xl leading-relaxed font-bold">{personalizedLine3}</p>
                 </>
               ) : oldPersonalizedMessage ? (
                 <p className="text-white text-base sm:text-lg leading-relaxed">{oldPersonalizedMessage}</p>
