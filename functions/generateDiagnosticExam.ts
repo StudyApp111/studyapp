@@ -23,11 +23,11 @@ Deno.serve(async (req) => {
     
     const modelConfig = hasDocumentContent 
       ? {
-          model: 'gemini-flash-latest'
+          model: 'gemini-flash-lite-latest'
           // No tools - using JSON mode instead
         }
       : {
-          model: 'gemini-flash-latest',
+          model: 'gemini-flash-lite-latest',
           tools: [{
             googleSearch: {}
           }]
