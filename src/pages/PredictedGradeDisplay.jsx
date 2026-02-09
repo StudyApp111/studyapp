@@ -440,14 +440,14 @@ export default function PredictedGradeDisplay() {
               </h3>
             </div>
 
-            {/* Topic title - 18-20px */}
-            <p className="text-lg sm:text-xl font-semibold text-white mb-4">{previewQuestion.topic}</p>
+            {/* Topic title */}
+            <p className="text-base sm:text-lg font-semibold text-white mb-4">{previewQuestion.topic}</p>
             
-            {/* LARGE Grade Impact - 40-48px red */}
+            {/* Grade Impact - red */}
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-3xl sm:text-4xl">📉</span>
-              <span className="text-slate-300 text-lg font-medium">COSTING YOU:</span>
-              <span className="font-black text-red-500 text-4xl sm:text-5xl">{weakAreasDetailed[0]?.grade_impact}</span>
+              <span className="text-2xl">📉</span>
+              <span className="text-slate-300 text-sm font-medium">COSTING YOU:</span>
+              <span className="font-black text-red-500 text-2xl sm:text-3xl">{weakAreasDetailed[0]?.grade_impact}</span>
             </div>
             
             {/* Impact statement */}
@@ -581,10 +581,10 @@ export default function PredictedGradeDisplay() {
                         <p className="font-semibold text-white text-base sm:text-lg flex-1">{weak.topic}</p>
                       </div>
                       
-                      {/* Grade impact - MASSIVE 40-48px */}
+                      {/* Grade impact */}
                       <div className="flex items-center gap-3 mb-4">
-                        <span className="text-2xl sm:text-3xl">📉</span>
-                        <span className="font-black text-red-500 text-3xl sm:text-4xl">{weak.grade_impact}</span>
+                        <span className="text-xl">📉</span>
+                        <span className="font-black text-red-500 text-2xl sm:text-3xl">{weak.grade_impact}</span>
                       </div>
                       <p className="text-slate-400 text-sm mb-4">Costing you this much on your exam</p>
                       
