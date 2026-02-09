@@ -356,10 +356,19 @@ export default function PredictedGradeDisplay() {
             {/* Visual Grade Meter */}
             <div className="w-full max-w-md mx-auto space-y-2">
               <div className="relative h-3 sm:h-4 bg-white/20 rounded-full overflow-hidden">
-                {/* Background fill showing progress */}
+                {/* Background fill showing progress - uses same scale as indicator */}
                 <div 
                   className="absolute left-0 top-0 h-full rounded-full bg-white/30 transition-all duration-1000"
-                  style={{ width: `${percentage}%` }}
+                  style={{ 
+                    width: `${
+                      percentage < 50 ? (percentage / 50) * 16.67 :
+                      percentage < 60 ? 16.67 + ((percentage - 50) / 10) * 16.67 :
+                      percentage < 70 ? 33.34 + ((percentage - 60) / 10) * 16.67 :
+                      percentage < 80 ? 50.01 + ((percentage - 70) / 10) * 16.67 :
+                      percentage < 90 ? 66.68 + ((percentage - 80) / 10) * 16.67 :
+                      83.35 + ((percentage - 90) / 10) * 16.65
+                    }%`
+                  }}
                 />
                 {/* Position indicator - accurately positioned based on grade scale */}
                 <div 
