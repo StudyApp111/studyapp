@@ -1423,29 +1423,51 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
                   )}
                 </div>
               </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setExam(null);
-                  setSelectedExamNumber(1);
-                  hasAutoSelectedRef.current = true;
-                }}
-                className="group relative w-full overflow-hidden p-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 shadow-sm hover:shadow-md transition-all text-left"
-              >
-                <div className="relative flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                    <span className="text-base font-black text-white">1</span>
+            ) : (() => {
+              // Check if exam record exists but questions not ready yet
+              const pendingExam = (exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice' && (!e.questions || e.questions.length === 0));
+              const isExamGenerating = !!pendingExam;
+
+              return (
+                <button
+                  onClick={() => {
+                    if (isExamGenerating) return;
+                    setExam(null);
+                    setSelectedExamNumber(1);
+                    hasAutoSelectedRef.current = true;
+                  }}
+                  disabled={isExamGenerating}
+                  className={`group relative w-full overflow-hidden p-2.5 rounded-xl shadow-sm transition-all text-left ${
+                    isExamGenerating 
+                      ? 'bg-gradient-to-r from-slate-400 to-slate-500 cursor-not-allowed opacity-80'
+                      : 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:shadow-md'
+                  }`}
+                >
+                  <div className="relative flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                      {isExamGenerating ? (
+                        <Loader2 className="w-4 h-4 text-white animate-spin" />
+                      ) : (
+                        <span className="text-base font-black text-white">1</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-white text-xs">Diagnostic</h3>
+                      <p className="text-[10px] text-white/70">
+                        {isExamGenerating ? 'Generating questions...' : 'Baseline assessment'}
+                      </p>
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                      {isExamGenerating ? (
+                        <Loader2 className="w-2.5 h-2.5 text-white/60 animate-spin" />
+                      ) : (
+                        <Play className="w-2.5 h-2.5 text-white" />
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white text-xs">Diagnostic</h3>
-                    <p className="text-[10px] text-white/70">Baseline assessment</p>
-                  </div>
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                    <Play className="w-2.5 h-2.5 text-white" />
-                  </div>
-                </div>
-              </button>
-            )}
+                </button>
+              );
+            })()}
           </div>
         </div>
 
