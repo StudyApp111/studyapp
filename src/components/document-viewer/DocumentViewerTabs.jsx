@@ -49,18 +49,38 @@ export default function DocumentViewerTabs({ lesson }) {
     }
   }, [lesson?.id, viewMode, annotationsLoaded]);
 
-  // PDF loading with timeout and retry
+  const pdfRetryCountRef = useRef(0);
+  const maxPdfRetries = 2;
+
+  // PDF loading with timeout and auto-retry
   useEffect(() => {
     if (hasFile && viewMode === "pdf") {
       setPdfLoaded(false);
       setPdfError(false);
+      pdfRetryCountRef.current = 0;
       
-      // Timeout after 10s
-      loadTimeoutRef.current = setTimeout(() => {
-        if (!pdfLoaded) {
-          setPdfError(true);
-        }
-      }, 10000);
+      // Timeout after 15s, then auto-retry up to 2 times
+      const startTimeout = () => {
+        loadTimeoutRef.current = setTimeout(() => {
+          if (!pdfLoaded && pdfRetryCountRef.current < maxPdfRetries) {
+            pdfRetryCountRef.current++;
+            console.log(`PDF load timeout - auto-retry ${pdfRetryCountRef.current}/${maxPdfRetries}`);
+            // Force iframe reload
+            if (iframeRef.current) {
+              const src = iframeRef.current.src;
+              iframeRef.current.src = '';
+              setTimeout(() => {
+                if (iframeRef.current) iframeRef.current.src = src;
+                startTimeout();
+              }, 500);
+            }
+          } else if (!pdfLoaded) {
+            setPdfError(true);
+          }
+        }, 15000);
+      };
+      
+      startTimeout();
       
       return () => {
         if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
