@@ -507,6 +507,11 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     );
   }
 
+  // Check if diagnostic exam is ready (has questions generated)
+  const diagnosticExamFromExams = (exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice');
+  const isDiagnosticReady = diagnosticExamFromExams?.questions?.length > 0;
+  const isDiagnosticGenerating = diagnosticExamFromExams && !diagnosticExamFromExams.questions?.length;
+
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
@@ -590,20 +595,37 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           >
             <Button 
               onClick={() => {
-                // Navigate to exam tab AND auto-start Exam 1
+                if (!isDiagnosticReady) return;
                 onNavigate('exam');
                 setTimeout(() => {
                   window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
                 }, 100);
               }}
-              className="w-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:via-indigo-700 hover:to-purple-800 text-white font-bold py-5 text-base rounded-2xl shadow-xl shadow-purple-500/30 relative overflow-hidden group"
+              disabled={!isDiagnosticReady}
+              className={`w-full font-bold py-5 text-base rounded-2xl shadow-xl relative overflow-hidden group ${
+                isDiagnosticReady 
+                  ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:via-indigo-700 hover:to-purple-800 text-white shadow-purple-500/30'
+                  : 'bg-gradient-to-r from-slate-400 to-slate-500 text-white/70 cursor-not-allowed shadow-none'
+              }`}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-              <Play className="w-5 h-5 mr-2" />
-              Start 5-Minute Diagnostic
+              {isDiagnosticReady ? (
+                <>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                  <Play className="w-5 h-5 mr-2" />
+                  Start 5-Minute Diagnostic
+                </>
+              ) : (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Preparing Your Diagnostic...
+                </>
+              )}
             </Button>
             <p className="text-center text-[10px] text-slate-400 mt-2">
-              Free • Results in 5 minutes • Know your grade before exam day
+              {isDiagnosticReady 
+                ? 'Free • Results in 5 minutes • Know your grade before exam day'
+                : 'Almost ready — generating your personalized questions'
+              }
             </p>
           </motion.div>
 
