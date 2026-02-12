@@ -610,7 +610,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       <div className="flex items-center justify-between">
         <button
           onClick={() => setShowSetsList(true)}
-          className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${isDark ? 'text-amber-400 bg-amber-500/20 hover:bg-amber-500/30' : 'text-amber-600 bg-amber-50 hover:bg-amber-100'}`}
+          className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors flex-shrink-0 ${isDark ? 'text-amber-400 bg-amber-500/20 hover:bg-amber-500/30' : 'text-amber-600 bg-amber-50 hover:bg-amber-100'}`}
         >
           <Copy className="w-3.5 h-3.5" />
           All Sets
@@ -619,7 +619,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 0.3 }}
           key={currentIndex}
-          className="flex items-center justify-center gap-2 flex-1"
+          className="absolute left-1/2 -translate-x-1/2"
         >
           <span className={`text-sm font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
             Card {currentIndex + 1} of {cards.length}
@@ -627,7 +627,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         </motion.div>
         <button
           onClick={() => setShowHowTo(true)}
-          className={`flex items-center gap-1 text-xs font-medium ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}
+          className={`flex items-center gap-1 text-xs font-medium flex-shrink-0 ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}
         >
           <HelpCircle className="w-3.5 h-3.5" />
         </button>
