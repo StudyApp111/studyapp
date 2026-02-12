@@ -382,6 +382,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         setCurrentCardIndex(0);
         setUserAnswer("");
         setShowFeedback(false);
+        setShowSetsList(false);
         await generateCards();
       } catch (error) {
         console.error("Error regenerating cards:", error);
