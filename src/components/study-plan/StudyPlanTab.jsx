@@ -551,7 +551,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
-      <div className={`px-3 md:px-6 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
+      <div className={`px-3 md:px-6 pt-4 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
