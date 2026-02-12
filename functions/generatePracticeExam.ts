@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { lesson_id, focus_topics, target_competency, misconception_addressed } = await req.json();
+    const { lesson_id, focus_topics, target_competency, misconception_addressed, amount, difficulty } = await req.json();
 
     // Get lesson data
     const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
@@ -55,6 +55,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Insufficient lesson content to generate exam' }, { status: 400 });
     }
 
+    const questionCount = amount || 10;
+    const difficultyPref = difficulty || 'mixed';
+    
+    const difficultyInstruction = difficultyPref !== 'mixed'
+      ? `\nDIFFICULTY: ALL questions should be "${difficultyPref}" difficulty level.`
+      : `\nDIFFICULTY: Mix Easy, Medium, and Hard questions for a balanced set.`;
+
+    // Calculate question type distribution based on count
+    const mcqCount = Math.ceil(questionCount * 0.4);
+    const tfCount = Math.ceil(questionCount * 0.2);
+    const fibCount = Math.ceil(questionCount * 0.2);
+    const saCount = questionCount - mcqCount - tfCount - fibCount;
+
     // Build the prompt for practice exam generation
     // Note: We don't use Google Search grounding because it's incompatible with JSON response mode
     const prompt = `You are an expert educator creating a focused PRACTICE QUIZ for a student.
@@ -69,20 +82,21 @@ FOCUS AREAS:
 COURSE CONTENT (use this as your PRIMARY source for questions):
 ${contentForExam}
 
-TASK: Generate exactly 10 practice questions that:
+TASK: Generate exactly ${questionCount} practice questions that:
 1. Are DIRECTLY based on the course content provided above
 2. Test understanding of the specified focus topics
 3. Address the identified misconception if provided
 4. Use a MIX of question types for variety
 5. Range from foundational to challenging
+${difficultyInstruction}
 
 CRITICAL: All questions MUST be answerable using the course content above. Do not create questions about topics not covered in the content.
 
 QUESTION TYPE DISTRIBUTION (use this mix):
-- 4 Multiple Choice questions
-- 2 True/False questions  
-- 2 Fill-in-the-Blank questions
-- 2 Short Answer questions (1-2 sentence responses)
+- ${mcqCount} Multiple Choice questions
+- ${tfCount} True/False questions  
+- ${fibCount} Fill-in-the-Blank questions
+- ${saCount} Short Answer questions (1-2 sentence responses)
 
 CRITICAL RULES:
 1. Use EXACTLY these question_type values: "Multiple Choice", "True/False", "Fill in the Blank", "Short Answer"
