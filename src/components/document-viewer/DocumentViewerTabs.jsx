@@ -428,9 +428,10 @@ export default function DocumentViewerTabs({ lesson }) {
                       ref={iframeRef}
                       src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
                       className="w-full border-0"
-                      style={{ height: '70vh', visibility: pdfLoaded ? 'visible' : 'hidden' }}
+                      style={{ height: '100%', minHeight: '70vh', visibility: pdfLoaded ? 'visible' : 'hidden' }}
                       title="Course Document"
                       onLoad={handlePdfLoad}
+                      onError={() => setPdfError(true)}
                     />
                   </>
                 ) : isImage ? (
