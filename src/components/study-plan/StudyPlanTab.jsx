@@ -547,11 +547,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     );
   }
 
-  // Check if diagnostic exam is ready (has questions generated)
-  const diagnosticExamFromExams = (exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice');
-  const isDiagnosticReady = diagnosticExamFromExams?.questions?.length > 0;
-  const isDiagnosticGenerating = diagnosticExamFromExams && !diagnosticExamFromExams.questions?.length;
-
   // No study plan yet - prompt to take official exam
   if (!loading && !studyPlan) {
     return (
