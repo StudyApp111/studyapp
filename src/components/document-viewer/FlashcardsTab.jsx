@@ -521,12 +521,27 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
               Generate intelligent flashcards from your notes.
             </p>
             <Button
-              onClick={handleGenerate}
+              onClick={() => handleGenerate()}
               className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-bold text-lg rounded-xl shadow-xl"
             >
               <Sparkles className="w-5 h-5 mr-2" />
               Generate Flashcards
             </Button>
+            <button
+              onClick={() => setShowCustomize(true)}
+              className={`w-full mt-2 text-sm font-medium py-2 rounded-lg transition-colors ${isDark ? 'text-purple-400 hover:bg-purple-500/10' : 'text-purple-600 hover:bg-purple-50'}`}
+            >
+              ⚙️ Customize (topics, difficulty, amount)
+            </button>
+
+            <CustomizeGenerationModal
+              open={showCustomize}
+              onOpenChange={setShowCustomize}
+              type="flashcards"
+              lessonId={lesson?.id}
+              compressedContent={lesson?.compressed_content || extractedContent}
+              onGenerate={(opts) => handleGenerate(opts)}
+            />
           </div>
         </Card>
       </div>
