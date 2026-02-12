@@ -205,24 +205,7 @@ RULES:
 OUTPUT:
 Return exactly ${cardCount} cards with question and model_answer fields, each based on specific content from the student's material.`;
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            cards: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  question: { type: "string" },
-                  model_answer: { type: "string" }
-                }
-              }
-            }
-          }
-        }
-      });
+      const { data: result } = await base44.functions.invoke('generateTeachItCards', { prompt });
 
       const generatedCards = result?.cards || [];
       if (generatedCards.length === 0) {
