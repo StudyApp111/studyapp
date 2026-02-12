@@ -21,6 +21,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
+import { PostHogProvider } from '@posthog/react';
 
 // Google Analytics initialization
 const initGoogleAnalytics = () => {
@@ -437,12 +438,20 @@ function LayoutContent({ children, currentPageName }) {
 
 export default function Layout({ children, currentPageName }) {
   return (
-    <ThemeProvider>
-      <SubscriptionProvider>
-        <AITutorProvider>
-          <LayoutContent children={children} currentPageName={currentPageName} />
-        </AITutorProvider>
-      </SubscriptionProvider>
-    </ThemeProvider>
+    <PostHogProvider
+      apiKey='phc_CW2ahMtxlaEYnd9YbML39HMb1xJMfMqLVj7w2qbwnZY'
+      options={{
+        api_host: 'https://us.i.posthog.com',
+        defaults: '2026-01-30',
+      }}
+    >
+      <ThemeProvider>
+        <SubscriptionProvider>
+          <AITutorProvider>
+            <LayoutContent children={children} currentPageName={currentPageName} />
+          </AITutorProvider>
+        </SubscriptionProvider>
+      </ThemeProvider>
+    </PostHogProvider>
   );
 }
