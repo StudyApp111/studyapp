@@ -604,21 +604,21 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
             style={{ boxSizing: 'border-box' }}
           >
             <Card className={`backdrop-blur-xl border shadow-xl overflow-hidden w-full max-w-full ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200/50'}`} style={{ boxSizing: 'border-box' }}>
-              {/* Question Area - AskAI in top-right, question centered */}
-              <div className={`px-4 py-5 md:px-6 md:py-6 w-full relative ${isDark ? 'bg-gradient-to-br from-purple-900/40 to-indigo-900/40' : 'bg-gradient-to-br from-purple-50 to-indigo-50'}`}>
-                {/* AskAI button top-right */}
-                <div className="absolute top-3 right-3" onClick={(e) => e.stopPropagation()}>
+              {/* Question Area */}
+              <div className={`px-4 py-5 md:px-6 md:py-6 w-full ${isDark ? 'bg-gradient-to-br from-purple-900/40 to-indigo-900/40' : 'bg-gradient-to-br from-purple-50 to-indigo-50'}`}>
+                <div className="flex items-center justify-center text-center mb-3">
+                  <MathText className={`text-lg md:text-xl font-bold leading-relaxed break-words ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    {currentCard.question}
+                  </MathText>
+                </div>
+                {/* AskAI button centered below question */}
+                <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                   <AskAIButton 
                     type="teachit" 
                     data={{ question: currentCard.question, model_answer: currentCard.model_answer }} 
                     lesson={lesson} 
                     size="sm" 
                   />
-                </div>
-                <div className="flex items-center justify-center text-center pr-10">
-                  <MathText className={`text-lg md:text-xl font-bold leading-relaxed break-words ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    {currentCard.question}
-                  </MathText>
                 </div>
               </div>
 
