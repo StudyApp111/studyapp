@@ -211,7 +211,7 @@ PHASE 4: WEAK AREAS REQUIREMENTS
 - If 0-2 correct: Identify fundamental competencies missing from wrong answers
 - If 3-4 correct: Identify specific topics from wrong answers
 - If 5/5 correct: Identify 3 high-yield untested topics from curriculum map
-- grade_impact: If score >90%→max 10% per weak area. If score <30%→20-25% per area.
+- grade_impact: MUST be a percentage string showing point cost (e.g., "15%", "8%"). Calculate: If score >90%→max 10% per weak area. If score <30%→20-25% per area.
 - Assign tool: Conceptual→"Teach It Cards", Application→"Practice Questions", Complex→"AI Tutor"
 
 PHASE 5: PREVIEW QUESTION GENERATION
