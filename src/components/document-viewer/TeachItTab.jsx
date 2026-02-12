@@ -625,7 +625,56 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       </AnimatePresence>
 
       <div className={`flex flex-col w-full max-w-full pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
-        {/* Centered content */}
+        {/* Top bar: Back, card counter, progress, actions */}
+        <div className={`px-3 py-2.5 md:px-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-purple-100'}`}>
+          <button
+            onClick={() => setShowSetsList(true)}
+            className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${isDark ? 'text-purple-400 bg-purple-500/20 hover:bg-purple-500/30' : 'text-purple-600 bg-purple-50 hover:bg-purple-100'}`}
+          >
+            <X className="w-3 h-3" />
+            Back
+          </button>
+          <div className="flex items-center gap-2">
+            <span className={`text-sm font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+              {currentCardIndex + 1} / {cards.length}
+            </span>
+            <span className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>•</span>
+            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{completedCount} done</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div onClick={(e) => e.stopPropagation()}>
+              <AskAIButton 
+                type="teachit" 
+                data={{ question: currentCard.question, model_answer: currentCard.model_answer }} 
+                lesson={lesson} 
+                size="sm" 
+              />
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRegenerate}
+              className={`gap-1 h-7 px-2 ${isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-white/10' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'}`}
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span className="hidden sm:inline text-xs">New</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="px-3 md:px-4 pt-2">
+          <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-purple-100'}`}>
+            <motion.div
+              className="h-full bg-gradient-to-r from-purple-500 to-indigo-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            />
+          </div>
+        </div>
+
+        {/* Card content */}
         <div className="px-3 py-3 md:px-4 w-full max-w-full flex items-start justify-center" style={{ boxSizing: 'border-box' }}>
           <AnimatePresence mode="wait">
             <motion.div
@@ -638,65 +687,17 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               style={{ boxSizing: 'border-box' }}
             >
               <Card className={`backdrop-blur-xl border shadow-xl overflow-hidden w-full max-w-full ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200/50'}`} style={{ boxSizing: 'border-box' }}>
-                {/* Integrated Card Header with Progress */}
-                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-4 py-3 md:px-6 md:py-4 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
-                  {/* Top row: Progress info + Actions */}
-                  <div className="flex items-center justify-between mb-2">
-                    <button
-                      onClick={() => setShowSetsList(true)}
-                      className="flex items-center gap-1 text-xs text-white/90 hover:text-white font-medium bg-white/10 hover:bg-white/20 px-2 py-1 rounded-lg transition-colors"
-                    >
-                      <X className="w-3 h-3" />
-                      Back
-                    </button>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-white/90 text-xs font-medium">
-                        {currentCardIndex + 1}/{cards.length}
-                      </span>
-                      <span className="text-white/60 text-xs">•</span>
-                      <span className="text-white/70 text-xs">{completedCount} done</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <AskAIButton 
-                          type="teachit" 
-                          data={{ question: currentCard.question, model_answer: currentCard.model_answer }} 
-                          lesson={lesson} 
-                          size="sm" 
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleRegenerate}
-                        className="gap-1 bg-white/10 hover:bg-white/20 text-white border-white/20 h-7 px-2"
-                      >
-                        <RefreshCw className="w-3 h-3" />
-                        <span className="hidden sm:inline text-xs">New</span>
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mb-3">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-yellow-400 via-pink-400 to-yellow-300"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    />
-                  </div>
-                  
-                  {/* Question */}
-                  <div className="flex items-start gap-2 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
-                    <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-[9px] flex-shrink-0 mt-0.5">
-                      <HelpCircle className="w-2.5 h-2.5 mr-0.5" />
-                      Explain
+                {/* Question Area */}
+                <div className={`px-4 py-5 md:px-6 md:py-6 w-full ${isDark ? 'bg-gradient-to-br from-purple-900/40 to-indigo-900/40' : 'bg-gradient-to-br from-purple-50 to-indigo-50'}`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Badge className={`text-[10px] ${isDark ? 'bg-purple-500/30 text-purple-300 border-purple-500/40' : 'bg-purple-100 text-purple-700 border-purple-200'}`}>
+                      <HelpCircle className="w-3 h-3 mr-1" />
+                      Explain this
                     </Badge>
-                    <MathText className="text-sm font-bold text-white leading-snug break-words flex-1 min-w-0">
-                      {currentCard.question}
-                    </MathText>
                   </div>
+                  <MathText className={`text-lg md:text-xl font-bold leading-relaxed break-words ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    {currentCard.question}
+                  </MathText>
                 </div>
 
                 <div className="p-4 md:p-6 w-full">
