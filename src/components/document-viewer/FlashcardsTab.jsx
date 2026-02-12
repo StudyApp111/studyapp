@@ -13,6 +13,7 @@ import FlashcardSetsList from "./FlashcardSetsList";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import MathText from "@/components/math/MathText";
+import CustomizeGenerationModal from "@/components/modals/CustomizeGenerationModal";
 
 // Sound effects removed per user request
 
@@ -30,7 +31,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const [showSetsList, setShowSetsList] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationMessage, setCelebrationMessage] = useState('');
-  const [lastRating, setLastRating] = useState(null); // Track last button pressed for animation
+  const [lastRating, setLastRating] = useState(null);
+  const [showCustomize, setShowCustomize] = useState(false);
 
   const isGeneratingRef = useRef(false);
   const pendingStudyTaskRef = useRef(null);
@@ -98,7 +100,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     }
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (customOptions = null) => {
     if (isGeneratingRef.current) return;
     
     const taskCheck = await canDoTask();
@@ -117,12 +119,14 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         contentForFlashcards = contentForFlashcards.substring(0, 50000) + "\n...[content truncated]";
       }
       
-      const topicsToFocus = focusTopics || studyPlanTopics;
+      const topicsToFocus = customOptions?.topics?.length > 0 ? customOptions.topics : (focusTopics || studyPlanTopics);
       
       const { data: response } = await base44.functions.invoke('generateFlashcards', {
         course_name: lesson.course_name,
         content: contentForFlashcards,
-        focus_topics: topicsToFocus || []
+        focus_topics: topicsToFocus || [],
+        amount: customOptions?.amount || 10,
+        difficulty: customOptions?.difficulty || 'mixed'
       });
 
       const generatedCards = response?.flashcards || [];
@@ -453,12 +457,27 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
               </div>
               
               <Button
-                onClick={handleGenerate}
+                onClick={() => handleGenerate()}
                 className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-bold text-lg rounded-xl shadow-xl"
               >
                 <Sparkles className="w-5 h-5 mr-2" />
                 Generate Flashcards
               </Button>
+              <button
+                onClick={() => setShowCustomize(true)}
+                className={`w-full mt-2 text-sm font-medium py-2 rounded-lg transition-colors ${isDark ? 'text-purple-400 hover:bg-purple-500/10' : 'text-purple-600 hover:bg-purple-50'}`}
+              >
+                ⚙️ Customize (topics, difficulty, amount)
+              </button>
+
+              <CustomizeGenerationModal
+                open={showCustomize}
+                onOpenChange={setShowCustomize}
+                type="flashcards"
+                lessonId={lesson?.id}
+                compressedContent={lesson?.compressed_content || extractedContent}
+                onGenerate={(opts) => handleGenerate(opts)}
+              />
             </div>
           </Card>
         </motion.div>
