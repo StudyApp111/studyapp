@@ -714,204 +714,131 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         </motion.div>
       </div>
 
-      {/* Rating Buttons - Below Card */}
+      {/* Rating Buttons - Below Card - Duolingo/Gizmo style fast pop animations */}
       {isFlipped && (
         <motion.div 
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
           className="mt-4"
         >
           <p className={`text-xs text-center mb-3 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>How well did you know this?</p>
           <div className="grid grid-cols-2 gap-2">
+            {/* Bad */}
             <motion.button
               onClick={() => handleRating('bad')}
-              whileTap={{ scale: 0.95 }}
-              animate={lastRating === 'bad' ? { 
-                x: [0, -8, 8, -6, 6, -4, 4, 0],
-                rotate: [0, -3, 3, -3, 3, 0]
-              } : {}}
-              transition={{ duration: 0.6 }}
-              className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl py-3 px-3 shadow-lg transition-all relative overflow-hidden"
+              whileTap={{ scale: 0.92 }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              className="bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl py-3 px-3 shadow-lg relative overflow-hidden"
             >
               {lastRating === 'bad' && (
-                <>
-                  <motion.div
-                    className="absolute inset-0 bg-red-700"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 0.4, 0] }}
-                    transition={{ duration: 0.6 }}
-                  />
-                  {/* X marks */}
-                  {[...Array(3)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="absolute text-2xl"
-                      style={{ left: '50%', top: '50%' }}
-                      initial={{ scale: 0, x: '-50%', y: '-50%', opacity: 1 }}
-                      animate={{
-                        scale: [0, 1.2, 0],
-                        x: ['-50%', `${(Math.random() - 0.5) * 80}px`],
-                        y: ['-50%', `${(Math.random() - 0.5) * 80}px`],
-                        opacity: [1, 1, 0],
-                        rotate: [0, 360]
-                      }}
-                      transition={{ duration: 0.7, delay: i * 0.1 }}
-                    >
-                      ❌
-                    </motion.div>
-                  ))}
-                </>
+                <motion.div
+                  className="absolute inset-0 bg-red-400/50 rounded-xl"
+                  initial={{ scale: 0, borderRadius: '50%' }}
+                  animate={{ scale: 2.5, opacity: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  style={{ transformOrigin: 'center' }}
+                />
               )}
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xl">❌</span>
+              <div className="relative flex flex-col items-center gap-1">
+                <motion.span className="text-xl" animate={lastRating === 'bad' ? { x: [0, -4, 4, -3, 3, 0] } : {}} transition={{ duration: 0.3 }}>❌</motion.span>
                 <div className="font-bold text-sm">Bad</div>
                 <div className="text-[10px] opacity-80">Show again</div>
               </div>
             </motion.button>
             
+            {/* Okay */}
             <motion.button
               onClick={() => handleRating('okay')}
-              whileTap={{ scale: 0.95 }}
-              animate={lastRating === 'okay' ? { 
-                scale: [1, 1.08, 1],
-                y: [0, -8, 0]
-              } : {}}
-              transition={{ duration: 0.5, type: "spring", stiffness: 300 }}
-              className="bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl py-3 px-3 shadow-lg transition-all relative overflow-hidden"
+              whileTap={{ scale: 0.92 }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              className="bg-gradient-to-br from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl py-3 px-3 shadow-lg relative overflow-hidden"
             >
               {lastRating === 'okay' && (
-                <>
-                  <motion.div
-                    className="absolute inset-0 bg-amber-400/40"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 1, 0] }}
-                    transition={{ duration: 0.5 }}
-                  />
-                  {/* Small ripple */}
-                  <motion.div
-                    className="absolute inset-0 border-4 border-amber-300 rounded-xl"
-                    initial={{ scale: 0.8, opacity: 1 }}
-                    animate={{ scale: 1.5, opacity: 0 }}
-                    transition={{ duration: 0.6 }}
-                  />
-                </>
+                <motion.div
+                  className="absolute inset-0 bg-amber-300/50 rounded-xl"
+                  initial={{ scale: 0, borderRadius: '50%' }}
+                  animate={{ scale: 2.5, opacity: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  style={{ transformOrigin: 'center' }}
+                />
               )}
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xl">😐</span>
+              <div className="relative flex flex-col items-center gap-1">
+                <motion.span className="text-xl" animate={lastRating === 'okay' ? { y: [0, -4, 0] } : {}} transition={{ duration: 0.25, type: "spring", stiffness: 400 }}>😐</motion.span>
                 <div className="font-bold text-sm">Okay</div>
                 <div className="text-[10px] opacity-80">1 day</div>
               </div>
             </motion.button>
             
+            {/* Good */}
             <motion.button
               onClick={() => handleRating('good')}
-              whileTap={{ scale: 0.95 }}
-              animate={lastRating === 'good' ? { 
-                scale: [1, 1.12, 1]
-              } : {}}
-              transition={{ duration: 0.6, type: "spring", stiffness: 200 }}
-              className="bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl py-3 px-3 shadow-lg transition-all relative overflow-hidden"
+              whileTap={{ scale: 0.92 }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              className="bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl py-3 px-3 shadow-lg relative overflow-hidden"
             >
               {lastRating === 'good' && (
                 <>
-                  {/* Bright flash */}
                   <motion.div
-                    className="absolute inset-0 bg-emerald-300"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 0.6, 0] }}
-                    transition={{ duration: 0.5 }}
+                    className="absolute inset-0 bg-emerald-300/50 rounded-xl"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 2.5, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    style={{ transformOrigin: 'center' }}
                   />
-                  {/* Expanding ring */}
-                  <motion.div
-                    className="absolute inset-0 border-4 border-emerald-300 rounded-xl"
-                    initial={{ scale: 0.9, opacity: 1 }}
-                    animate={{ scale: 1.6, opacity: 0 }}
-                    transition={{ duration: 0.7 }}
-                  />
-                  {/* Checkmark particles burst */}
-                  {[...Array(8)].map((_, i) => (
+                  {[...Array(6)].map((_, i) => (
                     <motion.div
                       key={i}
-                      className="absolute w-2 h-2 bg-emerald-200 rounded-full"
+                      className="absolute w-1.5 h-1.5 bg-emerald-200 rounded-full"
                       style={{ left: '50%', top: '50%' }}
                       initial={{ scale: 0, x: 0, y: 0 }}
-                      animate={{
-                        scale: [0, 1.5, 0],
-                        x: Math.cos((i / 8) * Math.PI * 2) * 45,
-                        y: Math.sin((i / 8) * Math.PI * 2) * 45
-                      }}
-                      transition={{ duration: 0.6, delay: i * 0.03 }}
+                      animate={{ scale: [0, 1, 0], x: Math.cos((i / 6) * Math.PI * 2) * 30, y: Math.sin((i / 6) * Math.PI * 2) * 30 }}
+                      transition={{ duration: 0.35, delay: i * 0.02 }}
                     />
                   ))}
                 </>
               )}
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xl">✅</span>
+              <div className="relative flex flex-col items-center gap-1">
+                <motion.span className="text-xl" animate={lastRating === 'good' ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.25, type: "spring", stiffness: 500 }}>✅</motion.span>
                 <div className="font-bold text-sm">Good</div>
                 <div className="text-[10px] opacity-80">Few days</div>
               </div>
             </motion.button>
             
+            {/* Excellent */}
             <motion.button
               onClick={() => handleRating('excellent')}
-              whileTap={{ scale: 0.95 }}
-              animate={lastRating === 'excellent' ? {
-                scale: [1, 1.2, 1.05, 1],
-                rotate: [0, -8, 8, -5, 5, 0]
-              } : {}}
-              transition={{ duration: 0.8, type: "spring", stiffness: 150 }}
-              className="bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl py-3 px-3 shadow-lg transition-all relative overflow-hidden"
+              whileTap={{ scale: 0.92 }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              className="bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl py-3 px-3 shadow-lg relative overflow-hidden"
             >
               {lastRating === 'excellent' && (
                 <>
-                  {/* Golden flash */}
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-purple-400"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0, 0.7, 0] }}
-                    transition={{ duration: 0.5 }}
+                    className="absolute inset-0 bg-gradient-to-br from-yellow-300/60 to-purple-300/60 rounded-xl"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 2.5, opacity: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    style={{ transformOrigin: 'center' }}
                   />
-                  {/* Multiple expanding rings */}
-                  {[0, 0.15, 0.3].map((delay, idx) => (
-                    <motion.div
-                      key={idx}
-                      className="absolute inset-0 border-4 border-yellow-300 rounded-xl"
-                      initial={{ scale: 0.9, opacity: 1 }}
-                      animate={{ scale: 2, opacity: 0 }}
-                      transition={{ duration: 0.8, delay }}
-                    />
-                  ))}
-                  {/* Star burst - more dramatic */}
-                  {[...Array(16)].map((_, i) => (
+                  {[...Array(8)].map((_, i) => (
                     <motion.div
                       key={i}
-                      className="absolute"
+                      className="absolute text-sm"
                       style={{ left: '50%', top: '50%' }}
-                      initial={{ scale: 0, x: 0, y: 0, rotate: 0 }}
-                      animate={{
-                        scale: [0, 1, 0.5, 0],
-                        x: Math.cos((i / 16) * Math.PI * 2) * 60,
-                        y: Math.sin((i / 16) * Math.PI * 2) * 60,
-                        rotate: [0, 180, 360]
-                      }}
-                      transition={{ duration: 0.9, delay: i * 0.02 }}
-                    >
-                      <span className="text-xl">⭐</span>
-                    </motion.div>
+                      initial={{ scale: 0, x: 0, y: 0 }}
+                      animate={{ scale: [0, 1, 0], x: Math.cos((i / 8) * Math.PI * 2) * 35, y: Math.sin((i / 8) * Math.PI * 2) * 35 }}
+                      transition={{ duration: 0.4, delay: i * 0.02 }}
+                    >⭐</motion.div>
                   ))}
-                  {/* Center burst */}
-                  <motion.div
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                    initial={{ scale: 0, rotate: 0 }}
-                    animate={{ scale: [0, 2, 0], rotate: 360 }}
-                    transition={{ duration: 0.7 }}
-                  >
-                    <span className="text-4xl">✨</span>
-                  </motion.div>
                 </>
               )}
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xl">⭐</span>
+              <div className="relative flex flex-col items-center gap-1">
+                <motion.span className="text-xl" animate={lastRating === 'excellent' ? { scale: [1, 1.4, 1], rotate: [0, -10, 10, 0] } : {}} transition={{ duration: 0.3, type: "spring", stiffness: 400 }}>⭐</motion.span>
                 <div className="font-bold text-sm">Excellent</div>
                 <div className="text-[10px] opacity-80">Mastered</div>
               </div>
@@ -1028,13 +955,29 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         )}
       </AnimatePresence>
 
-      {/* XP Toast */}
-      <XPGainToast 
-        xpGained={xpToast.xp}
-        reason={xpToast.reason}
-        show={xpToast.show}
-        onComplete={() => setXpToast({ show: false, xp: 0, reason: '' })}
-      />
+      {/* XP Toast - positioned within tab container */}
+      <AnimatePresence>
+        {xpToast.show && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.7, y: -20 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="absolute top-16 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+            onAnimationComplete={() => {
+              setTimeout(() => setXpToast({ show: false, xp: 0, reason: '' }), 1800);
+            }}
+          >
+            <div className="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5">
+              <motion.span animate={{ rotate: [0, -15, 15, 0], scale: [1, 1.3, 1] }} transition={{ duration: 0.5 }} className="text-lg">⚡</motion.span>
+              <div>
+                <p className="text-lg font-bold">+{xpToast.xp} XP</p>
+                {xpToast.reason && <p className="text-xs text-slate-700">{xpToast.reason}</p>}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
