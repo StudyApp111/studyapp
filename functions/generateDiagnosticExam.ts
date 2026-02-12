@@ -209,7 +209,32 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
       
       if (jsonEnd === -1) {
         // Truncated response - braces never balanced
-        console.error("Truncated JSON response (unbalanced braces). Length:", text.length, "Preview:", text.substring(0, 500));
+        // Try lightweight JSON repair: find last complete question and close properly
+        console.log("Attempting JSON repair for truncated response");
+        
+        // Find the last complete question object
+        const lastCompleteQuestion = cleanedText.lastIndexOf('},');
+        if (lastCompleteQuestion !== -1) {
+          // Close array and object after last complete question
+          const repairedJson = cleanedText.substring(altStart, lastCompleteQuestion + 1) + ']}';
+          
+          try {
+            parsed = JSON.parse(repairedJson);
+            console.log("JSON repair successful. Recovered questions:", parsed.questions?.length);
+            
+            // If we have at least 3 questions, proceed
+            if (parsed.questions && parsed.questions.length >= 3) {
+              return Response.json({
+                success: true,
+                questions: parsed.questions
+              });
+            }
+          } catch (repairError) {
+            console.error("JSON repair failed:", repairError.message);
+          }
+        }
+        
+        console.error("Cannot repair truncated response. Length:", text.length);
         return Response.json({ error: 'AI response was truncated. Please try again.' }, { status: 500 });
       }
       
