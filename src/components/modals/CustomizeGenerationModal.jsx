@@ -18,16 +18,18 @@ const DIFFICULTY_OPTIONS = [
 
 export default function CustomizeGenerationModal({ open, onOpenChange, type, lessonId, compressedContent, onGenerate }) {
   const { isDark } = useTheme();
-  const [amount, setAmount] = useState(type === "flashcards" ? 10 : 5);
+  const isPracticeQuiz = type === "practice_quiz";
+  const isFlashcards = type === "flashcards";
+  const defaultAmount = isPracticeQuiz ? 10 : (isFlashcards ? 10 : 5);
+  const [amount, setAmount] = useState(defaultAmount);
   const [difficulty, setDifficulty] = useState("mixed");
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [customTopicInput, setCustomTopicInput] = useState("");
   const [extractedTopics, setExtractedTopics] = useState([]);
   const [loadingTopics, setLoadingTopics] = useState(false);
 
-  const isFlashcards = type === "flashcards";
-  const minAmount = isFlashcards ? 5 : 3;
-  const maxAmount = isFlashcards ? 20 : 10;
+  const minAmount = isPracticeQuiz ? 5 : (isFlashcards ? 5 : 3);
+  const maxAmount = isPracticeQuiz ? 20 : (isFlashcards ? 20 : 10);
 
   // Load topics from localStorage or extract them
   useEffect(() => {
@@ -125,7 +127,7 @@ Return ONLY a JSON object with a "topics" array.`,
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <DialogTitle className="text-lg font-bold text-white">
-              Customize {isFlashcards ? 'Flashcards' : 'Teach It Cards'}
+              Customize {isPracticeQuiz ? 'Practice Quiz' : isFlashcards ? 'Flashcards' : 'Teach It Cards'}
             </DialogTitle>
           </div>
           <DialogDescription className="text-purple-100 text-sm">
@@ -137,7 +139,7 @@ Return ONLY a JSON object with a "topics" array.`,
           {/* Amount */}
           <div className="space-y-2">
             <Label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-              Number of Cards
+              Number of {isPracticeQuiz ? 'Questions' : 'Cards'}
             </Label>
             <div className="flex items-center gap-3">
               <input
@@ -152,7 +154,7 @@ Return ONLY a JSON object with a "topics" array.`,
               <span className={`font-bold text-lg w-8 text-center ${isDark ? 'text-white' : 'text-slate-900'}`}>{amount}</span>
             </div>
             <p className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              {minAmount}–{maxAmount} {isFlashcards ? 'flashcards' : 'cards'}
+              {minAmount}–{maxAmount} {isPracticeQuiz ? 'questions' : isFlashcards ? 'flashcards' : 'cards'}
             </p>
           </div>
 
@@ -268,7 +270,7 @@ Return ONLY a JSON object with a "topics" array.`,
             className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg rounded-xl px-6"
           >
             <Sparkles className="w-4 h-4 mr-2" />
-            Generate {amount} {isFlashcards ? 'Flashcards' : 'Cards'}
+            Generate {amount} {isPracticeQuiz ? 'Questions' : isFlashcards ? 'Flashcards' : 'Cards'}
           </Button>
         </DialogFooter>
       </DialogContent>
