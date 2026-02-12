@@ -90,10 +90,46 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const [gradeChange, setGradeChange] = useState(null); // { from, to, scoreDiff }
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const ctaRef = useRef(null);
+  const examPollRef = useRef(null);
 
   const scrollToCTA = () => {
     ctaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
+
+  // Poll for diagnostic exam readiness when it's generating
+  useEffect(() => {
+    if (examPollRef.current) {
+      clearInterval(examPollRef.current);
+      examPollRef.current = null;
+    }
+
+    // Only poll if we don't have a study plan yet AND diagnostic isn't ready
+    if (!studyPlan && lesson?.id && !isDiagnosticReady) {
+      examPollRef.current = setInterval(async () => {
+        try {
+          const freshExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
+          const diag = freshExams.find(e => e.exam_type !== 'practice');
+          if (diag?.questions?.length > 0) {
+            // Exam is ready - trigger a re-render by reloading exams in parent
+            window.dispatchEvent(new Event('reloadLesson'));
+            if (examPollRef.current) {
+              clearInterval(examPollRef.current);
+              examPollRef.current = null;
+            }
+          }
+        } catch (err) {
+          console.warn('Exam poll error:', err);
+        }
+      }, 3000);
+    }
+
+    return () => {
+      if (examPollRef.current) {
+        clearInterval(examPollRef.current);
+        examPollRef.current = null;
+      }
+    };
+  }, [lesson?.id, studyPlan, isDiagnosticReady]);
 
   useEffect(() => {
     const checkAndLoadPlan = async () => {
