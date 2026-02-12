@@ -71,13 +71,16 @@ ${JSON.stringify(curriculumData, null, 2)}
               topic: { type: "string" },
               related_competency: { type: "string" },
               severity: { type: "string" },
-              grade_impact: { type: "string" },
+              grade_impact: { 
+                type: "string",
+                description: "Percentage cost on exam (e.g., '15%', '8%')"
+              },
               assessment_context: { type: "string" },
               recommended_tool: { type: "string" },
               tool_reason: { type: "string" },
               specific_fix: { type: "string" }
             },
-            required: ["topic", "severity", "recommended_tool"]
+            required: ["topic", "severity", "grade_impact", "recommended_tool"]
           }
         },
         preview_question: {
