@@ -560,7 +560,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   return (
-    <div className={`space-y-3 px-3 py-3 pb-8 w-full max-w-full md:max-w-lg mx-auto ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
+    <div className={`space-y-3 px-3 py-3 pb-8 w-full max-w-full md:max-w-lg mx-auto relative ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
       {/* Celebration Modal */}
       <AnimatePresence>
         {showCelebration && (
