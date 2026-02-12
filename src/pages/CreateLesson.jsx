@@ -168,25 +168,15 @@ export default function CreateLesson() {
       setCreatedLessonId(lesson.id);
       console.log("✅ Lesson created:", lesson.id);
 
-      // CRITICAL: Generate Exam 1 BEFORE completing loader - user needs this ready
-      console.log("🎯 Generating diagnostic exam...");
-      let examGenerated = false;
-      
-      try {
-        const examResult = await base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id });
-        if (examResult?.data?.success) {
-          console.log("✅ Exam 1 generated:", examResult.data.exam_id);
-          examGenerated = true;
-          setStepStatuses(prev => ({ ...prev, examGenerated: true }));
-        } else {
-          console.warn("⚠️ Exam generation returned but no success flag");
-          setStepStatuses(prev => ({ ...prev, examGenerated: true }));
-        }
-      } catch (examErr) {
-        console.error("❌ Exam generation error:", examErr.message);
-        // Continue anyway - user can still view materials
-        setStepStatuses(prev => ({ ...prev, examGenerated: true }));
-      }
+      // Fire-and-forget: Generate Exam 1 in background - user will see it loading on the study plan
+      console.log("🎯 Triggering diagnostic exam generation in background...");
+      base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+        .then(examResult => {
+          if (examResult?.data?.success) {
+            console.log("✅ Exam 1 generated:", examResult.data.exam_id);
+          }
+        })
+        .catch(err => console.error("❌ Exam generation error:", err.message));
 
       // Fire-and-forget: Curriculum mapping in background (not critical path)
       console.log('🗺️ Triggering curriculum mapping for lesson:', lesson.id);
@@ -206,7 +196,8 @@ export default function CreateLesson() {
         })
         .catch(err => console.warn("Curriculum mapping error:", err));
 
-      // Now complete the loader - exam is ready (or we tried our best)
+      // Complete loader immediately after OCR + compression - no need to wait for exam
+      setStepStatuses(prev => ({ ...prev, examGenerated: true }));
       setLoaderComplete(true);
 
     } catch (error) {
