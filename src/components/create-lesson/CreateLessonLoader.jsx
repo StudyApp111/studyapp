@@ -166,12 +166,11 @@ export default function CreateLessonLoader({ fileName, isComplete, onAnimationCo
                     {step.title}
                   </p>
                   {isActive && !isCompleted && (
-                    <div className="h-1 mt-1.5 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-1 mt-1.5 bg-slate-700 rounded-full overflow-hidden relative">
                       <motion.div
-                        className="h-full bg-purple-500 rounded-full"
-                        initial={{ width: 0 }}
-                        animate={{ width: '100%' }}
-                        transition={{ duration: 2, repeat: Infinity }}
+                        className="absolute h-full w-1/3 bg-purple-500 rounded-full"
+                        animate={{ left: ['-33%', '100%'] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                       />
                     </div>
                   )}
