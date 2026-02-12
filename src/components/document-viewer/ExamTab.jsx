@@ -1358,18 +1358,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           </div>
         )}
 
-        {/* Create Practice Quiz Button */}
-        <CreatePracticeQuizButton 
-          lesson={lesson}
-          extractedContent={extractedContent}
-          onExamCreated={(exam) => {
-            setExam(exam);
-            setCurrentQuestion(0);
-            hasAutoSelectedRef.current = true;
-            if (onExamComplete) onExamComplete();
-          }}
-        />
-
         {/* Official Exams Section - Only Exam 1 */}
         <div>
           <div className="flex items-center gap-2 mb-3">
@@ -1483,6 +1471,18 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             })()}
           </div>
         </div>
+
+        {/* Create Practice Quiz Button - below Official Exams */}
+        <CreatePracticeQuizButton 
+          lesson={lesson}
+          extractedContent={extractedContent}
+          onExamCreated={(newExam) => {
+            setExam(newExam);
+            setCurrentQuestion(0);
+            hasAutoSelectedRef.current = true;
+            if (onExamComplete) onExamComplete();
+          }}
+        />
 
       </div>
     );
