@@ -22,6 +22,24 @@ import { base44 } from "@/api/base44Client";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
 
+// Google Analytics initialization
+const initGoogleAnalytics = () => {
+  // Prevent duplicate injection
+  const existingScript = document.querySelector('script[src*="googletagmanager.com/gtag/js"]');
+  if (existingScript) return;
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://www.googletagmanager.com/gtag/js?id=G-J5CF3WKGDR';
+  document.head.appendChild(script);
+
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){window.dataLayer.push(arguments);}
+  window.gtag = gtag; // Make accessible globally
+  gtag('js', new Date());
+  gtag('config', 'G-J5CF3WKGDR');
+};
+
 // TikTok Pixel initialization
 const initTikTokPixel = () => {
   if (window.ttq) return; // Already initialized
@@ -87,7 +105,8 @@ function LayoutContent({ children, currentPageName }) {
   const { isDark, toggleTheme } = useTheme();
 
   React.useEffect(() => {
-    // Initialize TikTok Pixel
+    // Initialize Analytics
+    initGoogleAnalytics();
     initTikTokPixel();
 
     let cleanup;
