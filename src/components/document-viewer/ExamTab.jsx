@@ -15,6 +15,7 @@ import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset
 import FeedbackDisplay from "@/components/feedback/FeedbackDisplay";
 import TaskCompletionToast from "@/components/gamification/TaskCompletionToast";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import CreatePracticeQuizButton from "./CreatePracticeQuizButton";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -122,7 +123,7 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
   }
 };
 
-export default function ExamTab({ lesson, exams, onExamComplete }) {
+export default function ExamTab({ lesson, exams, onExamComplete, extractedContent }) {
   const { isDark } = useTheme();
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -1356,6 +1357,18 @@ export default function ExamTab({ lesson, exams, onExamComplete }) {
             </div>
           </div>
         )}
+
+        {/* Create Practice Quiz Button */}
+        <CreatePracticeQuizButton 
+          lesson={lesson}
+          extractedContent={extractedContent}
+          onExamCreated={(exam) => {
+            setExam(exam);
+            setCurrentQuestion(0);
+            hasAutoSelectedRef.current = true;
+            if (onExamComplete) onExamComplete();
+          }}
+        />
 
         {/* Official Exams Section - Only Exam 1 */}
         <div>
