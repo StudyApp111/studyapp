@@ -25,20 +25,27 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { course_name, content, focus_topics } = await req.json();
+    const { course_name, content, focus_topics, amount, difficulty } = await req.json();
 
     if (!content) {
       return Response.json({ error: 'Content is required' }, { status: 400 });
     }
 
+    const cardCount = Math.min(Math.max(amount || 10, 5), 20);
+    const difficultyPref = difficulty || 'mixed';
+
     const focusInstruction = focus_topics?.length > 0 
       ? `\n\nPRIORITY FOCUS: Generate cards that specifically cover these topics (from the student's study plan):
 ${focus_topics.map((t, i) => `${i + 1}. ${t}`).join('\n')}
 
-At least 60% of the flashcards should directly address these focus topics.`
+At least ${Math.ceil(cardCount * 0.6)} of the ${cardCount} flashcards should directly address these focus topics.`
       : '';
 
-    const prompt = `Generate 10 high-quality flashcards for this course: ${course_name || 'Course'}
+    const difficultyInstruction = difficultyPref !== 'mixed'
+      ? `\n6. ALL cards should be "${difficultyPref}" difficulty level.`
+      : `\n6. Vary in difficulty (mark as easy, medium, or hard)`;
+
+    const prompt = `Generate exactly ${cardCount} high-quality flashcards for this course: ${course_name || 'Course'}
 
 Content: ${content}
 ${focusInstruction}
@@ -48,7 +55,7 @@ Create flashcards that:
 2. Are clear and concise
 3. Have a question/front side and detailed answer/back side
 4. Include topic tags for categorization
-5. Vary in difficulty (mark as easy, medium, or hard)
+5. Are grounded in the provided content${difficultyInstruction}
 
 Return a JSON object with a "flashcards" array containing objects with: question, answer, topics (array), difficulty (easy/medium/hard)`;
 
