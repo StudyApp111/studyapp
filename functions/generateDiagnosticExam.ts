@@ -143,12 +143,12 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
     const generationConfig = hasDocumentContent
       ? {
           temperature: 0.5,
-          maxOutputTokens: 16000,
+          maxOutputTokens: 8192,
           responseMimeType: "application/json"
         }
       : {
           temperature: 0.5,
-          maxOutputTokens: 16000
+          maxOutputTokens: 8192
           // No responseMimeType when using google search
         };
     
