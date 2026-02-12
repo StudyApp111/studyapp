@@ -108,8 +108,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       examPollRef.current = null;
     }
 
-    // Only poll if we don't have a study plan yet AND diagnostic isn't ready
-    if (!studyPlan && lesson?.id && !isDiagnosticReady) {
+    // Poll if diagnostic isn't ready yet (regardless of study plan status)
+    if (lesson?.id && !isDiagnosticReady) {
       examPollRef.current = setInterval(async () => {
         try {
           const freshExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
@@ -134,7 +134,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         examPollRef.current = null;
       }
     };
-  }, [lesson?.id, studyPlan, isDiagnosticReady]);
+  }, [lesson?.id, isDiagnosticReady]);
 
   useEffect(() => {
     const checkAndLoadPlan = async () => {
