@@ -388,11 +388,11 @@ export default function DocumentViewerTabs({ lesson }) {
             )}
           </div>
 
-          {/* Content Area - Full height, no extra space */}
+          {/* Content Area - Match AI tutor panel height on desktop */}
           <div className="relative md:flex-1 md:overflow-hidden w-full max-w-full" style={{ minHeight: '70vh', boxSizing: 'border-box', overflowX: 'hidden' }}>
             {/* PDF View */}
             {hasFile && viewMode === "pdf" && (
-              <div className={`w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ height: '70vh' }}>
+              <div className={`w-full h-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ height: 'calc(100vh - 160px)', minHeight: '70vh' }}>
                 {isPDF || isOfficeDoc ? (
                   <>
                     {!pdfLoaded && !pdfError && (
