@@ -633,9 +633,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               onClick={() => {
                 if (!isDiagnosticReady) return;
                 onNavigate('exam');
-                setTimeout(() => {
-                  window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
-                }, 100);
               }}
               disabled={!isDiagnosticReady}
               className={`w-full font-bold py-5 text-base rounded-2xl shadow-xl relative overflow-hidden group ${
