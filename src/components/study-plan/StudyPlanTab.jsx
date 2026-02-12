@@ -82,10 +82,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const { canDoTask, triggerUpgradeModal } = useSubscription();
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Check if diagnostic exam is ready (has questions generated)
-  const diagnosticExamFromExams = (exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice');
-  const isDiagnosticReady = diagnosticExamFromExams?.questions?.length > 0;
   const [liveProgress, setLiveProgress] = useState({});
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [showPracticeTopics, setShowPracticeTopics] = useState(false);
