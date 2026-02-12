@@ -270,7 +270,7 @@ No extra text.`;
       }],
       generationConfig: {
         temperature: 0.4,
-        maxOutputTokens: 20000,
+        maxOutputTokens: 8192,
         responseMimeType: "application/json",
         responseSchema: responseSchema
       }
