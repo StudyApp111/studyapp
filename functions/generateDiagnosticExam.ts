@@ -160,34 +160,67 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
     const response = result.response;
     const text = response.text();
     
-    // Extract JSON from response (handles preamble text and markdown blocks)
-    let cleanedText = text.trim();
-    
-    // Find JSON object boundaries
-    const jsonStart = cleanedText.indexOf('{');
-    const jsonEnd = cleanedText.lastIndexOf('}');
-    
-    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-      cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
-    } else {
-      // Fallback: try to remove markdown code blocks
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.slice(7);
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.slice(3);
-      }
-      if (cleanedText.endsWith('```')) {
-        cleanedText = cleanedText.slice(0, -3);
-      }
-      cleanedText = cleanedText.trim();
-    }
+    console.log("Raw response length:", text.length);
     
     let parsed;
-    try {
-      parsed = JSON.parse(cleanedText);
-    } catch (parseError) {
-      console.error("Failed to parse AI response:", text.substring(0, 500));
-      return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
+    
+    if (hasDocumentContent) {
+      // JSON mode response - should be clean JSON already
+      try {
+        parsed = JSON.parse(text.trim());
+      } catch (parseError) {
+        console.error("JSON mode parse failed:", text.substring(0, 500));
+        return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
+      }
+    } else {
+      // Google Search response - model may wrap in markdown or add preamble
+      // Use regex to extract the JSON object containing "questions" array
+      let cleanedText = text;
+      
+      // Strip markdown code fences first
+      const codeBlockMatch = cleanedText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlockMatch) {
+        cleanedText = codeBlockMatch[1].trim();
+      }
+      
+      // Find the outermost JSON object that contains "questions"
+      // Walk through to find matching braces for a complete JSON object
+      const jsonStart = cleanedText.indexOf('{"questions"');
+      const altStart = jsonStart === -1 ? cleanedText.indexOf('{') : jsonStart;
+      
+      if (altStart === -1) {
+        console.error("No JSON object found in response:", text.substring(0, 500));
+        return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
+      }
+      
+      // Count brace depth to find the matching closing brace
+      let depth = 0;
+      let jsonEnd = -1;
+      for (let i = altStart; i < cleanedText.length; i++) {
+        if (cleanedText[i] === '{') depth++;
+        else if (cleanedText[i] === '}') {
+          depth--;
+          if (depth === 0) {
+            jsonEnd = i;
+            break;
+          }
+        }
+      }
+      
+      if (jsonEnd === -1) {
+        // Truncated response - braces never balanced
+        console.error("Truncated JSON response (unbalanced braces). Length:", text.length, "Preview:", text.substring(0, 500));
+        return Response.json({ error: 'AI response was truncated. Please try again.' }, { status: 500 });
+      }
+      
+      const jsonStr = cleanedText.substring(altStart, jsonEnd + 1);
+      
+      try {
+        parsed = JSON.parse(jsonStr);
+      } catch (parseError) {
+        console.error("Failed to parse extracted JSON:", jsonStr.substring(0, 500));
+        return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
+      }
     }
 
     return Response.json({
