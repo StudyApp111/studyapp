@@ -327,6 +327,7 @@ export default function DocumentViewerTabs({ lesson }) {
 
   const handlePdfLoad = () => {
     setPdfLoaded(true);
+    pdfRetryCountRef.current = maxPdfRetries; // Stop retries
     if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
   };
 
