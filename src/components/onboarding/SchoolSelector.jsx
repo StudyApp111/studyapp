@@ -15,20 +15,48 @@ export default function SchoolSelector({ value, onChange, prefetchedData }) {
       if (prefetchedData?.schools?.length > 0) {
         setNearbySchools(prefetchedData.schools);
         setUserLocation(prefetchedData.location);
+        setInitialized(true);
       } else {
-        loadSchools();
+        // Get browser geolocation for accurate results
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              setUserLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+              loadSchools("", pos.coords.latitude, pos.coords.longitude);
+              setInitialized(true);
+            },
+            () => {
+              // Permission denied or error - fall back to IP-based
+              loadSchools();
+              setInitialized(true);
+            },
+            { timeout: 5000, maximumAge: 300000 }
+          );
+        } else {
+          loadSchools();
+          setInitialized(true);
+        }
       }
-      setInitialized(true);
     }
   }, [initialized, prefetchedData]);
 
-  const loadSchools = async (query = "") => {
+  const loadSchools = async (query = "", lat = null, lon = null) => {
     setIsLoading(true);
     try {
-      const result = await base44.functions.invoke('getNearbySchools', { searchQuery: query });
+      const payload = { searchQuery: query };
+      if (lat && lon) {
+        payload.lat = lat;
+        payload.lon = lon;
+      } else if (userLocation?.lat && userLocation?.lon) {
+        payload.lat = userLocation.lat;
+        payload.lon = userLocation.lon;
+      }
+      const result = await base44.functions.invoke('getNearbySchools', payload);
       if (result?.data?.success) {
         setNearbySchools(result.data.schools || []);
-        setUserLocation(result.data.location);
+        if (result.data.location?.city) {
+          setUserLocation(prev => ({ ...prev, ...result.data.location }));
+        }
       }
     } catch (error) {
       console.error("Error loading schools:", error);
