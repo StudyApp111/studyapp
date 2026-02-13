@@ -143,18 +143,12 @@ No extra text.
 ────────────────────────────
 Generate 5 authentic ${courseCode} diagnostic questions now.`;
 
-    // Conditional generation config
-    const generationConfig = hasDocumentContent
-      ? {
-          temperature: 0.5,
-          maxOutputTokens: 16000,
-          responseMimeType: "application/json"
-        }
-      : {
-          temperature: 0.5,
-          maxOutputTokens: 16000
-          // No responseMimeType when using google search
-        };
+    // Always use JSON mode now - search is done separately
+    const generationConfig = {
+      temperature: 0.5,
+      maxOutputTokens: 8192,
+      responseMimeType: "application/json"
+    };
     
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
