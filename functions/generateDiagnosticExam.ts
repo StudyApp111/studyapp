@@ -18,23 +18,29 @@ Deno.serve(async (req) => {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Conditional model configuration based on whether document content exists
     const hasDocumentContent = documentContent && documentContent.trim().length > 0;
     
-    const modelConfig = hasDocumentContent 
-      ? {
-          model: 'gemini-flash-lite-latest'
-          // No tools - using JSON mode instead
-        }
-      : {
-          model: 'gemini-flash-lite-latest',
-          tools: [{
-            googleSearch: {}
-          }]
-          // No responseMimeType - can't combine with google search
-        };
+    // Always use JSON mode for reliable parsing
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
     
-    const model = genAI.getGenerativeModel(modelConfig);
+    // If no document content, do a search call first to gather course context
+    let searchContext = '';
+    if (!hasDocumentContent) {
+      try {
+        const searchModel = genAI.getGenerativeModel({
+          model: 'gemini-flash-lite-latest',
+          tools: [{ googleSearch: {} }]
+        });
+        const searchResult = await searchModel.generateContent({
+          contents: [{ role: 'user', parts: [{ text: `Find the syllabus, typical exam questions, and learning outcomes for the course "${courseCode}" at "${school}". Summarize the key topics, assessment methods, and competencies covered. Be concise.` }] }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: 2000 }
+        });
+        searchContext = searchResult.response.text();
+        console.log("Search context length:", searchContext.length);
+      } catch (searchErr) {
+        console.warn("Search step failed, proceeding without:", searchErr.message);
+      }
+    }
 
     const prompt = `You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${courseCode}. 
 This exam establishes an accurate learning baseline and must reflect how the course is ACTUALLY assessed.
