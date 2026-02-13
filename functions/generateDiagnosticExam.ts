@@ -56,13 +56,11 @@ School: ${school}
 Content Summary (OCR notes):
 ${documentContent || 'Not provided'}
 
+${searchContext ? `Research Context (from web search about this course):\n${searchContext}` : ''}
 
-IF Content Summary is EMPTY, conduct the following first research step. If Content Summary is NOT empty then all questions MUST be grounded in Content Summary and skip the following google searches.
-
-IF Content Summary is EMPTY, you MUST search for:
-1. "${courseCode} ${school} syllabus" OR "${courseCode} syllabus"
-2. "${courseCode} exam questions" OR "${courseCode} typical assessments"
-3. "${courseCode} course outline" OR "${courseCode} learning outcomes"
+If Content Summary is NOT empty, all questions MUST be grounded in the Content Summary.
+If Content Summary is empty but Research Context is provided, ground questions in the Research Context.
+If both are empty, rely on general knowledge of the course.
 
 ────────────────────────────
 Internal Rules (Do NOT Output)
