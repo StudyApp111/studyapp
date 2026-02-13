@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { GoogleGenAI } from 'npm:@google/genai@1.0.0';
 
 Deno.serve(async (req) => {
   try {
@@ -13,50 +14,53 @@ Deno.serve(async (req) => {
 
     const apiKey = Deno.env.get("API_KEY");
     if (!apiKey) {
-      return Response.json({ error: 'Service configuration error' }, { status: 500 });
-    }
-
-    const prompt = `List 6 common undergraduate course codes at ${school || 'a typical North American university'}.
-${year ? `Focus on courses typical for year ${year} students.` : ''}
-
-Return ONLY a JSON array of 6 course codes like ["ECON 203", "PSYC 200", "MATH 101", "BIOL 241", "CHEM 201", "POLI 200"].
-No explanation, just the array.`;
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 256
-          }
-        })
-      }
-    );
-
-    if (!response.ok) {
-      console.error('Gemini API error:', response.status);
       return Response.json({ codes: [] });
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
-    // Extract JSON array
-    const match = text.match(/\[[\s\S]*?\]/);
-    if (match) {
+    const genAI = new GoogleGenAI({ apiKey });
+
+    // Step 1: Use Google Search grounding to find real courses at this school
+    let searchContext = '';
+    if (school) {
       try {
-        const codes = JSON.parse(match[0]);
-        return Response.json({ codes: codes.slice(0, 6) });
-      } catch {
-        return Response.json({ codes: [] });
+        const searchResult = await genAI.models.generateContent({
+          model: 'gemini-2.0-flash-lite',
+          contents: `List the most popular and common undergraduate courses offered at "${school}". Include course codes and names. Focus on high-enrollment first and second year courses.`,
+          config: {
+            tools: [{ googleSearch: {} }],
+            temperature: 0.2,
+            maxOutputTokens: 1500
+          }
+        });
+        searchContext = searchResult.text || '';
+      } catch (searchErr) {
+        console.log('Search step failed:', searchErr.message);
       }
     }
 
-    return Response.json({ codes: [] });
+    // Step 2: Use JSON mode to extract exactly 6 course codes
+    const prompt = `Based on the following research about courses at "${school || 'a typical university'}", return exactly 6 real, common undergraduate course codes.
+${year ? `Focus on courses for year ${year} students.` : 'Include a mix of popular first and second year courses.'}
+
+${searchContext ? `Research:\n${searchContext}` : `List 6 common undergraduate course codes at ${school || 'a typical university'}.`}
+
+Return a JSON object with a "codes" array of exactly 6 course code strings. Use the actual course codes from that school (e.g. "MATH 211", "PSYC 200"). If you can't find real codes, use realistic ones for that type of institution.`;
+
+    const result = await genAI.models.generateContent({
+      model: 'gemini-2.0-flash-lite',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        temperature: 0.3,
+        maxOutputTokens: 256
+      }
+    });
+
+    const text = result.text || '';
+    const parsed = JSON.parse(text.trim());
+    const codes = parsed.codes || parsed.course_codes || [];
+
+    return Response.json({ codes: codes.slice(0, 6) });
 
   } catch (error) {
     console.error('Error:', error.message);
