@@ -184,7 +184,6 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
       }
       
       // Find the outermost JSON object that contains "questions"
-      // Walk through to find matching braces for a complete JSON object
       const jsonStart = cleanedText.indexOf('{"questions"');
       const altStart = jsonStart === -1 ? cleanedText.indexOf('{') : jsonStart;
       
@@ -193,16 +192,32 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
         return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
       }
       
-      // Count brace depth to find the matching closing brace
+      // String-aware brace matching - skips braces inside JSON string values
+      // This prevents LaTeX like \text{ m}^3 or set notation {1,2,3} from breaking extraction
       let depth = 0;
       let jsonEnd = -1;
+      let inString = false;
       for (let i = altStart; i < cleanedText.length; i++) {
-        if (cleanedText[i] === '{') depth++;
-        else if (cleanedText[i] === '}') {
-          depth--;
-          if (depth === 0) {
-            jsonEnd = i;
-            break;
+        const char = cleanedText[i];
+        if (inString) {
+          if (char === '\\') {
+            i++; // skip escaped character
+            continue;
+          }
+          if (char === '"') {
+            inString = false;
+          }
+        } else {
+          if (char === '"') {
+            inString = true;
+          } else if (char === '{') {
+            depth++;
+          } else if (char === '}') {
+            depth--;
+            if (depth === 0) {
+              jsonEnd = i;
+              break;
+            }
           }
         }
       }
