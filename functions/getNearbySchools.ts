@@ -1,23 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Popular universities as fallback (covers major regions)
-const FALLBACK_SCHOOLS = [
-  { name: "University of Toronto", type: "university" },
-  { name: "University of British Columbia", type: "university" },
-  { name: "McGill University", type: "university" },
-  { name: "University of Alberta", type: "university" },
-  { name: "University of Calgary", type: "university" },
-  { name: "Harvard University", type: "university" },
-  { name: "Stanford University", type: "university" },
-  { name: "MIT", type: "university" },
-  { name: "UCLA", type: "university" },
-  { name: "University of Michigan", type: "university" },
-  { name: "Oxford University", type: "university" },
-  { name: "Cambridge University", type: "university" },
-  { name: "University of Sydney", type: "university" },
-  { name: "University of Melbourne", type: "university" }
-];
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -27,50 +9,63 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchQuery } = await req.json();
-
-    // Get user's approximate location from IP
-    const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
-      || req.headers.get('cf-connecting-ip') 
-      || req.headers.get('x-real-ip')
-      || null;
+    const { searchQuery, lat, lon } = await req.json();
 
     let userCity = null;
     let userCountry = null;
-    let userLat = null;
-    let userLon = null;
+    let userLat = lat || null;
+    let userLon = lon || null;
 
-    // Quick geo lookup with 3s timeout - try multiple providers
-    const geoProviders = [
-      clientIP ? `https://ipapi.co/${clientIP}/json/` : 'https://ipapi.co/json/',
-      `http://ip-api.com/json/${clientIP || ''}`
-    ];
+    // If no coords from client, try IP-based geo as fallback
+    if (!userLat || !userLon) {
+      const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || req.headers.get('cf-connecting-ip')
+        || req.headers.get('x-real-ip')
+        || null;
 
-    for (const geoUrl of geoProviders) {
-      if (userLat && userLon) break;
       try {
+        const geoUrl = clientIP ? `https://ipapi.co/${clientIP}/json/` : 'https://ipapi.co/json/';
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
         const geoResponse = await fetch(geoUrl, { signal: controller.signal });
         clearTimeout(timeoutId);
-        
+
         if (geoResponse.ok) {
           const geoData = await geoResponse.json();
-          if (!geoData.error && !geoData.status === 'fail') {
+          if (!geoData.error) {
             userCity = geoData.city;
             userCountry = geoData.country_name || geoData.country;
-            userLat = geoData.latitude || geoData.lat;
-            userLon = geoData.longitude || geoData.lon;
+            if (!userLat) userLat = geoData.latitude;
+            if (!userLon) userLon = geoData.longitude;
           }
         }
       } catch (geoError) {
-        console.log('Geo provider failed:', geoError.message);
+        console.log('Geo lookup failed:', geoError.message);
+      }
+    }
+
+    // If we got coords from client but no city, do reverse geocode
+    if (userLat && userLon && !userCity) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const revGeo = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json&zoom=10`,
+          { signal: controller.signal, headers: { 'User-Agent': 'StudyApp/1.0' } }
+        );
+        clearTimeout(timeoutId);
+        if (revGeo.ok) {
+          const revData = await revGeo.json();
+          userCity = revData.address?.city || revData.address?.town || revData.address?.state;
+          userCountry = revData.address?.country;
+        }
+      } catch (e) {
+        console.log('Reverse geocode failed:', e.message);
       }
     }
 
     let nearbySchools = [];
-    
+
     // Only try Overpass if we have coordinates
     if (userLat && userLon) {
       try {
@@ -82,10 +77,10 @@ Deno.serve(async (req) => {
   way["amenity"="college"](around:50000,${userLat},${userLon});
 );
 out center tags 15;`;
-        
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
+
         const overpassResponse = await fetch('https://overpass-api.de/api/interpreter', {
           method: 'POST',
           body: overpassQuery,
@@ -96,33 +91,32 @@ out center tags 15;`;
         if (overpassResponse.ok) {
           const overpassData = await overpassResponse.json();
           const elements = overpassData.elements || [];
-          
+
           const seenNames = new Set();
-          
+
           for (const el of elements) {
             const name = el.tags?.name;
             if (!name || seenNames.has(name.toLowerCase())) continue;
             seenNames.add(name.toLowerCase());
-            
-            const lat = el.lat || el.center?.lat;
-            const lon = el.lon || el.center?.lon;
+
+            const elLat = el.lat || el.center?.lat;
+            const elLon = el.lon || el.center?.lon;
             let distance = null;
-            
-            if (lat && lon) {
+
+            if (elLat && elLon) {
               const R = 6371;
-              const dLat = (lat - userLat) * Math.PI / 180;
-              const dLon = (lon - userLon) * Math.PI / 180;
-              const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(userLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              const dLat = (elLat - userLat) * Math.PI / 180;
+              const dLon = (elLon - userLon) * Math.PI / 180;
+              const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(userLat * Math.PI / 180) * Math.cos(elLat * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
               distance = R * c;
             }
 
             nearbySchools.push({
               name,
               address: userCity || '',
-              classmates: 0,
               distance,
               type: el.tags?.amenity === 'university' ? 'university' : 'college'
             });
@@ -135,20 +129,10 @@ out center tags 15;`;
       }
     }
 
-    // Use fallback schools if no results found
-    if (nearbySchools.length === 0) {
-      nearbySchools = FALLBACK_SCHOOLS.map(s => ({
-        ...s,
-        address: '',
-        classmates: 0,
-        distance: null
-      }));
-    }
-
     // Filter by search query if provided
     if (searchQuery?.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      nearbySchools = nearbySchools.filter(s => 
+      nearbySchools = nearbySchools.filter(s =>
         s.name.toLowerCase().includes(query)
       );
     }
@@ -161,11 +145,10 @@ out center tags 15;`;
 
   } catch (error) {
     console.error('Error:', error.message);
-    // Return fallback schools even on error
-    return Response.json({ 
-      success: true, 
-      schools: FALLBACK_SCHOOLS.slice(0, 10).map(s => ({ ...s, address: '', classmates: 0, distance: null })), 
-      location: {} 
+    return Response.json({
+      success: true,
+      schools: [],
+      location: {}
     });
   }
 });
