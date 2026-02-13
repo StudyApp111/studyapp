@@ -161,104 +161,11 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
     console.log("Raw response length:", text.length);
     
     let parsed;
-    
-    if (hasDocumentContent) {
-      // JSON mode response - should be clean JSON already
-      try {
-        parsed = JSON.parse(text.trim());
-      } catch (parseError) {
-        console.error("JSON mode parse failed:", text.substring(0, 500));
-        return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
-      }
-    } else {
-      // Google Search response - model may wrap in markdown or add preamble
-      // Use regex to extract the JSON object containing "questions" array
-      let cleanedText = text;
-      
-      // Strip markdown code fences first
-      const codeBlockMatch = cleanedText.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (codeBlockMatch) {
-        cleanedText = codeBlockMatch[1].trim();
-      }
-      
-      // Find the outermost JSON object that contains "questions"
-      const jsonStart = cleanedText.indexOf('{"questions"');
-      const altStart = jsonStart === -1 ? cleanedText.indexOf('{') : jsonStart;
-      
-      if (altStart === -1) {
-        console.error("No JSON object found in response:", text.substring(0, 500));
-        return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
-      }
-      
-      // String-aware brace matching - skips braces inside JSON string values
-      // This prevents LaTeX like \text{ m}^3 or set notation {1,2,3} from breaking extraction
-      let depth = 0;
-      let jsonEnd = -1;
-      let inString = false;
-      for (let i = altStart; i < cleanedText.length; i++) {
-        const char = cleanedText[i];
-        if (inString) {
-          if (char === '\\') {
-            i++; // skip escaped character
-            continue;
-          }
-          if (char === '"') {
-            inString = false;
-          }
-        } else {
-          if (char === '"') {
-            inString = true;
-          } else if (char === '{') {
-            depth++;
-          } else if (char === '}') {
-            depth--;
-            if (depth === 0) {
-              jsonEnd = i;
-              break;
-            }
-          }
-        }
-      }
-      
-      if (jsonEnd === -1) {
-        // Truncated response - braces never balanced
-        // Try lightweight JSON repair: find last complete question and close properly
-        console.log("Attempting JSON repair for truncated response");
-        
-        // Find the last complete question object
-        const lastCompleteQuestion = cleanedText.lastIndexOf('},');
-        if (lastCompleteQuestion !== -1) {
-          // Close array and object after last complete question
-          const repairedJson = cleanedText.substring(altStart, lastCompleteQuestion + 1) + ']}';
-          
-          try {
-            parsed = JSON.parse(repairedJson);
-            console.log("JSON repair successful. Recovered questions:", parsed.questions?.length);
-            
-            // If we have at least 3 questions, proceed
-            if (parsed.questions && parsed.questions.length >= 3) {
-              return Response.json({
-                success: true,
-                questions: parsed.questions
-              });
-            }
-          } catch (repairError) {
-            console.error("JSON repair failed:", repairError.message);
-          }
-        }
-        
-        console.error("Cannot repair truncated response. Length:", text.length);
-        return Response.json({ error: 'AI response was truncated. Please try again.' }, { status: 500 });
-      }
-      
-      const jsonStr = cleanedText.substring(altStart, jsonEnd + 1);
-      
-      try {
-        parsed = JSON.parse(jsonStr);
-      } catch (parseError) {
-        console.error("Failed to parse extracted JSON:", jsonStr.substring(0, 500));
-        return Response.json({ error: 'Failed to generate questions' }, { status: 500 });
-      }
+    try {
+      parsed = JSON.parse(text.trim());
+    } catch (parseError) {
+      console.error("JSON parse failed:", text.substring(0, 500));
+      return Response.json({ error: 'Failed to generate questions. Please try again.' }, { status: 500 });
     }
 
     return Response.json({
