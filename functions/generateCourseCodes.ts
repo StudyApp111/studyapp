@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     if (school) {
       try {
         const searchResult = await genAI.models.generateContent({
-          model: 'gemini-2.0-flash-lite',
+          model: 'gemini-flash-lite-latest',
           contents: `List the most popular and common undergraduate courses offered at "${school}". Include course codes and names. Focus on high-enrollment first and second year courses.`,
           config: {
             tools: [{ googleSearch: {} }],
