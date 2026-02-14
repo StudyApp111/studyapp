@@ -69,15 +69,9 @@ ${JSON.stringify(curriculumData, null, 2)}
             type: "object",
             properties: {
               topic: { type: "string" },
-              related_competency: { type: "string" },
               severity: { type: "string" },
-              grade_impact: { 
-                type: "string",
-                description: "Percentage cost on exam (e.g., '15%', '8%')"
-              },
-              assessment_context: { type: "string" },
+              grade_impact: { type: "string" },
               recommended_tool: { type: "string" },
-              tool_reason: { type: "string" },
               specific_fix: { type: "string" }
             },
             required: ["topic", "severity", "grade_impact", "recommended_tool"]
@@ -86,14 +80,10 @@ ${JSON.stringify(curriculumData, null, 2)}
         preview_question: {
           type: "object",
           properties: {
-            topic: { type: "string" },
-            related_competency: { type: "string" },
-            assessment_format: { type: "string" },
             question_text: { type: "string" },
             question_type: { type: "string" },
             correct_answer: { type: "string" },
-            why_this_matters: { type: "string" },
-            impact_statement: { type: "string" }
+            why_this_matters: { type: "string" }
           }
         },
         estimated_study_time_days: { type: "number" },
@@ -104,13 +94,10 @@ ${JSON.stringify(curriculumData, null, 2)}
             current: { type: "string" },
             week_1_target: { type: "string" },
             week_1_percentage: { type: "number" },
-            week_1_description: { type: "string" },
             week_2_target: { type: "string" },
             week_2_percentage: { type: "number" },
-            week_2_description: { type: "string" },
             week_3_target: { type: "string" },
             week_3_percentage: { type: "number" },
-            week_3_description: { type: "string" },
             final_target: { type: "string" }
           }
         },
@@ -133,7 +120,6 @@ ${JSON.stringify(curriculumData, null, 2)}
               type: "object",
               properties: {
                 testimonial: { type: "string" },
-                testimonial_author: { type: "string" },
                 stats: { type: "string" }
               }
             },
@@ -141,7 +127,6 @@ ${JSON.stringify(curriculumData, null, 2)}
               type: "object",
               properties: {
                 testimonial: { type: "string" },
-                testimonial_author: { type: "string" },
                 stats: { type: "string" }
               }
             },
@@ -149,7 +134,6 @@ ${JSON.stringify(curriculumData, null, 2)}
               type: "object",
               properties: {
                 testimonial: { type: "string" },
-                testimonial_author: { type: "string" },
                 stats: { type: "string" }
               }
             }
@@ -162,16 +146,12 @@ ${JSON.stringify(curriculumData, null, 2)}
         "confidence_level",
         "strong_areas",
         "weak_areas_detailed",
-        "preview_question",
         "estimated_study_time_days",
-        "study_intensity",
         "grade_trajectory",
         "personalized_message_line1",
         "personalized_message_line2",
         "personalized_message_line3",
-        "urgency_timeline",
-        "top_priority_action",
-        "toolkit_social_proof"
+        "top_priority_action"
       ]
     };
 
@@ -255,7 +235,7 @@ PHASE 8: CRITICAL VALIDATION RULES
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.5,
-        maxOutputTokens: 16000,
+        maxOutputTokens: 32000,
         responseMimeType: "application/json",
         responseSchema: responseSchema
       }

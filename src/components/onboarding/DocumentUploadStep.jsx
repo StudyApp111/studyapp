@@ -144,8 +144,9 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
       <div className="text-center space-y-3">
         <div className="text-6xl mb-2">📄</div>
         <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
-          Want More Accurate Results {userName}?
+          Want a more accurate prediction?
         </h2>
+        <p className="text-slate-600 text-sm">Upload your notes — your diagnostic will use your actual course material.</p>
       </div>
 
       {/* Info card */}

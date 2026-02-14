@@ -13,30 +13,39 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
   const [userLocation, setUserLocation] = useState(null);
   const inputRef = useRef(null);
 
-  // Load nearby schools on mount
+  // Load nearby schools on mount using browser geolocation for accuracy
   useEffect(() => {
-    loadNearbySchools();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          loadNearbySchools('', pos.coords.latitude, pos.coords.longitude);
+        },
+        () => {
+          // Permission denied — fall back to IP-based
+          loadNearbySchools('');
+        },
+        { timeout: 5000, maximumAge: 300000 }
+      );
+    } else {
+      loadNearbySchools('');
+    }
   }, []);
 
-  const loadNearbySchools = async () => {
+  const loadNearbySchools = async (query = '', lat = null, lon = null) => {
     setLoading(true);
     try {
-      const result = await base44.functions.invoke('getNearbySchools', { searchQuery: '' });
+      const payload = { searchQuery: query };
+      if (lat && lon) {
+        payload.lat = lat;
+        payload.lon = lon;
+      }
+      const result = await base44.functions.invoke('getNearbySchools', payload);
       if (result?.data?.success) {
         setSuggestions(result.data.schools || []);
         setUserLocation(result.data.location);
       }
     } catch (error) {
       console.error('Error loading schools:', error);
-      // Fallback schools
-      setSuggestions([
-        { name: 'University of Toronto', type: 'university' },
-        { name: 'University of British Columbia', type: 'university' },
-        { name: 'McGill University', type: 'university' },
-        { name: 'University of Alberta', type: 'university' },
-        { name: 'University of Calgary', type: 'university' },
-        { name: 'Harvard University', type: 'university' }
-      ]);
     } finally {
       setLoading(false);
     }
@@ -54,6 +63,23 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
     if (trimmedSchool) {
       onChange(trimmedSchool);
       onNext(trimmedSchool);
+    }
+  };
+
+  // Search with API when user types, filter locally for instant feedback
+  const handleInputChange = (e) => {
+    const query = e.target.value;
+    setSchool(query);
+    setShowSuggestions(true);
+    
+    // Debounce API search for typed queries
+    if (query.length >= 2) {
+      clearTimeout(window._schoolSearchTimeout);
+      window._schoolSearchTimeout = setTimeout(() => {
+        loadNearbySchools(query);
+      }, 400);
+    } else if (query.length === 0) {
+      loadNearbySchools('');
     }
   };
 
@@ -88,7 +114,7 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
           What school do you attend?
         </h2>
         <p className="text-slate-600 text-sm md:text-base">
-          This helps us tailor questions to your curriculum
+          We'll match your diagnostic to your school's curriculum.
         </p>
       </div>
 
@@ -99,10 +125,7 @@ export default function SchoolInput({ value, onChange, onNext, onBack }) {
           type="text"
           placeholder="Search for your school..."
           value={school}
-          onChange={(e) => {
-            setSchool(e.target.value);
-            setShowSuggestions(true);
-          }}
+          onChange={handleInputChange}
           className="h-14 text-lg bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-xl focus:border-purple-500 focus:ring-purple-100"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && school.trim()) {

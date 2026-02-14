@@ -50,7 +50,7 @@ export default function NameInput({ value, onChange, onNext, onBack }) {
       <div className="text-center space-y-3 relative z-10">
         <div className="text-6xl mb-2">👋</div>
         <h2 className="text-2xl md:text-3xl font-bold text-slate-900">What's your name?</h2>
-        <p className="text-slate-600 text-sm">We'll personalize your learning experience</p>
+        <p className="text-slate-600 text-sm">We'll predict your grade in 5 quick questions — let's start with your name.</p>
       </div>
 
       {/* Input */}

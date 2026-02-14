@@ -21,17 +21,22 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
   const loadCourseSuggestions = async () => {
     setLoading(true);
     try {
-      const result = await base44.functions.invoke('generateCourseCodes', { 
+      // Set a 6-second timeout — if suggestions take too long, show empty and let user type
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), 6000)
+      );
+      const fetchPromise = base44.functions.invoke('generateCourseCodes', { 
         school: school || '',
         year: null 
       });
+      const result = await Promise.race([fetchPromise, timeoutPromise]);
       if (result?.data?.codes) {
         setSuggestions(result.data.codes);
       }
     } catch (error) {
       console.error('Error loading course codes:', error);
-      // Fallback suggestions
-      setSuggestions(['MATH 101', 'ECON 201', 'PSYC 200', 'BIOL 241', 'CHEM 201', 'POLI 200']);
+      // No fallback — user can just type their course
+      setSuggestions([]);
     } finally {
       setLoading(false);
     }
@@ -79,7 +84,7 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
           What course are you studying?
         </h2>
         <p className="text-slate-600 text-sm md:text-base">
-          Enter your course name or code (e.g., MATH 101, Calculus I)
+          Next up: a 5-question diagnostic exam to predict your grade.
         </p>
       </div>
 
