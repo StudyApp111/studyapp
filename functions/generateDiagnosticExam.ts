@@ -99,7 +99,7 @@ Q5: Challenging → High Challenge (depth, edge cases, or precision—not new co
 ────────────────────────────
 QUESTION-TYPE RULES (STRICT)
 
-Choose question_type for EACH question:
+Choose question_type for EACH of the 5 question:
 Multiple Choice
 
 • Multiple Choice → EXACTLY 4 options (A–D)
