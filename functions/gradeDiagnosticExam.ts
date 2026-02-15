@@ -50,7 +50,7 @@ ${JSON.stringify(curriculumData, null, 2)}
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-flash-lite-latest'
+      model: 'gemini-flash-latest'
     });
 
     const responseSchema = {
