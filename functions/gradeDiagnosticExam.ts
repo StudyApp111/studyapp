@@ -43,10 +43,23 @@ Deno.serve(async (req) => {
     Competencies: ${(q.assessed_competencies || []).join(', ')}`;
     }).join('\n\n');
 
-    const curriculumContext = curriculumData ? `
-CURRICULUM MAP DATA:
-${JSON.stringify(curriculumData, null, 2)}
-` : '';
+    // Extract only essential curriculum info to keep prompt lean
+    let curriculumContext = '';
+    if (curriculumData) {
+      const parts = [];
+      if (curriculumData.core_competencies?.length) {
+        parts.push('Competencies: ' + curriculumData.core_competencies.map(c => c.name).join(', '));
+      }
+      if (curriculumData.high_yield_focal_points?.length) {
+        parts.push('Key topics: ' + curriculumData.high_yield_focal_points.slice(0, 5).join(', '));
+      }
+      if (curriculumData.common_misconceptions?.length) {
+        parts.push('Common mistakes: ' + curriculumData.common_misconceptions.slice(0, 3).join(', '));
+      }
+      if (parts.length) {
+        curriculumContext = '\nCURRICULUM: ' + parts.join(' | ');
+      }
+    }
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ 
