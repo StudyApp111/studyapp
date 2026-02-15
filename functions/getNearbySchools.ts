@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
         // Search for universities/colleges near the coordinates using Nominatim
         const searchUrl = searchQuery?.trim()
           ? `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery + ' university college school')}&format=json&limit=12&addressdetails=1`
-          : `https://nominatim.openstreetmap.org/search?q=university+college&format=json&limit=15&viewbox=${userLon - 1.0},${userLat + 1.0},${userLon + 1.0},${userLat - 1.0}&bounded=1&addressdetails=1`;
+          : `https://nominatim.openstreetmap.org/search?q=university+OR+college&format=json&limit=20&viewbox=${userLon - 0.6},${userLat + 0.6},${userLon + 0.6},${userLat - 0.6}&bounded=0&addressdetails=1`;
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4000);
