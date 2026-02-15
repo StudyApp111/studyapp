@@ -62,59 +62,52 @@ Deno.serve(async (req) => {
 
     let nearbySchools = [];
 
-    // Use Overpass API for nearby schools — most reliable for geo-based search
+    // Search for nearby schools using Nominatim geocoding
     if (userLat && userLon) {
       const isTextSearch = searchQuery?.trim()?.length >= 2;
       
       try {
-        // Build Overpass query — search both universities and colleges within 50km
-        const radius = 50000;
-        let overpassQuery;
-        
+        let searchUrl;
         if (isTextSearch) {
-          // Text search: find schools matching the name
-          const escaped = searchQuery.trim().replace(/"/g, '\\"');
-          overpassQuery = `[out:json][timeout:4];
-(
-  node["amenity"~"university|college"]["name"~"${escaped}",i];
-  way["amenity"~"university|college"]["name"~"${escaped}",i];
-);
-out center tags 12;`;
+          // Text search — search globally for the query + university/college
+          searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery.trim())}&format=json&limit=12&addressdetails=1&extratags=1`;
         } else {
-          // Nearby search: all universities and colleges within radius
-          overpassQuery = `[out:json][timeout:4];
-(
-  node["amenity"~"university|college"](around:${radius},${userLat},${userLon});
-  way["amenity"~"university|college"](around:${radius},${userLat},${userLon});
-);
-out center tags 15;`;
+          // Nearby search — find universities near user coordinates
+          // Use reverse geocode first, then search by city name
+          const cityName = userCity || '';
+          searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent('university ' + cityName)}&format=json&limit=15&addressdetails=1&extratags=1`;
         }
-
+        
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-        const overpassResponse = await fetch('https://overpass-api.de/api/interpreter', {
-          method: 'POST',
-          body: overpassQuery,
-          signal: controller.signal
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        
+        const response = await fetch(searchUrl, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'StudyApp/1.0' }
         });
         clearTimeout(timeoutId);
-
-        if (overpassResponse.ok) {
-          const overpassData = await overpassResponse.json();
-          const elements = overpassData.elements || [];
+        
+        if (response.ok) {
+          const results = await response.json();
           const seenNames = new Set();
-
-          for (const el of elements) {
-            const elName = el.tags?.name;
-            if (!elName || seenNames.has(elName.toLowerCase())) continue;
-            seenNames.add(elName.toLowerCase());
-
-            const elLat = el.lat || el.center?.lat;
-            const elLon = el.lon || el.center?.lon;
+          
+          for (const place of results) {
+            // Extract clean name
+            let name = place.display_name?.split(',')[0]?.trim();
+            if (!name || seenNames.has(name.toLowerCase())) continue;
+            
+            // Filter to educational institutions
+            const fullText = (place.type || '') + ' ' + (place.class || '') + ' ' + (place.display_name || '');
+            const isSchool = /university|college|school|institute|academy|polytechnic|campus/i.test(fullText);
+            if (!isSchool) continue;
+            
+            seenNames.add(name.toLowerCase());
+            
+            const elLat = parseFloat(place.lat);
+            const elLon = parseFloat(place.lon);
             let distance = null;
-
-            if (elLat && elLon) {
+            
+            if (elLat && elLon && userLat && userLon) {
               const R = 6371;
               const dLat = (elLat - userLat) * Math.PI / 180;
               const dLon = (elLon - userLon) * Math.PI / 180;
@@ -124,19 +117,14 @@ out center tags 15;`;
               const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
               distance = R * c;
             }
-
-            nearbySchools.push({
-              name: elName,
-              address: userCity || '',
-              distance,
-              type: el.tags?.amenity === 'university' ? 'university' : 'college'
-            });
+            
+            nearbySchools.push({ name, address: userCity || '', distance, type: 'university' });
           }
-
+          
           nearbySchools.sort((a, b) => (a.distance || 999) - (b.distance || 999));
         }
-      } catch (overpassError) {
-        console.log('Overpass failed:', overpassError.message);
+      } catch (searchError) {
+        console.log('Nominatim search failed:', searchError.message);
       }
     }
 
