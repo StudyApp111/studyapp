@@ -146,7 +146,7 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
     // Always use JSON mode now - search is done separately
     const generationConfig = {
       temperature: 0.5,
-      maxOutputTokens: 8192,
+      maxOutputTokens: 16000,
       responseMimeType: "application/json"
     };
     
@@ -168,17 +168,9 @@ Generate 5 authentic ${courseCode} diagnostic questions now.`;
       return Response.json({ error: 'Failed to generate questions. Please try again.' }, { status: 500 });
     }
 
-    // Enforce exactly 5 questions — LLM sometimes returns 6
-    const questions = (parsed.questions || []).slice(0, 5);
-    
-    if (questions.length < 5) {
-      console.error("LLM returned fewer than 5 questions:", questions.length);
-      return Response.json({ error: 'Failed to generate enough questions. Please try again.' }, { status: 500 });
-    }
-
     return Response.json({
       success: true,
-      questions
+      questions: parsed.questions || []
     });
 
   } catch (error) {
