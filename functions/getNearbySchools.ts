@@ -69,8 +69,11 @@ Deno.serve(async (req) => {
       try {
         let searchUrl;
         if (isTextSearch) {
-          // Text search — search globally for the query + university/college
-          searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery.trim())}&format=json&limit=12&addressdetails=1&extratags=1`;
+          // Text search — append "university" to improve results
+          const q = searchQuery.trim();
+          const hasEduKeyword = /university|college|school|institute|academy/i.test(q);
+          const finalQuery = hasEduKeyword ? q : q + ' university';
+          searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(finalQuery)}&format=json&limit=12&addressdetails=1&extratags=1`;
         } else {
           // Nearby search — find universities near user coordinates
           // Use reverse geocode first, then search by city name
