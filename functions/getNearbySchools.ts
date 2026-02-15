@@ -159,8 +159,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Filter by search query if provided
-    if (searchQuery?.trim()) {
+    // Filter by search query if provided (only for Overpass results, Nominatim already filtered)
+    if (searchQuery?.trim() && nearbySchools.length > 12) {
       const query = searchQuery.toLowerCase().trim();
       nearbySchools = nearbySchools.filter(s =>
         s.name.toLowerCase().includes(query)
