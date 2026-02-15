@@ -233,7 +233,7 @@ grade_impact format:
 Tool assignment:
 - Conceptual → "Teach It Cards"
 - Application → "Practice Questions"
-- Complex → "AI Tutor"
+- Complex → "AI Professor"
 
 ==================================================
 PHASE 5 — PREVIEW QUESTION
