@@ -294,59 +294,61 @@ export default function PredictedGradeDisplay() {
         </div>
 
         {/* ========== 1. PREDICTED GRADE BANNER ========== */}
-        <div className="bg-slate-900/80 rounded-2xl p-5 sm:p-6 border border-slate-700/60 w-full">
-          <div className="flex items-start gap-4 sm:gap-5">
-            {/* Grade square */}
-            <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gradient-to-br ${gradeColors.gradient} flex flex-col items-center justify-center flex-shrink-0 shadow-lg`}>
-              <span className="text-3xl sm:text-4xl font-black text-white leading-none">{grade}</span>
-              <span className="text-white/70 text-xs sm:text-sm font-semibold">{percentage}%</span>
-            </div>
-            
-            {/* Info */}
-            <div className="flex-1 min-w-0 space-y-2.5">
-              <h2 className="text-xl sm:text-2xl font-bold text-white truncate">{courseCode}</h2>
-              
-              {/* Tags row */}
-              <div className="flex flex-wrap gap-2">
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                  percentage >= 70 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                  percentage >= 50 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                  'bg-red-500/20 text-red-400 border border-red-500/30'
-                }`}>
-                  {studyIntensity}
-                </span>
-                {estimatedStudyDays && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                    ~{estimatedStudyDays}d to A+
-                  </span>
-                )}
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-300 border border-slate-500/30">
-                  Confidence: {confidenceDisplay}
-                </span>
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${gradeColors.gradient} p-[2px] w-full shadow-lg`}>
+          <div className="bg-slate-900 rounded-[14px] p-5 sm:p-6">
+            <div className="flex items-start gap-4 sm:gap-5">
+              {/* Grade square */}
+              <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gradient-to-br ${gradeColors.gradient} flex flex-col items-center justify-center flex-shrink-0 shadow-lg`}>
+                <span className="text-3xl sm:text-4xl font-black text-white leading-none">{grade}</span>
+                <span className="text-white/70 text-xs sm:text-sm font-semibold">{percentage}%</span>
               </div>
               
-              {/* One-liner */}
-              <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-                {personalizedLine1 || `Based on thousands of students in similar courses, here's your predicted starting grade.`}
-              </p>
+              {/* Info */}
+              <div className="flex-1 min-w-0 space-y-2.5">
+                <h2 className="text-xl sm:text-2xl font-bold text-white truncate">{courseCode}</h2>
+                
+                {/* Tags row */}
+                <div className="flex flex-wrap gap-2">
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                    percentage >= 70 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                    percentage >= 50 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                    'bg-red-500/20 text-red-400 border border-red-500/30'
+                  }`}>
+                    {studyIntensity}
+                  </span>
+                  {estimatedStudyDays && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                      ~{estimatedStudyDays}d to A+
+                    </span>
+                  )}
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-300 border border-slate-500/30">
+                    Confidence: {confidenceDisplay}
+                  </span>
+                </div>
+                
+                {/* One-liner */}
+                <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+                  {personalizedLine1 || `Based on thousands of students in similar courses, here's your predicted starting grade.`}
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
         {/* ========== 2. HERO BLOCK — Emotional Context ========== */}
-        <div className="space-y-4 text-center px-2">
-          <p className="text-white text-lg sm:text-xl font-semibold leading-relaxed">
+        <div className="bg-slate-900/80 rounded-2xl p-5 sm:p-7 border border-slate-700/50 w-full space-y-4">
+          <p className="text-white text-lg sm:text-xl font-bold leading-relaxed text-center">
             {personalizedLine2 || `You're currently tracking at ${percentage}% (${grade}) — and this is recoverable.`}
           </p>
-          <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+          <p className="text-slate-400 text-sm sm:text-base leading-relaxed text-center">
             You just completed a rapid diagnostic. This score is your starting point, not your ceiling.
           </p>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 text-sm text-center">
             Confidence: {confidenceDisplay} — We only used 5 questions. Uploading class notes increases precision.
           </p>
           
           {/* What this means right now */}
-          <div className="bg-slate-900/60 rounded-xl p-4 sm:p-5 border border-slate-700/50 text-left mt-4">
+          <div className="bg-purple-500/10 rounded-xl p-4 sm:p-5 border border-purple-500/20">
             <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
               <span className="font-bold text-white">What this means right now: </span>
               {personalizedLine3 || 'You understand parts of the course, but a few high-impact gaps are pulling your grade down.'}
@@ -377,13 +379,18 @@ export default function PredictedGradeDisplay() {
         </div>
 
         {/* ========== 4. REFRAME / EMOTIONAL SAFETY ========== */}
-        <div className="bg-slate-900/60 rounded-2xl p-5 sm:p-6 border border-purple-500/20 w-full text-center space-y-3">
-          <p className="text-purple-300 text-lg sm:text-xl font-bold">
-            Breathe — you're not behind, you're now calibrated.
-          </p>
-          <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-lg mx-auto">
-            Most students feel anxious when they don't know where they stand. Now you do. From here, we focus on the fastest point-gain topics first.
-          </p>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600/20 to-pink-600/20 p-[1px] w-full">
+          <div className="bg-slate-900 rounded-[15px] p-5 sm:p-7 text-center space-y-3">
+            <div className="w-12 h-12 bg-purple-500/15 rounded-full flex items-center justify-center mx-auto mb-2">
+              <span className="text-2xl">🧘</span>
+            </div>
+            <p className="text-purple-300 text-lg sm:text-xl font-bold">
+              Breathe — you're not behind, you're now calibrated.
+            </p>
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-lg mx-auto">
+              Most students feel anxious when they don't know where they stand. Now you do. From here, we focus on the fastest point-gain topics first.
+            </p>
+          </div>
         </div>
 
         {/* ========== 5. PERFORMANCE BREAKDOWN ========== */}
@@ -411,41 +418,48 @@ export default function PredictedGradeDisplay() {
 
           {/* Weak Areas — highest impact first */}
           {weakAreasDetailed.length > 0 && (
-            <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-red-500/30 w-full">
-              <h4 className="text-base font-bold text-red-400 mb-5 flex items-center gap-2">
+            <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-red-500/40 w-full">
+              <h4 className="text-base sm:text-lg font-bold text-red-400 mb-5 flex items-center gap-2 uppercase tracking-wide">
                 <AlertCircle className="w-5 h-5" />
-                Where points are leaking (highest impact first)
+                WHERE YOU'RE LOSING POINTS
               </h4>
               <div className="space-y-4">
                 {weakAreasDetailed.slice(0, 4).map((weak, idx) => {
                   const ToolIcon = getToolIcon(weak.recommended_tool);
+                  const borderColor = idx === 0 ? 'border-l-red-500' : idx === 1 ? 'border-l-orange-500' : 'border-l-yellow-500';
                   
                   return (
-                    <div key={idx} className="bg-slate-800 rounded-xl p-4 sm:p-5 border border-slate-700 w-full">
-                      {/* Topic with rank */}
-                      <div className="flex items-start gap-3 mb-3">
-                        <span className={`text-xl font-black ${idx === 0 ? 'text-red-400' : idx === 1 ? 'text-orange-400' : 'text-yellow-400'}`}>
-                          {idx + 1})
+                    <div key={idx} className={`bg-slate-800 rounded-xl p-5 sm:p-6 border-l-4 ${borderColor} border border-slate-700 w-full`}>
+                      {/* Rank badge + Topic */}
+                      <div className="flex items-start gap-3 mb-4">
+                        <span className={`text-2xl sm:text-3xl font-black ${idx === 0 ? 'text-red-400' : idx === 1 ? 'text-orange-400' : 'text-yellow-400'}`}>
+                          #{idx + 1}
                         </span>
                         <p className="font-semibold text-white text-base sm:text-lg flex-1">{weak.topic}</p>
                       </div>
                       
-                      {/* Impact + tool on same line for compactness */}
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
-                        <span className="text-sm text-slate-400">
-                          Estimated impact: <span className="font-bold text-red-400">{weak.grade_impact}</span>
-                        </span>
-                        <span className="text-sm text-slate-400">
-                          Best tool: <span className="font-bold text-purple-300">{weak.recommended_tool}</span>
-                        </span>
+                      {/* Grade impact */}
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-xl">📉</span>
+                        <span className="font-black text-red-500 text-2xl sm:text-3xl">{weak.grade_impact}</span>
                       </div>
+                      <p className="text-slate-400 text-sm mb-4">Costing you this much on your exam</p>
                       
                       {/* Why this matters */}
                       {weak.specific_fix && (
-                        <p className="text-slate-500 text-sm leading-relaxed">
+                        <p className="text-slate-500 text-sm leading-relaxed mb-4">
                           <span className="text-slate-400 font-medium">Why this matters:</span> {weak.specific_fix}
                         </p>
                       )}
+                      
+                      {/* Divider */}
+                      <div className="border-t border-slate-700 my-4" />
+                      
+                      {/* Tool badge */}
+                      <div className="flex items-center gap-3 bg-purple-500/15 rounded-xl px-4 py-3 border border-purple-500/30">
+                        <ToolIcon className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                        <span className="text-purple-300 font-bold text-sm sm:text-base">🎯 Fix with: {weak.recommended_tool}</span>
+                      </div>
                     </div>
                   );
                 })}

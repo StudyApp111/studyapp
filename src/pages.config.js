@@ -59,11 +59,11 @@ import Home from './pages/Home';
 import LessonHistory from './pages/LessonHistory';
 import ManageSubscription from './pages/ManageSubscription';
 import Onboarding from './pages/Onboarding';
+import PredictedGradeDisplay from './pages/PredictedGradeDisplay';
 import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
 import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
-import PredictedGradeDisplay from './pages/PredictedGradeDisplay';
 import __Layout from './Layout.jsx';
 
 
@@ -80,11 +80,11 @@ export const PAGES = {
     "LessonHistory": LessonHistory,
     "ManageSubscription": ManageSubscription,
     "Onboarding": Onboarding,
+    "PredictedGradeDisplay": PredictedGradeDisplay,
     "PricingPlans": PricingPlans,
     "ProfileInformation": ProfileInformation,
     "Settings": Settings,
     "SmartGrader": SmartGrader,
-    "PredictedGradeDisplay": PredictedGradeDisplay,
 }
 
 export const pagesConfig = {
