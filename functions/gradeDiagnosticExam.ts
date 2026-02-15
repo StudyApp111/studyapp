@@ -155,80 +155,132 @@ ${JSON.stringify(curriculumData, null, 2)}
       ]
     };
 
-    const prompt = `Expert educator for ${courseCode} at ${school}. Analyze diagnostic performance using curriculum map to predict grade as if you were teaching this course.
+    const prompt = `
+You are an expert educator for ${courseCode} at ${school}. Analyze this 5-question diagnostic using the curriculum map to estimate current in-class performance, then provide supportive, conversion-oriented guidance.
 
-STUDENT INFORMATION:
+STUDENT INFORMATION
 - Name: ${studentName || 'Student'}
 - Course: ${courseCode} at ${school}
 
 ${curriculumContext}
 
-STUDENT RESPONSES (Grade these first):
+STUDENT RESPONSES (grade first):
 ${questionContext}
 
-YOUR OVERALL TASK: Analyze the student's diagnostic performance by following the phases below. Ensure all outputs strictly adhere to the provided JSON schema.
+OUTPUT RULE
+Return ONE JSON object only, strictly matching the provided schema. No extra text.
 
-PHASE 1: PROBABILITY-BASED SCORING ALGORITHM
-1. Initialize Per-Question Score: For each question in the diagnostic: Base Score: IF Correct: 0.90 (High mastery probability). IF Incorrect: 0.20 (Low mastery, but acknowledges exposure).
-2. Adjust for Difficulty (The Rigor Factor): Modify the Base Score using the question's difficulty level: IF CORRECT: "High Challenge": Score × 1.05 (Max 0.98). "Challenging": Score × 1.02. "Moderate": Score × 1.01. IF INCORRECT: "High Challenge": Score × 0.90 (Min 0.18). "Challenging": Score × 0.80. "Moderate": Score × 0.70 (Min 0.14 - Severe penalty for missing basics).
-3. Weighted Competency Calculation: Group questions by their Competency (from Curriculum). Calculate the Average Adjusted Score for each competency. Final Prediction Formula: Predicted % = Sum(Competency Score × Competency Weight) × 100
-4. Round predicted grade to the nearest percent. No decimals. 
-5. Confidence Calculation (20-65%): Base: 20%.
-  - Coverage: (+1% per 10% of curriculum weighted coverage).
-  - Consistency: (+10% if scores across competencies are standard deviation < 0.15).
-  - Niche Penalty: (-5% if questions are all from the same narrow topic). Cap: Strictly max 65%.
+==================================================
+PHASE 1 — PROBABILITY-BASED SCORING
+1) Per-question base score:
+- Correct = 0.90
+- Incorrect = 0.20
 
-PHASE 2: TRAJECTORY & SEVERITY MAPPING
-Trajectory: Score < 40%: "Rescue Mission" (+5-8%/week). 
-Score 40-70%: "Reconstruction" (+8-12%/week). 
-Score > 70%: "Optimization" (+3-5%/week).
-Weakness Severity: Critical: Failed a "High Weight" competency. High: Failed a "Moderate Weight" competency. Medium: Missed "High Challenge" questions only.
+2) Difficulty adjustment:
+If CORRECT:
+- High Challenge: ×1.05 (cap 0.98)
+- Challenging: ×1.02
+- Moderate: ×1.01
+If INCORRECT:
+- High Challenge: ×0.90 (min 0.18)
+- Challenging: ×0.80
+- Moderate: ×0.70 (min 0.14)
 
-PHASE 3: COMPETENCY ANALYSIS
+3) Weighted competency score:
+- Group questions by curriculum competency.
+- Compute average adjusted score per competency.
+- Predicted % = Sum(Competency Score × Competency Weight) × 100
+
+4) Round predicted grade to nearest whole percent (no decimals).
+
+5) Confidence (20–65%):
+- Base: 20%
+- Coverage: +1% per 10% curriculum weighted coverage
+- Consistency: +10% if competency-score SD < 0.15
+- Niche penalty: -5% if all questions are narrow-topic
+- Hard cap: 65%
+
+==================================================
+PHASE 2 — TRAJECTORY & SEVERITY
+Trajectory band:
+- <40%: "Rescue Mission" (+5–8%/week)
+- 40–70%: "Reconstruction" (+8–12%/week)
+- >70%: "Optimization" (+3–5%/week)
+
+Weakness severity:
+- Critical: failed high-weight competency
+- High: failed moderate-weight competency
+- Medium: missed high-challenge questions only
+
+==================================================
+PHASE 3 — COMPETENCY ANALYSIS
 - Map wrong answers to curriculum competencies
-- Weight by assessment_weightings (e.g., "Final Paper - 40%" = higher impact)
-- Match preview question to assessment_formats style
-- Reference high_yield_focal_points for weak areas
+- Weight by assessment_weightings (e.g., Final Paper 40%)
+- Match preview question style to assessment_formats
+- Use high_yield_focal_points for weak areas
 
-PHASE 4: WEAK AREAS REQUIREMENTS
-- If 0-2 correct: Identify fundamental competencies missing from wrong answers
-- If 3-4 correct: Identify specific topics from wrong answers
-- If 5/5 correct: Identify 3 high-yield untested topics from curriculum map
-- grade_impact: MUST be a percentage string showing point cost (e.g., "15%", "8%"). Calculate: If score >90%→max 10% per weak area. If score <30%→20-25% per area.
-- Assign tool: Conceptual→"Teach It Cards", Application→"Practice Questions", Complex→"AI Tutor"
+==================================================
+PHASE 4 — WEAK AREAS REQUIREMENTS
+- If 0–2 correct: identify missing fundamental competencies from wrong answers
+- If 3–4 correct: identify specific topic gaps from wrong answers
+- If 5/5 correct: identify 3 high-yield untested topics from curriculum map
 
-PHASE 5: PREVIEW QUESTION GENERATION
-- Test the #1 weak area (highest impact)
-- Match course assessment format if curriculum available
-- Different question than diagnostic
+grade_impact format:
+- MUST be percentage string (e.g., "15%", "8%")
+- If score >90%: max 10% per weak area
+- If score <30%: 20–25% per area
+
+Tool assignment:
+- Conceptual → "Teach It Cards"
+- Application → "Practice Questions"
+- Complex → "AI Tutor"
+
+==================================================
+PHASE 5 — PREVIEW QUESTION
+- Target #1 weak area (highest impact)
+- Match course assessment format (if available)
+- Must differ from diagnostic questions
 - Include complete model answer
 
-PHASE 6: GRADE TRAJECTORY RULES & CONSTRAINTS (CRITICAL - MUST BE REALISTIC)
-Based on starting percentage, calculate realistic weekly improvements:
-- If 0-30%: +8-12%/week (Week3→C max)
-- If 31-50%: +10-15%/week (Week3→C+ max)
-- If 51-70%: +8-12%/week (Week3→B max)
-- If 71-85%: +5-10%/week (Week3→A- max)
-- If 86-95%: +3-5%/week (Week3→A+ max)
-- If 96-100%: Should not occur (capped at 92%). If happens, maintain A- (descriptions focus on untested topics).
-DO NOT promise A+ from F in 3 weeks. Be realistic based on ACTUAL starting grade.
+==================================================
+PHASE 6 — REALISTIC GRADE TRAJECTORY CONSTRAINTS (CRITICAL)
+Weekly improvement by starting score:
+- 0–30%: +8–12%/week (Week 3 max: C)
+- 31–50%: +10–15%/week (Week 3 max: C+)
+- 51–70%: +8–12%/week (Week 3 max: B)
+- 71–85%: +5–10%/week (Week 3 max: A-)
+- 86–95%: +3–5%/week (Week 3 max: A+)
+- 96–100% should not occur (cap at 92%); if occurs, maintain A- and focus on untested topics
 
-PHASE 7: PERSONALIZED MESSAGE RULES
-- Line 1: Use ACTUAL calculated percentage (not placeholder)
-- Line 2: If 0-30%→"reach C", 31-70%→"reach B", 71-92%→"reach A", 86-92%→"maintain mastery by studying untested topics"
-- Line 3: If low→"This is fixable", if high→"Stay sharp on untested material"
+Never promise A+ from F in 3 weeks. Use actual starting grade realism.
 
-PHASE 8: CRITICAL VALIDATION RULES
-- Use calculated score for percentage (don't default to 80%)
-- Grade trajectory MUST be realistic based on starting grade
-- Week-to-week improvements follow the ranges above
-- If starting F (0-59%), target C or B max (not A+)
-- If starting D (60-69%), target B or B+ max
-- If starting C (70-79%), target A- or A max
-- Personalized message line 2 must reference realistic target
-- Severity levels: "critical" (for F/D students), "high", "medium", "low"
-- Weak areas must match WRONG answers
-- You MUST use curriculum competencies `;
+==================================================
+PHASE 7 — PERSONALIZED MESSAGE RULES
+Message must be encouraging, non-shaming, and action-focused.
+- Line 1: Use ACTUAL calculated percentage (no placeholder)
+- Line 2 target:
+  - 0–30% → "reach C"
+  - 31–70% → "reach B"
+  - 71–92% → "reach A"
+  - 86–92% → "maintain mastery by studying untested topics"
+- Line 3:
+  - low scores → "This is fixable"
+  - high scores → "Stay sharp on untested material"
+Also include calm-confidence framing (reduce exam anxiety, emphasize clarity and control).
+
+==================================================
+PHASE 8 — CRITICAL VALIDATION
+- Use computed score (never default 80%)
+- Trajectory must match starting grade realism
+- Week-to-week gains must follow ranges above
+- If starting F (0–59%): target C or B max (not A+)
+- If starting D (60–69%): target B or B+ max
+- If starting C (70–79%): target A- or A max
+- Personalized message line 2 must match realistic target
+- Severity labels allowed: "critical", "high", "medium", "low"
+- Weak areas must come from WRONG answers
+- MUST use curriculum competencies
+`;
 
     console.log("Sending request to Gemini...");
     const result = await model.generateContent({
