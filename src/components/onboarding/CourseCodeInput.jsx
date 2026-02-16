@@ -59,27 +59,24 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
 
   return (
     <div className="relative w-full max-w-2xl mx-auto px-4 py-6 overflow-hidden bg-white rounded-2xl shadow-2xl">
-      {/* Animated Background Sparkles */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-purple-400/30 rounded-full"
-          initial={{ opacity: 0, x: Math.random() * 500, y: Math.random() * 350 }}
-          animate={{
-            opacity: [0, 0.7, 0],
-            x: Math.random() * 500,
-            y: Math.random() * 350,
-          }}
-          transition={{
-            duration: 3.5 + Math.random() * 1.5,
-            repeat: Infinity,
-            delay: Math.random() * 2,
-          }}
-        />
-      ))}
+      {/* Floating animated element */}
+      <motion.div
+        className="absolute top-4 right-4 text-2xl select-none pointer-events-none z-0"
+        animate={{ rotate: [0, 10, -10, 0], y: [0, -4, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        🎯
+      </motion.div>
+
       {/* Header */}
       <div className="text-center mb-6">
-        <div className="text-5xl mb-4">📚</div>
+        <motion.div
+          className="text-5xl mb-4"
+          animate={{ y: [0, -6, 0], rotate: [0, -3, 3, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          📚
+        </motion.div>
         <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
           What course are you studying?
         </h2>

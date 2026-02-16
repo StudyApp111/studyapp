@@ -27,28 +27,24 @@ export default function NameInput({ value, onChange, onNext, onBack }) {
 
   return (
     <div className="relative p-6 md:p-8 space-y-6 bg-white rounded-2xl shadow-2xl overflow-hidden">
-      {/* Animated Background Sparkles */}
-      {[...Array(8)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-purple-400/40 rounded-full"
-          initial={{ opacity: 0, x: Math.random() * 400, y: Math.random() * 300 }}
-          animate={{
-            opacity: [0, 1, 0],
-            x: Math.random() * 400,
-            y: Math.random() * 300,
-          }}
-          transition={{
-            duration: 3 + Math.random() * 2,
-            repeat: Infinity,
-            delay: Math.random() * 2,
-          }}
-        />
-      ))}
+      {/* Floating animated element — lightweight idle motion */}
+      <motion.div
+        className="absolute top-4 right-4 text-3xl select-none pointer-events-none z-0"
+        animate={{ y: [0, -6, 0], rotate: [0, 5, -5, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      >
+        ✏️
+      </motion.div>
       
       {/* Header */}
       <div className="text-center space-y-3 relative z-10">
-        <div className="text-6xl mb-2">👋</div>
+        <motion.div
+          className="text-6xl mb-2"
+          animate={{ rotate: [0, 14, -8, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 3, ease: "easeInOut" }}
+        >
+          👋
+        </motion.div>
         <h2 className="text-2xl md:text-3xl font-bold text-slate-900">What's your name?</h2>
         <p className="text-slate-600 text-sm">We'll predict your grade in 5 quick questions — let's start with your name.</p>
       </div>

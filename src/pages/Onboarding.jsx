@@ -191,20 +191,13 @@ export default function Onboarding() {
     const progress = (answeredCount / totalSteps) * 100;
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 overflow-hidden">
-      {/* Animated Background Sparkles */}
-      {[...Array(15)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-purple-400/30 rounded-full animate-pulse"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 3}s`,
-            animationDuration: `${3 + Math.random() * 2}s`
-          }}
-        />
-      ))}
+    <div className="relative min-h-screen flex flex-col overflow-hidden">
+      {/* Gradient Hero Top */}
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-900 via-indigo-950 to-slate-950 pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/25 via-pink-500/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-lg md:max-w-2xl relative z-10">
         {/* StudyApp Branding - Logo + Text */}
         <div className="flex items-center justify-center gap-3 mb-8">
@@ -214,7 +207,7 @@ export default function Onboarding() {
             className="w-10 h-10 md:w-12 md:h-12"
           />
           <h1 className="text-3xl md:text-4xl font-black">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">Study</span>
             <span className="text-white">App</span>
           </h1>
         </div>
@@ -225,9 +218,9 @@ export default function Onboarding() {
             <span className="text-sm text-purple-300 font-medium">Step {currentStep + 1} of {totalSteps}</span>
             <span className="text-sm text-purple-300">{Math.round(progress)}% complete</span>
           </div>
-          <div className="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
             <div 
-              className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -298,13 +291,11 @@ export default function Onboarding() {
         <div className="text-center mt-6 space-y-3">
           <button
             onClick={async () => {
-              // Store current progress before redirecting to login
-              // This way, if user signs in during onboarding, we know they haven't done diagnostic yet
               const progressData = {
                 name: answersRef.current.name,
                 school: answersRef.current.school,
                 courseCode: answersRef.current.courseCode,
-                fromReportCard: false // User signing in during questions, not from report card
+                fromReportCard: false
               };
               sessionStorage.setItem('pendingOnboardingData', JSON.stringify(progressData));
               base44.auth.redirectToLogin(createPageUrl("Home") + "?fromOnboarding=true");
@@ -314,6 +305,7 @@ export default function Onboarding() {
             Already a user? Sign In
           </button>
           <p className="text-slate-500 text-xs">Powered by StudyApp.AI</p>
+        </div>
         </div>
         </div>
         </div>

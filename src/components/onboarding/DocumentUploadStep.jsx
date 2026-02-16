@@ -122,27 +122,24 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         aria-hidden="true"
       />
 
-      {/* Animated Background Sparkles */}
-      {[...Array(6)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-purple-400/30 rounded-full"
-          initial={{ opacity: 0, x: Math.random() * 500, y: Math.random() * 400 }}
-          animate={{
-            opacity: [0, 0.8, 0],
-            x: Math.random() * 500,
-            y: Math.random() * 400,
-          }}
-          transition={{
-            duration: 4 + Math.random() * 2,
-            repeat: Infinity,
-            delay: Math.random() * 2,
-          }}
-        />
-      ))}
+      {/* Floating animated element */}
+      <motion.div
+        className="absolute top-4 right-4 text-2xl select-none pointer-events-none z-0"
+        animate={{ y: [0, -6, 0], rotate: [0, 8, -8, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+      >
+        ✨
+      </motion.div>
+
       {/* Header */}
       <div className="text-center space-y-3">
-        <div className="text-6xl mb-2">📄</div>
+        <motion.div
+          className="text-6xl mb-2"
+          animate={{ y: [0, -5, 0], scale: [1, 1.05, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+        >
+          📄
+        </motion.div>
         <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
           Want a more accurate prediction?
         </h2>

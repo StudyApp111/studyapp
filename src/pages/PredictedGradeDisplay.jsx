@@ -272,23 +272,24 @@ export default function PredictedGradeDisplay() {
   const confidenceDisplay = confidencePct ? `${confidencePct}%` : confidenceLevel;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 overflow-y-auto pb-20">
-      {/* Animated background */}
+    <div className="min-h-screen bg-slate-950 overflow-y-auto pb-20">
+      {/* Rich gradient hero top */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-0 left-0 right-0 h-[50vh] bg-gradient-to-b from-purple-900/60 via-indigo-950/40 to-transparent" />
+        <div className="absolute top-[5%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-gradient-to-br from-purple-600/20 via-pink-500/10 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-[20%] right-[10%] w-72 h-72 bg-indigo-600/8 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 md:px-8 pt-8 space-y-10">
+      <div className="relative z-10 w-full max-w-lg sm:max-w-xl md:max-w-2xl mx-auto px-4 sm:px-5 pt-8 space-y-8">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-4 mb-4">
+        <div className="flex items-center justify-center gap-3 mb-2">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
             alt="StudyApp Logo"
-            className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20"
+            className="w-10 h-10 sm:w-12 sm:h-12"
           />
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
+          <h1 className="text-3xl sm:text-4xl font-black">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">Study</span>
             <span className="text-white">App</span>
           </h1>
         </div>
@@ -336,20 +337,20 @@ export default function PredictedGradeDisplay() {
         </div>
 
         {/* ========== 2. HERO BLOCK — Emotional Context ========== */}
-        <div className="bg-slate-900/80 rounded-2xl p-5 sm:p-7 border border-slate-700/50 w-full space-y-4">
-          <p className="text-white text-lg sm:text-xl font-bold leading-relaxed text-center">
+        <div className="bg-slate-900/80 rounded-2xl p-5 sm:p-6 border border-slate-700/50 w-full space-y-4">
+          <p className="text-white text-base sm:text-lg font-bold leading-snug text-center">
             {personalizedLine2 || `You're currently tracking at ${percentage}% (${grade}) — and this is recoverable.`}
           </p>
-          <p className="text-slate-400 text-sm sm:text-base leading-relaxed text-center">
+          <p className="text-slate-400 text-sm leading-relaxed text-center">
             You just completed a rapid diagnostic. This score is your starting point, not your ceiling.
           </p>
-          <p className="text-slate-500 text-sm text-center">
+          <p className="text-slate-500 text-xs text-center">
             Confidence: {confidenceDisplay} — We only used 5 questions. Uploading class notes increases precision.
           </p>
           
           {/* What this means right now */}
-          <div className="bg-purple-500/10 rounded-xl p-4 sm:p-5 border border-purple-500/20">
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+          <div className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/20">
+            <p className="text-slate-300 text-sm leading-relaxed">
               <span className="font-bold text-white">What this means right now: </span>
               {personalizedLine3 || 'You understand parts of the course, but a few high-impact gaps are pulling your grade down.'}
             </p>
@@ -357,21 +358,26 @@ export default function PredictedGradeDisplay() {
         </div>
 
         {/* ========== 3. PRIMARY CTA ========== */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-6 sm:p-8 shadow-2xl w-full">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 p-5 sm:p-7 shadow-2xl w-full">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
           
           <div className="relative text-center space-y-4">
-            <Button 
-              onClick={handleCTA}
-              disabled={ctaLoading}
-              className="w-full bg-white hover:bg-slate-100 text-purple-700 font-black py-4 sm:py-5 text-lg sm:text-xl rounded-xl shadow-xl shadow-black/20 transition-all hover:scale-[1.02] min-h-[56px]"
+            <motion.div
+              animate={{ scale: [1, 1.02, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              {ctaLoading ? 'Loading...' : 'Build My Free Recovery Plan'}
-            </Button>
-            <p className="text-white/80 text-sm">Personalized steps, topic order, and weekly trajectory in under 30 seconds.</p>
+              <Button 
+                onClick={handleCTA}
+                disabled={ctaLoading}
+                className="w-full bg-white hover:bg-slate-100 text-purple-700 font-black py-4 sm:py-5 text-base sm:text-lg rounded-xl shadow-xl shadow-black/20 transition-all hover:scale-[1.02] min-h-[52px]"
+              >
+                {ctaLoading ? 'Loading...' : 'Build My Free Recovery Plan →'}
+              </Button>
+            </motion.div>
+            <p className="text-white/80 text-xs sm:text-sm">Personalized steps, topic order, and weekly trajectory in under 30 seconds.</p>
             <button 
               onClick={handleCTA}
-              className="text-white/60 hover:text-white text-sm underline transition-colors"
+              className="text-white/60 hover:text-white text-xs underline transition-colors"
             >
               Already have an account? Log in
             </button>
@@ -394,8 +400,8 @@ export default function PredictedGradeDisplay() {
         </div>
 
         {/* ========== 5. PERFORMANCE BREAKDOWN ========== */}
-        <div className="space-y-5">
-          <h3 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+        <div className="space-y-4">
+          <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
             📊 Performance Breakdown
           </h3>
 
@@ -470,21 +476,26 @@ export default function PredictedGradeDisplay() {
 
         {/* ========== 6. MID CTA ========== */}
         <div className="text-center">
-          <Button 
-            onClick={handleCTA}
-            disabled={ctaLoading}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black py-4 sm:py-5 px-8 text-lg rounded-xl shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02] min-h-[56px]"
+          <motion.div
+            animate={{ scale: [1, 1.03, 1] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           >
-            {ctaLoading ? 'Loading...' : (
-              <>Show Me Exactly What to Study First <ArrowRight className="h-5 w-5 ml-2" /></>
-            )}
-          </Button>
+            <Button 
+              onClick={handleCTA}
+              disabled={ctaLoading}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-black py-4 px-6 text-base sm:text-lg rounded-xl shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02] min-h-[52px]"
+            >
+              {ctaLoading ? 'Loading...' : (
+                <>Show Me What to Study First <ArrowRight className="h-5 w-5 ml-2" /></>
+              )}
+            </Button>
+          </motion.div>
         </div>
 
         {/* ========== 7. TRAJECTORY ========== */}
         {gradeTrajectory.current && (
-          <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 md:p-8 border border-purple-500/30 w-full">
-            <h3 className="text-xl sm:text-2xl font-black text-white mb-6">
+          <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-purple-500/30 w-full">
+            <h3 className="text-lg sm:text-xl font-black text-white mb-5">
               📅 Your 3-week trajectory if you start now
             </h3>
             
@@ -575,8 +586,8 @@ export default function PredictedGradeDisplay() {
         )}
 
         {/* ========== 8. YOUR PERSONALIZED STUDY STACK ========== */}
-        <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 md:p-8 border border-purple-500/30 w-full">
-          <h3 className="text-xl sm:text-2xl font-black text-white mb-6">
+        <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-purple-500/30 w-full">
+          <h3 className="text-lg sm:text-xl font-black text-white mb-5">
             🧠 Your personalized study stack
           </h3>
           
@@ -677,38 +688,43 @@ export default function PredictedGradeDisplay() {
         )}
 
         {/* ========== 10. FINAL CONVERSION BLOCK ========== */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 p-6 sm:p-8 shadow-2xl w-full">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 p-5 sm:p-7 shadow-2xl w-full">
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
           
-          <div className="relative text-center space-y-5">
-            <h3 className="text-2xl sm:text-3xl font-black text-white">
+          <div className="relative text-center space-y-4">
+            <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
               You now have clarity. Let's turn it into points.
             </h3>
-            <p className="text-white/80 text-base sm:text-lg max-w-md mx-auto">
-              You don't need to study everything. You need to study the right things in the right order.
+            <p className="text-white/80 text-sm sm:text-base">
+              You don't need to study everything. Study the right things in the right order.
             </p>
             
-            <Button 
-              onClick={handleCTA}
-              disabled={ctaLoading}
-              className="w-full max-w-md mx-auto bg-white hover:bg-slate-100 text-purple-700 font-black py-4 sm:py-5 text-lg sm:text-xl rounded-xl shadow-xl shadow-black/20 transition-all hover:scale-[1.02] min-h-[56px]"
+            <motion.div
+              animate={{ scale: [1, 1.03, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              {ctaLoading ? 'Loading...' : (
-                <>Get My Free Study Plan <ArrowRight className="h-5 w-5 ml-2" /></>
-              )}
-            </Button>
-            <p className="text-white/70 text-sm">No credit card • Starts in 30 seconds</p>
+              <Button 
+                onClick={handleCTA}
+                disabled={ctaLoading}
+                className="w-full bg-white hover:bg-slate-100 text-purple-700 font-black py-4 sm:py-5 text-base sm:text-lg rounded-xl shadow-xl shadow-black/20 transition-all hover:scale-[1.02] min-h-[52px]"
+              >
+                {ctaLoading ? 'Loading...' : (
+                  <>Get My Free Study Plan <ArrowRight className="h-5 w-5 ml-2" /></>
+                )}
+              </Button>
+            </motion.div>
+            <p className="text-white/70 text-xs">No credit card • Starts in 30 seconds</p>
           </div>
         </div>
 
         {/* Footer */}
         <div className="text-center space-y-3 pb-8">
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-slate-400 text-sm sm:text-base">
-            <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 flex-shrink-0" /> Start in 30 seconds</span>
-            <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 flex-shrink-0" /> Trusted by 10,000+ students</span>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-slate-400 text-xs sm:text-sm">
+            <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> Start in 30 seconds</span>
+            <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> Trusted by 10,000+ students</span>
           </div>
-          <p className="text-slate-600 text-sm">Powered by StudyApp.AI</p>
+          <p className="text-slate-600 text-xs">Powered by StudyApp.AI</p>
         </div>
       </div>
 
