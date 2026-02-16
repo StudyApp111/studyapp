@@ -59,15 +59,6 @@ export default function CourseCodeInput({ value, onChange, onNext, onBack, schoo
 
   return (
     <div className="relative w-full max-w-2xl mx-auto px-4 py-6 overflow-hidden bg-white rounded-2xl shadow-2xl">
-      {/* Floating animated element */}
-      <motion.div
-        className="absolute top-4 right-4 text-2xl select-none pointer-events-none z-0"
-        animate={{ rotate: [0, 10, -10, 0], y: [0, -4, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      >
-        🎯
-      </motion.div>
-
       {/* Header */}
       <div className="text-center mb-6">
         <motion.div

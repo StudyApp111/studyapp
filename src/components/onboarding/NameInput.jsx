@@ -27,14 +27,6 @@ export default function NameInput({ value, onChange, onNext, onBack }) {
 
   return (
     <div className="relative p-6 md:p-8 space-y-6 bg-white rounded-2xl shadow-2xl overflow-hidden">
-      {/* Floating animated element — lightweight idle motion */}
-      <motion.div
-        className="absolute top-4 right-4 text-3xl select-none pointer-events-none z-0"
-        animate={{ y: [0, -6, 0], rotate: [0, 5, -5, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-      >
-        ✏️
-      </motion.div>
       
       {/* Header */}
       <div className="text-center space-y-3 relative z-10">

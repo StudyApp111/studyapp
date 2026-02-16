@@ -337,23 +337,47 @@ export default function PredictedGradeDisplay() {
         </div>
 
         {/* ========== 2. HERO BLOCK — Emotional Context ========== */}
-        <div className="bg-slate-900/80 rounded-2xl p-5 sm:p-6 border border-slate-700/50 w-full space-y-4">
-          <p className="text-white text-base sm:text-lg font-bold leading-snug text-center">
-            {personalizedLine2 || `You're currently tracking at ${percentage}% (${grade}) — and this is recoverable.`}
-          </p>
-          <p className="text-slate-400 text-sm leading-relaxed text-center">
-            You just completed a rapid diagnostic. This score is your starting point, not your ceiling.
-          </p>
-          <p className="text-slate-500 text-xs text-center">
-            Confidence: {confidenceDisplay} — We only used 5 questions. Uploading class notes increases precision.
-          </p>
-          
-          {/* What this means right now */}
-          <div className="bg-purple-500/10 rounded-xl p-4 border border-purple-500/20">
-            <p className="text-slate-300 text-sm leading-relaxed">
-              <span className="font-bold text-white">What this means right now: </span>
-              {personalizedLine3 || 'You understand parts of the course, but a few high-impact gaps are pulling your grade down.'}
+        <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-700/50 w-full space-y-4">
+          {/* Main message card with left accent */}
+          <div className="border-l-4 border-purple-500 pl-4 py-1">
+            <p className="text-white text-base sm:text-lg font-bold leading-snug">
+              {personalizedLine2 || `You're currently tracking at ${percentage}% (${grade}) — and this is recoverable.`}
             </p>
+          </div>
+          
+          {/* Context sub-cards */}
+          <div className="space-y-3">
+            <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+              <div className="flex items-start gap-3">
+                <span className="text-lg flex-shrink-0">📊</span>
+                <div>
+                  <p className="text-white text-sm font-semibold mb-1">Rapid Diagnostic Complete</p>
+                  <p className="text-slate-400 text-xs leading-relaxed">This score is your starting point, not your ceiling. Uploading class notes increases precision.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+              <div className="flex items-start gap-3">
+                <span className="text-lg flex-shrink-0">🔍</span>
+                <div>
+                  <p className="text-white text-sm font-semibold mb-1">What this means right now</p>
+                  <p className="text-slate-400 text-xs leading-relaxed">
+                    {personalizedLine3 || 'You understand parts of the course, but a few high-impact gaps are pulling your grade down.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+              <div className="flex items-start gap-3">
+                <span className="text-lg flex-shrink-0">🎯</span>
+                <div>
+                  <p className="text-white text-sm font-semibold mb-1">Confidence: {confidenceDisplay}</p>
+                  <p className="text-slate-400 text-xs leading-relaxed">We only used 5 questions. Your real exam coverage will refine this further.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

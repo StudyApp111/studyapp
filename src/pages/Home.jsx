@@ -155,20 +155,22 @@ export default function Home() {
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons'],
     queryFn: () => base44.entities.Lesson.list('-created_date', 100),
-    staleTime: 30 * 1000,
-    refetchOnMount: 'always',
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const { data: allExams = [] } = useQuery({
     queryKey: ['exams'],
     queryFn: () => base44.entities.Exam.list('-created_date'),
     staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const { data: studyPlans = [] } = useQuery({
     queryKey: ['studyPlans'],
     queryFn: () => base44.entities.StudyPlan.filter({ status: 'active' }),
     staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const studyPlansByLesson = React.useMemo(() => {

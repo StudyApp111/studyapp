@@ -3,14 +3,35 @@ import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { 
-  ArrowLeft, CheckCircle2, TrendingUp, 
-  ChevronDown, Loader2, AlertTriangle, Sparkles, Award
+  ArrowLeft, CheckCircle2, TrendingUp, AlertCircle,
+  ChevronDown, Loader2, Sparkles, Award, ArrowRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+
+const getGradeColor = (percentage) => {
+  if (percentage >= 90) return { gradient: 'from-emerald-500 to-teal-600' };
+  if (percentage >= 80) return { gradient: 'from-blue-500 to-indigo-600' };
+  if (percentage >= 70) return { gradient: 'from-purple-500 to-violet-600' };
+  if (percentage >= 60) return { gradient: 'from-orange-500 to-amber-600' };
+  return { gradient: 'from-red-500 to-rose-600' };
+};
+
+const getGradeFromScore = (score) => {
+  if (score >= 95) return 'A+';
+  if (score >= 90) return 'A';
+  if (score >= 85) return 'A-';
+  if (score >= 80) return 'B+';
+  if (score >= 75) return 'B';
+  if (score >= 70) return 'B-';
+  if (score >= 65) return 'C+';
+  if (score >= 60) return 'C';
+  if (score >= 55) return 'C-';
+  if (score >= 50) return 'D+';
+  if (score >= 45) return 'D';
+  return 'F';
+};
 
 export default function GradeResults() {
   const navigate = useNavigate();
@@ -24,327 +45,245 @@ export default function GradeResults() {
   }, []);
 
   const loadAssignment = async () => {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const assignmentId = urlParams.get('assignmentId');
-      
-      if (!assignmentId) {
-        navigate(createPageUrl("SmartGrader"));
-        return;
-      }
-
-      const assignments = await base44.entities.GradedAssignment.filter({ id: assignmentId });
-      if (assignments.length === 0) {
-        navigate(createPageUrl("SmartGrader"));
-        return;
-      }
-
-      setAssignment(assignments[0]);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error loading assignment:", error);
-      navigate(createPageUrl("SmartGrader"));
-    }
-  };
-
-  const getGradeColor = (grade) => {
-    if (!grade) return 'from-slate-500 to-slate-600';
-    if (grade.startsWith('A')) return 'from-emerald-500 via-teal-500 to-cyan-500';
-    if (grade.startsWith('B')) return 'from-blue-500 via-indigo-500 to-purple-500';
-    if (grade.startsWith('C')) return 'from-amber-500 via-orange-500 to-red-400';
-    return 'from-red-500 via-rose-500 to-pink-500';
+    const urlParams = new URLSearchParams(window.location.search);
+    const assignmentId = urlParams.get('assignmentId');
+    if (!assignmentId) { navigate(createPageUrl("SmartGrader")); return; }
+    const assignments = await base44.entities.GradedAssignment.filter({ id: assignmentId });
+    if (assignments.length === 0) { navigate(createPageUrl("SmartGrader")); return; }
+    setAssignment(assignments[0]);
+    setLoading(false);
   };
 
   const toggleSection = (idx) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [idx]: !prev[idx]
-    }));
+    setExpandedSections(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
-        <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 p-4">
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png" alt="StudyApp Logo" className="w-10 h-10" />
+            <h1 className="text-3xl font-black">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">Study</span>
+              <span className="text-white">App</span>
+            </h1>
+          </div>
+          <Award className="h-16 w-16 text-purple-400 mx-auto animate-bounce" />
+          <h2 className="text-xl font-bold text-white">Analyzing Your Assignment...</h2>
+        </div>
       </div>
     );
   }
 
   const result = assignment?.grading_result;
+  const grade = result?.predicted_grade || getGradeFromScore(result?.total_score || 0);
+  const percentage = Math.round(result?.total_score || 0);
+  const gradeColors = getGradeColor(percentage);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 pb-28 md:pb-10">
-      {/* Back Button */}
-      <div className="p-4">
+    <div className="min-h-screen bg-slate-950 overflow-y-auto pb-28 md:pb-10">
+      {/* Gradient hero top */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 h-[50vh] bg-gradient-to-b from-purple-900/60 via-indigo-950/40 to-transparent" />
+        <div className="absolute top-[5%] left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-gradient-to-br from-purple-600/20 via-pink-500/10 to-transparent rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-lg sm:max-w-xl md:max-w-2xl mx-auto px-4 sm:px-5 pt-6 space-y-6">
+        {/* Back Button */}
         <Button
           onClick={() => navigate(createPageUrl("AssignmentHistory"))}
           variant="ghost"
-          className="gap-2 text-white/70 hover:text-white hover:bg-white/10"
+          className="gap-2 text-white/70 hover:text-white hover:bg-white/10 -ml-2"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back
+          <ArrowLeft className="w-4 h-4" /> Back
         </Button>
-      </div>
 
-      {/* Hero Grade Section */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="px-4 pb-8"
-      >
-        <div className="max-w-sm mx-auto text-center">
-          {/* Glowing Grade Circle */}
-          <div className="relative mb-6">
-            <div className={`absolute inset-0 blur-3xl opacity-50 bg-gradient-to-br ${getGradeColor(result?.predicted_grade)} rounded-full scale-75`} />
-            <div className={`relative w-40 h-40 mx-auto rounded-full bg-gradient-to-br ${getGradeColor(result?.predicted_grade)} flex items-center justify-center shadow-2xl`}>
-              <div className="text-center">
-                <span className="text-6xl font-black text-white drop-shadow-lg">{result?.predicted_grade || '—'}</span>
-              </div>
-            </div>
-            {/* Sparkle decorations */}
-            <Sparkles className="absolute top-2 right-1/4 w-6 h-6 text-yellow-300 animate-pulse" />
-            <Award className="absolute bottom-4 left-1/4 w-5 h-5 text-yellow-300/70" />
-          </div>
-
-          {/* Score */}
-          {result?.total_score !== undefined && (
-            <div className="mb-3">
-              <span className="text-4xl font-bold text-white">{Math.round(result.total_score)}%</span>
-            </div>
-          )}
-
-          {/* Assignment Info */}
-          <h1 className="text-xl font-bold text-white mb-1">{assignment?.assignment_title}</h1>
-          <p className="text-purple-200 text-sm">{assignment?.course_name}</p>
-
-          {/* Missing References Warning */}
-          {result?.missing_references_flag && result.missing_references_flag !== "None" && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4"
-            >
-              <div className="bg-amber-500/20 border border-amber-400/30 rounded-xl p-3 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-300 flex-shrink-0" />
-                <p className="text-amber-200 text-xs text-left">Missing referenced materials may affect accuracy</p>
-              </div>
-            </motion.div>
-          )}
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png" alt="StudyApp Logo" className="w-10 h-10 sm:w-12 sm:h-12" />
+          <h1 className="text-3xl sm:text-4xl font-black">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">Study</span>
+            <span className="text-white">App</span>
+          </h1>
         </div>
-      </motion.div>
 
-      {/* Content Section - White Background */}
-      <div className={`rounded-t-3xl min-h-[50vh] px-4 pt-6 pb-8 ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
-        <div className="max-w-lg mx-auto space-y-6">
-          
-          {/* Summary */}
-          {result?.overall_performance_summary && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-center"
-            >
-              <p className={`leading-relaxed text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{result.overall_performance_summary}</p>
-            </motion.div>
-          )}
-
-          {/* Strengths */}
-          {result?.identified_strengths?.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
-                  <CheckCircle2 className="w-4 h-4 text-white" />
-                </div>
-                <h3 className={`font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-800'}`}>Strengths</h3>
+        {/* ========== GRADE BANNER ========== */}
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${gradeColors.gradient} p-[2px] w-full shadow-lg`}>
+          <div className="bg-slate-900 rounded-[14px] p-5 sm:p-6">
+            <div className="flex items-start gap-4 sm:gap-5">
+              <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-gradient-to-br ${gradeColors.gradient} flex flex-col items-center justify-center flex-shrink-0 shadow-lg`}>
+                <span className="text-3xl sm:text-4xl font-black text-white leading-none">{grade}</span>
+                <span className="text-white/70 text-xs sm:text-sm font-semibold">{percentage}%</span>
               </div>
-              <ul className="space-y-2">
-                {result.identified_strengths.map((strength, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${isDark ? 'bg-emerald-400' : 'bg-emerald-500'}`} />
-                    <span className={`text-sm ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>{strength}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
-
-          {/* Areas for Improvement */}
-          {result?.areas_for_improvement?.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-amber-50 rounded-2xl p-4 border border-amber-100"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-white" />
-                </div>
-                <h3 className={`font-bold ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>Areas to Improve</h3>
+              <div className="flex-1 min-w-0 space-y-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-white truncate">{assignment?.assignment_title}</h2>
+                <p className="text-slate-400 text-sm">{assignment?.course_name}</p>
+                {result?.missing_references_flag && result.missing_references_flag !== "None" && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    Missing references may affect accuracy
+                  </span>
+                )}
               </div>
-              <ul className="space-y-2">
-                {result.areas_for_improvement.map((area, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${isDark ? 'bg-amber-400' : 'bg-amber-500'}`} />
-                    <span className={`text-sm ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>{area}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
+            </div>
+          </div>
+        </div>
 
-          {/* Rubric Breakdown */}
-          {result?.rubric_breakdown?.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
-                  <Award className="w-4 h-4 text-white" />
+        {/* ========== SUMMARY ========== */}
+        {result?.overall_performance_summary && (
+          <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-700/50 w-full">
+            <div className="border-l-4 border-purple-500 pl-4 py-1">
+              <p className="text-white text-sm sm:text-base leading-relaxed">{result.overall_performance_summary}</p>
+            </div>
+          </div>
+        )}
+
+        {/* ========== STRENGTHS ========== */}
+        {result?.identified_strengths?.length > 0 && (
+          <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-emerald-500/30 w-full">
+            <h4 className="text-base font-bold text-emerald-400 mb-4">Where you're already strong</h4>
+            <div className="space-y-3">
+              {result.identified_strengths.map((strength, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-white/90 text-sm">{strength}</span>
                 </div>
-                <h3 className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Rubric Breakdown</h3>
-              </div>
-              <div className="space-y-3">
-                {result.rubric_breakdown.map((item, idx) => {
-                  const percentage = (item.score / item.max_score) * 100;
-                  const getScoreColor = () => {
-                    if (percentage >= 80) return 'from-emerald-500 to-teal-500';
-                    if (percentage >= 60) return 'from-blue-500 to-indigo-500';
-                    if (percentage >= 40) return 'from-amber-500 to-orange-500';
-                    return 'from-red-500 to-rose-500';
-                  };
-                  
-                  return (
-                    <div key={idx} className={`rounded-2xl p-4 border shadow-sm ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100'}`}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h4 className={`font-semibold text-sm mb-1 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{item.criterion}</h4>
-                          {item.comments && (
-                            <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{item.comments}</p>
-                          )}
-                        </div>
-                        <div className={`ml-3 px-3 py-1.5 rounded-xl bg-gradient-to-r ${getScoreColor()} flex-shrink-0`}>
-                          <span className="text-sm font-black text-white">{item.score}/{item.max_score}</span>
-                        </div>
-                      </div>
-                      <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-                        <div 
-                          className={`h-full bg-gradient-to-r ${getScoreColor()} rounded-full transition-all`}
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========== AREAS TO IMPROVE — styled like "WHERE YOU'RE LOSING POINTS" ========== */}
+        {result?.areas_for_improvement?.length > 0 && (
+          <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-red-500/40 w-full">
+            <h4 className="text-base sm:text-lg font-bold text-red-400 mb-5 flex items-center gap-2 uppercase tracking-wide">
+              <AlertCircle className="w-5 h-5" />
+              WHERE TO IMPROVE
+            </h4>
+            <div className="space-y-4">
+              {result.areas_for_improvement.map((area, idx) => {
+                const borderColor = idx === 0 ? 'border-l-red-500' : idx === 1 ? 'border-l-orange-500' : 'border-l-yellow-500';
+                return (
+                  <div key={idx} className={`bg-slate-800 rounded-xl p-4 sm:p-5 border-l-4 ${borderColor} border border-slate-700 w-full`}>
+                    <div className="flex items-start gap-3">
+                      <span className={`text-xl font-black ${idx === 0 ? 'text-red-400' : idx === 1 ? 'text-orange-400' : 'text-yellow-400'}`}>#{idx + 1}</span>
+                      <p className="font-medium text-white text-sm sm:text-base flex-1">{area}</p>
                     </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-          {/* Detailed Feedback */}
-          {result?.detailed_feedback_by_section?.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-                <h3 className={`font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Section Feedback</h3>
-              </div>
-              <div className="space-y-3">
-                {result.detailed_feedback_by_section.map((section, idx) => {
-                  const isExpanded = expandedSections[idx];
-                  const percentage = section.points_possible > 0 
-                    ? (section.points_earned / section.points_possible) * 100 
-                    : 0;
-                  
-                  return (
-                    <div key={idx} className={`rounded-2xl border shadow-sm overflow-hidden ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-100'}`}>
-                      <button
-                        onClick={() => toggleSection(idx)}
-                        className={`w-full p-4 text-left transition-colors ${isDark ? 'hover:bg-white/5' : 'hover:bg-slate-50'}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                              percentage >= 70 
-                                ? 'bg-emerald-100 text-emerald-600' 
-                                : percentage >= 50 
-                                  ? 'bg-amber-100 text-amber-600'
-                                  : 'bg-red-100 text-red-600'
-                            }`}>
-                              <span className="text-sm font-black">{Math.round(percentage)}%</span>
-                            </div>
-                            <div className="min-w-0">
-                              <h4 className={`font-semibold text-sm truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{section.section_name}</h4>
-                              <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                                {section.points_earned}/{section.points_possible} points
-                              </p>
-                            </div>
-                          </div>
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-transform ${
-                            isExpanded ? (isDark ? 'bg-purple-600/30 rotate-180' : 'bg-purple-100 rotate-180') : (isDark ? 'bg-white/10' : 'bg-slate-100')
-                          }`}>
-                            <ChevronDown className={`w-4 h-4 ${isExpanded ? (isDark ? 'text-purple-400' : 'text-purple-600') : (isDark ? 'text-slate-500' : 'text-slate-400')}`} />
+        {/* ========== RUBRIC BREAKDOWN ========== */}
+        {result?.rubric_breakdown?.length > 0 && (
+          <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-purple-500/30 w-full">
+            <h4 className="text-lg sm:text-xl font-black text-white mb-5 flex items-center gap-2">
+              <Award className="w-5 h-5 text-purple-400" /> Rubric Breakdown
+            </h4>
+            <div className="space-y-3">
+              {result.rubric_breakdown.map((item, idx) => {
+                const pct = (item.score / item.max_score) * 100;
+                const barColor = pct >= 80 ? 'from-emerald-500 to-teal-500' : pct >= 60 ? 'from-blue-500 to-indigo-500' : pct >= 40 ? 'from-amber-500 to-orange-500' : 'from-red-500 to-rose-500';
+                return (
+                  <div key={idx} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+                    <div className="flex items-start justify-between mb-2">
+                      <h5 className="font-semibold text-white text-sm flex-1">{item.criterion}</h5>
+                      <span className={`ml-3 px-2.5 py-1 rounded-lg bg-gradient-to-r ${barColor} text-white text-xs font-black flex-shrink-0`}>
+                        {item.score}/{item.max_score}
+                      </span>
+                    </div>
+                    <div className="h-2 rounded-full overflow-hidden bg-white/10">
+                      <div className={`h-full bg-gradient-to-r ${barColor} rounded-full`} style={{ width: `${pct}%` }} />
+                    </div>
+                    {item.comments && <p className="text-slate-400 text-xs mt-2 leading-relaxed">{item.comments}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ========== SECTION FEEDBACK ========== */}
+        {result?.detailed_feedback_by_section?.length > 0 && (
+          <div className="bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-700/50 w-full">
+            <h4 className="text-lg sm:text-xl font-black text-white mb-5 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-400" /> Section Feedback
+            </h4>
+            <div className="space-y-3">
+              {result.detailed_feedback_by_section.map((section, idx) => {
+                const isExpanded = expandedSections[idx];
+                const pct = section.points_possible > 0 ? (section.points_earned / section.points_possible) * 100 : 0;
+                const pillColor = pct >= 70 ? 'bg-emerald-500/20 text-emerald-400' : pct >= 50 ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400';
+
+                return (
+                  <div key={idx} className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                    <button onClick={() => toggleSection(idx)} className="w-full p-4 text-left hover:bg-white/5 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <span className={`text-xs font-black px-2.5 py-1 rounded-lg ${pillColor}`}>{Math.round(pct)}%</span>
+                          <div className="min-w-0">
+                            <h5 className="font-semibold text-white text-sm truncate">{section.section_name}</h5>
+                            <p className="text-slate-500 text-[11px]">{section.points_earned}/{section.points_possible} points</p>
                           </div>
                         </div>
-                      </button>
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="border-t border-slate-100"
-                          >
-                            <div className={`p-4 ${isDark ? 'bg-gradient-to-b from-white/5 to-[#12121a]' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
-                              <p className={`text-sm leading-relaxed mb-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{section.feedback}</p>
-                              {section.competencies_assessed?.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5">
+                        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      </div>
+                    </button>
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="border-t border-slate-700"
+                        >
+                          <div className="p-4 bg-slate-800/50">
+                            <p className="text-slate-300 text-sm leading-relaxed mb-3">{section.feedback}</p>
+                            {section.competencies_assessed?.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
                                 {section.competencies_assessed.map((comp, cidx) => (
-                                  <span key={cidx} className={`text-[10px] font-medium px-2 py-1 rounded-full ${isDark ? 'bg-purple-600/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
-                                      {comp}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
+                                  <span key={cidx} className="text-[10px] font-medium px-2 py-1 rounded-full bg-purple-500/20 text-purple-300">{comp}</span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-          {/* Actions */}
-          <div className="pt-4 flex flex-col gap-3">
-            <Button
-              onClick={() => navigate(createPageUrl("SmartGrader"))}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 h-12 text-base font-semibold rounded-xl"
-            >
-              Grade Another Assignment
-            </Button>
+        {/* ========== FINAL CTA ========== */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 p-5 sm:p-7 shadow-2xl w-full">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+          <div className="relative text-center space-y-4">
+            <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">Ready to improve?</h3>
+            <motion.div animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}>
+              <Button
+                onClick={() => navigate(createPageUrl("SmartGrader"))}
+                className="w-full bg-white hover:bg-slate-100 text-purple-700 font-black py-4 sm:py-5 text-base sm:text-lg rounded-xl shadow-xl shadow-black/20 transition-all hover:scale-[1.02] min-h-[52px]"
+              >
+                Grade Another Assignment <ArrowRight className="h-5 w-5 ml-2" />
+              </Button>
+            </motion.div>
             <Button
               onClick={() => navigate(createPageUrl("AssignmentHistory"))}
-              variant="outline"
-              className="w-full h-12 rounded-xl"
+              variant="ghost"
+              className="text-white/70 hover:text-white hover:bg-white/10"
             >
               View All History
             </Button>
           </div>
+        </div>
+
+        <div className="text-center pb-8">
+          <p className="text-slate-600 text-xs">Powered by StudyApp.AI</p>
         </div>
       </div>
     </div>

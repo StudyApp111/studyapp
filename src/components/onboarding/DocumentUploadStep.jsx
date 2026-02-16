@@ -122,15 +122,6 @@ export default function DocumentUploadStep({ userName, courseName, onNext, onBac
         aria-hidden="true"
       />
 
-      {/* Floating animated element */}
-      <motion.div
-        className="absolute top-4 right-4 text-2xl select-none pointer-events-none z-0"
-        animate={{ y: [0, -6, 0], rotate: [0, 8, -8, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-      >
-        ✨
-      </motion.div>
-
       {/* Header */}
       <div className="text-center space-y-3">
         <motion.div

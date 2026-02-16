@@ -182,13 +182,8 @@ export default function Onboarding() {
     );
     }
 
-    // Calculate progress based on actual answered questions
-    let answeredCount = 0;
-    if (answersRef.current.name) answeredCount++;
-    if (answersRef.current.school) answeredCount++;
-    if (answersRef.current.courseCode) answeredCount++;
-    if (currentStep >= 3) answeredCount++; // Document step (can be skipped)
-    const progress = (answeredCount / totalSteps) * 100;
+    // Progress tracks the current step position (not answered count)
+    const progress = ((currentStep + 1) / totalSteps) * 100;
 
   return (
     <div className="relative min-h-screen flex flex-col overflow-hidden">
