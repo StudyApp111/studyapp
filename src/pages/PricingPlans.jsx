@@ -215,8 +215,9 @@ export default function PricingPlans() {
     }
   }, [showSuccess]);
 
-  // Success state - only show if user actually has pro access
-  if (isPro) {
+  // Success state - show ONLY when user actually has active pro access
+  // showSuccess is from ?success=true after Stripe checkout - but only matters if user is actually pro
+  if (showSuccess && isPro) {
     const isTrialing = (user?.subscription_status || user?.data?.subscription_status) === 'trialing';
     
     return (
@@ -246,7 +247,6 @@ export default function PricingPlans() {
           </div>
           <Button
             onClick={() => {
-              // Trigger refresh before navigating
               window.dispatchEvent(new Event('userSubscriptionUpdated'));
               navigate(createPageUrl("Home"));
             }}
