@@ -124,20 +124,22 @@ function LayoutContent({ children, currentPageName }) {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
         
+        const onboardingDone = currentUser?.onboarding_completed || currentUser?.data?.onboarding_completed;
+        
         // If on onboarding flow and onboarding is complete, redirect home
-        if (isOnboardingFlow && currentUser?.onboarding_completed) {
+        if (isOnboardingFlow && onboardingDone) {
           navigate(createPageUrl("Home"), { replace: true });
           return;
         }
         
         // If NOT on onboarding flow and onboarding incomplete, redirect to onboarding
-        if (!isOnboardingFlow && currentUser && !currentUser.onboarding_completed) {
+        if (!isOnboardingFlow && currentUser && !onboardingDone) {
           navigate(createPageUrl("Onboarding"), { replace: true });
           return;
         }
         
         // Track session for authenticated users with completed onboarding
-        if (currentUser?.onboarding_completed && !isOnboardingFlow) {
+        if (onboardingDone && !isOnboardingFlow) {
           trackUserSession();
           cleanup = trackSessionDuration();
         }

@@ -134,7 +134,7 @@ export default function Home() {
           setShowWelcome(true);
         }
 
-        if (!currentUser.onboarding_completed) {
+        if (!currentUser.onboarding_completed && !currentUser.data?.onboarding_completed) {
           navigate(createPageUrl("Onboarding"));
         } else if (currentUser.learning_profile_id) {
           const profile = await base44.entities.LearningProfile.filter({

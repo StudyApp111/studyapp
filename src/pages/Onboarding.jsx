@@ -47,7 +47,7 @@ export default function Onboarding() {
         const urlParams = new URLSearchParams(window.location.search);
         const fromOnboarding = urlParams.get('fromOnboarding');
         
-        if (user && (user.onboarding_completed || fromOnboarding === 'true')) {
+        if (user && (user.onboarding_completed || user.data?.onboarding_completed || fromOnboarding === 'true')) {
           navigate(createPageUrl("Home"), { replace: true });
           return;
         }
