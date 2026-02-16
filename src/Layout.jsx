@@ -125,15 +125,16 @@ function LayoutContent({ children, currentPageName }) {
         setUser(currentUser);
         
         const onboardingDone = currentUser?.onboarding_completed || currentUser?.data?.onboarding_completed;
+        const isAdmin = currentUser?.role === 'admin';
         
-        // If on onboarding flow and onboarding is complete, redirect home
-        if (isOnboardingFlow && onboardingDone) {
+        // If on onboarding flow and onboarding is complete (or admin), redirect home
+        if (isOnboardingFlow && (onboardingDone || isAdmin)) {
           navigate(createPageUrl("Home"), { replace: true });
           return;
         }
         
-        // If NOT on onboarding flow and onboarding incomplete, redirect to onboarding
-        if (!isOnboardingFlow && currentUser && !onboardingDone) {
+        // If NOT on onboarding flow and onboarding incomplete (skip for admins), redirect to onboarding
+        if (!isOnboardingFlow && currentUser && !onboardingDone && !isAdmin) {
           navigate(createPageUrl("Onboarding"), { replace: true });
           return;
         }
