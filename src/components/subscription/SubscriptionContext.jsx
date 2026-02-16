@@ -140,7 +140,8 @@ export function SubscriptionProvider({ children }) {
     let needsUpdate = false;
 
     // Daily counter reset - 24h rolling window
-    const dailyResetTime = currentUser.daily_reset_timestamp ? new Date(currentUser.daily_reset_timestamp) : null;
+    const resetTs = currentUser.daily_reset_timestamp || currentUser.data?.daily_reset_timestamp;
+    const dailyResetTime = resetTs ? new Date(resetTs) : null;
     
     if (!dailyResetTime) {
       updates.daily_reset_timestamp = now.toISOString();
