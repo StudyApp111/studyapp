@@ -38,50 +38,57 @@ export function SubscriptionProvider({ children }) {
     return currentUser;
   };
 
+  // Helper to read user fields from either top-level or nested data object
+  const getUserField = (field) => {
+    if (!user) return undefined;
+    return user[field] !== undefined ? user[field] : user.data?.[field];
+  };
+
   // Check if user has pro subscription OR is in trial period
   const isPro = () => {
     if (!user) return false;
     
     const now = new Date();
+    const tier = getUserField('subscription_tier');
+    const status = getUserField('subscription_status');
+    const endDate = getUserField('subscription_end_date');
+    const trialEnd = getUserField('trial_end_date');
+    const promoUntil = getUserField('promo_access_until');
     
     // Cancelled users immediately lose access (no grace period for trials)
-    if (user.subscription_status === 'cancelled') {
-      // Check if they still have time left (paid subscription grace period)
-      if (user.subscription_end_date) {
-        const endDate = new Date(user.subscription_end_date);
-        if (endDate > now && user.subscription_tier === 'pro') {
+    if (status === 'cancelled') {
+      if (endDate) {
+        const end = new Date(endDate);
+        if (end > now && tier === 'pro') {
           return true; // Still in paid grace period
         }
       }
-      return false; // Cancelled, no access
+      return false;
     }
     
     // Check for active trial first
-    if (user.subscription_status === 'trialing' && user.trial_end_date) {
-      const trialEnd = new Date(user.trial_end_date);
-      if (trialEnd > now) {
-        return true; // Trial still active
+    if (status === 'trialing' && trialEnd) {
+      if (new Date(trialEnd) > now) {
+        return true;
       }
     }
     
     // Must have pro tier AND active status
-    if (user.subscription_tier !== 'pro') return false;
-    if (user.subscription_status !== 'active') return false;
+    if (tier !== 'pro') return false;
+    if (status !== 'active') return false;
     
     // Check promo access expiry first
-    if (user.promo_access_until) {
-      const promoExpiry = new Date(user.promo_access_until);
-      if (promoExpiry < now) {
-        return false; // Promo expired
+    if (promoUntil) {
+      if (new Date(promoUntil) < now) {
+        return false;
       }
-      return true; // Promo still valid
+      return true;
     }
     
     // Check subscription end date for paid subscriptions
-    if (user.subscription_end_date) {
-      const subExpiry = new Date(user.subscription_end_date);
-      if (subExpiry < now) {
-        return false; // Subscription expired
+    if (endDate) {
+      if (new Date(endDate) < now) {
+        return false;
       }
     }
     
@@ -91,32 +98,28 @@ export function SubscriptionProvider({ children }) {
   // Check if user is in trial
   const isInTrial = () => {
     if (!user) return false;
-    if (user.subscription_status !== 'trialing') return false;
-    if (!user.trial_end_date) return false;
-    
-    const now = new Date();
-    const trialEnd = new Date(user.trial_end_date);
-    return trialEnd > now;
+    if (getUserField('subscription_status') !== 'trialing') return false;
+    const trialEnd = getUserField('trial_end_date');
+    if (!trialEnd) return false;
+    return new Date(trialEnd) > new Date();
   };
   
   // Get trial remaining days
   const getTrialRemainingDays = () => {
-    if (!user?.trial_end_date) return null;
-    if (user.subscription_status !== 'trialing') return null;
+    const trialEnd = getUserField('trial_end_date');
+    if (!trialEnd) return null;
+    if (getUserField('subscription_status') !== 'trialing') return null;
     
-    const now = new Date();
-    const trialEnd = new Date(user.trial_end_date);
-    const diffTime = trialEnd - now;
+    const diffTime = new Date(trialEnd) - new Date();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
 
   // Get remaining promo days
   const getPromoRemainingDays = () => {
-    if (!user?.promo_access_until) return null;
-    const expiryDate = new Date(user.promo_access_until);
-    const now = new Date();
-    const diffTime = expiryDate - now;
+    const promoUntil = getUserField('promo_access_until');
+    if (!promoUntil) return null;
+    const diffTime = new Date(promoUntil) - new Date();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
