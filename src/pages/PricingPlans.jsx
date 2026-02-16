@@ -82,7 +82,23 @@ export default function PricingPlans() {
     }
   }, []);
 
-  const isPro = user?.subscription_tier === 'pro' && user?.subscription_status === 'active';
+  // Check if user truly has active pro access (active, trialing, or cancelled with grace period)
+  const isPro = (() => {
+    if (!user) return false;
+    const tier = user.subscription_tier || user.data?.subscription_tier;
+    const status = user.subscription_status || user.data?.subscription_status;
+    if (tier !== 'pro') return false;
+    if (status === 'active') return true;
+    if (status === 'trialing') {
+      const trialEnd = user.trial_end_date || user.data?.trial_end_date;
+      return trialEnd ? new Date(trialEnd) > new Date() : false;
+    }
+    if (status === 'cancelled') {
+      const endDate = user.subscription_end_date || user.data?.subscription_end_date;
+      return endDate ? new Date(endDate) > new Date() : false;
+    }
+    return false;
+  })();
 
   const monthlyPrice = 6.99;
   const yearlyPrice = 4.99;
