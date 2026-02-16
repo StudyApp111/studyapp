@@ -215,9 +215,9 @@ export default function PricingPlans() {
     }
   }, [showSuccess]);
 
-  // Success state
-  if (showSuccess || isPro) {
-    const isTrialing = user?.subscription_status === 'trialing';
+  // Success state - only show if user actually has pro access
+  if (isPro) {
+    const isTrialing = (user?.subscription_status || user?.data?.subscription_status) === 'trialing';
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 flex items-center justify-center p-6">
