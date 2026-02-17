@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, GraduationCap, Crown } from "lucide-react";
+import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, Crown } from "lucide-react";
 import { UpgradeButton } from "@/components/subscription/UpgradeBadge";
 import { motion } from "framer-motion";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
@@ -160,15 +160,7 @@ export default function Home() {
   // Derive first name: prefer display_name > full_name
   const firstName = user?.display_name || user?.data?.display_name || user?.full_name?.split(' ')[0] || '';
   const schoolName = learningProfile?.school || '';
-  const yearInfo = learningProfile?.grade || '';
-  
-  // Build subtitle: "University of X • Year 2" or just school or just year
-  const subtitleParts = [];
-  if (schoolName) subtitleParts.push(schoolName);
-  if (yearInfo && !['professional_cert', 'standardized_tests', 'other'].includes(yearInfo)) {
-    subtitleParts.push(yearInfo);
-  }
-  const subtitle = subtitleParts.join(' • ');
+  const subtitle = schoolName;
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0a12]' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
