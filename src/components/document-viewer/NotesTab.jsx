@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, GraduationCap, FileText, Download, Notebook, Eye, EyeOff, Highlighter } from "lucide-react";
+import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, GraduationCap, FileText, Download, Notebook, Eye, EyeOff, Highlighter, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { renderMathText } from "@/components/math/MathText";
 import NoteSettingsModal from "@/components/modals/NoteSettingsModal";
@@ -32,6 +32,7 @@ export default function NotesTab({ lesson }) {
   const [copied, setCopied] = useState(false);
   const [highlightMode, setHighlightMode] = useState(false);
   const [fontSize, setFontSize] = useState('base'); // 'sm', 'base', 'lg'
+  const [tocCollapsed, setTocCollapsed] = useState(false);
 
   // Track if notes have been loaded to prevent redundant calls
   const [notesLoaded, setNotesLoaded] = useState(false);
@@ -276,12 +277,23 @@ export default function NotesTab({ lesson }) {
 
           {/* Content */}
           <div className="flex gap-0 overflow-hidden">
-            {/* Table of Contents - Desktop Only */}
+            {/* Table of Contents - Desktop Only, Collapsible */}
             {tableOfContents.length > 0 && (
-              <div className={`hidden lg:block w-64 border-r overflow-y-auto ${isDark ? 'bg-[#0a0a12] border-white/10' : 'bg-slate-50 border-slate-200'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
-                <div className="p-4 sticky top-0">
-                  <h3 className={`text-xs font-bold uppercase tracking-wider mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contents</h3>
-                  <nav className="space-y-1">
+              <div className={`hidden lg:flex flex-col border-r transition-all duration-300 ${tocCollapsed ? 'w-10' : 'w-64'} ${isDark ? 'bg-[#0a0a12] border-white/10' : 'bg-slate-50 border-slate-200'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
+                <div className="p-2 flex items-center justify-between">
+                  {!tocCollapsed && (
+                    <h3 className={`text-xs font-bold uppercase tracking-wider px-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contents</h3>
+                  )}
+                  <button
+                    onClick={() => setTocCollapsed(!tocCollapsed)}
+                    className={`p-1 rounded-md transition-colors ${isDark ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
+                    title={tocCollapsed ? 'Expand contents' : 'Collapse contents'}
+                  >
+                    {tocCollapsed ? <ChevronRightIcon className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                  </button>
+                </div>
+                {!tocCollapsed && (
+                  <nav className="space-y-1 px-4 pb-4 overflow-y-auto">
                     {tableOfContents.map((item, idx) => (
                       <button
                         key={idx}
@@ -297,7 +309,7 @@ export default function NotesTab({ lesson }) {
                       </button>
                     ))}
                   </nav>
-                </div>
+                )}
               </div>
             )}
 

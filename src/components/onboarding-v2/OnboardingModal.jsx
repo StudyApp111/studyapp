@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import posthog from "posthog-js";
 import StepSignIn from "./StepSignIn";
 import StepProfile from "./StepProfile";
 import StepWelcome from "./StepWelcome";
@@ -40,11 +41,17 @@ export default function OnboardingModal({ onComplete }) {
     checkAuth();
   }, []);
 
+  // Track step changes in PostHog
+  useEffect(() => {
+    try {
+      posthog.capture('onboarding_step_viewed', { step, total_steps: TOTAL_STEPS });
+    } catch {}
+  }, [step]);
+
   const handleNext = useCallback(() => {
     if (step < TOTAL_STEPS) {
       setStep((s) => s + 1);
     } else {
-      // Final step — mark onboarding complete
       handleComplete();
     }
   }, [step]);
@@ -57,16 +64,17 @@ export default function OnboardingModal({ onComplete }) {
   }, [step, user]);
 
   const handleSignIn = (method) => {
-    // Store that we're in onboarding so Layout doesn't interfere
+    try { posthog.capture('onboarding_sign_in_clicked', { method }); } catch {}
     sessionStorage.setItem("onboarding_v2_active", "true");
-    // Redirect to login — after login, user lands back on Home
     const returnUrl = window.location.pathname + window.location.search;
     base44.auth.redirectToLogin(returnUrl);
   };
 
   const handleProfileComplete = async ({ name, school }) => {
     try {
-      // Update user display name
+      posthog.capture('onboarding_profile_completed', { has_school: !!school });
+    } catch {}
+    try {
       await base44.auth.updateMe({ display_name: name });
       setDisplayName(name);
 
@@ -91,6 +99,9 @@ export default function OnboardingModal({ onComplete }) {
   };
 
   const handleComplete = async () => {
+    try {
+      posthog.capture('onboarding_completed', { total_steps: TOTAL_STEPS });
+    } catch {}
     try {
       await base44.auth.updateMe({ onboarding_completed: true });
       sessionStorage.removeItem("onboarding_v2_active");
