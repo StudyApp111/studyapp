@@ -218,12 +218,7 @@ export default function Home() {
                     <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{learningProfile.school}</span>
                   </div>
                 )}
-                {learningProfile?.grade && (
-                  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200'}`}>
-                    <GraduationCap className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
-                    <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{learningProfile.grade.replace(/_/g, ' ')}</span>
-                  </div>
-                )}
+
                 <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/20 border-orange-500/30' : (isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200')}`}>
                   <Flame className="w-4 h-4 text-orange-400" />
                   <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : (isDark ? 'text-slate-200' : 'text-slate-700')}`}>{user?.current_streak || 0} day streak</span>

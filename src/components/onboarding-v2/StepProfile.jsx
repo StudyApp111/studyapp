@@ -14,16 +14,31 @@ export default function StepProfile({ user, onComplete, onBack }) {
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const initialLoadDone = useRef(false);
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => loadSchools("", pos.coords.latitude, pos.coords.longitude),
-        () => loadSchools(""),
-        { timeout: 5000, maximumAge: 300000 }
-      );
-    } else {
-      loadSchools("");
+    // Load saved school from learning profile
+    const loadSavedSchool = async () => {
+      try {
+        const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
+        if (profiles.length > 0 && profiles[0].school) {
+          setSchool(profiles[0].school);
+        }
+      } catch {}
+    };
+    loadSavedSchool();
+
+    if (!initialLoadDone.current) {
+      initialLoadDone.current = true;
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => loadSchools("", pos.coords.latitude, pos.coords.longitude),
+          () => loadSchools(""),
+          { timeout: 5000, maximumAge: 300000 }
+        );
+      } else {
+        loadSchools("");
+      }
     }
   }, []);
 

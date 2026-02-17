@@ -15,15 +15,6 @@ export default function StepWelcome({ displayName, onNext, onBack }) {
       transition={{ duration: 0.25 }}
       className="text-center space-y-6 py-6"
     >
-      {/* Emoji */}
-      <motion.div
-        className="text-6xl"
-        animate={{ y: [0, -8, 0] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-      >
-        👋
-      </motion.div>
-
       <div className="space-y-3">
         <h2
           className={`text-2xl md:text-3xl font-black ${

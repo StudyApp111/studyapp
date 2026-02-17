@@ -413,7 +413,8 @@ export default function Settings() {
                 label="Onboarding"
                 onClick={async () => {
                   await base44.auth.updateMe({ onboarding_completed: false });
-                  navigate(createPageUrl("Onboarding"));
+                  navigate(createPageUrl("Home"));
+                  window.location.reload();
                 }}
               />
             </SettingsSection>
@@ -478,9 +479,17 @@ export default function Settings() {
                       <Input
                         value={deleteConfirmText}
                         onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        onFocus={(e) => {
+                          // Move cursor to end to prevent auto-select
+                          const val = e.target.value;
+                          e.target.value = '';
+                          e.target.value = val;
+                        }}
                         placeholder="Type DELETE to confirm"
                         className="border-red-200 focus:border-red-400"
                         autoComplete="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
                       />
                       <DialogFooter className="gap-2 sm:gap-0">
                         <Button variant="outline" onClick={() => {

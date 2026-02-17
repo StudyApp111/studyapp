@@ -2,17 +2,13 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Upload } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { ChevronLeft, Rocket } from "lucide-react";
 
 export default function StepReady({ displayName, onComplete, onBack }) {
   const { isDark } = useTheme();
-  const navigate = useNavigate();
 
-  const handleUpload = async () => {
+  const handleGetStarted = async () => {
     await onComplete();
-    navigate(createPageUrl("CreateLesson"));
   };
 
   return (
@@ -52,7 +48,7 @@ export default function StepReady({ displayName, onComplete, onBack }) {
             isDark ? "text-slate-400" : "text-slate-500"
           }`}
         >
-          Click 'Upload Notes' to get started
+          Let's get started
         </p>
       </div>
 
@@ -71,11 +67,11 @@ export default function StepReady({ displayName, onComplete, onBack }) {
           Back
         </Button>
         <Button
-          onClick={handleUpload}
+          onClick={handleGetStarted}
           className="flex-1 h-12 text-base font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-purple-500/20"
         >
-          <Upload className="w-5 h-5 mr-2" />
-          Upload Notes
+          <Rocket className="w-5 h-5 mr-2" />
+          Get Started
         </Button>
       </div>
     </motion.div>
