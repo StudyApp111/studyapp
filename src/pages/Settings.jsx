@@ -428,7 +428,7 @@ export default function Settings() {
                   setDeleteConfirmStep(1);
                   setDeleteConfirmText("");
                 }
-              }}>
+              }} onOpenAutoFocus={(e) => e.preventDefault()}>
                 <DialogTrigger asChild>
                   <button className="w-full flex items-center justify-between p-4 rounded-lg border border-red-200 hover:bg-red-50 hover:border-red-300 transition-all">
                     <div className="flex items-center gap-3">
