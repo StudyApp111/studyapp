@@ -118,15 +118,22 @@ function LayoutContent({ children, currentPageName }) {
         setUser(currentUser);
 
         const onboardingDone = currentUser?.onboarding_completed || currentUser?.data?.onboarding_completed;
+        const isAdmin = currentUser?.role === 'admin';
 
         // Track session for authenticated users with completed onboarding
-        if (onboardingDone) {
+        if (onboardingDone || isAdmin) {
           trackUserSession();
           cleanup = trackSessionDuration();
+        } else if (!onboardingDone && !isAdmin && !isHomePage) {
+          // Not onboarded and not on Home — redirect to Home where modal lives
+          navigate(createPageUrl("Home"), { replace: true });
         }
       } catch (error) {
-        // Not authenticated — Home page handles onboarding modal
+        // Not authenticated — redirect non-Home pages to Home for onboarding
         setUser(null);
+        if (!isHomePage) {
+          navigate(createPageUrl("Home"), { replace: true });
+        }
       }
     })();
 
