@@ -8,121 +8,50 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, GraduationCap, Crown } from "lucide-react";
 import { UpgradeButton } from "@/components/subscription/UpgradeBadge";
 import { motion } from "framer-motion";
-// CreateLessonModal replaced with CreateLesson page
 import DailyChallenge from "@/components/gamification/DailyChallenge";
 import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
 import LearningTrajectory from "@/components/home/LearningTrajectory";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import OnboardingModal from "@/components/onboarding-v2/OnboardingModal";
 
 export default function Home() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
   const [user, setUser] = useState(null);
-  // CreateLessonModal removed - using CreateLesson page instead
   const [dailyXP, setDailyXP] = useState(0);
   const [studyMinutesToday, setStudyMinutesToday] = useState(0);
   const [questionsToday, setQuestionsToday] = useState(0);
   const [flashcardsToday, setFlashcardsToday] = useState(0);
   const [showWelcome, setShowWelcome] = useState(false);
   const [learningProfile, setLearningProfile] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    const checkOnboarding = async () => {
+    const init = async () => {
       try {
         const isAuth = await base44.auth.isAuthenticated();
+
         if (!isAuth) {
-          base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+          // Not authenticated — show onboarding modal (step 1 = sign in)
+          setShowOnboarding(true);
           return;
         }
 
         const resetResult = await handleDailyReset();
         let currentUser = resetResult.user || await base44.auth.me();
-
-        // Check if user is coming from onboarding flow
-        const urlParams = new URLSearchParams(window.location.search);
-        const fromOnboarding = urlParams.get('fromOnboarding') === 'true';
-        const pendingDataStr = sessionStorage.getItem('pendingOnboardingData');
         
-        if (fromOnboarding && pendingDataStr) {
-          try {
-            const pendingData = JSON.parse(pendingDataStr);
-            sessionStorage.removeItem('pendingOnboardingData');
+        const onboardingDone = currentUser?.onboarding_completed || currentUser?.data?.onboarding_completed;
+        const isAdmin = currentUser?.role === 'admin';
 
-            console.log('📥 Processing pending onboarding data:', {
-              fromReportCard: pendingData.fromReportCard,
-              hasReportData: !!pendingData.reportData,
-              hasFile: !!pendingData.fileUrl,
-              hasExtracted: !!pendingData.extractedContent,
-              hasCompressed: !!pendingData.compressedContent
-            });
-
-            // Check if this is from the report card (completed diagnostic) or just sign-in during questions
-            if (pendingData.fromReportCard && pendingData.reportData) {
-              // User completed diagnostic and is coming from report card - create lesson
-              const lessonData = {
-                course_name: pendingData.courseCode,
-                description: `Course at ${pendingData.school}`,
-                status: 'diagnostic_completed'
-              };
-
-              if (pendingData.fileUrl) {
-                lessonData.file_url = pendingData.fileUrl;
-                lessonData.file_urls = [pendingData.fileUrl];
-                lessonData.input_type = 'file';
-              }
-              if (pendingData.extractedContent) {
-                lessonData.extracted_content = pendingData.extractedContent;
-              }
-              if (pendingData.compressedContent) {
-                lessonData.compressed_content = pendingData.compressedContent;
-              }
-
-              console.log('📝 Creating lesson with data:', {
-                course_name: lessonData.course_name,
-                hasFile: !!lessonData.file_url,
-                hasExtracted: !!lessonData.extracted_content,
-                hasCompressed: !!lessonData.compressed_content
-              });
-
-              const newLesson = await base44.entities.Lesson.create(lessonData);
-              console.log('✅ Lesson created:', newLesson.id);
-
-              // Track Submit Application TikTok event (user signed up from report card and successfully logged in)
-              try {
-                if (window.ttq) {
-                  window.ttq.track('SubmitApplication', {
-                    content_name: pendingData.courseCode,
-                    content_category: pendingData.school
-                  });
-                  console.log('📊 TikTok SubmitApplication event sent (from Home after login)');
-                }
-              } catch (ttqError) {
-                console.error('TikTok tracking error (non-blocking):', ttqError);
-              }
-
-              // Mark user as onboarding completed
-              await base44.auth.updateMe({ onboarding_completed: true });
-
-              // Navigate to DocumentViewer with study plan tab and report data
-              const reportDataStr = JSON.stringify(pendingData.reportData || {});
-              console.log('🚀 Navigating to DocumentViewer with reportData');
-              navigate(`${createPageUrl("DocumentViewer")}?id=${newLesson.id}&tab=studyplan&fromOnboarding=true&reportData=${encodeURIComponent(reportDataStr)}`, { replace: true });
-              return;
-            } else {
-              // User signed in during onboarding questions (before diagnostic) - stay on Home
-              // Mark onboarding complete
-              await base44.auth.updateMe({ onboarding_completed: true });
-              // Refetch user to get updated onboarding_completed flag
-              currentUser = await base44.auth.me();
-              window.history.replaceState({}, '', createPageUrl("Home"));
-            }
-          } catch (err) {
-            console.error("Error processing onboarding data:", err);
-            sessionStorage.removeItem('pendingOnboardingData');
-          }
+        if (!onboardingDone && !isAdmin) {
+          // Authenticated but onboarding not done — show modal at step 2
+          setUser(currentUser);
+          setShowOnboarding(true);
+          return;
         }
 
+        // Fully onboarded user
         setUser(currentUser);
         setDailyXP(resetResult.dailyXP ?? currentUser.daily_xp ?? 0);
         setStudyMinutesToday(resetResult.studyMinutesToday ?? currentUser.study_minutes_today ?? 0);
@@ -134,22 +63,22 @@ export default function Home() {
           setShowWelcome(true);
         }
 
-        if (!currentUser.onboarding_completed && !currentUser.data?.onboarding_completed && currentUser.role !== 'admin') {
-          navigate(createPageUrl("Onboarding"));
-        } else if (currentUser.learning_profile_id) {
-          const profile = await base44.entities.LearningProfile.filter({
-            id: currentUser.learning_profile_id
-          });
-          if (profile.length > 0) {
-            setLearningProfile(profile[0]);
+        // Load learning profile
+        try {
+          const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
+          if (profiles.length > 0) {
+            setLearningProfile(profiles[0]);
           }
+        } catch {
+          // No profile yet
         }
       } catch (error) {
-        console.error("Error checking user:", error);
+        // Not authenticated or error — show onboarding
+        setShowOnboarding(true);
       }
     };
 
-    checkOnboarding();
+    init();
   }, []);
 
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
