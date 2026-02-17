@@ -256,5 +256,12 @@ export const checkIsInAppBrowser = () => {
   const ua = navigator.userAgent;
   return ua.includes('BytedanceWebview') || 
          ua.includes('musical_ly') || 
-         ua.includes('Instagram');
+         ua.includes('Instagram') ||
+         ua.includes('FBAN') || 
+         ua.includes('FBAV') ||
+         ua.includes('Snapchat') ||
+         ua.includes('Twitter') || 
+         ua.includes('X-Twitter') ||
+         ua.includes('LinkedIn') ||
+         (ua.includes('wv') && !ua.includes('Chrome'));
 };
