@@ -15,6 +15,7 @@ export default function StepProfile({ user, onComplete, onBack }) {
   const [userLocation, setUserLocation] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const initialLoadDone = useRef(false);
+  const loadTimeoutRef = useRef(null);
 
   useEffect(() => {
     // Load saved school from learning profile
@@ -30,16 +31,26 @@ export default function StepProfile({ user, onComplete, onBack }) {
 
     if (!initialLoadDone.current) {
       initialLoadDone.current = true;
+      
+      // Hard safety timeout — never show loading spinner for more than 4s
+      loadTimeoutRef.current = setTimeout(() => {
+        setLoadingSuggestions(false);
+      }, 4000);
+
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (pos) => loadSchools("", pos.coords.latitude, pos.coords.longitude),
           () => loadSchools(""),
-          { timeout: 5000, maximumAge: 300000 }
+          { timeout: 3000, maximumAge: 300000 }
         );
       } else {
         loadSchools("");
       }
     }
+
+    return () => {
+      if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
+    };
   }, []);
 
   const loadSchools = async (query, lat = null, lon = null) => {
@@ -50,15 +61,27 @@ export default function StepProfile({ user, onComplete, onBack }) {
         payload.lat = lat;
         payload.lon = lon;
       }
-      const result = await base44.functions.invoke("getNearbySchools", payload);
+      
+      // Race the API call against a 4s timeout so users never wait too long
+      const timeoutPromise = new Promise((resolve) => 
+        setTimeout(() => resolve({ data: { success: true, schools: [], location: {} } }), 4000)
+      );
+      const result = await Promise.race([
+        base44.functions.invoke("getNearbySchools", payload),
+        timeoutPromise
+      ]);
+      
       if (result?.data?.success) {
         setSuggestions(result.data.schools || []);
-        setUserLocation(result.data.location);
+        if (result.data.location?.city) {
+          setUserLocation(result.data.location);
+        }
       }
     } catch (err) {
       console.error("Error loading schools:", err);
     } finally {
       setLoadingSuggestions(false);
+      if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
     }
   };
 
@@ -168,7 +191,7 @@ export default function StepProfile({ user, onComplete, onBack }) {
         {/* School suggestions as pills */}
         <div className="flex flex-wrap gap-2 mt-2 max-h-[160px] overflow-y-auto">
           {loadingSuggestions ? (
-            <div className="flex items-center gap-2 py-3">
+            <div className="flex items-center gap-2 py-2">
               <Loader2
                 className={`w-4 h-4 animate-spin ${
                   isDark ? "text-purple-400" : "text-purple-600"
@@ -182,7 +205,7 @@ export default function StepProfile({ user, onComplete, onBack }) {
                 Finding nearby schools...
               </span>
             </div>
-          ) : (
+          ) : filteredSuggestions.length > 0 ? (
             filteredSuggestions.slice(0, 8).map((s, idx) => (
               <button
                 key={idx}
@@ -206,6 +229,10 @@ export default function StepProfile({ user, onComplete, onBack }) {
                 )}
               </button>
             ))
+          ) : (
+            <span className={`text-xs py-1 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+              Type your school name above
+            </span>
           )}
         </div>
       </div>

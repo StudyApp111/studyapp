@@ -11,7 +11,6 @@ import {
   Target, TrendingUp, Upload, Flame, Zap
 } from "lucide-react";
 import { motion } from "framer-motion";
-import CreateLessonModal from "@/components/modals/CreateLessonModal";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
 const formatTime = (seconds) => {
@@ -27,7 +26,7 @@ export default function LessonHistory() {
   const { isDark } = useTheme();
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
-  const [createLessonModalOpen, setCreateLessonModalOpen] = useState(false);
+
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(console.error);
@@ -361,10 +360,10 @@ export default function LessonHistory() {
                 : 'Upload your lecture notes to get AI-powered study plans'}
             </p>
             <Button
-              onClick={() => setCreateLessonModalOpen(true)}
+              onClick={() => navigate(createPageUrl("CreateLesson"))}
               className="bg-purple-600 hover:bg-purple-700"
             >
-              <Upload className="w-4 h-4 mr-2" /> Upload Notes
+              <Upload className="w-4 h-4 mr-2" /> Add Course
             </Button>
           </div>
         ) : (
@@ -378,10 +377,6 @@ export default function LessonHistory() {
         )}
       </div>
 
-      <CreateLessonModal 
-        open={createLessonModalOpen} 
-        onOpenChange={setCreateLessonModalOpen} 
-      />
     </div>
   );
 }

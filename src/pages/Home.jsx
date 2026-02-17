@@ -223,8 +223,8 @@ export default function Home() {
                   onClick={() => navigate(createPageUrl("CreateLesson"))}
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:from-purple-500 hover:to-indigo-500 transition-all hover:scale-[1.02] border border-purple-500/50"
                 >
-                  <Upload className="w-5 h-5" />
-                  Upload Notes
+                  <Sparkles className="w-5 h-5" />
+                  Start Studying
                 </button>
                 <button
                   onClick={() => navigate(createPageUrl("SmartGrader"))}
@@ -269,9 +269,9 @@ export default function Home() {
                     <BookOpen className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                   </div>
                   <p className={`font-medium mb-1 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>No courses yet</p>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Upload your first lesson to get started</p>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Add your first course to get started</p>
                   <Button onClick={() => navigate(createPageUrl("CreateLesson"))} className="bg-purple-600 hover:bg-purple-700">
-                    <Upload className="w-4 h-4 mr-2" /> Upload Notes
+                    <Sparkles className="w-4 h-4 mr-2" /> Start Studying
                   </Button>
                 </div>
               ) : (
