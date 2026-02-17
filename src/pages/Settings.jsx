@@ -54,8 +54,6 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState(true);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteConfirmStep, setDeleteConfirmStep] = useState(1);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const { isDark, toggleTheme } = useTheme();
 
@@ -94,8 +92,6 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText.toUpperCase() !== "DELETE") return;
-    
     setIsDeleting(true);
     try {
       // Delete all user data
@@ -429,13 +425,7 @@ export default function Settings() {
             <Separator className="my-6" />
 
             <SettingsSection title="Danger Zone">
-              <Dialog open={deleteDialogOpen} onOpenChange={(open) => {
-                setDeleteDialogOpen(open);
-                if (!open) {
-                  setDeleteConfirmStep(1);
-                  setDeleteConfirmText("");
-                }
-              }}>
+              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <DialogTrigger asChild>
                   <button className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${isDark ? 'border-red-500/30 hover:bg-red-500/10 hover:border-red-500/50' : 'border-red-200 hover:bg-red-50 hover:border-red-300'}`}>
                     <div className="flex items-center gap-3">
@@ -445,78 +435,44 @@ export default function Settings() {
                     <ArrowRight className={`w-5 h-5 ${isDark ? 'text-red-500' : 'text-red-400'}`} />
                   </button>
                 </DialogTrigger>
-                <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
-                  {deleteConfirmStep === 1 ? (
-                    <>
-                      <DialogHeader>
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-red-500/20' : 'bg-red-100'}`}>
-                            <AlertTriangle className={`w-6 h-6 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
-                          </div>
-                          <DialogTitle className="text-xl">Delete Account?</DialogTitle>
-                        </div>
-                        <DialogDescription className="text-left space-y-3 pt-2">
-                          <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>This will permanently delete:</p>
-                          <ul className={`list-disc list-inside space-y-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                            <li>All your lessons and study materials</li>
-                            <li>Your exam history and grades</li>
-                            <li>Flashcards, notes, and progress data</li>
-                            <li>Your account and profile information</li>
-                          </ul>
-                          <p className="text-red-500 font-medium pt-2">This action cannot be undone.</p>
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button variant="destructive" onClick={() => setDeleteConfirmStep(2)}>
-                          I Understand, Continue
-                        </Button>
-                      </DialogFooter>
-                    </>
-                  ) : (
-                    <>
-                      <DialogHeader>
-                        <DialogTitle>Final Confirmation</DialogTitle>
-                        <DialogDescription className="pt-2">
-                          Type <strong>DELETE</strong> below to confirm you want to permanently delete your account.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <input
-                        type="text"
-                        value={deleteConfirmText}
-                        onChange={(e) => setDeleteConfirmText(e.target.value)}
-                        placeholder="Type DELETE to confirm"
-                        className={`flex h-9 w-full rounded-md border px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 ${isDark ? 'bg-white/5 border-red-500/30 text-white' : 'bg-transparent border-red-200 text-slate-900'}`}
-                        autoComplete="off"
-                        autoCapitalize="off"
-                        spellCheck={false}
-                      />
-                      <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="outline" onClick={() => {
-                          setDeleteConfirmStep(1);
-                          setDeleteConfirmText("");
-                        }}>
-                          Go Back
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          onClick={handleDeleteAccount}
-                          disabled={deleteConfirmText.toUpperCase() !== "DELETE" || isDeleting}
-                        >
-                          {isDeleting ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Deleting...
-                            </>
-                          ) : (
-                            "Delete My Account"
-                          )}
-                        </Button>
-                      </DialogFooter>
-                    </>
-                  )}
+                <DialogContent>
+                  <DialogHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-red-500/20' : 'bg-red-100'}`}>
+                        <AlertTriangle className={`w-6 h-6 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
+                      </div>
+                      <DialogTitle className="text-xl">Delete Account?</DialogTitle>
+                    </div>
+                    <DialogDescription className="text-left space-y-3 pt-2">
+                      <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>This will permanently delete:</p>
+                      <ul className={`list-disc list-inside space-y-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                        <li>All your lessons and study materials</li>
+                        <li>Your exam history and grades</li>
+                        <li>Flashcards, notes, and progress data</li>
+                        <li>Your account and profile information</li>
+                      </ul>
+                      <p className="text-red-500 font-medium pt-2">This action cannot be undone.</p>
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={handleDeleteAccount}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete My Account"
+                      )}
+                    </Button>
+                  </DialogFooter>
                 </DialogContent>
               </Dialog>
 

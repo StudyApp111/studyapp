@@ -9,7 +9,6 @@ import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, 
 import { UpgradeButton } from "@/components/subscription/UpgradeBadge";
 import { motion } from "framer-motion";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
-import FirstSessionWelcome from "@/components/gamification/FirstSessionWelcome";
 import { handleDailyReset } from "@/components/utils/dailyReset";
 import LearningTrajectory from "@/components/home/LearningTrajectory";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -23,7 +22,7 @@ export default function Home() {
   const [studyMinutesToday, setStudyMinutesToday] = useState(0);
   const [questionsToday, setQuestionsToday] = useState(0);
   const [flashcardsToday, setFlashcardsToday] = useState(0);
-  const [showWelcome, setShowWelcome] = useState(false);
+  
   const [learningProfile, setLearningProfile] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -61,11 +60,6 @@ export default function Home() {
         setStudyMinutesToday(resetResult.studyMinutesToday ?? currentUser.study_minutes_today ?? 0);
         setQuestionsToday(resetResult.questionsToday ?? currentUser.questions_today ?? 0);
         setFlashcardsToday(resetResult.flashcardsToday ?? currentUser.flashcards_today ?? 0);
-
-        const hasSeenWelcome = localStorage.getItem('hasSeenWelcomeGuide');
-        if (!hasSeenWelcome && currentUser.session_count <= 2) {
-          setShowWelcome(true);
-        }
 
         try {
           const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
@@ -389,11 +383,6 @@ export default function Home() {
 
       {/* CreateLessonModal removed - using CreateLesson page instead */}
 
-      <FirstSessionWelcome 
-        open={showWelcome}
-        onOpenChange={setShowWelcome}
-        userName={user?.full_name?.split(' ')[0]}
-      />
     </div>
   );
 }

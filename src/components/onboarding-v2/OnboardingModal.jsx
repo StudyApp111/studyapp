@@ -8,8 +8,9 @@ import StepWelcome from "./StepWelcome";
 import StepHowItWorks from "./StepHowItWorks";
 import StepFeatures from "./StepFeatures";
 import StepReady from "./StepReady";
+import StepMaterials from "./StepMaterials";
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 export default function OnboardingModal({ onComplete }) {
   const { isDark } = useTheme();
@@ -184,15 +185,22 @@ export default function OnboardingModal({ onComplete }) {
                 />
               )}
               {step === 5 && (
-                <StepFeatures
+                <StepMaterials
                   key="step5"
                   onNext={handleNext}
                   onBack={handleBack}
                 />
               )}
               {step === 6 && (
-                <StepReady
+                <StepFeatures
                   key="step6"
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
+              {step === 7 && (
+                <StepReady
+                  key="step7"
                   displayName={displayName}
                   onComplete={handleComplete}
                   onBack={handleBack}

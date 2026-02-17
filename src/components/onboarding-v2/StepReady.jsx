@@ -48,7 +48,7 @@ export default function StepReady({ displayName, onComplete, onBack }) {
             isDark ? "text-slate-400" : "text-slate-500"
           }`}
         >
-          Let's get started
+          Click 'Upload Notes' to get started
         </p>
       </div>
 

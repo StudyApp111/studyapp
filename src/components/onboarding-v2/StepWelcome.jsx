@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, TrendingUp } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
 export default function StepWelcome({ displayName, onNext, onBack }) {
   const { isDark } = useTheme();
@@ -21,7 +21,7 @@ export default function StepWelcome({ displayName, onNext, onBack }) {
             isDark ? "text-white" : "text-slate-900"
           }`}
         >
-          Welcome to StudyApp, {displayName || "there"}!
+          Welcome to StudyApp, {displayName || "there"}! 👋
         </h2>
         <p
           className={`text-base ${
@@ -30,21 +30,6 @@ export default function StepWelcome({ displayName, onNext, onBack }) {
         >
           We predict your grade, then help you improve it.
         </p>
-      </div>
-
-      {/* Visual hint */}
-      <div
-        className={`mx-auto w-20 h-20 rounded-2xl flex items-center justify-center ${
-          isDark
-            ? "bg-gradient-to-br from-purple-600/30 to-indigo-600/30 border border-purple-500/20"
-            : "bg-gradient-to-br from-purple-100 to-indigo-100 border border-purple-200"
-        }`}
-      >
-        <TrendingUp
-          className={`w-10 h-10 ${
-            isDark ? "text-purple-400" : "text-purple-600"
-          }`}
-        />
       </div>
 
       {/* Navigation */}
