@@ -211,9 +211,16 @@ Deno.serve(async (req) => {
         // For images and small files, use Gemini Vision
         console.log('Using Gemini Vision for OCR...');
         
-        // Convert blob to base64
+        // Convert blob to base64 - chunk to avoid call stack overflow on large files
         const arrayBuffer = await fileBlob.arrayBuffer();
-        const base64Content = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        const bytes = new Uint8Array(arrayBuffer);
+        let binaryString = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+            const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+            binaryString += String.fromCharCode.apply(null, chunk);
+        }
+        const base64Content = btoa(binaryString);
         console.log('Base64 encoding complete, length:', base64Content.length);
         
         // Determine MIME type - Gemini requires specific supported types

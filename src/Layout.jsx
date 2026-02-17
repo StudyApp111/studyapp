@@ -55,7 +55,7 @@ const initTikTokPixel = () => {
 };
 // CreateLessonModal replaced with CreateLesson page for better UX
 
-import BrowserCompatibilityBanner from "@/components/utils/BrowserCompatibility";
+// BrowserCompatibilityBanner removed — in-app browser detection now handled inline in onboarding sign-in step
 import FeedbackModal from "@/components/feedback/FeedbackModal.jsx";
 import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton.jsx";
 
@@ -189,7 +189,6 @@ function LayoutContent({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
-      <BrowserCompatibilityBanner />
       <div className={`min-h-screen flex w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'} relative`}>
         <style>{`
           /* Hide desktop sidebar on mobile */
