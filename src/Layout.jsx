@@ -156,16 +156,13 @@ function LayoutContent({ children, currentPageName }) {
 
   // Navigation visibility
   const pathLower = location.pathname.toLowerCase();
-  const isOnboardingFlow = 
-    pathLower.includes("onboarding") || 
-    pathLower.includes("diagnosticquiz") || 
-    pathLower.includes("predictedgradedisplay");
-  
+
   const isDocumentViewerPage = currentPageName === "DocumentViewer" || pathLower.includes("documentviewer");
   const isHomePage = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
 
-  // Show navigation ONLY if user exists AND not on onboarding flow
-  const showNavigation = !!user && !isOnboardingFlow;
+  const onboardingDone = user?.onboarding_completed || user?.data?.onboarding_completed;
+  // Show navigation ONLY if user exists AND onboarding done
+  const showNavigation = !!user && !!onboardingDone;
   const showSidebar = showNavigation;
   
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
