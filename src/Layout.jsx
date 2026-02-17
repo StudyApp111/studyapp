@@ -105,6 +105,9 @@ function LayoutContent({ children, currentPageName }) {
   const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
   const { isDark, toggleTheme } = useTheme();
 
+  const pathLowerEarly = location.pathname.toLowerCase();
+  const isHomePageEarly = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
+
   React.useEffect(() => {
     // Initialize Analytics
     initGoogleAnalytics();
@@ -112,6 +115,8 @@ function LayoutContent({ children, currentPageName }) {
 
     let cleanup;
     (async () => {
+      const currentIsHome = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
+      
       // Try to get user
       try {
         const currentUser = await base44.auth.me();
@@ -124,14 +129,14 @@ function LayoutContent({ children, currentPageName }) {
         if (onboardingDone || isAdmin) {
           trackUserSession();
           cleanup = trackSessionDuration();
-        } else if (!onboardingDone && !isAdmin && !isHomePage) {
+        } else if (!onboardingDone && !isAdmin && !currentIsHome) {
           // Not onboarded and not on Home — redirect to Home where modal lives
           navigate(createPageUrl("Home"), { replace: true });
         }
       } catch (error) {
         // Not authenticated — redirect non-Home pages to Home for onboarding
         setUser(null);
-        if (!isHomePage) {
+        if (!currentIsHome) {
           navigate(createPageUrl("Home"), { replace: true });
         }
       }
