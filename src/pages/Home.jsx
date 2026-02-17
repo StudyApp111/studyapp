@@ -30,10 +30,12 @@ export default function Home() {
   useEffect(() => {
     const init = async () => {
       try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const forceOnboarding = urlParams.get('onboarding') === 'true';
+
         const isAuth = await base44.auth.isAuthenticated();
 
         if (!isAuth) {
-          // Not authenticated — show onboarding modal (step 1 = sign in)
           setShowOnboarding(true);
           return;
         }
@@ -44,14 +46,16 @@ export default function Home() {
         const onboardingDone = currentUser?.onboarding_completed || currentUser?.data?.onboarding_completed;
         const isAdmin = currentUser?.role === 'admin';
 
-        if (!onboardingDone && !isAdmin) {
-          // Authenticated but onboarding not done — show modal at step 2
+        if (forceOnboarding || (!onboardingDone && !isAdmin)) {
           setUser(currentUser);
           setShowOnboarding(true);
+          // Clean URL param
+          if (forceOnboarding) {
+            window.history.replaceState({}, '', window.location.pathname);
+          }
           return;
         }
 
-        // Fully onboarded user
         setUser(currentUser);
         setDailyXP(resetResult.dailyXP ?? currentUser.daily_xp ?? 0);
         setStudyMinutesToday(resetResult.studyMinutesToday ?? currentUser.study_minutes_today ?? 0);
@@ -63,7 +67,6 @@ export default function Home() {
           setShowWelcome(true);
         }
 
-        // Load learning profile
         try {
           const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
           if (profiles.length > 0) {
@@ -73,7 +76,6 @@ export default function Home() {
           // No profile yet
         }
       } catch (error) {
-        // Not authenticated or error — show onboarding
         setShowOnboarding(true);
       }
     };
