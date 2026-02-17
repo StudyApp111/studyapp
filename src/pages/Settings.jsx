@@ -126,8 +126,16 @@ export default function Settings() {
       
       await Promise.all(deletePromises);
       
-      // Log out immediately after data deletion
-      base44.auth.logout();
+      // Reset user data and log out
+      await base44.auth.updateMe({ 
+        onboarding_completed: false,
+        display_name: null,
+        daily_xp: 0,
+        current_streak: 0,
+        session_count: 0
+      });
+      
+      base44.auth.logout("/");
     } catch (error) {
       console.error("Error deleting account:", error);
       alert("There was an error deleting your data. Please contact info@studyappai.com");
@@ -413,8 +421,7 @@ export default function Settings() {
                 label="Onboarding"
                 onClick={async () => {
                   await base44.auth.updateMe({ onboarding_completed: false });
-                  navigate(createPageUrl("Home"));
-                  window.location.reload();
+                  window.location.href = createPageUrl("Home") + "?onboarding=true";
                 }}
               />
             </SettingsSection>
@@ -428,35 +435,35 @@ export default function Settings() {
                   setDeleteConfirmStep(1);
                   setDeleteConfirmText("");
                 }
-              }} onOpenAutoFocus={(e) => e.preventDefault()}>
+              }}>
                 <DialogTrigger asChild>
-                  <button className="w-full flex items-center justify-between p-4 rounded-lg border border-red-200 hover:bg-red-50 hover:border-red-300 transition-all">
+                  <button className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${isDark ? 'border-red-500/30 hover:bg-red-500/10 hover:border-red-500/50' : 'border-red-200 hover:bg-red-50 hover:border-red-300'}`}>
                     <div className="flex items-center gap-3">
-                      <Trash2 className="w-5 h-5 text-red-600" />
-                      <span className="font-medium text-red-600">Delete Account</span>
+                      <Trash2 className={`w-5 h-5 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
+                      <span className={`font-medium ${isDark ? 'text-red-400' : 'text-red-600'}`}>Delete Account</span>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-red-400" />
+                    <ArrowRight className={`w-5 h-5 ${isDark ? 'text-red-500' : 'text-red-400'}`} />
                   </button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
                   {deleteConfirmStep === 1 ? (
                     <>
                       <DialogHeader>
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                            <AlertTriangle className="w-6 h-6 text-red-600" />
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDark ? 'bg-red-500/20' : 'bg-red-100'}`}>
+                            <AlertTriangle className={`w-6 h-6 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
                           </div>
                           <DialogTitle className="text-xl">Delete Account?</DialogTitle>
                         </div>
                         <DialogDescription className="text-left space-y-3 pt-2">
-                          <p className="font-medium text-slate-700">This will permanently delete:</p>
-                          <ul className="list-disc list-inside text-slate-600 space-y-1">
+                          <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>This will permanently delete:</p>
+                          <ul className={`list-disc list-inside space-y-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                             <li>All your lessons and study materials</li>
                             <li>Your exam history and grades</li>
                             <li>Flashcards, notes, and progress data</li>
                             <li>Your account and profile information</li>
                           </ul>
-                          <p className="text-red-600 font-medium pt-2">This action cannot be undone.</p>
+                          <p className="text-red-500 font-medium pt-2">This action cannot be undone.</p>
                         </DialogDescription>
                       </DialogHeader>
                       <DialogFooter className="gap-2 sm:gap-0">
@@ -476,17 +483,12 @@ export default function Settings() {
                           Type <strong>DELETE</strong> below to confirm you want to permanently delete your account.
                         </DialogDescription>
                       </DialogHeader>
-                      <Input
+                      <input
+                        type="text"
                         value={deleteConfirmText}
                         onChange={(e) => setDeleteConfirmText(e.target.value)}
-                        onFocus={(e) => {
-                          // Move cursor to end to prevent auto-select
-                          const val = e.target.value;
-                          e.target.value = '';
-                          e.target.value = val;
-                        }}
                         placeholder="Type DELETE to confirm"
-                        className="border-red-200 focus:border-red-400"
+                        className={`flex h-9 w-full rounded-md border px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-400 ${isDark ? 'bg-white/5 border-red-500/30 text-white' : 'bg-transparent border-red-200 text-slate-900'}`}
                         autoComplete="off"
                         autoCapitalize="off"
                         spellCheck={false}
