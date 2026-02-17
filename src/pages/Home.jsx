@@ -134,15 +134,26 @@ export default function Home() {
     review_notes: BookOpen
   };
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
-      </div>
-    );
-  }
+  const handleOnboardingComplete = async () => {
+    setShowOnboarding(false);
+    // Reload user data after onboarding
+    try {
+      const resetResult = await handleDailyReset();
+      const currentUser = resetResult.user || await base44.auth.me();
+      setUser(currentUser);
+      setDailyXP(resetResult.dailyXP ?? currentUser.daily_xp ?? 0);
+      setStudyMinutesToday(resetResult.studyMinutesToday ?? currentUser.study_minutes_today ?? 0);
+      setQuestionsToday(resetResult.questionsToday ?? currentUser.questions_today ?? 0);
+      setFlashcardsToday(resetResult.flashcardsToday ?? currentUser.flashcards_today ?? 0);
+      try {
+        const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
+        if (profiles.length > 0) setLearningProfile(profiles[0]);
+      } catch {}
+    } catch {}
+  };
 
-  const firstName = user?.full_name?.split(' ')[0] || 'there';
+  // Derive first name: prefer display_name > full_name
+  const firstName = user?.display_name || user?.data?.display_name || user?.full_name?.split(' ')[0] || '';
   const schoolName = learningProfile?.school || '';
   const yearInfo = learningProfile?.grade || '';
   
@@ -156,6 +167,11 @@ export default function Home() {
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0a12]' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
+      {/* Onboarding Modal */}
+      {showOnboarding && (
+        <OnboardingModal onComplete={handleOnboardingComplete} />
+      )}
+
       {/* Hero Section */}
       <div className={`relative overflow-hidden px-4 pt-10 pb-8 md:px-8 md:pt-14 md:pb-12 ${isDark ? 'bg-gradient-to-b from-purple-900/50 to-[#0a0a12]' : 'bg-gradient-to-b from-purple-100 to-purple-50/30'}`}>
         {/* Subtle gradient blobs */}
@@ -180,7 +196,7 @@ export default function Home() {
               {/* Title - Centered and Large */}
               <div>
                 <h1 className={`text-2xl md:text-4xl font-black leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  Hey {firstName}, are you ready to lock in?
+                  {firstName ? `Hey ${firstName}, are you ready to lock in?` : 'Are you ready to lock in?'}
                 </h1>
                 {subtitle && (
                   <p className={`text-sm md:text-base mt-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
