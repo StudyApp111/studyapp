@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     let userLat = lat || null;
     let userLon = lon || null;
 
-    // If no coords from client, try IP-based geo as fallback
+    // If no coords from client, try IP-based geo as fallback (tight 2s timeout)
     if (!userLat || !userLon) {
       const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
         || req.headers.get('cf-connecting-ip')
@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
       try {
         const geoUrl = clientIP ? `https://ipapi.co/${clientIP}/json/` : 'https://ipapi.co/json/';
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const geoResponse = await fetch(geoUrl, { signal: controller.signal });
         clearTimeout(timeoutId);
 
@@ -40,15 +40,15 @@ Deno.serve(async (req) => {
           }
         }
       } catch (geoError) {
-        console.log('Geo lookup failed:', geoError.message);
+        console.log('Geo lookup failed (skipping):', geoError.message);
       }
     }
 
-    // If we got coords from client but no city, do reverse geocode
+    // If we got coords from client but no city, do reverse geocode (tight 2s timeout)
     if (userLat && userLon && !userCity) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const revGeo = await fetch(
           `https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLon}&format=json&zoom=10`,
           { signal: controller.signal, headers: { 'User-Agent': 'StudyApp/1.0' } }
@@ -60,16 +60,16 @@ Deno.serve(async (req) => {
           userCountry = revData.address?.country;
         }
       } catch (e) {
-        console.log('Reverse geocode failed:', e.message);
+        console.log('Reverse geocode failed (skipping):', e.message);
       }
     }
 
     let nearbySchools = [];
 
-    // Only try Overpass if we have coordinates
+    // Only try Overpass if we have coordinates (tight 3s timeout)
     if (userLat && userLon) {
       try {
-        const overpassQuery = `[out:json][timeout:5];
+        const overpassQuery = `[out:json][timeout:3];
 (
   node["amenity"="university"](around:50000,${userLat},${userLon});
   node["amenity"="college"](around:50000,${userLat},${userLon});
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
 out center tags 15;`;
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
 
         const overpassResponse = await fetch('https://overpass-api.de/api/interpreter', {
           method: 'POST',
@@ -139,7 +139,7 @@ out center tags 15;`;
 
     return Response.json({
       success: true,
-      location: { city: userCity, country: userCountry },
+      location: { city: userCity || null, country: userCountry || null },
       schools: nearbySchools.slice(0, 12)
     });
 
