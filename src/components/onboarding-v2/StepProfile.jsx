@@ -1,0 +1,228 @@
+import React, { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { useTheme } from "@/components/theme/ThemeProvider";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Loader2, MapPin, School, ChevronLeft } from "lucide-react";
+import { base44 } from "@/api/base44Client";
+
+export default function StepProfile({ user, onComplete, onBack }) {
+  const { isDark } = useTheme();
+  const [name, setName] = useState(user?.full_name?.split(" ")[0] || "");
+  const [school, setSchool] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(true);
+  const [userLocation, setUserLocation] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => loadSchools("", pos.coords.latitude, pos.coords.longitude),
+        () => loadSchools(""),
+        { timeout: 5000, maximumAge: 300000 }
+      );
+    } else {
+      loadSchools("");
+    }
+  }, []);
+
+  const loadSchools = async (query, lat = null, lon = null) => {
+    setLoadingSuggestions(true);
+    try {
+      const payload = { searchQuery: query };
+      if (lat && lon) {
+        payload.lat = lat;
+        payload.lon = lon;
+      }
+      const result = await base44.functions.invoke("getNearbySchools", payload);
+      if (result?.data?.success) {
+        setSuggestions(result.data.schools || []);
+        setUserLocation(result.data.location);
+      }
+    } catch (err) {
+      console.error("Error loading schools:", err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleSchoolInput = (e) => {
+    const q = e.target.value;
+    setSchool(q);
+    if (q.length >= 2) {
+      clearTimeout(window._schoolSearchTimeout);
+      window._schoolSearchTimeout = setTimeout(() => loadSchools(q), 400);
+    } else if (q.length === 0) {
+      loadSchools("");
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!name.trim() || !school.trim()) return;
+    setSubmitting(true);
+    await onComplete({ name: name.trim(), school: school.trim() });
+  };
+
+  const filteredSuggestions = school.trim()
+    ? suggestions.filter((s) =>
+        s.name.toLowerCase().includes(school.toLowerCase())
+      )
+    : suggestions;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 30 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -30 }}
+      transition={{ duration: 0.25 }}
+      className="space-y-5 py-2"
+    >
+      {/* Greeting */}
+      <div className="text-center space-y-1">
+        <h2
+          className={`text-2xl font-black ${
+            isDark ? "text-white" : "text-slate-900"
+          }`}
+        >
+          Hi {user?.full_name?.split(" ")[0] || "there"} 👋
+        </h2>
+        <p
+          className={`text-sm ${
+            isDark ? "text-slate-400" : "text-slate-600"
+          }`}
+        >
+          Let's personalize your experience
+        </p>
+      </div>
+
+      {/* Name input */}
+      <div className="space-y-1.5">
+        <label
+          className={`text-sm font-medium ${
+            isDark ? "text-slate-300" : "text-slate-700"
+          }`}
+        >
+          What would you like us to call you?
+        </label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Your first name"
+          className={`h-12 text-base rounded-xl ${
+            isDark
+              ? "bg-white/5 border-white/10 text-white placeholder:text-slate-500"
+              : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
+          }`}
+          autoFocus
+        />
+      </div>
+
+      {/* School input */}
+      <div className="space-y-1.5">
+        <label
+          className={`text-sm font-medium ${
+            isDark ? "text-slate-300" : "text-slate-700"
+          }`}
+        >
+          What school do you go to?
+        </label>
+        <Input
+          value={school}
+          onChange={handleSchoolInput}
+          placeholder="Search for your school..."
+          className={`h-12 text-base rounded-xl ${
+            isDark
+              ? "bg-white/5 border-white/10 text-white placeholder:text-slate-500"
+              : "bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400"
+          }`}
+        />
+
+        {/* Location hint */}
+        {userLocation?.city && (
+          <div
+            className={`flex items-center gap-1.5 text-xs ${
+              isDark ? "text-slate-500" : "text-slate-400"
+            }`}
+          >
+            <MapPin className="w-3 h-3" />
+            Near {userLocation.city}
+          </div>
+        )}
+
+        {/* School suggestions as pills */}
+        <div className="flex flex-wrap gap-2 mt-2 max-h-[160px] overflow-y-auto">
+          {loadingSuggestions ? (
+            <div className="flex items-center gap-2 py-3">
+              <Loader2
+                className={`w-4 h-4 animate-spin ${
+                  isDark ? "text-purple-400" : "text-purple-600"
+                }`}
+              />
+              <span
+                className={`text-xs ${
+                  isDark ? "text-slate-500" : "text-slate-400"
+                }`}
+              >
+                Finding nearby schools...
+              </span>
+            </div>
+          ) : (
+            filteredSuggestions.slice(0, 8).map((s, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSchool(s.name)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium transition-all border ${
+                  school === s.name
+                    ? isDark
+                      ? "bg-purple-600/30 border-purple-500/50 text-purple-300"
+                      : "bg-purple-100 border-purple-300 text-purple-700"
+                    : isDark
+                    ? "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                    : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <School className="w-3 h-3" />
+                {s.name}
+                {s.distance && (
+                  <span className="opacity-60">
+                    {s.distance.toFixed(0)}km
+                  </span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center gap-3 pt-2">
+        {onBack && (
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className={`${
+              isDark
+                ? "text-slate-400 hover:text-white"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back
+          </Button>
+        )}
+        <Button
+          onClick={handleSubmit}
+          disabled={!name.trim() || !school.trim() || submitting}
+          className="flex-1 h-12 text-base font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-purple-500/20 disabled:opacity-50"
+        >
+          {submitting ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            "Continue"
+          )}
+        </Button>
+      </div>
+    </motion.div>
+  );
+}
