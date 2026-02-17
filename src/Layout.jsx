@@ -173,8 +173,9 @@ function LayoutContent({ children, currentPageName }) {
   const isHomePage = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
 
   const onboardingDone = user?.onboarding_completed || user?.data?.onboarding_completed;
-  // Show navigation ONLY if user exists AND onboarding done
-  const showNavigation = !!user && !!onboardingDone;
+  const isAdmin = user?.role === 'admin';
+  // Show navigation if user exists AND (onboarding done OR admin)
+  const showNavigation = !!user && (!!onboardingDone || !!isAdmin);
   const showSidebar = showNavigation;
   
   const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
