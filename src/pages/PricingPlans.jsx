@@ -12,6 +12,7 @@ import {
   Loader2, CheckCircle2, Gift, AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import posthog from "posthog-js";
 
 export default function PricingPlans() {
   const navigate = useNavigate();
@@ -76,6 +77,9 @@ export default function PricingPlans() {
       };
       
       trackSubscription();
+      try {
+        posthog.capture('subscription_started', { source: 'pricing_page' });
+      } catch {}
       setShowSuccess(true);
       // Clear the URL parameter
       window.history.replaceState({}, '', createPageUrl("PricingPlans"));
