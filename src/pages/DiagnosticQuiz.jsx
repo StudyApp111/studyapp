@@ -45,7 +45,7 @@ export default function DiagnosticQuiz() {
     if (!school || !courseCode) {
       setError('Missing required information. Redirecting...');
       setTimeout(() => {
-        navigate(createPageUrl("Onboarding"), { replace: true });
+        navigate(createPageUrl("Home"), { replace: true });
       }, 2000);
       setIsLoading(false);
       return;

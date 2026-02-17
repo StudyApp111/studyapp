@@ -100,7 +100,7 @@ export default function PredictedGradeDisplay() {
 
   useEffect(() => {
     if (!school || !courseCode) {
-      navigate(createPageUrl("Onboarding"), { replace: true });
+      navigate(createPageUrl("Home"), { replace: true });
       return;
     }
 
