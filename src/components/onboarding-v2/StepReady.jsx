@@ -8,6 +8,12 @@ export default function StepReady({ displayName, onComplete, onBack }) {
   const { isDark } = useTheme();
 
   const handleGetStarted = async () => {
+    // Fire TikTok CompleteRegistration event
+    if (window.ttq) {
+      window.ttq.track('CompleteRegistration', {
+        content_name: 'onboarding_complete'
+      });
+    }
     await onComplete();
   };
 

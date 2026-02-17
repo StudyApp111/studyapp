@@ -168,6 +168,18 @@ export default function CreateLesson() {
       setCreatedLessonId(lesson.id);
       console.log("✅ Lesson created:", lesson.id);
 
+      // Fire TikTok SubmitApplication on first lesson creation
+      try {
+        const allLessons = await base44.entities.Lesson.list('-created_date', 2);
+        if (allLessons.length === 1 && window.ttq) {
+          window.ttq.track('SubmitForm', {
+            content_name: 'first_lesson_created',
+            content_id: lesson.id
+          });
+        }
+      } catch {}
+
+
       // Fire-and-forget: Generate Exam 1 in background - user will see it loading on the study plan
       console.log("🎯 Triggering diagnostic exam generation in background...");
       base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
