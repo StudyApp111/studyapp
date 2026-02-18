@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{
-            parts: [{ text: `Read this lecture aloud naturally:\n\n${truncated}` }]
+            parts: [{ text: `Read this lecture aloud naturally as if you were a professor:\n\n${truncated}` }]
           }],
           generationConfig: {
             temperature: 0.3,
