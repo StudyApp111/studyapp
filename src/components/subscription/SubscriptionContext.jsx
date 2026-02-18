@@ -3,11 +3,15 @@ import { base44 } from '@/api/base44Client';
 
 const SubscriptionContext = createContext(null);
 
-// Free tier limits - daily rolling window
+// Free tier limits — lifetime caps for free users
 export const FREE_TIER_LIMITS = {
-  lessons_per_day: 3,  // 3 lesson uploads/creations per day
-  diagnostic_exams_per_day: 3,  // 3 diagnostic exams per day
-  ai_messages_per_day: 10  // 10 AI messages per day
+  lessons_total: 1,           // 1 lesson ever
+  flashcard_sets_total: 1,    // 1 flashcard generation per lesson
+  teachit_sets_total: 1,      // 1 teach-it generation per lesson
+  practice_quizzes_total: 1,  // 1 practice quiz per lesson
+  polly_messages_total: 10,   // 10 Polly chat messages ever
+  diagnostic_exams_per_day: 3,  // diagnostics stay generous
+  ai_messages_per_day: 10     // kept for backward compat (not used for paywall)
 };
 
 export function SubscriptionProvider({ children }) {
@@ -164,28 +168,49 @@ export function SubscriptionProvider({ children }) {
     return currentUser;
   };
 
-  // Upload/Create Lesson - 3 per day for free, unlimited for pro
+  // Upload/Create Lesson - 1 ever for free, unlimited for pro
   const canUpload = async () => {
     if (isPro()) return { allowed: true };
     const currentUser = await checkAndResetCounters();
-    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.lessons_per_day, remaining: 0 };
+    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.lessons_total, remaining: 0 };
     
-    const count = currentUser.daily_lessons_count || 0;
-    const allowed = count < FREE_TIER_LIMITS.lessons_per_day;
+    const totalLessons = currentUser.total_lessons_created || currentUser.daily_lessons_count || 0;
+    const allowed = totalLessons < FREE_TIER_LIMITS.lessons_total;
     
     return {
       allowed,
-      current: count,
-      limit: FREE_TIER_LIMITS.lessons_per_day,
-      remaining: Math.max(0, FREE_TIER_LIMITS.lessons_per_day - count)
+      current: totalLessons,
+      limit: FREE_TIER_LIMITS.lessons_total,
+      remaining: Math.max(0, FREE_TIER_LIMITS.lessons_total - totalLessons)
     };
   };
 
-  // Tasks - NO access for free users (Notes, Teach It, Flashcards, Practice Exams)
-  const canDoTask = async () => {
+  // Tasks - free users get 1 generation each of flashcards, teach-it, practice quiz per lesson
+  const canDoTask = async (taskType = null) => {
     if (isPro()) return { allowed: true };
-    // Free users cannot do tasks at all
-    return { allowed: false, requiresPro: true };
+    if (!taskType) {
+      // Legacy callers without taskType — check user's total_tasks_used
+      const currentUser = await checkAndResetCounters();
+      if (!currentUser) return { allowed: false, requiresPro: true };
+      const totalUsed = currentUser.total_tasks_used || 0;
+      // Allow up to 3 total tasks (1 flashcard + 1 teach-it + 1 practice quiz)
+      return { allowed: totalUsed < 3, requiresPro: totalUsed >= 3 };
+    }
+    
+    const currentUser = await checkAndResetCounters();
+    if (!currentUser) return { allowed: false, requiresPro: true };
+    
+    const fieldMap = {
+      flashcards: 'total_flashcard_sets',
+      teach_it: 'total_teachit_sets',
+      practice_exam: 'total_practice_quizzes'
+    };
+    const field = fieldMap[taskType];
+    if (!field) return { allowed: false, requiresPro: true };
+    
+    const count = currentUser[field] || 0;
+    const limit = 1;
+    return { allowed: count < limit, current: count, limit, requiresPro: count >= limit };
   };
   
   // Diagnostic Exams - 3 per day for free, unlimited for pro
@@ -205,19 +230,20 @@ export function SubscriptionProvider({ children }) {
     };
   };
 
+  // Polly chat: 10 messages lifetime for free
   const canSendAIMessage = async () => {
     if (isPro()) return { allowed: true };
     const currentUser = await checkAndResetCounters();
-    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.ai_messages_per_day, remaining: 0 };
+    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.polly_messages_total, remaining: 0 };
     
-    const count = currentUser.daily_ai_messages_count || 0;
-    const allowed = count < FREE_TIER_LIMITS.ai_messages_per_day;
+    const count = currentUser.total_polly_messages || currentUser.daily_ai_messages_count || 0;
+    const allowed = count < FREE_TIER_LIMITS.polly_messages_total;
     
     return {
       allowed,
       current: count,
-      limit: FREE_TIER_LIMITS.ai_messages_per_day,
-      remaining: Math.max(0, FREE_TIER_LIMITS.ai_messages_per_day - count)
+      limit: FREE_TIER_LIMITS.polly_messages_total,
+      remaining: Math.max(0, FREE_TIER_LIMITS.polly_messages_total - count)
     };
   };
 
@@ -232,8 +258,8 @@ export function SubscriptionProvider({ children }) {
     if (isPro()) return;
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
-    const newCount = (freshUser.daily_lessons_count || 0) + 1;
-    await base44.auth.updateMe({ daily_lessons_count: newCount });
+    const newCount = (freshUser.total_lessons_created || freshUser.daily_lessons_count || 0) + 1;
+    await base44.auth.updateMe({ total_lessons_created: newCount, daily_lessons_count: newCount });
     await refreshUser();
   };
   
@@ -246,14 +272,30 @@ export function SubscriptionProvider({ children }) {
     await refreshUser();
   };
 
-  const incrementTaskCount = async () => { /* No-op - tasks blocked for free users */ };
+  const incrementTaskCount = async (taskType = null) => {
+    if (isPro()) return;
+    const freshUser = await checkAndResetCounters();
+    if (!freshUser) return;
+    const updates = { total_tasks_used: (freshUser.total_tasks_used || 0) + 1 };
+    if (taskType) {
+      const fieldMap = {
+        flashcards: 'total_flashcard_sets',
+        teach_it: 'total_teachit_sets',
+        practice_exam: 'total_practice_quizzes'
+      };
+      const field = fieldMap[taskType];
+      if (field) updates[field] = (freshUser[field] || 0) + 1;
+    }
+    await base44.auth.updateMe(updates);
+    await refreshUser();
+  };
   
   const incrementAIMessageCount = async () => {
     if (isPro()) return;
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
-    const newCount = (freshUser.daily_ai_messages_count || 0) + 1;
-    await base44.auth.updateMe({ daily_ai_messages_count: newCount });
+    const newCount = (freshUser.total_polly_messages || freshUser.daily_ai_messages_count || 0) + 1;
+    await base44.auth.updateMe({ total_polly_messages: newCount, daily_ai_messages_count: newCount });
     await refreshUser();
   };
 

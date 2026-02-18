@@ -4,61 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { X, Check, Zap, Gift, Loader2, CheckCircle2, AlertCircle, Calendar, Sparkles } from 'lucide-react';
+import { Check, Zap, Gift, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useSubscription } from './SubscriptionContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
 
-const LIMIT_MESSAGES = {
-  uploads: {
-    title: "Start Your Free Trial",
-    description: "Upload unlimited study materials with Pro.",
-    icon: "📄"
-  },
-  upload: {
-    title: "Start Your Free Trial",
-    description: "Upload unlimited study materials with Pro.",
-    icon: "📄"
-  },
-  tasks: {
-    title: "Start Your Free Trial", 
-    description: "Complete unlimited study tasks with Pro.",
-    icon: "📝"
-  },
-  task: {
-    title: "Start Your Free Trial", 
-    description: "Complete unlimited study tasks with Pro.",
-    icon: "📝"
-  },
-  ai_message: {
-    title: "Daily AI Message Limit Reached",
-    description: "Free users can send 10 AI messages per day.",
-    icon: "💬"
-  },
-  assignments: {
-    title: "Start Your Free Trial",
-    description: "Grade unlimited assignments with Pro.",
-    icon: "📝"
-  },
-  polly: {
-    title: "Start Your Free Trial",
-    description: "Unlock AI-powered grade forensics and personalized roadmaps.",
-    icon: "🔮"
-  },
-  default: {
-    title: "Start Your 7-Day Free Trial",
-    description: "Unlock unlimited access to all features.",
-    icon: "🚀"
-  }
-};
-
 export default function UpgradeModal({ open, onOpenChange, reason = 'default' }) {
   const { refreshUser } = useSubscription();
   const { isDark } = useTheme();
-  const limitInfo = LIMIT_MESSAGES[reason] || LIMIT_MESSAGES.default;
   
-  const [isYearly, setIsYearly] = useState(true); // Default to yearly
+  const [isYearly, setIsYearly] = useState(true);
   const [showPromoInput, setShowPromoInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
@@ -73,22 +29,17 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
     setCheckoutLoading(true);
     try {
       const planType = isYearly ? 'yearly' : 'monthly';
-      console.log('Starting checkout with plan_type:', planType);
-      
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: planType,
         trial: true,
-        success_url: window.location.href, // Return to current page after payment
+        success_url: window.location.href,
         cancel_url: window.location.href
       });
-      
-      console.log('Checkout response:', response);
       
       if (response.data?.url || response.data?.checkout_url) {
         window.location.href = response.data.url || response.data.checkout_url;
       } else if (response.data?.error) {
-        console.error('Checkout error:', response.data.error, response.data.details);
-        alert(`Error: ${response.data.error}${response.data.details ? ` (${response.data.details})` : ''}`);
+        console.error('Checkout error:', response.data.error);
       }
     } catch (error) {
       console.error('Checkout error:', error);
@@ -99,20 +50,15 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
 
   const handlePromoSubmit = async () => {
     if (!promoCode.trim()) return;
-    
     setPromoLoading(true);
     setPromoResult(null);
-    
     try {
-      const response = await base44.functions.invoke('redeemPromoCode', {
-        code: promoCode.trim()
-      });
-      
+      const response = await base44.functions.invoke('redeemPromoCode', { code: promoCode.trim() });
       if (response.data?.success) {
         setPromoResult({ success: true, message: response.data.message });
         await refreshUser();
         setTimeout(() => {
-          onOpenChange(true); // Pass true to trigger success callback
+          onOpenChange(true);
           setPromoCode('');
           setPromoResult(null);
           setShowPromoInput(false);
@@ -135,68 +81,82 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100vw-24px)] sm:max-w-sm p-0 overflow-hidden border-0 bg-transparent max-h-[85vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-[calc(100vw-24px)] sm:max-w-sm p-0 overflow-hidden border-0 bg-transparent max-h-[85vh] overflow-y-auto [&>button]:hidden">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-sm rounded-2xl border border-purple-500/50 shadow-2xl shadow-purple-500/20"
+          className="relative bg-gradient-to-br from-[#1a1040] via-[#2a1560] to-[#1a1040] rounded-2xl border border-purple-500/40 shadow-2xl shadow-purple-500/20"
         >
-          {/* Close button */}
+          {/* Single close button */}
           <button 
             onClick={handleClose}
-            className="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            className="absolute top-3 right-3 z-20 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 hover:text-white transition-colors"
           >
-            <X className="w-3.5 h-3.5" />
+            ✕
           </button>
 
-          {/* Header - More compact */}
-          <div className="p-4 pb-3 text-center">
-            {/* Trial badge */}
-            <Badge className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white px-3 py-0.5 text-[10px] font-bold mb-3">
-              🎉 7-DAY FREE TRIAL
-            </Badge>
-            
-            <h2 className="text-lg font-black text-white mb-1">Locked In ⚡</h2>
-            <p className="text-purple-200 text-xs mb-3">Start free, cancel anytime</p>
-            
-            {/* Price display */}
+          <div className="p-5 pb-4 text-center">
+            {/* Main headline — 7-day free trial */}
+            <h2 className="text-2xl font-black text-white mb-1 leading-tight">
+              Try Pro Free for 7 Days
+            </h2>
+            <p className="text-purple-300 text-xs mb-4">No charge today · Cancel anytime</p>
+
+            {/* Pricing info */}
             <div className="mb-3">
-              <span className="text-3xl font-black text-white">${isYearly ? yearlyPrice : monthlyPrice}</span>
-              <span className="text-purple-300 text-sm">/mo</span>
-              {isYearly && (
-                <p className="text-emerald-400 text-[10px] mt-0.5">
-                  Billed ${(yearlyPrice * 12).toFixed(2)}/year
-                </p>
+              {isYearly ? (
+                <>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-purple-400 text-sm line-through">${monthlyPrice}/mo</span>
+                    <span className="text-xl font-black text-white">${yearlyPrice}</span>
+                    <span className="text-purple-300 text-sm">/mo</span>
+                  </div>
+                  <p className="text-emerald-400 text-xs mt-0.5 font-medium">
+                    Billed ${(yearlyPrice * 12).toFixed(2)}/year after trial
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-xl font-black text-white">${monthlyPrice}</span>
+                    <span className="text-purple-300 text-sm">/mo</span>
+                  </div>
+                  <p className="text-purple-400 text-xs mt-0.5">
+                    Billed monthly after trial
+                  </p>
+                </>
               )}
             </div>
             
-            {/* Billing Toggle - Compact */}
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <span className={`text-[10px] font-medium ${!isYearly ? 'text-white' : 'text-white/50'}`}>Monthly</span>
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className={`text-xs font-medium ${!isYearly ? 'text-white' : 'text-white/40'}`}>Monthly</span>
               <Switch
                 checked={isYearly}
                 onCheckedChange={setIsYearly}
                 className="data-[state=checked]:bg-emerald-500 scale-90"
               />
-              <span className={`text-[10px] font-medium ${isYearly ? 'text-white' : 'text-white/50'}`}>
+              <span className={`text-xs font-medium ${isYearly ? 'text-white' : 'text-white/40'}`}>
                 Yearly
-                {isYearly && <Badge className="ml-1 bg-emerald-500 text-white text-[8px] px-1 py-0">-{yearlySavings}%</Badge>}
               </span>
+              {isYearly && <Badge className="bg-emerald-500 text-white text-[9px] px-1.5 py-0">Save {yearlySavings}%</Badge>}
             </div>
           </div>
 
-          {/* Features - Ultra compact */}
-          <div className="px-4 pb-3">
-            <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+          {/* Features */}
+          <div className="px-5 pb-3">
+            <div className="grid grid-cols-2 gap-1.5 text-[11px]">
               {[
-                'Unlimited everything',
-                'Grade predictions', 
+                'Unlimited lessons',
+                'Unlimited flashcards',
                 'AI study coach',
+                'Grade predictions',
+                'Smart Grader',
                 'Study roadmaps'
               ].map((feature, i) => (
-                <div key={i} className="flex items-center gap-1 text-white/90">
-                  <Check className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                <div key={i} className="flex items-center gap-1.5 text-white/90">
+                  <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
                   <span>{feature}</span>
                 </div>
               ))}
@@ -204,11 +164,11 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
           </div>
 
           {/* CTA */}
-          <div className="px-4 pb-4">
+          <div className="px-5 pb-5">
             <Button
               onClick={handleStartTrial}
               disabled={checkoutLoading}
-              className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3 text-sm rounded-xl shadow-lg shadow-purple-500/30"
+              className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3.5 text-sm rounded-xl shadow-lg shadow-purple-500/30"
             >
               {checkoutLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -217,11 +177,11 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
               )}
               Start Free Trial
             </Button>
-            <p className="text-center text-[9px] text-purple-300/70 mt-1.5">
-              No charge for 7 days • Cancel anytime
+            <p className="text-center text-[9px] text-purple-300/60 mt-2">
+              You won't be charged until the trial ends
             </p>
 
-            {/* Promo Code - Minimal */}
+            {/* Promo Code */}
             <AnimatePresence mode="wait">
               {!showPromoInput ? (
                 <motion.button
@@ -230,7 +190,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onClick={() => setShowPromoInput(true)}
-                  className="w-full flex items-center justify-center gap-1 text-[10px] text-purple-300/60 hover:text-purple-200 transition-colors mt-2"
+                  className="w-full flex items-center justify-center gap-1 text-[10px] text-purple-300/50 hover:text-purple-200 transition-colors mt-2"
                 >
                   <Gift className="w-3 h-3" />
                   Promo code?

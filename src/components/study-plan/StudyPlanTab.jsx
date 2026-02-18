@@ -557,112 +557,58 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          {/* Hero Section - The Big Hook */}
+          {/* Hero Section — Clear CTA */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-6 shadow-2xl">
             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl" />
             
             <div className="relative text-center">
-              <h2 className="text-2xl md:text-3xl font-black text-white mb-3 leading-tight">
-                Know your grade<br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400">before you walk in.</span>
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight">
+                What grade would<br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400">you get today?</span>
               </h2>
               
-              <p className="text-purple-200 text-sm max-w-sm mx-auto leading-relaxed">
-                One 5-minute diagnostic. One path to an A+.<br/>
-                <span className="text-white font-medium">No more "guessing" if you've studied enough.</span>
+              <p className="text-purple-200 text-sm max-w-xs mx-auto leading-relaxed mb-5">
+                Take a quick 5-minute quiz and we'll predict your exam grade instantly.
+              </p>
+
+              {/* Big CTA right in the hero */}
+              <Button 
+                ref={ctaRef}
+                onClick={() => {
+                  if (!isDiagnosticReady) return;
+                  onNavigate('exam');
+                }}
+                disabled={!isDiagnosticReady}
+                className={`w-full max-w-xs mx-auto font-bold py-5 text-base rounded-2xl shadow-xl relative overflow-hidden group ${
+                  isDiagnosticReady 
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/30'
+                    : 'bg-gradient-to-r from-slate-400 to-slate-500 text-white/70 cursor-not-allowed shadow-none'
+                }`}
+              >
+                {isDiagnosticReady ? (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                    <Play className="w-5 h-5 mr-2" />
+                    Start Diagnostic — 5 min
+                  </>
+                ) : (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Preparing Your Quiz...
+                  </>
+                )}
+              </Button>
+              <p className="text-center text-[10px] text-purple-300/70 mt-2">
+                {isDiagnosticReady 
+                  ? 'Free · 10 questions · Get your predicted grade'
+                  : 'Almost ready — generating your personalized questions'
+                }
               </p>
             </div>
           </div>
 
-          {/* Comparison - Old Way vs StudyApp Way */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* Old Way */}
-            <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 relative">
-              <div className="absolute -top-2 -left-1">
-                <span className="text-lg">💀</span>
-              </div>
-              <h3 className="font-bold text-slate-700 text-xs mb-2 mt-1">The Old Way</h3>
-              <ul className="space-y-1.5">
-                <li className="flex items-start gap-1.5 text-[11px] text-slate-600">
-                  <span className="text-red-500 font-bold">✕</span>
-                  <span>Staring at 400 pages of notes</span>
-                </li>
-                <li className="flex items-start gap-1.5 text-[11px] text-slate-600">
-                  <span className="text-red-500 font-bold">✕</span>
-                  <span>Guessing what might be on the exam</span>
-                </li>
-                <li className="flex items-start gap-1.5 text-[11px] text-slate-600">
-                  <span className="text-red-500 font-bold">✕</span>
-                  <span>Anxiety until results day</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* StudyApp Way */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-3 relative shadow-md">
-              <div className="absolute -top-2 -left-1">
-                <span className="text-lg">🐐</span>
-              </div>
-              <h3 className="font-bold text-emerald-700 text-xs mb-2 mt-1">The StudyApp Way</h3>
-              <ul className="space-y-1.5">
-                <li className="flex items-start gap-1.5 text-[11px] text-emerald-700">
-                  <span className="text-emerald-500 font-bold">✓</span>
-                  <span>AI finds weak spots in 5 min</span>
-                </li>
-                <li className="flex items-start gap-1.5 text-[11px] text-emerald-700">
-                  <span className="text-emerald-500 font-bold">✓</span>
-                  <span>Curated plan: exactly what to do</span>
-                </li>
-                <li className="flex items-start gap-1.5 text-[11px] text-emerald-700">
-                  <span className="text-emerald-500 font-bold">✓</span>
-                  <span>Predicted grade updates in real-time</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Final CTA - Moved above How It Works */}
-          <motion.div
-            ref={ctaRef}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <Button 
-              onClick={() => {
-                if (!isDiagnosticReady) return;
-                onNavigate('exam');
-              }}
-              disabled={!isDiagnosticReady}
-              className={`w-full font-bold py-5 text-base rounded-2xl shadow-xl relative overflow-hidden group ${
-                isDiagnosticReady 
-                  ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:via-indigo-700 hover:to-purple-800 text-white shadow-purple-500/30'
-                  : 'bg-gradient-to-r from-slate-400 to-slate-500 text-white/70 cursor-not-allowed shadow-none'
-              }`}
-            >
-              {isDiagnosticReady ? (
-                <>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                  <Play className="w-5 h-5 mr-2" />
-                  Start 5-Minute Diagnostic
-                </>
-              ) : (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Preparing Your Diagnostic...
-                </>
-              )}
-            </Button>
-            <p className="text-center text-[10px] text-slate-400 mt-2">
-              {isDiagnosticReady 
-                ? 'Free • Results in 5 minutes • Know your grade before exam day'
-                : 'Almost ready — generating your personalized questions'
-              }
-            </p>
-          </motion.div>
-
-          {/* How It Works - Simple Steps */}
+          {/* How It Works — 3 simple steps */}
           <div className={`rounded-xl border p-4 shadow-sm ${isDark ? 'bg-white/5 border-purple-500/30' : 'bg-white border-purple-100'}`}>
             <p className={`text-[10px] font-bold uppercase tracking-wide mb-3 text-center ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>How it works</p>
             <div className="flex items-center justify-between">
@@ -670,7 +616,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
                   <span className="text-lg">📝</span>
                 </div>
-                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>5-min<br/>Diagnostic</p>
+                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Take<br/>Diagnostic</p>
               </div>
               <ArrowRight className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-purple-500' : 'text-purple-300'}`} />
               <div className="flex flex-col items-center text-center flex-1">
@@ -684,7 +630,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 ${isDark ? 'bg-emerald-600/20' : 'bg-emerald-100'}`}>
                   <span className="text-lg">🚀</span>
                 </div>
-                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Follow Plan<br/>to Improve</p>
+                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Follow Plan<br/>to A+</p>
               </div>
             </div>
           </div>

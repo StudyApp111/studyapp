@@ -131,7 +131,6 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
           <input
             ref={fileInputRef}
             type="file"
-            multiple
             accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
             onChange={handleFileChange}
             className="hidden"
@@ -185,16 +184,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
                   </button>
                 </div>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 py-3"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Add more files
-              </Button>
+
             </div>
           )}
         </div>
