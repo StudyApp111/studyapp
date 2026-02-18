@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 
 Deno.serve(async (req) => {
   try {
@@ -13,25 +14,63 @@ Deno.serve(async (req) => {
     if (!lessons.length) return Response.json({ error: 'Lesson not found' }, { status: 404 });
 
     const lesson = lessons[0];
-    // Use compressed_content as-is (already optimized by compressDocument function)
     const content = lesson.compressed_content || lesson.extracted_content || lesson.description || '';
-    if (!content || content.length < 50) {
+    const courseName = lesson.course_name || 'this course';
+
+    const GEMINI_KEY = Deno.env.get('GEMINIAPIKEY');
+    const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+
+    // Determine if content is too short to generate topics from directly
+    const isShortContent = !content || content.length < 200;
+
+    let enrichedContent = content;
+
+    // For short/description-only lessons, use Google Search grounding to gather real course info
+    if (isShortContent) {
+      console.log("Short content detected, using Google Search grounding to enrich...");
+      try {
+        const searchModel = genAI.getGenerativeModel({
+          model: 'gemini-2.0-flash-lite',
+          tools: [{ googleSearch: {} }]
+        });
+
+        const searchResult = await searchModel.generateContent({
+          contents: [{
+            role: 'user',
+            parts: [{
+              text: `Find the syllabus, key topics, and learning outcomes for the course "${courseName}". Context: ${content}. Summarize the major topics covered in this course with descriptions. Be detailed and specific.`
+            }]
+          }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: 3000 }
+        });
+
+        const searchContext = searchResult.response.text();
+        console.log("Search context length:", searchContext.length);
+
+        if (searchContext && searchContext.length > 50) {
+          enrichedContent = `Course: ${courseName}\n\nUser description: ${content}\n\nCourse research:\n${searchContext}`;
+        }
+      } catch (searchErr) {
+        console.warn("Search grounding failed:", searchErr.message);
+      }
+    }
+
+    // If still insufficient after enrichment, return error
+    if (!enrichedContent || enrichedContent.length < 30) {
       return Response.json({ error: 'Insufficient content' }, { status: 400 });
     }
 
-    const GEMINI_KEY = Deno.env.get('GEMINIAPIKEY');
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `You are an expert educator. Given the following student material for the course "${lesson.course_name}", break it into 4-7 clearly named topic chunks that cover the major themes.
+    // Generate topics using standard JSON mode
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
+
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{
+          text: `You are an expert educator. Given the following student material for the course "${courseName}", break it into 4-7 clearly named topic chunks that cover the major themes.
 
 MATERIAL:
-${content}
+${enrichedContent}
 
 Return a JSON array of objects. Each object has:
 - "title": a short descriptive topic name like "Topic 1: Cell Division"
@@ -39,19 +78,16 @@ Return a JSON array of objects. Each object has:
 - "key_content": the most relevant excerpt or summary from the material for this topic (300-500 words)
 
 Return ONLY valid JSON array, no markdown.`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 4000,
-            responseMimeType: 'application/json'
-          }
-        })
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 4000,
+        responseMimeType: 'application/json'
       }
-    );
+    });
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+    const text = result.response.text();
 
     let topics;
     try {
@@ -61,8 +97,13 @@ Return ONLY valid JSON array, no markdown.`
       topics = match ? JSON.parse(match[0]) : [];
     }
 
+    if (!topics || topics.length === 0) {
+      return Response.json({ error: 'Could not generate topics' }, { status: 500 });
+    }
+
     return Response.json({ success: true, topics });
   } catch (error) {
+    console.error("generateLearnTopics error:", error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
