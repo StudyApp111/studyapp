@@ -36,10 +36,10 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
     } catch (err) {
       console.error("Error loading topics:", err);
       const msg = err?.response?.data?.error;
-      if (msg === 'Insufficient content') {
+      if (msg && msg.includes('Insufficient content')) {
         setErrorMsg("This lesson doesn't have enough material to generate topics. Try uploading a document or adding more content first.");
       } else {
-        setErrorMsg("Something went wrong generating topics. Please try again.");
+        setErrorMsg(msg || "Something went wrong generating topics. Please try again.");
       }
     } finally {
       setLoadingTopics(false);
