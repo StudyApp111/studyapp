@@ -178,12 +178,9 @@ function LayoutContent({ children, currentPageName }) {
   const showNavigation = !!user && (!!onboardingDone || !!isAdmin);
   const showSidebar = showNavigation;
   
-  const pagesWithCustomNav = ["DiagnosticQuiz", "Worksheet"];
+  const pagesWithCustomNav = ["Worksheet"];
   const showMobileHeader = showNavigation && !isDocumentViewerPage && !isHomePage;
   const showMobileBottomNav = showNavigation && !pagesWithCustomNav.includes(currentPageName);
-
-  // For pages that need the old onboarding flow (DiagnosticQuiz, PredictedGradeDisplay) — still accessible
-  const isLegacyOnboardingPage = pathLower.includes("diagnosticquiz") || pathLower.includes("predictedgradedisplay");
 
 
 
