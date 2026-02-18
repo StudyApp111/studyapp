@@ -173,7 +173,31 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
     );
   }
 
-  // Show topic list
+  // Show error or topic list
+  if (errorMsg && topics.length === 0) {
+    return (
+      <div className={`flex items-center justify-center p-4 pb-8 min-h-[400px] ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md">
+          <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden ${isDark ? 'bg-[#12121a]/95 border-red-500/30' : 'bg-white/95 border-red-200'}`}>
+            <div className="p-6 text-center">
+              <BookOpen className={`w-12 h-12 mx-auto mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+              <p className={`mb-5 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                {errorMsg}
+              </p>
+              <Button
+                onClick={loadTopics}
+                variant="outline"
+                className="rounded-xl"
+              >
+                Try Again
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <LearnTopicList
       topics={topics}
