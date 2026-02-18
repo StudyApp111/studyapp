@@ -22,9 +22,12 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
 
   // Do NOT auto-load on mount — user clicks "Generate Topics" to avoid rate limits
 
+  const [errorMsg, setErrorMsg] = useState(null);
+
   const loadTopics = async () => {
     if (!lesson?.id) return;
     setLoadingTopics(true);
+    setErrorMsg(null);
     try {
       const { data } = await base44.functions.invoke('generateLearnTopics', { lesson_id: lesson.id });
       if (data?.topics) {
@@ -32,6 +35,12 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
       }
     } catch (err) {
       console.error("Error loading topics:", err);
+      const msg = err?.response?.data?.error;
+      if (msg === 'Insufficient content') {
+        setErrorMsg("This lesson doesn't have enough material to generate topics. Try uploading a document or adding more content first.");
+      } else {
+        setErrorMsg("Something went wrong generating topics. Please try again.");
+      }
     } finally {
       setLoadingTopics(false);
       setHasLoaded(true);
