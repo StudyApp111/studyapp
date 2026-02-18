@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     // Determine if content is too short to generate topics from directly
     const isShortContent = !content || content.length < 200;
 
-    let enrichedContent = content;
+    let enrichedContent = content || '';
 
     // For short/description-only lessons, use Google Search grounding to gather real course info
     if (isShortContent) {
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
           contents: [{
             role: 'user',
             parts: [{
-              text: `Find the syllabus, key topics, and learning outcomes for the course "${courseName}". Context: ${content}. Summarize the major topics covered in this course with descriptions. Be detailed and specific.`
+              text: `Find the syllabus, key topics, and learning outcomes for the course "${courseName}". Context: ${enrichedContent || 'No additional context provided'}. Summarize the major topics covered in this course with descriptions. Be detailed and specific.`
             }]
           }],
           generationConfig: { temperature: 0.3, maxOutputTokens: 3000 }
@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
         console.log("Search context length:", searchContext.length);
 
         if (searchContext && searchContext.length > 50) {
-          enrichedContent = `Course: ${courseName}\n\nUser description: ${content}\n\nCourse research:\n${searchContext}`;
+          enrichedContent = `Course: ${courseName}\n\nUser description: ${enrichedContent}\n\nCourse research:\n${searchContext}`;
         }
       } catch (searchErr) {
         console.warn("Search grounding failed:", searchErr.message);
@@ -57,8 +57,13 @@ Deno.serve(async (req) => {
 
     // If still insufficient after enrichment, return error
     if (!enrichedContent || enrichedContent.length < 30) {
-      return Response.json({ error: 'Insufficient content' }, { status: 400 });
+      return Response.json({ error: 'Insufficient content. Try uploading study material or adding a more detailed description.' }, { status: 400 });
     }
+
+    // Strip LaTeX / special chars that can break JSON output
+    const cleanedContent = enrichedContent
+      .replace(/\\\\/g, '\\\\')
+      .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, ' ');
 
     // Generate topics using standard JSON mode
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
@@ -70,7 +75,7 @@ Deno.serve(async (req) => {
           text: `You are an expert educator. Given the following student material for the course "${courseName}", break it into 4-7 clearly named topic chunks that cover the major themes.
 
 MATERIAL:
-${enrichedContent}
+${cleanedContent}
 
 Return a JSON array of objects. Each object has:
 - "title": a short descriptive topic name like "Topic 1: Cell Division"
