@@ -97,7 +97,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
 
   const generateCards = async (customOptions = null) => {
     if (isGeneratingRef.current) return;
-    const taskCheck = await canDoTask();
+    const taskCheck = await canDoTask('teach_it');
     if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
     
     isGeneratingRef.current = true;
@@ -209,8 +209,6 @@ Return exactly ${cardCount} cards with question and model_answer fields, each ba
     if (!userAnswer.trim()) return;
     setIsGrading(true);
     try {
-      const taskCheck = await canDoTask();
-      if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); setIsGrading(false); return; }
       
       const currentCard = cards[currentCardIndex];
       const prompt = `You are grading a student's explanation of a concept.
@@ -308,7 +306,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   const handleRegenerate = async () => {
     if (confirm("Regenerate all cards? Current progress will be lost.")) {
-      const taskCheck = await canDoTask();
+      const taskCheck = await canDoTask('teach_it');
       if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
       try {
         await Promise.all(cards.map(card => base44.entities.TeachItCard.delete(card.id)));

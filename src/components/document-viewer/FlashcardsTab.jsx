@@ -103,7 +103,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const handleGenerate = async (customOptions = null) => {
     if (isGeneratingRef.current) return;
     
-    const taskCheck = await canDoTask();
+    const taskCheck = await canDoTask('flashcards');
     if (!taskCheck.allowed) {
       triggerUpgradeModal('tasks');
       return;
@@ -111,7 +111,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     
     isGeneratingRef.current = true;
     setIsGenerating(true);
-    await incrementTaskCount();
+    await incrementTaskCount('flashcards');
     
     try {
       let contentForFlashcards = lesson.compressed_content || extractedContent || lesson.description || 'General course material';
@@ -201,14 +201,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     
     // Check subscription limit
     const wasReviewed = currentCard.review_count > 0;
-    if (!wasReviewed) {
-      const taskCheck = await canDoTask();
-      if (!taskCheck.allowed) {
-        triggerUpgradeModal('tasks');
-        return;
-      }
-      await incrementTaskCount();
-    }
     
     // Anki algorithm - adjust ease factor and calculate next review interval
     const currentEase = currentCard.ease_factor || 2.5;
@@ -386,13 +378,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   const handleRegenerate = async () => {
-    const taskCheck = await canDoTask();
+    const taskCheck = await canDoTask('flashcards');
     if (!taskCheck.allowed) {
       triggerUpgradeModal('tasks');
       return;
     }
     
-    await incrementTaskCount();
+    await incrementTaskCount('flashcards');
     
     if (cards && cards.length > 0) {
       await Promise.all(cards.map(c => base44.entities.Flashcard.delete(c.id)));
