@@ -4,13 +4,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target, StickyNote, Brain } from "lucide-react";
+import { FileText, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target, StickyNote, Brain, Headphones } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 
 
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
 import TeachItTab from "@/components/document-viewer/TeachItTab";
+import LearnTab from "@/components/document-viewer/LearnTab";
 import StudyPlanTab from "@/components/study-plan/StudyPlanTab";
 import NextStepBanner from "@/components/study-plan/NextStepBanner";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
@@ -609,6 +610,13 @@ export default function DocumentViewer() {
                     <Zap className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Practice</span>
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="learn"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                  >
+                    <Headphones className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Learn</span>
+                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -648,6 +656,10 @@ export default function DocumentViewer() {
 
                 <TabsContent value="teachit" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <TeachItTab lesson={lesson} />
+                </TabsContent>
+
+                <TabsContent value="learn" className="mt-0 p-0 h-full">
+                  <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />
                 </TabsContent>
 
               </div>
@@ -726,6 +738,13 @@ export default function DocumentViewer() {
                     <Zap className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-semibold">Practice</span>
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="learn"
+                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                  >
+                    <Headphones className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-semibold">Learn</span>
+                  </TabsTrigger>
                 </TabsList>
               </div>
             </div>
@@ -770,6 +789,10 @@ export default function DocumentViewer() {
 
               <TabsContent value="teachit" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
                 <TeachItTab lesson={lesson} />
+              </TabsContent>
+
+              <TabsContent value="learn" className="mt-0 p-0 w-full overflow-x-hidden">
+                <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />
               </TabsContent>
 
             </div>
