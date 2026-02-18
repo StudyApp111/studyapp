@@ -20,12 +20,7 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
   const [loadingLecture, setLoadingLecture] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
 
-  // Load topics on mount (only once)
-  useEffect(() => {
-    if (lesson?.id && !hasLoaded && isPro()) {
-      loadTopics();
-    }
-  }, [lesson?.id, hasLoaded]);
+  // Do NOT auto-load on mount — user clicks "Generate Topics" to avoid rate limits
 
   const loadTopics = async () => {
     if (!lesson?.id) return;

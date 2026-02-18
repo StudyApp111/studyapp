@@ -13,12 +13,11 @@ Deno.serve(async (req) => {
     if (!lessons.length) return Response.json({ error: 'Lesson not found' }, { status: 404 });
 
     const lesson = lessons[0];
+    // Use compressed_content as-is (already optimized by compressDocument function)
     const content = lesson.compressed_content || lesson.extracted_content || lesson.description || '';
     if (!content || content.length < 50) {
       return Response.json({ error: 'Insufficient content' }, { status: 400 });
     }
-
-    const truncated = content.length > 15000 ? content.substring(0, 15000) + '\n...[truncated]' : content;
 
     const GEMINI_KEY = Deno.env.get('GEMINIAPIKEY');
     const response = await fetch(
@@ -32,7 +31,7 @@ Deno.serve(async (req) => {
               text: `You are an expert educator. Given the following student material for the course "${lesson.course_name}", break it into 4-7 clearly named topic chunks that cover the major themes.
 
 MATERIAL:
-${truncated}
+${content}
 
 Return a JSON array of objects. Each object has:
 - "title": a short descriptive topic name like "Topic 1: Cell Division"
