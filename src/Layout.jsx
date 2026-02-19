@@ -258,7 +258,7 @@ function LayoutContent({ children, currentPageName }) {
               </button>
 
               {/* Upgrade Badge */}
-              <UpgradeNavBadge />
+              <UpgradeNavBadge isDark={isDark} />
 
               {/* Theme Toggle */}
               <button
@@ -310,13 +310,20 @@ function LayoutContent({ children, currentPageName }) {
               <div className="flex items-center justify-center">
                 {/* Logo + App Name - centered */}
                 <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                  <img 
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
-                    alt="StudyApp Logo"
-                    className="w-6 h-6"
-                  />
-                  <span className={`font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>StudyApp</span>
-                </Link>
+                    <img 
+                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+                      alt="StudyApp Logo"
+                      className="w-6 h-6"
+                    />
+                    {isDark ? (
+                      <span className="font-bold text-sm text-white">StudyApp</span>
+                    ) : (
+                      <span className="font-bold text-sm">
+                        <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
+                        <span className="text-slate-800">App</span>
+                      </span>
+                    )}
+                  </Link>
               </div>
             </header>
           )}
