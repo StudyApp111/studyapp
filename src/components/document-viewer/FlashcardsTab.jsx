@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, RotateCcw, Shuffle, ChevronLeft, ChevronRight, HelpCircle, X, Zap, Play, Copy, Volume2 } from "lucide-react";
+import GenerateToolCTA from "./GenerateToolCTA";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
@@ -414,66 +415,30 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   // Initial state - not generated
   if (!cards && !isGenerating) {
     return (
-      <div className={`flex items-center justify-center p-4 pb-8 w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-md"
-        >
-          <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
-            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-5 py-6 text-center">
-              <motion.div
-                animate={{ rotate: [0, -10, 10, -10, 0] }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <Sparkles className="w-16 h-16 text-yellow-300 mx-auto mb-3 drop-shadow-lg" />
-              </motion.div>
-              <h3 className="text-xl font-black text-white mb-1">AI-Powered Flashcards</h3>
-              <p className="text-purple-100 text-xs">
-                Master concepts through active recall
-              </p>
-            </div>
-            <div className="p-5 text-center w-full" style={{ boxSizing: 'border-box' }}>
-              <p className={`mb-4 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                Generate smart flashcards from your notes. Rate each card to optimize your learning!
-              </p>
-              
-              <div className={`rounded-xl p-3 border mb-6 ${isDark ? 'bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border-yellow-500/30' : 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200'}`}>
-                <div className="flex items-center justify-center gap-2">
-                  <Zap className={`w-4 h-4 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`} />
-                  <span className={`text-xs font-medium ${isDark ? 'text-yellow-300' : 'text-yellow-800'}`}>
-                    Earn <span className="font-bold">+2-10 XP</span> per card mastered!
-                  </span>
-                </div>
-              </div>
-              
-              <Button
-                onClick={() => handleGenerate()}
-                className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-bold text-lg rounded-xl shadow-xl"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
-                Generate Flashcards
-              </Button>
-              <button
-                onClick={() => setShowCustomize(true)}
-                className={`w-full mt-2 text-sm font-medium py-2 rounded-lg transition-colors ${isDark ? 'text-purple-400 hover:bg-purple-500/10' : 'text-purple-600 hover:bg-purple-50'}`}
-              >
-                ⚙️ Customize (topics, difficulty, amount)
-              </button>
-
-              <CustomizeGenerationModal
-                open={showCustomize}
-                onOpenChange={setShowCustomize}
-                type="flashcards"
-                lessonId={lesson?.id}
-                compressedContent={lesson?.compressed_content || extractedContent}
-                onGenerate={(opts) => handleGenerate(opts)}
-              />
-            </div>
-          </Card>
-        </motion.div>
-      </div>
+      <>
+        <GenerateToolCTA
+          icon={Copy}
+          title="AI Flashcards"
+          description="Generate smart flashcards from your notes. Rate each card to optimize spaced repetition."
+          features={[
+            "Auto-generated from your course material",
+            "Spaced repetition with smart scheduling",
+            "Earn +2-10 XP per card mastered"
+          ]}
+          buttonLabel="Generate Flashcards"
+          accentColor="amber"
+          onGenerate={() => handleGenerate()}
+          onCustomize={() => setShowCustomize(true)}
+        />
+        <CustomizeGenerationModal
+          open={showCustomize}
+          onOpenChange={setShowCustomize}
+          type="flashcards"
+          lessonId={lesson?.id}
+          compressedContent={lesson?.compressed_content || extractedContent}
+          onGenerate={(opts) => handleGenerate(opts)}
+        />
+      </>
     );
   }
 
@@ -501,42 +466,26 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   if (!cards || cards.length === 0) {
     return (
-      <div className={`flex items-center justify-center p-4 pb-8 w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
-        <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden w-full max-w-md ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
-          <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-5 py-6 text-center">
-            <Sparkles className="w-16 h-16 text-yellow-300 mx-auto mb-3 drop-shadow-lg" />
-            <h3 className="text-xl font-black text-white mb-1">AI-Powered Flashcards</h3>
-            <p className="text-purple-100 text-xs">Master concepts through active recall</p>
-          </div>
-          <div className="p-5 text-center">
-            <p className={`mb-5 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-              Generate intelligent flashcards from your notes.
-            </p>
-            <Button
-              onClick={() => handleGenerate()}
-              className="w-full h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-bold text-lg rounded-xl shadow-xl"
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Generate Flashcards
-            </Button>
-            <button
-              onClick={() => setShowCustomize(true)}
-              className={`w-full mt-2 text-sm font-medium py-2 rounded-lg transition-colors ${isDark ? 'text-purple-400 hover:bg-purple-500/10' : 'text-purple-600 hover:bg-purple-50'}`}
-            >
-              ⚙️ Customize (topics, difficulty, amount)
-            </button>
-
-            <CustomizeGenerationModal
-              open={showCustomize}
-              onOpenChange={setShowCustomize}
-              type="flashcards"
-              lessonId={lesson?.id}
-              compressedContent={lesson?.compressed_content || extractedContent}
-              onGenerate={(opts) => handleGenerate(opts)}
-            />
-          </div>
-        </Card>
-      </div>
+      <>
+        <GenerateToolCTA
+          icon={Copy}
+          title="AI Flashcards"
+          description="Generate smart flashcards from your course material."
+          features={["Spaced repetition", "Earn XP per card mastered"]}
+          buttonLabel="Generate Flashcards"
+          accentColor="amber"
+          onGenerate={() => handleGenerate()}
+          onCustomize={() => setShowCustomize(true)}
+        />
+        <CustomizeGenerationModal
+          open={showCustomize}
+          onOpenChange={setShowCustomize}
+          type="flashcards"
+          lessonId={lesson?.id}
+          compressedContent={lesson?.compressed_content || extractedContent}
+          onGenerate={(opts) => handleGenerate(opts)}
+        />
+      </>
     );
   }
 

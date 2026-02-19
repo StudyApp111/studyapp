@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, PenLine, HelpCircle, Brain, X } from "lucide-react";
+import GenerateToolCTA from "./GenerateToolCTA";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { awardDailyXP } from "@/components/utils/dailyReset";
@@ -393,53 +394,30 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length === 0) {
     return (
-      <div className={`flex items-center justify-center p-4 pb-8 min-h-[400px] w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-md md:max-w-xl"
-        >
-          <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
-            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-6 py-6 md:py-8 text-center">
-              <motion.div
-                animate={{ rotate: [0, -10, 10, -10, 0] }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <Lightbulb className="w-16 h-16 md:w-20 md:h-20 text-yellow-300 mx-auto mb-3 drop-shadow-lg" />
-              </motion.div>
-              <h3 className="text-xl md:text-2xl font-black text-white mb-1">Teach It to Master It</h3>
-              <p className="text-purple-100 text-xs md:text-sm">The best way to learn is to teach</p>
-            </div>
-            <div className="p-5 md:p-6 text-center">
-              <p className={`mb-5 leading-relaxed text-sm md:text-base ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                Explain concepts in your own words and get instant AI feedback on your understanding.
-              </p>
-              <Button
-                onClick={() => generateCards()}
-                className="w-full h-12 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-bold text-base md:text-lg rounded-xl shadow-xl"
-              >
-                <Sparkles className="w-5 h-5 mr-2" />
-                Generate Cards
-              </Button>
-              <button
-                onClick={() => setShowCustomize(true)}
-                className={`w-full mt-2 text-sm font-medium py-2 rounded-lg transition-colors ${isDark ? 'text-purple-400 hover:bg-purple-500/10' : 'text-purple-600 hover:bg-purple-50'}`}
-              >
-                ⚙️ Customize (topics, difficulty, amount)
-              </button>
-              <CustomizeGenerationModal
-                open={showCustomize}
-                onOpenChange={setShowCustomize}
-                type="teach_it"
-                lessonId={lesson?.id}
-                compressedContent={lesson?.compressed_content || extractedContent}
-                onGenerate={(opts) => generateCards(opts)}
-              />
-            </div>
-          </Card>
-        </motion.div>
-      </div>
+      <>
+        <GenerateToolCTA
+          icon={Lightbulb}
+          title="Teach It to Master It"
+          description="Explain concepts in your own words and get instant AI feedback on your understanding."
+          features={[
+            "The best way to learn is to teach",
+            "AI grades your explanations instantly",
+            "Earn +10-20 XP per concept taught"
+          ]}
+          buttonLabel="Generate Teach It Cards"
+          accentColor="violet"
+          onGenerate={() => generateCards()}
+          onCustomize={() => setShowCustomize(true)}
+        />
+        <CustomizeGenerationModal
+          open={showCustomize}
+          onOpenChange={setShowCustomize}
+          type="teach_it"
+          lessonId={lesson?.id}
+          compressedContent={lesson?.compressed_content || extractedContent}
+          onGenerate={(opts) => generateCards(opts)}
+        />
+      </>
     );
   }
 
