@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Insufficient lesson content to generate exam' }, { status: 400 });
     }
 
-    const questionCount = amount || 10;
+    const questionCount = amount || 5;
     const difficultyPref = difficulty || 'mixed';
     
     const difficultyInstruction = difficultyPref !== 'mixed'
