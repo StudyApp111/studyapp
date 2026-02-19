@@ -29,22 +29,24 @@ export default function LearnTopicList({ topics, currentTopicIndex, onSelectTopi
   }
 
   return (
-    <div className={`px-3 md:px-6 py-4 pb-8 w-full max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+    <div className={`px-4 md:px-8 py-6 pb-12 w-full max-w-4xl mx-auto ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
       {/* Header */}
-      <div className="mb-4">
-        <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>📚 Learn Your Material</h2>
-        <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-          Select a topic to hear an AI lecture with key concepts explained
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'} flex items-center gap-2`}>
+            <span className="text-3xl">📚</span> Course Topics
+          </h2>
+          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Master your material one topic at a time
+          </p>
+        </div>
+        <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDark ? 'bg-white/10 text-slate-300' : 'bg-white shadow-sm text-slate-600'}`}>
+          {topics.length} Modules
+        </div>
       </div>
 
-      {/* Topic progress */}
-      <div className={`text-xs font-medium mb-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-        {topics.length} topics from your material
-      </div>
-
-      {/* Topic Cards */}
-      <div className="space-y-2">
+      {/* Topic Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {topics.map((topic, idx) => (
           <motion.button
             key={idx}
@@ -52,37 +54,40 @@ export default function LearnTopicList({ topics, currentTopicIndex, onSelectTopi
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}
             onClick={() => onSelectTopic(idx)}
-            className={`w-full text-left p-4 rounded-xl border transition-all group ${
+            className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden ${
               currentTopicIndex === idx
-                ? (isDark ? 'bg-purple-600/20 border-purple-500/50 ring-1 ring-purple-500/30' : 'bg-purple-50 border-purple-300 ring-1 ring-purple-200')
-                : (isDark ? 'bg-white/5 border-white/10 hover:border-purple-500/30 hover:bg-white/8' : 'bg-white border-slate-200 hover:border-purple-200 hover:shadow-sm')
+                ? (isDark ? 'bg-purple-600/20 border-purple-500/50 ring-1 ring-purple-500/30' : 'bg-white border-purple-300 shadow-lg shadow-purple-100')
+                : (isDark ? 'bg-[#12121a] border-white/5 hover:border-purple-500/30 hover:bg-white/5' : 'bg-white border-slate-100 hover:border-purple-200 hover:shadow-md')
             }`}
           >
-            <div className="flex items-center gap-3">
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+            {/* Hover Gradient */}
+            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${
+              isDark ? 'from-purple-500/5 to-transparent' : 'from-purple-50 to-transparent'
+            }`} />
+
+            <div className="relative flex gap-4 items-start">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
                 currentTopicIndex === idx
-                  ? 'bg-gradient-to-br from-purple-600 to-indigo-600'
-                  : (isDark ? 'bg-white/10' : 'bg-purple-100')
+                  ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white'
+                  : (isDark ? 'bg-white/10 text-purple-400' : 'bg-purple-50 text-purple-600')
               }`}>
-                <span className={`text-sm font-bold ${currentTopicIndex === idx ? 'text-white' : (isDark ? 'text-purple-400' : 'text-purple-600')}`}>
-                  {idx + 1}
-                </span>
+                <span className="text-lg font-bold">{idx + 1}</span>
               </div>
 
-              <div className="flex-1 min-w-0">
-                <p className={`font-semibold text-sm ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+              <div className="flex-1 min-w-0 pt-0.5">
+                <h3 className={`font-bold text-base mb-1.5 leading-tight ${isDark ? 'text-slate-100' : 'text-slate-900 group-hover:text-purple-700 transition-colors'}`}>
                   {topic.title}
-                </p>
+                </h3>
                 {topic.description && (
-                  <p className={`text-[11px] mt-0.5 line-clamp-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <p className={`text-sm leading-relaxed line-clamp-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                     {topic.description}
                   </p>
                 )}
+                
+                <div className={`mt-3 flex items-center text-xs font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'} opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0`}>
+                  Start Lecture <ChevronRight className="w-3 h-3 ml-0.5" />
+                </div>
               </div>
-
-              <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:translate-x-0.5 ${
-                currentTopicIndex === idx ? 'text-purple-400' : (isDark ? 'text-slate-600' : 'text-slate-400')
-              }`} />
             </div>
           </motion.button>
         ))}

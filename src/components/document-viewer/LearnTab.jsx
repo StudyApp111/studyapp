@@ -13,14 +13,20 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
   const { isPro, triggerUpgradeModal } = useSubscription();
   const { isDark } = useTheme();
 
-  const [topics, setTopics] = useState([]);
+  const [topics, setTopics] = useState(lesson?.topics || []);
   const [loadingTopics, setLoadingTopics] = useState(false);
   const [selectedTopicIdx, setSelectedTopicIdx] = useState(null);
   const [lecture, setLecture] = useState(null);
   const [loadingLecture, setLoadingLecture] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(!!(lesson?.topics && lesson.topics.length > 0));
 
-  // Do NOT auto-load on mount — user clicks "Generate Topics" to avoid rate limits
+  // Sync state with prop if lesson updates
+  useEffect(() => {
+    if (lesson?.topics && lesson.topics.length > 0) {
+      setTopics(lesson.topics);
+      setHasLoaded(true);
+    }
+  }, [lesson?.topics]);
 
   const [errorMsg, setErrorMsg] = useState(null);
 
@@ -32,6 +38,8 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
       const { data } = await base44.functions.invoke('generateLearnTopics', { lesson_id: lesson.id });
       if (data?.topics) {
         setTopics(data.topics);
+        // Persist generated topics
+        await base44.entities.Lesson.update(lesson.id, { topics: data.topics });
       }
     } catch (err) {
       console.error("Error loading topics:", err);

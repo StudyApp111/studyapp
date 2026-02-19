@@ -346,13 +346,13 @@ export default function DocumentViewerTabs({ lesson }) {
           {/* Header with Controls */}
           <div className={`border-b px-3 py-2 ${isDark ? 'border-white/10' : 'border-purple-200'}`}>
             <div className="flex items-center justify-between gap-2">
-              <div className={`flex items-center rounded-lg p-0.5 ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
+              <div className={`flex items-center rounded-lg p-0.5 overflow-x-auto scrollbar-hide flex-nowrap ${isDark ? 'bg-white/10' : 'bg-slate-100'} max-w-[calc(100%-80px)]`}>
                 {hasFile && (
                   <Button
                     variant={viewMode === "pdf" ? "default" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("pdf")}
-                    className={`text-xs h-7 px-3 ${viewMode === "pdf" ? (isDark ? "bg-white/20 shadow-sm text-white" : "bg-white shadow-sm text-slate-900") : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900")}`}
+                    className={`text-xs h-7 px-3 whitespace-nowrap flex-shrink-0 ${viewMode === "pdf" ? (isDark ? "bg-white/20 shadow-sm text-white" : "bg-white shadow-sm text-slate-900") : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900")}`}
                   >
                     <FileText className="w-3 h-3 mr-1" />
                     PDF
@@ -362,7 +362,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   variant={viewMode === "transcript" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("transcript")}
-                  className={`text-xs h-7 px-3 ${viewMode === "transcript" ? (isDark ? "bg-white/20 shadow-sm text-white" : "bg-white shadow-sm text-slate-900") : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900")}`}
+                  className={`text-xs h-7 px-3 whitespace-nowrap flex-shrink-0 ${viewMode === "transcript" ? (isDark ? "bg-white/20 shadow-sm text-white" : "bg-white shadow-sm text-slate-900") : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900")}`}
                 >
                   <Highlighter className="w-3 h-3 mr-1" />
                   Annotate
@@ -371,7 +371,7 @@ export default function DocumentViewerTabs({ lesson }) {
                   variant={viewMode === "notes" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("notes")}
-                  className={`text-xs h-7 px-3 ${viewMode === "notes" ? (isDark ? "bg-white/20 shadow-sm text-white" : "bg-white shadow-sm text-slate-900") : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900")}`}
+                  className={`text-xs h-7 px-3 whitespace-nowrap flex-shrink-0 ${viewMode === "notes" ? (isDark ? "bg-white/20 shadow-sm text-white" : "bg-white shadow-sm text-slate-900") : (isDark ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-900")}`}
                 >
                   <StickyNote className="w-3 h-3 mr-1" />
                   Notes
