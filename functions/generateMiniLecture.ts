@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 
 Deno.serve(async (req) => {
   try {
@@ -6,53 +7,92 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { course_name, topic_title, topic_content } = await req.json();
-    if (!topic_title || !topic_content) {
-      return Response.json({ error: 'topic_title and topic_content required' }, { status: 400 });
+    const { course_name, topic_title, topic_content, lesson_id } = await req.json();
+    if (!topic_title) {
+      return Response.json({ error: 'topic_title required' }, { status: 400 });
     }
 
     const GEMINI_KEY = Deno.env.get('GEMINIAPIKEY');
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+
+    const isShortContent = !topic_content || topic_content.length < 150;
+    let enrichedContent = topic_content || '';
+
+    // For minimal content, enrich with Google Search grounding
+    if (isShortContent) {
+      console.log("Short topic content, enriching with Google Search...");
+      try {
+        const searchModel = genAI.getGenerativeModel({
+          model: 'gemini-2.0-flash-lite',
+          tools: [{ googleSearch: {} }]
+        });
+        const searchResult = await searchModel.generateContent({
           contents: [{
-            parts: [{
-              text: `You are an expert lecturer for the course "${course_name || 'this course'}".
+            role: 'user',
+            parts: [{ text: `For the course "${course_name || 'general studies'}", explain the topic "${topic_title}" in depth. Include definitions, key concepts, real-world examples, and why it matters. Provide detailed educational content.` }]
+          }],
+          generationConfig: { temperature: 0.3, maxOutputTokens: 3000 }
+        });
+        const searchContext = searchResult.response.text();
+        if (searchContext && searchContext.length > 100) {
+          enrichedContent = `${topic_content ? `Student's notes: ${topic_content}\n\n` : ''}Research on topic:\n${searchContext}`;
+        }
+      } catch (searchErr) {
+        console.warn("Search grounding failed:", searchErr.message);
+        // Proceed with whatever content we have
+      }
+    }
 
-Write a detailed, student-friendly lecture explanation of the topic "${topic_title}".
+    const finalContent = enrichedContent || `The topic "${topic_title}" as taught in ${course_name || 'this course'}.`;
 
-STUDENT'S MATERIAL FOR THIS TOPIC:
-${topic_content}
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{
+          text: `You are an expert university lecturer teaching "${course_name || 'this course'}".
+
+Write a rich, detailed lecture on the topic: "${topic_title}"
+
+CONTENT TO BASE THE LECTURE ON:
+${finalContent}
 
 INSTRUCTIONS:
-- Write a lecture with a clear heading and 3-5 key concept explanations
-- For each key concept, explain what it is, how it works, give a concrete example from the provided material, and explain why it matters
-- Write in a conversational tone suitable for being read aloud
-- Each concept explanation should be at least 150 words
-- Use simple, clear language that a student would easily understand
-- Structure with markdown headings (## for the main title, ### for each concept)
-- Do NOT use bullet points for the main explanations — write in flowing paragraphs
-- Include transition sentences between concepts
+- Start with "## ${topic_title}" as the title
+- Write 3-5 key concept sections using ### headings
+- For EACH concept: define it clearly, explain how it works, provide a real-world example, and explain why it matters to students
+- Write in a warm, engaging, conversational tone — as if speaking directly to a student
+- Each section should be 150-250 words of flowing prose (no bullet points)
+- Include smooth transitions between sections
+- End with a short "## Key Takeaways" summary paragraph
+- Total length: 800-1200 words
 
-Write the full lecture now.`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 6000
-          }
-        })
+Write the full lecture now:`
+        }]
+      }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 6000 }
+    });
+
+    const lectureText = result.response.text();
+
+    // Persist the lecture to the lesson entity if lesson_id provided
+    if (lesson_id && lectureText) {
+      try {
+        const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
+        if (lessons.length > 0) {
+          const lesson = lessons[0];
+          const savedLectures = lesson.saved_lectures || {};
+          savedLectures[topic_title] = lectureText;
+          await base44.entities.Lesson.update(lesson_id, { saved_lectures: savedLectures });
+        }
+      } catch (saveErr) {
+        console.warn("Could not save lecture:", saveErr.message);
       }
-    );
-
-    const data = await response.json();
-    const lectureText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    }
 
     return Response.json({ success: true, lecture: lectureText });
   } catch (error) {
+    console.error("generateMiniLecture error:", error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

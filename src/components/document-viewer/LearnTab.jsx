@@ -61,9 +61,20 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
   const handleSelectTopic = async (idx) => {
     setSelectedTopicIdx(idx);
     
-    // Check cache first
+    // Check in-memory cache first
     if (lectureCache.current[idx]) {
       setLecture(lectureCache.current[idx]);
+      setLoadingLecture(false);
+      return;
+    }
+
+    // Check if already saved on the lesson entity
+    const topic = topics[idx];
+    const savedLectures = lesson?.saved_lectures || {};
+    if (savedLectures[topic.title]) {
+      const saved = savedLectures[topic.title];
+      setLecture(saved);
+      lectureCache.current[idx] = saved;
       setLoadingLecture(false);
       return;
     }
@@ -71,12 +82,12 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
     setLecture(null);
     setLoadingLecture(true);
 
-    const topic = topics[idx];
     try {
       const { data } = await base44.functions.invoke('generateMiniLecture', {
         course_name: lesson?.course_name || '',
         topic_title: topic.title,
-        topic_content: topic.key_content || topic.description || topic.title
+        topic_content: topic.key_content || topic.description || topic.title,
+        lesson_id: lesson?.id
       });
       if (data?.lecture) {
         setLecture(data.lecture);
