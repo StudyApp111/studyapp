@@ -119,14 +119,16 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   };
 
   const renderMCQOptions = () => (
-    <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} className="space-y-2 md:space-y-3">
+    <RadioGroup value={selectedAnswer} onValueChange={handleAnswerSelect} className="space-y-2">
       {question.options?.map((option, index) => {
         const optionLetter = String.fromCharCode(65 + index);
+        // Robust option text extraction - handle objects
         let optionText = '';
         if (typeof option === 'string') {
           optionText = option;
         } else if (option && typeof option === 'object') {
           optionText = option.text || option.label || option.value || option.content || '';
+          // Last resort: don't stringify objects, just use empty string
         }
         const displayText = stripLetterPrefix(optionText);
         const isThisCorrect = checkIsCorrect(optionText, question.correct_answer, index);
@@ -136,7 +138,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
           <label
             key={index}
             htmlFor={`option-${index}`}
-            className={`flex items-center gap-2 p-2.5 md:p-3.5 rounded-lg border-2 transition-all cursor-pointer ${getOptionStyle(optionText, index)} ${hasAnswered ? 'cursor-default' : 'active:scale-[0.99]'}`}
+            className={`flex items-center gap-2 p-2.5 rounded-lg border-2 transition-all cursor-pointer ${getOptionStyle(optionText, index)} ${hasAnswered ? 'cursor-default' : 'active:scale-[0.99]'}`}
             onClick={(e) => {
               e.preventDefault();
               handleAnswerSelect(optionText);
@@ -145,8 +147,8 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
             <RadioGroupItem value={optionText} id={`option-${index}`} className="pointer-events-none shrink-0" disabled={hasAnswered} />
             <div className="flex-1 min-w-0">
               <div className="flex items-start gap-1">
-                <span className={`font-semibold text-xs md:text-sm shrink-0 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{optionLetter}.</span>
-                <MathText inline className={`text-xs md:text-sm leading-snug break-words ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{displayText}</MathText>
+                <span className={`font-semibold text-xs shrink-0 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{optionLetter}.</span>
+                <MathText inline className={`text-xs leading-snug break-words ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{displayText}</MathText>
               </div>
             </div>
             {hasAnswered && isThisCorrect && (
@@ -288,7 +290,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
         duration: showWrongPulse ? 0.5 : 0.2,
         x: { duration: 0.5, ease: "easeInOut" }
       }}
-      className={`space-y-3 md:space-y-4 relative ${showWrongPulse ? 'ring-2 ring-red-400/60 rounded-xl' : ''}`}
+      className={`space-y-3 relative ${showWrongPulse ? 'ring-2 ring-red-400/60 rounded-xl' : ''}`}
     >
       {/* Wrong answer flash overlay */}
       <AnimatePresence>
@@ -326,7 +328,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
             )}
           </div>
         </div>
-        <MathText className={`text-sm md:text-base font-medium leading-relaxed ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+        <MathText className={`text-sm font-medium leading-relaxed ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
           {question.question_text}
         </MathText>
       </div>
@@ -365,12 +367,12 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
               </motion.div>
             )}
             <div className="flex-1">
-              <p className={`text-xs md:text-sm font-bold ${isCorrect ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-amber-300' : 'text-amber-700')}`}>
+              <p className={`text-xs font-bold ${isCorrect ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-amber-300' : 'text-amber-700')}`}>
                 {isCorrect ? "🎉 Excellent!" : "Keep learning!"}
               </p>
               {/* Show correct answer when wrong */}
               {!isCorrect && question.correct_answer && (
-                <MathText className={`text-xs md:text-sm font-medium mt-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                <MathText className={`text-xs font-medium mt-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
                   Correct answer: {isMCQ && /^[A-Da-d]$/i.test(question.correct_answer.trim()) 
                     ? (() => {
                         const letter = question.correct_answer.trim().toUpperCase();
@@ -383,7 +385,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
                 </MathText>
               )}
               {question.explanation && (
-                <MathText className={`text-xs md:text-sm mt-1.5 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                <MathText className={`text-xs mt-1.5 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                   {question.explanation}
                 </MathText>
               )}

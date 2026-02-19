@@ -96,12 +96,10 @@ export default function LearnTopicList({ topics, currentTopicIndex, onSelectTopi
                   
                   {/* CTA */}
                   <div className={`inline-flex items-center gap-1.5 text-xs font-semibold transition-all ${
-                    topic.lecture_content
-                      ? (isDark ? 'text-emerald-400 group-hover:text-emerald-300' : 'text-emerald-600 group-hover:text-emerald-700')
-                      : (isDark ? 'text-purple-400 group-hover:text-purple-300' : 'text-purple-600 group-hover:text-purple-700')
+                    isDark ? 'text-purple-400 group-hover:text-purple-300' : 'text-purple-600 group-hover:text-purple-700'
                   }`}>
                     <Headphones className="w-3.5 h-3.5" />
-                    {topic.lecture_content ? 'Resume Lecture' : 'Listen to Lecture'}
+                    Listen to Lecture
                     <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
                   </div>
                 </div>

@@ -6,7 +6,6 @@ import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, Gr
 import ReactMarkdown from "react-markdown";
 import { renderMathText } from "@/components/math/MathText";
 import NoteSettingsModal from "@/components/modals/NoteSettingsModal";
-import GenerateToolCTA from "./GenerateToolCTA";
 import { toast } from "sonner";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -349,22 +348,51 @@ export default function NotesTab({ lesson }) {
           </div>
         </div>
       ) : (
-        <>
-          <GenerateToolCTA
-            icon={Notebook}
-            title="AI Note Generator"
-            description="Transform your lesson content into structured study materials in seconds."
-            features={[
-              "Detailed notes with full topic coverage",
-              "Cheat sheets for quick exam reference",
-              "Exam prep summaries with key points"
-            ]}
-            buttonLabel="Generate Notes"
-            accentColor="purple"
-            onGenerate={() => generateNotes(settings)}
-            onCustomize={() => setSettingsOpen(true)}
-          />
-        </>
+        <div className={`overflow-y-auto p-4 ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+          <div className="max-w-md mx-auto text-center py-8">
+            <div className={`w-20 h-20 md:w-24 md:h-24 rounded-3xl rotate-3 flex items-center justify-center mb-6 mx-auto shadow-xl ${isDark ? 'bg-violet-600/20 shadow-violet-900/50' : 'bg-violet-100 shadow-violet-100'}`}>
+              <Sparkles className={`w-10 h-10 md:w-12 md:h-12 ${isDark ? 'text-violet-400' : 'text-violet-600'}`} />
+            </div>
+            
+            <h2 className={`text-2xl md:text-3xl font-bold mb-2 tracking-tight ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Note Generator</h2>
+            <p className={`text-sm md:text-base mb-6 leading-relaxed px-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+              Transform your lesson content into structured study materials in seconds.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              <div className={`p-3 rounded-xl border text-left ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`flex items-center gap-1.5 mb-1 font-bold text-xs ${isDark ? 'text-violet-400' : 'text-violet-700'}`}>
+                  <BookOpen className="w-3.5 h-3.5" /> Detailed Notes
+                </div>
+                <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Full topic coverage</p>
+              </div>
+              <div className={`p-3 rounded-xl border text-left ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
+                <div className={`flex items-center gap-1.5 mb-1 font-bold text-xs ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                  <Zap className="w-3.5 h-3.5" /> Cheat Sheets
+                </div>
+                <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Quick exam references</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2 w-full">
+              <Button 
+                onClick={() => generateNotes(settings)}
+                className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white shadow-lg shadow-violet-200 font-semibold"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate Notes
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setSettingsOpen(true)}
+                className={`w-full h-10 ${isDark ? 'border-white/10 hover:bg-white/5 hover:text-slate-200 text-slate-300' : 'border-slate-200 hover:bg-slate-50 hover:text-slate-900 text-slate-600'}`}
+              >
+                <Settings2 className="w-4 h-4 mr-2" />
+                Customize Settings
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

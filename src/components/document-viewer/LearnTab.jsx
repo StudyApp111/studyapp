@@ -68,18 +68,10 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
       return;
     }
     
-    // Check if lecture is already stored on the topic
-    const topic = topics[idx];
-    if (topic.lecture_content) {
-      setLecture(topic.lecture_content);
-      lectureCache.current[idx] = topic.lecture_content;
-      setLoadingLecture(false);
-      return;
-    }
-    
     setLecture(null);
     setLoadingLecture(true);
 
+    const topic = topics[idx];
     try {
       const { data } = await base44.functions.invoke('generateMiniLecture', {
         course_name: lesson?.course_name || '',
@@ -89,12 +81,6 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
       if (data?.lecture) {
         setLecture(data.lecture);
         lectureCache.current[idx] = data.lecture;
-        
-        // Persist lecture to lesson entity so it's not regenerated
-        const updatedTopics = [...topics];
-        updatedTopics[idx] = { ...updatedTopics[idx], lecture_content: data.lecture };
-        setTopics(updatedTopics);
-        await base44.entities.Lesson.update(lesson.id, { topics: updatedTopics });
       }
     } catch (err) {
       console.error("Error generating lecture:", err);

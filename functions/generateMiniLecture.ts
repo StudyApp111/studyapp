@@ -12,36 +12,6 @@ Deno.serve(async (req) => {
     }
 
     const GEMINI_KEY = Deno.env.get('GEMINIAPIKEY');
-
-    // Detect thin content — if the topic_content is very short, use Google Search grounding
-    const isContentThin = topic_content.length < 300;
-    let enrichedContent = topic_content;
-
-    if (isContentThin) {
-      // Use Gemini with Google Search grounding to gather real course info
-      const searchResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{ text: `Research the topic "${topic_title}" in the context of the university course "${course_name || 'this course'}". Provide detailed factual information, key theories, important concepts, and real-world examples. Write at least 500 words of substantive academic content.` }]
-            }],
-            tools: [{ google_search: {} }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 3000 }
-          })
-        }
-      );
-
-      const searchData = await searchResponse.json();
-      const researchText = searchData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-      if (researchText.length > 100) {
-        enrichedContent = `ORIGINAL COURSE DESCRIPTION:\n${topic_content}\n\nRESEARCHED CONTENT:\n${researchText}`;
-      }
-    }
-
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
       {
@@ -55,7 +25,7 @@ Deno.serve(async (req) => {
 Write a detailed, student-friendly lecture explanation of the topic "${topic_title}".
 
 STUDENT'S MATERIAL FOR THIS TOPIC:
-${enrichedContent}
+${topic_content}
 
 INSTRUCTIONS:
 - Write a lecture with a clear heading and 3-5 key concept explanations
@@ -66,8 +36,6 @@ INSTRUCTIONS:
 - Structure with markdown headings (## for the main title, ### for each concept)
 - Do NOT use bullet points for the main explanations — write in flowing paragraphs
 - Include transition sentences between concepts
-- Do NOT talk about what a syllabus should contain or meta-commentary about the course structure
-- Focus ONLY on teaching the actual subject matter and concepts
 
 Write the full lecture now.`
             }]

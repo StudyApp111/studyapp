@@ -295,15 +295,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       });
       
       if (plans.length > 0) {
-        const plan = plans[0];
-        
-        // If plan has no grade yet but the latest exam does, update the plan
-        if (!plan.current_predicted_grade && latestOfficialExam?.predicted_grade) {
-          plan.current_predicted_grade = latestOfficialExam.predicted_grade;
-          plan.current_score = latestOfficialExam.total_score;
-        }
-        
-        setStudyPlan(plan);
+        setStudyPlan(plans[0]);
         loadLiveProgress();
       }
       setLoading(false);
@@ -451,12 +443,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     .filter(e => e.completed && e.predicted_grade && e.exam_type !== 'practice')
     .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
 
-  // Also check the latest completed exam directly for grade — feedbackGrade may have saved it already
-  const latestCompletedExamGrade = latestOfficialExam?.predicted_grade;
-  const latestCompletedExamScore = latestOfficialExam?.total_score;
-  
-  const currentGrade = studyPlan?.current_predicted_grade || latestCompletedExamGrade || studyPlan?.initial_predicted_grade || '—';
-  const currentScore = studyPlan?.current_score || latestCompletedExamScore || studyPlan?.initial_score || null;
+  const currentGrade = studyPlan?.current_predicted_grade || latestOfficialExam?.predicted_grade || studyPlan?.initial_predicted_grade || '—';
+  const currentScore = studyPlan?.current_score || studyPlan?.initial_score || null;
   const currentConfidence = studyPlan?.current_confidence || studyPlan?.initial_confidence || 45;
   const learningVelocity = studyPlan?.learning_velocity;
   const velocityConfig = getVelocityConfig(learningVelocity);
