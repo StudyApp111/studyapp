@@ -689,63 +689,65 @@ export default function DocumentViewer() {
               
               {/* Tabs bar */}
               <div className={`backdrop-blur-sm px-2 py-1.5 border-b ${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-purple-200'}`}>
-                <TabsList className={`flex w-full border p-0.5 h-auto rounded-lg shadow-sm gap-0.5 ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
-                  {hasDocument && (
+                <div className="overflow-x-auto scrollbar-hide">
+                  <TabsList className={`flex w-max min-w-full border p-0.5 h-auto rounded-lg shadow-sm gap-0.5 ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
+                    {hasDocument && (
+                      <TabsTrigger 
+                        value="doc"
+                        className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span className="text-[10px] font-semibold">Doc</span>
+                      </TabsTrigger>
+                    )}
                     <TabsTrigger 
-                      value="doc"
-                      className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                      value="studyplan"
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                     >
-                      <FileText className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Doc</span>
+                      {showStudyPlanDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                      <Target className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Plan</span>
                     </TabsTrigger>
-                  )}
-                  <TabsTrigger 
-                    value="studyplan"
-                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    {showStudyPlanDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <Target className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-semibold">Plan</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="notes"
-                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    <StickyNote className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-semibold">Notes</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="teachit"
-                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    {showTeachItDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <Brain className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-semibold">Teach</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="flashcards"
-                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    {showFlashcardsDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <BookMarked className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-semibold">Flash</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="exam"
-                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    {showExamDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                    <Zap className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-semibold">Practice</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="learn"
-                    className={`flex-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-1 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    <Headphones className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-semibold">Learn</span>
-                  </TabsTrigger>
-                </TabsList>
+                    <TabsTrigger 
+                      value="notes"
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                    >
+                      <StickyNote className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Notes</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="teachit"
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                    >
+                      {showTeachItDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                      <Brain className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Teach</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="flashcards"
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                    >
+                      {showFlashcardsDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                      <BookMarked className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Flash</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="exam"
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                    >
+                      {showExamDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
+                      <Zap className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Practice</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="learn"
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                    >
+                      <Headphones className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Learn</span>
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
               </div>
             </div>
             

@@ -1,23 +1,33 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, ChevronLeft, Loader2, Volume2, VolumeX } from "lucide-react";
-import { motion } from "framer-motion";
+import { Play, Pause, ChevronLeft, Loader2, Volume2, HelpCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useAITutor } from "@/components/ai-tutor/AITutorContext";
+import { base44 } from "@/api/base44Client";
 
-export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture, isLoadingLecture, onBack, onQuizPrompt }) {
+export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture, isLoadingLecture, onBack, onQuizPrompt, lesson }) {
   const { isDark } = useTheme();
+  const { openWithContext } = useAITutor();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSentenceIdx, setCurrentSentenceIdx] = useState(-1);
   const [audioLoading, setAudioLoading] = useState(false);
+  const [audioSrc, setAudioSrc] = useState(null);
+  const audioRef = useRef(null);
   const utteranceRef = useRef(null);
   const sentencesRef = useRef([]);
   const contentRef = useRef(null);
+  
+  // Text selection state
+  const [selectedText, setSelectedText] = useState("");
+  const [showAskAI, setShowAskAI] = useState(false);
+  const [askAIPos, setAskAIPos] = useState({ x: 0, y: 0 });
+  const askAIRef = useRef(null);
 
   // Split lecture into sentences for highlighting
   useEffect(() => {
     if (!lecture) return;
-    // Strip markdown for sentence parsing
     const clean = lecture
       .replace(/#{1,6}\s*/g, '')
       .replace(/\*\*([^*]+)\*\*/g, '$1')
@@ -31,6 +41,10 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
 
   const stopSpeech = useCallback(() => {
     window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     setIsPlaying(false);
     setCurrentSentenceIdx(-1);
   }, []);
@@ -39,10 +53,59 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
     };
   }, []);
 
-  const playSpeech = useCallback(() => {
+  // Generate TTS audio from backend
+  const playGeminiTTS = useCallback(async () => {
+    if (!lecture) return;
+    
+    // If we already have audio, just play it
+    if (audioSrc && audioRef.current) {
+      audioRef.current.play();
+      setIsPlaying(true);
+      return;
+    }
+    
+    setAudioLoading(true);
+    setIsPlaying(true);
+    
+    try {
+      const { data } = await base44.functions.invoke('generateLectureSpeech', { text: lecture });
+      
+      if (data?.audio_base64) {
+        const mimeType = data.mime_type || 'audio/wav';
+        const src = `data:${mimeType};base64,${data.audio_base64}`;
+        setAudioSrc(src);
+        
+        // Play audio
+        const audio = new Audio(src);
+        audioRef.current = audio;
+        audio.onended = () => {
+          setIsPlaying(false);
+          setCurrentSentenceIdx(-1);
+        };
+        audio.onerror = () => {
+          console.error("Audio playback error, falling back to browser TTS");
+          playBrowserTTS();
+        };
+        await audio.play();
+      } else {
+        // Fallback to browser TTS
+        playBrowserTTS();
+      }
+    } catch (err) {
+      console.error("Gemini TTS error:", err);
+      playBrowserTTS();
+    } finally {
+      setAudioLoading(false);
+    }
+  }, [lecture, audioSrc]);
+
+  const playBrowserTTS = useCallback(() => {
     if (!sentencesRef.current.length) return;
 
     setIsPlaying(true);
@@ -75,9 +138,67 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
     if (isPlaying) {
       stopSpeech();
     } else {
-      playSpeech();
+      playGeminiTTS();
     }
   };
+
+  // Handle text selection for Ask AI
+  const handleTextSelection = () => {
+    const selection = window.getSelection();
+    const text = selection?.toString().trim();
+    
+    if (text && text.length > 5) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      setSelectedText(text);
+      setAskAIPos({
+        x: rect.left + rect.width / 2,
+        y: rect.top - 10
+      });
+      setShowAskAI(true);
+    } else {
+      setShowAskAI(false);
+      setSelectedText("");
+    }
+  };
+
+  const handleAskAI = () => {
+    const isMobile = window.innerWidth < 768;
+    
+    const contextData = {
+      type: "document",
+      selectedText,
+      lesson: lesson ? {
+        id: lesson.id,
+        course_name: lesson.course_name,
+        extracted_content: lesson.extracted_content?.substring(0, 8000)
+      } : null,
+      initialPrompt: `Explain this section from my lecture on "${topic?.title}":\n\n"${selectedText}"\n\nBreak it down in simple terms.`
+    };
+
+    if (isMobile) {
+      openWithContext(contextData);
+    } else {
+      window.dispatchEvent(new CustomEvent('askAIFromContext', { detail: contextData }));
+    }
+    
+    setShowAskAI(false);
+    setSelectedText("");
+    window.getSelection().removeAllRanges();
+  };
+
+  // Click outside to dismiss
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (askAIRef.current && !askAIRef.current.contains(e.target)) {
+        setShowAskAI(false);
+        setSelectedText("");
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (isLoadingLecture) {
     return (
@@ -136,7 +257,7 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
               {topic?.title}
             </p>
             <p className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              {isPlaying ? `Reading sentence ${currentSentenceIdx + 1} of ${sentencesRef.current.length}` : 'Tap play to listen'}
+              {audioLoading ? 'Generating audio...' : isPlaying ? 'Playing...' : 'Tap play to listen'}
             </p>
           </div>
           {isPlaying && (
@@ -155,7 +276,7 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
       </div>
 
       {/* Lecture Content */}
-      <div ref={contentRef} className="px-4">
+      <div ref={contentRef} className="px-4" onMouseUp={handleTextSelection} onTouchEnd={handleTextSelection}>
         <div className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''}`}>
           <ReactMarkdown
             components={{
@@ -163,7 +284,6 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
               h3: ({ children }) => <h3 className={`text-base font-bold mt-5 mb-2 ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{children}</h3>,
               p: ({ children }) => {
                 const text = typeof children === 'string' ? children : '';
-                // Check if any sentence in this paragraph is the current one
                 const isHighlighted = currentSentenceIdx >= 0 && sentencesRef.current[currentSentenceIdx] && text.includes(sentencesRef.current[currentSentenceIdx]);
                 return (
                   <p className={`text-sm leading-relaxed mb-3 transition-colors duration-300 ${
@@ -183,6 +303,32 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
           </ReactMarkdown>
         </div>
       </div>
+
+      {/* Floating Ask AI Button */}
+      <AnimatePresence>
+        {showAskAI && selectedText && (
+          <motion.div
+            ref={askAIRef}
+            initial={{ opacity: 0, scale: 0.9, y: 5 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed z-50"
+            style={{
+              left: `${Math.min(Math.max(askAIPos.x, 80), window.innerWidth - 80)}px`,
+              top: `${askAIPos.y}px`,
+              transform: 'translate(-50%, -100%)'
+            }}
+          >
+            <button
+              onClick={handleAskAI}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-medium text-xs rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>Ask AI</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* End-of-topic Quiz Prompt */}
       <div className="px-4 mt-6">

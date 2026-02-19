@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { BookOpen, ChevronRight, Loader2 } from "lucide-react";
+import { BookOpen, ChevronRight, Loader2, Headphones, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function LearnTopicList({ topics, currentTopicIndex, onSelectTopic, loading }) {
@@ -29,67 +30,82 @@ export default function LearnTopicList({ topics, currentTopicIndex, onSelectTopi
   }
 
   return (
-    <div className={`px-4 md:px-8 py-6 pb-12 w-full max-w-4xl mx-auto ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+    <div className={`px-4 md:px-8 py-6 pb-12 w-full max-w-3xl mx-auto ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'} flex items-center gap-2`}>
-            <span className="text-3xl">📚</span> Course Topics
-          </h2>
-          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Master your material one topic at a time
-          </p>
-        </div>
-        <div className={`px-3 py-1 rounded-full text-xs font-medium ${isDark ? 'bg-white/10 text-slate-300' : 'bg-white shadow-sm text-slate-600'}`}>
-          {topics.length} Modules
+      <div className="mb-2">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <Headphones className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className={`text-xl md:text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              AI Voice Lectures
+            </h2>
+            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              {topics.length} topics from your material
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Topic Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Helpful tip */}
+      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg mb-5 ${isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-100'}`}>
+        <Sparkles className={`w-3.5 h-3.5 flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+        <p className={`text-xs ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+          Tap a topic to generate a detailed AI lecture. You can read along or listen with text-to-speech.
+        </p>
+      </div>
+
+      {/* Topic List */}
+      <div className="space-y-3">
         {topics.map((topic, idx) => (
-          <motion.button
+          <motion.div
             key={idx}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            onClick={() => onSelectTopic(idx)}
-            className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 group relative overflow-hidden ${
-              currentTopicIndex === idx
-                ? (isDark ? 'bg-purple-600/20 border-purple-500/50 ring-1 ring-purple-500/30' : 'bg-white border-purple-300 shadow-lg shadow-purple-100')
-                : (isDark ? 'bg-[#12121a] border-white/5 hover:border-purple-500/30 hover:bg-white/5' : 'bg-white border-slate-100 hover:border-purple-200 hover:shadow-md')
-            }`}
+            transition={{ delay: idx * 0.06, duration: 0.3 }}
           >
-            {/* Hover Gradient */}
-            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${
-              isDark ? 'from-purple-500/5 to-transparent' : 'from-purple-50 to-transparent'
-            }`} />
-
-            <div className="relative flex gap-4 items-start">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
+            <button
+              onClick={() => onSelectTopic(idx)}
+              className={`w-full text-left rounded-2xl border transition-all duration-200 group overflow-hidden ${
                 currentTopicIndex === idx
-                  ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white'
-                  : (isDark ? 'bg-white/10 text-purple-400' : 'bg-purple-50 text-purple-600')
-              }`}>
-                <span className="text-lg font-bold">{idx + 1}</span>
-              </div>
+                  ? (isDark ? 'bg-purple-600/15 border-purple-500/40 shadow-lg shadow-purple-500/10' : 'bg-white border-purple-300 shadow-lg shadow-purple-100')
+                  : (isDark ? 'bg-[#12121a] border-white/5 hover:border-purple-500/25 hover:bg-[#16162a]' : 'bg-white border-slate-100 hover:border-purple-200 hover:shadow-md')
+              }`}
+            >
+              <div className="flex items-start gap-4 p-4 md:p-5">
+                {/* Topic Number */}
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-base transition-all ${
+                  currentTopicIndex === idx
+                    ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-500/30'
+                    : (isDark ? 'bg-white/8 text-purple-400 group-hover:bg-purple-500/20' : 'bg-purple-50 text-purple-600 group-hover:bg-purple-100')
+                }`}>
+                  {idx + 1}
+                </div>
 
-              <div className="flex-1 min-w-0 pt-0.5">
-                <h3 className={`font-bold text-base mb-1.5 leading-tight ${isDark ? 'text-slate-100' : 'text-slate-900 group-hover:text-purple-700 transition-colors'}`}>
-                  {topic.title}
-                </h3>
-                {topic.description && (
-                  <p className={`text-sm leading-relaxed line-clamp-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {topic.description}
-                  </p>
-                )}
-                
-                <div className={`mt-3 flex items-center text-xs font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'} opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0`}>
-                  Start Lecture <ChevronRight className="w-3 h-3 ml-0.5" />
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <h3 className={`font-bold text-sm md:text-base leading-snug mb-1 ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                    {topic.title}
+                  </h3>
+                  {topic.description && (
+                    <p className={`text-xs md:text-sm leading-relaxed line-clamp-2 mb-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {topic.description}
+                    </p>
+                  )}
+                  
+                  {/* CTA */}
+                  <div className={`inline-flex items-center gap-1.5 text-xs font-semibold transition-all ${
+                    isDark ? 'text-purple-400 group-hover:text-purple-300' : 'text-purple-600 group-hover:text-purple-700'
+                  }`}>
+                    <Headphones className="w-3.5 h-3.5" />
+                    Listen to Lecture
+                    <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.button>
+            </button>
+          </motion.div>
         ))}
       </div>
     </div>

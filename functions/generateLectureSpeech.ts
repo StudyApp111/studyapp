@@ -22,54 +22,50 @@ Deno.serve(async (req) => {
     // Truncate to ~4000 chars for TTS limits
     const truncated = cleanText.length > 4000 ? cleanText.substring(0, 4000) + '...' : cleanText;
 
-    // Use API_KEY (likely Google Cloud API Key) or fallback to GEMINIAPIKEY
-    const API_KEY = Deno.env.get('API_KEY') || Deno.env.get('GEMINIAPIKEY');
-    
-    // Voice selection: "Algieba" requested. 
-    // "Algieba" is likely a reference to a specific Journey voice or Gemini voice.
-    // For Google Cloud TTS, we'll use 'en-US-Journey-F' (a pleasant, expressive voice) as the closest match
-    // or 'en-GB-Neural2-D' if "Algieba" implies Gamma Leonis (British?).
-    // We'll default to 'en-US-Journey-O' (Warm, friendly) if specific map isn't found.
-    // Let's use 'en-US-Journey-D' which is often popular.
-    const voiceName = 'en-US-Journey-D';
+    const GEMINI_KEY = Deno.env.get('GEMINIAPIKEY');
 
+    // Use Gemini 2.5 Flash TTS with voice "Algieba" per docs
     const response = await fetch(
-      `https://texttospeech.googleapis.com/v1/text:synthesize?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-tts:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          input: { text: truncated },
-          voice: { 
-            languageCode: 'en-US', 
-            name: voiceName,
-          },
-          audioConfig: { 
-            audioEncoding: 'MP3',
-            speakingRate: 1.0,
-            pitch: 0.0
+          contents: [{
+            parts: [{ text: `Say the following in a clear, engaging, professor-like tone:\n\n${truncated}` }]
+          }],
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: "Algieba"
+                }
+              }
+            }
           }
         })
       }
     );
 
-    // Check if Google TTS returned audio
     const data = await response.json();
     
-    if (data.audioContent) {
+    if (data.error) {
+      console.error("Gemini TTS Error:", JSON.stringify(data.error));
+      throw new Error(data.error.message || "Gemini TTS failed");
+    }
+
+    const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    
+    if (inlineData?.data) {
       return Response.json({ 
         success: true, 
-        audio_base64: data.audioContent,
-        mime_type: 'audio/mp3'
+        audio_base64: inlineData.data,
+        mime_type: inlineData.mimeType || 'audio/wav'
       });
     }
 
-    if (data.error) {
-      console.error("Google TTS Error:", data.error);
-      throw new Error(data.error.message || "Google TTS failed");
-    }
-
-    throw new Error("No audio content received");
+    throw new Error("No audio content received from Gemini TTS");
 
   } catch (error) {
     console.error("generateLectureSpeech error:", error.message);

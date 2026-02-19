@@ -19,6 +19,9 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
   const [lecture, setLecture] = useState(null);
   const [loadingLecture, setLoadingLecture] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(!!(lesson?.topics && lesson.topics.length > 0));
+  
+  // Cache lectures per topic index so switching tabs doesn't lose them
+  const lectureCache = React.useRef({});
 
   // Sync state with prop if lesson updates
   useEffect(() => {
@@ -57,6 +60,14 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
 
   const handleSelectTopic = async (idx) => {
     setSelectedTopicIdx(idx);
+    
+    // Check cache first
+    if (lectureCache.current[idx]) {
+      setLecture(lectureCache.current[idx]);
+      setLoadingLecture(false);
+      return;
+    }
+    
     setLecture(null);
     setLoadingLecture(true);
 
@@ -69,6 +80,7 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
       });
       if (data?.lecture) {
         setLecture(data.lecture);
+        lectureCache.current[idx] = data.lecture;
       }
     } catch (err) {
       console.error("Error generating lecture:", err);
@@ -146,8 +158,9 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
         totalTopics={topics.length}
         lecture={lecture}
         isLoadingLecture={loadingLecture}
-        onBack={() => { setSelectedTopicIdx(null); setLecture(null); }}
+        onBack={() => { setSelectedTopicIdx(null); }}
         onQuizPrompt={handleQuizPrompt}
+        lesson={lesson}
       />
     );
   }
