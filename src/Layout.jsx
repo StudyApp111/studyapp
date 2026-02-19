@@ -278,7 +278,7 @@ function LayoutContent({ children, currentPageName }) {
                 className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
                   location.pathname.replace(/\/$/, '') === createPageUrl("Settings").replace(/\/$/, '')
                     ? 'bg-purple-600/20 text-purple-400 shadow-sm' 
-                    : isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+                    : isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
                 title="Settings"
               >
