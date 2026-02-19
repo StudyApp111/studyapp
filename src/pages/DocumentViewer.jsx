@@ -658,7 +658,7 @@ export default function DocumentViewer() {
                   <TeachItTab lesson={lesson} />
                 </TabsContent>
 
-                <TabsContent value="learn" className="mt-0 p-0 h-full">
+                <TabsContent value="learn" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />
                 </TabsContent>
 
@@ -793,7 +793,7 @@ export default function DocumentViewer() {
                 <TeachItTab lesson={lesson} />
               </TabsContent>
 
-              <TabsContent value="learn" className="mt-0 p-0 w-full overflow-x-hidden">
+              <TabsContent value="learn" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
                 <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />
               </TabsContent>
 
