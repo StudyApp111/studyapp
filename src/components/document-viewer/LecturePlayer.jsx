@@ -40,12 +40,16 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
   }, [lecture]);
 
   const stopSpeech = useCallback(() => {
+    isStoppedRef.current = true;
     window.speechSynthesis.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current = null;
     }
     setIsPlaying(false);
     setCurrentSentenceIdx(-1);
+    setAudioSrc(null);
+    chunksRef.current = [];
   }, []);
 
   // Cleanup on unmount
