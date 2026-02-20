@@ -10,6 +10,8 @@ import StepHowItWorks from "./StepHowItWorks";
 import StepFeatures from "./StepFeatures";
 import StepReady from "./StepReady";
 import StepMaterials from "./StepMaterials";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
+import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
 
 const TOTAL_STEPS = 7;
 
@@ -19,6 +21,7 @@ export default function OnboardingModal({ onComplete }) {
   const [user, setUser] = useState(null);
   const [displayName, setDisplayName] = useState("");
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { isGuest, startGuestSession, updateGuestProfile } = useGuestSession();
 
   // On mount, check if user is already authenticated
   useEffect(() => {
@@ -31,15 +34,19 @@ export default function OnboardingModal({ onComplete }) {
           setDisplayName(currentUser.full_name?.split(" ")[0] || "");
           // Authenticated users start at step 2 (profile)
           setStep(2);
+        } else if (isGuest) {
+          // Guest session already active — go to profile step
+          setStep(2);
         }
       } catch {
         // Not authenticated - stay on step 1
+        if (isGuest) setStep(2);
       } finally {
         setIsCheckingAuth(false);
       }
     };
     checkAuth();
-  }, []);
+  }, [isGuest]);
 
   // Track step changes in PostHog
   useEffect(() => {
@@ -70,10 +77,28 @@ export default function OnboardingModal({ onComplete }) {
     base44.auth.redirectToLogin(returnUrl);
   };
 
+  const handleGuestStart = async () => {
+    try { posthog.capture('guest_session_started'); } catch {}
+    const result = await startGuestSession();
+    if (result.allowed) {
+      setStep(2); // Go to profile step
+    }
+    return result;
+  };
+
   const handleProfileComplete = async ({ name, school }) => {
     try {
       posthog.capture('onboarding_profile_completed', { has_school: !!school });
     } catch {}
+
+    // Guest mode: store profile data locally, skip API calls
+    if (isGuest) {
+      updateGuestProfile(name, school);
+      setDisplayName(name);
+      handleNext();
+      return;
+    }
+
     try {
       await base44.auth.updateMe({ display_name: name });
       setDisplayName(name);
@@ -100,8 +125,16 @@ export default function OnboardingModal({ onComplete }) {
 
   const handleComplete = async () => {
     try {
-      posthog.capture('onboarding_completed', { total_steps: TOTAL_STEPS });
+      posthog.capture('onboarding_completed', { total_steps: TOTAL_STEPS, is_guest: isGuest });
     } catch {}
+
+    // Guest mode: skip updateMe, just complete
+    if (isGuest) {
+      sessionStorage.removeItem("onboarding_v2_active");
+      onComplete?.();
+      return;
+    }
+
     try {
       await base44.auth.updateMe({ onboarding_completed: true });
       sessionStorage.removeItem("onboarding_v2_active");
@@ -170,12 +203,17 @@ export default function OnboardingModal({ onComplete }) {
           <div className="px-6 pb-6">
             <AnimatePresence mode="wait">
               {step === 1 && (
-                <StepSignIn key="step1" onSignIn={handleSignIn} />
+                <StepSignIn 
+                  key="step1" 
+                  onSignIn={handleSignIn} 
+                  onGuestStart={checkIsInAppBrowser() ? handleGuestStart : null}
+                />
               )}
               {step === 2 && (
                 <StepProfile
                   key="step2"
                   user={user}
+                  isGuest={isGuest}
                   onComplete={handleProfileComplete}
                   onBack={canGoBack ? handleBack : null}
                 />
