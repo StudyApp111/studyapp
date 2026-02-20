@@ -58,11 +58,18 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
     };
   }, []);
 
-  // Generate TTS audio from backend
+  // Track chunk playback state
+  const chunksRef = useRef([]); // array of audio base64 URIs
+  const currentChunkIdxRef = useRef(0);
+  const totalChunksRef = useRef(0);
+  const isStoppedRef = useRef(false);
+
+  // Generate TTS audio from backend — chunked streaming approach
+  // Fetches chunk 0 immediately for fast start, then prefetches remaining chunks in background
   const playGeminiTTS = useCallback(async () => {
     if (!lecture) return;
     
-    // If we already have a loaded audio element, just resume it
+    // If we already have audio loaded, just resume
     if (audioRef.current && audioSrc) {
       audioRef.current.play();
       setIsPlaying(true);
@@ -71,38 +78,85 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
     
     setAudioLoading(true);
     setIsPlaying(true);
+    isStoppedRef.current = false;
+    currentChunkIdxRef.current = 0;
+    chunksRef.current = [];
     
     try {
-      const { data } = await base44.functions.invoke('generateLectureSpeech', { text: lecture });
+      // Fetch chunk 0 first for fast playback start
+      const { data } = await base44.functions.invoke('generateLectureSpeech', { text: lecture, chunkIndex: 0 });
       
-      if (data?.audio_base64) {
-        const mimeType = data.mime_type || 'audio/wav';
-        const src = `data:${mimeType};base64,${data.audio_base64}`;
-        setAudioSrc(src);
-        
-        // Play audio
-        const audio = new Audio(src);
-        audioRef.current = audio;
-        audio.onended = () => {
-          setIsPlaying(false);
-          setCurrentSentenceIdx(-1);
-        };
-        audio.onerror = () => {
-          console.error("Audio playback error, falling back to browser TTS");
-          playBrowserTTS();
-        };
-        await audio.play();
-      } else {
-        // Fallback to browser TTS
+      if (!data?.audio_base64) {
         playBrowserTTS();
+        return;
+      }
+      
+      const totalChunks = data.totalChunks || 1;
+      totalChunksRef.current = totalChunks;
+      
+      // Store chunk 0
+      const mimeType = data.mime_type || 'audio/wav';
+      chunksRef.current[0] = `data:${mimeType};base64,${data.audio_base64}`;
+      setAudioSrc(chunksRef.current[0]);
+      setAudioLoading(false);
+      
+      // Play chunk 0 immediately
+      if (!isStoppedRef.current) {
+        playChunk(0);
+      }
+      
+      // Prefetch remaining chunks in background
+      for (let i = 1; i < totalChunks; i++) {
+        if (isStoppedRef.current) break;
+        base44.functions.invoke('generateLectureSpeech', { text: lecture, chunkIndex: i })
+          .then(({ data: chunkData }) => {
+            if (chunkData?.audio_base64) {
+              const mt = chunkData.mime_type || 'audio/wav';
+              chunksRef.current[i] = `data:${mt};base64,${chunkData.audio_base64}`;
+            }
+          })
+          .catch(err => console.warn(`Chunk ${i} prefetch error:`, err));
       }
     } catch (err) {
       console.error("Gemini TTS error:", err);
-      playBrowserTTS();
-    } finally {
       setAudioLoading(false);
+      playBrowserTTS();
     }
   }, [lecture, audioSrc]);
+
+  const playChunk = useCallback((idx) => {
+    if (isStoppedRef.current) return;
+    
+    const src = chunksRef.current[idx];
+    if (!src) {
+      // Chunk not ready yet — wait and retry
+      if (idx < totalChunksRef.current) {
+        setTimeout(() => playChunk(idx), 300);
+      }
+      return;
+    }
+    
+    const audio = new Audio(src);
+    audioRef.current = audio;
+    currentChunkIdxRef.current = idx;
+    
+    audio.onended = () => {
+      const nextIdx = idx + 1;
+      if (nextIdx < totalChunksRef.current && !isStoppedRef.current) {
+        playChunk(nextIdx);
+      } else {
+        setIsPlaying(false);
+        setCurrentSentenceIdx(-1);
+      }
+    };
+    audio.onerror = () => {
+      console.error(`Audio chunk ${idx} playback error`);
+      setIsPlaying(false);
+    };
+    audio.play().catch(() => {
+      setIsPlaying(false);
+    });
+  }, []);
 
   const playBrowserTTS = useCallback(() => {
     if (!sentencesRef.current.length) return;
