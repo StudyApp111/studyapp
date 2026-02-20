@@ -555,7 +555,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
+          className="space-y-5"
         >
           {/* Hero Section — Clear CTA */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-6 shadow-2xl">
@@ -563,13 +563,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl" />
             
             <div className="relative text-center">
-              <h2 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight">
-                What grade would<br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400">you get today?</span>
+              <h2 className="text-xl md:text-2xl font-black text-white mb-2 leading-tight">
+                Let's build your custom<br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400">study roadmap.</span>
               </h2>
               
-              <p className="text-purple-200 text-sm max-w-xs mx-auto leading-relaxed mb-5">
-                Take a quick 5-minute quiz and we'll predict your exam grade instantly.
+              <p className="text-purple-200 text-sm max-w-sm mx-auto leading-relaxed mb-5">
+                Take a quick 5-minute diagnostic. It's completely okay if you don't know the answers yet! We use this baseline to figure out exactly where your study plan should begin.
               </p>
 
               {/* Big CTA right in the hero */}
@@ -608,29 +608,41 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             </div>
           </div>
 
-          {/* How It Works — 3 simple steps */}
-          <div className={`rounded-xl border p-4 shadow-sm ${isDark ? 'bg-white/5 border-purple-500/30' : 'bg-white border-purple-100'}`}>
-            <p className={`text-[10px] font-bold uppercase tracking-wide mb-3 text-center ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>How it works</p>
-            <div className="flex items-center justify-between">
-              <div className="flex flex-col items-center text-center flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
-                  <span className="text-lg">📝</span>
+          {/* How It Works — 3 steps, larger & more visual */}
+          <div className={`rounded-2xl border p-5 md:p-6 shadow-md ${isDark ? 'bg-gradient-to-br from-white/[0.04] to-purple-500/[0.06] border-purple-500/20' : 'bg-gradient-to-br from-white to-purple-50/50 border-purple-100'}`}>
+            <p className={`text-xs font-bold uppercase tracking-widest mb-5 text-center ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>How it works</p>
+            <div className="space-y-4">
+              {/* Step 1 */}
+              <div className="flex items-start gap-3.5">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'} shadow-sm`}>
+                  <span className="text-2xl">📝</span>
                 </div>
-                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Take<br/>Diagnostic</p>
+                <div className="flex-1 pt-0.5">
+                  <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Find Your Baseline</p>
+                  <p className={`text-xs mt-0.5 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Take a quick, low-pressure quiz.</p>
+                </div>
               </div>
-              <ArrowRight className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-purple-500' : 'text-purple-300'}`} />
-              <div className="flex flex-col items-center text-center flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 ${isDark ? 'bg-amber-600/20' : 'bg-amber-100'}`}>
-                  <span className="text-lg">🎯</span>
+              
+              {/* Step 2 */}
+              <div className="flex items-start gap-3.5">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-amber-600/20' : 'bg-amber-100'} shadow-sm`}>
+                  <span className="text-2xl">🎯</span>
                 </div>
-                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>See Your<br/>Predicted Grade</p>
+                <div className="flex-1 pt-0.5">
+                  <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Get Your Roadmap</p>
+                  <p className={`text-xs mt-0.5 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>We build a step-by-step path based on your gaps.</p>
+                </div>
               </div>
-              <ArrowRight className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-purple-500' : 'text-purple-300'}`} />
-              <div className="flex flex-col items-center text-center flex-1">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 ${isDark ? 'bg-emerald-600/20' : 'bg-emerald-100'}`}>
-                  <span className="text-lg">🚀</span>
+              
+              {/* Step 3 */}
+              <div className="flex items-start gap-3.5">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-emerald-600/20' : 'bg-emerald-100'} shadow-sm`}>
+                  <span className="text-2xl">🚀</span>
                 </div>
-                <p className={`text-[10px] font-medium leading-tight ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Follow Plan<br/>to A+</p>
+                <div className="flex-1 pt-0.5">
+                  <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Hit Your Target Grade</p>
+                  <p className={`text-xs mt-0.5 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Follow the daily tasks and watch your score rise.</p>
+                </div>
               </div>
             </div>
           </div>
