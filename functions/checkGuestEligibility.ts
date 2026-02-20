@@ -77,32 +77,37 @@ Deno.serve(async (req) => {
       // Transfer guest lesson to authenticated user
       const { lesson_data, user_email, profile_data } = body;
       
-      if (!user_email) {
-        return Response.json({ error: 'user_email required' }, { status: 400 });
+      // Verify the caller is authenticated
+      const user = await base44.auth.me();
+      if (!user) {
+        return Response.json({ error: 'Must be authenticated to transfer' }, { status: 401 });
       }
 
       let lessonId = null;
 
-      // Create lesson if guest had one
+      // Create lesson using USER-scoped client so created_by = user's email (RLS)
       if (lesson_data && lesson_data.course_name) {
-        const lesson = await base44.asServiceRole.entities.Lesson.create({
+        const lesson = await base44.entities.Lesson.create({
           ...lesson_data,
           status: 'created'
         });
         lessonId = lesson.id;
-        console.log(`✅ GUEST LESSON TRANSFERRED: ${lessonId} for ${user_email}`);
+        console.log(`✅ GUEST LESSON TRANSFERRED: ${lessonId} for ${user.email}`);
       }
 
-      // Create learning profile if guest had one
+      // Create learning profile using user-scoped client
       if (profile_data && (profile_data.school || profile_data.name)) {
-        const existingProfiles = await base44.entities.LearningProfile.filter({
-          created_by: user_email
-        });
+        const existingProfiles = await base44.entities.LearningProfile.filter({});
         if (existingProfiles.length === 0 && profile_data.school) {
           await base44.entities.LearningProfile.create({
             school: profile_data.school
           });
         }
+      }
+
+      // Update user's display name if guest set one
+      if (profile_data?.name) {
+        await base44.auth.updateMe({ display_name: profile_data.name });
       }
 
       return Response.json({ success: true, lesson_id: lessonId });
