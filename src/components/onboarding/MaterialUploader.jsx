@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload, FileText, Type, Loader2, X, CheckCircle, Lightbulb, ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-export default function MaterialUploader({ courseName, school, onMaterialReady }) {
+export default function MaterialUploader({ courseName, school, onMaterialReady, disabled = false }) {
   const [activeTab, setActiveTab] = useState("upload");
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [pastedNotes, setPastedNotes] = useState("");
@@ -104,15 +104,21 @@ export default function MaterialUploader({ courseName, school, onMaterialReady }
     { id: "paste", label: "Paste", icon: FileText, emoji: "📝" }
   ];
 
+  const isDisabled = disabled || !courseName?.trim();
+
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
+      {/* Course name required hint */}
+      {isDisabled && (
+        <p className="text-xs text-amber-400 text-center">Enter a course name above first</p>
+      )}
       {/* Tab selector - more visual */}
       <div className="grid grid-cols-3 gap-2 p-1 bg-slate-800/50 rounded-xl">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => !isDisabled && setActiveTab(tab.id)}
             className={`flex items-center justify-center gap-2 py-3 px-2 rounded-lg font-medium transition-all ${
               activeTab === tab.id
                 ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg'

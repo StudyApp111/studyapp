@@ -10,7 +10,8 @@ Deno.serve(async (req) => {
 
     // Forward directly to sendResendEmail
     const result = await base44.functions.invoke('sendResendEmail', payload);
-    return Response.json(result);
+    // result is an axios-like response {data, status, headers} — return just the data
+    return Response.json(result.data || result);
 
   } catch (error) {
     console.error('triggerAutomaticEmails error:', error);

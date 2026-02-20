@@ -205,8 +205,8 @@ export default function Home() {
             className="w-14 h-14 md:w-16 md:h-16"
           />
           <span className="text-4xl md:text-5xl font-black">
-            <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
-            <span className="text-white">App</span>
+            <span className={`bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent ${!isDark ? 'from-slate-900 to-slate-900' : ''}`}>Study</span>
+            <span className={isDark ? 'text-white' : 'text-slate-900'}>App</span>
           </span>
           <UpgradeButton compact />
         </div>
@@ -342,7 +342,7 @@ export default function Home() {
                             {plan ? (
                               <div className="mt-1.5">
                                 <div className="flex items-center gap-2">
-                                  <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden max-w-[140px]">
+                                  <div className={`flex-1 h-2 rounded-full overflow-hidden max-w-[140px] ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
                                     <div 
                                       className={`h-full rounded-full ${tasksRemaining === 0 ? 'bg-emerald-500' : 'bg-purple-500'}`}
                                       style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
