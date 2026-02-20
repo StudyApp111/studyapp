@@ -120,6 +120,9 @@ function LayoutContent({ children, currentPageName }) {
     (async () => {
       const currentIsHome = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
       
+      // Force redirect to Home if platform default page is misconfigured (e.g. AssignmentHistory)
+      const isAssignmentHistory = currentPageName === "AssignmentHistory" || location.pathname.toLowerCase().includes("assignmenthistory");
+      
       // Try to get user
       try {
         const currentUser = await base44.auth.me();
