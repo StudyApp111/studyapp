@@ -1668,39 +1668,45 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             </AnimatePresence>
           </div>
 
-          <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-4 border-t dark:border-white/10 border-purple-100 dark:bg-[#12121a]/95 bg-white/95 backdrop-blur-sm shrink-0">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentQuestion === 0}
-              className="flex-1 dark:text-white text-xs h-10 rounded-xl font-medium"
-            >
-              Previous
-            </Button>
-            {isLastQuestion ? (
+          <div className="shrink-0 border-t dark:border-white/10 border-purple-100 dark:bg-[#12121a]/95 bg-white/95 backdrop-blur-sm">
+            <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-3">
               <Button
-                onClick={submitExam}
-                disabled={!canProceed || isSubmitting}
-                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs h-10 rounded-xl font-medium"
+                variant="outline"
+                onClick={handlePrevious}
+                disabled={currentQuestion === 0}
+                className="flex-1 dark:text-white text-xs h-10 rounded-xl font-medium"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  "Submit Exam"
-                )}
+                Previous
               </Button>
-            ) : (
-              <Button
-                onClick={handleNext}
-                disabled={!canProceed}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white text-xs h-10 rounded-xl font-medium"
-              >
-                Next Question
-              </Button>
-            )}
+              {isLastQuestion ? (
+                <Button
+                  onClick={submitExam}
+                  disabled={!canProceed || isSubmitting}
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs h-10 rounded-xl font-medium"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    "Submit Exam"
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleNext}
+                  disabled={!canProceed}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white text-xs h-10 rounded-xl font-medium"
+                >
+                  Next Question
+                </Button>
+              )}
+            </div>
+            {/* Low-key hint */}
+            <p className={`text-center text-[10px] px-4 pb-2.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              If you don't know the answer, give your best guess. This is how we design a custom study plan for you.
+            </p>
           </div>
         </div>
       </div>
