@@ -8,12 +8,15 @@ import { Sparkles, Loader2 } from "lucide-react";
 import MaterialUploader from "@/components/onboarding/MaterialUploader";
 import CreateLessonLoader from "@/components/create-lesson/CreateLessonLoader";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
+import GuestLessonCreatedModal from "@/components/guest/GuestLessonCreatedModal";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
 export default function CreateLesson() {
   const navigate = useNavigate();
   const { canUpload, incrementUploadCount, triggerUpgradeModal } = useSubscription();
+  const { isGuest, guestLessonCreated, setGuestLesson, guestData } = useGuestSession();
   const [courseName, setCourseName] = useState("");
   const [materialData, setMaterialData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,9 +27,18 @@ export default function CreateLesson() {
   const [user, setUser] = useState(null);
   const [learningProfile, setLearningProfile] = useState(null);
   const [stepStatuses, setStepStatuses] = useState({ extracted: false, compressed: false, examGenerated: false });
+  const [showGuestLessonModal, setShowGuestLessonModal] = useState(false);
 
   useEffect(() => {
-    loadUserData();
+    // Guest users who already created a lesson cannot create another
+    if (isGuest && guestLessonCreated) {
+      setError("Guest preview allows only 1 lesson. Sign up to create more!");
+      return;
+    }
+    
+    if (!isGuest) {
+      loadUserData();
+    }
     
     // Check for course name from URL (coming from PredictedGradeDisplay)
     const urlParams = new URLSearchParams(window.location.search);
@@ -49,8 +61,10 @@ export default function CreateLesson() {
         }
       }
     } catch (error) {
-      // Redirect to login if not authenticated
-      base44.auth.redirectToLogin(window.location.pathname);
+      // Allow guests through without redirecting
+      if (!isGuest) {
+        base44.auth.redirectToLogin(window.location.pathname);
+      }
     }
   };
 
@@ -63,28 +77,39 @@ export default function CreateLesson() {
   const handleSubmit = async () => {
     if (!canSubmit) return;
     
+    // Block guests who already created a lesson
+    if (isGuest && guestLessonCreated) {
+      setError("Guest preview allows only 1 lesson. Sign up to create more!");
+      return;
+    }
+    
     setIsSubmitting(true);
     setError("");
 
     try {
-      // Check upload limit FIRST
-      const uploadCheck = await canUpload();
-      if (!uploadCheck.allowed) {
-        setIsSubmitting(false);
-        if (uploadCheck.requiresPro) {
-          triggerUpgradeModal('tasks');
-        } else {
-          triggerUpgradeModal('uploads', {
-            message: `You've created ${uploadCheck.current} lessons today. Upgrade for unlimited lessons!`
-          });
+      // Skip subscription checks for guests
+      if (!isGuest) {
+        // Check upload limit FIRST
+        const uploadCheck = await canUpload();
+        if (!uploadCheck.allowed) {
+          setIsSubmitting(false);
+          if (uploadCheck.requiresPro) {
+            triggerUpgradeModal('tasks');
+          } else {
+            triggerUpgradeModal('uploads', {
+              message: `You've created ${uploadCheck.current} lessons today. Upgrade for unlimited lessons!`
+            });
+          }
+          return;
         }
-        return;
       }
       
       setShowLoader(true);
       
-      // Increment upload counter
-      await incrementUploadCount();
+      // Increment upload counter (skip for guests)
+      if (!isGuest) {
+        await incrementUploadCount();
+      }
       // Create the lesson - handle file extraction inline for reliability
       const lessonData = {
         course_name: courseName.trim(),
@@ -164,6 +189,15 @@ export default function CreateLesson() {
         setStepStatuses(prev => ({ ...prev, extracted: true, compressed: true }));
       }
 
+      // Guest mode: store lesson data locally, don't create on server
+      if (isGuest) {
+        setGuestLesson(lessonData);
+        setStepStatuses(prev => ({ ...prev, examGenerated: true }));
+        setLoaderComplete(true);
+        setShowGuestLessonModal(true);
+        return;
+      }
+
       const lesson = await base44.entities.Lesson.create(lessonData);
       setCreatedLessonId(lesson.id);
       console.log("✅ Lesson created:", lesson.id);
@@ -221,6 +255,11 @@ export default function CreateLesson() {
   };
 
   const handleLoaderComplete = () => {
+    // For guests, show the "lesson created" modal instead of navigating
+    if (isGuest) {
+      setShowGuestLessonModal(true);
+      return;
+    }
     if (createdLessonId) {
       navigate(createPageUrl("DocumentViewer") + `?lessonId=${createdLessonId}`, { replace: true });
     } else {
@@ -231,12 +270,22 @@ export default function CreateLesson() {
   // Show loader when processing
   if (showLoader) {
     return (
-      <CreateLessonLoader 
-        fileName={materialData?.type === "file" ? materialData.files?.[0]?.name : null}
-        isComplete={loaderComplete}
-        onAnimationComplete={handleLoaderComplete}
-        stepStatuses={stepStatuses}
-      />
+      <>
+        <CreateLessonLoader 
+          fileName={materialData?.type === "file" ? materialData.files?.[0]?.name : null}
+          isComplete={loaderComplete}
+          onAnimationComplete={handleLoaderComplete}
+          stepStatuses={stepStatuses}
+        />
+        {showGuestLessonModal && (
+          <GuestLessonCreatedModal 
+            onDismiss={() => {
+              setShowGuestLessonModal(false);
+              // Guest stays on the page, timer will lock them out
+            }}
+          />
+        )}
+      </>
     );
   }
 
