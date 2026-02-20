@@ -1655,7 +1655,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto overscroll-contain p-3 md:p-5 dark:bg-[#0a0a12]">
+          <div className="flex-1 overflow-y-auto overscroll-contain p-3 md:p-5 dark:bg-[#0a0a12]" style={{ WebkitOverflowScrolling: 'touch', minHeight: 0 }}>
             <AnimatePresence mode="wait">
               <ExamQuestion
                 key={currentQuestion}

@@ -62,7 +62,7 @@ const getGradeColor = (grade) => {
   if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
   if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
   if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
-  if (grade.startsWith('D') || grade.startsWith('F')) return 'from-slate-600 to-blue-700';
+  if (grade.startsWith('D') || grade.startsWith('F')) return 'from-red-500 to-rose-600';
   return 'from-red-500 to-rose-600';
 };
 
@@ -585,6 +585,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 ref={ctaRef}
                 onClick={() => {
                   if (!isDiagnosticReady) return;
+                  // Dispatch event to start diagnostic immediately at question 1
+                  window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
                   onNavigate('exam');
                 }}
                 disabled={!isDiagnosticReady}
@@ -802,14 +804,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
       {/* Task Timeline */}
       <div className="relative w-full max-w-full overflow-x-hidden px-3 md:px-4" style={{ boxSizing: 'border-box' }}>
-        <div className="absolute left-[28px] md:left-[26px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
+        <div className="absolute left-[23px] md:left-[23px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
         
         <div className="space-y-3 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
 
           {/* Section Header */}
           <div className="flex items-center gap-3 w-full">
-            <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center z-10 shadow-lg flex-shrink-0">
-              <Target className="w-4 h-4 text-white" />
+            <div className="w-[24px] h-[24px] rounded-full bg-purple-600 flex items-center justify-center z-10 shadow-lg flex-shrink-0">
+              <Target className="w-3 h-3 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <h3 className={`font-bold text-sm md:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Up Next: Your Path to {getNextGradeBracket(currentGrade)}</h3>
@@ -861,8 +863,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 transition={{ delay: 0.05 + idx * 0.05 }}
                 className="relative w-full flex items-start gap-3"
               >
-                <div className={`w-6 h-6 rounded-full flex-shrink-0 mt-3 flex items-center justify-center text-[10px] font-black ${
-                  isFocusFactor ? 'bg-amber-500 text-white ring-2 ring-amber-300 ring-offset-1' : (isDark ? 'bg-white/10 text-slate-300 border border-purple-400/50' : 'bg-white text-slate-600 border-2 border-purple-300')
+                <div className={`w-[24px] h-[24px] rounded-full flex-shrink-0 mt-3 flex items-center justify-center text-[10px] font-black z-10 ${
+                  isFocusFactor ? 'bg-amber-500 text-white ring-2 ring-amber-300 ring-offset-1' : (isDark ? 'bg-[#1a1a2e] text-slate-300 border-2 border-purple-400/50' : 'bg-white text-slate-600 border-2 border-purple-300')
                 }`}>{idx + 1}</div>
                 
                 <button
@@ -940,7 +942,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             animate={{ opacity: 1, y: 0 }}
             className="relative w-full flex items-start gap-3"
           >
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0 mt-3">
+            <div className="w-[24px] h-[24px] rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0 mt-3 z-10">
               <Plus className="w-3 h-3 text-white" />
             </div>
             
@@ -991,7 +993,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               animate={{ opacity: 1 }}
               className="relative pt-2 w-full flex items-start gap-3"
             >
-              <div className="w-3 h-3 rounded-full bg-emerald-500 flex-shrink-0 mt-6" />
+              <div className="w-[24px] h-[24px] rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-6 z-10">
+                <CheckCircle2 className="w-3 h-3 text-white" />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
                   Completed ({completedTasks.length})

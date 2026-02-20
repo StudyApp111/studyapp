@@ -313,13 +313,8 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
             lesson={lesson} 
           />
           
-          {/* Right side - Question type and difficulty badges */}
+          {/* Right side - Difficulty badge only */}
           <div className="flex gap-1 flex-wrap items-center">
-            <Badge className={`text-[9px] px-1.5 py-0 ${isDark ? 'bg-purple-600/20 text-purple-300 border-purple-500/30' : 'bg-purple-100 text-purple-700'}`}>
-              {(question.question_type || '')
-                .replace(/_/g, ' ')
-                .replace(/\b\w/g, c => c.toUpperCase())}
-            </Badge>
             {question.difficulty_index && (
               <Badge className={`text-[9px] px-1.5 py-0 ${isDark ? 'bg-white/10 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
                 {(question.difficulty_index || '')
