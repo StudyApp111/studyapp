@@ -99,8 +99,10 @@ Deno.serve(async (req) => {
           from: 'StudyApp.AI <updates@updates.studyappai.com>',
           reply_to: 'info@studyappai.com',
           to: user_email,
-          template_id: template.resend_template_id,
-          template_variables: userVars
+          template: {
+            id: template.resend_template_id,
+            variables: userVars
+          }
         };
 
         const response = await fetch('https://api.resend.com/emails', {
