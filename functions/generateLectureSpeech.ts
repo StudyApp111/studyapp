@@ -34,13 +34,17 @@ function buildWav(pcmBase64) {
   return btoa(binary);
 }
 
-// Split text into chunks at sentence boundaries, each under maxChars
-function chunkText(text, maxChars = 1200) {
+// Split text into chunks at sentence boundaries
+// First chunk is smaller (faster time-to-audio), subsequent chunks are larger
+function chunkText(text, firstChunkMaxChars = 400, restMaxChars = 1200) {
   const sentences = text.match(/[^.!?]+[.!?]+[\s]*/g) || [text];
   const chunks = [];
   let current = '';
+  const maxChars = chunks.length === 0 ? firstChunkMaxChars : restMaxChars;
+  
   for (const sentence of sentences) {
-    if (current.length + sentence.length > maxChars && current.length > 0) {
+    const limit = chunks.length === 0 ? firstChunkMaxChars : restMaxChars;
+    if (current.length + sentence.length > limit && current.length > 0) {
       chunks.push(current.trim());
       current = sentence;
     } else {
@@ -111,7 +115,8 @@ Deno.serve(async (req) => {
     }
 
     // Default: chunk the text and return chunk info + first chunk audio
-    const chunks = chunkText(cleanText, 1200);
+    // First chunk is small (400 chars) for fast initial playback, rest are 1200
+    const chunks = chunkText(cleanText, 400, 1200);
     
     // Generate audio for first chunk only (fast response)
     const pcmBase64 = await generateChunkAudio(chunks[0], GEMINI_KEY);
