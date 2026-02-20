@@ -56,10 +56,12 @@ Deno.serve(async (req) => {
     if (profiles.length > 0) profile = profiles[0];
 
     // Build user variables to pass to Resend template
+    // NOTE: Resend reserves these variable names: FIRST_NAME, LAST_NAME, EMAIL, UNSUBSCRIBE_URL
+    // Use lowercase or different names to avoid conflicts
     const userVars = {
-      name: targetUser.full_name || 'there',
-      first_name: (targetUser.full_name || 'there').split(' ')[0],
-      email: targetUser.email,
+      user_name: targetUser.full_name || 'there',
+      user_first_name: (targetUser.full_name || 'there').split(' ')[0],
+      user_email: targetUser.email,
       school: profile?.school || '',
       grade: profile?.grade || '',
       level: String(targetUser.level || 1),
@@ -98,7 +100,8 @@ Deno.serve(async (req) => {
         const emailPayload = {
           from: 'StudyApp.AI <updates@updates.studyappai.com>',
           reply_to: 'info@studyappai.com',
-          to: user_email,
+          to: [user_email],
+          subject: template.name || 'StudyApp.AI',
           template: {
             id: template.resend_template_id,
             variables: userVars
@@ -114,10 +117,13 @@ Deno.serve(async (req) => {
           body: JSON.stringify(emailPayload)
         });
 
+        const resBody = await response.text();
         const success = response.ok;
         if (!success) {
-          const errText = await response.text();
-          console.error('Resend send error:', errText);
+          console.error('Resend send error:', response.status, resBody);
+          console.error('Payload sent:', JSON.stringify(emailPayload));
+        } else {
+          console.log('Resend send success:', resBody);
         }
 
         // Log it (skip logging for test sends)
