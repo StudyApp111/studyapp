@@ -66,7 +66,7 @@ import { UpgradeNavBadge } from "@/components/subscription/UpgradeBadge";
 import UpgradeModalWrapper from "@/components/subscription/UpgradeModalWrapper";
 import { ThemeProvider, useTheme } from "@/components/theme/ThemeProvider";
 import { Moon, Sun } from "lucide-react";
-import { GuestSessionProvider } from "@/components/guest/GuestSessionContext";
+import { GuestSessionProvider, useGuestSession } from "@/components/guest/GuestSessionContext";
 import GuestTimerLockout from "@/components/guest/GuestTimerLockout";
 
 const navigationItems = [
@@ -101,11 +101,12 @@ const formatTime = (seconds) => {
 };
 
 function LayoutContent({ children, currentPageName }) {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [user, setUser] = React.useState(null);
-  const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
-  const { isDark, toggleTheme } = useTheme();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [user, setUser] = React.useState(null);
+    const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
+    const { isDark, toggleTheme } = useTheme();
+    const { isGuest } = useGuestSession();
 
   const pathLowerEarly = location.pathname.toLowerCase();
   const isHomePageEarly = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
@@ -125,22 +126,27 @@ function LayoutContent({ children, currentPageName }) {
         setUser(currentUser);
 
         const onboardingDone = currentUser?.onboarding_completed || currentUser?.data?.onboarding_completed;
-        const isAdmin = currentUser?.role === 'admin';
+          const isAdmin = currentUser?.role === 'admin';
 
-        // Track session for authenticated users with completed onboarding
-        if (onboardingDone || isAdmin) {
-          trackUserSession();
-          cleanup = trackSessionDuration();
-        } else if (!onboardingDone && !isAdmin && !currentIsHome) {
-          // Not onboarded and not on Home — redirect to Home where modal lives
-          navigate(createPageUrl("Home"), { replace: true });
-        }
-      } catch (error) {
-        // Not authenticated — redirect non-Home pages to Home for onboarding
-        setUser(null);
-        if (!currentIsHome) {
-          navigate(createPageUrl("Home"), { replace: true });
-        }
+            // Track session for authenticated users with completed onboarding
+            if (onboardingDone || isAdmin) {
+              trackUserSession();
+              cleanup = trackSessionDuration();
+            } else if (!onboardingDone && !isAdmin && !currentIsHome) {
+              // Not onboarded and not on Home — redirect to Home where modal lives
+              navigate(createPageUrl("Home"), { replace: true });
+            }
+          } catch (error) {
+            // Not authenticated
+            setUser(null);
+            // Allow guests to access CreateLesson and DocumentViewer
+            const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer'];
+            const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
+              currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
+            );
+            if (!currentIsHome && !isGuestAllowed) {
+              navigate(createPageUrl("Home"), { replace: true });
+            }
       }
     })();
 
