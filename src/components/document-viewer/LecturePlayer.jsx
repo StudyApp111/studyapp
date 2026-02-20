@@ -79,24 +79,29 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
   const currentChunkIdxRef = useRef(0);
   const prefetchingRef = useRef(false);
 
-  // Prefetch remaining chunks in background
+  // Prefetch remaining chunks in background — batch 2 at a time for speed
   const prefetchChunks = useCallback(async (chunksText, startIdx) => {
     if (prefetchingRef.current) return;
     prefetchingRef.current = true;
     
-    for (let i = startIdx; i < chunksText.length; i++) {
-      try {
-        const { data } = await base44.functions.invoke('generateLectureSpeech', { 
-          text: chunksText[i], 
-          chunk_index: i 
-        });
-        if (data?.audio_base64) {
-          const mimeType = data.mime_type || 'audio/wav';
-          chunksQueueRef.current[i] = `data:${mimeType};base64,${data.audio_base64}`;
-        }
-      } catch (err) {
-        console.warn(`Prefetch chunk ${i} failed:`, err);
+    // Process in parallel batches of 2 for faster prefetch
+    const batchSize = 2;
+    for (let i = startIdx; i < chunksText.length; i += batchSize) {
+      const batch = [];
+      for (let j = i; j < Math.min(i + batchSize, chunksText.length); j++) {
+        batch.push(
+          base44.functions.invoke('generateLectureSpeech', { 
+            text: chunksText[j], 
+            chunk_index: j 
+          }).then(({ data }) => {
+            if (data?.audio_base64) {
+              const mimeType = data.mime_type || 'audio/wav';
+              chunksQueueRef.current[j] = `data:${mimeType};base64,${data.audio_base64}`;
+            }
+          }).catch(err => console.warn(`Prefetch chunk ${j} failed:`, err))
+        );
       }
+      await Promise.all(batch);
     }
     prefetchingRef.current = false;
   }, []);
