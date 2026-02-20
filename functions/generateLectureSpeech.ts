@@ -1,7 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Build a proper WAV file from raw PCM bytes (16-bit, mono, 24000 Hz)
-function buildWav(pcmBytes) {
+function buildWav(pcmBase64) {
+  const pcmBytes = Uint8Array.from(atob(pcmBase64), c => c.charCodeAt(0));
   const numChannels = 1;
   const sampleRate = 24000;
   const bitsPerSample = 16;
@@ -27,46 +28,53 @@ function buildWav(pcmBytes) {
   view.setUint32(40, dataSize, true);
   new Uint8Array(buffer).set(pcmBytes, 44);
 
-  return new Uint8Array(buffer);
-}
-
-function base64ToBytes(b64) {
-  const raw = atob(b64);
-  const bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-  return bytes;
-}
-
-function bytesToBase64(bytes) {
+  const bytes = new Uint8Array(buffer);
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
   return btoa(binary);
 }
 
-// Split text into chunks at sentence boundaries, each ≤ maxLen chars
-function chunkText(text, maxLen = 2000) {
-  if (text.length <= maxLen) return [text];
-  
+// Split text into chunks at sentence boundaries, each under maxChars
+function chunkText(text, maxChars = 1200) {
+  const sentences = text.match(/[^.!?]+[.!?]+[\s]*/g) || [text];
   const chunks = [];
-  let remaining = text;
-  
-  while (remaining.length > 0) {
-    if (remaining.length <= maxLen) {
-      chunks.push(remaining);
-      break;
+  let current = '';
+  for (const sentence of sentences) {
+    if (current.length + sentence.length > maxChars && current.length > 0) {
+      chunks.push(current.trim());
+      current = sentence;
+    } else {
+      current += sentence;
     }
-    // Find last sentence boundary within maxLen
-    let cutPoint = remaining.lastIndexOf('. ', maxLen);
-    if (cutPoint < maxLen * 0.3) cutPoint = remaining.lastIndexOf('! ', maxLen);
-    if (cutPoint < maxLen * 0.3) cutPoint = remaining.lastIndexOf('? ', maxLen);
-    if (cutPoint < maxLen * 0.3) cutPoint = remaining.lastIndexOf('\n', maxLen);
-    if (cutPoint < maxLen * 0.3) cutPoint = maxLen; // hard cut as fallback
-    
-    chunks.push(remaining.substring(0, cutPoint + 1).trim());
-    remaining = remaining.substring(cutPoint + 1).trim();
   }
-  
-  return chunks.filter(c => c.length > 0);
+  if (current.trim()) chunks.push(current.trim());
+  return chunks;
+}
+
+async function generateChunkAudio(text, apiKey) {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text }] }],
+        generationConfig: {
+          responseModalities: ["AUDIO"],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: "Kore" }
+            }
+          }
+        }
+      })
+    }
+  );
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message || "Gemini TTS failed");
+  const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+  if (!inlineData?.data) throw new Error("No audio content");
+  return inlineData.data; // raw PCM base64
 }
 
 Deno.serve(async (req) => {
@@ -75,7 +83,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { text, chunkIndex } = await req.json();
+    const { text, chunk_index } = await req.json();
     if (!text) return Response.json({ error: 'text required' }, { status: 400 });
 
     // Strip markdown for cleaner speech
@@ -88,61 +96,35 @@ Deno.serve(async (req) => {
       .replace(/---+/g, '')
       .trim();
 
-    // If chunkIndex is provided, split and generate only that chunk
-    // If not provided (legacy), generate the first chunk and return total count
-    const chunks = chunkText(cleanText, 2000);
-    const idx = chunkIndex ?? 0;
-    
-    if (idx >= chunks.length) {
-      return Response.json({ error: 'Chunk index out of range' }, { status: 400 });
-    }
-
-    const chunkToSpeak = chunks[idx];
     const GEMINI_KEY = Deno.env.get('GEMINIAPIKEY');
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: chunkToSpeak }] }],
-          generationConfig: {
-            responseModalities: ["AUDIO"],
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: { voiceName: "Kore" }
-              }
-            }
-          }
-        })
-      }
-    );
-
-    const data = await response.json();
-    
-    if (data.error) {
-      console.error("Gemini TTS Error:", JSON.stringify(data.error));
-      throw new Error(data.error.message || "Gemini TTS failed");
-    }
-
-    const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-    
-    if (inlineData?.data) {
-      const pcmBytes = base64ToBytes(inlineData.data);
-      const wavBytes = buildWav(pcmBytes);
-      const wavBase64 = bytesToBase64(wavBytes);
-      
+    // If chunk_index is specified, caller already chunked — generate just that text
+    if (chunk_index !== undefined && chunk_index !== null) {
+      const pcmBase64 = await generateChunkAudio(cleanText, GEMINI_KEY);
+      const wavBase64 = buildWav(pcmBase64);
       return Response.json({ 
         success: true, 
         audio_base64: wavBase64,
         mime_type: 'audio/wav',
-        totalChunks: chunks.length,
-        chunkIndex: idx
+        chunk_index
       });
     }
 
-    throw new Error("No audio content received from Gemini TTS");
+    // Default: chunk the text and return chunk info + first chunk audio
+    const chunks = chunkText(cleanText, 1200);
+    
+    // Generate audio for first chunk only (fast response)
+    const pcmBase64 = await generateChunkAudio(chunks[0], GEMINI_KEY);
+    const wavBase64 = buildWav(pcmBase64);
+
+    return Response.json({ 
+      success: true, 
+      audio_base64: wavBase64,
+      mime_type: 'audio/wav',
+      chunk_index: 0,
+      total_chunks: chunks.length,
+      chunks_text: chunks // send all chunk texts so frontend can request remaining
+    });
 
   } catch (error) {
     console.error("generateLectureSpeech error:", error.message);
