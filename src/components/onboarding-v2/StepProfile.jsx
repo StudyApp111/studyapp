@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, MapPin, School, ChevronLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-export default function StepProfile({ user, onComplete, onBack }) {
+export default function StepProfile({ user, isGuest, onComplete, onBack }) {
   const { isDark } = useTheme();
   const [name, setName] = useState(user?.full_name?.split(" ")[0] || "");
   const [school, setSchool] = useState("");
@@ -18,16 +18,18 @@ export default function StepProfile({ user, onComplete, onBack }) {
   const loadTimeoutRef = useRef(null);
 
   useEffect(() => {
-    // Load saved school from learning profile
-    const loadSavedSchool = async () => {
-      try {
-        const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
-        if (profiles.length > 0 && profiles[0].school) {
-          setSchool(profiles[0].school);
-        }
-      } catch {}
-    };
-    loadSavedSchool();
+    // Load saved school from learning profile (skip for guests)
+    if (!isGuest) {
+      const loadSavedSchool = async () => {
+        try {
+          const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
+          if (profiles.length > 0 && profiles[0].school) {
+            setSchool(profiles[0].school);
+          }
+        } catch {}
+      };
+      loadSavedSchool();
+    }
 
     if (!initialLoadDone.current) {
       initialLoadDone.current = true;
