@@ -281,8 +281,8 @@ export default function CreateLesson() {
           <GuestLessonCreatedModal 
             onDismiss={() => {
               setShowGuestLessonModal(false);
-              setShowLoader(false);
-              setIsSubmitting(false);
+              // Navigate guest to DocumentViewer with their local lesson data
+              navigate(createPageUrl("DocumentViewer"), { replace: true });
             }}
           />
         )}
