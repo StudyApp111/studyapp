@@ -1,8 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Build a proper WAV file from raw PCM bytes (16-bit, mono, 24000 Hz)
-function buildWav(pcmBase64) {
-  const pcmBytes = Uint8Array.from(atob(pcmBase64), c => c.charCodeAt(0));
+function buildWav(pcmBytes) {
   const numChannels = 1;
   const sampleRate = 24000;
   const bitsPerSample = 16;
@@ -28,10 +27,46 @@ function buildWav(pcmBase64) {
   view.setUint32(40, dataSize, true);
   new Uint8Array(buffer).set(pcmBytes, 44);
 
-  const bytes = new Uint8Array(buffer);
+  return new Uint8Array(buffer);
+}
+
+function base64ToBytes(b64) {
+  const raw = atob(b64);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  return bytes;
+}
+
+function bytesToBase64(bytes) {
   let binary = '';
   for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
   return btoa(binary);
+}
+
+// Split text into chunks at sentence boundaries, each ≤ maxLen chars
+function chunkText(text, maxLen = 2000) {
+  if (text.length <= maxLen) return [text];
+  
+  const chunks = [];
+  let remaining = text;
+  
+  while (remaining.length > 0) {
+    if (remaining.length <= maxLen) {
+      chunks.push(remaining);
+      break;
+    }
+    // Find last sentence boundary within maxLen
+    let cutPoint = remaining.lastIndexOf('. ', maxLen);
+    if (cutPoint < maxLen * 0.3) cutPoint = remaining.lastIndexOf('! ', maxLen);
+    if (cutPoint < maxLen * 0.3) cutPoint = remaining.lastIndexOf('? ', maxLen);
+    if (cutPoint < maxLen * 0.3) cutPoint = remaining.lastIndexOf('\n', maxLen);
+    if (cutPoint < maxLen * 0.3) cutPoint = maxLen; // hard cut as fallback
+    
+    chunks.push(remaining.substring(0, cutPoint + 1).trim());
+    remaining = remaining.substring(cutPoint + 1).trim();
+  }
+  
+  return chunks.filter(c => c.length > 0);
 }
 
 Deno.serve(async (req) => {
@@ -40,7 +75,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { text } = await req.json();
+    const { text, chunkIndex } = await req.json();
     if (!text) return Response.json({ error: 'text required' }, { status: 400 });
 
     // Strip markdown for cleaner speech
@@ -53,9 +88,16 @@ Deno.serve(async (req) => {
       .replace(/---+/g, '')
       .trim();
 
-    // Truncate to ~3500 chars for TTS limits
-    const truncated = cleanText.length > 3500 ? cleanText.substring(0, 3500) + '...' : cleanText;
+    // If chunkIndex is provided, split and generate only that chunk
+    // If not provided (legacy), generate the first chunk and return total count
+    const chunks = chunkText(cleanText, 2000);
+    const idx = chunkIndex ?? 0;
+    
+    if (idx >= chunks.length) {
+      return Response.json({ error: 'Chunk index out of range' }, { status: 400 });
+    }
 
+    const chunkToSpeak = chunks[idx];
     const GEMINI_KEY = Deno.env.get('GEMINIAPIKEY');
 
     const response = await fetch(
@@ -64,7 +106,7 @@ Deno.serve(async (req) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: truncated }] }],
+          contents: [{ parts: [{ text: chunkToSpeak }] }],
           generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: {
@@ -87,12 +129,16 @@ Deno.serve(async (req) => {
     const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
     
     if (inlineData?.data) {
-      // Gemini TTS returns raw PCM — wrap in proper WAV header for browser playback
-      const wavBase64 = buildWav(inlineData.data);
+      const pcmBytes = base64ToBytes(inlineData.data);
+      const wavBytes = buildWav(pcmBytes);
+      const wavBase64 = bytesToBase64(wavBytes);
+      
       return Response.json({ 
         success: true, 
         audio_base64: wavBase64,
-        mime_type: 'audio/wav'
+        mime_type: 'audio/wav',
+        totalChunks: chunks.length,
+        chunkIndex: idx
       });
     }
 
