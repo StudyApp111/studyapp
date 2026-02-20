@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -14,13 +14,6 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 export default function AssignmentHistory() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
-
-  // This page should never be the landing page — redirect to Home if accessed directly as root
-  useEffect(() => {
-    if (window.location.pathname === '/' || window.location.pathname === '') {
-      navigate(createPageUrl("Home"), { replace: true });
-    }
-  }, [navigate]);
 
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['graded-assignments'],

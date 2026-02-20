@@ -60,9 +60,14 @@ ${finalContent}
 INSTRUCTIONS:
 - Start with "## ${topic_title}" as the title
 - Write 3-5 key concept sections using ### headings
-- For EACH concept: define it clearly, explain how it works, provide a real-world example, and explain why it matters to students
-- Write in a warm, engaging, conversational tone — as if speaking directly to a student
+- For EACH concept:
+  1. Define it clearly in 1-2 sentences
+  2. Walk through a **concrete worked example** or **real-world case study** step by step — show numbers, scenarios, or actual applications
+  3. Use the **Socratic method**: pose a thought-provoking question to the student mid-section (e.g. "So what do you think would happen if...?"), then answer it to deepen understanding
+  4. Explain why it matters and connect it to the bigger picture
+- Write in a warm, engaging, conversational tone — as if a tutor is speaking directly to one student
 - Each section should be 150-250 words of flowing prose (no bullet points)
+- Prioritize **practical examples, case-based reasoning, and problem-solving walkthroughs** over pure theory
 - Include smooth transitions between sections
 - End with a short "## Key Takeaways" summary paragraph
 - Total length: 800-1200 words

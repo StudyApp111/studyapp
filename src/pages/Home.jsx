@@ -204,7 +204,10 @@ export default function Home() {
             alt="StudyApp Logo"
             className="w-14 h-14 md:w-16 md:h-16"
           />
-          <span className="text-4xl md:text-5xl font-black text-white">StudyApp</span>
+          <span className="text-4xl md:text-5xl font-black">
+            <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
+            <span className="text-white">App</span>
+          </span>
           <UpgradeButton compact />
         </div>
 
