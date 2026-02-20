@@ -330,14 +330,10 @@ function LayoutContent({ children, currentPageName }) {
                       alt="StudyApp Logo"
                       className="w-6 h-6"
                     />
-                    {isDark ? (
-                      <span className="font-bold text-sm text-white">StudyApp</span>
-                    ) : (
-                      <span className="font-bold text-sm">
-                        <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
-                        <span className="text-slate-800">App</span>
-                      </span>
-                    )}
+                    <span className="font-bold text-sm">
+                          <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
+                          <span className="text-white">App</span>
+                        </span>
                   </Link>
               </div>
             </header>
