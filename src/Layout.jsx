@@ -363,6 +363,16 @@ function LayoutContent({ children, currentPageName }) {
                   <Home className="w-6 h-6" />
                 </Link>
 
+                <button
+                  onClick={() => setFeedbackModalOpen(true)}
+                  className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${isDark ? 'text-slate-400' : 'text-slate-600'} hover:text-purple-400 hover:bg-purple-600/20`}
+                >
+                  <Mail className="w-6 h-6" />
+                </button>
+
+                {/* Space for center CTA */}
+                <div className="w-16" />
+
                 <Link
                   to={createPageUrl("LessonHistory")}
                   className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
@@ -373,16 +383,6 @@ function LayoutContent({ children, currentPageName }) {
                 >
                   <History className="w-6 h-6" />
                 </Link>
-
-                {/* Space for center CTA */}
-                <div className="w-16" />
-
-                <button
-                  onClick={() => setFeedbackModalOpen(true)}
-                  className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${isDark ? 'text-slate-400' : 'text-slate-600'} hover:text-purple-400 hover:bg-purple-600/20`}
-                >
-                  <Mail className="w-6 h-6" />
-                </button>
 
                 <Link
                   to={createPageUrl("Settings")}

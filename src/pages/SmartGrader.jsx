@@ -370,7 +370,7 @@ Output valid JSON matching the expected schema.`;
         <div className="mb-8">
           <div className="flex justify-end mb-4">
             <Button
-              onClick={() => navigate(createPageUrl("AssignmentHistory"))}
+              onClick={() => navigate(createPageUrl("Home"))}
               variant="outline"
               className="gap-2"
             >
