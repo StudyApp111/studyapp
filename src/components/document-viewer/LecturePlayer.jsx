@@ -43,6 +43,7 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
     window.speechSynthesis.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current.onended = null;
     }
     setIsPlaying(false);
     setCurrentSentenceIdx(-1);
