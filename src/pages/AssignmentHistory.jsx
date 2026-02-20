@@ -15,6 +15,13 @@ export default function AssignmentHistory() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
 
+  // This page should never be the landing page — redirect to Home if accessed directly as root
+  useEffect(() => {
+    if (window.location.pathname === '/' || window.location.pathname === '') {
+      navigate(createPageUrl("Home"), { replace: true });
+    }
+  }, [navigate]);
+
   const { data: assignments = [], isLoading } = useQuery({
     queryKey: ['graded-assignments'],
     queryFn: () => base44.entities.GradedAssignment.list('-created_date', 50),
