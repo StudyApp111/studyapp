@@ -1,19 +1,33 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { Mail, ExternalLink, Smartphone } from "lucide-react";
+import { Mail, ExternalLink, Smartphone, Loader2, Eye } from "lucide-react";
 import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
 
-export default function StepSignIn({ onSignIn }) {
+export default function StepSignIn({ onSignIn, onGuestStart }) {
   const { isDark } = useTheme();
   const [showBrowserWarning, setShowBrowserWarning] = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestError, setGuestError] = useState(null);
+  const isInApp = checkIsInAppBrowser();
 
   const handleSignIn = (method) => {
-    if (checkIsInAppBrowser()) {
+    if (isInApp) {
       setShowBrowserWarning(true);
       return;
     }
     onSignIn(method);
+  };
+
+  const handleGuestStart = async () => {
+    if (!onGuestStart) return;
+    setGuestLoading(true);
+    setGuestError(null);
+    const result = await onGuestStart();
+    if (!result.allowed) {
+      setGuestError(result.reason);
+    }
+    setGuestLoading(false);
   };
 
   return (
@@ -76,12 +90,43 @@ export default function StepSignIn({ onSignIn }) {
               </div>
             </div>
 
-            <button
-              onClick={() => setShowBrowserWarning(false)}
-              className={`text-sm font-medium ${isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'} transition-colors`}
-            >
-              ← Go back
-            </button>
+            <div className="flex flex-col items-center gap-3">
+              <button
+                onClick={() => setShowBrowserWarning(false)}
+                className={`text-sm font-medium ${isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'} transition-colors`}
+              >
+                ← Go back
+              </button>
+
+              {onGuestStart && (
+                <div className="w-full max-w-sm space-y-2 pt-2 border-t border-slate-200/20">
+                  <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Or try a quick preview first
+                  </p>
+                  <button
+                    onClick={handleGuestStart}
+                    disabled={guestLoading}
+                    className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border ${
+                      isDark
+                        ? "bg-white/5 hover:bg-white/10 text-white border-white/10"
+                        : "bg-white hover:bg-slate-50 text-slate-900 border-slate-200 shadow-sm"
+                    } disabled:opacity-50`}
+                  >
+                    {guestLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Eye className="w-4 h-4" />
+                        Preview as Guest (5 min)
+                      </>
+                    )}
+                  </button>
+                  {guestError && (
+                    <p className="text-xs text-red-400">{guestError}</p>
+                  )}
+                </div>
+              )}
+            </div>
           </motion.div>
         ) : (
           <motion.div
