@@ -805,55 +805,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         <div className="absolute left-[28px] md:left-[26px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
         
         <div className="space-y-3 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
-          {/* Practice Your Topics - First Item */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative w-full flex items-start gap-3"
-          >
-            <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0 mt-3.5">
-              <Plus className="w-3 h-3 text-white" />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <button
-                onClick={() => setShowPracticeTopics(!showPracticeTopics)}
-                className={`w-full text-left p-3 rounded-xl border-2 transition-all group ${
-                  showPracticeTopics 
-                    ? (isDark ? 'border-purple-500 bg-gradient-to-r from-purple-600/20 to-indigo-600/20' : 'border-purple-500 bg-gradient-to-r from-purple-50 to-indigo-50')
-                    : (isDark ? 'border-purple-500/40 bg-gradient-to-r from-purple-600/10 to-indigo-600/10 hover:border-purple-500/60' : 'border-purple-300 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 hover:border-purple-500')
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg`}>
-                    <Plus className={`w-5 h-5 text-white ${showPracticeTopics ? 'rotate-45' : 'group-hover:scale-110'} transition-transform`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className={`font-bold text-sm ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
-                      Practice Your Topics
-                    </p>
-                    <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Choose topics from your materials • Pick your format
-                    </p>
-                  </div>
-                  <Sparkles className={`w-5 h-5 transition-all ${showPracticeTopics ? 'text-purple-400' : 'text-purple-300 group-hover:text-purple-500'}`} />
-                </div>
-              </button>
-
-              {/* Practice Topics Panel - Inline */}
-              <AnimatePresence>
-                {showPracticeTopics && (
-                  <PracticeTopicsPanel
-                    isOpen={showPracticeTopics}
-                    onClose={() => setShowPracticeTopics(false)}
-                    lessonId={lesson?.id}
-                    compressedContent={lesson?.compressed_content || lesson?.extracted_content}
-                    onCreateTask={handleCreateTask}
-                  />
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
 
           {/* Section Header */}
           <div className="flex items-center gap-3 w-full">
@@ -861,13 +812,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               <Target className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className={`font-bold text-sm md:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Complete these tasks to improve your grade</h3>
+              <h3 className={`font-bold text-sm md:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Up Next: Your Path to {getNextGradeBracket(currentGrade)}</h3>
               <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{completedTasks.length} of {totalTasks} complete</p>
             </div>
           </div>
 
-          {/* Incomplete Tasks */}
-          {incompleteTasks.map((task, idx) => {
+          {/* Incomplete Tasks - Grade booster first, then rest */}
+          {[...incompleteTasks].sort((a, b) => (b.is_focus_factor ? 1 : 0) - (a.is_focus_factor ? 1 : 0)).map((task, idx) => {
             const config = TASK_CONFIG[task.task_type] || TASK_CONFIG.flashcards;
             const live = liveProgress[task.task_type] || {};
             let actualCount = task.completed_count || 0;
