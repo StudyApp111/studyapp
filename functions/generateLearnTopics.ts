@@ -79,8 +79,8 @@ ${cleanedContent}
 
 Return a JSON array of objects. Each object has:
 - "title": a short descriptive topic name like "Topic 1: Cell Division"
-- "description": a 1-sentence summary of what this topic covers, mentioning a practical example or application
-- "key_content": the most relevant excerpt or summary from the material for this topic (300-500 words). Include concrete examples, case studies, or real-world applications where possible — not just definitions.
+- "description": a 1-sentence summary of what this topic covers, emphasizing what the student will learn to DO (not just know)
+- "key_content": the most relevant excerpt or summary from the material for this topic (300-500 words). Include specific examples, formulas, case references, or scenarios from the material that can be used for worked examples in a lecture.
 
 Return ONLY valid JSON array, no markdown.`
         }]
