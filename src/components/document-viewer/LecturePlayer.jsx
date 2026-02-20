@@ -40,16 +40,12 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
   }, [lecture]);
 
   const stopSpeech = useCallback(() => {
-    isStoppedRef.current = true;
     window.speechSynthesis.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current = null;
     }
     setIsPlaying(false);
     setCurrentSentenceIdx(-1);
-    setAudioSrc(null);
-    chunksRef.current = [];
   }, []);
 
   // Cleanup on unmount
@@ -62,14 +58,70 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
     };
   }, []);
 
-  // Track chunk playback state
-  const chunksRef = useRef([]); // array of audio base64 URIs
+  // Chunked TTS state
+  const chunksQueueRef = useRef([]); // array of { src, text } for each chunk
   const currentChunkIdxRef = useRef(0);
-  const totalChunksRef = useRef(0);
-  const isStoppedRef = useRef(false);
+  const prefetchingRef = useRef(false);
 
-  // Generate TTS audio from backend — chunked streaming approach
-  // Fetches chunk 0 immediately for fast start, then prefetches remaining chunks in background
+  // Prefetch remaining chunks in background
+  const prefetchChunks = useCallback(async (chunksText, startIdx) => {
+    if (prefetchingRef.current) return;
+    prefetchingRef.current = true;
+    
+    for (let i = startIdx; i < chunksText.length; i++) {
+      try {
+        const { data } = await base44.functions.invoke('generateLectureSpeech', { 
+          text: chunksText[i], 
+          chunk_index: i 
+        });
+        if (data?.audio_base64) {
+          const mimeType = data.mime_type || 'audio/wav';
+          chunksQueueRef.current[i] = `data:${mimeType};base64,${data.audio_base64}`;
+        }
+      } catch (err) {
+        console.warn(`Prefetch chunk ${i} failed:`, err);
+      }
+    }
+    prefetchingRef.current = false;
+  }, []);
+
+  // Play the next chunk in sequence
+  const playChunk = useCallback((idx) => {
+    const src = chunksQueueRef.current[idx];
+    if (!src) {
+      // Chunk not ready yet — wait and retry
+      const retryInterval = setInterval(() => {
+        if (chunksQueueRef.current[idx]) {
+          clearInterval(retryInterval);
+          playChunk(idx);
+        }
+      }, 300);
+      // Timeout after 15s
+      setTimeout(() => clearInterval(retryInterval), 15000);
+      return;
+    }
+
+    const audio = new Audio(src);
+    audioRef.current = audio;
+    currentChunkIdxRef.current = idx;
+
+    audio.onended = () => {
+      const nextIdx = idx + 1;
+      if (nextIdx < chunksQueueRef.current.length) {
+        playChunk(nextIdx);
+      } else {
+        setIsPlaying(false);
+        setCurrentSentenceIdx(-1);
+      }
+    };
+    audio.onerror = () => {
+      console.error(`Chunk ${idx} playback error`);
+      setIsPlaying(false);
+    };
+    audio.play();
+  }, []);
+
+  // Generate TTS audio from backend (chunked)
   const playGeminiTTS = useCallback(async () => {
     if (!lecture) return;
     
@@ -82,85 +134,40 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
     
     setAudioLoading(true);
     setIsPlaying(true);
-    isStoppedRef.current = false;
-    currentChunkIdxRef.current = 0;
-    chunksRef.current = [];
     
     try {
-      // Fetch chunk 0 first for fast playback start
-      const { data } = await base44.functions.invoke('generateLectureSpeech', { text: lecture, chunkIndex: 0 });
+      const { data } = await base44.functions.invoke('generateLectureSpeech', { text: lecture });
       
-      if (!data?.audio_base64) {
-        playBrowserTTS();
-        return;
-      }
-      
-      const totalChunks = data.totalChunks || 1;
-      totalChunksRef.current = totalChunks;
-      
-      // Store chunk 0
-      const mimeType = data.mime_type || 'audio/wav';
-      chunksRef.current[0] = `data:${mimeType};base64,${data.audio_base64}`;
-      setAudioSrc(chunksRef.current[0]);
-      setAudioLoading(false);
-      
-      // Play chunk 0 immediately
-      if (!isStoppedRef.current) {
+      if (data?.audio_base64) {
+        const mimeType = data.mime_type || 'audio/wav';
+        const firstSrc = `data:${mimeType};base64,${data.audio_base64}`;
+        
+        // Initialize chunks queue
+        const totalChunks = data.total_chunks || 1;
+        chunksQueueRef.current = new Array(totalChunks).fill(null);
+        chunksQueueRef.current[0] = firstSrc;
+        currentChunkIdxRef.current = 0;
+        setAudioSrc(firstSrc); // Mark that we have audio
+
+        // Start playing first chunk immediately
+        setAudioLoading(false);
         playChunk(0);
-      }
-      
-      // Prefetch remaining chunks in background
-      for (let i = 1; i < totalChunks; i++) {
-        if (isStoppedRef.current) break;
-        base44.functions.invoke('generateLectureSpeech', { text: lecture, chunkIndex: i })
-          .then(({ data: chunkData }) => {
-            if (chunkData?.audio_base64) {
-              const mt = chunkData.mime_type || 'audio/wav';
-              chunksRef.current[i] = `data:${mt};base64,${chunkData.audio_base64}`;
-            }
-          })
-          .catch(err => console.warn(`Chunk ${i} prefetch error:`, err));
+
+        // Prefetch remaining chunks in background
+        if (data.chunks_text && data.chunks_text.length > 1) {
+          prefetchChunks(data.chunks_text, 1);
+        }
+        return;
+      } else {
+        playBrowserTTS();
       }
     } catch (err) {
       console.error("Gemini TTS error:", err);
-      setAudioLoading(false);
       playBrowserTTS();
+    } finally {
+      setAudioLoading(false);
     }
-  }, [lecture, audioSrc]);
-
-  const playChunk = useCallback((idx) => {
-    if (isStoppedRef.current) return;
-    
-    const src = chunksRef.current[idx];
-    if (!src) {
-      // Chunk not ready yet — wait and retry
-      if (idx < totalChunksRef.current) {
-        setTimeout(() => playChunk(idx), 300);
-      }
-      return;
-    }
-    
-    const audio = new Audio(src);
-    audioRef.current = audio;
-    currentChunkIdxRef.current = idx;
-    
-    audio.onended = () => {
-      const nextIdx = idx + 1;
-      if (nextIdx < totalChunksRef.current && !isStoppedRef.current) {
-        playChunk(nextIdx);
-      } else {
-        setIsPlaying(false);
-        setCurrentSentenceIdx(-1);
-      }
-    };
-    audio.onerror = () => {
-      console.error(`Audio chunk ${idx} playback error`);
-      setIsPlaying(false);
-    };
-    audio.play().catch(() => {
-      setIsPlaying(false);
-    });
-  }, []);
+  }, [lecture, audioSrc, playChunk, prefetchChunks]);
 
   const playBrowserTTS = useCallback(() => {
     if (!sentencesRef.current.length) return;
@@ -200,13 +207,7 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
       window.speechSynthesis.cancel();
       setIsPlaying(false);
     } else {
-      // If we have a paused audio element, resume it
-      if (audioRef.current && audioRef.current.paused && audioRef.current.currentTime > 0) {
-        audioRef.current.play();
-        setIsPlaying(true);
-      } else {
-        playGeminiTTS();
-      }
+      playGeminiTTS();
     }
   };
 
