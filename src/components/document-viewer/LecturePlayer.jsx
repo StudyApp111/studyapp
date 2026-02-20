@@ -49,12 +49,27 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
     setCurrentSentenceIdx(-1);
   }, []);
 
+  // Reset audio state when lecture changes
+  useEffect(() => {
+    setAudioSrc(null);
+    chunksQueueRef.current = [];
+    currentChunkIdxRef.current = 0;
+    prefetchingRef.current = false;
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.onended = null;
+      audioRef.current = null;
+    }
+  }, [lecture]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
+      prefetchingRef.current = false;
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current.onended = null;
       }
     };
   }, []);
