@@ -140,16 +140,16 @@ function LayoutContent({ children, currentPageName }) {
               navigate(createPageUrl("Home"), { replace: true });
             }
           } catch (error) {
-            // Not authenticated
-            setUser(null);
-            // Allow guests to access CreateLesson and DocumentViewer
-            const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer'];
-            const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
-              currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
-            );
-            if (!currentIsHome && !isGuestAllowed) {
-              navigate(createPageUrl("Home"), { replace: true });
-            }
+              // Not authenticated
+              setUser(null);
+              // Allow guests to access CreateLesson and DocumentViewer
+              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer'];
+              const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
+                currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
+              );
+              if (isAssignmentHistory || (!currentIsHome && !isGuestAllowed)) {
+                navigate(createPageUrl("Home"), { replace: true });
+              }
       }
     })();
 
