@@ -861,9 +861,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 transition={{ delay: 0.05 + idx * 0.05 }}
                 className="relative w-full flex items-start gap-3"
               >
-                <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-4 ${
-                  isFocusFactor ? 'bg-amber-500 ring-2 ring-amber-300 ring-offset-1' : 'bg-white border-2 border-purple-300'
-                }`} />
+                <div className={`w-6 h-6 rounded-full flex-shrink-0 mt-3 flex items-center justify-center text-[10px] font-black ${
+                  isFocusFactor ? 'bg-amber-500 text-white ring-2 ring-amber-300 ring-offset-1' : (isDark ? 'bg-white/10 text-slate-300 border border-purple-400/50' : 'bg-white text-slate-600 border-2 border-purple-300')
+                }`}>{idx + 1}</div>
                 
                 <button
                   onClick={() => handleTaskClick(task)}
