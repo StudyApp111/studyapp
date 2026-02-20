@@ -281,7 +281,8 @@ export default function CreateLesson() {
           <GuestLessonCreatedModal 
             onDismiss={() => {
               setShowGuestLessonModal(false);
-              // Guest stays on the page, timer will lock them out
+              setShowLoader(false);
+              setIsSubmitting(false);
             }}
           />
         )}
