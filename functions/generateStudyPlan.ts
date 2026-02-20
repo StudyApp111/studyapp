@@ -205,15 +205,16 @@ AVAILABLE TASK TYPES:
 - "practice_exam": A quick practice quiz focused on specific weak areas. target_count = 1 (one quiz). Use this to test understanding after other study tasks.
 
 IMPORTANT: 
-- Include at least ONE "practice_exam" task to help students test their knowledge on weak areas. This should be the FIRST STUDY TASK, always.
+- Create 3-5 total tasks maximum. Order them CHRONOLOGICALLY so each task builds on the previous one (e.g., review notes first to rebuild understanding, then flashcards to lock in terms, then teach-it to prove mastery, then a practice exam to test it all).
+- The VERY FIRST task must be the is_focus_factor=true "Grade Booster" task that directly targets the mastery gap "${masteryGap}". This is the student's biggest weakness and should be addressed immediately.
+- Include at least ONE "practice_exam" task (usually as the LAST task) to test consolidated knowledge.
 - For flashcards, set target_count between 10-20 (the number of cards to master)
 - For practice_exam, set target_count to 1 (one quiz to complete)
-- Create 3-5 total tasks maximum
 - NEVER use "Diagnostic Quiz" or "Diagnostic" in practice exam titles - use "Practice Quiz", "Quick Practice", "Focus Practice" or similar
 
 CRITICAL: Each task's "focus_topics" array must contain SPECIFIC concepts from the course material that relate to the weak competency. These will be used to generate targeted content.
 
-MASTERY GAP: The student's biggest weakness is "${masteryGap}". At least ONE task MUST directly address this competency - mark it with is_focus_factor=true. This task gets special "Grade Booster" highlighting.
+MASTERY GAP: The student's biggest weakness is "${masteryGap}". The FIRST task MUST directly address this competency - mark it with is_focus_factor=true. This task gets special "Grade Booster" highlighting and must appear first.
 
 Return JSON:
 {
