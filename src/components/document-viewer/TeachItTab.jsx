@@ -269,13 +269,11 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       const totalCompleted = updatedCards.filter(c => c.completed).length;
       await updateStudyPlanProgress(totalCompleted);
 
-      const taskCompleted = await checkIfTaskCompleted('teach_it', totalCompleted);
-      if (taskCompleted) {
-        base44.functions.invoke('runPollyEngine', {
-          trigger_event: 'task_completed',
-          lesson_id: lesson.id
-        }).catch(err => console.warn('Polly trigger failed:', err.message));
-      }
+      // Trigger Polly after every teach-it grading to keep grade prediction fresh
+      base44.functions.invoke('runPollyEngine', {
+        trigger_event: 'teach_it_graded',
+        lesson_id: lesson.id
+      }).catch(err => console.warn('Polly trigger failed:', err.message));
 
       const xpAmount = gradingResult.score >= 90 ? 20 : gradingResult.score >= 75 ? 15 : 10;
       await awardDailyXP(xpAmount, "Taught a concept!");

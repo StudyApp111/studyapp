@@ -814,7 +814,17 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               <Target className="w-3 h-3 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className={`font-bold text-sm md:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Up Next: Your Path to {getNextGradeBracket(currentGrade)}</h3>
+              <h3 className={`font-bold text-sm md:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+              Up Next: Your Path to{' '}
+              <motion.span
+                key={getNextGradeBracket(currentGrade)}
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="inline-block"
+              >
+                {getNextGradeBracket(currentGrade)}
+              </motion.span>
+            </h3>
               <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{completedTasks.length} of {totalTasks} complete</p>
             </div>
           </div>

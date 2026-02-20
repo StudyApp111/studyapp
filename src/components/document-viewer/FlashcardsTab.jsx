@@ -268,14 +268,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       // Update study plan
       if (!wasReviewed) {
         const totalReviewed = updatedCards.filter(c => c.review_count > 0).length;
-        const taskCompleted = await updateStudyPlanProgress('flashcards', totalReviewed);
+        await updateStudyPlanProgress('flashcards', totalReviewed);
         
-        if (taskCompleted) {
-          base44.functions.invoke('runPollyEngine', {
-            trigger_event: 'task_completed',
-            lesson_id: lesson.id
-          }).catch(err => console.warn('Polly trigger failed:', err.message));
-        }
+        // Trigger Polly after every flashcard review to keep grade prediction fresh
+        base44.functions.invoke('runPollyEngine', {
+          trigger_event: 'flashcard_reviewed',
+          lesson_id: lesson.id
+        }).catch(err => console.warn('Polly trigger failed:', err.message));
       }
       
       // Check for milestone celebrations (every 5 cards)
