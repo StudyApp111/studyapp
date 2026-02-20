@@ -120,6 +120,9 @@ function LayoutContent({ children, currentPageName }) {
     (async () => {
       const currentIsHome = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
       
+      // Force redirect to Home if platform default page is misconfigured (e.g. AssignmentHistory)
+      const isAssignmentHistory = currentPageName === "AssignmentHistory" || location.pathname.toLowerCase().includes("assignmenthistory");
+      
       // Try to get user
       try {
         const currentUser = await base44.auth.me();
@@ -132,21 +135,25 @@ function LayoutContent({ children, currentPageName }) {
             if (onboardingDone || isAdmin) {
               trackUserSession();
               cleanup = trackSessionDuration();
+              // Redirect away from AssignmentHistory if it loaded as default
+              if (isAssignmentHistory) {
+                navigate(createPageUrl("Home"), { replace: true });
+              }
             } else if (!onboardingDone && !isAdmin && !currentIsHome) {
               // Not onboarded and not on Home — redirect to Home where modal lives
               navigate(createPageUrl("Home"), { replace: true });
             }
           } catch (error) {
-            // Not authenticated
-            setUser(null);
-            // Allow guests to access CreateLesson and DocumentViewer
-            const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer'];
-            const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
-              currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
-            );
-            if (!currentIsHome && !isGuestAllowed) {
-              navigate(createPageUrl("Home"), { replace: true });
-            }
+              // Not authenticated
+              setUser(null);
+              // Allow guests to access CreateLesson and DocumentViewer
+              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer'];
+              const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
+                currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
+              );
+              if (isAssignmentHistory || (!currentIsHome && !isGuestAllowed)) {
+                navigate(createPageUrl("Home"), { replace: true });
+              }
       }
     })();
 
@@ -323,10 +330,14 @@ function LayoutContent({ children, currentPageName }) {
                       alt="StudyApp Logo"
                       className="w-6 h-6"
                     />
-                    <span className="font-bold text-sm">
-                      <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
-                      <span className={isDark ? 'text-white' : 'text-slate-800'}>App</span>
-                    </span>
+                    {isDark ? (
+                      <span className="font-bold text-sm text-white">StudyApp</span>
+                    ) : (
+                      <span className="font-bold text-sm">
+                        <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
+                        <span className="text-slate-800">App</span>
+                      </span>
+                    )}
                   </Link>
               </div>
             </header>
