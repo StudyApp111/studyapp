@@ -13,6 +13,7 @@ import { handleDailyReset } from "@/components/utils/dailyReset";
 import LearningTrajectory from "@/components/home/LearningTrajectory";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import OnboardingModal from "@/components/onboarding-v2/OnboardingModal";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function Home() {
   
   const [learningProfile, setLearningProfile] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const { isGuest, guestData, transferGuestData, endGuestSession } = useGuestSession();
 
   useEffect(() => {
     const init = async () => {
@@ -35,8 +37,26 @@ export default function Home() {
         const isAuth = await base44.auth.isAuthenticated();
 
         if (!isAuth) {
+          // If guest session is active, don't show onboarding — show the guest home
+          if (isGuest) {
+            setShowOnboarding(false);
+            return;
+          }
           setShowOnboarding(true);
           return;
+        }
+
+        // If user just authenticated after being a guest, transfer data
+        if (guestData?.lessonData) {
+          const result = await transferGuestData();
+          if (result?.lesson_id) {
+            // Redirect to the transferred lesson
+            navigate(createPageUrl("DocumentViewer") + `?id=${result.lesson_id}`, { replace: true });
+            return;
+          }
+        } else if (isGuest) {
+          // Guest session active but no lesson — end it since they're now authenticated
+          endGuestSession();
         }
 
         const resetResult = await handleDailyReset();
@@ -70,12 +90,14 @@ export default function Home() {
           // No profile yet
         }
       } catch (error) {
-        setShowOnboarding(true);
+        if (!isGuest) {
+          setShowOnboarding(true);
+        }
       }
     };
 
     init();
-  }, []);
+  }, [isGuest]);
 
   const isOnboarded = !!user && !showOnboarding;
 
@@ -137,6 +159,13 @@ export default function Home() {
 
   const handleOnboardingComplete = async () => {
     setShowOnboarding(false);
+
+    // If guest, just redirect to CreateLesson
+    if (isGuest) {
+      navigate(createPageUrl("CreateLesson"));
+      return;
+    }
+
     // Reload user data after onboarding
     try {
       const resetResult = await handleDailyReset();
