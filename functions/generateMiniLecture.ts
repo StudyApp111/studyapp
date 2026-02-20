@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       contents: [{
         role: 'user',
         parts: [{
-          text: `You are an expert university lecturer teaching "${course_name || 'this course'}".
+          text: `You are an expert university lecturer teaching "${course_name || 'this course'}". You are known for making complex topics accessible through worked examples, case studies, and the Socratic method.
 
 Write a rich, detailed lecture on the topic: "${topic_title}"
 
@@ -61,13 +61,13 @@ INSTRUCTIONS:
 - Start with "## ${topic_title}" as the title
 - Write 3-5 key concept sections using ### headings
 - For EACH concept:
-  1. Define it clearly in 1-2 sentences
-  2. Walk through a **concrete worked example** or **real-world case study** step by step — show numbers, scenarios, or actual applications
-  3. Use the **Socratic method**: pose a thought-provoking question to the student mid-section (e.g. "So what do you think would happen if...?"), then answer it to deepen understanding
-  4. Explain why it matters and connect it to the bigger picture
-- Write in a warm, engaging, conversational tone — as if a tutor is speaking directly to one student
+  1. Briefly define the concept (2-3 sentences max)
+  2. Walk through a CONCRETE WORKED EXAMPLE step-by-step — show the student HOW to apply it, not just what it is
+  3. Pose a Socratic question to the student (e.g., "But what would happen if...?" or "Why do you think this works?") and then answer it — this deepens understanding
+  4. Where relevant, present a brief CASE STUDY or real-world scenario that illustrates the concept in practice
+- Write in a warm, engaging, conversational tone — as if speaking directly to a student
 - Each section should be 150-250 words of flowing prose (no bullet points)
-- Prioritize **practical examples, case-based reasoning, and problem-solving walkthroughs** over pure theory
+- Prioritize PRACTICAL APPLICATION over abstract theory — students should finish knowing how to DO something, not just recite definitions
 - Include smooth transitions between sections
 - End with a short "## Key Takeaways" summary paragraph
 - Total length: 800-1200 words
