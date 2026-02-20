@@ -32,15 +32,12 @@ export default function OnboardingModal({ onComplete }) {
           const currentUser = await base44.auth.me();
           setUser(currentUser);
           setDisplayName(currentUser.full_name?.split(" ")[0] || "");
-          // Authenticated users start at step 2 (profile)
-          setStep(2);
-        } else if (isGuest) {
-          // Guest session already active — go to profile step
+          // Authenticated users skip sign-in, start at step 2 (profile)
           setStep(2);
         }
+        // Guests always start at step 1 (sign-in) — they go through full onboarding
       } catch {
         // Not authenticated - stay on step 1
-        if (isGuest) setStep(2);
       } finally {
         setIsCheckingAuth(false);
       }

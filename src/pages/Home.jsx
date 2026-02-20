@@ -37,11 +37,7 @@ export default function Home() {
         const isAuth = await base44.auth.isAuthenticated();
 
         if (!isAuth) {
-          // If guest session is active, don't show onboarding — show the guest home
-          if (isGuest) {
-            setShowOnboarding(false);
-            return;
-          }
+          // Always show onboarding for unauthenticated users (including guests)
           setShowOnboarding(true);
           return;
         }

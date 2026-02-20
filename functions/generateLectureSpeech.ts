@@ -53,13 +53,13 @@ Deno.serve(async (req) => {
       .replace(/---+/g, '')
       .trim();
 
-    // Truncate to ~2000 chars for faster TTS generation
-    const truncated = cleanText.length > 2000 ? cleanText.substring(0, 2000) + '...' : cleanText;
+    // Truncate to ~3500 chars for TTS limits
+    const truncated = cleanText.length > 3500 ? cleanText.substring(0, 3500) + '...' : cleanText;
 
     const GEMINI_KEY = Deno.env.get('GEMINIAPIKEY');
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-tts:generateContent?key=${GEMINI_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${GEMINI_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -43,7 +43,6 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
     window.speechSynthesis.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current.currentTime = 0;
     }
     setIsPlaying(false);
     setCurrentSentenceIdx(-1);
@@ -63,8 +62,8 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
   const playGeminiTTS = useCallback(async () => {
     if (!lecture) return;
     
-    // If we already have audio, just play it
-    if (audioSrc && audioRef.current) {
+    // If we already have a loaded audio element, just resume it
+    if (audioRef.current && audioSrc) {
       audioRef.current.play();
       setIsPlaying(true);
       return;
@@ -136,7 +135,12 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
 
   const togglePlay = () => {
     if (isPlaying) {
-      stopSpeech();
+      // Pause without resetting position
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
     } else {
       playGeminiTTS();
     }
