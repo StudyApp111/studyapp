@@ -669,149 +669,85 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   return (
     <div className={`w-full max-w-full overflow-x-hidden py-3 space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', maxWidth: '100vw' }}>
-      {/* Grade + Confidence Card */}
+      {/* Slim Grade Banner */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="px-3 md:px-4 w-full max-w-full"
         style={{ boxSizing: 'border-box' }}
       >
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-1 mb-2 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
-          <p className={`text-xs md:text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-            If your <span className={`font-semibold ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{lesson?.course_name || 'course'}</span> exam was today, you'd score:
-          </p>
-          {latestOfficialExam && (
-            <button
-              onClick={() => {
-                // Navigate to exam tab with the exam ID
-                onNavigate('exam');
-                // Also dispatch event to show specific exam
-                setTimeout(() => {
-                  window.dispatchEvent(new CustomEvent('viewExamResults', { detail: { examId: latestOfficialExam.id } }));
-                }, 100);
-              }}
-              className={`text-[10px] font-medium px-2 py-1 rounded-lg transition-colors whitespace-nowrap ${isDark ? 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'}`}
-            >
-              View Diagnostic Results →
-            </button>
-          )}
-        </div>
-
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${getGradeColor(currentGrade)} p-4 md:p-6 shadow-xl transition-all duration-500 w-full max-w-full ${gradeJustUpdated ? 'ring-4 ring-yellow-400 ring-offset-2 animate-pulse' : ''}`} style={{ boxSizing: 'border-box' }}>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${getGradeColor(currentGrade)} px-4 py-3 shadow-lg transition-all duration-500 w-full max-w-full ${gradeJustUpdated ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`} style={{ boxSizing: 'border-box' }}>
+          <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
           
-          {/* Grade Updated Banner - More Prominent */}
+          {/* Grade Updated Badge */}
           <AnimatePresence>
             {gradeJustUpdated && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: -20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                className="absolute -top-2 left-1/2 -translate-x-1/2 z-20"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-1 right-2 z-20"
               >
-                <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-400 to-amber-400 text-yellow-900 rounded-full shadow-xl border-2 border-yellow-300">
-                    <Sparkles className="w-4 h-4 animate-spin" style={{ animationDuration: '2s' }} />
-                    <span className="text-sm font-black">Grade Updated!</span>
-                    {gradeChange?.scoreDiff !== null && gradeChange?.scoreDiff !== 0 && (
-                      <span className={`text-sm font-bold ${gradeChange.scoreDiff > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                        {gradeChange.scoreDiff > 0 ? '+' : ''}{gradeChange.scoreDiff}%
-                      </span>
-                    )}
-                  </div>
-                  {/* Arrow pointing down */}
-                  <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-yellow-400" />
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-400 text-yellow-900 rounded-full text-[9px] font-black">
+                  <Sparkles className="w-3 h-3" />
+                  Updated
+                  {gradeChange?.scoreDiff !== null && gradeChange?.scoreDiff !== 0 && (
+                    <span className={`${gradeChange.scoreDiff > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+                      {gradeChange.scoreDiff > 0 ? '+' : ''}{gradeChange.scoreDiff}%
+                    </span>
+                  )}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <div className={`relative w-full max-w-full ${gradeJustUpdated ? 'pt-6' : ''}`} style={{ boxSizing: 'border-box' }}>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
-              {/* Current Grade + Score + Velocity */}
-              <div className="text-center md:text-left mb-4 md:mb-0 md:flex-1">
-                <p className="text-white/70 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">StudyApp Predicted Grade</p>
-                <div className="flex items-center justify-center md:justify-start gap-3">
-                  <motion.span 
-                    className="text-5xl md:text-6xl font-black text-white"
-                    animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {currentGrade}
-                  </motion.span>
-                  <motion.div
-                    className="flex flex-col"
-                    animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                  >
-                    <span className="text-3xl md:text-4xl font-black text-white">
-                      {currentScore ? Math.round(currentScore) : '—'}%
-                    </span>
-                  </motion.div>
-                </div>
-                
-                {/* Learning Velocity - Integrated */}
-                {learningVelocity && (
-                  <div className={`inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full ${velocityConfig.bg}`}>
-                    <velocityConfig.icon className={`w-3.5 h-3.5 ${velocityConfig.color}`} />
-                    <span className={`text-[11px] font-bold ${velocityConfig.color}`}>
-                      {velocityConfig.label}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Confidence Meter */}
-              <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 md:p-4 w-full md:w-auto">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-4 h-4 text-yellow-300" />
-                  <span className="text-white/90 text-xs font-bold uppercase tracking-wide">Prediction Confidence</span>
-                </div>
-                
-                <div className="mb-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-white font-bold text-lg md:text-xl">
-                      {Math.round(currentConfidence)}%
-                    </span>
-                    <Badge className={`text-[10px] px-2 py-0.5 ${
-                      currentConfidence >= 75 ? 'bg-emerald-500/80 text-white' :
-                      currentConfidence >= 50 ? 'bg-amber-500/80 text-white' :
-                      'bg-red-500/80 text-white'
-                    }`}>
-                      {currentConfidence >= 75 ? 'High' : currentConfidence >= 50 ? 'Medium' : 'Low'} Data
-                    </Badge>
-                  </div>
-                  <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${currentConfidence}%` }}
-                      transition={{ duration: 1, delay: 0.3 }}
-                    />
-                  </div>
-                </div>
-                
-                {currentConfidence < 95 && (
-                  <div className="flex items-start gap-1.5 bg-white/10 rounded-lg p-2">
-                    <AlertCircle className="w-3.5 h-3.5 text-yellow-300 mt-0.5 flex-shrink-0" />
-                    <p className="text-white/80 text-[10px] md:text-xs leading-tight">
-                      Complete tasks to improve prediction accuracy
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Arrow + Target - Mobile only */}
-            <div className="flex items-center justify-center gap-2 pt-3 mt-3 md:hidden">
-              <motion.div
-                animate={{ y: [0, 3, 0] }}
-                transition={{ duration: 1, repeat: Infinity }}
-                className="text-white/70 text-sm"
+          <div className="relative flex items-center justify-between gap-3 w-full">
+            {/* Grade + Score */}
+            <div className="flex items-center gap-3">
+              <motion.span 
+                className="text-3xl md:text-4xl font-black text-white"
+                animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
               >
-                ↓
-              </motion.div>
-              <span className="text-white/60 text-[11px] font-medium">Complete Tasks To Get A+</span>
+                {currentGrade}
+              </motion.span>
+              <div className="flex flex-col">
+                <span className="text-white font-bold text-lg leading-tight">
+                  {currentScore ? Math.round(currentScore) : '—'}%
+                </span>
+                <span className="text-white/60 text-[9px] font-medium uppercase tracking-wide">Predicted</span>
+              </div>
+              {learningVelocity && (
+                <div className={`hidden sm:flex items-center gap-1 px-2 py-0.5 rounded-full ${velocityConfig.bg}`}>
+                  <velocityConfig.icon className={`w-3 h-3 ${velocityConfig.color}`} />
+                  <span className={`text-[10px] font-bold ${velocityConfig.color}`}>{velocityConfig.label}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Confidence + View Results */}
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-12 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${currentConfidence}%` }} />
+                  </div>
+                  <span className="text-white/80 text-[10px] font-bold">{Math.round(currentConfidence)}%</span>
+                </div>
+                <span className="text-white/50 text-[8px]">confidence</span>
+              </div>
+              {latestOfficialExam && (
+                <button
+                  onClick={() => {
+                    onNavigate('exam');
+                    setTimeout(() => {
+                      window.dispatchEvent(new CustomEvent('viewExamResults', { detail: { examId: latestOfficialExam.id } }));
+                    }, 100);
+                  }}
+                  className="text-white/60 hover:text-white/90 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>
