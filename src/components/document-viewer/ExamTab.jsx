@@ -1026,8 +1026,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         };
       });
 
-      // Save exam with questions and feedback, but NO grade/score yet
-      // feedbackGrade will update it with the AI prediction
+      // Save exam with questions and feedback
       await retryOperation(() => 
         base44.entities.Exam.update(exam.id, {
           questions: questionsWithGrading,
@@ -1039,24 +1038,30 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         })
       );
 
-      // Show 3s loading on submit button, then switch to study plan tab
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Dispatch study plan loading state immediately
+      window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
 
-      // Fire-and-forget: Get AI feedback in background and update exam + study plan
-      // feedbackGrade function handles the grading prompt internally - we just pass exam data
-      base44.functions.invoke('feedbackGrade', {
-        exam_id: exam.id,
-        lesson_id: lesson.id,
-        exam_performance_data: examPerformanceData,
-        curriculum_map: currentLesson.curriculum_map,
-        student_grade: learningProfile.grade || "N/A",
-        course_name: currentLesson.course_name,
-        exam_number: exam.exam_number
-      }).then(async ({ data: feedbackData }) => {
+      // Get AI feedback FIRST (blocking) so we have the grade before generating the study plan
+      let aiGrade = null;
+      let aiScore = null;
+      let aiConfidence = null;
+      let feedbackMasteryGap = null;
+      
+      try {
+        const { data: feedbackData } = await base44.functions.invoke('feedbackGrade', {
+          exam_id: exam.id,
+          lesson_id: lesson.id,
+          exam_performance_data: examPerformanceData,
+          curriculum_map: currentLesson.curriculum_map,
+          student_grade: learningProfile.grade || "N/A",
+          course_name: currentLesson.course_name,
+          exam_number: exam.exam_number
+        });
+        
         if (feedbackData?.predicted_exam_score_percentage) {
-          const aiScore = parseInt(feedbackData.predicted_exam_score_percentage);
+          aiScore = parseInt(feedbackData.predicted_exam_score_percentage);
           if (!isNaN(aiScore) && aiScore > 0) {
-            let aiGrade = "F";
+            aiGrade = "F";
             if (aiScore >= 90) aiGrade = "A+";
             else if (aiScore >= 85) aiGrade = "A";
             else if (aiScore >= 80) aiGrade = "A-";
@@ -1068,48 +1073,31 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             else if (aiScore >= 60) aiGrade = "C-";
             else if (aiScore >= 50) aiGrade = "D";
             
-            console.log(`📊 AI Feedback: Score=${aiScore}%, Grade=${aiGrade}, Confidence=${feedbackData.prediction_confidence_percentage}`);
+            aiConfidence = feedbackData.prediction_confidence_percentage || 45;
+            feedbackMasteryGap = feedbackData.mastery_gap || null;
+            
+            console.log(`📊 AI Feedback: Score=${aiScore}%, Grade=${aiGrade}, Confidence=${aiConfidence}`);
             
             // Update exam with AI feedback
             await base44.entities.Exam.update(exam.id, {
               total_score: aiScore,
               predicted_grade: aiGrade,
-              prediction_confidence: feedbackData.prediction_confidence_percentage || 45,
+              prediction_confidence: aiConfidence,
               confidence_level: feedbackData.confidence_level || 'Low',
-              mastery_gap: feedbackData.mastery_gap || null,
+              mastery_gap: feedbackMasteryGap,
               ai_feedback: feedbackData
             });
-            
-            // Also update study plan initial values if it exists (fire-and-forget)
-            base44.entities.StudyPlan.filter({ lesson_id: lesson.id, status: 'active' })
-              .then(async (plans) => {
-                if (plans.length > 0) {
-                  const plan = plans[0];
-                  await base44.entities.StudyPlan.update(plan.id, {
-                    initial_predicted_grade: aiGrade,
-                    initial_score: aiScore,
-                    initial_confidence: feedbackData.prediction_confidence_percentage || 45,
-                    current_predicted_grade: aiGrade,
-                    current_score: aiScore,
-                    current_confidence: feedbackData.prediction_confidence_percentage || 45,
-                    mastery_gap: feedbackData.mastery_gap || plan.mastery_gap
-                  });
-                  console.log(`📊 Study plan updated with AI predicted grade: ${aiGrade}`);
-                }
-              }).catch(err => console.warn("Study plan update error:", err.message));
           }
         }
-      }).catch(err => console.warn("Background AI feedback error:", err.message));
+      } catch (err) {
+        console.warn("AI feedback error (non-blocking):", err.message);
+      }
 
-      // Dispatch event to show study plan loading state
-      window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
-      
-      // Generate study plan in background - don't wait for it
+      // Now generate study plan - exam already has grade so plan will pick it up
       base44.functions.invoke('generateStudyPlan', {
         exam_id: exam.id,
         lesson_id: lesson.id
       }).then(() => {
-        // Study plan generated - stop showing loading state
         window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
         window.dispatchEvent(new Event('reloadLesson'));
       }).catch(planError => {
