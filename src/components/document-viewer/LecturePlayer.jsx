@@ -196,7 +196,13 @@ export default function LecturePlayer({ topic, topicIndex, totalTopics, lecture,
       window.speechSynthesis.cancel();
       setIsPlaying(false);
     } else {
-      playGeminiTTS();
+      // If we have a paused audio element, resume it
+      if (audioRef.current && audioRef.current.paused && audioRef.current.currentTime > 0) {
+        audioRef.current.play();
+        setIsPlaying(true);
+      } else {
+        playGeminiTTS();
+      }
     }
   };
 
