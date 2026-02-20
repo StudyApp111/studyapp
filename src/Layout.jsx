@@ -66,6 +66,8 @@ import { UpgradeNavBadge } from "@/components/subscription/UpgradeBadge";
 import UpgradeModalWrapper from "@/components/subscription/UpgradeModalWrapper";
 import { ThemeProvider, useTheme } from "@/components/theme/ThemeProvider";
 import { Moon, Sun } from "lucide-react";
+import { GuestSessionProvider } from "@/components/guest/GuestSessionContext";
+import GuestTimerLockout from "@/components/guest/GuestTimerLockout";
 
 const navigationItems = [
         {
@@ -425,27 +427,32 @@ function LayoutContent({ children, currentPageName }) {
         {/* Global Upgrade Modal */}
         <UpgradeModalWrapper />
 
+        {/* Guest Timer Lockout */}
+        <GuestTimerLockout />
+
         </div>
         </SidebarProvider>
         );
         }
 
-export default function Layout({ children, currentPageName }) {
-  return (
-    <PostHogProvider
-      apiKey='phc_CW2ahMtxlaEYnd9YbML39HMb1xJMfMqLVj7w2qbwnZY'
-      options={{
+        export default function Layout({ children, currentPageName }) {
+        return (
+        <PostHogProvider
+        apiKey='phc_CW2ahMtxlaEYnd9YbML39HMb1xJMfMqLVj7w2qbwnZY'
+        options={{
         api_host: 'https://us.i.posthog.com',
         defaults: '2026-01-30',
-      }}
-    >
-      <ThemeProvider>
+        }}
+        >
+        <ThemeProvider>
+        <GuestSessionProvider>
         <SubscriptionProvider>
-          <AITutorProvider>
-            <LayoutContent children={children} currentPageName={currentPageName} />
-          </AITutorProvider>
+        <AITutorProvider>
+          <LayoutContent children={children} currentPageName={currentPageName} />
+        </AITutorProvider>
         </SubscriptionProvider>
-      </ThemeProvider>
-    </PostHogProvider>
-  );
-}
+        </GuestSessionProvider>
+        </ThemeProvider>
+        </PostHogProvider>
+        );
+        }
