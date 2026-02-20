@@ -66,6 +66,14 @@ const getGradeColor = (grade) => {
   return 'from-red-500 to-rose-600';
 };
 
+const getNextGradeBracket = (grade) => {
+  if (!grade || grade === '—') return 'A+';
+  const order = ['F', 'D', 'D+', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
+  const idx = order.indexOf(grade);
+  if (idx < 0 || idx >= order.length - 1) return 'A+';
+  return order[idx + 1];
+};
+
 const getVelocityConfig = (velocity) => {
   switch (velocity) {
     case 'Accelerating':
