@@ -182,8 +182,8 @@ function LayoutContent({ children, currentPageName }) {
 
   const onboardingDone = user?.onboarding_completed || user?.data?.onboarding_completed;
   const isAdmin = user?.role === 'admin';
-  // Show navigation if user exists AND (onboarding done OR admin)
-  const showNavigation = !!user && (!!onboardingDone || !!isAdmin);
+  // Show navigation if user exists AND (onboarding done OR admin), OR if guest
+  const showNavigation = (!!user && (!!onboardingDone || !!isAdmin)) || false; // Never show nav for guests
   const showSidebar = showNavigation;
   
   const pagesWithCustomNav = ["Worksheet"];

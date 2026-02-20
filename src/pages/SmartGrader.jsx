@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -10,9 +10,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, CheckCircle2, Microscope, FileEdit } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
+  const { isGuest } = useGuestSession();
+
+  // Block guests from accessing Smart Grader
+  useEffect(() => {
+    if (isGuest) {
+      navigate(createPageUrl("Home"), { replace: true });
+    }
+  }, [isGuest]);
   const { isDark } = useTheme();
   const { canGradeAssignment, incrementAssignmentCount, triggerUpgradeModal } = useSubscription();
   const [courseName, setCourseName] = useState("");
