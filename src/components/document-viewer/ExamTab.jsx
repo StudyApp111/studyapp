@@ -503,22 +503,31 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       }
       
       if (dbExam && !dbExam.questions?.length) {
-        // Exam record exists but no questions - poll for it
-        console.log('⏳ Exam 1 record exists in DB but no questions - polling...');
-        setIsGenerating(true);
+        // Exam record exists but no questions — check if generation is stale (>90s old)
+        const updatedAt = new Date(dbExam.updated_date || dbExam.created_date);
+        const secondsSinceUpdate = (Date.now() - updatedAt.getTime()) / 1000;
+        const isStale = secondsSinceUpdate > 90;
         
-        for (let i = 0; i < 30; i++) {
-          await new Promise(r => setTimeout(r, 1000));
-          const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
-          if (refreshed[0]?.questions?.length > 0) {
-            console.log('✅ Questions appeared after DB polling');
-            setExam(refreshed[0]);
-            setIsGenerating(false);
-            return;
+        if (!isStale) {
+          // Recently updated — poll briefly for generation to finish
+          console.log('⏳ Exam 1 record exists in DB, generation in progress — polling...');
+          setIsGenerating(true);
+          
+          for (let i = 0; i < 30; i++) {
+            await new Promise(r => setTimeout(r, 1000));
+            const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
+            if (refreshed[0]?.questions?.length > 0) {
+              console.log('✅ Questions appeared after DB polling');
+              setExam(refreshed[0]);
+              setIsGenerating(false);
+              return;
+            }
           }
+          // Polling timed out — fall through to trigger generation below
+          console.log('⚠️ Polling timed out, will trigger autoGenerateExam1');
+        } else {
+          console.log('⚠️ Stale exam record (no questions after ' + Math.round(secondsSinceUpdate) + 's), will regenerate');
         }
-        setIsGenerating(false);
-        return;
       }
 
       // No exam 1 exists at all - trigger autoGenerateExam1 with timeout handling
