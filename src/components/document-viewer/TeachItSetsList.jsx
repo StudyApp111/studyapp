@@ -16,7 +16,7 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
           <Brain className="w-4 h-4 text-white" />
         </div>
         <div>
-          <h2 className={`text-base md:text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Teach It Cards</h2>
+          <h2 className={`text-base md:text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Feynman Cards</h2>
           <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             {totalMastered} / {cards.length} mastered
           </p>

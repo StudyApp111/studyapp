@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, PenLine, HelpCircle, Brain, X } from "lucide-react";
+import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, PenLine, HelpCircle, Brain, X, Mic } from "lucide-react";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import EducationalLoader from "@/components/ui/EducationalLoader";
+import SpeechToTextButton from "./SpeechToTextButton";
 import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import TeachItSetsList from "./TeachItSetsList";
@@ -368,7 +369,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
   if (isGenerating) {
     return (
       <EducationalLoader
-        title="Creating Teach It Cards"
+        title="Creating Feynman Cards"
         description="Generating foundational concept questions based on your material..."
       />
     );
@@ -406,8 +407,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               >
                 <Lightbulb className="w-16 h-16 md:w-20 md:h-20 text-yellow-300 mx-auto mb-3 drop-shadow-lg" />
               </motion.div>
-              <h3 className="text-xl md:text-2xl font-black text-white mb-1">Teach It to Master It</h3>
-              <p className="text-purple-100 text-xs md:text-sm">The best way to learn is to teach</p>
+              <h3 className="text-xl md:text-2xl font-black text-white mb-1">Feynman Method</h3>
+              <p className="text-purple-100 text-xs md:text-sm">Explain it simply to truly understand it</p>
             </div>
             <div className="p-5 md:p-6 text-center">
               <p className={`mb-5 leading-relaxed text-sm md:text-base ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
@@ -493,7 +494,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Teach It Sets</h3>
+                <h3 className={`text-lg font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Feynman Sets</h3>
                 <button onClick={() => setShowSetsList(false)} className={`p-1 rounded-full ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}>
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
@@ -624,10 +625,19 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                     <Textarea
                       value={userAnswer}
                       onChange={(e) => setUserAnswer(e.target.value)}
-                      placeholder="Type your explanation..."
+                      placeholder="Type or dictate your explanation..."
                       className="min-h-[140px] md:min-h-[200px] mb-3 text-sm md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none w-full"
                       disabled={isGrading}
                     />
+                    <div className="flex items-center gap-2 mb-3">
+                      <SpeechToTextButton
+                        disabled={isGrading}
+                        onTranscript={(text) => setUserAnswer(prev => prev ? prev + ' ' + text : text)}
+                      />
+                      <span className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Tap to speak your explanation
+                      </span>
+                    </div>
                     <Button
                       onClick={gradeAnswer}
                       disabled={!userAnswer.trim() || isGrading}

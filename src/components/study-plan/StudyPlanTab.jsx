@@ -31,7 +31,7 @@ const TASK_CONFIG = {
     bgLight: "bg-purple-50",
     border: "border-purple-200",
     text: "text-purple-700",
-    label: "Teach It",
+    label: "Feynman",
     action: "Explain",
     unit: "concepts"
   },

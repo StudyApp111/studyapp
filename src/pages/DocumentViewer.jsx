@@ -592,7 +592,7 @@ export default function DocumentViewer() {
                   >
                     {showTeachItDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Brain className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Teach It</span>
+                    <span className="text-xs font-medium">Feynman</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="flashcards"
@@ -721,7 +721,7 @@ export default function DocumentViewer() {
                     >
                       {showTeachItDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                       <Brain className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Teach</span>
+                      <span className="text-[10px] font-semibold">Feynman</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="flashcards"
