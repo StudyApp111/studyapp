@@ -17,7 +17,7 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 }
 
 // Auto-generates Exam 1 questions when lesson is ready
-// Called from DocumentViewer preload logic
+// Called from ExamTab when no exam with questions exists
 
 Deno.serve(async (req) => {
   console.log('=== autoGenerateExam1 Start ===');
@@ -43,32 +43,28 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, skipped: true, exam_id: officialExam.id });
     }
     
-    // STEP 2: Check if generation is in progress (exam record exists within last 20 seconds)
+    // STEP 2: Check if generation is actively in progress (exam record updated within last 90 seconds)
     if (officialExam) {
-      const createdAt = new Date(officialExam.created_date);
       const updatedAt = new Date(officialExam.updated_date || officialExam.created_date);
       const now = new Date();
-      const secondsSinceCreation = (now - createdAt) / 1000;
       const secondsSinceUpdate = (now - updatedAt) / 1000;
       
-      // If exam was created/updated within last 20 seconds, another call is in progress
-      if (secondsSinceCreation < 20 || secondsSinceUpdate < 20) {
-        console.log(`Exam 1 generation in progress (created ${secondsSinceCreation}s ago), skipping duplicate`);
+      // If exam was updated within last 90 seconds AND has status "generating", another call is in progress
+      if (officialExam.status === 'generating' && secondsSinceUpdate < 90) {
+        console.log(`Exam 1 generation in progress (updated ${secondsSinceUpdate}s ago), skipping duplicate`);
         return Response.json({ success: true, skipped: true, in_progress: true, exam_id: officialExam.id });
       }
+      // If status is "generating" but it's been > 90s, the previous attempt likely failed — proceed to regenerate
     }
     
-    // STEP 3: Create a placeholder exam record IMMEDIATELY to act as a lock
-    // This prevents race conditions where two requests both pass the check above
+    // STEP 3: Create or update a placeholder exam record as a lock
     let lockExam;
     if (officialExam) {
-      // Update existing record to refresh updated_date (acts as lock refresh)
       lockExam = await base44.entities.Exam.update(officialExam.id, {
         status: "generating"
       });
       console.log('Refreshed lock on existing exam record:', lockExam.id);
     } else {
-      // Create new placeholder record
       lockExam = await base44.entities.Exam.create({
         lesson_id,
         exam_number: 1,
@@ -95,28 +91,37 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Lesson not found' }, { status: 400 });
     }
 
-    // Wait for compressed content
-    if (!lesson.compressed_content && lesson.input_type === 'file') {
-      return Response.json({ error: 'Content not ready yet', retry: true }, { status: 202 });
-    }
-
-    // Get learning profile
-    const profiles = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
-    const learningProfile = profiles[0] || {};
-
-    // Determine content
+    // Build content from whatever is available — DO NOT bail if compressed_content is missing
     let contentDescription = "";
     if (lesson.input_type === "description" && lesson.description) {
       contentDescription = lesson.description;
     } else if (lesson.compressed_content) {
       contentDescription = lesson.compressed_content;
     } else if (lesson.extracted_content) {
-      contentDescription = lesson.extracted_content;
+      // Use extracted content (truncate if very long to fit prompt limits)
+      contentDescription = lesson.extracted_content.length > 30000
+        ? lesson.extracted_content.substring(0, 30000) + "\n...[truncated]"
+        : lesson.extracted_content;
+    } else if (lesson.description) {
+      contentDescription = lesson.description;
     } else {
-      contentDescription = lesson.description || "N/A";
+      contentDescription = `Course: ${lesson.course_name}`;
     }
 
-    // Build the exam generation prompt (same as ExamTab)
+    console.log(`Content source: ${lesson.compressed_content ? 'compressed' : lesson.extracted_content ? 'extracted' : lesson.description ? 'description' : 'course_name'}, length: ${contentDescription.length}`);
+
+    // Get learning profile
+    let learningProfile = {};
+    try {
+      if (user.learning_profile_id) {
+        const profiles = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
+        learningProfile = profiles[0] || {};
+      }
+    } catch (e) {
+      console.warn('Could not load learning profile:', e.message);
+    }
+
+    // Build the exam generation prompt
     const aiPrompt = `
 [Context]
 You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${lesson.course_name}. 
@@ -157,7 +162,7 @@ Examples:
 
 - Computer Science / Engineering:
   Use code snippets, logic traces, outputs, or system behavior.
-  DO NOT ask “what is” or “explain the concept” unless required by curriculum.
+  DO NOT ask "what is" or "explain the concept" unless required by curriculum.
 
 - Business / Economics:
   Use case scenarios, numbers, or decisions.
@@ -290,6 +295,8 @@ No extra text.`;
     if (!resp.ok) {
       const errText = await resp.text();
       console.error('Gemini error:', resp.status, errText);
+      // Reset status so it can be retried
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to generate exam', details: errText }, { status: 500 });
     }
 
@@ -302,7 +309,7 @@ No extra text.`;
       data = JSON.parse(responseText);
     } catch (parseErr) {
       console.error('Failed to parse Gemini API response:', parseErr.message);
-      console.error('Response preview:', responseText.substring(0, 500));
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Invalid API response format' }, { status: 500 });
     }
     
@@ -310,6 +317,7 @@ No extra text.`;
 
     if (!content) {
       console.error('No content from Gemini, candidates:', JSON.stringify(data?.candidates));
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'No content generated' }, { status: 500 });
     }
 
@@ -320,13 +328,14 @@ No extra text.`;
       examData = JSON.parse(content);
     } catch (e) {
       console.error('JSON parse failed:', e?.message);
-      console.error('Content end:', content.substring(Math.max(0, content.length - 300)));
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to parse exam response' }, { status: 500 });
     }
 
     const examQuestions = examData?.exam_questions || [];
     if (!Array.isArray(examQuestions) || examQuestions.length === 0) {
       console.error('Invalid exam_questions:', examData);
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to generate exam questions' }, { status: 500 });
     }
 
