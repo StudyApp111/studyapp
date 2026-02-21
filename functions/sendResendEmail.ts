@@ -56,12 +56,22 @@ Deno.serve(async (req) => {
     if (profiles.length > 0) profile = profiles[0];
 
     // Build user variables to pass to Resend template
-    // NOTE: Resend reserves these variable names: FIRST_NAME, LAST_NAME, EMAIL, UNSUBSCRIBE_URL
-    // Use lowercase or different names to avoid conflicts
+    // Resend reserves FIRST_NAME, LAST_NAME, EMAIL, UNSUBSCRIBE_URL — we provide both formats
+    const fullName = targetUser.full_name || 'there';
+    const firstName = fullName.split(' ')[0];
+    const lastName = fullName.split(' ').slice(1).join(' ') || '';
+    
     const userVars = {
-      user_name: targetUser.full_name || 'there',
-      user_first_name: (targetUser.full_name || 'there').split(' ')[0],
+      // Resend reserved variable names (uppercase)
+      FIRST_NAME: firstName,
+      LAST_NAME: lastName,
+      EMAIL: targetUser.email,
+      // Custom variables (lowercase)
+      user_name: fullName,
+      user_first_name: firstName,
       user_email: targetUser.email,
+      name: fullName,
+      first_name: firstName,
       school: profile?.school || '',
       grade: profile?.grade || '',
       level: String(targetUser.level || 1),
