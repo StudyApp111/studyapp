@@ -376,7 +376,7 @@ export default function Home() {
                                     <Icon className="w-4 h-4 text-purple-400" />
                                     <span className="text-[10px] text-purple-300 font-medium">
                                       {nextTask?.task_type === 'flashcards' ? 'Cards' :
-                                       nextTask?.task_type === 'teach_it' ? 'Teach' :
+                                       nextTask?.task_type === 'teach_it' ? 'Feynman' :
                                        nextTask?.task_type === 'practice_exam' ? 'Quiz' : 'Notes'}
                                     </span>
                                   </>

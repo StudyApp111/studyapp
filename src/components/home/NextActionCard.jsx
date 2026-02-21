@@ -11,6 +11,13 @@ const TASK_ICONS = {
   practice_exam: Zap
 };
 
+const TASK_LABELS = {
+  flashcards: 'Flashcards',
+  teach_it: 'Feynman',
+  review_notes: 'Review Notes',
+  practice_exam: 'Practice Quiz'
+};
+
 const TASK_COLORS = {
   flashcards: 'from-blue-500 to-cyan-500',
   teach_it: 'from-purple-500 to-pink-500',
