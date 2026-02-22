@@ -55,18 +55,31 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Insufficient lesson content to generate exam' }, { status: 400 });
     }
 
-    const questionCount = amount || 5;
+    const questionCount = amount || 10;
     const difficultyPref = difficulty || 'mixed';
     
     const difficultyInstruction = difficultyPref !== 'mixed'
       ? `\nDIFFICULTY: ALL questions should be "${difficultyPref}" difficulty level.`
       : `\nDIFFICULTY: Mix Easy, Medium, and Hard questions for a balanced set.`;
 
-    // Calculate question type distribution based on count
-    const mcqCount = Math.ceil(questionCount * 0.4);
-    const tfCount = Math.ceil(questionCount * 0.2);
-    const fibCount = Math.ceil(questionCount * 0.2);
-    const saCount = questionCount - mcqCount - tfCount - fibCount;
+    // Determine which question types to use
+    const enabledTypes = (question_types && question_types.length > 0) 
+      ? question_types 
+      : ["Multiple Choice", "True/False", "Fill in the Blank", "Short Answer"];
+    
+    // Calculate question type distribution based on enabled types
+    const typeCount = enabledTypes.length;
+    const perType = Math.floor(questionCount / typeCount);
+    const remainder = questionCount % typeCount;
+    
+    const typeDistribution = enabledTypes.map((t, i) => ({
+      type: t,
+      count: perType + (i < remainder ? 1 : 0)
+    }));
+
+    const customInstructionBlock = custom_instructions 
+      ? `\n\nCUSTOM STUDENT INSTRUCTIONS (follow these closely):\n${custom_instructions}`
+      : '';
 
     // Build the prompt for practice exam generation
     // Note: We don't use Google Search grounding because it's incompatible with JSON response mode
