@@ -33,6 +33,96 @@ Deno.serve(async (req) => {
 
         const MAX_CHUNK_SIZE = 40000; // ~10K tokens safe limit
 
+        // ── PHASE 1: Extract structured topics from the document ──
+        console.log('📋 Phase 1: Extracting structured topics...');
+        
+        // Use up to 60K chars for topic detection to get good structural coverage
+        const topicInputContent = content.length > 60000 
+            ? content.substring(0, 30000) + "\n\n...[middle content omitted]...\n\n" + content.substring(content.length - 30000)
+            : content;
+
+        const topicPrompt = `You are a document structure analyzer. Analyze this educational document and extract its organizational structure into topics.
+
+DOCUMENT CONTENT:
+${topicInputContent}
+
+INSTRUCTIONS:
+1. Identify the document's natural organizational structure: chapters, lectures, units, modules, sections, parts, classes, weeks, etc.
+2. For each top-level section, extract sub-topics if they exist.
+3. Each topic needs a clear title and a detailed description (2-3 sentences) summarizing what that section covers — enough detail for an AI to generate flashcards, quiz questions, or study cards about it.
+4. Preserve the original naming convention (e.g., "Chapter 1:", "Lecture 2:", "Unit 3:", "Week 4:" etc.)
+5. If no clear structural divisions exist, extract 5-10 major conceptual topics from the content.
+
+OUTPUT FORMAT:
+Return a JSON object with a "topics" array. Each topic has:
+- "title": The section/chapter/lecture name exactly as it appears
+- "description": 2-3 sentence summary of what this topic covers, including key concepts, terms, and ideas
+- "key_content": A detailed paragraph (4-6 sentences) capturing the essential information, definitions, formulas, arguments, or facts from this section — enough for question generation
+- "subtopics": Optional array of child topic objects (same structure, without further nesting)`;
+
+        let topics = [];
+        try {
+            const topicResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: topicPrompt }] }],
+                    generationConfig: { 
+                        temperature: 0.1, 
+                        maxOutputTokens: 4000,
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "object",
+                            properties: {
+                                topics: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            title: { type: "string" },
+                                            description: { type: "string" },
+                                            key_content: { type: "string" },
+                                            subtopics: {
+                                                type: "array",
+                                                items: {
+                                                    type: "object",
+                                                    properties: {
+                                                        title: { type: "string" },
+                                                        description: { type: "string" },
+                                                        key_content: { type: "string" }
+                                                    },
+                                                    required: ["title", "description"]
+                                                }
+                                            }
+                                        },
+                                        required: ["title", "description"]
+                                    }
+                                }
+                            },
+                            required: ["topics"]
+                        }
+                    }
+                })
+            });
+
+            if (topicResponse.ok) {
+                const topicData = await topicResponse.json();
+                const topicText = topicData.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (topicText) {
+                    const parsed = JSON.parse(topicText);
+                    topics = parsed.topics || [];
+                    console.log('✅ Extracted', topics.length, 'topics');
+                }
+            } else {
+                console.warn('⚠️ Topic extraction failed:', topicResponse.status);
+            }
+        } catch (topicErr) {
+            console.warn('⚠️ Topic extraction error:', topicErr.message);
+        }
+
+        // ── PHASE 2: Compress document content (existing logic) ──
+        console.log('📦 Phase 2: Compressing document content...');
+
         const compressChunk = async (chunkContent, isFinalPass = false) => {
             const prompt = isFinalPass 
                 ? `You are a document compression engine. Consolidate this extracted information into a final summary.
@@ -137,7 +227,12 @@ Output concise bullet points only. No commentary.`;
         }
 
         console.log('✅ Compression successful, output length:', compressedContent.length);
-        return Response.json({ compressed_content: compressedContent });
+        console.log('✅ Topics extracted:', topics.length);
+        
+        return Response.json({ 
+            compressed_content: compressedContent,
+            topics: topics
+        });
 
     } catch (error) {
         console.error('❌ Error compressing document:', error.message);
