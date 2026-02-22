@@ -303,7 +303,9 @@ export default function NotesTab({ lesson }) {
                         key={idx}
                         onClick={() => {
                           const element = document.getElementById(item.id);
-                          element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
                         }}
                         className={`block w-full text-left text-sm py-1.5 px-2 rounded transition-colors ${
                           item.level === 1 ? 'font-bold' : item.level === 2 ? 'font-semibold pl-3' : 'pl-5'

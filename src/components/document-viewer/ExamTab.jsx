@@ -1047,7 +1047,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         })
       );
 
-      // Dispatch study plan loading state immediately
+      // Dispatch study plan loading state (but don't navigate away from exam tab)
       window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
 
       // Get AI feedback FIRST (blocking) so we have the grade before generating the study plan
