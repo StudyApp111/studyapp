@@ -137,6 +137,10 @@ Generate cards that specifically address these topics. At least ${Math.ceil(card
         ? `\n\nDIFFICULTY: All cards should be at "${difficultyPref}" difficulty level.`
         : `\n\nDIFFICULTY: Mix easy, medium, and hard cards for a balanced set.`;
 
+      const customInstructionBlock = customInstructions 
+        ? `\n\nCUSTOM STUDENT INSTRUCTIONS (follow these closely):\n${customInstructions}`
+        : '';
+
       const prompt = `You are an expert educator creating "Teach It" cards for ${lesson.course_name}.
 
 CONTEXT:
