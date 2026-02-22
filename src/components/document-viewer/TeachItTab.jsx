@@ -125,6 +125,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
       const topicsToFocus = customOptions?.topics?.length > 0 ? customOptions.topics : (focusTopics || studyPlanTopics);
       const cardCount = customOptions?.amount || 5;
       const difficultyPref = customOptions?.difficulty || 'mixed';
+      const customInstructions = customOptions?.custom_instructions || '';
 
       const focusInstruction = topicsToFocus?.length > 0 
         ? `\n\nPRIORITY FOCUS TOPICS (from student's study plan - they struggled with these):
