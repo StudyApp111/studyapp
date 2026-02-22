@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { course_name, content, focus_topics, amount, difficulty } = await req.json();
+    const { course_name, content, focus_topics, amount, difficulty, custom_instructions } = await req.json();
 
     if (!content) {
       return Response.json({ error: 'Content is required' }, { status: 400 });
