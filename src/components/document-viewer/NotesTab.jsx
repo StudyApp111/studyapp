@@ -322,7 +322,7 @@ export default function NotesTab({ lesson }) {
             {/* Main Content */}
             <div className={`flex-1 overflow-y-auto p-3 sm:p-6 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden', maxHeight: 'calc(100vh - 140px)' }}>
               <div className="w-full max-w-full md:max-w-4xl mx-auto" style={{ boxSizing: 'border-box' }}>
-                <Card className={`p-6 sm:p-12 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'} ${highlightMode ? 'selection:bg-yellow-300 selection:text-slate-900 [&_*]::selection:bg-yellow-300 [&_*]::selection:text-slate-900' : ''}`} style={highlightMode ? { userSelect: 'text', WebkitUserSelect: 'text' } : {}}>
+                <Card className={`p-6 sm:p-12 shadow-sm ${isDark ? 'border-purple-500/30 bg-[#12121a]' : 'border-slate-200 bg-white'}`} style={{ userSelect: 'text', WebkitUserSelect: 'text', cursor: highlightMode ? 'text' : 'auto' }}>
                   <div className={`prose max-w-none ${isDark ? 'prose-invert' : ''} ${
                     fontSize === 'sm' ? '[&_h1]:text-3xl [&_h2]:text-xl [&_h3]:text-lg [&_h4]:text-base [&_p]:text-sm [&_li]:text-sm' :
                     fontSize === 'lg' ? '[&_h1]:!text-5xl [&_h2]:!text-3xl [&_h3]:!text-2xl [&_h4]:!text-xl [&_p]:!text-lg [&_li]:!text-lg' :

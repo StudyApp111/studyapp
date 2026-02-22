@@ -47,16 +47,19 @@ FORMATTING:
 - Use > blockquotes for critical "remember this" callouts
 - Separate major sections with ---
 
-CONTENT QUALITY — ABSOLUTE RULES:
-1. Every bullet point MUST be a complete, meaningful sentence or phrase. NEVER start a bullet with just a colon or orphan punctuation.
-   BAD:  "- : The sacred texts..."
-   GOOD: "- **Shruti (What is Heard)**: The sacred texts believed to be divinely revealed."
-2. A term and its definition MUST appear on the SAME bullet/line. Never split them.
-3. Do NOT repeat the same concept in multiple sections. Each section adds new value.
-4. Write like a real professor explaining to a smart student — be precise, not vague.
-5. Include concrete examples, dates, formulas, or data points wherever possible. Vague hand-waving like "this is important" without saying WHY is not acceptable.
-6. After every definition or concept, briefly explain WHY it matters or HOW it connects to other concepts.
-7. If the source material is thin on a topic, say what IS known rather than padding with filler.
+CONTENT QUALITY — ABSOLUTE RULES (VIOLATIONS WILL RUIN THE OUTPUT):
+1. NEVER start any line or bullet with a colon. Every line MUST begin with a word — typically a bolded term.
+   FORBIDDEN: "- : The sacred texts..."
+   FORBIDDEN: ": Mental suffering occurs when..."
+   CORRECT:   "- **Shruti (What is Heard)**: The sacred texts believed to be divinely revealed."
+   CORRECT:   "- **Dukkha (Suffering)**: Mental suffering occurs when..."
+2. When defining a list of terms, ALWAYS write the term name in **bold** at the START of the bullet, followed by a colon, then the definition. NEVER omit the term name.
+3. A term and its definition MUST appear on the SAME bullet/line. Never split them across lines.
+4. Do NOT repeat the same concept in multiple sections. Each section adds new value.
+5. Write like a real professor explaining to a smart student — be precise, not vague.
+6. Include concrete examples, dates, formulas, or data points wherever possible.
+7. After every definition or concept, briefly explain WHY it matters or HOW it connects to other concepts.
+8. If the source material is thin on a topic, say what IS known rather than padding with filler.
 
 CONTENT STRUCTURE:`;
 

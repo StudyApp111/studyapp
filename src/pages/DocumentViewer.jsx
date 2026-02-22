@@ -21,6 +21,7 @@ import NotesTab from "@/components/document-viewer/NotesTab";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import MaterialUploadPrompt from "@/components/document-viewer/MaterialUploadPrompt";
+import DiagnosticLockOverlay from "@/components/document-viewer/DiagnosticLockOverlay";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
@@ -541,9 +542,9 @@ export default function DocumentViewer() {
 
       <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-56px)] overflow-x-hidden">
         {/* Desktop: Flex container for AI tutor + tabs */}
-        <div className="hidden md:flex gap-3 h-full w-full max-w-full">
+        <div className="hidden md:flex gap-3 h-full w-full max-w-full" style={{ isolation: 'isolate' }}>
           {/* AI Tutor Panel - Left side, 50% width */}
-          <div className="w-1/2 flex-shrink-0" style={{ fontSize: '15px' }}>
+          <div className="w-1/2 flex-shrink-0">
             <AITutorPanel 
               messages={messages}
               setMessages={setMessages}
@@ -649,15 +650,15 @@ export default function DocumentViewer() {
 
 
                 <TabsContent value="flashcards" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+                  {!diagnosticCompleted ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />}
                 </TabsContent>
 
                 <TabsContent value="teachit" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  <TeachItTab lesson={lesson} />
+                  {!diagnosticCompleted ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <TeachItTab lesson={lesson} />}
                 </TabsContent>
 
                 <TabsContent value="learn" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />
+                  {!diagnosticCompleted ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
                 </TabsContent>
 
               </div>
@@ -784,15 +785,15 @@ export default function DocumentViewer() {
 
 
               <TabsContent value="flashcards" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+                {!diagnosticCompleted ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />}
               </TabsContent>
 
               <TabsContent value="teachit" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                <TeachItTab lesson={lesson} />
+                {!diagnosticCompleted ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <TeachItTab lesson={lesson} />}
               </TabsContent>
 
               <TabsContent value="learn" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />
+                {!diagnosticCompleted ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
               </TabsContent>
 
             </div>
