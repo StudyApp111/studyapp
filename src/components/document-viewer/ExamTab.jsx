@@ -1184,14 +1184,18 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         console.log('📊 TikTok Pixel: SubmitApplication tracked for diagnostic quiz');
       }
 
-      // Navigate to study plan tab FIRST (while still showing submit loading)
-      window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'));
+      // Stay on exam tab and show the completed exam results
+      // Reload exams to get the updated data with AI feedback
+      if (onExamComplete) await onExamComplete();
       
+      // Fetch the freshly updated exam with AI feedback
+      const freshExams = await base44.entities.Exam.filter({ id: exam.id });
+      const freshExam = freshExams[0] || { ...exam, completed: true, predicted_grade: aiGrade, total_score: aiScore, prediction_confidence: aiConfidence, ai_feedback: null };
+      
+      setViewingCompletedExam(freshExam);
       setExam(null);
       setSelectedExamNumber(null);
       hasAutoSelectedRef.current = false;
-      
-      if (onExamComplete) onExamComplete();
       setIsSubmitting(false);
     } catch (error) {
       console.error("Error submitting exam:", error);

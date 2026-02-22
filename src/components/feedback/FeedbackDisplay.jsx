@@ -400,6 +400,29 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
   // Official Exam Results UI (existing)
   return (
     <div className={`space-y-6 px-3 max-w-5xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
+      {/* CTA: Go to Study Plan - above everything */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
+          className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-xl shadow-emerald-500/20 transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <Target className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-bold text-base">View Your Study Plan</p>
+              <p className="text-white/70 text-xs">Personalized roadmap to improve your grade</p>
+            </div>
+            <ChevronDown className="w-5 h-5 text-white/60 rotate-[-90deg]" />
+          </div>
+        </button>
+      </motion.div>
+
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
