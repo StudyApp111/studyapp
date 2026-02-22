@@ -219,8 +219,8 @@ export default function CreateLesson() {
       } catch {}
 
 
-      // Fire-and-forget: Generate Exam 1 in background - user will see it loading on the study plan
-      console.log("🎯 Triggering diagnostic exam generation in background...");
+      // Fire-and-forget: Generate Exam 1 + Topic Suggestions simultaneously
+      console.log("🎯 Triggering diagnostic exam + topic suggestions in background...");
       base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
         .then(examResult => {
           if (examResult?.data?.success) {
@@ -228,6 +228,14 @@ export default function CreateLesson() {
           }
         })
         .catch(err => console.error("❌ Exam generation error:", err.message));
+
+      base44.functions.invoke('generateTopicSuggestions', { lesson_id: lesson.id })
+        .then(result => {
+          if (result?.data?.success) {
+            console.log("✅ Topic suggestions generated:", result.data.sections?.length, "sections");
+          }
+        })
+        .catch(err => console.error("❌ Topic suggestions error:", err.message));
 
       // Fire-and-forget: Curriculum mapping in background (not critical path)
       console.log('🗺️ Triggering curriculum mapping for lesson:', lesson.id);
