@@ -196,7 +196,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
             >
               {msg.role === 'assistant' ? (
                 <ReactMarkdown 
-                  className="text-xs leading-relaxed prose prose-xs max-w-none [&>p]:my-0.5 [&>ul]:my-1 [&>ul]:ml-3 [&>ol]:my-1 [&>ol]:ml-3 [&>li]:my-0.5"
+                  className="text-sm leading-relaxed prose prose-sm max-w-none [&>p]:my-1 [&>ul]:my-1.5 [&>ul]:ml-3 [&>ol]:my-1.5 [&>ol]:ml-3 [&>li]:my-0.5"
                   components={{
                     p: ({ children }) => {
                       const text = typeof children === 'string' ? children : 
@@ -222,7 +222,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
                   {msg.content}
                 </ReactMarkdown>
               ) : (
-                <p className="text-xs leading-relaxed">{msg.content}</p>
+                <p className="text-sm leading-relaxed">{msg.content}</p>
               )}
             </div>
           </motion.div>
@@ -266,7 +266,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
               key={action.label}
               onClick={() => handleSend(action.prompt)}
               disabled={isLoading}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all text-[10px] font-medium whitespace-nowrap ${isDark ? 'bg-purple-600/20 border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 text-purple-300' : 'bg-purple-100 border-purple-200 hover:bg-purple-200 text-purple-700'}`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all text-xs font-medium whitespace-nowrap ${isDark ? 'bg-purple-600/20 border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 text-purple-300' : 'bg-purple-100 border-purple-200 hover:bg-purple-200 text-purple-700'}`}
             >
               <action.icon className="w-3 h-3" />
               {action.label}
@@ -281,7 +281,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder={hasDocument ? "Ask about your document..." : "Ask me anything..."}
             disabled={isLoading}
-            className={`flex-1 focus-visible:ring-purple-500 text-xs rounded-xl h-9 ${isDark ? 'bg-white/5 border-white/10 text-slate-200 placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
+            className={`flex-1 focus-visible:ring-purple-500 text-sm rounded-xl h-10 ${isDark ? 'bg-white/5 border-white/10 text-slate-200 placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
           />
           <Button
             onClick={() => handleSend()}
