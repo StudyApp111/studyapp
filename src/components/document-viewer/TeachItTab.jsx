@@ -152,6 +152,7 @@ STUDENT'S MATERIAL:
 ${contentDescription}
 ${focusInstruction}
 ${difficultyInstruction}
+${customInstructionBlock}
 
 CRITICAL INSTRUCTIONS:
 1. Read the student's material carefully and identify ${cardCount} SPECIFIC, CONCRETE concepts that are EXPLICITLY covered in their content
