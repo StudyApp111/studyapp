@@ -98,21 +98,48 @@ Deno.serve(async (req) => {
             }, { status: 500 });
         }
 
-        const fileBlob = await fileResponse.blob();
-        const fileSize = fileBlob.size;
-        console.log('File size:', fileSize, 'bytes');
-
-        if (fileSize > 10 * 1024 * 1024) {
-            return Response.json({ 
-                error: 'File too large. Please upload files smaller than 10MB.' 
-            }, { status: 400 });
-        }
-
-        // Determine file type - strip query params first
+        // Determine file type from URL BEFORE downloading (needed for routing)
         const urlPath = new URL(file_url).pathname;
         const fileName = urlPath.split('/').pop().toLowerCase();
         const fileExt = fileName.split('.').pop();
         console.log('File name:', fileName, 'Extension:', fileExt);
+
+        // Get file size from headers first (Content-Length) to avoid downloading huge files unnecessarily
+        const contentLength = parseInt(fileResponse.headers.get('content-length') || '0', 10);
+        console.log('Content-Length header:', contentLength, 'bytes');
+
+        // For PDFs/DOCX/PPTX: route large files directly to Mistral OCR (URL-based, no download needed)
+        const documentFormatsForMistral = ['pdf', 'docx', 'pptx'];
+        if (documentFormatsForMistral.includes(fileExt) && contentLength > 10 * 1024 * 1024) {
+            console.log('Large document detected (' + contentLength + ' bytes), routing directly to Mistral OCR (URL-based)...');
+            
+            const mistralResult = await extractWithMistralOCR(file_url, fileExt);
+            if (mistralResult.success && mistralResult.content.trim().length > 50) {
+                return Response.json({ 
+                    extracted_content: mistralResult.content.trim(),
+                    characters: mistralResult.content.trim().length,
+                    file_size: contentLength,
+                    file_type: fileExt.toUpperCase(),
+                    method: 'mistral_ocr_direct'
+                });
+            }
+            
+            // Mistral failed on large file — cannot fall back to in-memory processing
+            return Response.json({ 
+                error: 'Could not extract content from this large document. Please try splitting it into smaller files.',
+                details: `File is ${Math.round(contentLength / 1024 / 1024)}MB. OCR extraction failed.`
+            }, { status: 400 });
+        }
+
+        const fileBlob = await fileResponse.blob();
+        const fileSize = fileBlob.size;
+        console.log('File size:', fileSize, 'bytes');
+
+        if (fileSize > 20 * 1024 * 1024) {
+            return Response.json({ 
+                error: 'File too large. Please upload files smaller than 20MB.' 
+            }, { status: 400 });
+        }
 
         // Direct text extraction for .txt files
         if (fileExt === 'txt') {
