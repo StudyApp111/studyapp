@@ -361,42 +361,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             </div>
           </div>
 
-          {/* Topic Suggestions - show even before diagnostic */}
-          {topicSuggestions.length > 0 && (
-            <div className="space-y-3">
-              <p className={`text-xs font-bold uppercase tracking-wider px-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Your Content Breakdown
-              </p>
-              {displayedSections.map((section, idx) => (
-                <SectionCard
-                  key={idx}
-                  section={section}
-                  index={idx}
-                  defaultExpanded={idx === 0}
-                  onTopicClick={handleSuggestedTopicClick}
-                  onAllTopicsClick={handleAllTopicsClick}
-                />
-              ))}
-              {remainingSections.length > 0 && (
-                <>
-                  <button onClick={() => setShowMoreSections(!showMoreSections)} className={`w-full text-center py-2 text-xs font-semibold ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}>
-                    {showMoreSections ? 'Show less' : `+ ${remainingSections.length} more section${remainingSections.length !== 1 ? 's' : ''}`}
-                  </button>
-                  <AnimatePresence>
-                    {showMoreSections && remainingSections.map((section, idx) => (
-                      <SectionCard key={idx + 3} section={section} index={idx + 3} defaultExpanded={false} onTopicClick={handleSuggestedTopicClick} onAllTopicsClick={handleAllTopicsClick} />
-                    ))}
-                  </AnimatePresence>
-                </>
-              )}
-            </div>
-          )}
-          {loadingSuggestions && topicSuggestions.length === 0 && (
-            <div className="flex items-center justify-center gap-2 py-4">
-              <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
-              <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Analyzing your materials...</span>
-            </div>
-          )}
+          {/* Topic suggestions hidden until diagnostic is completed */}
         </motion.div>
         <PickFormatModal open={showPickFormat} onOpenChange={setShowPickFormat} lessonId={lesson?.id} sectionTitle={pickFormatSection} onGenerate={handlePickFormatGenerate} />
       </div>
