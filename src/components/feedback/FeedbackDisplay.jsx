@@ -564,6 +564,30 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
         )}
       </div>
 
+      {/* CTA: Go to Study Plan */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="space-y-3"
+      >
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
+          className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-xl transition-all group"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <Target className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-bold text-base">View Your Study Plan</p>
+              <p className="text-white/70 text-xs">Personalized roadmap to improve your grade</p>
+            </div>
+            <ChevronDown className="w-5 h-5 text-white/60 rotate-[-90deg]" />
+          </div>
+        </button>
+      </motion.div>
+
       {/* Question Breakdown */}
       {exam.questions && exam.feedback && (
         <motion.div
