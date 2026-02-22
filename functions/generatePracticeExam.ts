@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { lesson_id, focus_topics, target_competency, misconception_addressed, amount, difficulty } = await req.json();
+    const { lesson_id, focus_topics, target_competency, misconception_addressed, amount, difficulty, question_types, custom_instructions } = await req.json();
 
     // Get lesson data
     const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
