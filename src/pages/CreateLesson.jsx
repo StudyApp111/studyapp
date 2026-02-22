@@ -151,6 +151,11 @@ export default function CreateLesson() {
             try {
               const compResult = await base44.functions.invoke('compressDocument', { content: extractedContent });
               compressedContent = compResult?.data?.compressed_content || extractedContent;
+              // Save structured topics if returned
+              if (compResult?.data?.topics?.length > 0) {
+                lessonData.topics = compResult.data.topics;
+                console.log("✅ Extracted", compResult.data.topics.length, "topics from document");
+              }
             } catch (compErr) {
               console.warn("⚠️ Compression failed, using raw:", compErr);
               compressedContent = extractedContent;
