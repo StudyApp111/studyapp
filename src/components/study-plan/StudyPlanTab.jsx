@@ -2,59 +2,29 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { 
   Target, CheckCircle2, BookOpen, Zap, Brain, 
-  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock, Copy
+  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock, Copy, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import PracticeTopicsPanel from "./PracticeTopicsPanel";
+import SectionCard from "./SectionCard";
+import PickFormatModal from "./PickFormatModal";
 import CompletedTaskItem from "./CompletedTaskItem";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 const TASK_CONFIG = {
-  flashcards: { 
-    icon: Copy, 
-    gradient: "from-amber-500 to-orange-600",
-    bgLight: "bg-amber-50",
-    border: "border-amber-200",
-    text: "text-amber-700",
-    label: "Flashcards",
-    action: "Master",
-    unit: "cards"
-  },
-  teach_it: { 
-    icon: Brain, 
-    gradient: "from-violet-500 to-purple-600",
-    bgLight: "bg-purple-50",
-    border: "border-purple-200",
-    text: "text-purple-700",
-    label: "Feynman",
-    action: "Explain",
-    unit: "concepts"
-  },
-  review_notes: { 
-    icon: FileText, 
-    gradient: "from-emerald-500 to-teal-600",
-    bgLight: "bg-emerald-50",
-    border: "border-emerald-200",
-    text: "text-emerald-700",
-    label: "Review Notes",
-    action: "Read",
-    unit: "sections"
-  },
-  practice_exam: { 
-    icon: Zap, 
-    gradient: "from-blue-500 to-indigo-600",
-    bgLight: "bg-blue-50",
-    border: "border-blue-200",
-    text: "text-blue-700",
-    label: "Practice Quiz",
-    action: "Complete",
-    unit: "quizzes"
-  }
+  flashcards: { icon: Copy, gradient: "from-amber-500 to-orange-600", label: "Flashcards", action: "Master", unit: "cards" },
+  teach_it: { icon: Brain, gradient: "from-violet-500 to-purple-600", label: "Feynman", action: "Explain", unit: "concepts" },
+  review_notes: { icon: FileText, gradient: "from-emerald-500 to-teal-600", label: "Review Notes", action: "Read", unit: "sections" },
+  practice_exam: { icon: Zap, gradient: "from-blue-500 to-indigo-600", label: "Practice Quiz", action: "Complete", unit: "quizzes" }
+};
+
+const FORMAT_TO_TAB = {
+  review_notes: "notes",
+  flashcards: "flashcards",
+  practice_exam: "exam",
+  teach_it: "teachit"
 };
 
 const getGradeColor = (grade) => {
@@ -62,16 +32,7 @@ const getGradeColor = (grade) => {
   if (grade.startsWith('A')) return 'from-emerald-500 to-teal-600';
   if (grade.startsWith('B')) return 'from-blue-500 to-indigo-600';
   if (grade.startsWith('C')) return 'from-amber-500 to-orange-600';
-  if (grade.startsWith('D') || grade.startsWith('F')) return 'from-red-500 to-rose-600';
   return 'from-red-500 to-rose-600';
-};
-
-const getNextGradeBracket = (grade) => {
-  if (!grade || grade === '—') return 'A+';
-  const order = ['F', 'D', 'D+', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'];
-  const idx = order.indexOf(grade);
-  if (idx < 0 || idx >= order.length - 1) return 'A+';
-  return order[idx + 1];
 };
 
 const getVelocityConfig = (velocity) => {
@@ -90,85 +51,56 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const { canDoTask, triggerUpgradeModal } = useSubscription();
   const [studyPlan, setStudyPlan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [topicSuggestions, setTopicSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showMoreSections, setShowMoreSections] = useState(false);
+  
+  // Pick Format Modal state
+  const [showPickFormat, setShowPickFormat] = useState(false);
+  const [pickFormatSection, setPickFormatSection] = useState(null);
 
-  // Check if diagnostic exam is ready (has questions generated)
   const diagnosticExamFromExams = (exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice');
   const isDiagnosticReady = diagnosticExamFromExams?.questions?.length > 0;
 
-  const [liveProgress, setLiveProgress] = useState({});
-  const [showCreateTask, setShowCreateTask] = useState(false);
-  const [showPracticeTopics, setShowPracticeTopics] = useState(false);
   const [gradeJustUpdated, setGradeJustUpdated] = useState(false);
-  const [previousGrade, setPreviousGrade] = useState(null);
-  const [gradeChange, setGradeChange] = useState(null); // { from, to, scoreDiff }
+  const [gradeChange, setGradeChange] = useState(null);
   const [generatingProgress, setGeneratingProgress] = useState(0);
   const ctaRef = useRef(null);
   const examPollRef = useRef(null);
 
-  const scrollToCTA = () => {
-    ctaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  };
-
-  // Poll for diagnostic exam readiness when it's generating
+  // Poll for diagnostic exam readiness
   useEffect(() => {
-    if (examPollRef.current) {
-      clearInterval(examPollRef.current);
-      examPollRef.current = null;
-    }
-
-    // Poll if diagnostic isn't ready yet (regardless of study plan status)
+    if (examPollRef.current) { clearInterval(examPollRef.current); examPollRef.current = null; }
     if (lesson?.id && !isDiagnosticReady) {
       examPollRef.current = setInterval(async () => {
         try {
           const freshExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
           const diag = freshExams.find(e => e.exam_type !== 'practice');
           if (diag?.questions?.length > 0) {
-            // Exam is ready - trigger a re-render by reloading exams in parent
             window.dispatchEvent(new Event('reloadLesson'));
-            if (examPollRef.current) {
-              clearInterval(examPollRef.current);
-              examPollRef.current = null;
-            }
+            clearInterval(examPollRef.current); examPollRef.current = null;
           }
-        } catch (err) {
-          console.warn('Exam poll error:', err);
-        }
+        } catch (err) { console.warn('Exam poll error:', err); }
       }, 3000);
     }
-
-    return () => {
-      if (examPollRef.current) {
-        clearInterval(examPollRef.current);
-        examPollRef.current = null;
-      }
-    };
+    return () => { if (examPollRef.current) { clearInterval(examPollRef.current); examPollRef.current = null; } };
   }, [lesson?.id, isDiagnosticReady]);
 
+  // Load study plan
   useEffect(() => {
     const checkAndLoadPlan = async () => {
       if (!lesson?.id) return;
-      
-      // If already generating from parent, don't do anything
       if (isGeneratingPlan) return;
       
-      // Check if coming from onboarding with report data
       const urlParams = new URLSearchParams(window.location.search);
       const fromOnboarding = urlParams.get('fromOnboarding') === 'true';
       const reportDataStr = urlParams.get('reportData');
       
       if (fromOnboarding && reportDataStr) {
         try {
-          // URLSearchParams.get() already returns decoded string - try parsing directly first
           let reportData;
-          try {
-            reportData = JSON.parse(reportDataStr);
-          } catch {
-            // If that fails, try decoding first (in case it was double-encoded)
-            reportData = JSON.parse(decodeURIComponent(reportDataStr));
-          }
-          console.log('📊 Parsed report data for study plan:', reportData);
+          try { reportData = JSON.parse(reportDataStr); } catch { reportData = JSON.parse(decodeURIComponent(reportDataStr)); }
           
-          // Show a placeholder with the predicted grade while generating
           setStudyPlan({
             initial_predicted_grade: reportData.predicted_grade,
             current_predicted_grade: reportData.predicted_grade,
@@ -176,136 +108,89 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             current_score: reportData.predicted_percentage,
             initial_confidence: parseInt(reportData.confidence_level) || 45,
             current_confidence: parseInt(reportData.confidence_level) || 45,
-            tasks: [],
-            status: 'active'
+            tasks: [], status: 'active'
           });
           setLoading(false);
           
-          // Set generating state and trigger study plan generation
           setGeneratingProgress(0);
           window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
           
           base44.functions.invoke('generateStudyPlan', {
             lesson_id: lesson.id,
-            diagnosticData: {
-              predicted_grade: reportData.predicted_grade,
-              predicted_percentage: reportData.predicted_percentage,
-              confidence_level: reportData.confidence_level,
-              weak_areas_detailed: reportData.weak_areas_detailed
-            }
+            diagnosticData: { predicted_grade: reportData.predicted_grade, predicted_percentage: reportData.predicted_percentage, confidence_level: reportData.confidence_level, weak_areas_detailed: reportData.weak_areas_detailed }
           }).then(result => {
             window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
-            if (result.data?.success) {
-              console.log('✅ Study plan generated successfully');
-              loadStudyPlan();
-              // Clean URL
-              window.history.replaceState({}, '', `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=studyplan`);
-            } else {
-              console.error('Study plan generation returned error:', result.data?.error);
-              loadStudyPlan();
-            }
+            if (result.data?.success) { loadStudyPlan(); }
+            window.history.replaceState({}, '', `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=studyplan`);
           }).catch(err => {
             window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
-            console.error("Error generating study plan:", err);
             loadStudyPlan();
           });
-        } catch (error) {
-          console.error("Error parsing report data:", error);
-          await loadStudyPlan();
-        }
+        } catch (error) { await loadStudyPlan(); }
       } else {
         await loadStudyPlan();
       }
     };
-    
     checkAndLoadPlan();
   }, [lesson?.id, isGeneratingPlan]);
 
-  // Subscribe to study plan updates for real-time grade changes
+  // Load topic suggestions from lesson
   useEffect(() => {
     if (!lesson?.id) return;
-    
+    loadTopicSuggestions();
+  }, [lesson?.id, lesson?.topic_suggestions]);
+
+  const loadTopicSuggestions = async () => {
+    // First check if already on the lesson object
+    if (lesson?.topic_suggestions?.length > 0) {
+      setTopicSuggestions(lesson.topic_suggestions);
+      return;
+    }
+
+    // Poll for them (they're generated async)
+    setLoadingSuggestions(true);
+    const maxPolls = 8;
+    for (let i = 0; i < maxPolls; i++) {
+      try {
+        const lessons = await base44.entities.Lesson.filter({ id: lesson.id });
+        const fresh = lessons[0];
+        if (fresh?.topic_suggestions?.length > 0) {
+          setTopicSuggestions(fresh.topic_suggestions);
+          setLoadingSuggestions(false);
+          return;
+        }
+      } catch (e) { /* ignore */ }
+      if (i < maxPolls - 1) await new Promise(r => setTimeout(r, 3000));
+    }
+    setLoadingSuggestions(false);
+  };
+
+  // Subscribe to study plan updates
+  useEffect(() => {
+    if (!lesson?.id) return;
     const unsubscribe = base44.entities.StudyPlan.subscribe((event) => {
       if (event.data?.lesson_id === lesson.id && event.data?.status === 'active') {
-        // Grade was updated by Polly engine - check for meaningful change
         if (event.type === 'update' && studyPlan) {
           const oldScore = studyPlan.current_score || studyPlan.initial_score;
           const newScore = event.data.current_score || event.data.initial_score;
           const oldGrade = studyPlan.current_predicted_grade || studyPlan.initial_predicted_grade;
           const newGrade = event.data.current_predicted_grade || event.data.initial_predicted_grade;
-          
-          // Only show update if score or grade actually changed
           if (newScore !== oldScore || newGrade !== oldGrade) {
-            setGradeChange({
-              from: oldGrade,
-              to: newGrade,
-              scoreDiff: newScore && oldScore ? Math.round(newScore - oldScore) : null,
-              newScore: newScore
-            });
+            setGradeChange({ from: oldGrade, to: newGrade, scoreDiff: newScore && oldScore ? Math.round(newScore - oldScore) : null, newScore });
             setGradeJustUpdated(true);
-            // Keep showing for 3 seconds
             setTimeout(() => setGradeJustUpdated(false), 3000);
           }
         }
         setStudyPlan(event.data);
-        loadLiveProgress();
       }
     });
-    
     return () => unsubscribe();
   }, [lesson?.id, studyPlan?.current_score, studyPlan?.current_predicted_grade]);
 
-  // Also check for updates when tab is revisited (async scenario)
-  useEffect(() => {
-    if (!studyPlan?.last_polly_update) return;
-    
-    const lastSeen = localStorage.getItem(`polly_seen_${studyPlan.id}`);
-    const lastUpdate = new Date(studyPlan.last_polly_update).getTime();
-    
-    if (!lastSeen || parseInt(lastSeen) < lastUpdate) {
-      // There's a new update the user hasn't seen
-      setGradeJustUpdated(true);
-      setGradeChange({
-        from: null,
-        to: studyPlan.current_predicted_grade || studyPlan.initial_predicted_grade,
-        scoreDiff: null,
-        newScore: studyPlan.current_score || studyPlan.initial_score
-      });
-      localStorage.setItem(`polly_seen_${studyPlan.id}`, lastUpdate.toString());
-      setTimeout(() => setGradeJustUpdated(false), 3000);
-    }
-  }, [studyPlan?.last_polly_update, studyPlan?.id]);
-
-  // Refresh live progress when tab becomes visible or when studyPlan tasks change
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && lesson?.id && studyPlan) {
-        loadLiveProgress();
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [lesson?.id, studyPlan]);
-
-  // Also refresh when studyPlan tasks change (from subscription)
-  useEffect(() => {
-    if (studyPlan?.tasks) {
-      loadLiveProgress();
-    }
-  }, [studyPlan?.tasks?.filter(t => t.completed).length]);
-
   const loadStudyPlan = async () => {
     try {
-      const plans = await base44.entities.StudyPlan.filter({ 
-        lesson_id: lesson.id,
-        status: 'active'
-      });
-      
-      if (plans.length > 0) {
-        setStudyPlan(plans[0]);
-        loadLiveProgress();
-      }
+      const plans = await base44.entities.StudyPlan.filter({ lesson_id: lesson.id, status: 'active' });
+      if (plans.length > 0) setStudyPlan(plans[0]);
       setLoading(false);
     } catch (error) {
       console.error("Error loading study plan:", error);
@@ -313,144 +198,89 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     }
   };
 
-  const loadLiveProgress = async () => {
-    try {
-      const [flashcards, teachItCards, practiceExams] = await Promise.all([
-        base44.entities.Flashcard.filter({ lesson_id: lesson.id }),
-        base44.entities.TeachItCard.filter({ lesson_id: lesson.id }),
-        base44.entities.Exam.filter({ lesson_id: lesson.id, exam_type: 'practice' })
-      ]);
-      
-      const completedPracticeExams = practiceExams.filter(e => e.completed);
-      const latestPracticeExam = completedPracticeExams.sort((a, b) => 
-        new Date(b.updated_date) - new Date(a.updated_date)
-      )[0];
-      
-      setLiveProgress({
-        flashcards: {
-          total: flashcards.length,
-          mastered: flashcards.filter(f => f.mastered).length,
-          reviewed: flashcards.filter(f => f.review_count > 0).length
-        },
-        teach_it: {
-          total: teachItCards.length,
-          completed: teachItCards.filter(t => t.completed).length,
-          mastered: teachItCards.filter(t => t.mastered).length
-        },
-        practice_exam: {
-          total: practiceExams.length,
-          completed: completedPracticeExams.length,
-          totalQuestions: latestPracticeExam?.questions?.length || 0,
-          correctAnswers: latestPracticeExam?.correct_count || 0
-        }
-      });
-    } catch (error) {
-      console.error("Error loading live progress:", error);
-    }
-  };
+  // Handle clicking a suggested topic — navigate directly to the format tab
+  const handleSuggestedTopicClick = async (section, topic) => {
+    const taskCheck = await canDoTask();
+    if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
 
-  const handleTaskClick = async (task) => {
-    const isComplete = task.completed || (task.target_count > 0 && (task.completed_count || 0) >= task.target_count);
-    
-    // PAYWALL CHECK FIRST - before ANY task action (except viewing completed)
-    if (!isComplete) {
-      const taskCheck = await canDoTask();
-      if (!taskCheck.allowed) {
-        triggerUpgradeModal('tasks');
-        return;
-      }
-    }
-    
-    switch (task.task_type) {
-      case 'flashcards':
-        // For completed tasks, just navigate without regenerating
-        if (isComplete) {
-          onNavigate('flashcards');
-        } else {
-          window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
-            detail: { taskType: 'flashcards', task, isComplete }
-          }));
-          onNavigate('flashcards');
-        }
-        break;
-      case 'teach_it':
-        // For completed tasks, just navigate without regenerating
-        if (isComplete) {
-          onNavigate('teachit');
-        } else {
-          window.dispatchEvent(new CustomEvent('generateFromStudyTask', { 
-            detail: { taskType: 'teach_it', task, isComplete }
-          }));
-          onNavigate('teachit');
-        }
-        break;
-      case 'review_notes':
-        onNavigate('notes');
-        break;
-      case 'practice_exam':
-        // For completed practice exams, just navigate to show the list
-        if (isComplete) {
-          onNavigate('exam');
-        } else {
-          window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { 
-            detail: { 
-              task,
-              focus_topics: task.focus_topics || [],
-              target_competency: task.target_competency || '',
-              misconception_addressed: task.misconception_addressed || ''
-            }
-          }));
-          setTimeout(() => onNavigate('exam'), 50);
-        }
-        break;
-      default:
-        onNavigate('flashcards');
-        break;
-    }
-  };
-
-  const handleCreateTask = async ({ topic, taskType, target_count }) => {
-    if (!studyPlan) return;
-    
-    const newTask = {
-      task_id: `custom_${Date.now()}`,
-      task_type: taskType,
-      title: topic.topic_name,
-      description: topic.topic_description || `Custom ${TASK_CONFIG[taskType]?.label} task`,
-      target_count: target_count,
-      completed_count: 0,
-      focus_topics: [topic.topic_name],
-      is_custom: true,
-      is_focus_factor: false,
-      completed: false
+    const formatMap = {
+      "Review Notes": "notes",
+      "Flashcards": "flashcards",
+      "Practice Test": "exam",
+      "Feynman Technique": "teachit"
     };
 
-    const updatedTasks = [...(studyPlan.tasks || []), newTask];
+    const tab = formatMap[topic.format] || "flashcards";
     
-    try {
-      await base44.entities.StudyPlan.update(studyPlan.id, {
-        tasks: updatedTasks
-      });
-      
-      // Update local state FIRST so task card appears immediately
-      setStudyPlan(prev => ({ ...prev, tasks: updatedTasks }));
-      setShowCreateTask(false);
-      
-      // Small delay to let the UI update and show the new task card
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Then navigate to the relevant tab and start generating
-      handleTaskClick(newTask);
-    } catch (error) {
-      console.error("Error creating custom task:", error);
+    // Dispatch event with topic info so the target tab can use it
+    const eventMap = {
+      "flashcards": "generateFromStudyTask",
+      "teachit": "generateFromStudyTask",
+      "exam": "generatePracticeExamFromTask"
+    };
+
+    const eventName = eventMap[tab];
+    if (eventName) {
+      window.dispatchEvent(new CustomEvent(eventName, {
+        detail: {
+          taskType: tab === "teachit" ? "teach_it" : tab === "exam" ? "practice_exam" : tab,
+          task: {
+            focus_topics: [topic.topic_title],
+            target_competency: topic.topic_title,
+            title: topic.topic_title,
+            target_count: tab === "flashcards" ? 10 : tab === "exam" ? 1 : 3
+          }
+        }
+      }));
     }
+
+    onNavigate(tab);
   };
 
-  // Get current grade - prefer Polly's live update, fallback to exam/initial
-  const latestOfficialExam = (exams || [])
-    .filter(e => e.completed && e.predicted_grade && e.exam_type !== 'practice')
-    .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+  // Handle "All Topics: Pick Your Format" click
+  const handleAllTopicsClick = (section) => {
+    setPickFormatSection(section.section_title);
+    setShowPickFormat(true);
+  };
 
+  // Handle generation from PickFormatModal
+  const handlePickFormatGenerate = async (opts) => {
+    const taskCheck = await canDoTask();
+    if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
+
+    // Navigate to the first selected format's tab
+    const firstFormat = opts.formats[0];
+    const tab = FORMAT_TO_TAB[firstFormat] || "flashcards";
+
+    // For each format, dispatch appropriate events
+    for (const format of opts.formats) {
+      const targetTab = FORMAT_TO_TAB[format];
+      
+      if (format === "practice_exam") {
+        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
+          detail: {
+            task: { focus_topics: opts.topics, target_competency: opts.section_title || '', title: opts.section_title || 'Custom Quiz' },
+            focus_topics: opts.topics,
+            target_competency: opts.section_title || '',
+            custom_instructions: opts.custom_instructions || ''
+          }
+        }));
+      } else if (format === "flashcards" || format === "teach_it") {
+        window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+          detail: {
+            taskType: format,
+            task: { focus_topics: opts.topics, title: opts.section_title || 'Custom', target_count: format === "flashcards" ? 10 : 3 },
+            custom_instructions: opts.custom_instructions || ''
+          }
+        }));
+      }
+    }
+
+    onNavigate(tab);
+  };
+
+  // Grade + metrics
+  const latestOfficialExam = (exams || []).filter(e => e.completed && e.predicted_grade && e.exam_type !== 'practice').sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
   const currentGrade = studyPlan?.current_predicted_grade || latestOfficialExam?.predicted_grade || studyPlan?.initial_predicted_grade || '—';
   const currentScore = studyPlan?.current_score || studyPlan?.initial_score || null;
   const currentConfidence = studyPlan?.current_confidence || studyPlan?.initial_confidence || 45;
@@ -458,264 +288,149 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const velocityConfig = getVelocityConfig(learningVelocity);
   const behavioralInsights = studyPlan?.behavioral_insights;
 
-  // Separate completed and incomplete tasks
-  const incompleteTasks = studyPlan?.tasks?.filter(t => !t.completed) || [];
   const completedTasks = studyPlan?.tasks?.filter(t => t.completed) || [];
-  const totalTasks = studyPlan?.tasks?.length || 0;
 
   // Progress animation for generating state
   useEffect(() => {
-    if (!isGeneratingPlan) {
-      setGeneratingProgress(0);
-      return;
-    }
-    
+    if (!isGeneratingPlan) { setGeneratingProgress(0); return; }
     const startTime = Date.now();
     const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const newProgress = Math.min((elapsed / 12000) * 100, 95);
-      setGeneratingProgress(newProgress);
+      setGeneratingProgress(Math.min((Date.now() - startTime) / 12000 * 100, 95));
     }, 100);
-    
     return () => clearInterval(interval);
   }, [isGeneratingPlan]);
 
-  // Show placeholder while generating study plan
+  // Split sections: first 3 expanded, rest collapsed
+  const displayedSections = topicSuggestions.slice(0, 3);
+  const remainingSections = topicSuggestions.slice(3);
+
+  // ===== GENERATING STATE =====
   if (isGeneratingPlan) {
-    
     return (
-      <div className={`px-3 md:px-6 pt-4 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-4"
-        >
-          {/* Prediction Progress */}
+      <div className={`px-3 md:px-6 pt-4 pb-8 w-full max-w-[400px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <div className="flex flex-col items-center justify-center py-6">
             <div className="relative w-28 h-28 mb-4">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" className={isDark ? 'stroke-slate-700' : 'stroke-slate-200'} />
-                <circle 
-                  cx="50" cy="50" r="42" 
-                  fill="none" 
-                  strokeWidth="8" 
-                  strokeLinecap="round" 
-                  className="stroke-purple-500 transition-all duration-300"
-                  style={{ 
-                    strokeDasharray: '264',
-                    strokeDashoffset: 264 - (264 * generatingProgress / 100)
-                  }} 
-                />
+                <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" strokeLinecap="round" className="stroke-purple-500 transition-all duration-300" style={{ strokeDasharray: '264', strokeDashoffset: 264 - (264 * generatingProgress / 100) }} />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  {Math.round(generatingProgress)}%
-                </span>
+                <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{Math.round(generatingProgress)}%</span>
               </div>
             </div>
-            
             <h3 className={`font-bold text-lg mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Building Your Study Plan</h3>
-            <p className={`text-sm text-center max-w-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Analyzing your diagnostic to create a personalized roadmap
-            </p>
-          </div>
-
-          {/* Task Skeletons with Sequential Progress */}
-          <div className="space-y-2">
-            {[
-              { icon: '📊', label: 'Calculating grade prediction', duration: 3000 },
-              { icon: '🎯', label: 'Finding weak spots', duration: 4000 },
-              { icon: '📝', label: 'Creating study tasks', duration: 5000 }
-            ].map((step, i) => {
-              const stepProgress = Math.max(0, Math.min(100, ((generatingProgress * 3) - (i * 100))));
-              
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className={`flex items-center gap-3 p-3 rounded-xl ${isDark ? 'bg-purple-500/10' : 'bg-purple-50'}`}
-                >
-                  <span className="text-2xl">{step.icon}</span>
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{step.label}</p>
-                    <div className={`h-1 mt-1.5 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                      <div
-                        className="h-full bg-purple-500 rounded-full transition-all duration-300"
-                        style={{ width: `${stepProgress}%` }}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+            <p className={`text-sm text-center max-w-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Analyzing your diagnostic to create a personalized roadmap</p>
           </div>
         </motion.div>
       </div>
     );
   }
 
-  // No study plan yet - prompt to take official exam
+  // ===== NO STUDY PLAN - TAKE DIAGNOSTIC =====
   if (!loading && !studyPlan) {
     return (
-      <div className={`px-3 md:px-6 pt-4 pb-8 w-full max-w-[360px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-5"
-        >
-          {/* Hero Section — Clear CTA */}
+      <div className={`px-3 md:px-6 pt-4 pb-8 w-full max-w-[400px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+          {/* Hero CTA */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-purple-900 to-indigo-900 p-6 shadow-2xl">
             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl" />
-            
             <div className="relative text-center">
               <h2 className="text-xl md:text-2xl font-black text-white mb-2 leading-tight">
                 Let's build your custom<br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400">study roadmap.</span>
               </h2>
-              
               <p className="text-purple-200 text-sm max-w-sm mx-auto leading-relaxed mb-5">
-                Take a quick 5-minute diagnostic. It's completely okay if you don't know the answers yet! We use this baseline to figure out exactly where your study plan should begin.
+                Take a quick 5-minute diagnostic. It's completely okay if you don't know the answers yet!
               </p>
-
-              {/* Big CTA right in the hero */}
               <Button 
                 ref={ctaRef}
                 onClick={() => {
                   if (!isDiagnosticReady) return;
-                  // Dispatch event to start diagnostic immediately at question 1
                   window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
                   onNavigate('exam');
                 }}
                 disabled={!isDiagnosticReady}
-                className={`w-full max-w-xs mx-auto font-bold py-5 text-base rounded-2xl shadow-xl relative overflow-hidden group ${
-                  isDiagnosticReady 
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/30'
-                    : 'bg-gradient-to-r from-slate-400 to-slate-500 text-white/70 cursor-not-allowed shadow-none'
-                }`}
+                className={`w-full max-w-xs mx-auto font-bold py-5 text-base rounded-2xl shadow-xl relative overflow-hidden group ${isDiagnosticReady ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/30' : 'bg-gradient-to-r from-slate-400 to-slate-500 text-white/70 cursor-not-allowed shadow-none'}`}
               >
-                {isDiagnosticReady ? (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                    <Play className="w-5 h-5 mr-2" />
-                    Start Diagnostic — 5 min
-                  </>
-                ) : (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Preparing Your Quiz...
-                  </>
-                )}
+                {isDiagnosticReady ? (<><Play className="w-5 h-5 mr-2" />Start Diagnostic — 5 min</>) : (<><Loader2 className="w-5 h-5 mr-2 animate-spin" />Preparing Your Quiz...</>)}
               </Button>
-              <p className="text-center text-[10px] text-purple-300/70 mt-2">
-                {isDiagnosticReady 
-                  ? 'Free · 10 questions · Get your predicted grade'
-                  : 'Almost ready — generating your personalized questions'
-                }
+              <p className="text-[10px] text-purple-300/70 mt-2">
+                {isDiagnosticReady ? 'Free · 10 questions · Get your predicted grade' : 'Almost ready — generating your personalized questions'}
               </p>
             </div>
           </div>
 
-          {/* How It Works — 3 steps, larger & more visual */}
-          <div className={`rounded-2xl border p-5 md:p-6 shadow-md ${isDark ? 'bg-gradient-to-br from-white/[0.04] to-purple-500/[0.06] border-purple-500/20' : 'bg-gradient-to-br from-white to-purple-50/50 border-purple-100'}`}>
-            <p className={`text-xs font-bold uppercase tracking-widest mb-5 text-center ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>How it works</p>
-            <div className="space-y-4">
-              {/* Step 1 */}
-              <div className="flex items-start gap-3.5">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'} shadow-sm`}>
-                  <span className="text-2xl">📝</span>
-                </div>
-                <div className="flex-1 pt-0.5">
-                  <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Find Your Baseline</p>
-                  <p className={`text-xs mt-0.5 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Take a quick, low-pressure quiz.</p>
-                </div>
-              </div>
-              
-              {/* Step 2 */}
-              <div className="flex items-start gap-3.5">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-amber-600/20' : 'bg-amber-100'} shadow-sm`}>
-                  <span className="text-2xl">🎯</span>
-                </div>
-                <div className="flex-1 pt-0.5">
-                  <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Get Your Roadmap</p>
-                  <p className={`text-xs mt-0.5 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>We build a step-by-step path based on your gaps.</p>
-                </div>
-              </div>
-              
-              {/* Step 3 */}
-              <div className="flex items-start gap-3.5">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-emerald-600/20' : 'bg-emerald-100'} shadow-sm`}>
-                  <span className="text-2xl">🚀</span>
-                </div>
-                <div className="flex-1 pt-0.5">
-                  <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Hit Your Target Grade</p>
-                  <p className={`text-xs mt-0.5 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Follow the daily tasks and watch your score rise.</p>
-                </div>
-              </div>
+          {/* Topic Suggestions - show even before diagnostic */}
+          {topicSuggestions.length > 0 && (
+            <div className="space-y-3">
+              <p className={`text-xs font-bold uppercase tracking-wider px-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Your Content Breakdown
+              </p>
+              {displayedSections.map((section, idx) => (
+                <SectionCard
+                  key={idx}
+                  section={section}
+                  index={idx}
+                  defaultExpanded={idx === 0}
+                  onTopicClick={handleSuggestedTopicClick}
+                  onAllTopicsClick={handleAllTopicsClick}
+                />
+              ))}
+              {remainingSections.length > 0 && (
+                <>
+                  <button onClick={() => setShowMoreSections(!showMoreSections)} className={`w-full text-center py-2 text-xs font-semibold ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}>
+                    {showMoreSections ? 'Show less' : `+ ${remainingSections.length} more section${remainingSections.length !== 1 ? 's' : ''}`}
+                  </button>
+                  <AnimatePresence>
+                    {showMoreSections && remainingSections.map((section, idx) => (
+                      <SectionCard key={idx + 3} section={section} index={idx + 3} defaultExpanded={false} onTopicClick={handleSuggestedTopicClick} onAllTopicsClick={handleAllTopicsClick} />
+                    ))}
+                  </AnimatePresence>
+                </>
+              )}
             </div>
-          </div>
+          )}
+          {loadingSuggestions && topicSuggestions.length === 0 && (
+            <div className="flex items-center justify-center gap-2 py-4">
+              <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+              <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Analyzing your materials...</span>
+            </div>
+          )}
         </motion.div>
+        <PickFormatModal open={showPickFormat} onOpenChange={setShowPickFormat} lessonId={lesson?.id} sectionTitle={pickFormatSection} onGenerate={handlePickFormatGenerate} />
       </div>
     );
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full" />
-      </div>
-    );
+    return <div className="flex items-center justify-center p-8"><div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full" /></div>;
   }
 
+  // ===== MAIN STUDY PLAN VIEW =====
   return (
     <div className={`w-full max-w-full overflow-x-hidden py-3 space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', maxWidth: '100vw' }}>
-      {/* Slim Grade Banner */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-3 md:px-4 w-full max-w-full"
-        style={{ boxSizing: 'border-box' }}
-      >
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${getGradeColor(currentGrade)} px-4 py-3 shadow-lg transition-all duration-500 w-full max-w-full ${gradeJustUpdated ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`} style={{ boxSizing: 'border-box' }}>
+      {/* Grade Banner */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-3 md:px-4 w-full max-w-full">
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${getGradeColor(currentGrade)} px-4 py-3 shadow-lg transition-all duration-500 w-full ${gradeJustUpdated ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}>
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
-          
-          {/* Grade Updated Badge */}
           <AnimatePresence>
             {gradeJustUpdated && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-1 right-2 z-20"
-              >
+              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-1 right-2 z-20">
                 <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-400 text-yellow-900 rounded-full text-[9px] font-black">
-                  <Sparkles className="w-3 h-3" />
-                  Updated
-                  {gradeChange?.scoreDiff !== null && gradeChange?.scoreDiff !== 0 && (
-                    <span className={`${gradeChange.scoreDiff > 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                      {gradeChange.scoreDiff > 0 ? '+' : ''}{gradeChange.scoreDiff}%
-                    </span>
+                  <Sparkles className="w-3 h-3" />Updated
+                  {gradeChange?.scoreDiff != null && gradeChange.scoreDiff !== 0 && (
+                    <span className={gradeChange.scoreDiff > 0 ? 'text-emerald-700' : 'text-red-700'}>{gradeChange.scoreDiff > 0 ? '+' : ''}{gradeChange.scoreDiff}%</span>
                   )}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-
           <div className="relative flex items-center justify-between gap-3 w-full">
-            {/* Grade + Score */}
             <div className="flex items-center gap-3">
-              <motion.span 
-                className="text-3xl md:text-4xl font-black text-white"
-                animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}
-              >
-                {currentGrade}
-              </motion.span>
+              <motion.span className="text-3xl md:text-4xl font-black text-white" animate={gradeJustUpdated ? { scale: [1, 1.1, 1] } : {}}>{currentGrade}</motion.span>
               <div className="flex flex-col">
-                <span className="text-white font-bold text-lg leading-tight">
-                  {currentScore ? Math.round(currentScore) : '—'}%
-                </span>
+                <span className="text-white font-bold text-lg leading-tight">{currentScore ? Math.round(currentScore) : '—'}%</span>
                 <span className="text-white/60 text-[9px] font-medium uppercase tracking-wide">Predicted</span>
               </div>
               {learningVelocity && (
@@ -725,8 +440,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 </div>
               )}
             </div>
-
-            {/* Confidence + View Results */}
             <div className="flex items-center gap-2">
               <div className="text-right">
                 <div className="flex items-center gap-1.5">
@@ -738,15 +451,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 <span className="text-white/50 text-[8px]">confidence</span>
               </div>
               {latestOfficialExam && (
-                <button
-                  onClick={() => {
-                    onNavigate('exam');
-                    setTimeout(() => {
-                      window.dispatchEvent(new CustomEvent('viewExamResults', { detail: { examId: latestOfficialExam.id } }));
-                    }, 100);
-                  }}
-                  className="text-white/60 hover:text-white/90 transition-colors"
-                >
+                <button onClick={() => { onNavigate('exam'); setTimeout(() => { window.dispatchEvent(new CustomEvent('viewExamResults', { detail: { examId: latestOfficialExam.id } })); }, 100); }} className="text-white/60 hover:text-white/90 transition-colors">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               )}
@@ -755,15 +460,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </div>
       </motion.div>
 
-      {/* AI Insights Card - Consolidated */}
+      {/* AI Insights */}
       {behavioralInsights && (behavioralInsights.is_guessing_detected || behavioralInsights.is_inefficient_studying || behavioralInsights.recommended_focus || behavioralInsights.estimated_hours_to_target) && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.15 }}
-          className="px-3 md:px-4 w-full max-w-full"
-          style={{ boxSizing: 'border-box' }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="px-3 md:px-4 w-full">
           <div className={`rounded-2xl p-4 border ${isDark ? 'bg-gradient-to-br from-indigo-950/50 to-purple-950/50 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200/60'}`}>
             <div className="flex items-center justify-center gap-2 mb-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
@@ -771,30 +470,18 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               </div>
               <span className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>StudyApp Insights</span>
             </div>
-            
-            {/* Metrics Row */}
             <div className="flex flex-wrap justify-center gap-2 mb-3">
               {behavioralInsights.estimated_hours_to_target && (
                 <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
-                  <Clock className="w-3 h-3" />
-                  <span className="text-[11px] font-semibold">~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A+</span>
+                  <Clock className="w-3 h-3" /><span className="text-[11px] font-semibold">~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A+</span>
                 </div>
               )}
               {behavioralInsights.is_guessing_detected && (
                 <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
-                  <AlertCircle className="w-3 h-3" />
-                  <span className="text-[11px] font-semibold">Slow down</span>
-                </div>
-              )}
-              {behavioralInsights.is_inefficient_studying && (
-                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-orange-500/20 text-orange-300' : 'bg-orange-100 text-orange-700'}`}>
-                  <Target className="w-3 h-3" />
-                  <span className="text-[11px] font-semibold">Focus needed</span>
+                  <AlertCircle className="w-3 h-3" /><span className="text-[11px] font-semibold">Slow down</span>
                 </div>
               )}
             </div>
-            
-            {/* Recommendation */}
             {behavioralInsights.recommended_focus && (
               <p className={`text-sm leading-relaxed text-center ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{behavioralInsights.recommended_focus}</p>
             )}
@@ -802,236 +489,72 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </motion.div>
       )}
 
-      {/* Task Timeline */}
-      <div className="relative w-full max-w-full overflow-x-hidden px-3 md:px-4" style={{ boxSizing: 'border-box' }}>
-        <div className="absolute left-[23px] md:left-[23px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-purple-300 via-purple-200 to-slate-200" />
-        
-        <div className="space-y-3 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
-
-          {/* Section Header */}
-          <div className="flex items-center gap-3 w-full">
-            <div className="w-[24px] h-[24px] rounded-full bg-purple-600 flex items-center justify-center z-10 shadow-lg flex-shrink-0">
-              <Target className="w-3 h-3 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className={`font-bold text-sm md:text-base ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Up Next: Your Path to an A</h3>
-              <p className={`text-[10px] md:text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{completedTasks.length} of {totalTasks} complete</p>
-            </div>
-          </div>
-
-          {/* Incomplete Tasks - Grade booster first, then rest */}
-          {[...incompleteTasks].sort((a, b) => (b.is_focus_factor ? 1 : 0) - (a.is_focus_factor ? 1 : 0)).map((task, idx) => {
-            const config = TASK_CONFIG[task.task_type] || TASK_CONFIG.flashcards;
-            const live = liveProgress[task.task_type] || {};
-            let actualCount = task.completed_count || 0;
-            let displayText = '';
-            
-            if (task.task_type === 'flashcards') {
-              // Flashcards track reviewed cards (any card that has been seen)
-              actualCount = task.completed_count || 0;
-              if (live.reviewed !== undefined && live.reviewed > actualCount) {
-                actualCount = live.reviewed;
-              }
-              const targetCount = task.target_count || 10;
-              displayText = `${actualCount} / ${targetCount} reviewed`;
-            } else if (task.task_type === 'teach_it') {
-              // TeachIt tracks completed cards (any answered card counts)
-              actualCount = task.completed_count || 0;
-              if (live.completed !== undefined && live.completed > actualCount) {
-                actualCount = live.completed;
-              }
-              const targetCount = task.target_count || 3;
-              displayText = `${actualCount} / ${targetCount} completed`;
-            } else if (task.task_type === 'practice_exam') {
-              if (live.completed > 0 && live.totalQuestions > 0) {
-                displayText = `Score: ${live.correctAnswers}/${live.totalQuestions}`;
-              } else {
-                displayText = `${actualCount} / ${task.target_count || 1} completed`;
-              }
-            } else {
-              displayText = task.completed ? 'Completed' : 'Not started';
-            }
-            
-            const progress = task.target_count > 0 ? (actualCount / task.target_count) * 100 : 0;
-            const isFocusFactor = task.is_focus_factor;
-
-            return (
-              <motion.div
-                key={task.task_id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 + idx * 0.05 }}
-                className="relative w-full flex items-start gap-3"
-              >
-                <div className={`w-[24px] h-[24px] rounded-full flex-shrink-0 mt-3 flex items-center justify-center text-[10px] font-black z-10 ${
-                  isFocusFactor ? 'bg-amber-500 text-white ring-2 ring-amber-300 ring-offset-1' : (isDark ? 'bg-[#1a1a2e] text-slate-300 border-2 border-purple-400/50' : 'bg-white text-slate-600 border-2 border-purple-300')
-                }`}>{idx + 1}</div>
-                
-                <button
-                  onClick={() => handleTaskClick(task)}
-                  className="flex-1 min-w-0 text-left group"
-                >
-                  <div className={`relative rounded-xl transition-all ${
-                    isFocusFactor 
-                      ? (isDark ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-500/40 hover:border-amber-500/60 hover:shadow-lg shadow-md' : 'bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 hover:border-amber-400 hover:shadow-lg shadow-md')
-                      : (isDark ? 'bg-white/5 border border-white/10 hover:border-purple-500/30 hover:shadow-md' : 'bg-white border border-slate-200 hover:border-purple-300 hover:shadow-md')
-                  } p-3`}>
-                    {isFocusFactor && (
-                      <div className="absolute -top-0 -right-0">
-                        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-bl-lg rounded-tr-xl">
-                          ⚡ Grade Booster
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                        isFocusFactor
-                          ? 'bg-gradient-to-br from-amber-500 to-orange-600'
-                          : `bg-gradient-to-br ${config.gradient}`
-                      } shadow-md group-hover:scale-105 transition-transform`}>
-                        <config.icon className="w-4 h-4 text-white" />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className={`text-[9px] font-bold uppercase tracking-wide ${
-                            isFocusFactor ? (isDark ? 'text-amber-300' : 'text-amber-700') : (isDark ? 'text-purple-400' : config.text)
-                          }`}>
-                            {config.label}
-                            {task.is_custom && <span className={`ml-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>• Custom</span>}
-                          </span>
-                        </div>
-                        <p className={`font-semibold text-xs leading-tight mb-1 ${
-                          isFocusFactor ? (isDark ? 'text-amber-200' : 'text-amber-900') : (isDark ? 'text-slate-100' : 'text-slate-900')
-                        }`}>
-                          {task.title || `${config.action} ${task.target_count} ${config.unit}`}
-                        </p>
-                        
-                        {task.target_count > 0 && (
-                          <div>
-                            <div className="flex items-center justify-between mb-0.5">
-                              <span className={`text-[9px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{displayText}</span>
-                              <span className={`text-[9px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{Math.round(progress)}%</span>
-                            </div>
-                            <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
-                              <div 
-                                className={`h-full bg-gradient-to-r ${isFocusFactor ? 'from-amber-500 to-orange-500' : config.gradient} rounded-full transition-all`} 
-                                style={{ width: `${Math.min(100, progress)}%` }} 
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      <ChevronRight className={`w-4 h-4 flex-shrink-0 group-hover:translate-x-0.5 transition-all ${
-                        isFocusFactor ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-slate-500 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600')
-                      }`} />
-                    </div>
-                  </div>
-                </button>
-              </motion.div>
-            );
-          })}
-
-
-
-          {/* Practice Your Topics - After task list */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative w-full flex items-start gap-3"
-          >
-            <div className="w-[24px] h-[24px] rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0 mt-3 z-10">
-              <Plus className="w-3 h-3 text-white" />
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <button
-                onClick={() => setShowPracticeTopics(!showPracticeTopics)}
-                className={`w-full text-left p-3 rounded-xl border-2 transition-all group ${
-                  showPracticeTopics 
-                    ? (isDark ? 'border-purple-500 bg-gradient-to-r from-purple-600/20 to-indigo-600/20' : 'border-purple-500 bg-gradient-to-r from-purple-50 to-indigo-50')
-                    : (isDark ? 'border-purple-500/40 bg-gradient-to-r from-purple-600/10 to-indigo-600/10 hover:border-purple-500/60' : 'border-purple-300 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 hover:border-purple-500')
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg`}>
-                    <Plus className={`w-5 h-5 text-white ${showPracticeTopics ? 'rotate-45' : 'group-hover:scale-110'} transition-transform`} />
-                  </div>
-                  <div className="flex-1">
-                    <p className={`font-bold text-sm ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
-                      Practice Your Topics
-                    </p>
-                    <p className={`text-[10px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Choose topics from your materials • Pick your format
-                    </p>
-                  </div>
-                  <Sparkles className={`w-5 h-5 transition-all ${showPracticeTopics ? 'text-purple-400' : 'text-purple-300 group-hover:text-purple-500'}`} />
-                </div>
+      {/* Section-based Study Guide */}
+      {topicSuggestions.length > 0 && (
+        <div className="px-3 md:px-4 space-y-3">
+          <p className={`text-xs font-bold uppercase tracking-wider px-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Your Study Guide
+          </p>
+          {displayedSections.map((section, idx) => (
+            <SectionCard
+              key={idx}
+              section={section}
+              index={idx}
+              defaultExpanded={idx < 2}
+              onTopicClick={handleSuggestedTopicClick}
+              onAllTopicsClick={handleAllTopicsClick}
+            />
+          ))}
+          {remainingSections.length > 0 && (
+            <>
+              <button onClick={() => setShowMoreSections(!showMoreSections)} className={`w-full text-center py-2 text-xs font-semibold flex items-center justify-center gap-1 ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}>
+                {showMoreSections ? <><ChevronDown className="w-3 h-3" /> Show less</> : <><ChevronRight className="w-3 h-3" /> {remainingSections.length} more section{remainingSections.length !== 1 ? 's' : ''}</>}
               </button>
-
-              {/* Practice Topics Panel - Inline */}
               <AnimatePresence>
-                {showPracticeTopics && (
-                  <PracticeTopicsPanel
-                    isOpen={showPracticeTopics}
-                    onClose={() => setShowPracticeTopics(false)}
-                    lessonId={lesson?.id}
-                    compressedContent={lesson?.compressed_content || lesson?.extracted_content}
-                    onCreateTask={handleCreateTask}
-                  />
-                )}
+                {showMoreSections && remainingSections.map((section, idx) => (
+                  <SectionCard key={idx + 3} section={section} index={idx + 3} defaultExpanded={false} onTopicClick={handleSuggestedTopicClick} onAllTopicsClick={handleAllTopicsClick} />
+                ))}
               </AnimatePresence>
-            </div>
-          </motion.div>
-
-          {/* Completed Tasks - Below Practice Topics */}
-          {completedTasks.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="relative pt-2 w-full flex items-start gap-3"
-            >
-              <div className="w-[24px] h-[24px] rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-6 z-10">
-                <CheckCircle2 className="w-3 h-3 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                  Completed ({completedTasks.length})
-                </p>
-                <div className="space-y-1.5">
-                  {completedTasks.map((task) => (
-                    <CompletedTaskItem 
-                      key={task.task_id} 
-                      task={task} 
-                      onClick={() => handleTaskClick(task)} 
-                    />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
+            </>
           )}
         </div>
-      </div>
+      )}
+      {loadingSuggestions && topicSuggestions.length === 0 && (
+        <div className="flex items-center justify-center gap-2 py-4 px-3">
+          <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading study guide...</span>
+        </div>
+      )}
 
-
+      {/* Completed Tasks */}
+      {completedTasks.length > 0 && (
+        <div className="px-3 md:px-4">
+          <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+            <CheckCircle2 className="w-3 h-3 inline mr-1" />Completed ({completedTasks.length})
+          </p>
+          <div className="space-y-1.5">
+            {completedTasks.map((task) => (
+              <CompletedTaskItem key={task.task_id} task={task} onClick={() => {
+                const tab = FORMAT_TO_TAB[task.task_type] || 'flashcards';
+                onNavigate(tab);
+              }} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Rationale */}
       {studyPlan?.plan_rationale && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-4 px-3 md:px-4 w-full max-w-full"
-          style={{ boxSizing: 'border-box' }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="mt-4 px-3 md:px-4 w-full">
           <div className={`rounded-xl p-3 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-100'}`}>
             <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Why this plan</p>
             <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{studyPlan.plan_rationale}</p>
           </div>
         </motion.div>
       )}
+
+      {/* Pick Format Modal */}
+      <PickFormatModal open={showPickFormat} onOpenChange={setShowPickFormat} lessonId={lesson?.id} sectionTitle={pickFormatSection} onGenerate={handlePickFormatGenerate} />
     </div>
   );
 }
