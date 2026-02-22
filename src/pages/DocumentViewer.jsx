@@ -191,9 +191,7 @@ export default function DocumentViewer() {
     const handleStudyPlanGenerating = (e) => {
       const isGenerating = e.detail?.generating ?? true;
       setIsGeneratingStudyPlan(isGenerating);
-      if (isGenerating) {
-        setActiveTab('studyplan');
-      } else {
+      if (!isGenerating) {
         // When generation completes, reload lesson to get study plan
         loadLesson();
       }

@@ -4,10 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
 const FORMAT_CONFIG = {
-  "Review Notes": { icon: FileText, gradient: "from-emerald-500 to-teal-600", label: "Review Notes" },
-  "Flashcards": { icon: Copy, gradient: "from-amber-500 to-orange-600", label: "Flashcards" },
-  "Practice Test": { icon: Zap, gradient: "from-blue-500 to-indigo-600", label: "Practice Test" },
-  "Feynman Technique": { icon: Brain, gradient: "from-violet-500 to-purple-600", label: "Feynman" },
+  "Review Notes": { icon: FileText, gradient: "from-emerald-500 to-teal-600", label: "Review Notes", actionLabel: "Review Notes" },
+  "Flashcards": { icon: Copy, gradient: "from-amber-500 to-orange-600", label: "Flashcards", actionLabel: "Flashcards" },
+  "Practice Test": { icon: Zap, gradient: "from-blue-500 to-indigo-600", label: "Practice Test", actionLabel: "Practice Test" },
+  "Feynman Technique": { icon: Brain, gradient: "from-violet-500 to-purple-600", label: "Feynman (Concept Review)", actionLabel: "Feynman (Concept Review)" },
 };
 
 export default function SectionCard({ section, index, defaultExpanded, onTopicClick, onAllTopicsClick }) {
@@ -84,10 +84,7 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={`text-xs font-semibold leading-tight truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                            {topic.topic_title}
-                          </p>
-                          <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                            {formatCfg.label}
+                            {formatCfg.actionLabel}: {topic.topic_title}
                           </p>
                         </div>
                         <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:translate-x-0.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`} />
