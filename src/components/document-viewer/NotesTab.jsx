@@ -145,18 +145,22 @@ export default function NotesTab({ lesson }) {
     }
   };
 
+  const slugify = (text) => {
+    return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+  };
+
   const extractTableOfContents = (content) => {
     if (!content) return [];
     const lines = content.split('\n');
     const toc = [];
-    lines.forEach((line, idx) => {
+    lines.forEach((line) => {
       const h1Match = line.match(/^#\s+(.+)$/);
       const h2Match = line.match(/^##\s+(.+)$/);
       const h3Match = line.match(/^###\s+(.+)$/);
       
-      if (h1Match) toc.push({ level: 1, text: h1Match[1], id: `heading-${idx}` });
-      else if (h2Match) toc.push({ level: 2, text: h2Match[1], id: `heading-${idx}` });
-      else if (h3Match) toc.push({ level: 3, text: h3Match[1], id: `heading-${idx}` });
+      if (h1Match) toc.push({ level: 1, text: h1Match[1], id: `heading-${slugify(h1Match[1])}` });
+      else if (h2Match) toc.push({ level: 2, text: h2Match[1], id: `heading-${slugify(h2Match[1])}` });
+      else if (h3Match) toc.push({ level: 3, text: h3Match[1], id: `heading-${slugify(h3Match[1])}` });
     });
     return toc;
   };
@@ -324,9 +328,18 @@ export default function NotesTab({ lesson }) {
                   } [&_h1]:!font-black [&_h1]:!border-b [&_h1]:!pb-4 [&_h1]:!mb-6 [&_h2]:!font-bold [&_h2]:!mt-8 [&_h2]:!mb-3 ${isDark ? '[&_h2]:!text-purple-400' : '[&_h2]:!text-purple-700'} [&_h3]:!font-semibold [&_h3]:!mt-6 [&_h3]:!mb-2 [&_p]:!leading-relaxed [&_p]:!my-3 [&_li]:!my-1 [&_strong]:!font-bold ${isDark ? '[&_strong]:!text-white' : '[&_strong]:!text-slate-900'} [&_ul]:!my-4 [&_ol]:!my-4 [&_ul]:!space-y-1 [&_ol]:!space-y-1`}>
                     <ReactMarkdown
                       components={{
-                        h1: ({ children }) => <h1 id={`heading-${children}`}>{children}</h1>,
-                        h2: ({ children }) => <h2 id={`heading-${children}`}>{children}</h2>,
-                        h3: ({ children }) => <h3 id={`heading-${children}`}>{children}</h3>,
+                        h1: ({ children }) => {
+                          const text = typeof children === 'string' ? children : (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : String(children || ''));
+                          return <h1 id={`heading-${slugify(text)}`}>{children}</h1>;
+                        },
+                        h2: ({ children }) => {
+                          const text = typeof children === 'string' ? children : (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : String(children || ''));
+                          return <h2 id={`heading-${slugify(text)}`}>{children}</h2>;
+                        },
+                        h3: ({ children }) => {
+                          const text = typeof children === 'string' ? children : (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : String(children || ''));
+                          return <h3 id={`heading-${slugify(text)}`}>{children}</h3>;
+                        },
                         p: ({ children }) => {
                           const text = typeof children === 'string' ? children : 
                             (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
