@@ -126,7 +126,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         content: contentForFlashcards,
         focus_topics: topicsToFocus || [],
         amount: customOptions?.amount || 10,
-        difficulty: customOptions?.difficulty || 'mixed'
+        difficulty: customOptions?.difficulty || 'mixed',
+        custom_instructions: customOptions?.custom_instructions || ''
       });
 
       const generatedCards = response?.flashcards || [];
