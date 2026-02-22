@@ -39,10 +39,10 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
             <FolderOpen className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`font-bold text-sm leading-tight truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+            <p className={`font-bold text-base leading-tight truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
               {section.section_title}
             </p>
-            <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
               {topics.length} suggested topics
             </p>
           </div>
@@ -83,7 +83,7 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
                           <Icon className="w-4 h-4 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-xs font-semibold leading-tight truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                          <p className={`text-sm font-semibold leading-tight truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                             {formatCfg.actionLabel}: {topic.topic_title}
                           </p>
                         </div>
@@ -107,10 +107,10 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
                       <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold leading-tight ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+                      <p className={`text-sm font-semibold leading-tight ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
                         All topics: Pick Your Format
                       </p>
-                      <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                      <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                         Custom generation
                       </p>
                     </div>

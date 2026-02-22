@@ -425,65 +425,64 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </div>
       </motion.div>
 
-      {/* AI Insights */}
+      {/* AI Insights — unified card */}
       {(behavioralInsights || studyPlan?.mastery_gap || studyPlan?.priority_focus || studyPlan?.weak_competencies?.length > 0) && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="px-3 md:px-4 w-full">
           <div className={`rounded-2xl p-4 border ${isDark ? 'bg-gradient-to-br from-indigo-950/50 to-purple-950/50 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200/60'}`}>
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
-                <Lightbulb className={`w-4 h-4 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+            {/* Header row with title + stat pills */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className="flex items-center gap-2">
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
+                  <Lightbulb className={`w-3.5 h-3.5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                </div>
+                <span className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>Insights</span>
               </div>
-              <span className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>StudyApp Insights</span>
-            </div>
-            
-            {/* Stats row */}
-            <div className="flex flex-wrap justify-center gap-2 mb-3">
               {behavioralInsights?.estimated_hours_to_target && (
-                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
-                  <Clock className="w-3 h-3" /><span className="text-[11px] font-semibold">~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A+</span>
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
+                  <Clock className="w-3 h-3" />~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A+
                 </div>
               )}
               {behavioralInsights?.is_guessing_detected && (
-                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
-                  <AlertCircle className="w-3 h-3" /><span className="text-[11px] font-semibold">Slow down — we detected guessing</span>
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
+                  <AlertCircle className="w-3 h-3" />Guessing detected
                 </div>
               )}
               {behavioralInsights?.is_inefficient_studying && (
-                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
-                  <AlertCircle className="w-3 h-3" /><span className="text-[11px] font-semibold">Try active recall over re-reading</span>
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
+                  <AlertCircle className="w-3 h-3" />Try active recall
                 </div>
               )}
             </div>
 
-            {/* Biggest weakness / mastery gap */}
-            {(studyPlan?.mastery_gap || studyPlan?.priority_focus) && (
-              <div className={`rounded-xl p-3 mb-3 border ${isDark ? 'bg-red-500/10 border-red-500/20' : 'bg-red-50 border-red-200'}`}>
-                <p className={`text-[10px] font-bold uppercase tracking-wide mb-1 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                  <Target className="w-3 h-3 inline mr-1" />Your #1 Focus Area
-                </p>
-                <p className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                  {studyPlan?.mastery_gap || studyPlan?.priority_focus}
-                </p>
-              </div>
-            )}
-
-            {/* Weak competencies list */}
-            {studyPlan?.weak_competencies?.length > 1 && (
-              <div className={`rounded-xl p-3 mb-3 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Topics to Improve</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {studyPlan.weak_competencies.slice(0, 5).map((comp, idx) => (
-                    <span key={idx} className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
-                      {comp}
-                    </span>
-                  ))}
+            {/* Focus area + weak competencies in one block */}
+            <div className={`rounded-xl p-3 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+              {(studyPlan?.mastery_gap || studyPlan?.priority_focus) && (
+                <div className="mb-2">
+                  <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                    <Target className="w-3 h-3 inline mr-1" />#1 Focus Area
+                  </p>
+                  <p className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                    {studyPlan?.mastery_gap || studyPlan?.priority_focus}
+                  </p>
                 </div>
-              </div>
-            )}
+              )}
+              {studyPlan?.weak_competencies?.length > 1 && (
+                <div className={`${(studyPlan?.mastery_gap || studyPlan?.priority_focus) ? 'pt-2 mt-2 border-t ' + (isDark ? 'border-white/10' : 'border-slate-100') : ''}`}>
+                  <p className={`text-[10px] font-bold uppercase tracking-wide mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Also improve</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {studyPlan.weak_competencies.filter(c => c !== studyPlan?.mastery_gap).slice(0, 4).map((comp, idx) => (
+                      <span key={idx} className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
+                        {comp}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Recommended focus text */}
             {behavioralInsights?.recommended_focus && (
-              <p className={`text-sm leading-relaxed text-center ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{behavioralInsights.recommended_focus}</p>
+              <p className={`text-xs leading-relaxed mt-3 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{behavioralInsights.recommended_focus}</p>
             )}
           </div>
         </motion.div>

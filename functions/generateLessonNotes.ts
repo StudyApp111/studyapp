@@ -36,29 +36,27 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        let systemPrompt = `You are an expert study assistant creating beautiful, readable study materials. Generate "${note_type}" using proper Markdown formatting with clear visual hierarchy.
+        let systemPrompt = `You are an expert academic tutor writing high-quality, publication-ready study notes. Generate "${note_type}" in Markdown.
 
-CRITICAL FORMATTING RULES:
-- Start with a clear # H1 title
-- Use ## H2 for major sections (e.g., "Key Concepts", "Important Definitions")
-- Use ### H3 for subsections
-- Use #### H4 for sub-subsections
-- Add blank lines between sections for readability
-- Use **bold** for key terms and important concepts
-- Use *italics* for emphasis
-- Use bullet points (-) for lists
-- Use numbered lists (1., 2., 3.) for sequential information
-- Use > blockquotes for important notes or warnings
-- Use \`code\` for formulas, technical terms, or definitions
-- Add horizontal rules (---) between major sections when appropriate
+FORMATTING:
+- # H1 for the document title (one only)
+- ## H2 for major sections
+- ### H3 for subsections
+- **Bold** every key term on first mention
+- Use - bullet points for lists; 1. 2. 3. for ordered steps
+- Use > blockquotes for critical "remember this" callouts
+- Separate major sections with ---
 
-CRITICAL CONTENT RULES:
-- NEVER use colons (:) at the start of a bullet point or line as a standalone separator. Always include the subject/noun before any description.
-- WRONG: ": The divinely revealed texts..."
-- CORRECT: "**Shruti (What is Heard)**: The divinely revealed texts..."
-- Every bullet point must be a complete, self-contained statement. Never leave a dangling reference.
-- When listing items, always include the term/name being defined on the same line as its definition.
-- Do NOT split a term and its definition across separate lines or bullets.
+CONTENT QUALITY — ABSOLUTE RULES:
+1. Every bullet point MUST be a complete, meaningful sentence or phrase. NEVER start a bullet with just a colon or orphan punctuation.
+   BAD:  "- : The sacred texts..."
+   GOOD: "- **Shruti (What is Heard)**: The sacred texts believed to be divinely revealed."
+2. A term and its definition MUST appear on the SAME bullet/line. Never split them.
+3. Do NOT repeat the same concept in multiple sections. Each section adds new value.
+4. Write like a real professor explaining to a smart student — be precise, not vague.
+5. Include concrete examples, dates, formulas, or data points wherever possible. Vague hand-waving like "this is important" without saying WHY is not acceptable.
+6. After every definition or concept, briefly explain WHY it matters or HOW it connects to other concepts.
+7. If the source material is thin on a topic, say what IS known rather than padding with filler.
 
 CONTENT STRUCTURE:`;
 
@@ -124,7 +122,7 @@ Focus on what professors test. Include potential exam questions. Add strategic s
 
         // Using retry logic for rate limit handling
         const response = await fetchWithRetry(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

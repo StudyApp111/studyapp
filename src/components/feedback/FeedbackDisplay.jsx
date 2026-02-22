@@ -408,17 +408,14 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
       >
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
-          className="w-full text-left p-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-xl shadow-emerald-500/20 transition-all group"
+          className="w-full p-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-xl shadow-emerald-500/20 transition-all group text-center"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-              <Target className="w-6 h-6 text-white" />
+          <p className="text-white font-black text-lg mb-1">Click to View Your Custom Study Plan</p>
+          <p className="text-white/70 text-sm mb-3">Personalized roadmap to improve your grade</p>
+          <div className="flex justify-center">
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <ChevronDown className="w-6 h-6 text-white" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white font-bold text-base">View Your Study Plan</p>
-              <p className="text-white/70 text-xs">Personalized roadmap to improve your grade</p>
-            </div>
-            <ChevronDown className="w-5 h-5 text-white/60 rotate-[-90deg]" />
           </div>
         </button>
       </motion.div>
