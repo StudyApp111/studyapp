@@ -106,10 +106,8 @@ ${difficultyInstruction}
 CRITICAL: All questions MUST be answerable using the course content above. Do not create questions about topics not covered in the content.
 
 QUESTION TYPE DISTRIBUTION (use this mix):
-- ${mcqCount} Multiple Choice questions
-- ${tfCount} True/False questions  
-- ${fibCount} Fill-in-the-Blank questions
-- ${saCount} Short Answer questions (1-2 sentence responses)
+${typeDistribution.map(td => `- ${td.count} ${td.type} questions`).join('\n')}
+${customInstructionBlock}
 
 CRITICAL RULES:
 1. Use EXACTLY these question_type values: "Multiple Choice", "True/False", "Fill in the Blank", "Short Answer"
