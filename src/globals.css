@@ -184,6 +184,16 @@ button[class*="inline-flex"] {
   animation: spin-slow 3s linear infinite;
 }
 
+/* Notes highlighting support */
+.highlight-active ::selection {
+  background-color: #fde047 !important;
+  color: #1e293b !important;
+}
+.highlight-active *::selection {
+  background-color: #fde047 !important;
+  color: #1e293b !important;
+}
+
 /* Hide scrollbar but keep functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;

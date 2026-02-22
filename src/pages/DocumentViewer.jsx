@@ -557,9 +557,9 @@ export default function DocumentViewer() {
           </div>
           
           {/* Tabs - Right side, 50% width */}
-          <div className="w-1/2 min-w-0">
+          <div className="w-1/2 min-w-0 relative z-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 relative z-0">
                 <TabsList className={`flex w-full border p-1 gap-1 h-auto rounded-lg ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
                   {hasDocument && (
                     <TabsTrigger 
