@@ -21,8 +21,10 @@ export default function CreatePracticeQuizButton({ lesson, extractedContent, onE
         focus_topics: customOptions?.topics || [],
         target_competency: customOptions?.topics?.[0] || '',
         misconception_addressed: '',
-        amount: customOptions?.amount || 10,
-        difficulty: customOptions?.difficulty || 'mixed'
+        amount: 10,
+        difficulty: customOptions?.difficulty || 'mixed',
+        question_types: customOptions?.question_types || [],
+        custom_instructions: customOptions?.custom_instructions || ''
       });
 
       if (data?.success && data.exam) {
