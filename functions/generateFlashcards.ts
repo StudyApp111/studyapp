@@ -45,10 +45,15 @@ At least ${Math.ceil(cardCount * 0.6)} of the ${cardCount} flashcards should dir
       ? `\n6. ALL cards should be "${difficultyPref}" difficulty level.`
       : `\n6. Vary in difficulty (mark as easy, medium, or hard)`;
 
+    const customInstructionBlock = custom_instructions 
+      ? `\n\nCUSTOM STUDENT INSTRUCTIONS (follow these closely):\n${custom_instructions}`
+      : '';
+
     const prompt = `Generate exactly ${cardCount} high-quality flashcards for this course: ${course_name || 'Course'}
 
 Content: ${content}
 ${focusInstruction}
+${customInstructionBlock}
 
 Create flashcards that:
 1. Cover key concepts, definitions, and important facts
