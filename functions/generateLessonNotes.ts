@@ -52,6 +52,14 @@ CRITICAL FORMATTING RULES:
 - Use \`code\` for formulas, technical terms, or definitions
 - Add horizontal rules (---) between major sections when appropriate
 
+CRITICAL CONTENT RULES:
+- NEVER use colons (:) at the start of a bullet point or line as a standalone separator. Always include the subject/noun before any description.
+- WRONG: ": The divinely revealed texts..."
+- CORRECT: "**Shruti (What is Heard)**: The divinely revealed texts..."
+- Every bullet point must be a complete, self-contained statement. Never leave a dangling reference.
+- When listing items, always include the term/name being defined on the same line as its definition.
+- Do NOT split a term and its definition across separate lines or bullets.
+
 CONTENT STRUCTURE:`;
 
         if (note_type === 'Detailed Notes') {
