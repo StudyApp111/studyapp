@@ -8,6 +8,36 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
   const { isDark } = useTheme();
   const totalMastered = cards.filter(c => c.mastered).length;
 
+  // Group cards by generation batch (cards created within 2 min of each other = 1 set)
+  const sorted = [...cards].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+  const sets = [];
+  let currentSet = null;
+  
+  sorted.forEach((card) => {
+    const cardTime = new Date(card.created_date).getTime();
+    const globalIndex = cards.findIndex(c => c.id === card.id);
+    
+    if (!currentSet || cardTime - currentSet.lastTime > 120000) {
+      const setNum = sets.length + 1;
+      currentSet = { 
+        label: `Set ${setNum}`, 
+        cards: [], 
+        mastered: 0,
+        completed: 0,
+        firstIndex: globalIndex,
+        lastTime: cardTime
+      };
+      sets.push(currentSet);
+    }
+    
+    currentSet.lastTime = cardTime;
+    currentSet.cards.push({ ...card, globalIndex });
+    if (card.mastered) currentSet.mastered++;
+    if (card.completed) currentSet.completed++;
+  });
+  
+  sets.reverse();
+
   return (
     <div className={`px-3 md:px-4 py-4 w-full max-w-full mx-auto space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden', maxWidth: '100vw' }}>
       {/* Header */}
@@ -23,51 +53,57 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
         </div>
       </div>
 
-      {/* Cards Grid */}
-      <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
-        {cards.map((card, idx) => {
-          const isCompleted = card.completed;
-          const isMastered = card.mastered;
-          const score = card.score;
+      {/* Sets Grid */}
+      <div className="space-y-2 w-full max-w-full">
+        {sets.map((set, idx) => {
+          const allMastered = set.mastered === set.cards.length && set.cards.length > 0;
+          const allCompleted = set.completed === set.cards.length && set.cards.length > 0;
+          const progress = set.cards.length > 0 ? (set.mastered / set.cards.length) * 100 : 0;
           
           return (
             <motion.button
-              key={card.id}
+              key={`set-${idx}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              onClick={() => onSelectCard(idx)}
+              onClick={() => onSelectCard(set.firstIndex)}
               className={`group relative w-full overflow-hidden p-3 md:p-4 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
-                isMastered
+                allMastered
                   ? 'bg-gradient-to-r from-violet-500 to-purple-600'
-                  : isCompleted
+                  : allCompleted
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500'
                     : (isDark ? 'bg-white/5 border border-purple-500/30 hover:border-purple-500/50' : 'bg-white border border-purple-200 hover:border-purple-300')
               }`}
             >
               <div className="relative flex items-center gap-3">
                 <div className={`w-10 h-10 md:w-11 md:h-11 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  isMastered || isCompleted ? 'bg-white/20' : 'bg-purple-50'
+                  allMastered || allCompleted ? 'bg-white/20' : (isDark ? 'bg-purple-600/20' : 'bg-purple-50')
                 }`}>
-                  {isMastered ? (
+                  {allMastered ? (
                     <CheckCircle2 className="w-5 h-5 text-white" />
-                  ) : isCompleted ? (
-                    <span className="text-white font-bold text-sm">{score}%</span>
                   ) : (
-                    <Brain className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                    <Brain className={`w-5 h-5 ${allCompleted ? 'text-white' : (isDark ? 'text-purple-400' : 'text-purple-600')}`} />
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className={`font-semibold text-sm line-clamp-2 leading-tight ${isMastered || isCompleted ? 'text-white' : (isDark ? 'text-white' : 'text-slate-900')}`}>
-                    {card.question}
+                  <h3 className={`font-semibold text-sm truncate ${allMastered || allCompleted ? 'text-white' : (isDark ? 'text-white' : 'text-slate-900')}`}>
+                    {set.label} ({set.cards.length} cards)
                   </h3>
-                  <p className={`text-[10px] mt-1 ${isMastered || isCompleted ? 'text-white/70' : (isDark ? 'text-slate-400' : 'text-slate-500')}`}>
-                    {isMastered ? 'Mastered ✓' : isCompleted ? `Score: ${score}/100` : 'Not attempted'}
-                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className={`flex-1 h-1.5 rounded-full overflow-hidden max-w-[100px] ${allMastered || allCompleted ? 'bg-white/30' : (isDark ? 'bg-white/10' : 'bg-purple-100')}`}>
+                      <div 
+                        className={`h-full rounded-full ${allMastered || allCompleted ? 'bg-white' : 'bg-purple-500'}`}
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <span className={`text-[10px] font-medium ${allMastered || allCompleted ? 'text-white/80' : (isDark ? 'text-slate-400' : 'text-slate-500')}`}>
+                      {set.mastered}/{set.cards.length} mastered
+                    </span>
+                  </div>
                 </div>
                 
-                {isMastered || isCompleted ? (
+                {allMastered || allCompleted ? (
                   <ChevronRight className="w-4 h-4 text-white/70 flex-shrink-0" />
                 ) : (
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${isDark ? 'bg-purple-600/20 group-hover:bg-purple-600/30' : 'bg-purple-100 group-hover:bg-purple-200'}`}>
