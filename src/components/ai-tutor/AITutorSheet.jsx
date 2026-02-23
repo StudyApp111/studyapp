@@ -62,7 +62,6 @@ export default function AITutorSheet() {
     console.log('🔒 AITutorSheet: canSendAIMessage result:', aiCheck);
     
     if (!aiCheck.allowed) {
-      // Close sheet and show upgrade modal
       setIsLoading(false);
       close();
       triggerUpgradeModal('ai_message');
