@@ -109,10 +109,10 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
           <div className="flex items-center gap-2">
             <Button
               onClick={onGoToDiagnostic}
-              disabled={!diagnosticReady}
-              className={`flex-1 font-bold text-xs h-9 rounded-xl shadow-md ${diagnosticReady ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/20' : 'bg-slate-400 text-white/70 cursor-not-allowed'}`}
+              disabled={!liveReady}
+              className={`flex-1 font-bold text-xs h-9 rounded-xl shadow-md ${liveReady ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/20' : 'bg-slate-400 text-white/70 cursor-not-allowed'}`}
             >
-              {diagnosticReady ? (
+              {liveReady ? (
                 <><Play className="w-3.5 h-3.5 mr-1.5" /> Take Diagnostic Quiz</>
               ) : (
                 <><Sparkles className="w-3.5 h-3.5 mr-1.5 animate-pulse" /> Preparing Quiz...</>
