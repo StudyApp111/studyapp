@@ -155,9 +155,16 @@ Deno.serve(async (req) => {
 
     // Generate intelligent study plan - use predictedGrade which is always set
     const gradeForPrompt = predictedGrade || 'current level';
-    const planPrompt = `You are an expert learning scientist designing a HIGHLY TARGETED, exam-focused study plan that will measurably improve the student's grade from ${gradeForPrompt} to an A+/90%.
+    const planPrompt = `You are an expert learning scientist and instructional designer. Design a PRECISE, chronologically-ordered study plan that will measurably improve the student's grade from ${gradeForPrompt} toward an A+/90%.
 
-Use ONLY the data below. Be specific, practical, and realistic.
+PEDAGOGICAL FRAMEWORK (Bloom's Taxonomy + Spaced Retrieval):
+The tasks MUST follow this evidence-based learning sequence. Each step builds on the previous:
+1. UNDERSTAND → "review_notes": Re-read the material to rebuild conceptual foundations for weak areas
+2. REMEMBER → "flashcards": Active recall to lock key terms, definitions, relationships into memory
+3. ANALYZE → "teach_it": Feynman technique — explaining concepts forces deep processing and reveals gaps
+4. APPLY → "practice_exam": Test under exam-like conditions to consolidate and identify remaining weaknesses
+
+You MUST output tasks in this chronological order. The student completes them 1→2→3→4.
 
 STUDENT PERFORMANCE DATA:
 - Course: ${lesson.course_name}
@@ -185,53 +192,36 @@ AI FEEDBACK SUMMARY:
 COURSE CONTENT OVERVIEW:
 ${contentSummary.substring(0, 2000)}
 
-Each task MUST:
-- Target ONE weak competency OR one explicitly identified misconception
-- Be grounded in the Course Content Summary AND directly traceable to:
-  • at least one missed question OR
-  • a listed misconception OR
-  • a bottom-ranked competency
-- Reference SPECIFIC course concepts, terms, theories, formulas, or methods
-  that appear in the Course Content Summary (no generic skills or study advice like Comprehensive Assessment of Core Weaknesses)
-- Address the underlying *reason* the student lost marks
-  (e.g., concept confusion, misapplication, incomplete reasoning)
-- Be actionable and measurable (clear output, count, or completion signal)
-- Directly support exam performance for this course at this school
+MASTERY GAP: "${masteryGap}" — ALL tasks should converge on addressing this weakness as the primary thread.
 
-AVAILABLE TASK TYPES:
-- "flashcards": For memorizing key terms, definitions, relationships. Include SPECIFIC topics to generate cards for. target_count = number of flashcards to master (10-20).
-- "teach_it": For deep understanding. Include SPECIFIC concepts student must explain. target_count = number of concepts to explain (3-5).
-- "review_notes": For re-reading specific sections. Include SPECIFIC sections/topics to review. target_count = 1.
-- "practice_exam": A quick practice quiz focused on specific weak areas. target_count = 1 (one quiz). Use this to test understanding after other study tasks.
-
-IMPORTANT: 
-- Create 3-5 total tasks maximum. Order them CHRONOLOGICALLY so each task builds on the previous one (e.g., review notes first to rebuild understanding, then flashcards to lock in terms, then teach-it to prove mastery, then a practice exam to test it all).
-- The VERY FIRST task must be the is_focus_factor=true "Grade Booster" task that directly targets the mastery gap "${masteryGap}". This is the student's biggest weakness and should be addressed immediately.
-- Include at least ONE "practice_exam" task (usually as the LAST task) to test consolidated knowledge.
-- For flashcards, set target_count between 10-20 (the number of cards to master)
-- For practice_exam, set target_count to 1 (one quiz to complete)
-- NEVER use "Diagnostic Quiz" or "Diagnostic" in practice exam titles - use "Practice Quiz", "Quick Practice", "Focus Practice" or similar
-
-CRITICAL: Each task's "focus_topics" array must contain SPECIFIC concepts from the course material that relate to the weak competency. These will be used to generate targeted content.
-
-MASTERY GAP: The student's biggest weakness is "${masteryGap}". The FIRST task MUST directly address this competency - mark it with is_focus_factor=true. This task gets special "Grade Booster" highlighting and must appear first.
+RULES:
+- Output EXACTLY 4 tasks in this fixed order: review_notes → flashcards → teach_it → practice_exam
+- Task 1 (review_notes) is_focus_factor=true — directly targets the mastery gap, gets "Grade Booster" highlighting
+- Each task's focus_topics MUST reference SPECIFIC concepts from the course content (not generic advice)
+- Each task's description must explain WHY this step matters for the student's specific weaknesses
+- For flashcards: target_count 10-20
+- For teach_it: target_count 3-5
+- For review_notes: target_count 1
+- For practice_exam: target_count 1
+- NEVER use "Diagnostic" in any title. Use "Practice Quiz", "Focus Practice", etc.
+- target_competency must be a single competency name (max 150 chars, no explanations)
 
 Return JSON:
 {
   "tasks": [
     {
-      "task_type": "flashcards" | "teach_it" | "review_notes" | "practice_exam",
+      "task_type": "review_notes" | "flashcards" | "teach_it" | "practice_exam",
       "title": "Clear action title (max 100 chars)",
       "description": "What this helps with and why (max 300 chars)",
-      "target_count": number (10-20 for flashcards, 3-5 for teach_it, 1 for practice_exam/review_notes),
-      "target_competency": "Single competency name only (max 150 chars - NO explanations or notes)",
+      "target_count": number,
+      "target_competency": "Single competency name (max 150 chars)",
       "focus_topics": ["specific topic 1", "specific topic 2", "specific topic 3"],
       "misconception_addressed": "Single misconception only (max 150 chars)",
-      "is_focus_factor": boolean (true if this task directly addresses the mastery_gap "${masteryGap}")
+      "is_focus_factor": boolean
     }
   ],
-  "plan_rationale": "2-3 sentences only (max 500 chars)",
-  "priority_focus": "Single sentence only (max 150 chars)"
+  "plan_rationale": "2-3 sentences explaining the pedagogical reasoning (max 500 chars)",
+  "priority_focus": "Single sentence (max 150 chars)"
 }`;
 
     console.log(`⏱️ [generateStudyPlan] Pre-LLM prep: ${Date.now() - startTime}ms`);
