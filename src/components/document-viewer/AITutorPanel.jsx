@@ -62,7 +62,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
       
       setMessages([{
         role: "assistant",
-        content: `👋 Hi! I'm **Polly**, your AI study assistant for **${courseName}**.${pollyInsight}\n\n**Here's how StudyApp works:**\n1. 📝 **Take the Diagnostic** (5 min) — I'll predict your grade and find your weak spots\n2. 📊 **Get your Study Plan** — personalized tasks based on your results\n3. 🧠 **Study with AI tools** — Flashcards, Feynman cards, Practice quizzes, AI-generated Notes, and Voice Lectures\n\nStart by taking the **Diagnostic** in the Practice tab — it's okay if you don't know the answers yet!\n\nI'm always here to explain concepts, quiz you, or help you study. Just ask! 🎓`
+        content: `👋 Hey there! I'm **Polly**, your personal AI study assistant for **${courseName}**.${pollyInsight}\n\n🎯 **Your first step: Take the Diagnostic Quiz** (5 min)\nHead over to the **Practice** tab and complete the 10-question diagnostic. Don't worry if you don't know the answers — that's the whole point! I use your responses to **predict your grade** and pinpoint exactly where you need to focus.\n\n**Once you finish, here's what unlocks:**\n• 📊 A **custom Study Plan** built around your weak spots\n• 🃏 **AI Flashcards** that target what you need to memorize\n• 🧠 **Feynman Cards** to test if you *truly* understand concepts\n• 📝 **Practice Quizzes** with instant feedback\n• 📖 **Smart Notes** & **Voice Lectures** generated from your materials\n\nI'll be right here to explain anything, quiz you, or help you study. **Let's start with the diagnostic — tap the Practice tab!** 🚀`
       }]);
     };
     loadChatHistory();
