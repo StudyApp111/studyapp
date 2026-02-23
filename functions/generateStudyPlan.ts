@@ -311,8 +311,12 @@ Return JSON:
       practice_exam: 1
     };
     
+    // Enforce pedagogical order: review_notes → flashcards → teach_it → practice_exam
+    const pedagogicalOrder = ['review_notes', 'flashcards', 'teach_it', 'practice_exam'];
+    
     const validatedTasks = (response.tasks || [])
       .filter(task => validTaskTypes.includes(task.task_type))
+      .sort((a, b) => pedagogicalOrder.indexOf(a.task_type) - pedagogicalOrder.indexOf(b.task_type))
       .map((task, idx) => {
         // Ensure target_count is a valid positive number
         let targetCount = parseInt(task.target_count) || defaultTargetCounts[task.task_type] || 1;
@@ -334,7 +338,7 @@ Return JSON:
           completed: false,
           focus_topics: task.focus_topics || [],
           misconception_addressed: task.misconception_addressed || null,
-          is_focus_factor: task.is_focus_factor || false
+          is_focus_factor: idx === 0 ? true : (task.is_focus_factor || false)
         };
       });
 
