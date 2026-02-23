@@ -118,7 +118,8 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
         course_name: lesson?.course_name || '',
         topic_title: topic.title,
         topic_content: topic.key_content || topic.description || topic.title,
-        lesson_id: lesson?.id
+        lesson_id: lesson?.id,
+        section_title: topic.section_title || topic.title
       });
       if (data?.lecture) {
         setLecture(data.lecture);
