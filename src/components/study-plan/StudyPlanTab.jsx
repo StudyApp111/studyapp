@@ -204,8 +204,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   // Handle clicking a suggested topic — navigate directly to the format tab
   const handleSuggestedTopicClick = async (section, topic) => {
-    const taskCheck = await canDoTask();
-    if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
 
     const formatMap = {
       "Review Notes": "notes",
@@ -215,6 +213,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     };
 
     const tab = formatMap[topic.format] || "flashcards";
+    
+    // Check paywall for the specific task type
+    const taskTypeMap = { "flashcards": "flashcards", "teachit": "teach_it", "exam": "practice_exam" };
+    const taskType = taskTypeMap[tab];
+    if (taskType) {
+      const taskCheck = await canDoTask(taskType);
+      if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
+    }
     
     // Dispatch event with topic info so the target tab can use it
     const eventMap = {
@@ -250,8 +256,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   // Handle generation from PickFormatModal
   const handlePickFormatGenerate = async (opts) => {
-    const taskCheck = await canDoTask();
-    if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
+    // Check paywall for the first format selected
+    const firstFormat = opts.formats[0];
+    const taskTypeMap = { "flashcards": "flashcards", "teach_it": "teach_it", "practice_exam": "practice_exam" };
+    const taskType = taskTypeMap[firstFormat];
+    if (taskType) {
+      const taskCheck = await canDoTask(taskType);
+      if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
+    }
 
     // Navigate to the first selected format's tab
     const firstFormat = opts.formats[0];
