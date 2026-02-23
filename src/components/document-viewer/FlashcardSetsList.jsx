@@ -14,19 +14,15 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
   
   sorted.forEach((card) => {
     const cardTime = new Date(card.created_date).getTime();
-    const globalIndex = cards.findIndex(c => c.id === card.id);
     
     if (!currentSet || cardTime - currentSet.lastTime > 120000) {
-      // New batch — start a new set
       const setNum = sets.length + 1;
-      // Try to derive a meaningful label from the first card's topics
       const topicLabel = card.topics?.[0] || null;
       currentSet = { 
         label: topicLabel || `Set ${setNum}`,
         cardIds: [],
         cards: [], 
         mastered: 0, 
-        firstIndex: -1,
         lastTime: cardTime,
         createdDate: card.created_date
       };
@@ -34,17 +30,9 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
     }
     
     currentSet.lastTime = cardTime;
-    currentSet.cards.push({ ...card, globalIndex });
+    currentSet.cards.push(card);
     currentSet.cardIds.push(card.id);
     if (card.mastered) currentSet.mastered++;
-  });
-
-  // For each set, find the first card's index in the original cards array
-  // This ensures when user clicks a set, they start at card 1 of that set
-  sets.forEach(set => {
-    if (set.cards.length > 0) {
-      set.firstIndex = set.cards[0].globalIndex;
-    }
   });
   
   // Reverse so newest set is first
@@ -79,7 +67,7 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              onClick={() => onSelectSet(set.firstIndex)}
+              onClick={() => onSelectSet(set.cardIds)}
               className={`group relative w-full overflow-hidden p-3 md:p-4 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
                 isCompleted
                   ? 'bg-gradient-to-r from-amber-500 to-orange-600'
