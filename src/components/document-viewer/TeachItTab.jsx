@@ -200,8 +200,11 @@ Return exactly ${cardCount} cards with question and model_answer fields, each ba
         )
       );
 
-      setCards(savedCards);
-      setCurrentCardIndex(0);
+      // Reload all cards so sets list shows all sets including the new one
+      const allCards = await base44.entities.TeachItCard.filter({ lesson_id: lesson.id });
+      setCards(allCards);
+      const newFirstIndex = allCards.findIndex(c => c.id === savedCards[0]?.id);
+      setCurrentCardIndex(newFirstIndex >= 0 ? newFirstIndex : 0);
       setShowSetsList(false);
     } catch (error) {
       console.error("Error generating cards:", error);
