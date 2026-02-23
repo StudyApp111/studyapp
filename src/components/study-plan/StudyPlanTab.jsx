@@ -627,6 +627,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
       {/* Pick Format Modal */}
       <PickFormatModal open={showPickFormat} onOpenChange={setShowPickFormat} lessonId={lesson?.id} sectionTitle={pickFormatSection} onGenerate={handlePickFormatGenerate} />
+
+      {/* Topic Selection Modal */}
+      <TopicSelectionModal
+        open={showTopicSelection}
+        onOpenChange={setShowTopicSelection}
+        lesson={lesson}
+        onConfirm={handleTopicSelectionConfirm}
+      />
     </div>
   );
 }
