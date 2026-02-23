@@ -100,21 +100,26 @@ CONTENT:
 ${contentForPrompt}
 ${curriculumContext}
 
-TASK: Create sections that match the document's ACTUAL organizational structure. Each section represents a major division from the material (lecture, chapter, unit, module, etc.). 
-For each section, suggest exactly 6 high-yield topics with the best study format for each. Prioritize topics most likely to be tested on exams.
+TASK: Create sections that match the document's ACTUAL top-level organizational structure ONLY. A "section" is a major division like a lecture, chapter, unit, or module — NOT a subtopic within one.
 
-RULES:
-1. Section titles MUST match the document's actual organizational structure EXACTLY (e.g., "Lecture 1: Introduction to Hinduism", "Chapter 3: Cell Division", "Unit 2: Thermodynamics"). If the document has 2 lectures, create exactly 2 sections. If it has 5 chapters, create 5 sections. Match the source material structure.
-2. If no clear structure exists, create conceptual sections (max 5)
-3. Each topic should have a specific, actionable name (not generic like "Key Concepts")
-4. Format should be the BEST fit for that topic type:
+CRITICAL — SECTION EXTRACTION RULES:
+1. Count the ACTUAL top-level divisions in the source material (lectures, chapters, units, modules). If the document contains "Lecture 1" and "Lecture 2", create EXACTLY 2 sections — one per lecture. Do NOT split a single lecture into multiple sections.
+2. Section titles must match the document headings exactly (e.g., "Lecture 1: Introduction to Hinduism", "Chapter 3: Cell Division").
+3. Subtopics within a lecture/chapter become "suggested_topics" INSIDE that section, NOT separate sections.
+4. If no clear structure exists, create conceptual sections (max 3-4).
+
+TOPIC RULES:
+5. Each section should have 4-6 suggested topics drawn from the subtopics WITHIN that section.
+6. Each topic should have a specific, actionable name (not generic like "Key Concepts").
+7. Format should be the BEST fit for that topic type:
    - "Review Notes" — for dense reading/theory topics
    - "Flashcards" — for terminology, definitions, key facts
    - "Practice Test" — for problem-solving, application topics
    - "Feynman Technique" — for complex concepts requiring deep understanding
-5. Each section MUST have exactly 6 suggested topics
-6. For each topic, set high_yield to true if it is very likely to appear on an exam based on curriculum emphasis, common exam patterns, and how foundational the concept is. Mark at least 2-3 per section as high_yield.
-7. high_yield_reason should be a SHORT phrase explaining WHY it's high-yield (e.g., "Frequently tested definition", "Core framework for essay questions", "Common calculation problem")`;
+8. For each topic, set high_yield to true if it is very likely to appear on an exam. Mark at least 2-3 per section as high_yield.
+9. high_yield_reason should be a SHORT phrase explaining WHY it's high-yield.
+
+EXAMPLE: If the document has "Lecture 1: Hinduism" covering Vedic texts, Karma, Dharma, Ashramas, and Trimurti — that is ONE section with 5 topics inside it. Do NOT create separate sections for each subtopic.`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
