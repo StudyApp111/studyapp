@@ -336,7 +336,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
   const updateStudyPlanProgress = async (completedCount) => {
     try {
       const plans = await base44.entities.StudyPlan.filter({ lesson_id: lesson.id, status: 'active' });
-      if (plans.length === 0) return;
+      if (plans.length === 0) return false;
       const plan = plans[0];
       let taskJustCompleted = false;
       
@@ -363,8 +363,10 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         all_tasks_completed: allComplete,
         official_exam_unlocked: allComplete
       });
+      return taskJustCompleted;
     } catch (error) {
       console.error("Error updating study plan:", error);
+      return false;
     }
   };
 
