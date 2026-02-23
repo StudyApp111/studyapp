@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,33 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   const [showConfetti, setShowConfetti] = useState(false);
   const [showWrongPulse, setShowWrongPulse] = useState(false);
   const [showCorrectBurst, setShowCorrectBurst] = useState(false);
+  const stuckTimerRef = useRef(null);
+  const hasNudgedRef = useRef(false);
+
+  // Proactive Polly: nudge on mobile if user is stuck >45s without answering
+  useEffect(() => {
+    hasNudgedRef.current = false;
+    if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current);
+    
+    if (hasAnswered || selectedAnswer) return;
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+
+    stuckTimerRef.current = setTimeout(() => {
+      if (hasNudgedRef.current) return;
+      hasNudgedRef.current = true;
+      window.dispatchEvent(new CustomEvent('pollyStuckNudge', {
+        detail: {
+          nudge_type: 'exam_stuck',
+          question_text: question?.question_text,
+          topic: question?.assessed_competencies?.[0],
+          lesson
+        }
+      }));
+    }, 45000);
+
+    return () => { if (stuckTimerRef.current) clearTimeout(stuckTimerRef.current); };
+  }, [question?.question_text, hasAnswered, selectedAnswer]);
 
   const questionType = question.question_type?.toLowerCase() || "";
   // Handle both official exam types ("Multiple Choice") and practice exam types ("multiple_choice")
