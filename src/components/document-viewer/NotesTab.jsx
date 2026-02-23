@@ -73,6 +73,7 @@ export default function NotesTab({ lesson }) {
     }
     
     setIsLoading(true);
+    await incrementTaskCount('review_notes');
     try {
       const content = lesson.compressed_content || lesson.extracted_content || lesson.description;
       
