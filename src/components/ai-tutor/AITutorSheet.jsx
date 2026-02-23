@@ -11,7 +11,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import MathText, { renderMathText } from "@/components/math/MathText";
 
 export default function AITutorSheet() {
-  const { isOpen, setIsOpen, context, messages, setMessages, close } = useAITutor();
+  const { isOpen, setIsOpen, context, setContext, messages, setMessages, close } = useAITutor();
   const { canSendAIMessage, incrementAIMessageCount, triggerUpgradeModal } = useSubscription();
   const { isDark } = useTheme();
   const [input, setInput] = useState("");
