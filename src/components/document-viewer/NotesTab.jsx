@@ -21,7 +21,7 @@ const TYPE_CONFIG = {
 
 export default function NotesTab({ lesson }) {
   const { isDark } = useTheme();
-  const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
+  const { canDoTask, incrementTaskCount, triggerUpgradeModal, isPro } = useSubscription();
   const [note, setNote] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
