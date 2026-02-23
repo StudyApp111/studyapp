@@ -4,11 +4,12 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { 
   Target, CheckCircle2, BookOpen, Zap, Brain, 
-  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock, Copy, ChevronDown
+  Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock, Copy, ChevronDown, Filter
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import SectionCard from "./SectionCard";
 import PickFormatModal from "./PickFormatModal";
+import TopicSelectionModal from "./TopicSelectionModal";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
@@ -57,6 +58,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   // Pick Format Modal state
   const [showPickFormat, setShowPickFormat] = useState(false);
   const [pickFormatSection, setPickFormatSection] = useState(null);
+  
+  // Topic Selection Modal state
+  const [showTopicSelection, setShowTopicSelection] = useState(false);
+  const [selectedTopicTitles, setSelectedTopicTitles] = useState(null); // null = not loaded yet
 
   const diagnosticExamFromExams = (exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice');
   const isDiagnosticReady = diagnosticExamFromExams?.questions?.length > 0;
@@ -137,6 +142,16 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     checkAndLoadPlan();
   }, [lesson?.id, isGeneratingPlan]);
 
+  // Load selected topics from lesson
+  useEffect(() => {
+    if (!lesson?.id) return;
+    if (lesson.selected_topics?.length > 0) {
+      setSelectedTopicTitles(lesson.selected_topics);
+    } else {
+      setSelectedTopicTitles(null); // null = show all (no filter)
+    }
+  }, [lesson?.id, lesson?.selected_topics]);
+
   // Load topic suggestions from lesson
   useEffect(() => {
     if (!lesson?.id) return;
@@ -204,6 +219,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   // Handle clicking a suggested topic — navigate directly to the format tab
   const handleSuggestedTopicClick = async (section, topic) => {
+    const taskCheck = await canDoTask();
+    if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
 
     const formatMap = {
       "Review Notes": "notes",
@@ -213,14 +230,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     };
 
     const tab = formatMap[topic.format] || "flashcards";
-    
-    // Check paywall for the specific task type
-    const taskTypeMap = { "flashcards": "flashcards", "teachit": "teach_it", "exam": "practice_exam" };
-    const taskType = taskTypeMap[tab];
-    if (taskType) {
-      const taskCheck = await canDoTask(taskType);
-      if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
-    }
     
     // Dispatch event with topic info so the target tab can use it
     const eventMap = {
@@ -256,17 +265,11 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   // Handle generation from PickFormatModal
   const handlePickFormatGenerate = async (opts) => {
-    const firstFormat = opts.formats[0];
-    
-    // Check paywall for the first format selected
-    const taskTypeMap = { "flashcards": "flashcards", "teach_it": "teach_it", "practice_exam": "practice_exam" };
-    const taskType = taskTypeMap[firstFormat];
-    if (taskType) {
-      const taskCheck = await canDoTask(taskType);
-      if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
-    }
+    const taskCheck = await canDoTask();
+    if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
 
     // Navigate to the first selected format's tab
+    const firstFormat = opts.formats[0];
     const tab = FORMAT_TO_TAB[firstFormat] || "flashcards";
 
     // For each format, dispatch appropriate events
