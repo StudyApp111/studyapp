@@ -13,7 +13,6 @@ import { logError } from "@/components/utils/errorLogger";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
 import FeedbackDisplay from "@/components/feedback/FeedbackDisplay";
-import TaskCompletionToast from "@/components/gamification/TaskCompletionToast";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import CreatePracticeQuizButton from "./CreatePracticeQuizButton";
 
@@ -135,7 +134,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
   const [gradingInProgress, setGradingInProgress] = useState({});
   const [selectedExamNumber, setSelectedExamNumber] = useState(null);
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
-  const [taskCompletionToast, setTaskCompletionToast] = useState(false);
   const [waitingForCompression, setWaitingForCompression] = useState(false);
   const [correctStreak, setCorrectStreak] = useState(0);
   const hasAutoSelectedRef = useRef(false);
@@ -907,9 +905,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             official_exam_unlocked: allComplete
           });
           
-          if (taskJustCompleted) {
-            setTaskCompletionToast(true);
-          }
+          // Task completion toast removed - was blocking UI
         }
       } catch (planError) {
         console.error("Error updating study plan:", planError);
@@ -1586,12 +1582,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
   return (
     <>
       <ConfettiEffect show={showConfetti} onComplete={() => setShowConfetti(false)} />
-      
-      <TaskCompletionToast 
-        show={taskCompletionToast}
-        gradeIncrease={2.5}
-        onComplete={() => setTaskCompletionToast(false)}
-      />
       
       <AnimatePresence>
         {newBadges.length > 0 && (
