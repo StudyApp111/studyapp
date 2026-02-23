@@ -330,6 +330,12 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   // ===== NO STUDY PLAN - TAKE DIAGNOSTIC =====
   if (!loading && !studyPlan) {
+    const workflowSteps = [
+      { num: "1", label: "Take Diagnostic", desc: "5-min quiz to find your weak spots", icon: Target, color: "from-purple-500 to-indigo-600" },
+      { num: "2", label: "Get Your Grade", desc: "AI predicts your exam grade", icon: Trophy, color: "from-amber-500 to-orange-600" },
+      { num: "3", label: "Custom Study Plan", desc: "Personalized tasks to improve", icon: BookOpen, color: "from-emerald-500 to-teal-600" },
+    ];
+
     return (
       <div className={`px-3 md:px-6 pt-4 pb-8 w-full max-w-[400px] md:max-w-2xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
@@ -341,9 +347,27 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 Let's build your custom<br/>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-400">study roadmap.</span>
               </h2>
-              <p className="text-purple-200 text-sm max-w-sm mx-auto leading-relaxed mb-5">
+              <p className="text-purple-200 text-sm max-w-sm mx-auto leading-relaxed mb-4">
                 Take a quick 5-minute diagnostic. It's completely okay if you don't know the answers yet!
               </p>
+
+              {/* Visual workflow steps */}
+              <div className="flex items-center justify-center gap-2 mb-5">
+                {workflowSteps.map((step, idx) => (
+                  <React.Fragment key={step.num}>
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${step.color} flex items-center justify-center shadow-lg`}>
+                        <step.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-[10px] text-purple-200 font-medium leading-tight text-center max-w-[80px]">{step.label}</span>
+                    </div>
+                    {idx < workflowSteps.length - 1 && (
+                      <ArrowRight className="w-4 h-4 text-purple-400/60 flex-shrink-0 mt-[-14px]" />
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
               <Button 
                 ref={ctaRef}
                 onClick={() => {
