@@ -542,50 +542,74 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         }
       }
 
-      // No exam 1 exists at all - trigger autoGenerateExam1 with timeout handling
+      // No exam 1 exists at all - trigger autoGenerateExam1 with retry on 502
       console.log('🎯 No Exam 1 found anywhere, triggering autoGenerateExam1...');
       setIsGenerating(true);
 
-      try {
-        const result = await Promise.race([
-          base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Exam generation timeout - taking longer than expected')), 55000)
-          )
-        ]);
-        
-        if (result?.data?.success && result?.data?.exam_id) {
-          const createdExams = await base44.entities.Exam.filter({ id: result.data.exam_id });
-          if (createdExams[0]) {
-            setExam(createdExams[0]);
-          }
-        } else if (result?.data?.skipped) {
-          // autoGenerateExam1 returned skipped=true, meaning exam already exists
-          console.log('✅ autoGenerateExam1 returned skipped - exam already exists');
-          const existingExamId = result?.data?.exam_id;
-          if (existingExamId) {
-            const existingExam = await base44.entities.Exam.filter({ id: existingExamId });
-            if (existingExam[0]?.questions?.length > 0) {
-              setExam(existingExam[0]);
+      const MAX_ATTEMPTS = 2;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+          const result = await Promise.race([
+            base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id }),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Exam generation timeout')), 55000)
+            )
+          ]);
+          
+          if (result?.data?.success && result?.data?.exam_id) {
+            const createdExams = await base44.entities.Exam.filter({ id: result.data.exam_id });
+            if (createdExams[0]) {
+              setExam(createdExams[0]);
+            }
+          } else if (result?.data?.skipped) {
+            console.log('✅ autoGenerateExam1 returned skipped - exam already exists');
+            const existingExamId = result?.data?.exam_id;
+            if (existingExamId) {
+              const existingExam = await base44.entities.Exam.filter({ id: existingExamId });
+              if (existingExam[0]?.questions?.length > 0) {
+                setExam(existingExam[0]);
+              }
             }
           }
+          break; // Success - exit retry loop
+        } catch (err) {
+          const is502 = err.response?.status === 502;
+          const isTimeout = err.message?.includes('timeout') || is502;
+          
+          if (isTimeout && attempt < MAX_ATTEMPTS) {
+            console.log(`⚠️ Attempt ${attempt} failed (502/timeout), retrying...`);
+            // Check if questions appeared despite the 502 (function may have succeeded server-side)
+            const checkExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
+            const readyExam = checkExams.find(e => e.exam_type !== 'practice' && e.questions?.length > 0);
+            if (readyExam) {
+              console.log('✅ Questions appeared despite 502 - loading');
+              setExam(readyExam);
+              break;
+            }
+            await new Promise(r => setTimeout(r, 2000));
+            continue;
+          }
+          
+          if (isTimeout) {
+            // Final attempt failed - check DB one more time before showing error
+            const finalCheck = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
+            const finalExam = finalCheck.find(e => e.exam_type !== 'practice' && e.questions?.length > 0);
+            if (finalExam) {
+              console.log('✅ Questions found on final DB check');
+              setExam(finalExam);
+              break;
+            }
+            console.error('❌ Exam generation failed after all retries');
+            setError('Exam generation is taking longer than expected. Please refresh the page to try again.');
+          } else {
+            console.error('Error generating exam 1:', err);
+            setError('Failed to generate exam. Please try again.');
+          }
+          
+          await logError('exam_generation_timeout', err, { lesson_id: lesson?.id, is502, isTimeout, attempt });
         }
-      } catch (err) {
-        const is502 = err.response?.status === 502;
-        const isTimeout = err.message?.includes('timeout') || is502;
-        
-        if (isTimeout) {
-          console.error('⚠️ Exam generation timeout - the AI is taking longer than usual. Please refresh and try again.');
-          setError('Exam generation is taking longer than expected. Please refresh the page to try again.');
-        } else {
-          console.error('Error generating exam 1:', err);
-          setError('Failed to generate exam. Please try again.');
-        }
-        
-        await logError('exam_generation_timeout', err, { lesson_id: lesson?.id, is502, isTimeout });
-      } finally {
-        setIsGenerating(false);
       }
+      setIsGenerating(false);
     } catch (error) {
       console.error("Error loading exam:", error);
       await logError('exam_loading', error, { lesson_id: lesson?.id, examNumber });
