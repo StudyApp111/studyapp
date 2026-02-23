@@ -397,7 +397,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   // ===== MAIN STUDY PLAN VIEW =====
   return (
     <div className={`w-full max-w-full overflow-x-hidden py-3 space-y-3 md:space-y-4 pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', maxWidth: '100vw' }}>
-      {/* Grade Banner */}
+      {/* Grade Banner with Progress Explanation */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-3 md:px-4 w-full max-w-full">
         <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-r ${getGradeColor(currentGrade)} px-4 py-3 shadow-lg transition-all duration-500 w-full ${gradeJustUpdated ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}`}>
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl" />
@@ -443,6 +443,13 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 </button>
               )}
             </div>
+          </div>
+          {/* Live grade explanation */}
+          <div className="relative mt-2 pt-2 border-t border-white/20">
+            <p className="text-white/70 text-[10px] leading-relaxed">
+              <Sparkles className="w-3 h-3 inline mr-0.5 text-yellow-300" />
+              This grade updates live as you complete tasks below — every flashcard, quiz, and review improves your prediction.
+            </p>
           </div>
         </div>
       </motion.div>
