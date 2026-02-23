@@ -38,18 +38,50 @@ export default function AITutorSheet() {
         welcomeMessage = `👋 Let me help you understand this flashcard better.`;
       } else if (context.type === "document") {
         welcomeMessage = `👋 I'll help explain this section from your notes.`;
+      } else if (context.type === "diagnostic_complete") {
+        welcomeMessage = context.initialMessage || "Great work completing your diagnostic!";
       }
       
       setMessages([{ role: "assistant", content: welcomeMessage }]);
       
-      // Auto-send the initial prompt after a short delay
-      if (context.initialPrompt) {
+      // Auto-send the initial prompt after a short delay (skip for diagnostic_complete since message is already set)
+      if (context.initialPrompt && context.type !== "diagnostic_complete") {
         setTimeout(() => {
           handleSend(context.initialPrompt);
         }, 500);
       }
     }
   }, [isOpen, context]);
+
+  // Listen for diagnostic completion — auto-open on mobile with Polly message
+  useEffect(() => {
+    const handleDiagnosticComplete = (e) => {
+      const isMobile = window.innerWidth < 768;
+      if (!isMobile) return;
+
+      const { predicted_grade, total_score, mastery_gap } = e.detail;
+      
+      const gradeEmoji = predicted_grade?.startsWith('A') ? '🌟' : predicted_grade?.startsWith('B') ? '💪' : '🎯';
+      let message = `${gradeEmoji} **Your predicted grade: ${predicted_grade || '—'}** (${total_score ? Math.round(total_score) + '%' : '—'})\n\n`;
+      
+      if (mastery_gap) {
+        message += `Your biggest opportunity to improve is in **${mastery_gap}**. `;
+      }
+      message += `Head to your **Study Plan** tab — I've created personalized tasks to help you get to an A! Each task you complete will improve your prediction.\n\nNeed help with anything? Just ask! 📚`;
+
+      // Open the sheet with diagnostic context
+      setMessages([]);
+      setIsOpen(true);
+      
+      // Small delay to ensure sheet is rendered
+      setTimeout(() => {
+        setMessages([{ role: "assistant", content: message }]);
+      }, 300);
+    };
+
+    window.addEventListener('pollyDiagnosticComplete', handleDiagnosticComplete);
+    return () => window.removeEventListener('pollyDiagnosticComplete', handleDiagnosticComplete);
+  }, []);
 
   const handleSend = async (customMessage) => {
     const messageToSend = customMessage || input.trim();
