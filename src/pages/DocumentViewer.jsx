@@ -668,7 +668,7 @@ export default function DocumentViewer() {
                 </TabsContent>
 
                 <TabsContent value="notes" className="mt-0 p-0 h-full">
-                  <NotesTab lesson={lesson} />
+                  {!diagnosticCompleted ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <NotesTab lesson={lesson} />}
                 </TabsContent>
 
                 <TabsContent value="exam" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
@@ -814,7 +814,7 @@ export default function DocumentViewer() {
               </TabsContent>
 
               <TabsContent value="notes" className="mt-0 p-0 w-full overflow-x-hidden">
-                <NotesTab lesson={lesson} />
+                {!diagnosticCompleted ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <NotesTab lesson={lesson} />}
               </TabsContent>
 
               <TabsContent value="exam" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
