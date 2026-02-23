@@ -11,8 +11,11 @@ export default function CreatePracticeQuizButton({ lesson, extractedContent, onE
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
 
+  const generatingRef = React.useRef(false);
+
   const handleGenerate = async (customOptions = null) => {
-    if (isGenerating) return;
+    if (isGenerating || generatingRef.current) return;
+    generatingRef.current = true;
     setIsGenerating(true);
 
     try {
@@ -34,6 +37,7 @@ export default function CreatePracticeQuizButton({ lesson, extractedContent, onE
       console.error("Error generating practice quiz:", error);
     } finally {
       setIsGenerating(false);
+      generatingRef.current = false;
     }
   };
 
