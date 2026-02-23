@@ -606,7 +606,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           )}
         </div>
       )}
-      {loadingSuggestions && topicSuggestions.length === 0 && (
+      {loadingSuggestions && filteredSuggestions.length === 0 && (
         <div className="flex items-center justify-center gap-2 py-4 px-3">
           <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
           <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Loading study guide...</span>
