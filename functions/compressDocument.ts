@@ -32,14 +32,29 @@ Deno.serve(async (req) => {
         console.log('✅ API key found');
 
         const MAX_CHUNK_SIZE = 40000; // ~10K tokens safe limit
+        const MAX_TOTAL_INPUT = 200000; // Cap total input to ~200K chars to prevent timeouts on huge documents
+
+        // For very large documents (180+ pages), sample strategically instead of processing everything
+        let workingContent = content;
+        if (content.length > MAX_TOTAL_INPUT) {
+            console.log(`⚠️ Very large document (${content.length} chars), sampling strategically...`);
+            const third = Math.floor(MAX_TOTAL_INPUT / 3);
+            const midStart = Math.floor(content.length / 2) - Math.floor(third / 2);
+            workingContent = content.substring(0, third) + 
+                "\n\n...[beginning section ends, middle section begins]...\n\n" + 
+                content.substring(midStart, midStart + third) + 
+                "\n\n...[middle section ends, final section begins]...\n\n" + 
+                content.substring(content.length - third);
+            console.log(`📐 Sampled down to ${workingContent.length} chars (from ${content.length})`);
+        }
 
         // ── PHASE 1: Extract structured topics from the document ──
         console.log('📋 Phase 1: Extracting structured topics...');
         
         // Use up to 60K chars for topic detection to get good structural coverage
-        const topicInputContent = content.length > 60000 
-            ? content.substring(0, 30000) + "\n\n...[middle content omitted]...\n\n" + content.substring(content.length - 30000)
-            : content;
+        const topicInputContent = workingContent.length > 60000 
+            ? workingContent.substring(0, 30000) + "\n\n...[middle content omitted]...\n\n" + workingContent.substring(workingContent.length - 30000)
+            : workingContent;
 
         const topicPrompt = `You are a document structure analyzer. Analyze this educational document and extract its organizational structure into topics.
 
@@ -186,16 +201,16 @@ Output concise bullet points only. No commentary.`;
 
         let compressedContent;
 
-        if (content.length <= MAX_CHUNK_SIZE) {
+        if (workingContent.length <= MAX_CHUNK_SIZE) {
             console.log('📤 Direct compression (small document)');
-            compressedContent = await compressChunk(content, true);
+            compressedContent = await compressChunk(workingContent, true);
         } else {
-            console.log('📤 Chunked compression - document size:', content.length);
+            console.log('📤 Chunked compression - document size:', workingContent.length);
             
             // Split into chunks
             const chunks = [];
-            for (let i = 0; i < content.length; i += MAX_CHUNK_SIZE) {
-                chunks.push(content.slice(i, i + MAX_CHUNK_SIZE));
+            for (let i = 0; i < workingContent.length; i += MAX_CHUNK_SIZE) {
+                chunks.push(workingContent.slice(i, i + MAX_CHUNK_SIZE));
             }
             console.log('📦 Split into', chunks.length, 'chunks');
 
