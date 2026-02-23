@@ -46,8 +46,14 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
         type: data.question_type
       };
       
+      const isShortAnswer = (data.question_type || '').toLowerCase().includes('short answer') || 
+                           (data.question_type || '').toLowerCase().includes('fill in the blank') ||
+                           (data.question_type || '').toLowerCase().includes('structured response');
+      
       // Different prompts based on whether user has answered
-      if (!hasUserAnswer) {
+      if (!hasUserAnswer && isShortAnswer) {
+        contextData.initialPrompt = `I'm stuck on this short answer question and need help structuring my response. Do NOT give me the answer directly.\n\nQuestion: "${data.question_text}"\n\nPlease:\n1. Briefly explain the key concept being tested (1-2 sentences)\n2. Break down what the question is really asking — identify the specific parts I need to address\n3. Give me a framework/structure for a strong response (e.g. "Start by identifying X, then explain how Y relates to Z")\n4. Provide 2-3 starter hints or phrases I could use to begin my answer\n5. End with encouragement\n\nDo NOT write the full answer. Guide me so I can write it myself.`;
+      } else if (!hasUserAnswer) {
         contextData.initialPrompt = `Help me understand this question without giving away the answer:\n\n"${data.question_text}"\n\nExplain the underlying concept and give me hints to figure it out myself.`;
       } else if (userAnswerIsCorrect) {
         contextData.initialPrompt = `I got this question right! My answer: "${data.user_answer}"\n\nQuestion: "${data.question_text}"\n\nCan you explain why this is correct and help me understand the concept deeper?`;
