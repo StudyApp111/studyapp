@@ -97,7 +97,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     if (!hasAnswered || !isObjective) {
       return selectedAnswer === optionText
         ? isDark ? "border-purple-500 bg-purple-600/20" : "border-purple-500 bg-purple-50"
-        : isDark ? "border-white/10 hover:border-purple-500/30 bg-white/5" : "border-slate-200 hover:border-purple-300 bg-white";
+        : isDark ? "border-white/10 hover:border-purple-500/30 bg-white/5" : "border-slate-200 hover:border-purple-300 bg-slate-50";
     }
 
     const isThisCorrect = checkIsCorrect(optionText, question.correct_answer, optionIndex);
@@ -323,7 +323,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
             )}
           </div>
         </div>
-        <MathText className={`text-sm font-medium leading-relaxed ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+        <MathText className={`text-sm font-medium leading-relaxed ${isDark ? 'text-purple-200' : 'text-slate-900'}`}>
           {question.question_text}
         </MathText>
       </div>

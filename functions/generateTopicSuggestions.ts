@@ -74,11 +74,11 @@ CONTENT:
 ${contentForPrompt}
 ${curriculumContext}
 
-TASK: Create 3-5 study sections. Each section represents a major division from the material (lecture, chapter, unit, module, etc.). 
-For each section, suggest up to 6 high-yield topics with the best study format for each. Prioritize topics most likely to be tested on exams.
+TASK: Create sections that match the document's ACTUAL organizational structure. Each section represents a major division from the material (lecture, chapter, unit, module, etc.). 
+For each section, suggest exactly 6 high-yield topics with the best study format for each. Prioritize topics most likely to be tested on exams.
 
 RULES:
-1. Section titles MUST match the document's actual organizational structure (e.g., "Lecture 1: Introduction to Hinduism", "Chapter 3: Cell Division", "Unit 2: Thermodynamics")
+1. Section titles MUST match the document's actual organizational structure EXACTLY (e.g., "Lecture 1: Introduction to Hinduism", "Chapter 3: Cell Division", "Unit 2: Thermodynamics"). If the document has 2 lectures, create exactly 2 sections. If it has 5 chapters, create 5 sections. Match the source material structure.
 2. If no clear structure exists, create conceptual sections (max 5)
 3. Each topic should have a specific, actionable name (not generic like "Key Concepts")
 4. Format should be the BEST fit for that topic type:
@@ -86,8 +86,8 @@ RULES:
    - "Flashcards" — for terminology, definitions, key facts
    - "Practice Test" — for problem-solving, application topics
    - "Feynman Technique" — for complex concepts requiring deep understanding
-5. Return 3-5 sections total, each with 3-6 suggested topics (prioritize the most exam-relevant)
-6. For each topic, set high_yield to true if it is very likely to appear on an exam based on curriculum emphasis, common exam patterns, and how foundational the concept is. Mark at least 1-2 per section as high_yield.
+5. Each section MUST have exactly 6 suggested topics
+6. For each topic, set high_yield to true if it is very likely to appear on an exam based on curriculum emphasis, common exam patterns, and how foundational the concept is. Mark at least 2-3 per section as high_yield.
 7. high_yield_reason should be a SHORT phrase explaining WHY it's high-yield (e.g., "Frequently tested definition", "Core framework for essay questions", "Common calculation problem")`;
 
     const response = await fetch(
@@ -151,8 +151,8 @@ RULES:
     const parsed = JSON.parse(text);
     const sections = parsed.sections || [];
 
-    // Allow up to 6 topics per section
-    const cleanedSections = sections.slice(0, 5).map(s => ({
+    // Keep all sections from the document structure, up to 6 topics each
+    const cleanedSections = sections.map(s => ({
       section_title: s.section_title,
       suggested_topics: (s.suggested_topics || []).slice(0, 6)
     }));

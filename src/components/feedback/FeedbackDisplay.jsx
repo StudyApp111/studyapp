@@ -400,26 +400,6 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
   // Official Exam Results UI (existing)
   return (
     <div className={`space-y-6 px-3 max-w-5xl mx-auto ${isDark ? 'bg-[#0a0a12]' : ''}`}>
-      {/* CTA: Go to Study Plan - above everything */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-      >
-        <button
-          onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
-          className="w-full p-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-xl shadow-emerald-500/20 transition-all group text-center"
-        >
-          <p className="text-white font-black text-lg mb-1">Click to View Your Custom Study Plan</p>
-          <p className="text-white/70 text-sm mb-3">Personalized roadmap to improve your grade</p>
-          <div className="flex justify-center">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <ChevronDown className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </button>
-      </motion.div>
-
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -584,6 +564,23 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
         )}
       </div>
 
+      {/* CTA: Go to Study Plan - between insights and questions */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
+          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/20 transition-all group flex items-center justify-center gap-3"
+        >
+          <p className="text-white font-bold text-sm">View Your Custom Study Plan</p>
+          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <ChevronDown className="w-4 h-4 text-white" />
+          </div>
+        </button>
+      </motion.div>
+
       {/* Question Breakdown */}
       {exam.questions && exam.feedback && (
         <motion.div
@@ -743,9 +740,9 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
                                     {question.user_answer || "No answer"}
                                   </MathText>
                                 </div>
-                                <div className="bg-emerald-50 p-2 md:p-3 rounded-xl border border-emerald-100">
-                                  <p className="text-[10px] md:text-xs font-bold text-emerald-700 uppercase mb-1">Correct</p>
-                                  <MathText className="text-xs md:text-sm text-slate-800 font-medium">
+                                <div className={`p-2 md:p-3 rounded-xl border ${isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-100'}`}>
+                                  <p className={`text-[10px] md:text-xs font-bold uppercase mb-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Correct</p>
+                                  <MathText className={`text-xs md:text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
                                     {(() => {
                                       const ca = question.correct_answer;
                                       if (/^[A-Da-d]$/i.test(ca?.trim())) {
