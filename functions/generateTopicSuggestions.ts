@@ -109,17 +109,24 @@ CRITICAL — SECTION EXTRACTION RULES:
 4. If no clear structure exists, create conceptual sections (max 3-4).
 
 TOPIC RULES:
-5. Each section should have 4-6 suggested topics drawn from the subtopics WITHIN that section.
+5. Each section should have 4-5 suggested topics drawn from the subtopics WITHIN that section.
 6. Each topic should have a specific, actionable name (not generic like "Key Concepts").
-7. Format should be the BEST fit for that topic type:
-   - "Review Notes" — for dense reading/theory topics
-   - "Flashcards" — for terminology, definitions, key facts
-   - "Practice Test" — for problem-solving, application topics
-   - "Feynman Technique" — for complex concepts requiring deep understanding
+7. CRITICAL — FORMAT ORDERING: Within each section, suggest topics in this EXACT pedagogical sequence. Every section MUST follow this order:
+   Step 1: "Review Notes" — ONE per section, covering the section's main theory/reading content. This is always the FIRST task.
+   Step 2: "Flashcards" — for terminology, definitions, key facts from that section.
+   Step 3: "Feynman Technique" — for the hardest concept in the section that requires deep understanding.
+   Step 4: "Practice Test" — for application/problem-solving, always the LAST task as it tests everything.
+   
+   You may include 1-2 additional Flashcard or Feynman topics if the section has enough distinct subtopics, but NEVER more than ONE "Review Notes" per section and NEVER more than ONE "Practice Test" per section.
 8. For each topic, set high_yield to true if it is very likely to appear on an exam. Mark at least 2-3 per section as high_yield.
 9. high_yield_reason should be a SHORT phrase explaining WHY it's high-yield.
 
-EXAMPLE: If the document has "Lecture 1: Hinduism" covering Vedic texts, Karma, Dharma, Ashramas, and Trimurti — that is ONE section with 5 topics inside it. Do NOT create separate sections for each subtopic.`;
+EXAMPLE: If the document has "Lecture 1: Hinduism" covering Vedic texts, Karma, Dharma, Ashramas, and Trimurti — that is ONE section with topics ordered as:
+1. "Key Concepts of Hinduism" → Review Notes
+2. "Vedic Texts & Terminology" → Flashcards
+3. "Karma & Dharma" → Feynman Technique
+4. "Hindu Concepts Application" → Practice Test
+Do NOT create separate sections for each subtopic.`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
