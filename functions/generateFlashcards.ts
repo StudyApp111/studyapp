@@ -1,18 +1,36 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
-// Retry helper with exponential backoff
-async function fetchWithRetry(url, options, maxRetries = 3) {
+// Retry helper with exponential backoff and per-request timeout
+async function fetchWithRetry(url, options, maxRetries = 3, timeoutMs = 45000) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        const response = await fetch(url, options);
-        if (response.ok) return response;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
         
-        if (response.status === 429 && attempt < maxRetries) {
-            const waitTime = Math.pow(2, attempt) * 1000;
-            console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
-            await new Promise(r => setTimeout(r, waitTime));
-            continue;
+        try {
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (response.ok) return response;
+            
+            if (response.status === 429 && attempt < maxRetries) {
+                const waitTime = Math.pow(2, attempt) * 1000;
+                console.log(`Rate limited (429), waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}`);
+                await new Promise(r => setTimeout(r, waitTime));
+                continue;
+            }
+            return response;
+        } catch (err) {
+            clearTimeout(timeoutId);
+            if (err.name === 'AbortError') {
+                console.log(`Request timed out after ${timeoutMs}ms (attempt ${attempt}/${maxRetries})`);
+                if (attempt < maxRetries) {
+                    await new Promise(r => setTimeout(r, 1000));
+                    continue;
+                }
+                throw new Error(`Gemini request timed out after ${maxRetries} attempts`);
+            }
+            throw err;
         }
-        return response;
     }
 }
 
@@ -31,7 +49,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Content is required' }, { status: 400 });
     }
 
-    const cardCount = Math.min(Math.max(amount || 10, 5), 20);
+    const cardCount = Math.min(Math.max(amount || 10, 5), 10);
     const difficultyPref = difficulty || 'mixed';
 
     const focusInstruction = focus_topics?.length > 0 
