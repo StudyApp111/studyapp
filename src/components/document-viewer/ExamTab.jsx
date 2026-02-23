@@ -1687,19 +1687,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-3">
               <Button
                 variant="outline"
-                onClick={() => {
-                  // "I don't know" — skip to next without answering
-                  handleAnswer("I don't know");
-                  if (!isLastQuestion) {
-                    setTimeout(() => handleNext(), 100);
-                  }
-                }}
-                className={`h-10 rounded-xl font-medium text-xs px-4 ${isDark ? 'text-slate-400 border-white/10 hover:bg-white/5' : 'text-slate-500 border-slate-200 hover:bg-slate-50'}`}
-              >
-                Skip
-              </Button>
-              <Button
-                variant="outline"
                 onClick={handlePrevious}
                 disabled={currentQuestion === 0}
                 className="flex-1 dark:text-white text-xs h-10 rounded-xl font-medium"
