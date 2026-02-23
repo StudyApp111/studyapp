@@ -158,9 +158,16 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       // Reload all cards so sets list shows all sets including new one
       const allCards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
       setCards(allCards);
-      // Jump into the newly generated set
-      const newFirstIndex = allCards.findIndex(c => c.id === savedCards[0]?.id);
-      setCurrentIndex(newFirstIndex >= 0 ? newFirstIndex : 0);
+      // Jump into the newly generated set — find bounds by the saved card IDs
+      const savedIdSet = new Set(savedCards.map(c => c.id));
+      const newIndices = allCards.map((c, i) => savedIdSet.has(c.id) ? i : -1).filter(i => i >= 0);
+      const startIdx = newIndices.length > 0 ? newIndices[0] : 0;
+      const endIdx = newIndices.length > 0 ? newIndices[newIndices.length - 1] : 0;
+      setCurrentIndex(startIdx);
+      setCurrentSetStart(startIdx);
+      setCurrentSetEnd(endIdx);
+      setSessionComplete(false);
+      setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
       setShowSetsList(false); // Jump straight into review
       pendingStudyTaskRef.current = null;
     } catch (error) {
