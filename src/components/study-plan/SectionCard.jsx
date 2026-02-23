@@ -58,6 +58,8 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
 
   // Count completed
   const completedCount = topics.filter(t => isTopicCompleted(t)).length;
+  const progressPercent = topics.length > 0 ? Math.round((completedCount / topics.length) * 100) : 0;
+  const allComplete = completedCount === topics.length && topics.length > 0;
 
   return (
     <motion.div
@@ -86,19 +88,28 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
             <p className={`font-bold text-base leading-tight truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
               {section.section_title}
             </p>
-            <p className={`text-xs mt-0.5 flex items-center gap-1.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              {completedCount > 0 && (
-                <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                  <CheckCircle2 className="w-3 h-3" />{completedCount}/{topics.length}
-                </span>
+            <div className="flex items-center gap-2 mt-0.5">
+              {completedCount > 0 ? (
+                <>
+                  <div className={`flex-1 h-1.5 rounded-full overflow-hidden max-w-[80px] ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${allComplete ? 'bg-emerald-500' : 'bg-purple-500'}`}
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <span className={`text-[10px] font-bold ${allComplete ? (isDark ? 'text-emerald-400' : 'text-emerald-600') : (isDark ? 'text-purple-400' : 'text-purple-600')}`}>
+                    {progressPercent}%
+                  </span>
+                </>
+              ) : (
+                <span className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{topics.length} tasks</span>
               )}
-              {completedCount === 0 && <span>{topics.length} tasks</span>}
               {topics.some(t => t.high_yield) && (
                 <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
                   <Flame className="w-3 h-3" />{topics.filter(t => t.high_yield).length} high-yield
                 </span>
               )}
-            </p>
+            </div>
           </div>
           {expanded 
             ? <ChevronDown className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
