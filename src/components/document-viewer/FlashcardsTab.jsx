@@ -140,30 +140,25 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       
       const savedCards = [];
       for (const card of generatedCards) {
-        let attempts = 0;
-        while (attempts < 3) {
-          try {
-            const saved = await base44.entities.Flashcard.create({
-              lesson_id: lesson.id,
-              question: card.question || "Question",
-              answer: card.answer || "Answer",
-              topics: card.topics || [],
-              difficulty: card.difficulty || "medium",
-              status: "new",
-              review_count: 0,
-              ease_factor: 2.5,
-              next_review: new Date().toISOString()
-            });
-            savedCards.push(saved);
-            break;
-          } catch (err) {
-            attempts++;
-            if (attempts >= 3) throw err;
-            await new Promise(r => setTimeout(r, 500 * attempts));
-          }
-        }
+        const saved = await base44.entities.Flashcard.create({
+          lesson_id: lesson.id,
+          question: card.question || "Question",
+          answer: card.answer || "Answer",
+          topics: card.topics || [],
+          difficulty: card.difficulty || "medium",
+          status: "new",
+          review_count: 0,
+          ease_factor: 2.5,
+          next_review: new Date().toISOString()
+        });
+        savedCards.push(saved);
       }
-      setCards(savedCards);
+      // Reload all cards so sets list shows all sets including new one
+      const allCards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
+      setCards(allCards);
+      // Jump into the newly generated set
+      const newFirstIndex = allCards.findIndex(c => c.id === savedCards[0]?.id);
+      setCurrentIndex(newFirstIndex >= 0 ? newFirstIndex : 0);
       setShowSetsList(false); // Jump straight into review
       pendingStudyTaskRef.current = null;
     } catch (error) {
