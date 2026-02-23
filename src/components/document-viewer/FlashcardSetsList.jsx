@@ -6,18 +6,37 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew }) {
   const { isDark } = useTheme();
-  // Group cards by topic
-  const setMap = new Map();
-  cards.forEach((card, idx) => {
-    const topic = card.topics?.[0] || 'General';
-    if (!setMap.has(topic)) {
-      setMap.set(topic, { topic, cards: [], mastered: 0, firstIndex: idx });
+  
+  // Group cards by generation batch (cards created within 2 min of each other = 1 set)
+  const sorted = [...cards].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+  const sets = [];
+  let currentSet = null;
+  
+  sorted.forEach((card) => {
+    const cardTime = new Date(card.created_date).getTime();
+    const globalIndex = cards.findIndex(c => c.id === card.id);
+    
+    if (!currentSet || cardTime - currentSet.lastTime > 120000) {
+      // New batch — start a new set
+      const setNum = sets.length + 1;
+      currentSet = { 
+        label: `Set ${setNum}`, 
+        cards: [], 
+        mastered: 0, 
+        firstIndex: globalIndex,
+        lastTime: cardTime,
+        createdDate: card.created_date
+      };
+      sets.push(currentSet);
     }
-    const set = setMap.get(topic);
-    set.cards.push({ ...card, globalIndex: idx });
-    if (card.mastered) set.mastered++;
+    
+    currentSet.lastTime = cardTime;
+    currentSet.cards.push({ ...card, globalIndex });
+    if (card.mastered) currentSet.mastered++;
   });
-  const sets = Array.from(setMap.values());
+  
+  // Reverse so newest set is first
+  sets.reverse();
 
   const totalMastered = cards.filter(c => c.mastered).length;
 
