@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, Target, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, Rocket, Star, AlertCircle, AlertTriangle } from "lucide-react";
+import { Award, TrendingUp, CheckCircle, XCircle, Sparkles, Target, Clock, Brain, Zap, Eye, ChevronDown, ChevronUp, Rocket, Star, AlertCircle, AlertTriangle, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MathText from "../math/MathText";
@@ -572,11 +572,16 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
       >
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
-          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/20 transition-all group flex items-center justify-center gap-3"
+          className="w-full px-5 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-xl shadow-emerald-500/25 transition-all group"
         >
-          <p className="text-white font-bold text-sm">View Your Custom Study Plan</p>
-          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <ChevronDown className="w-4 h-4 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="text-left">
+              <p className="text-white/70 text-xs font-medium mb-0.5">Next Step</p>
+              <p className="text-white font-bold text-base">View Your Study Plan</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+              <ArrowRight className="w-5 h-5 text-white" />
+            </div>
           </div>
         </button>
       </motion.div>
@@ -811,6 +816,28 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
           </Card>
         </motion.div>
       )}
+
+      {/* Bottom CTA: Study Plan */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+      >
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('switchToStudyPlanTab'))}
+          className="w-full px-5 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-xl shadow-emerald-500/25 transition-all group"
+        >
+          <div className="flex items-center justify-between">
+            <div className="text-left">
+              <p className="text-white/70 text-xs font-medium mb-0.5">Next Step</p>
+              <p className="text-white font-bold text-base">View Your Study Plan</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+              <ArrowRight className="w-5 h-5 text-white" />
+            </div>
+          </div>
+        </button>
+      </motion.div>
 
     </div>
   );
