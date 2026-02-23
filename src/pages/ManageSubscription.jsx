@@ -140,16 +140,16 @@ export default function ManageSubscription() {
               )}
             </div>
 
-            {isPro && (
+            {(isPro || hasGracePeriod) && (
               <>
                 {/* Subscription Details */}
                 <div className="dark:bg-white/5 bg-slate-50 rounded-xl p-4 mb-6 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 dark:text-slate-300 text-slate-600">
                       <Calendar className="w-4 h-4" />
-                      <span>Next billing date</span>
+                      <span>{isCancelled ? 'Access ends' : 'Next billing date'}</span>
                     </div>
-                    <span className="font-medium dark:text-slate-100 text-slate-900">
+                    <span className={`font-medium ${isCancelled ? 'dark:text-amber-300 text-amber-700' : 'dark:text-slate-100 text-slate-900'}`}>
                       {user.subscription_end_date 
                         ? new Date(user.subscription_end_date).toLocaleDateString('en-US', {
                             month: 'long',
@@ -159,6 +159,12 @@ export default function ManageSubscription() {
                         : 'Not available'}
                     </span>
                   </div>
+                  {isCancelled && (
+                    <div className="flex items-center gap-2 text-sm dark:text-amber-400 text-amber-600">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      <span>You will not be billed again</span>
+                    </div>
+                  )}
                   
                   {user.stripe_customer_id && (
                     <div className="flex items-center justify-between">
