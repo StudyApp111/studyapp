@@ -52,7 +52,15 @@ Deno.serve(async (req) => {
     } else if (lesson.compressed_content) {
       contentForPrompt = lesson.compressed_content;
     } else if (lesson.extracted_content) {
-      contentForPrompt = lesson.extracted_content.substring(0, 6000);
+      // For very large documents, take beginning + end to stay within prompt limits
+      const MAX_EXTRACT = 8000;
+      if (lesson.extracted_content.length > MAX_EXTRACT) {
+        contentForPrompt = lesson.extracted_content.substring(0, MAX_EXTRACT / 2) + 
+          "\n\n...[content truncated]...\n\n" + 
+          lesson.extracted_content.substring(lesson.extracted_content.length - MAX_EXTRACT / 2);
+      } else {
+        contentForPrompt = lesson.extracted_content;
+      }
     } else if (lesson.description) {
       contentForPrompt = lesson.description;
     } else {
