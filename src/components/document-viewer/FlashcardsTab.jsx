@@ -29,8 +29,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const [xpToast, setXpToast] = useState({ show: false, xp: 0, reason: '' });
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
   const [showSetsList, setShowSetsList] = useState(true);
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [celebrationMessage, setCelebrationMessage] = useState('');
+  // Celebration modal removed - was blocking UI
   const [lastRating, setLastRating] = useState(null);
   const [showCustomize, setShowCustomize] = useState(false);
 
@@ -273,23 +272,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         }).catch(err => console.warn('Polly trigger failed:', err.message));
       }
       
-      // Check for milestone celebrations (every 5 cards)
-      if ((sessionStats.total + 1) % 5 === 0) {
-        setCelebrationMessage('Great job! Keep going!');
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 2000);
-      }
-      
-      // Check if session complete
-      if (currentIndex === cards.length - 1) {
-        const total = sessionStats.total + 1;
-        const excellent = sessionStats.excellent + (rating === 'excellent' ? 1 : 0);
-        const good = sessionStats.good + (rating === 'good' ? 1 : 0);
-        const okay = sessionStats.okay + (rating === 'okay' ? 1 : 0);
-        
-        setCelebrationMessage(`✨ Session Complete! ${total} cards reviewed • ${excellent} Excellent • ${good} Good • ${okay} Okay`);
-        setShowCelebration(true);
-      }
+      // Milestone celebrations removed - were blocking UI
     } catch (error) {
       console.error("Error updating flashcard:", error);
     }
@@ -538,50 +521,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   return (
     <div className={`space-y-3 px-3 py-3 pb-8 w-full max-w-full md:max-w-lg mx-auto relative ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
-      {/* Celebration Modal */}
-      <AnimatePresence>
-        {showCelebration && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ y: 50 }}
-              animate={{ y: 0 }}
-              className={`rounded-2xl max-w-sm w-full p-6 shadow-2xl text-center ${isDark ? 'bg-gradient-to-br from-purple-900 to-indigo-900' : 'bg-gradient-to-br from-purple-100 to-indigo-100'}`}
-            >
-              {/* Confetti effect */}
-              <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-                {[...Array(20)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-2 h-2 rounded-full"
-                    style={{
-                      left: `${Math.random() * 100}%`,
-                      top: '-10%',
-                      backgroundColor: ['#f59e0b', '#8b5cf6', '#ec4899', '#10b981'][Math.floor(Math.random() * 4)]
-                    }}
-                    animate={{
-                      y: ['0vh', '110vh'],
-                      x: [0, (Math.random() - 0.5) * 100],
-                      rotate: [0, 360]
-                    }}
-                    transition={{
-                      duration: 1 + Math.random(),
-                      delay: Math.random() * 0.3
-                    }}
-                  />
-                ))}
-              </div>
-              
-              <div className="text-5xl mb-3">🎉</div>
-              <p className={`font-bold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>{celebrationMessage}</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Celebration modal removed */}
 
       {/* Header */}
       <div className="flex items-center justify-between">

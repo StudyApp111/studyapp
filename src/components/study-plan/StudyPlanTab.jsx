@@ -516,9 +516,14 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       {/* Section-based Study Guide */}
       {topicSuggestions.length > 0 && (
         <div className="px-3 md:px-4 space-y-3">
-          <p className={`text-xs font-bold uppercase tracking-wider px-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Your Study Guide
-          </p>
+          <div className="px-1 space-y-1">
+            <p className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+              Your Study Guide
+            </p>
+            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Complete these and watch your predicted grade change
+            </p>
+          </div>
           {displayedSections.map((section, idx) => (
             <SectionCard
               key={idx}
@@ -527,6 +532,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               defaultExpanded={idx < 2}
               onTopicClick={handleSuggestedTopicClick}
               onAllTopicsClick={handleAllTopicsClick}
+              studyPlan={studyPlan}
             />
           ))}
           {remainingSections.length > 0 && (
@@ -536,7 +542,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               </button>
               <AnimatePresence>
                 {showMoreSections && remainingSections.map((section, idx) => (
-                  <SectionCard key={idx + 3} section={section} index={idx + 3} defaultExpanded={false} onTopicClick={handleSuggestedTopicClick} onAllTopicsClick={handleAllTopicsClick} />
+                  <SectionCard key={idx + 3} section={section} index={idx + 3} defaultExpanded={false} onTopicClick={handleSuggestedTopicClick} onAllTopicsClick={handleAllTopicsClick} studyPlan={studyPlan} />
                 ))}
               </AnimatePresence>
             </>
@@ -550,22 +556,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </div>
       )}
 
-      {/* Completed Tasks */}
-      {completedTasks.length > 0 && (
-        <div className="px-3 md:px-4">
-          <p className={`text-[10px] font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
-            <CheckCircle2 className="w-3 h-3 inline mr-1" />Completed ({completedTasks.length})
-          </p>
-          <div className="space-y-1.5">
-            {completedTasks.map((task) => (
-              <CompletedTaskItem key={task.task_id} task={task} onClick={() => {
-                const tab = FORMAT_TO_TAB[task.task_type] || 'flashcards';
-                onNavigate(tab);
-              }} />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Completed tasks are now shown inline within sections via studyPlan prop */}
 
       {/* Rationale */}
       {studyPlan?.plan_rationale && (
