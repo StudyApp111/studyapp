@@ -53,10 +53,26 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
     setLoadingTopics(true);
     setErrorMsg(null);
     try {
+      // First try to get topic_suggestions (same structure as study plan)
+      const freshLessons = await base44.entities.Lesson.filter({ id: lesson.id });
+      const freshLesson = freshLessons[0];
+      if (freshLesson?.topic_suggestions?.length > 0) {
+        const flatTopics = freshLesson.topic_suggestions.map(section => ({
+          title: section.section_title,
+          description: `Mini lecture covering: ${(section.suggested_topics || []).map(t => t.topic_title).join(', ')}`,
+          key_content: (section.suggested_topics || []).map(t => t.topic_title).join('. '),
+          section_title: section.section_title
+        }));
+        setTopics(flatTopics);
+        setLoadingTopics(false);
+        setHasLoaded(true);
+        return;
+      }
+      
+      // Fallback: use generateLearnTopics
       const { data } = await base44.functions.invoke('generateLearnTopics', { lesson_id: lesson.id });
       if (data?.topics) {
         setTopics(data.topics);
-        // Persist generated topics
         await base44.entities.Lesson.update(lesson.id, { topics: data.topics });
       }
     } catch (err) {
