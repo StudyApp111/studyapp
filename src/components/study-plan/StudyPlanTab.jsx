@@ -147,9 +147,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       return;
     }
 
-    // Poll for them (they're generated async)
+    // Poll for them (they're generated async) — use longer polling since generateTopicSuggestions 
+    // may need to wait for compressDocument to finish first
     setLoadingSuggestions(true);
-    const maxPolls = 8;
+    const maxPolls = 15;
     for (let i = 0; i < maxPolls; i++) {
       try {
         const lessons = await base44.entities.Lesson.filter({ id: lesson.id });
