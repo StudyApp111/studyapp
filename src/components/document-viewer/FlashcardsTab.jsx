@@ -379,25 +379,31 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     }
   };
 
-  // Determine current set boundaries
+  // Determine current set boundaries — find all cards in the same generation batch
   const findSetBounds = (idx) => {
     if (!cards || cards.length === 0) return { start: 0, end: 0 };
+    
+    // Sort cards by created_date and group into sets (>2min gap = new set)
     const sorted = [...cards].map((c, i) => ({ ...c, origIdx: i })).sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-    let setStart = 0;
-    let setEnd = 0;
-    let foundSet = false;
-    for (let i = 0; i < sorted.length; i++) {
-      if (i === 0 || new Date(sorted[i].created_date).getTime() - new Date(sorted[i-1].created_date).getTime() > 120000) {
-        if (foundSet) break;
-        setStart = i;
+    const sets = [];
+    let currentSet = [];
+    
+    sorted.forEach((card, i) => {
+      if (i === 0 || new Date(card.created_date).getTime() - new Date(sorted[i - 1].created_date).getTime() > 120000) {
+        if (currentSet.length > 0) sets.push(currentSet);
+        currentSet = [];
       }
-      setEnd = i;
-      if (sorted[i].origIdx === idx) foundSet = true;
-    }
-    // Map back to original indices
-    const startOrigIdx = sorted[setStart].origIdx;
-    const endOrigIdx = sorted[setEnd].origIdx;
-    return { start: Math.min(startOrigIdx, endOrigIdx), end: Math.max(startOrigIdx, endOrigIdx) };
+      currentSet.push(card);
+    });
+    if (currentSet.length > 0) sets.push(currentSet);
+    
+    // Find which set contains the card at `idx`
+    const targetSet = sets.find(set => set.some(c => c.origIdx === idx));
+    if (!targetSet) return { start: idx, end: idx };
+    
+    // Return the min and max original indices within that set
+    const origIndices = targetSet.map(c => c.origIdx);
+    return { start: Math.min(...origIndices), end: Math.max(...origIndices) };
   };
 
   // Show list view when cards exist and showSetsList is true
