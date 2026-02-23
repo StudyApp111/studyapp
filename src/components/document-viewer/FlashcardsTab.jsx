@@ -373,21 +373,11 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   };
 
   const handleRegenerate = async () => {
-    const taskCheck = await canDoTask('flashcards');
-    if (!taskCheck.allowed) {
-      triggerUpgradeModal('tasks');
-      return;
-    }
-    
-    await incrementTaskCount('flashcards');
-    
-    if (cards && cards.length > 0) {
-      await Promise.all(cards.map(c => base44.entities.Flashcard.delete(c.id)));
-    }
-    setCards(null);
+    // Generate a new set without deleting existing sets
     setCurrentIndex(0);
     setIsFlipped(false);
     setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
+    await handleGenerate();
   };
 
   // Show list view when cards exist and showSetsList is true
