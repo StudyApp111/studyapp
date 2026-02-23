@@ -290,6 +290,8 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
     if (!lesson?.id || !selectedExamNumber || exams === undefined) return;
     // Don't reload if we already have this exam loaded (prevents regeneration on re-entry)
     if (exam && exam.exam_number === selectedExamNumber && exam.questions?.length > 0) return;
+    // Don't reload if we're currently viewing a completed exam
+    if (viewingCompletedExam) return;
     if (waitingForCompression) return;
 
     loadOrGenerateExam(selectedExamNumber);
