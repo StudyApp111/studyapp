@@ -73,7 +73,6 @@ export default function NotesTab({ lesson }) {
     }
     
     setIsLoading(true);
-    await incrementTaskCount('review_notes');
     try {
       const content = lesson.compressed_content || lesson.extracted_content || lesson.description;
       
@@ -90,6 +89,7 @@ export default function NotesTab({ lesson }) {
       });
 
       if (data?.content) {
+        await incrementTaskCount('review_notes');
         const newNote = await base44.entities.LessonNote.create({
           lesson_id: lesson.id,
           note_type: currentSettings.noteType,
