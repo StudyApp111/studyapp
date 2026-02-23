@@ -13,23 +13,38 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
   const { isPro, triggerUpgradeModal } = useSubscription();
   const { isDark } = useTheme();
 
-  const [topics, setTopics] = useState(lesson?.topics || []);
+  const [topics, setTopics] = useState([]);
   const [loadingTopics, setLoadingTopics] = useState(false);
   const [selectedTopicIdx, setSelectedTopicIdx] = useState(null);
   const [lecture, setLecture] = useState(null);
   const [loadingLecture, setLoadingLecture] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(!!(lesson?.topics && lesson.topics.length > 0));
+  const [hasLoaded, setHasLoaded] = useState(false);
   
   // Cache lectures per topic index so switching tabs doesn't lose them
   const lectureCache = React.useRef({});
 
-  // Sync state with prop if lesson updates
+  // Build topics from topic_suggestions (same section/topic structure as study plan)
+  // Fall back to lesson.topics if topic_suggestions not available
   useEffect(() => {
-    if (lesson?.topics && lesson.topics.length > 0) {
+    if (lesson?.topic_suggestions?.length > 0) {
+      // Flatten topic_suggestions sections into individual lecture topics
+      const flatTopics = [];
+      lesson.topic_suggestions.forEach(section => {
+        // Add section itself as a topic for the lecture
+        flatTopics.push({
+          title: section.section_title,
+          description: `Mini lecture covering: ${(section.suggested_topics || []).map(t => t.topic_title).join(', ')}`,
+          key_content: (section.suggested_topics || []).map(t => t.topic_title).join('. '),
+          section_title: section.section_title
+        });
+      });
+      setTopics(flatTopics);
+      setHasLoaded(true);
+    } else if (lesson?.topics && lesson.topics.length > 0) {
       setTopics(lesson.topics);
       setHasLoaded(true);
     }
-  }, [lesson?.topics]);
+  }, [lesson?.topic_suggestions, lesson?.topics]);
 
   const [errorMsg, setErrorMsg] = useState(null);
 
