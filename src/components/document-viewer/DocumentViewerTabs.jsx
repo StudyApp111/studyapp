@@ -59,7 +59,7 @@ export default function DocumentViewerTabs({ lesson }) {
       setPdfError(false);
       pdfRetryCountRef.current = 0;
       
-      // Timeout after 15s, then auto-retry up to 2 times
+      // Timeout after 25s, then auto-retry up to 2 times
       const startTimeout = () => {
         loadTimeoutRef.current = setTimeout(() => {
           if (!pdfLoaded && pdfRetryCountRef.current < maxPdfRetries) {
@@ -77,7 +77,7 @@ export default function DocumentViewerTabs({ lesson }) {
           } else if (!pdfLoaded) {
             setPdfError(true);
           }
-        }, 15000);
+        }, 25000);
       };
       
       startTimeout();

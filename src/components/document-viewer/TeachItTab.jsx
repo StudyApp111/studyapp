@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, PenLine, HelpCircle, Brain, X, Mic } from "lucide-react";
+import { Loader2, Lightbulb, CheckCircle2, AlertCircle, Sparkles, RefreshCw, PenLine, HelpCircle, Brain, X } from "lucide-react";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import EducationalLoader from "@/components/ui/EducationalLoader";
-import SpeechToTextButton from "./SpeechToTextButton";
 import { awardDailyXP } from "@/components/utils/dailyReset";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import TeachItSetsList from "./TeachItSetsList";
@@ -633,15 +632,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       className="min-h-[140px] md:min-h-[200px] mb-3 text-sm md:text-base border-2 border-purple-200 focus:border-purple-400 rounded-xl resize-none w-full"
                       disabled={isGrading}
                     />
-                    <div className="flex items-center gap-2 mb-3">
-                      <SpeechToTextButton
-                        disabled={isGrading}
-                        onTranscript={(text) => setUserAnswer(prev => prev ? prev + ' ' + text : text)}
-                      />
-                      <span className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                        Tap to speak your explanation
-                      </span>
-                    </div>
+                    
                     <Button
                       onClick={gradeAnswer}
                       disabled={!userAnswer.trim() || isGrading}

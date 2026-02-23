@@ -24,7 +24,7 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
         cards: [], 
         mastered: 0,
         completed: 0,
-        firstIndex: globalIndex,
+        firstIndex: -1,
         lastTime: cardTime
       };
       sets.push(currentSet);
@@ -34,6 +34,13 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
     currentSet.cards.push({ ...card, globalIndex });
     if (card.mastered) currentSet.mastered++;
     if (card.completed) currentSet.completed++;
+  });
+
+  // Set firstIndex to the first card's position in the original array
+  sets.forEach(set => {
+    if (set.cards.length > 0) {
+      set.firstIndex = set.cards[0].globalIndex;
+    }
   });
   
   sets.reverse();

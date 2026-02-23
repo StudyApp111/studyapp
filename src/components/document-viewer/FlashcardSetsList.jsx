@@ -21,9 +21,10 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
       const setNum = sets.length + 1;
       currentSet = { 
         label: `Set ${setNum}`, 
+        cardIds: [],
         cards: [], 
         mastered: 0, 
-        firstIndex: globalIndex,
+        firstIndex: -1,
         lastTime: cardTime,
         createdDate: card.created_date
       };
@@ -32,7 +33,16 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
     
     currentSet.lastTime = cardTime;
     currentSet.cards.push({ ...card, globalIndex });
+    currentSet.cardIds.push(card.id);
     if (card.mastered) currentSet.mastered++;
+  });
+
+  // For each set, find the first card's index in the original cards array
+  // This ensures when user clicks a set, they start at card 1 of that set
+  sets.forEach(set => {
+    if (set.cards.length > 0) {
+      set.firstIndex = set.cards[0].globalIndex;
+    }
   });
   
   // Reverse so newest set is first

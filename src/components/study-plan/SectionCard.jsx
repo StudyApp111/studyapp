@@ -23,12 +23,15 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
   const [expanded, setExpanded] = useState(defaultExpanded);
   const topics = section.suggested_topics || [];
 
-  // Build a set of completed task descriptions for cross-reference
-  const completedTaskKeys = new Set();
+  // Build a set of completed task types for cross-reference
   const allTasks = studyPlan?.tasks || [];
+  
+  // Track completed task types AND their focus topics
+  const completedTaskKeys = new Set();
+  const completedTaskTypes = new Set();
   allTasks.forEach(task => {
     if (task.completed) {
-      // Match by focus_topics overlap with section topics
+      completedTaskTypes.add(TASK_TYPE_TO_FORMAT[task.task_type] || '');
       const taskTopics = task.focus_topics || [];
       taskTopics.forEach(ft => {
         completedTaskKeys.add(`${ft}::${TASK_TYPE_TO_FORMAT[task.task_type] || ''}`);
@@ -36,9 +39,12 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
     }
   });
 
-  // Check if a topic is completed
+  // Check if a topic is completed - match by focus_topics first, fallback to task_type completion
   const isTopicCompleted = (topic) => {
-    return completedTaskKeys.has(`${topic.topic_title}::${topic.format}`);
+    // Direct match: task has this exact topic in focus_topics
+    if (completedTaskKeys.has(`${topic.topic_title}::${topic.format}`)) return true;
+    // Fallback: any task of this format type is completed (handles tasks without focus_topics)
+    return completedTaskTypes.has(topic.format);
   };
 
   // Count completed

@@ -185,6 +185,14 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         return;
       }
 
+      // Debounce: ignore events within 2 seconds of each other
+      const now = Date.now();
+      if (handleGeneratePracticeExam._lastCall && now - handleGeneratePracticeExam._lastCall < 2000) {
+        console.log('⚠️ Debouncing duplicate practice exam event');
+        return;
+      }
+      handleGeneratePracticeExam._lastCall = now;
+
       const { task, focus_topics, target_competency, misconception_addressed } = e.detail;
       
       // Check if we've already generated an exam for this specific task
