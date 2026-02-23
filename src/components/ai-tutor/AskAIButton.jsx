@@ -67,7 +67,7 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
         answer: data.answer,
         topics: data.topics
       };
-      contextData.initialPrompt = `Help me understand this flashcard:\n\nQuestion: "${data.question}"\nAnswer: "${data.answer}"\n\nExplain this concept in more detail.`;
+      contextData.initialPrompt = `I'm stuck on this flashcard and need help understanding it. Do NOT give me the full answer directly.\n\nQuestion: "${data.question}"\n\nPlease:\n1. Explain the key concept being tested in simple terms (2-3 sentences)\n2. Give me a hint or clue to help me figure out the answer\n3. Suggest how I should think about this (e.g., "Think about what happens when X...")\n4. If it's a definition, break it into parts I can reason about\n\nGuide me to the answer without spelling it out.`;
     }
     else if (type === "teachit") {
       contextData.teachit = {
