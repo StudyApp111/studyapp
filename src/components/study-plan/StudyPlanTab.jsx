@@ -256,8 +256,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
 
   // Handle generation from PickFormatModal
   const handlePickFormatGenerate = async (opts) => {
-    // Check paywall for the first format selected
     const firstFormat = opts.formats[0];
+    
+    // Check paywall for the first format selected
     const taskTypeMap = { "flashcards": "flashcards", "teach_it": "teach_it", "practice_exam": "practice_exam" };
     const taskType = taskTypeMap[firstFormat];
     if (taskType) {
@@ -266,7 +267,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     }
 
     // Navigate to the first selected format's tab
-    const firstFormat = opts.formats[0];
     const tab = FORMAT_TO_TAB[firstFormat] || "flashcards";
 
     // For each format, dispatch appropriate events
