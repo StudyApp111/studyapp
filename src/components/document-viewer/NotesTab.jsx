@@ -65,8 +65,8 @@ export default function NotesTab({ lesson }) {
   };
 
   const generateNotes = async (currentSettings = settings) => {
-    // Check task limit
-    const taskCheck = await canDoTask();
+    // Check task limit - notes counts as a task
+    const taskCheck = await canDoTask('review_notes');
     if (!taskCheck.allowed) {
       triggerUpgradeModal('tasks');
       return;
