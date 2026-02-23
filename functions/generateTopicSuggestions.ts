@@ -19,17 +19,28 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
     }
 
-    // Fetch lesson
-    const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
-    const lesson = lessons[0];
-    if (!lesson) {
-      return Response.json({ error: 'Lesson not found' }, { status: 400 });
-    }
-
-    // If suggestions already exist, skip
-    if (lesson.topic_suggestions?.length > 0) {
-      console.log('✅ Topic suggestions already exist, skipping');
-      return Response.json({ success: true, skipped: true });
+    // Fetch lesson — retry briefly if topics/content not ready yet (race with compressDocument)
+    let lesson = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
+      lesson = lessons[0];
+      if (!lesson) {
+        return Response.json({ error: 'Lesson not found' }, { status: 400 });
+      }
+      // If suggestions already exist, skip
+      if (lesson.topic_suggestions?.length > 0) {
+        console.log('✅ Topic suggestions already exist, skipping');
+        return Response.json({ success: true, skipped: true });
+      }
+      // If we have topics or compressed content or description, we're good to go
+      if (lesson.topics?.length > 0 || lesson.compressed_content || lesson.description || lesson.extracted_content) {
+        break;
+      }
+      // Content not ready yet — wait and retry
+      if (attempt < 4) {
+        console.log(`⏳ Lesson content not ready yet, waiting (attempt ${attempt + 1}/5)...`);
+        await new Promise(r => setTimeout(r, 3000));
+      }
     }
 
     const apiKey = Deno.env.get('GEMINIAPIKEY');
