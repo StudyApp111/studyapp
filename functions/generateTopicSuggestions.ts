@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
         lesson.curriculum_map.core_competencies.map(c => `- ${c.name}: ${c.description || ''}`).join('\n');
     }
 
-    const prompt = `You are a study plan designer. Given this course content, create a section-by-section study guide.
+    const prompt = `You are an expert exam predictor and study plan designer. Given this course content, create a section-by-section study guide that highlights HIGH-YIELD topics most likely to appear on exams.
 
 COURSE: ${lesson.course_name}
 
@@ -75,7 +75,7 @@ ${contentForPrompt}
 ${curriculumContext}
 
 TASK: Create 3-5 study sections. Each section represents a major division from the material (lecture, chapter, unit, module, etc.). 
-For each section, suggest exactly 2 key topics with the best study format for each.
+For each section, suggest up to 6 high-yield topics with the best study format for each. Prioritize topics most likely to be tested on exams.
 
 RULES:
 1. Section titles MUST match the document's actual organizational structure (e.g., "Lecture 1: Introduction to Hinduism", "Chapter 3: Cell Division", "Unit 2: Thermodynamics")
@@ -86,7 +86,9 @@ RULES:
    - "Flashcards" — for terminology, definitions, key facts
    - "Practice Test" — for problem-solving, application topics
    - "Feynman Technique" — for complex concepts requiring deep understanding
-5. Return 3-5 sections total, each with exactly 2 suggested topics`;
+5. Return 3-5 sections total, each with 3-6 suggested topics (prioritize the most exam-relevant)
+6. For each topic, set high_yield to true if it is very likely to appear on an exam based on curriculum emphasis, common exam patterns, and how foundational the concept is. Mark at least 1-2 per section as high_yield.
+7. high_yield_reason should be a SHORT phrase explaining WHY it's high-yield (e.g., "Frequently tested definition", "Core framework for essay questions", "Common calculation problem")`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
@@ -114,9 +116,11 @@ RULES:
                           type: "object",
                           properties: {
                             topic_title: { type: "string" },
-                            format: { type: "string", enum: ["Review Notes", "Flashcards", "Practice Test", "Feynman Technique"] }
+                            format: { type: "string", enum: ["Review Notes", "Flashcards", "Practice Test", "Feynman Technique"] },
+                            high_yield: { type: "boolean" },
+                            high_yield_reason: { type: "string" }
                           },
-                          required: ["topic_title", "format"]
+                          required: ["topic_title", "format", "high_yield"]
                         }
                       }
                     },
@@ -147,10 +151,10 @@ RULES:
     const parsed = JSON.parse(text);
     const sections = parsed.sections || [];
 
-    // Ensure each section has exactly 2 topics
+    // Allow up to 6 topics per section
     const cleanedSections = sections.slice(0, 5).map(s => ({
       section_title: s.section_title,
-      suggested_topics: (s.suggested_topics || []).slice(0, 2)
+      suggested_topics: (s.suggested_topics || []).slice(0, 6)
     }));
 
     // Save to lesson

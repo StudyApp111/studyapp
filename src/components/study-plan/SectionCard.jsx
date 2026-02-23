@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronRight, ChevronDown, FolderOpen, BookOpen, Copy, Brain, Zap, FileText, Sparkles } from "lucide-react";
+import { ChevronRight, ChevronDown, FolderOpen, BookOpen, Copy, Brain, Zap, FileText, Sparkles, Flame } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -42,8 +42,13 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
             <p className={`font-bold text-base leading-tight truncate ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
               {section.section_title}
             </p>
-            <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              {topics.length} suggested topics
+            <p className={`text-xs mt-0.5 flex items-center gap-1.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              {topics.length} topics
+              {topics.some(t => t.high_yield) && (
+                <span className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                  <Flame className="w-3 h-3" />{topics.filter(t => t.high_yield).length} high-yield
+                </span>
+              )}
             </p>
           </div>
           {expanded 
@@ -74,17 +79,31 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
                         key={tIdx}
                         onClick={() => onTopicClick(section, topic)}
                         className={`w-full text-left flex items-center gap-3 p-3 rounded-xl transition-all group ${
-                          isDark 
-                            ? 'bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 hover:border-white/15'
-                            : 'bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200'
+                          topic.high_yield
+                            ? isDark 
+                              ? 'bg-amber-500/[0.08] hover:bg-amber-500/[0.15] border border-amber-500/20 hover:border-amber-500/40'
+                              : 'bg-amber-50 hover:bg-amber-100 border border-amber-200 hover:border-amber-300'
+                            : isDark 
+                              ? 'bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 hover:border-white/15'
+                              : 'bg-slate-50 hover:bg-slate-100 border border-slate-100 hover:border-slate-200'
                         }`}
                       >
                         <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${formatCfg.gradient} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                           <Icon className="w-4 h-4 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-semibold leading-tight truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                            {formatCfg.actionLabel}: {topic.topic_title}
+                          <div className="flex items-center gap-1.5">
+                            <p className={`text-sm font-semibold leading-tight truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                              {topic.topic_title}
+                            </p>
+                            {topic.high_yield && (
+                              <span className={`flex-shrink-0 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
+                                <Flame className="w-2.5 h-2.5" />HIGH YIELD
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-[11px] mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                            {formatCfg.actionLabel}{topic.high_yield_reason ? ` · ${topic.high_yield_reason}` : ''}
                           </p>
                         </div>
                         <ChevronRight className={`w-4 h-4 flex-shrink-0 transition-transform group-hover:translate-x-0.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`} />
