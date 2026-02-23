@@ -263,13 +263,15 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       // Update study plan
       if (!wasReviewed) {
         const totalReviewed = updatedCards.filter(c => c.review_count > 0).length;
-        await updateStudyPlanProgress('flashcards', totalReviewed);
+        const taskJustCompleted = await updateStudyPlanProgress('flashcards', totalReviewed);
         
-        // Trigger Polly after every flashcard review to keep grade prediction fresh
-        base44.functions.invoke('runPollyEngine', {
-          trigger_event: 'flashcard_reviewed',
-          lesson_id: lesson.id
-        }).catch(err => console.warn('Polly trigger failed:', err.message));
+        // Trigger Polly after flashcard task completion
+        if (taskJustCompleted) {
+          base44.functions.invoke('runPollyEngine', {
+            trigger_event: 'flashcard_task_completed',
+            lesson_id: lesson.id
+          }).catch(err => console.warn('Polly trigger failed:', err.message));
+        }
       }
       
       // Milestone celebrations removed - were blocking UI
