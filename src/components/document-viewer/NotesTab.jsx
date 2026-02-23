@@ -110,8 +110,10 @@ export default function NotesTab({ lesson }) {
           });
           if (studyPlans.length > 0) {
             const plan = studyPlans[0];
+            let markedOne = false;
             const updatedTasks = plan.tasks?.map(task => {
-              if (task.task_type === 'review_notes' && !task.completed) {
+              if (task.task_type === 'review_notes' && !task.completed && !markedOne) {
+                markedOne = true;
                 return {
                   ...task,
                   completed_count: (task.completed_count || 0) + 1,
