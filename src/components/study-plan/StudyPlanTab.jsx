@@ -564,13 +564,22 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       {/* Section-based Study Guide */}
       {topicSuggestions.length > 0 && (
         <div className="px-3 md:px-4 space-y-3">
-          <div className="px-1 space-y-1">
-            <p className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-              Your Study Guide
-            </p>
-            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Complete tasks in order — each one updates your predicted grade in real-time
-            </p>
+          <div className="px-1 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
+                Your Study Guide
+              </p>
+              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                {selectedTopicTitles ? `${filteredSuggestions.length} of ${topicSuggestions.length} sections` : 'Complete tasks in order'}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowTopicSelection(true)}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${isDark ? 'text-purple-400 bg-purple-500/10 hover:bg-purple-500/20' : 'text-purple-600 bg-purple-50 hover:bg-purple-100'}`}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              Filter Topics
+            </button>
           </div>
           {displayedSections.map((section, idx) => (
             <SectionCard
