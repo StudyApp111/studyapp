@@ -106,11 +106,7 @@ export default function StepSignIn({ onSignIn, onGuestStart }) {
                   <button
                     onClick={handleGuestStart}
                     disabled={guestLoading}
-                    className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all border ${
-                      isDark
-                        ? "bg-white/5 hover:bg-white/10 text-white border-white/10"
-                        : "bg-white hover:bg-slate-50 text-slate-900 border-slate-200 shadow-sm"
-                    } disabled:opacity-50`}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50"
                   >
                     {guestLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
