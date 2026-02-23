@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { 
-  Target, CheckCircle2, BookOpen, Zap, Brain, 
+  Target, BookOpen, Zap, Brain, 
   Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock, Copy, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
