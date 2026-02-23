@@ -58,12 +58,12 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
       {/* Sets Grid */}
       <div className="space-y-2 w-full max-w-full" style={{ boxSizing: 'border-box' }}>
         {sets.map((set, idx) => {
-          const isCompleted = set.mastered === set.cards.length;
-          const progress = (set.mastered / set.cards.length) * 100;
+          const isCompleted = set.mastered === set.cards.length && set.cards.length > 0;
+          const progress = set.cards.length > 0 ? (set.mastered / set.cards.length) * 100 : 0;
           
           return (
             <motion.button
-              key={set.topic}
+              key={`set-${idx}`}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
@@ -87,7 +87,7 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
                 
                 <div className="flex-1 min-w-0">
                   <h3 className={`font-semibold text-sm truncate ${isCompleted ? 'text-white' : (isDark ? 'text-white' : 'text-slate-900')}`}>
-                    {set.topic}
+                    {set.label} ({set.cards.length} cards)
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
                     <div className={`flex-1 h-1.5 rounded-full overflow-hidden max-w-[100px] ${isCompleted ? 'bg-white/30' : (isDark ? 'bg-white/10' : 'bg-amber-100')}`}>
@@ -97,7 +97,7 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
                       />
                     </div>
                     <span className={`text-[10px] font-medium ${isCompleted ? 'text-white/80' : (isDark ? 'text-slate-400' : 'text-slate-500')}`}>
-                      {set.mastered}/{set.cards.length}
+                      {set.mastered}/{set.cards.length} mastered
                     </span>
                   </div>
                 </div>
