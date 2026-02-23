@@ -136,12 +136,19 @@ export default function DocumentViewer() {
     const tabParam = urlParams.get('tab');
     if (tabParam) {
       setActiveTab(tabParam);
-    } else if (hasDocument) {
-      setActiveTab("doc");
-    } else {
-      setActiveTab("studyplan");
     }
   }, [location.search]);
+
+  // When lesson loads, default to doc tab if document exists and no tab was specified
+  useEffect(() => {
+    if (!lesson) return;
+    const urlParams = new URLSearchParams(location.search);
+    const tabParam = urlParams.get('tab');
+    if (!tabParam) {
+      const lessonHasDoc = lesson.file_url || lesson.file_urls?.length > 0;
+      setActiveTab(lessonHasDoc ? "doc" : "studyplan");
+    }
+  }, [lesson?.id]);
 
   // Track SubmitApplication when user views their FIRST lesson
   useEffect(() => {
