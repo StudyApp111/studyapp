@@ -1711,7 +1711,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
               ) : (
                 <Button
                   onClick={handleNext}
-                  disabled={!canProceed}
                   className="flex-1 bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white text-xs h-10 rounded-xl font-medium"
                 >
                   Next Question
