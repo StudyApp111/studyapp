@@ -62,7 +62,7 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
       
       setMessages([{
         role: "assistant",
-        content: `👋 Hi! I'm Polly, your AI study assistant for **${courseName}**.${pollyInsight}\n\nI can help you:\n• Summarize key concepts\n• Quiz you on the material\n• Explain confusing topics\n• Check your progress`
+        content: `👋 Hi! I'm **Polly**, your AI study assistant for **${courseName}**.${pollyInsight}\n\n**Here's how StudyApp works:**\n1. 📝 **Take the Diagnostic** (5 min) — I'll predict your grade and find your weak spots\n2. 📊 **Get your Study Plan** — personalized tasks based on your results\n3. 🧠 **Study with AI tools** — Flashcards, Feynman cards, Practice quizzes, AI-generated Notes, and Voice Lectures\n\nStart by taking the **Diagnostic** in the Practice tab — it's okay if you don't know the answers yet!\n\nI'm always here to explain concepts, quiz you, or help you study. Just ask! 🎓`
       }]);
     };
     loadChatHistory();
