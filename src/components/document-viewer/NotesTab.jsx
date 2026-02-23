@@ -44,11 +44,16 @@ export default function NotesTab({ lesson }) {
     }
   }, [lesson?.id, notesLoaded]);
 
+  const [allNotes, setAllNotes] = useState([]);
+  const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
+  
   const loadNotes = async () => {
     try {
-      const notes = await base44.entities.LessonNote.filter({ lesson_id: lesson.id }, '-created_date', 1);
+      const notes = await base44.entities.LessonNote.filter({ lesson_id: lesson.id }, '-created_date', 50);
       if (notes && notes.length > 0) {
+        setAllNotes(notes);
         setNote(notes[0]);
+        setCurrentNoteIndex(0);
         setSettings({
           noteType: notes[0].note_type,
           customInstructions: notes[0].custom_instructions || ""
