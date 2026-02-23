@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ChevronDown, ChevronUp, Play, Sparkles, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +9,7 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   const { isDark } = useTheme();
   const [expanded, setExpanded] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [liveReady, setLiveReady] = useState(diagnosticReady);
 
   const topics = lesson?.topics || [];
   const dismissKey = `topic_banner_dismissed_${lesson?.id}`;
@@ -16,6 +18,22 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   useEffect(() => {
     if (lesson?.id && localStorage.getItem(dismissKey)) setDismissed(true);
   }, [lesson?.id]);
+
+  // Sync prop
+  useEffect(() => {
+    if (diagnosticReady) setLiveReady(true);
+  }, [diagnosticReady]);
+
+  // Subscribe for instant exam readiness if not yet ready
+  useEffect(() => {
+    if (liveReady || !lesson?.id) return;
+    const unsubscribe = base44.entities.Exam.subscribe((event) => {
+      if (event.data?.lesson_id === lesson.id && event.data?.exam_number === 1 && event.data?.exam_type !== 'practice' && event.data?.questions?.length > 0) {
+        setLiveReady(true);
+      }
+    });
+    return () => unsubscribe();
+  }, [lesson?.id, liveReady]);
 
   // Don't show if no topics, already dismissed, or diagnostic already completed
   if (topics.length === 0 || dismissed || diagnosticCompleted) return null;
