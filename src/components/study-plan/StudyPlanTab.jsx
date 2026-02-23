@@ -318,9 +318,33 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     return () => clearInterval(interval);
   }, [isGeneratingPlan]);
 
+  // Filter topic suggestions by selected topics
+  const filteredSuggestions = React.useMemo(() => {
+    if (!selectedTopicTitles || selectedTopicTitles.length === 0) return topicSuggestions;
+    const selectedSet = new Set(selectedTopicTitles);
+    return topicSuggestions
+      .map(section => {
+        // Keep section if its title is selected
+        if (!selectedSet.has(section.section_title)) {
+          // Check if any suggested topics match
+          const filteredTopics = (section.suggested_topics || []).filter(t => selectedSet.has(t.topic_title));
+          if (filteredTopics.length === 0) return null;
+          return { ...section, suggested_topics: filteredTopics };
+        }
+        return section;
+      })
+      .filter(Boolean);
+  }, [topicSuggestions, selectedTopicTitles]);
+
+  const handleTopicSelectionConfirm = (selected) => {
+    setSelectedTopicTitles(selected);
+    // Reload lesson to reflect changes
+    window.dispatchEvent(new Event('reloadLesson'));
+  };
+
   // Split sections: first 3 expanded, rest collapsed
-  const displayedSections = topicSuggestions.slice(0, 3);
-  const remainingSections = topicSuggestions.slice(3);
+  const displayedSections = filteredSuggestions.slice(0, 3);
+  const remainingSections = filteredSuggestions.slice(3);
 
   // ===== GENERATING STATE =====
   if (isGeneratingPlan) {
