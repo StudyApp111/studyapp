@@ -14,7 +14,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { lesson_id } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (parseErr) {
+      return Response.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+    
+    const { lesson_id } = body;
     if (!lesson_id) {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
     }
