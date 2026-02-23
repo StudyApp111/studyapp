@@ -83,6 +83,45 @@ export default function AITutorSheet() {
     return () => window.removeEventListener('pollyDiagnosticComplete', handleDiagnosticComplete);
   }, []);
 
+  // Listen for proactive "stuck" nudges on mobile
+  useEffect(() => {
+    const handleStuckNudge = (e) => {
+      const isMobile = window.innerWidth < 768;
+      if (!isMobile) return;
+      // Don't interrupt if already open
+      if (isOpen) return;
+
+      const { question_text, topic, nudge_type } = e.detail || {};
+      
+      let message = '';
+      if (nudge_type === 'exam_stuck') {
+        message = `👋 Hey! I noticed you've been thinking about this one for a while — that's totally okay!\n\n`;
+        if (question_text) {
+          message += `Would you like me to:\n- **Break down** the question step by step\n- Give you a **hint** without the answer\n- Explain the **concept** behind it\n\nJust ask! No judgment here 😊`;
+        } else {
+          message += `Need a hint or want me to explain the concept? I'm here to help! 💡`;
+        }
+      } else if (nudge_type === 'flashcard_stuck') {
+        message = `👋 Struggling with this flashcard? I can explain the concept in simpler terms or give you a memory trick. Just ask! 🧠`;
+      } else {
+        message = `👋 Need some help? I noticed you might be stuck. Want me to explain this differently or give you a hint? 💡`;
+      }
+
+      setMessages([]);
+      setIsOpen(true);
+      setTimeout(() => {
+        setMessages([{ role: "assistant", content: message }]);
+        // Set context so follow-up messages have lesson info
+        if (e.detail?.lesson) {
+          setContext({ type: "question", lesson: e.detail.lesson, question: { text: question_text } });
+        }
+      }, 200);
+    };
+
+    window.addEventListener('pollyStuckNudge', handleStuckNudge);
+    return () => window.removeEventListener('pollyStuckNudge', handleStuckNudge);
+  }, [isOpen]);
+
   const handleSend = async (customMessage) => {
     const messageToSend = customMessage || input.trim();
     if (!messageToSend || isLoading) return;
