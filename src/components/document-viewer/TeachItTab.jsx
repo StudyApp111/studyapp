@@ -118,7 +118,8 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
         contentDescription = lesson.description || "N/A";
       }
 
-      const topicsToFocus = customOptions?.topics?.length > 0 ? customOptions.topics : (focusTopics || studyPlanTopics);
+      const studyTaskTopics = pendingStudyTaskRef.current?.focus_topics;
+      const topicsToFocus = customOptions?.topics?.length > 0 ? customOptions.topics : (studyTaskTopics || focusTopics || studyPlanTopics);
       const cardCount = customOptions?.amount || 5;
       const difficultyPref = customOptions?.difficulty || 'mixed';
       const customInstructions = customOptions?.custom_instructions || '';

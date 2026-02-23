@@ -117,7 +117,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         contentForFlashcards = contentForFlashcards.substring(0, 50000) + "\n...[content truncated]";
       }
       
-      const topicsToFocus = customOptions?.topics?.length > 0 ? customOptions.topics : (focusTopics || studyPlanTopics);
+      const studyTaskTopics = pendingStudyTaskRef.current?.focus_topics;
+      const topicsToFocus = customOptions?.topics?.length > 0 ? customOptions.topics : (studyTaskTopics || focusTopics || studyPlanTopics);
       
       const { data: response } = await base44.functions.invoke('generateFlashcards', {
         course_name: lesson.course_name,
