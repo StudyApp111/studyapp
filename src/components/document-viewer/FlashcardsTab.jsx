@@ -124,7 +124,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         course_name: lesson.course_name,
         content: contentForFlashcards,
         focus_topics: topicsToFocus || [],
-        amount: customOptions?.amount || 10,
+        amount: Math.min(customOptions?.amount || 10, 10),
         difficulty: customOptions?.difficulty || 'mixed',
         custom_instructions: customOptions?.custom_instructions || ''
       });
