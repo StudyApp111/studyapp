@@ -10,6 +10,30 @@ import { base44 } from '@/api/base44Client';
 import { useSubscription } from './SubscriptionContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
 
+// Contextual messaging based on trigger reason
+const PAYWALL_MESSAGES = {
+  default: {
+    headline: "Try Pro Free for 7 Days",
+    subtext: "No charge today · Cancel anytime"
+  },
+  uploads: {
+    headline: "Ready for your next course?",
+    subtext: "Upgrade to Pro for unlimited lesson creation"
+  },
+  tasks: {
+    headline: "You've seen the power!",
+    subtext: "Unlock your full study plan, unlimited lessons, and advanced AI feedback"
+  },
+  ai_message: {
+    headline: "Want deeper insights?",
+    subtext: "Unlock advanced AI analytics and unlimited study tools"
+  },
+  diagnostic_complete: {
+    headline: "Your predicted grade is ready!",
+    subtext: "Unlock unlimited study tools to improve your grade"
+  }
+};
+
 export default function UpgradeModal({ open, onOpenChange, reason = 'default' }) {
   const { refreshUser } = useSubscription();
   const { isDark } = useTheme();
@@ -24,6 +48,8 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
   const monthlyPrice = 6.99;
   const yearlyPrice = 4.99;
   const yearlySavings = 29;
+
+  const msg = PAYWALL_MESSAGES[reason] || PAYWALL_MESSAGES.default;
 
   const handleStartTrial = async () => {
     setCheckoutLoading(true);
@@ -97,11 +123,11 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
           </button>
 
           <div className="p-5 pb-4 text-center">
-            {/* Main headline — 7-day free trial */}
+            {/* Contextual headline */}
             <h2 className="text-2xl font-black text-white mb-1 leading-tight">
-              Try Pro Free for 7 Days
+              {msg.headline}
             </h2>
-            <p className="text-purple-300 text-xs mb-4">No charge today · Cancel anytime</p>
+            <p className="text-purple-300 text-xs mb-4">{msg.subtext}</p>
 
             {/* Pricing info */}
             <div className="mb-3">
