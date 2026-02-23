@@ -469,15 +469,23 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           setIsGenerating(true);
 
           // Poll for questions to appear (autoGenerateExam1 is running)
+          // Use exponential backoff to avoid 429 rate limits
           const pollForQuestions = async () => {
-            for (let i = 0; i < 30; i++) { // Max 30 seconds
-              await new Promise(r => setTimeout(r, 1000));
-              const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
-              if (refreshed[0]?.questions?.length > 0) {
-                console.log('✅ Questions appeared after polling');
-                setExam(refreshed[0]);
-                setIsGenerating(false);
-                return;
+            for (let i = 0; i < 15; i++) {
+              const delay = Math.min(2000 * Math.pow(1.3, i), 6000); // Start at 2s, grow to max 6s
+              await new Promise(r => setTimeout(r, delay));
+              try {
+                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+                if (refreshed[0]?.questions?.length > 0) {
+                  console.log('✅ Questions appeared after polling');
+                  setExam(refreshed[0]);
+                  setIsGenerating(false);
+                  return;
+                }
+              } catch (pollErr) {
+                console.warn('Exam poll error:', pollErr.message);
+                // On rate limit, wait longer before next attempt
+                await new Promise(r => setTimeout(r, 3000));
               }
             }
             // Timeout - something went wrong
@@ -509,18 +517,24 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         const isStale = secondsSinceUpdate > 90;
         
         if (!isStale) {
-          // Recently updated — poll briefly for generation to finish
+          // Recently updated — poll with exponential backoff to avoid rate limits
           console.log('⏳ Exam 1 record exists in DB, generation in progress — polling...');
           setIsGenerating(true);
           
-          for (let i = 0; i < 30; i++) {
-            await new Promise(r => setTimeout(r, 1000));
-            const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
-            if (refreshed[0]?.questions?.length > 0) {
-              console.log('✅ Questions appeared after DB polling');
-              setExam(refreshed[0]);
-              setIsGenerating(false);
-              return;
+          for (let i = 0; i < 15; i++) {
+            const delay = Math.min(2000 * Math.pow(1.3, i), 6000);
+            await new Promise(r => setTimeout(r, delay));
+            try {
+              const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
+              if (refreshed[0]?.questions?.length > 0) {
+                console.log('✅ Questions appeared after DB polling');
+                setExam(refreshed[0]);
+                setIsGenerating(false);
+                return;
+              }
+            } catch (pollErr) {
+              console.warn('Exam poll error:', pollErr.message);
+              await new Promise(r => setTimeout(r, 3000));
             }
           }
           // Polling timed out — fall through to trigger generation below
