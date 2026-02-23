@@ -1687,6 +1687,19 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-3">
               <Button
                 variant="outline"
+                onClick={() => {
+                  // "I don't know" — skip to next without answering
+                  handleAnswer("I don't know");
+                  if (!isLastQuestion) {
+                    setTimeout(() => handleNext(), 100);
+                  }
+                }}
+                className={`h-10 rounded-xl font-medium text-xs px-4 ${isDark ? 'text-slate-400 border-white/10 hover:bg-white/5' : 'text-slate-500 border-slate-200 hover:bg-slate-50'}`}
+              >
+                Skip
+              </Button>
+              <Button
+                variant="outline"
                 onClick={handlePrevious}
                 disabled={currentQuestion === 0}
                 className="flex-1 dark:text-white text-xs h-10 rounded-xl font-medium"
@@ -1696,7 +1709,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
               {isLastQuestion ? (
                 <Button
                   onClick={submitExam}
-                  disabled={!canProceed || isSubmitting}
+                  disabled={isSubmitting}
                   className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs h-10 rounded-xl font-medium"
                 >
                   {isSubmitting ? (
@@ -1718,10 +1731,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
                 </Button>
               )}
             </div>
-            {/* Low-key hint */}
-            <p className={`text-center text-[10px] px-4 pb-2.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              If you don't know the answer, give your best guess. This is how we design a custom study plan for you.
-            </p>
           </div>
         </div>
       </div>

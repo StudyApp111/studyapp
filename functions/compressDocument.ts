@@ -31,10 +31,9 @@ Deno.serve(async (req) => {
         }
         console.log('✅ API key found');
 
-        const MAX_CHUNK_SIZE = 40000; // ~10K tokens safe limit
-        const MAX_TOTAL_INPUT = 200000; // Cap total input to ~200K chars to prevent timeouts on huge documents
+        const MAX_TOTAL_INPUT = 200000; // Cap total input to ~200K chars
 
-        // For very large documents (180+ pages), sample strategically instead of processing everything
+        // For very large documents (180+ pages), sample strategically
         let workingContent = content;
         if (content.length > MAX_TOTAL_INPUT) {
             console.log(`⚠️ Very large document (${content.length} chars), sampling strategically...`);
@@ -81,7 +80,7 @@ ${topicInputContent}`;
             body: JSON.stringify({
                 contents: [{ parts: [{ text: topicPrompt }] }],
                 generationConfig: { 
-                    temperature: 0.3, 
+                    temperature: 0.1, 
                     maxOutputTokens: 4000,
                     responseMimeType: "application/json",
                     responseSchema: {
@@ -134,10 +133,11 @@ ${topicInputContent}`;
             return [];
         });
 
-        // ── PHASE 2: Compress document content (async, runs in parallel with Phase 1) ──
-        const compressChunk = async (chunkContent, isFinalPass = false) => {
-            const prompt = isFinalPass 
-                ? `You are a document compression engine. Consolidate this extracted information into a final summary.
+        // ── PHASE 2: Single-pass compression (no chunking — Gemini handles 124K input fine) ──
+        const compressionPromise = (async () => {
+            console.log('📤 Single-pass compression, input size:', workingContent.length);
+
+            const prompt = `You are a document compression engine. Extract and compress the key educational content from this document into a structured summary.
 
 OUTPUT (simple text only, EXACT headings):
 
@@ -161,65 +161,26 @@ RULES:
 - Total output MUST be ≤ 2000 characters.
 - No extra commentary.
 
-INPUT TO COMPRESS:
-${chunkContent}`
-                : `Extract key educational content from this text section. Be concise.
-
-Extract:
-1. KEY TERMS with definitions
-2. FORMULAS/METHODS/THEOREMS
-3. MAIN ARGUMENTS/THEMES
-4. EXAMPLES mentioned
-5. What's EMPHASIZED vs OPTIONAL
-
-Output concise bullet points only. No commentary.
-
-TEXT TO EXTRACT FROM:
-${chunkContent}`;
+DOCUMENT TO COMPRESS:
+${workingContent}`;
 
             const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.1, maxOutputTokens: isFinalPass ? 2500 : 1500 }
+                    generationConfig: { temperature: 0.1, maxOutputTokens: 2500 }
                 })
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('❌ Gemini chunk error:', errorText);
+                console.error('❌ Gemini compression error:', errorText);
                 throw new Error(`Gemini API error: ${response.status}`);
             }
 
             const data = await response.json();
             return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        };
-
-        const compressionPromise = (async () => {
-            if (workingContent.length <= MAX_CHUNK_SIZE) {
-                console.log('📤 Direct compression (small document)');
-                return await compressChunk(workingContent, true);
-            }
-            
-            console.log('📤 Chunked compression - document size:', workingContent.length);
-            const chunks = [];
-            for (let i = 0; i < workingContent.length; i += MAX_CHUNK_SIZE) {
-                chunks.push(workingContent.slice(i, i + MAX_CHUNK_SIZE));
-            }
-            console.log('📦 Split into', chunks.length, 'chunks');
-
-            // Process ALL chunks in parallel (no batching — Gemini handles concurrent requests fine)
-            console.log('📤 Processing all chunks in parallel...');
-            const chunkResults = await Promise.all(
-                chunks.map(chunk => compressChunk(chunk, false))
-            );
-
-            const mergedContent = chunkResults.filter(r => r).join('\n\n');
-            console.log('🔗 Merged extractions, length:', mergedContent.length);
-
-            console.log('📤 Final consolidation pass');
-            return await compressChunk(mergedContent, true);
         })();
 
         // Wait for BOTH phases to finish in parallel

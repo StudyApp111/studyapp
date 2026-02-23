@@ -33,7 +33,7 @@ export default function DocumentViewer() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState("studyplan");
+  const [activeTab, setActiveTab] = useState("doc");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -111,9 +111,10 @@ export default function DocumentViewer() {
     };
   };
   
-  // Exam tab: show dot if diagnostic not completed OR if practice_exam task pending
+  // Exam tab: show dot if diagnostic not completed OR if practice_exam task pending OR if diagnostic exam is ready but not started
   const practiceExamTask = getTaskStatus('practice_exam');
-  const showExamDot = !diagnosticCompleted || practiceExamTask.needsAction;
+  const diagnosticExamReady = (exams || []).some(e => e.exam_number === 1 && e.exam_type !== 'practice' && e.questions?.length > 0 && !e.completed);
+  const showExamDot = !diagnosticCompleted || practiceExamTask.needsAction || diagnosticExamReady;
   
   // Flashcards tab: show dot if flashcard task not completed in study plan
   const flashcardTask = getTaskStatus('flashcards');
@@ -123,9 +124,9 @@ export default function DocumentViewer() {
   const teachItTask = getTaskStatus('teach_it');
   const showTeachItDot = teachItTask.needsAction;
   
-  // Study Plan tab: show dot if plan exists but has incomplete tasks
+  // Study Plan tab: show dot if plan exists but has incomplete tasks, OR if diagnostic is ready (guiding user to take it)
   const hasIncompleteTasks = activePlan?.tasks?.some(t => !t.completed);
-  const showStudyPlanDot = activePlan && hasIncompleteTasks;
+  const showStudyPlanDot = (activePlan && hasIncompleteTasks) || diagnosticExamReady;
 
   // Track first lesson view (SubmitApplication)
   const hasTrackedFirstLesson = useRef(false);
@@ -133,8 +134,13 @@ export default function DocumentViewer() {
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab');
-    // Default to 'doc' for immediate content; URL param overrides
-    if (tabParam) setActiveTab(tabParam);
+    if (tabParam) {
+      setActiveTab(tabParam);
+    } else if (hasDocument) {
+      setActiveTab("doc");
+    } else {
+      setActiveTab("studyplan");
+    }
   }, [location.search]);
 
   // Track SubmitApplication when user views their FIRST lesson
