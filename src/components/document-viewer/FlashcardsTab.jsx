@@ -33,8 +33,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const [lastRating, setLastRating] = useState(null);
   const [showCustomize, setShowCustomize] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
-  const [setStartIndex, setSetStartIndex] = useState(0);
-  const [setEndIndex, setSetEndIndex] = useState(0);
+  const [currentSetStart, setCurrentSetStart] = useState(0);
+  const [currentSetEnd, setCurrentSetEnd] = useState(0);
 
   const isGeneratingRef = useRef(false);
   const pendingStudyTaskRef = useRef(null);
@@ -286,7 +286,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     setIsFlipped(false);
     setLastRating(null);
     setTimeout(() => {
-      if (currentIndex < setEndIndex) {
+      if (currentIndex < currentSetEnd) {
         setCurrentIndex(currentIndex + 1);
       } else {
         // Reached end of set — show session complete
@@ -352,13 +352,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const handlePrev = () => {
     setIsFlipped(false);
     setLastRating(null);
-    setCurrentIndex(prev => prev > setStartIndex ? prev - 1 : setEndIndex);
+    setCurrentIndex(prev => prev > currentSetStart ? prev - 1 : currentSetEnd);
   };
 
   const handleNext = () => {
     setIsFlipped(false);
     setLastRating(null);
-    setCurrentIndex(prev => prev < setEndIndex ? prev + 1 : setStartIndex);
+    setCurrentIndex(prev => prev < currentSetEnd ? prev + 1 : currentSetStart);
   };
 
   const handleRegenerate = async () => {
@@ -408,8 +408,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         onSelectSet={(idx) => {
           const bounds = findSetBounds(idx);
           setCurrentIndex(idx);
-          setSetStartIndex(bounds.start);
-          setSetEndIndex(bounds.end);
+          setCurrentSetStart(bounds.start);
+          setCurrentSetEnd(bounds.end);
           setIsFlipped(false);
           setShowSetsList(false);
           setSessionComplete(false);
@@ -551,10 +551,10 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   // Session complete screen
   if (sessionComplete && cards) {
-    const setCards = cards.slice(setStartIndex, setEndIndex + 1);
-    const masteredInSet = setCards.filter(c => c.mastered).length;
-    const needsReview = setCards.filter(c => !c.mastered).length;
-    const totalInSet = setCards.length;
+    const currentSetCards = cards.slice(currentSetStart, currentSetEnd + 1);
+    const masteredInSet = currentSetCards.filter(c => c.mastered).length;
+    const needsReview = currentSetCards.filter(c => !c.mastered).length;
+    const totalInSet = currentSetCards.length;
     
     return (
       <div className={`space-y-4 px-3 py-6 pb-8 w-full max-w-full md:max-w-lg mx-auto ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
@@ -587,7 +587,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
                 </p>
                 <Button
                   onClick={() => {
-                    setCurrentIndex(setStartIndex);
+                    setCurrentIndex(currentSetStart);
                     setIsFlipped(false);
                     setSessionComplete(false);
                     setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
@@ -629,8 +629,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   }
 
   const currentCard = cards[currentIndex];
-  const setSize = setEndIndex - setStartIndex + 1;
-  const positionInSet = currentIndex - setStartIndex;
+  const setSize = currentSetEnd - currentSetStart + 1;
+  const positionInSet = currentIndex - currentSetStart;
   const totalReviewed = sessionStats.total;
   const sessionProgress = totalReviewed > 0 ? ((sessionStats.good + sessionStats.excellent) / totalReviewed) * 100 : 0;
   
