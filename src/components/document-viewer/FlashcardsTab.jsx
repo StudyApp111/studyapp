@@ -411,11 +411,16 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     return (
       <FlashcardSetsList 
         cards={cards}
-        onSelectSet={(idx) => {
-          const bounds = findSetBounds(idx);
-          setCurrentIndex(idx);
-          setCurrentSetStart(bounds.start);
-          setCurrentSetEnd(bounds.end);
+        onSelectSet={(cardIds) => {
+          // cardIds is the array of card IDs in this set
+          // Find the indices in our cards array that match these IDs
+          const idSet = new Set(cardIds);
+          const indices = cards.map((c, i) => idSet.has(c.id) ? i : -1).filter(i => i >= 0);
+          if (indices.length === 0) return;
+          
+          setCurrentIndex(indices[0]);
+          setCurrentSetStart(indices[0]);
+          setCurrentSetEnd(indices[indices.length - 1]);
           setIsFlipped(false);
           setShowSetsList(false);
           setSessionComplete(false);
