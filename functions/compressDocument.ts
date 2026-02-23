@@ -48,18 +48,15 @@ Deno.serve(async (req) => {
             console.log(`📐 Sampled down to ${workingContent.length} chars (from ${content.length})`);
         }
 
-        // ── PHASE 1: Extract structured topics from the document ──
-        console.log('📋 Phase 1: Extracting structured topics...');
-        
-        // Use up to 60K chars for topic detection to get good structural coverage
+        // ── Run Phase 1 (topic extraction) and Phase 2 (compression) in PARALLEL ──
+        console.log('🚀 Starting Phase 1 (topics) + Phase 2 (compression) in PARALLEL...');
+
+        // ── PHASE 1: Extract structured topics (async) ──
         const topicInputContent = workingContent.length > 60000 
             ? workingContent.substring(0, 30000) + "\n\n...[middle content omitted]...\n\n" + workingContent.substring(workingContent.length - 30000)
             : workingContent;
 
         const topicPrompt = `You are a document structure analyzer. Analyze this educational document and extract its organizational structure into topics.
-
-DOCUMENT CONTENT:
-${topicInputContent}
 
 INSTRUCTIONS:
 1. Identify the document's natural organizational structure: chapters, lectures, units, modules, sections, parts, classes, weeks, etc.
@@ -73,77 +70,74 @@ Return a JSON object with a "topics" array. Each topic has:
 - "title": The section/chapter/lecture name exactly as it appears
 - "description": 2-3 sentence summary of what this topic covers, including key concepts, terms, and ideas
 - "key_content": A detailed paragraph (4-6 sentences) capturing the essential information, definitions, formulas, arguments, or facts from this section — enough for question generation
-- "subtopics": Optional array of child topic objects (same structure, without further nesting)`;
+- "subtopics": Optional array of child topic objects (same structure, without further nesting)
 
-        let topics = [];
-        try {
-            const topicResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: topicPrompt }] }],
-                    generationConfig: { 
-                        temperature: 0.1, 
-                        maxOutputTokens: 4000,
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "object",
-                            properties: {
-                                topics: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            title: { type: "string" },
-                                            description: { type: "string" },
-                                            key_content: { type: "string" },
-                                            subtopics: {
-                                                type: "array",
-                                                items: {
-                                                    type: "object",
-                                                    properties: {
-                                                        title: { type: "string" },
-                                                        description: { type: "string" },
-                                                        key_content: { type: "string" }
-                                                    },
-                                                    required: ["title", "description"]
-                                                }
+DOCUMENT CONTENT:
+${topicInputContent}`;
+
+        const topicPromise = fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: topicPrompt }] }],
+                generationConfig: { 
+                    temperature: 0.1, 
+                    maxOutputTokens: 4000,
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "object",
+                        properties: {
+                            topics: {
+                                type: "array",
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        title: { type: "string" },
+                                        description: { type: "string" },
+                                        key_content: { type: "string" },
+                                        subtopics: {
+                                            type: "array",
+                                            items: {
+                                                type: "object",
+                                                properties: {
+                                                    title: { type: "string" },
+                                                    description: { type: "string" },
+                                                    key_content: { type: "string" }
+                                                },
+                                                required: ["title", "description"]
                                             }
-                                        },
-                                        required: ["title", "description"]
-                                    }
+                                        }
+                                    },
+                                    required: ["title", "description"]
                                 }
-                            },
-                            required: ["topics"]
-                        }
+                            }
+                        },
+                        required: ["topics"]
                     }
-                })
-            });
-
+                }
+            })
+        }).then(async (topicResponse) => {
             if (topicResponse.ok) {
                 const topicData = await topicResponse.json();
                 const topicText = topicData.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (topicText) {
                     const parsed = JSON.parse(topicText);
-                    topics = parsed.topics || [];
-                    console.log('✅ Extracted', topics.length, 'topics');
+                    console.log('✅ Phase 1: Extracted', (parsed.topics || []).length, 'topics');
+                    return parsed.topics || [];
                 }
             } else {
                 console.warn('⚠️ Topic extraction failed:', topicResponse.status);
             }
-        } catch (topicErr) {
+            return [];
+        }).catch((topicErr) => {
             console.warn('⚠️ Topic extraction error:', topicErr.message);
-        }
+            return [];
+        });
 
-        // ── PHASE 2: Compress document content (existing logic) ──
-        console.log('📦 Phase 2: Compressing document content...');
-
+        // ── PHASE 2: Compress document content (async, runs in parallel with Phase 1) ──
         const compressChunk = async (chunkContent, isFinalPass = false) => {
             const prompt = isFinalPass 
                 ? `You are a document compression engine. Consolidate this extracted information into a final summary.
-
-Input:
-${chunkContent}
 
 OUTPUT (simple text only, EXACT headings):
 
@@ -165,11 +159,11 @@ Optional: items marked optional
 
 RULES:
 - Total output MUST be ≤ 2000 characters.
-- No extra commentary.`
-                : `Extract key educational content from this text section. Be concise.
+- No extra commentary.
 
-Input:
-${chunkContent}
+INPUT TO COMPRESS:
+${chunkContent}`
+                : `Extract key educational content from this text section. Be concise.
 
 Extract:
 1. KEY TERMS with definitions
@@ -178,7 +172,10 @@ Extract:
 4. EXAMPLES mentioned
 5. What's EMPHASIZED vs OPTIONAL
 
-Output concise bullet points only. No commentary.`;
+Output concise bullet points only. No commentary.
+
+TEXT TO EXTRACT FROM:
+${chunkContent}`;
 
             const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
                 method: 'POST',
@@ -199,42 +196,34 @@ Output concise bullet points only. No commentary.`;
             return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
         };
 
-        let compressedContent;
-
-        if (workingContent.length <= MAX_CHUNK_SIZE) {
-            console.log('📤 Direct compression (small document)');
-            compressedContent = await compressChunk(workingContent, true);
-        } else {
-            console.log('📤 Chunked compression - document size:', workingContent.length);
+        const compressionPromise = (async () => {
+            if (workingContent.length <= MAX_CHUNK_SIZE) {
+                console.log('📤 Direct compression (small document)');
+                return await compressChunk(workingContent, true);
+            }
             
-            // Split into chunks
+            console.log('📤 Chunked compression - document size:', workingContent.length);
             const chunks = [];
             for (let i = 0; i < workingContent.length; i += MAX_CHUNK_SIZE) {
                 chunks.push(workingContent.slice(i, i + MAX_CHUNK_SIZE));
             }
             console.log('📦 Split into', chunks.length, 'chunks');
 
-            // Process chunks in parallel (max 3 concurrent)
-            const chunkResults = [];
-            const batchSize = 3;
-            
-            for (let i = 0; i < chunks.length; i += batchSize) {
-                const batch = chunks.slice(i, i + batchSize);
-                console.log(`📤 Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(chunks.length/batchSize)}`);
-                
-                const batchResults = await Promise.all(
-                    batch.map(chunk => compressChunk(chunk, false))
-                );
-                chunkResults.push(...batchResults);
-            }
+            // Process ALL chunks in parallel (no batching — Gemini handles concurrent requests fine)
+            console.log('📤 Processing all chunks in parallel...');
+            const chunkResults = await Promise.all(
+                chunks.map(chunk => compressChunk(chunk, false))
+            );
 
-            // Merge and do final compression
             const mergedContent = chunkResults.filter(r => r).join('\n\n');
             console.log('🔗 Merged extractions, length:', mergedContent.length);
 
             console.log('📤 Final consolidation pass');
-            compressedContent = await compressChunk(mergedContent, true);
-        }
+            return await compressChunk(mergedContent, true);
+        })();
+
+        // Wait for BOTH phases to finish in parallel
+        const [topics, compressedContent] = await Promise.all([topicPromise, compressionPromise]);
 
         if (!compressedContent) {
             console.error('❌ No content in response');
