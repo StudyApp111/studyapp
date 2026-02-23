@@ -23,6 +23,7 @@ import XPGainToast from "@/components/gamification/XPGainToast";
 import MaterialUploadPrompt from "@/components/document-viewer/MaterialUploadPrompt";
 import DiagnosticLockOverlay from "@/components/document-viewer/DiagnosticLockOverlay";
 import TopicConfirmationBanner from "@/components/document-viewer/TopicConfirmationBanner";
+import PostDiagnosticPaywall from "@/components/document-viewer/PostDiagnosticPaywall";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
@@ -849,6 +850,9 @@ export default function DocumentViewer() {
           />
         )}
       </div>
+
+      {/* Post-Diagnostic Paywall for free users */}
+      {lesson?.id && <PostDiagnosticPaywall lessonId={lesson.id} />}
 
       {/* XP Gain Toast */}
       <XPGainToast 
