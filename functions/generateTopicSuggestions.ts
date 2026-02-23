@@ -125,7 +125,7 @@ RULES:
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 2000,
+            maxOutputTokens: 4000,
             responseMimeType: "application/json",
             responseSchema: {
               type: "object",
