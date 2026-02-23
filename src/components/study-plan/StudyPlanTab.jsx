@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { 
-  Target, BookOpen, Zap, Brain, 
+  Target, CheckCircle2, BookOpen, Zap, Brain, 
   Trophy, Play, ArrowRight, ChevronRight, Loader2, Sparkles, FileText, TrendingUp, AlertCircle, Plus, TrendingDown, Minus, Lightbulb, Clock, Copy, ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -517,10 +517,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         <div className="px-3 md:px-4 space-y-3">
           <div className="px-1 space-y-1">
             <p className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-              Your Study Guide
-            </p>
-            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Complete these and watch your predicted grade change
+              Your Study Guide: Complete these and watch your predicted grade change
             </p>
           </div>
           {displayedSections.map((section, idx) => (
