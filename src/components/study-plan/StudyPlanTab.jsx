@@ -288,8 +288,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const velocityConfig = getVelocityConfig(learningVelocity);
   const behavioralInsights = studyPlan?.behavioral_insights;
 
-  const completedTasks = studyPlan?.tasks?.filter(t => t.completed) || [];
-
   // Progress animation for generating state
   useEffect(() => {
     if (!isGeneratingPlan) { setGeneratingProgress(0); return; }
