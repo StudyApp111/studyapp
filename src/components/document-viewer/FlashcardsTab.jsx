@@ -92,11 +92,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     try {
       const existingCards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
       if (existingCards.length > 0) {
-        // Only load the most recent batch (cards created within 60s of the newest card)
-        const sorted = existingCards.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-        const newestTime = new Date(sorted[0].created_date).getTime();
-        const currentBatch = sorted.filter(c => Math.abs(new Date(c.created_date).getTime() - newestTime) < 60000);
-        setCards(currentBatch);
+        setCards(existingCards);
         setShowSetsList(true);
       }
     } catch (error) {
