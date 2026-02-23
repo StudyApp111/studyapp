@@ -10,15 +10,15 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   const [dismissed, setDismissed] = useState(false);
 
   const topics = lesson?.topics || [];
+  const dismissKey = `topic_banner_dismissed_${lesson?.id}`;
+
+  // Check localStorage for dismissal
+  useEffect(() => {
+    if (lesson?.id && localStorage.getItem(dismissKey)) setDismissed(true);
+  }, [lesson?.id]);
 
   // Don't show if no topics, already dismissed, or diagnostic already completed
   if (topics.length === 0 || dismissed || diagnosticCompleted) return null;
-
-  // Check localStorage for dismissal
-  const dismissKey = `topic_banner_dismissed_${lesson?.id}`;
-  useEffect(() => {
-    if (localStorage.getItem(dismissKey)) setDismissed(true);
-  }, [lesson?.id]);
 
   const handleDismiss = () => {
     localStorage.setItem(dismissKey, 'true');
