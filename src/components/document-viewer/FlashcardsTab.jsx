@@ -32,6 +32,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   // Celebration modal removed - was blocking UI
   const [lastRating, setLastRating] = useState(null);
   const [showCustomize, setShowCustomize] = useState(false);
+  const [sessionComplete, setSessionComplete] = useState(false);
+  const [setStartIndex, setSetStartIndex] = useState(0);
+  const [setEndIndex, setSetEndIndex] = useState(0);
 
   const isGeneratingRef = useRef(false);
   const pendingStudyTaskRef = useRef(null);
@@ -279,14 +282,15 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       console.error("Error updating flashcard:", error);
     }
 
-    // Move to next card
+    // Move to next card within the current set, or show completion
     setIsFlipped(false);
     setLastRating(null);
     setTimeout(() => {
-      if (currentIndex < cards.length - 1) {
+      if (currentIndex < setEndIndex) {
         setCurrentIndex(currentIndex + 1);
       } else {
-        setCurrentIndex(0);
+        // Reached end of set — show session complete
+        setSessionComplete(true);
       }
     }, 400);
   };
@@ -348,13 +352,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const handlePrev = () => {
     setIsFlipped(false);
     setLastRating(null);
-    setCurrentIndex(prev => prev > 0 ? prev - 1 : cards.length - 1);
+    setCurrentIndex(prev => prev > setStartIndex ? prev - 1 : setEndIndex);
   };
 
   const handleNext = () => {
     setIsFlipped(false);
     setLastRating(null);
-    setCurrentIndex(prev => prev < cards.length - 1 ? prev + 1 : 0);
+    setCurrentIndex(prev => prev < setEndIndex ? prev + 1 : setStartIndex);
   };
 
   const handleRegenerate = async () => {
@@ -365,16 +369,51 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     await handleGenerate();
   };
 
+  // Reload cards from DB when returning to sets list to get fresh mastered status
+  const handleBackToSets = async () => {
+    setShowSetsList(true);
+    setSessionComplete(false);
+    if (lesson?.id) {
+      const freshCards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
+      if (freshCards.length > 0) setCards(freshCards);
+    }
+  };
+
+  // Determine current set boundaries
+  const findSetBounds = (idx) => {
+    if (!cards || cards.length === 0) return { start: 0, end: 0 };
+    const sorted = [...cards].map((c, i) => ({ ...c, origIdx: i })).sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    let setStart = 0;
+    let setEnd = 0;
+    let foundSet = false;
+    for (let i = 0; i < sorted.length; i++) {
+      if (i === 0 || new Date(sorted[i].created_date).getTime() - new Date(sorted[i-1].created_date).getTime() > 120000) {
+        if (foundSet) break;
+        setStart = i;
+      }
+      setEnd = i;
+      if (sorted[i].origIdx === idx) foundSet = true;
+    }
+    // Map back to original indices
+    const startOrigIdx = sorted[setStart].origIdx;
+    const endOrigIdx = sorted[setEnd].origIdx;
+    return { start: Math.min(startOrigIdx, endOrigIdx), end: Math.max(startOrigIdx, endOrigIdx) };
+  };
+
   // Show list view when cards exist and showSetsList is true
   if (cards && cards.length > 0 && showSetsList) {
     return (
       <FlashcardSetsList 
         cards={cards}
         onSelectSet={(idx) => {
+          const bounds = findSetBounds(idx);
           setCurrentIndex(idx);
+          setSetStartIndex(bounds.start);
+          setSetEndIndex(bounds.end);
           setIsFlipped(false);
           setShowSetsList(false);
-          setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 }); // Reset session on new start
+          setSessionComplete(false);
+          setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
         }}
         onGenerateNew={handleRegenerate}
       />
@@ -510,7 +549,88 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     );
   }
 
+  // Session complete screen
+  if (sessionComplete && cards) {
+    const setCards = cards.slice(setStartIndex, setEndIndex + 1);
+    const masteredInSet = setCards.filter(c => c.mastered).length;
+    const needsReview = setCards.filter(c => !c.mastered).length;
+    const totalInSet = setCards.length;
+    
+    return (
+      <div className={`space-y-4 px-3 py-6 pb-8 w-full max-w-full md:max-w-lg mx-auto ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-4">
+          <div className="text-5xl mb-2">{sessionStats.excellent + sessionStats.good > sessionStats.bad + sessionStats.okay ? '🎉' : '💪'}</div>
+          <h2 className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Set Complete!</h2>
+          
+          <div className={`rounded-2xl p-4 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div>
+                <div className={`text-2xl font-black ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{sessionStats.good + sessionStats.excellent}</div>
+                <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Got it</div>
+              </div>
+              <div>
+                <div className={`text-2xl font-black ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>{sessionStats.bad + sessionStats.okay}</div>
+                <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Needs review</div>
+              </div>
+            </div>
+          </div>
+
+          {/* What to do next */}
+          <div className={`rounded-2xl p-4 border text-left ${isDark ? 'bg-purple-500/10 border-purple-500/20' : 'bg-purple-50 border-purple-200'}`}>
+            <p className={`text-xs font-bold uppercase tracking-wide mb-2 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+              ✨ What's next?
+            </p>
+            {needsReview > 0 ? (
+              <div className="space-y-2">
+                <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                  You have <strong>{needsReview} card{needsReview !== 1 ? 's' : ''}</strong> that need more practice. Cards need at least 2 "Good" or "Excellent" ratings to be mastered.
+                </p>
+                <Button
+                  onClick={() => {
+                    setCurrentIndex(setStartIndex);
+                    setIsFlipped(false);
+                    setSessionComplete(false);
+                    setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Review This Set Again
+                </Button>
+              </div>
+            ) : (
+              <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                Amazing! All {totalInSet} cards mastered. Head back to your study plan for the next task.
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleBackToSets}
+              className="flex-1"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              All Sets
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleRegenerate}
+              className="flex-1"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              New Set
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   const currentCard = cards[currentIndex];
+  const setSize = setEndIndex - setStartIndex + 1;
+  const positionInSet = currentIndex - setStartIndex;
   const totalReviewed = sessionStats.total;
   const sessionProgress = totalReviewed > 0 ? ((sessionStats.good + sessionStats.excellent) / totalReviewed) * 100 : 0;
   
@@ -528,7 +648,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       {/* Header */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => setShowSetsList(true)}
+          onClick={handleBackToSets}
           className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors flex-shrink-0 ${isDark ? 'text-amber-400 bg-amber-500/20 hover:bg-amber-500/30' : 'text-amber-600 bg-amber-50 hover:bg-amber-100'}`}
         >
           <Copy className="w-3.5 h-3.5" />
@@ -541,7 +661,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           className="absolute left-1/2 -translate-x-1/2"
         >
           <span className={`text-sm font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-            Card {currentIndex + 1} of {cards.length}
+            Card {positionInSet + 1} of {setSize}
           </span>
         </motion.div>
         <button
@@ -556,13 +676,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs">
           <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Session Progress</span>
-          <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{totalReviewed} / {cards.length}</span>
+          <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{totalReviewed} / {setSize}</span>
         </div>
         <div className={`h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
           <motion.div 
             className={`h-full bg-gradient-to-r ${getProgressBarColor()} rounded-full`}
             initial={{ width: 0 }}
-            animate={{ width: `${(totalReviewed / cards.length) * 100}%` }}
+            animate={{ width: `${(totalReviewed / setSize) * 100}%` }}
             transition={{ duration: 0.5 }}
           />
         </div>
@@ -606,12 +726,20 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
               </Badge>
             </div>
             <div className="p-6 flex flex-col items-center justify-center min-h-[220px]">
-              <MathText className={`text-lg font-medium leading-relaxed text-center mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <MathText className={`text-lg font-medium leading-relaxed text-center mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {currentCard.question}
               </MathText>
-              <div className="text-center">
+              <div className="text-center space-y-2">
                 <p className={`text-xs mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Think of the answer, then...</p>
                 <p className={`text-sm font-semibold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Tap to reveal →</p>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <AskAIButton
+                    type="flashcard"
+                    data={{ question: currentCard.question, answer: currentCard.answer, topics: currentCard.topics }}
+                    lesson={lesson}
+                    size="sm"
+                  />
+                </div>
               </div>
             </div>
           </Card>
