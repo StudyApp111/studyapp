@@ -48,24 +48,34 @@ FORMATTING:
 - Separate major sections with ---
 
 CONTENT QUALITY — ABSOLUTE RULES (VIOLATIONS WILL RUIN THE OUTPUT):
-1. NEVER start any line or bullet with a colon. Every line MUST begin with a word — typically a bolded term.
-   FORBIDDEN: "- : The sacred texts..."
-   FORBIDDEN: ": Mental suffering occurs when..."
-   CORRECT:   "- **Shruti (What is Heard)**: The sacred texts believed to be divinely revealed."
-   CORRECT:   "- **Dukkha (Suffering)**: Mental suffering occurs when..."
-2. When defining a list of terms, ALWAYS write the term name in **bold** at the START of the bullet, followed by a colon, then the definition. NEVER omit the term name.
-3. A term and its definition MUST appear on the SAME bullet/line. Never split them across lines.
-4. NEVER leave a definition incomplete. Every term MUST have its full definition written out. If you mention a concept like "the Vedas" or "the caste system", you MUST fully name and define it — do not leave placeholders or empty parentheses.
-5. Do NOT use empty parentheses () or leave blanks for the reader to fill in. ALWAYS write the actual term/name/value.
-   FORBIDDEN: "found in the (meaning 'to know')"  
-   CORRECT: "found in the **Vedas** (meaning 'to know')"
-   FORBIDDEN: ": The priestly class"
-   CORRECT: "- **Brahmins**: The priestly class"
-6. Do NOT repeat the same concept in multiple sections. Each section adds new value.
-7. Write like a real professor explaining to a smart student — be precise, not vague.
-8. Include concrete examples, dates, formulas, or data points wherever possible.
-9. After every definition or concept, briefly explain WHY it matters or HOW it connects to other concepts.
-10. If the source material is thin on a topic, say what IS known rather than padding with filler.
+
+RULE #1 (MOST CRITICAL — READ THIS 3 TIMES):
+Every bullet point that defines a term MUST have the term name WRITTEN OUT IN BOLD before the colon.
+Scan EVERY bullet you generate. If the first visible character after "- " is a colon ":", YOU HAVE A BUG. FIX IT.
+
+EXAMPLES OF THE BUG (FORBIDDEN):
+  - : The oldest and most authoritative texts   ← WRONG (missing term name)
+  - : Sacred texts believed to be divinely revealed   ← WRONG
+  - : The four-fold division of society   ← WRONG
+
+CORRECT VERSIONS:
+  - **Vedas**: The oldest and most authoritative texts of Hinduism, derived from the Sanskrit root meaning "to know."
+  - **Shruti ("What is Heard")**: Sacred texts believed to be divinely revealed to ancient seers.
+  - **Varna System**: The four-fold division of society designed to distribute social duties.
+
+HOW TO FOLLOW THIS RULE:
+1. Read the source material to find the ACTUAL NAME of each concept.
+2. Write that name in **bold** at the START of the bullet.
+3. Add a colon after the bold term.
+4. Then write the definition.
+If the source uses phrases like "the oldest texts" without a name, YOU must identify the correct term (e.g., "Vedas") and include it.
+
+RULE #2: A term and its definition MUST appear on the SAME bullet/line. Never split them across lines.
+RULE #3: NEVER leave a definition incomplete. Every mentioned concept MUST be fully named and defined.
+RULE #4: Do NOT use empty parentheses () or leave blanks. ALWAYS write the actual term/name/value.
+RULE #5: Do NOT repeat the same concept in multiple sections. Each section adds new value.
+RULE #6: Write like a real professor — be precise, include examples, dates, formulas where possible.
+RULE #7: After every definition, briefly explain WHY it matters or HOW it connects to other concepts.
 
 CONTENT STRUCTURE:`;
 
