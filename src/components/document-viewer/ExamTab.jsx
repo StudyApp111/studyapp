@@ -195,6 +195,8 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
 
       const { task, focus_topics, target_competency, misconception_addressed } = e.detail;
       
+      console.log('🎯 Practice exam task details:', { title: task?.title, section: task?.section_title, topics: focus_topics });
+      
       // Check if we've already generated an exam for this specific task
       const taskId = task?.task_id;
       if (taskId && generatedTaskIdsRef.current.has(taskId)) {
