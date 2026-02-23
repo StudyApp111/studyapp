@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, ChevronDown, ChevronUp, Play, Sparkles, BookOpen } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Play, Sparkles, BookOpen, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import TopicSelectionModal from "@/components/study-plan/TopicSelectionModal";
 
 export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diagnosticReady, diagnosticCompleted }) {
   const { isDark } = useTheme();
   const [expanded, setExpanded] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [liveReady, setLiveReady] = useState(diagnosticReady);
+  const [showTopicSelection, setShowTopicSelection] = useState(false);
+  const [selectedCount, setSelectedCount] = useState(null);
 
   const topics = lesson?.topics || [];
   const dismissKey = `topic_banner_dismissed_${lesson?.id}`;
@@ -34,6 +37,13 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
     });
     return () => unsubscribe();
   }, [lesson?.id, liveReady]);
+
+  // Track selected topics count
+  useEffect(() => {
+    if (lesson?.selected_topics?.length > 0) {
+      setSelectedCount(lesson.selected_topics.length);
+    }
+  }, [lesson?.selected_topics]);
 
   // Don't show if no topics, already dismissed, or diagnostic already completed
   if (topics.length === 0 || dismissed || diagnosticCompleted) return null;
@@ -107,6 +117,13 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
         {/* CTA */}
         <div className={`px-4 py-3 border-t ${isDark ? 'border-emerald-500/10 bg-emerald-950/20' : 'border-emerald-100 bg-emerald-50/50'}`}>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowTopicSelection(true)}
+              className={`flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${isDark ? 'text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20' : 'text-emerald-600 bg-emerald-100 hover:bg-emerald-200'}`}
+            >
+              <Filter className="w-3 h-3" />
+              {selectedCount ? `${selectedCount} selected` : 'Filter'}
+            </button>
             <Button
               onClick={onGoToDiagnostic}
               disabled={!liveReady}
@@ -127,6 +144,15 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
           </div>
         </div>
       </div>
+      <TopicSelectionModal
+        open={showTopicSelection}
+        onOpenChange={setShowTopicSelection}
+        lesson={lesson}
+        onConfirm={(selected) => {
+          setSelectedCount(selected.length);
+          window.dispatchEvent(new Event('reloadLesson'));
+        }}
+      />
     </motion.div>
   );
 }
