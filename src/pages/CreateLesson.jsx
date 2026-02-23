@@ -93,13 +93,7 @@ export default function CreateLesson() {
         const uploadCheck = await canUpload();
         if (!uploadCheck.allowed) {
           setIsSubmitting(false);
-          if (uploadCheck.requiresPro) {
-            triggerUpgradeModal('tasks');
-          } else {
-            triggerUpgradeModal('uploads', {
-              message: `You've created ${uploadCheck.current} lessons today. Upgrade for unlimited lessons!`
-            });
-          }
+          triggerUpgradeModal('uploads');
           return;
         }
       }
