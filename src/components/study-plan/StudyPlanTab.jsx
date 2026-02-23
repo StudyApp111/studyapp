@@ -67,22 +67,26 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const ctaRef = useRef(null);
   const examPollRef = useRef(null);
 
-  // Poll for diagnostic exam readiness
+  // Subscribe to exam changes for instant diagnostic readiness detection
   useEffect(() => {
-    if (examPollRef.current) { clearInterval(examPollRef.current); examPollRef.current = null; }
-    if (lesson?.id && !isDiagnosticReady) {
-      examPollRef.current = setInterval(async () => {
-        try {
-          const freshExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
-          const diag = freshExams.find(e => e.exam_type !== 'practice');
-          if (diag?.questions?.length > 0) {
-            window.dispatchEvent(new Event('reloadLesson'));
-            clearInterval(examPollRef.current); examPollRef.current = null;
-          }
-        } catch (err) { console.warn('Exam poll error:', err); }
-      }, 3000);
-    }
-    return () => { if (examPollRef.current) { clearInterval(examPollRef.current); examPollRef.current = null; } };
+    if (!lesson?.id || isDiagnosticReady) return;
+    
+    const unsubscribe = base44.entities.Exam.subscribe((event) => {
+      if (event.data?.lesson_id === lesson.id && event.data?.exam_number === 1 && event.data?.exam_type !== 'practice') {
+        if (event.data?.questions?.length > 0) {
+          console.log('✅ Diagnostic exam ready via realtime subscription');
+          window.dispatchEvent(new Event('reloadLesson'));
+        }
+      }
+    });
+    
+    // Also do one initial check in case it was already created
+    base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 }).then(freshExams => {
+      const diag = freshExams.find(e => e.exam_type !== 'practice' && e.questions?.length > 0);
+      if (diag) window.dispatchEvent(new Event('reloadLesson'));
+    }).catch(() => {});
+    
+    return () => unsubscribe();
   }, [lesson?.id, isDiagnosticReady]);
 
   // Load study plan
