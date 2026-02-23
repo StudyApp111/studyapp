@@ -1206,6 +1206,16 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       const freshExams = await base44.entities.Exam.filter({ id: exam.id });
       const freshExam = freshExams[0] || { ...exam, completed: true, predicted_grade: aiGrade, total_score: aiScore, prediction_confidence: aiConfidence, ai_feedback: null };
       
+      // Send Polly message directing user to the study plan
+      window.dispatchEvent(new CustomEvent('pollyDiagnosticComplete', {
+        detail: {
+          predicted_grade: aiGrade,
+          total_score: aiScore,
+          confidence: aiConfidence,
+          mastery_gap: feedbackMasteryGap
+        }
+      }));
+
       setViewingCompletedExam(freshExam);
       setExam(null);
       setSelectedExamNumber(null);
