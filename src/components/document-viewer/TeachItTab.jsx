@@ -313,21 +313,12 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
   };
 
   const handleRegenerate = async () => {
-    if (confirm("Regenerate all cards? Current progress will be lost.")) {
-      const taskCheck = await canDoTask('teach_it');
-      if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
-      try {
-        await Promise.all(cards.map(card => base44.entities.TeachItCard.delete(card.id)));
-        setCards([]);
-        setCurrentCardIndex(0);
-        setUserAnswer("");
-        setShowFeedback(false);
-        setShowSetsList(false);
-        await generateCards();
-      } catch (error) {
-        console.error("Error regenerating cards:", error);
-      }
-    }
+    // Generate a new set without deleting existing sets
+    setCurrentCardIndex(0);
+    setUserAnswer("");
+    setShowFeedback(false);
+    setShowSetsList(false);
+    await generateCards();
   };
 
   const checkIfTaskCompleted = async (taskType, completedCount) => {
