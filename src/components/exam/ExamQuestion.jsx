@@ -96,8 +96,8 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
   const getOptionStyle = (optionText, optionIndex) => {
     if (!hasAnswered || !isObjective) {
       return selectedAnswer === optionText
-        ? isDark ? "border-purple-500 bg-purple-600/20" : "border-purple-500 bg-purple-50"
-        : isDark ? "border-white/10 hover:border-purple-500/30 bg-white/5" : "border-slate-200 hover:border-purple-300 bg-slate-50";
+        ? isDark ? "border-purple-500 bg-purple-500/20" : "border-purple-500 bg-purple-50"
+        : isDark ? "border-white/10 hover:border-purple-500/30 bg-white/[0.04]" : "border-slate-200 hover:border-purple-300 bg-slate-50";
     }
 
     const isThisCorrect = checkIsCorrect(optionText, question.correct_answer, optionIndex);
@@ -109,7 +109,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     if (isThisSelected && !isThisCorrect) {
       return isDark ? "border-red-400 bg-red-500/20" : "border-red-400 bg-red-50";
     }
-    return isDark ? "border-white/10 bg-white/5 opacity-60" : "border-slate-200 bg-slate-50 opacity-60";
+    return isDark ? "border-white/10 bg-white/[0.04] opacity-60" : "border-slate-200 bg-slate-50 opacity-60";
   };
 
   // Strip leading letter prefix like "A)", "B.", "C) " from option text
