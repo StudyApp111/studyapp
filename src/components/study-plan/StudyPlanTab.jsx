@@ -523,7 +523,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         <div className="px-3 md:px-4 space-y-3">
           <div className="px-1 space-y-1">
             <p className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-              Your Study Guide: Complete these and watch your predicted grade change
+              Your Study Guide
+            </p>
+            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Complete tasks in order — each one updates your predicted grade in real-time
             </p>
           </div>
           {displayedSections.map((section, idx) => (
