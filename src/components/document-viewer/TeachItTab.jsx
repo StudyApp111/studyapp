@@ -42,21 +42,18 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
 
   const studyTaskHandledRef = useRef(false);
   
+  const pendingStudyTaskRef = useRef(null);
+  
   useEffect(() => {
     const handleStudyTask = async (e) => {
       if (e.detail.taskType !== 'teach_it') return;
       if (studyTaskHandledRef.current || isGeneratingRef.current) return;
       studyTaskHandledRef.current = true;
+      pendingStudyTaskRef.current = e.detail.task;
       
       try {
-        const existingCards = await base44.entities.TeachItCard.filter({ lesson_id: lesson?.id });
-        if (!existingCards || existingCards.length === 0) {
-          generateCards();
-        } else {
-          setCards(existingCards);
-          const incompleteIndex = existingCards.findIndex(c => !c.completed);
-          setCurrentCardIndex(incompleteIndex >= 0 ? incompleteIndex : 0);
-        }
+        // Always generate new set when coming from study plan
+        generateCards();
       } finally {
         setTimeout(() => { studyTaskHandledRef.current = false; }, 2000);
       }
@@ -188,16 +185,21 @@ Return exactly ${cardCount} cards with question and model_answer fields, each ba
       const generatedCards = result?.cards || [];
       if (generatedCards.length === 0) throw new Error("No cards generated");
 
+      // Determine set label from study task or custom options
+      const setLabel = pendingStudyTaskRef.current?.title || customOptions?.title || null;
+      
       const savedCards = await Promise.all(
         generatedCards.map(card =>
           base44.entities.TeachItCard.create({
             lesson_id: lesson.id,
             question: card.question,
             model_answer: card.model_answer,
+            topic: setLabel || card.topic || 'General Concepts',
             completed: false
           })
         )
       );
+      pendingStudyTaskRef.current = null;
 
       // Reload all cards so sets list shows all sets including the new one
       const allCards = await base44.entities.TeachItCard.filter({ lesson_id: lesson.id });
