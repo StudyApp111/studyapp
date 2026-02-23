@@ -55,21 +55,28 @@ Deno.serve(async (req) => {
             ? workingContent.substring(0, 30000) + "\n\n...[middle content omitted]...\n\n" + workingContent.substring(workingContent.length - 30000)
             : workingContent;
 
-        const topicPrompt = `You are a document structure analyzer. Analyze this educational document and extract its organizational structure into topics.
+        const topicPrompt = `You are a document structure analyzer. Analyze this educational document and extract its hierarchical organizational structure.
 
-INSTRUCTIONS:
-1. Identify the document's natural organizational structure: chapters, lectures, units, modules, sections, parts, classes, weeks, etc.
-2. For each top-level section, extract sub-topics if they exist.
-3. Each topic needs a clear title and a detailed description (2-3 sentences) summarizing what that section covers — enough detail for an AI to generate flashcards, quiz questions, or study cards about it.
-4. Preserve the original naming convention (e.g., "Chapter 1:", "Lecture 2:", "Unit 3:", "Week 4:" etc.)
-5. If no clear structural divisions exist, extract 5-10 major conceptual topics from the content.
+STEP 1 — IDENTIFY THE TOP-LEVEL STRUCTURE:
+Look for the document's major divisions. These are typically marked by:
+- Numbered headings: "Lecture 1", "Chapter 1", "Unit 1", "Module 1", "Week 1", "Part 1", "Section 1", "Class 1", "Session 1", "Topic 1"
+- Roman numerals: "I.", "II.", "III."
+- Textbook chapters with titles
+- Slide deck separators or title slides
+- Bold/uppercase section headers
+- Any other clear top-level organizational pattern
 
-OUTPUT FORMAT:
-Return a JSON object with a "topics" array. Each topic has:
-- "title": The section/chapter/lecture name exactly as it appears
-- "description": 2-3 sentence summary of what this topic covers, including key concepts, terms, and ideas
-- "key_content": A detailed paragraph (4-6 sentences) capturing the essential information, definitions, formulas, arguments, or facts from this section — enough for question generation
-- "subtopics": Optional array of child topic objects (same structure, without further nesting)
+STEP 2 — EXTRACT SUBTOPICS WITHIN EACH TOP-LEVEL SECTION:
+For each major section identified above, find the specific topics, concepts, or sub-headings discussed WITHIN that section. These become subtopics.
+
+CRITICAL RULES:
+1. HIERARCHY IS MANDATORY: Every document has at least 2 levels. Top-level sections contain subtopics. NEVER output a flat list of topics with no subtopics — always nest specific concepts under their parent section.
+2. If the document has "Lecture 1" covering topics A, B, C and "Lecture 2" covering topics D, E, F — output 2 top-level items, each with their respective subtopics nested inside.
+3. Preserve the original naming exactly (e.g., "Lecture 1: Introduction to Hinduism", "Chapter 3: Cell Division").
+4. Each top-level section MUST have at least 2 subtopics. If a section seems to have only one concept, break it into finer-grained subtopics.
+5. If NO clear structural divisions exist (e.g., a single essay or notes dump), create 3-5 thematic sections yourself and nest specific concepts under each.
+6. Subtopics should be specific and actionable (e.g., "Karma and Dharma" not "Key Concepts").
+7. Each description should be 2-3 sentences with enough detail for an AI to generate study materials about it.
 
 DOCUMENT CONTENT:
 ${topicInputContent}`;
