@@ -81,7 +81,7 @@ ${topicInputContent}`;
             body: JSON.stringify({
                 contents: [{ parts: [{ text: topicPrompt }] }],
                 generationConfig: { 
-                    temperature: 0.1, 
+                    temperature: 0.3, 
                     maxOutputTokens: 4000,
                     responseMimeType: "application/json",
                     responseSchema: {
