@@ -381,7 +381,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
                 {isDiagnosticReady ? (<><Play className="w-5 h-5 mr-2" />Start Diagnostic — 5 min</>) : (<><Loader2 className="w-5 h-5 mr-2 animate-spin" />Preparing Your Quiz...</>)}
               </Button>
               <p className="text-[10px] text-purple-300/70 mt-2">
-                {isDiagnosticReady ? 'Free · 10 questions · Get your predicted grade' : 'Almost ready — generating your personalized questions'}
+                {isDiagnosticReady ? 'Free · 5 questions · Get your predicted grade' : 'Almost ready — generating your personalized questions'}
               </p>
             </div>
           </div>
