@@ -105,6 +105,30 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
     return () => window.removeEventListener('askAIFromContext', handleAskAI);
   }, [messages]);
 
+  // Listen for diagnostic completion to add Polly message directing to study plan
+  useEffect(() => {
+    const handleDiagnosticComplete = (event) => {
+      const { predicted_grade, total_score, mastery_gap } = event.detail || {};
+      
+      let gradeInfo = '';
+      if (predicted_grade && total_score) {
+        gradeInfo = `\n\n📊 **Your predicted grade: ${predicted_grade} (${total_score}%)**`;
+      }
+      let gapInfo = '';
+      if (mastery_gap) {
+        gapInfo = `\nYour biggest opportunity to improve: **${mastery_gap}**`;
+      }
+      
+      setMessages(prev => [...prev, {
+        role: "assistant",
+        content: `🎉 **Diagnostic complete!** Nice work.${gradeInfo}${gapInfo}\n\nI've built a **custom Study Plan** just for you — it targets your specific weak spots with flashcards, practice quizzes, and more.\n\n👉 **Head over to the Study Plan tab** to see your personalized roadmap and start improving! 📈`
+      }]);
+    };
+
+    window.addEventListener('pollyDiagnosticComplete', handleDiagnosticComplete);
+    return () => window.removeEventListener('pollyDiagnosticComplete', handleDiagnosticComplete);
+  }, []);
+
   const handleSend = async (customMessage) => {
     const messageToSend = customMessage || input.trim();
     if (!messageToSend || isLoading) return;
