@@ -95,7 +95,11 @@ export default function NotesTab({ lesson }) {
           content: data.content,
           custom_instructions: currentSettings.customInstructions
         });
+        // Reload all notes and show the new one
+        const freshNotes = await base44.entities.LessonNote.filter({ lesson_id: lesson.id }, '-created_date', 50);
+        setAllNotes(freshNotes);
         setNote(newNote);
+        setCurrentNoteIndex(0);
         toast.success(`${currentSettings.noteType} generated!`);
         
         // Mark review_notes task as complete in study plan
