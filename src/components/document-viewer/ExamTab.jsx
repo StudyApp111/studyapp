@@ -164,6 +164,20 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
     
     const handleStartDiagnostic = (e) => {
       const { examNumber } = e.detail;
+      // Check if we already have a completed diagnostic in exams prop — show results instead of regenerating
+      const existing = (exams || []).find(ex => ex.exam_number === examNumber && ex.exam_type !== 'practice');
+      if (existing?.completed) {
+        setViewingCompletedExam(existing);
+        return;
+      }
+      // If exam exists with questions but not completed, load it directly
+      if (existing?.questions?.length > 0) {
+        setExam(existing);
+        const firstUnanswered = existing.questions.findIndex(q => !q.user_answer?.trim());
+        setCurrentQuestion(firstUnanswered >= 0 ? firstUnanswered : 0);
+        hasAutoSelectedRef.current = true;
+        return;
+      }
       setViewingCompletedExam(null);
       setExam(null);
       setSelectedExamNumber(examNumber);
@@ -472,35 +486,35 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           return;
         } else {
           // Exam exists but no questions yet - autoGenerateExam1 is still processing
-          // Use realtime subscription instead of polling for instant detection
-          console.log('⏳ Exam 1 exists but questions not ready - subscribing for updates...');
+          // Show loading state and wait for it
+          console.log('⏳ Exam 1 exists but questions not ready - waiting for autoGenerateExam1...');
           setIsGenerating(true);
 
-          let resolved = false;
-          const unsubscribe = base44.entities.Exam.subscribe((event) => {
-            if (resolved) return;
-            if (event.id === loadedExam.id && event.data?.questions?.length > 0) {
-              resolved = true;
-              console.log('✅ Questions appeared via realtime subscription');
-              setExam(event.data);
-              setIsGenerating(false);
-              unsubscribe();
+          // Poll for questions to appear (autoGenerateExam1 is running)
+          // Use exponential backoff to avoid 429 rate limits
+          const pollForQuestions = async () => {
+            for (let i = 0; i < 15; i++) {
+              const delay = Math.min(2000 * Math.pow(1.3, i), 6000); // Start at 2s, grow to max 6s
+              await new Promise(r => setTimeout(r, delay));
+              try {
+                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+                if (refreshed[0]?.questions?.length > 0) {
+                  console.log('✅ Questions appeared after polling');
+                  setExam(refreshed[0]);
+                  setIsGenerating(false);
+                  return;
+                }
+              } catch (pollErr) {
+                console.warn('Exam poll error:', pollErr.message);
+                // On rate limit, wait longer before next attempt
+                await new Promise(r => setTimeout(r, 3000));
+              }
             }
-          });
-
-          // Fallback timeout after 60s
-          setTimeout(async () => {
-            if (resolved) return;
-            unsubscribe();
-            // One final DB check
-            const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
-            if (refreshed[0]?.questions?.length > 0) {
-              setExam(refreshed[0]);
-            } else {
-              console.error('Timeout waiting for exam questions');
-            }
+            // Timeout - something went wrong
+            console.error('Timeout waiting for exam questions');
             setIsGenerating(false);
-          }, 60000);
+          };
+          pollForQuestions();
           return;
         }
       }
@@ -525,37 +539,28 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         const isStale = secondsSinceUpdate > 90;
         
         if (!isStale) {
-          // Recently updated — subscribe for realtime updates
-          console.log('⏳ Exam 1 record exists in DB, generation in progress — subscribing...');
+          // Recently updated — poll with exponential backoff to avoid rate limits
+          console.log('⏳ Exam 1 record exists in DB, generation in progress — polling...');
           setIsGenerating(true);
           
-          let resolved = false;
-          const unsubscribe = base44.entities.Exam.subscribe((event) => {
-            if (resolved) return;
-            if (event.id === dbExam.id && event.data?.questions?.length > 0) {
-              resolved = true;
-              console.log('✅ Questions appeared via realtime subscription (DB path)');
-              setExam(event.data);
-              setIsGenerating(false);
-              unsubscribe();
+          for (let i = 0; i < 15; i++) {
+            const delay = Math.min(2000 * Math.pow(1.3, i), 6000);
+            await new Promise(r => setTimeout(r, delay));
+            try {
+              const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
+              if (refreshed[0]?.questions?.length > 0) {
+                console.log('✅ Questions appeared after DB polling');
+                setExam(refreshed[0]);
+                setIsGenerating(false);
+                return;
+              }
+            } catch (pollErr) {
+              console.warn('Exam poll error:', pollErr.message);
+              await new Promise(r => setTimeout(r, 3000));
             }
-          });
-
-          // Fallback timeout
-          setTimeout(async () => {
-            if (resolved) return;
-            unsubscribe();
-            const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
-            if (refreshed[0]?.questions?.length > 0) {
-              setExam(refreshed[0]);
-              setIsGenerating(false);
-              return;
-            }
-            // Fall through to trigger generation below
-            console.log('⚠️ Subscription timed out, will trigger autoGenerateExam1');
-            setIsGenerating(false);
-          }, 45000);
-          return;
+          }
+          // Polling timed out — fall through to trigger generation below
+          console.log('⚠️ Polling timed out, will trigger autoGenerateExam1');
         } else {
           console.log('⚠️ Stale exam record (no questions after ' + Math.round(secondsSinceUpdate) + 's), will regenerate');
         }
