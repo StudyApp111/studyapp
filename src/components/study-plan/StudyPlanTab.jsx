@@ -562,7 +562,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       )}
 
       {/* Section-based Study Guide */}
-      {topicSuggestions.length > 0 && (
+      {filteredSuggestions.length > 0 && (
         <div className="px-3 md:px-4 space-y-3">
           <div className="px-1 flex items-center justify-between">
             <div className="space-y-1">
