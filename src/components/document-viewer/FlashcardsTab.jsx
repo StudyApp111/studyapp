@@ -56,11 +56,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         console.log('🎯 Received flashcard generation request from study plan');
         pendingStudyTaskRef.current = e.detail.task;
         
-        if (cards && cards.length > 0) {
-          console.log('🎯 Cards already loaded, skipping generation');
-          return;
-        }
-        
+        // Always generate new set when coming from study plan (don't skip)
         if (!isGeneratingRef.current) {
           handleGenerate();
         }
@@ -140,13 +136,16 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         return;
       }
       
+      // Determine set label from study task or custom options
+      const setLabel = pendingStudyTaskRef.current?.title || customOptions?.title || null;
+      
       const savedCards = [];
       for (const card of generatedCards) {
         const saved = await base44.entities.Flashcard.create({
           lesson_id: lesson.id,
           question: card.question || "Question",
           answer: card.answer || "Answer",
-          topics: card.topics || [],
+          topics: setLabel ? [setLabel, ...(card.topics || [])] : (card.topics || []),
           difficulty: card.difficulty || "medium",
           status: "new",
           review_count: 0,

@@ -19,8 +19,10 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
     if (!currentSet || cardTime - currentSet.lastTime > 120000) {
       // New batch — start a new set
       const setNum = sets.length + 1;
+      // Try to derive a meaningful label from the first card's topics
+      const topicLabel = card.topics?.[0] || null;
       currentSet = { 
-        label: `Set ${setNum}`, 
+        label: topicLabel || `Set ${setNum}`,
         cardIds: [],
         cards: [], 
         mastered: 0, 

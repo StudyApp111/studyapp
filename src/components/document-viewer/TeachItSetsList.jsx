@@ -19,8 +19,9 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
     
     if (!currentSet || cardTime - currentSet.lastTime > 120000) {
       const setNum = sets.length + 1;
+      const topicLabel = card.topic || null;
       currentSet = { 
-        label: `Set ${setNum}`, 
+        label: topicLabel || `Set ${setNum}`, 
         cards: [], 
         mastered: 0,
         completed: 0,
