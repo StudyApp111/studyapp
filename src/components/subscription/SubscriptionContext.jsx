@@ -203,7 +203,8 @@ export function SubscriptionProvider({ children }) {
     const fieldMap = {
       flashcards: 'total_flashcard_sets',
       teach_it: 'total_teachit_sets',
-      practice_exam: 'total_practice_quizzes'
+      practice_exam: 'total_practice_quizzes',
+      review_notes: 'total_note_generations'
     };
     const field = fieldMap[taskType];
     if (!field) return { allowed: false, requiresPro: true };
@@ -281,7 +282,8 @@ export function SubscriptionProvider({ children }) {
       const fieldMap = {
         flashcards: 'total_flashcard_sets',
         teach_it: 'total_teachit_sets',
-        practice_exam: 'total_practice_quizzes'
+        practice_exam: 'total_practice_quizzes',
+        review_notes: 'total_note_generations'
       };
       const field = fieldMap[taskType];
       if (field) updates[field] = (freshUser[field] || 0) + 1;
