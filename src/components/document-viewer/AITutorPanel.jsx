@@ -62,7 +62,29 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
       
       setMessages([{
         role: "assistant",
-        content: `👋 Hey there! I'm **Polly**, your personal AI study assistant for **${courseName}**.${pollyInsight}\n\n🎯 **Your first step: Take the Diagnostic Quiz** (5 min)\nHead over to the **Practice** tab and complete the 10-question diagnostic. Don't worry if you don't know the answers — that's the whole point! I use your responses to **predict your grade** and pinpoint exactly where you need to focus.\n\n**Once you finish, here's what unlocks:**\n• 📊 A **custom Study Plan** built around your weak spots\n• 🃏 **AI Flashcards** that target what you need to memorize\n• 🧠 **Feynman Cards** to test if you *truly* understand concepts\n• 📝 **Practice Quizzes** with instant feedback\n• 📖 **Smart Notes** & **Voice Lectures** generated from your materials\n\nI'll be right here to explain anything, quiz you, or help you study. **Let's start with the diagnostic — tap the Practice tab!** 🚀`
+        content: `👋 Hey there! I'm **Polly**, your personal AI study assistant for **${courseName}**.${pollyInsight}
+
+---
+
+### 🎯 Your first step: Take the Diagnostic Quiz
+
+Head over to the **Practice** tab and complete the **5-question diagnostic**. Don't worry if you don't know the answers — that's the whole point!
+
+I use your responses to **predict your grade** and pinpoint exactly where you need to focus.
+
+---
+
+### ✨ Once you finish, here's what unlocks:
+
+- 📊 A **custom Study Plan** built around your weak spots
+- 🃏 **AI Flashcards** that target what you need to memorize
+- 🧠 **Feynman Cards** to test if you *truly* understand concepts
+- 📝 **Practice Quizzes** with instant feedback
+- 📖 **Smart Notes** & **Voice Lectures** generated from your materials
+
+---
+
+I'll be right here to explain anything, quiz you, or help you study. **Let's start with the diagnostic — tap the Practice tab!** 🚀`
       }]);
     };
     loadChatHistory();
