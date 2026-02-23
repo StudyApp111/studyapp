@@ -92,6 +92,13 @@ Deno.serve(async (req) => {
         lesson.curriculum_map.core_competencies.map(c => `- ${c.name}: ${c.description || ''}`).join('\n');
     }
 
+    // Use lesson.topics to determine how many sections exist — this prevents the LLM from inventing structure
+    let sectionHint = '';
+    if (lesson.topics?.length > 0) {
+      const sectionNames = lesson.topics.map(t => t.title);
+      sectionHint = `\n\nKNOWN DOCUMENT SECTIONS (from parsing): ${sectionNames.map((n, i) => `\n${i + 1}. "${n}"`).join('')}\nYou MUST create EXACTLY ${sectionNames.length} sections matching these names. Do NOT add, remove, merge, or split sections.`;
+    }
+
     const prompt = `You are an expert exam predictor and study plan designer. Given this course content, create a section-by-section study guide that highlights HIGH-YIELD topics most likely to appear on exams.
 
 COURSE: ${lesson.course_name}
@@ -99,34 +106,28 @@ COURSE: ${lesson.course_name}
 CONTENT:
 ${contentForPrompt}
 ${curriculumContext}
+${sectionHint}
 
-TASK: Create sections that match the document's ACTUAL top-level organizational structure ONLY. A "section" is a major division like a lecture, chapter, unit, or module — NOT a subtopic within one.
+TASK: Create sections that match the document's ACTUAL top-level organizational structure ONLY. A "section" is a major division like a lecture, chapter, unit, module, part, or week — NOT a subtopic within one.
 
-CRITICAL — SECTION EXTRACTION RULES:
-1. Count the ACTUAL top-level divisions in the source material (lectures, chapters, units, modules). If the document contains "Lecture 1" and "Lecture 2", create EXACTLY 2 sections — one per lecture. Do NOT split a single lecture into multiple sections.
+CRITICAL — SECTION RULES:
+1. The number of sections MUST equal the number of top-level divisions in the source material. If the document has 2 lectures, output EXACTLY 2 sections. If it has 5 chapters, output EXACTLY 5 sections.
 2. Section titles must match the document headings exactly (e.g., "Lecture 1: Introduction to Hinduism", "Chapter 3: Cell Division").
 3. Subtopics within a lecture/chapter become "suggested_topics" INSIDE that section, NOT separate sections.
-4. If no clear structure exists, create conceptual sections (max 3-4).
+4. If no clear structure exists, create 3-4 conceptual sections.
 
 TOPIC RULES:
 5. Each section should have 4-5 suggested topics drawn from the subtopics WITHIN that section.
 6. Each topic should have a specific, actionable name (not generic like "Key Concepts").
-7. CRITICAL — FORMAT ORDERING: Within each section, suggest topics in this EXACT pedagogical sequence. Every section MUST follow this order:
-   Step 1: "Review Notes" — ONE per section, covering the section's main theory/reading content. This is always the FIRST task.
+7. CRITICAL — FORMAT ORDERING: Within each section, follow this EXACT pedagogical sequence:
+   Step 1: "Review Notes" — ONE per section, covering the section's main theory/reading content. Always FIRST.
    Step 2: "Flashcards" — for terminology, definitions, key facts from that section.
-   Step 3: "Feynman Technique" — for the hardest concept in the section that requires deep understanding.
-   Step 4: "Practice Test" — for application/problem-solving, always the LAST task as it tests everything.
+   Step 3: "Feynman Technique" — for the hardest concept in the section requiring deep understanding.
+   Step 4: "Practice Test" — for application/problem-solving. Always LAST.
    
    You may include 1-2 additional Flashcard or Feynman topics if the section has enough distinct subtopics, but NEVER more than ONE "Review Notes" per section and NEVER more than ONE "Practice Test" per section.
 8. For each topic, set high_yield to true if it is very likely to appear on an exam. Mark at least 2-3 per section as high_yield.
-9. high_yield_reason should be a SHORT phrase explaining WHY it's high-yield.
-
-EXAMPLE: If the document has "Lecture 1: Hinduism" covering Vedic texts, Karma, Dharma, Ashramas, and Trimurti — that is ONE section with topics ordered as:
-1. "Key Concepts of Hinduism" → Review Notes
-2. "Vedic Texts & Terminology" → Flashcards
-3. "Karma & Dharma" → Feynman Technique
-4. "Hindu Concepts Application" → Practice Test
-Do NOT create separate sections for each subtopic.`;
+9. high_yield_reason should be a SHORT phrase explaining WHY it's high-yield.`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
