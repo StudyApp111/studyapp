@@ -227,7 +227,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           task: {
             focus_topics: [topic.topic_title],
             target_competency: topic.topic_title,
-            title: topic.topic_title,
+            title: `${section.section_title}: ${topic.topic_title}`,
+            section_title: section.section_title,
             target_count: tab === "flashcards" ? 10 : tab === "exam" ? 1 : 3
           }
         }
@@ -259,7 +260,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       if (format === "practice_exam") {
         window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
           detail: {
-            task: { focus_topics: opts.topics, target_competency: opts.section_title || '', title: opts.section_title || 'Custom Quiz' },
+            task: { focus_topics: opts.topics, target_competency: opts.section_title || '', title: opts.section_title || 'Custom Quiz', section_title: opts.section_title || '' },
             focus_topics: opts.topics,
             target_competency: opts.section_title || '',
             custom_instructions: opts.custom_instructions || ''
@@ -269,7 +270,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
           detail: {
             taskType: format,
-            task: { focus_topics: opts.topics, title: opts.section_title || 'Custom', target_count: format === "flashcards" ? 10 : 3 },
+            task: { focus_topics: opts.topics, title: opts.section_title || 'Custom', section_title: opts.section_title || '', target_count: format === "flashcards" ? 10 : 3 },
             custom_instructions: opts.custom_instructions || ''
           }
         }));

@@ -79,7 +79,7 @@ export default function GuestTimerLockout() {
 
           <Button
             onClick={handleSignIn}
-            className="w-full h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl"
+            className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl"
           >
             <ExternalLink className="w-4 h-4 mr-2" />
             Sign Up Free

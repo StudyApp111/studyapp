@@ -23,28 +23,37 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
   const [expanded, setExpanded] = useState(defaultExpanded);
   const topics = section.suggested_topics || [];
 
-  // Build a set of completed task types for cross-reference
+  // Build a set of completed task types for cross-reference, SCOPED to this section
   const allTasks = studyPlan?.tasks || [];
+  const sectionTitle = section.section_title || '';
   
-  // Track completed task types AND their focus topics
+  // Track completed tasks scoped by section AND topic
   const completedTaskKeys = new Set();
-  const completedTaskTypes = new Set();
+  const completedSectionFormatKeys = new Set();
   allTasks.forEach(task => {
     if (task.completed) {
-      completedTaskTypes.add(TASK_TYPE_TO_FORMAT[task.task_type] || '');
+      const format = TASK_TYPE_TO_FORMAT[task.task_type] || '';
       const taskTopics = task.focus_topics || [];
+      const taskSection = task.section_title || '';
+      
+      // Track topic-level completion
       taskTopics.forEach(ft => {
-        completedTaskKeys.add(`${ft}::${TASK_TYPE_TO_FORMAT[task.task_type] || ''}`);
+        completedTaskKeys.add(`${ft}::${format}`);
       });
+      
+      // Track section-level completion (only if task belongs to THIS section)
+      if (taskSection === sectionTitle) {
+        completedSectionFormatKeys.add(format);
+      }
     }
   });
 
-  // Check if a topic is completed - match by focus_topics first, fallback to task_type completion
+  // Check if a topic is completed - match by focus_topics first, then section-scoped format
   const isTopicCompleted = (topic) => {
     // Direct match: task has this exact topic in focus_topics
     if (completedTaskKeys.has(`${topic.topic_title}::${topic.format}`)) return true;
-    // Fallback: any task of this format type is completed (handles tasks without focus_topics)
-    return completedTaskTypes.has(topic.format);
+    // Section-scoped fallback: task of this format completed FOR THIS SECTION
+    return completedSectionFormatKeys.has(topic.format);
   };
 
   // Count completed

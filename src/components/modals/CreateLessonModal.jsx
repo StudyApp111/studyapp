@@ -82,11 +82,11 @@ export default function CreateLessonModal({ open, onOpenChange }) {
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    const maxSize = 15 * 1024 * 1024; // 15MB per file
+    const maxSize = 20 * 1024 * 1024; // 20MB per file
     
     const oversizedFiles = selectedFiles.filter(f => f.size > maxSize);
     if (oversizedFiles.length > 0) {
-      setError(`Files must be less than 15MB each. ${oversizedFiles.length} file(s) too large.`);
+      setError(`Files must be less than 20MB each. ${oversizedFiles.length} file(s) too large.`);
       e.target.value = '';
       return;
     }
@@ -429,7 +429,7 @@ export default function CreateLessonModal({ open, onOpenChange }) {
                     >
                       <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
                       <p className="text-xs text-slate-600 font-medium">Tap to upload</p>
-                      <p className="text-[10px] text-slate-400">PDF, Word, PPT, Images • Max 15MB</p>
+                      <p className="text-[10px] text-slate-400">PDF, Word, PPT, Images • Max 20MB</p>
                       <Input
                         id="modal-file-input"
                         type="file"
