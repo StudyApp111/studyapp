@@ -9,7 +9,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import SectionCard from "./SectionCard";
 import PickFormatModal from "./PickFormatModal";
-import CompletedTaskItem from "./CompletedTaskItem";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
