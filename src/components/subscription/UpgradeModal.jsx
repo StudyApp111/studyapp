@@ -18,19 +18,19 @@ const PAYWALL_MESSAGES = {
   },
   uploads: {
     headline: "Ready for your next course?",
-    subtext: "Upgrade to Pro for unlimited lesson creation"
+    subtext: "Upgrade to Pro for unlimited lesson creation and unlock your full academic potential"
   },
   tasks: {
     headline: "You've seen the power!",
-    subtext: "Unlock your full study plan, unlimited lessons, and advanced AI feedback"
+    subtext: "Unlock your full personalized study plan, unlimited lessons, and advanced AI feedback with a 7-day free trial"
   },
   ai_message: {
-    headline: "Want deeper insights?",
-    subtext: "Unlock advanced AI analytics and unlimited study tools"
+    headline: "Want deeper insights into your learning?",
+    subtext: "Unlock advanced AI analytics and unlimited study tools with Pro"
   },
   diagnostic_complete: {
-    headline: "Your predicted grade is ready!",
-    subtext: "Unlock unlimited study tools to improve your grade"
+    headline: "Your study plan is ready!",
+    subtext: "Unlock your full personalized study plan, unlimited lessons, and advanced AI feedback"
   }
 };
 
