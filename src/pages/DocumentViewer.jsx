@@ -22,6 +22,7 @@ import StudySessionTracker from "@/components/gamification/StudySessionTracker";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import MaterialUploadPrompt from "@/components/document-viewer/MaterialUploadPrompt";
 import DiagnosticLockOverlay from "@/components/document-viewer/DiagnosticLockOverlay";
+import TopicConfirmationBanner from "@/components/document-viewer/TopicConfirmationBanner";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
@@ -638,7 +639,20 @@ export default function DocumentViewer() {
                     {!lesson ? (
                       <ParsingLoader />
                     ) : (
-                      <DocumentViewerTabs lesson={lesson} />
+                      <div className="h-full flex flex-col">
+                        <TopicConfirmationBanner
+                          lesson={lesson}
+                          diagnosticReady={!!((exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice' && e.questions?.length > 0))}
+                          diagnosticCompleted={diagnosticCompleted}
+                          onGoToDiagnostic={() => {
+                            window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
+                            setActiveTab('exam');
+                          }}
+                        />
+                        <div className="flex-1">
+                          <DocumentViewerTabs lesson={lesson} />
+                        </div>
+                      </div>
                     )}
                   </TabsContent>
                 )}
@@ -773,7 +787,18 @@ export default function DocumentViewer() {
                   {!lesson ? (
                     <ParsingLoader />
                   ) : (
-                    <DocumentViewerTabs lesson={lesson} />
+                    <>
+                      <TopicConfirmationBanner
+                        lesson={lesson}
+                        diagnosticReady={!!((exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice' && e.questions?.length > 0))}
+                        diagnosticCompleted={diagnosticCompleted}
+                        onGoToDiagnostic={() => {
+                          window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
+                          setActiveTab('exam');
+                        }}
+                      />
+                      <DocumentViewerTabs lesson={lesson} />
+                    </>
                   )}
                 </TabsContent>
               )}
