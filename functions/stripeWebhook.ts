@@ -195,20 +195,34 @@ Deno.serve(async (req) => {
 
         // Update status based on subscription state
         if (subscription.status === 'active') {
-          // Trial ended, now active paying customer OR user resubscribed after cancellation
-          const updates = {
-            subscription_status: 'active',
-            subscription_tier: 'pro',
-            trial_end_date: null
-          };
-          
-          // Update subscription end date
-          if (subscription.current_period_end) {
-            updates.subscription_end_date = new Date(subscription.current_period_end * 1000).toISOString();
+          // Check if subscription is set to cancel at period end
+          if (subscription.cancel_at_period_end) {
+            // User cancelled but still has access until period end — keep 'cancelled' status
+            const updates = {
+              subscription_status: 'cancelled',
+              subscription_tier: 'pro'
+            };
+            if (subscription.current_period_end) {
+              updates.subscription_end_date = new Date(subscription.current_period_end * 1000).toISOString();
+            }
+            await base44.asServiceRole.entities.User.update(user.id, updates);
+            console.log(`User ${user.email} cancel_at_period_end=true, keeping cancelled status, end: ${updates.subscription_end_date}`);
+          } else {
+            // Trial ended, now active paying customer OR user resubscribed after cancellation
+            const updates = {
+              subscription_status: 'active',
+              subscription_tier: 'pro',
+              trial_end_date: null
+            };
+            
+            // Update subscription end date
+            if (subscription.current_period_end) {
+              updates.subscription_end_date = new Date(subscription.current_period_end * 1000).toISOString();
+            }
+            
+            await base44.asServiceRole.entities.User.update(user.id, updates);
+            console.log(`User ${user.email} status: active, end: ${updates.subscription_end_date}`);
           }
-          
-          await base44.asServiceRole.entities.User.update(user.id, updates);
-          console.log(`User ${user.email} status: active, end: ${updates.subscription_end_date}`);
         } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
           // Only downgrade to free if current_period_end has passed
           const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : new Date();
