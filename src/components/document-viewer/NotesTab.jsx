@@ -278,6 +278,35 @@ export default function NotesTab({ lesson }) {
               >
                 <Settings2 className="w-4 h-4" />
               </Button>
+              {allNotes.length > 1 && (
+                <div className={`hidden sm:flex items-center gap-1 px-2 py-1 rounded-lg border ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-slate-50'}`}>
+                  <button 
+                    onClick={() => {
+                      const newIdx = Math.min(currentNoteIndex + 1, allNotes.length - 1);
+                      setCurrentNoteIndex(newIdx);
+                      setNote(allNotes[newIdx]);
+                    }}
+                    disabled={currentNoteIndex >= allNotes.length - 1}
+                    className={`p-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-200'}`}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <span className={`text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {currentNoteIndex + 1}/{allNotes.length}
+                  </span>
+                  <button 
+                    onClick={() => {
+                      const newIdx = Math.max(currentNoteIndex - 1, 0);
+                      setCurrentNoteIndex(newIdx);
+                      setNote(allNotes[newIdx]);
+                    }}
+                    disabled={currentNoteIndex <= 0}
+                    className={`p-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-200'}`}
+                  >
+                    <ChevronRightIcon className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
               <Button 
                 size="sm" 
                 onClick={() => generateNotes(settings)} 
