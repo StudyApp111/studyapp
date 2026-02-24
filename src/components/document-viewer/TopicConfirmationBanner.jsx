@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CheckCircle2, Sparkles, ArrowRight, FolderOpen, Clock, Loader2 } from "lucide-react";
+import { CheckCircle2, Sparkles, ArrowRight, FolderOpen, Clock, Loader2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -35,7 +35,6 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
     return () => unsubscribe();
   }, [lesson?.id, liveReady]);
 
-  // Load saved deselections
   useEffect(() => {
     if (!lesson?.id || topLevelTopics.length === 0) return;
     const saved = lesson?.selected_topics;
@@ -96,7 +95,7 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   return (
     <Dialog open={!dismissed} onOpenChange={() => {}}>
       <DialogContent
-        className={`sm:max-w-[420px] max-w-[calc(100vw-32px)] p-0 gap-0 overflow-hidden rounded-2xl border-0 ${isDark ? 'bg-[#14141e]' : 'bg-white'} [&>button]:hidden`}
+        className="w-[calc(100vw-32px)] sm:w-[420px] max-w-[420px] p-0 gap-0 overflow-hidden rounded-2xl border-0 bg-[#14141e] [&>button]:hidden"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -111,7 +110,6 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
 
         {step === 1 ? (
           <Step1Topics
-            isDark={isDark}
             lesson={lesson}
             topLevelTopics={topLevelTopics}
             deselected={deselected}
@@ -123,7 +121,6 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
           />
         ) : (
           <Step2Diagnostic
-            isDark={isDark}
             liveReady={liveReady}
             onStart={handleStartDiagnostic}
             onSkip={handleSkipDiagnostic}
@@ -134,58 +131,103 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   );
 }
 
-function Step1Topics({ isDark, lesson, topLevelTopics, deselected, toggleTopic, handleDeselectAll, allDeselected, selectedCount, onConfirm }) {
+function ExpandableText({ text, className }) {
+  const [expanded, setExpanded] = useState(false);
+  const [isTruncated, setIsTruncated] = useState(false);
+  const textRef = useRef(null);
+
+  useEffect(() => {
+    if (textRef.current) {
+      setIsTruncated(textRef.current.scrollWidth > textRef.current.clientWidth);
+    }
+  }, [text]);
+
+  if (!isTruncated && !expanded) {
+    return <span ref={textRef} className={`${className} truncate block`}>{text}</span>;
+  }
+
   return (
-    <div className="px-5 sm:px-6 pb-5 pt-2">
+    <div className="flex-1 min-w-0">
+      <span
+        ref={textRef}
+        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+        className={`${className} block cursor-pointer ${expanded ? 'whitespace-normal break-words' : 'truncate'}`}
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
+
+function Step1Topics({ lesson, topLevelTopics, deselected, toggleTopic, handleDeselectAll, allDeselected, selectedCount, onConfirm }) {
+  // Build section -> subtopic hierarchy
+  const sections = topLevelTopics.map(topic => ({
+    title: topic.title,
+    subtopics: topic.subtopics || [],
+    isSelected: !deselected.has(topic.title)
+  }));
+
+  return (
+    <div className="px-4 sm:px-6 pb-5 pt-2">
       {/* Header */}
       <div className="text-center mb-4">
         <div className="flex items-center justify-center gap-2 mb-2">
           <Sparkles className="w-4 h-4 text-amber-400" />
-          <span className={`text-sm font-bold tracking-wide ${isDark ? 'text-white' : 'text-slate-900'}`}>Document Analyzed</span>
+          <span className="text-sm font-bold tracking-wide text-white">Document Analyzed</span>
         </div>
-        <p className={`text-[13px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-          We read your <span className={`font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{lesson?.course_name || 'document'}</span> and found{' '}
-          <span className={`font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{topLevelTopics.length} key topics</span> to help you study.
+        <p className="text-[13px] leading-relaxed text-slate-400">
+          We read your <span className="font-semibold text-slate-200">{lesson?.course_name || 'document'}</span> and found{' '}
+          <span className="font-semibold text-slate-200">{topLevelTopics.length} key topics</span> to help you study.
         </p>
       </div>
 
-      {/* Divider */}
-      <div className={`h-px mb-3 ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
+      <div className="h-px mb-3 bg-white/10" />
 
-      {/* Topic list - tap to toggle */}
-      <div className="space-y-1 mb-3 max-h-[35vh] overflow-y-auto">
-        {topLevelTopics.map((topic, idx) => {
-          const isSelected = !deselected.has(topic.title);
-          return (
+      {/* Section/topic list */}
+      <div className="space-y-0.5 mb-3 max-h-[40vh] overflow-y-auto">
+        {sections.map((section, idx) => (
+          <div key={idx}>
+            {/* Section row */}
             <button
-              key={idx}
-              onClick={() => toggleTopic(topic.title)}
+              onClick={() => toggleTopic(section.title)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
-                isSelected
-                  ? isDark ? 'bg-white/[0.04]' : 'bg-slate-50'
-                  : isDark ? 'bg-white/[0.02] opacity-40' : 'bg-slate-50/50 opacity-40'
+                section.isSelected ? 'bg-white/[0.04]' : 'bg-white/[0.02] opacity-40'
               }`}
             >
-              <FolderOpen className={`w-4 h-4 flex-shrink-0 ${isSelected ? (isDark ? 'text-amber-400' : 'text-amber-500') : (isDark ? 'text-slate-600' : 'text-slate-400')}`} />
-              <span className={`text-[13px] font-medium flex-1 truncate ${
-                isSelected
-                  ? isDark ? 'text-slate-200' : 'text-slate-700'
-                  : isDark ? 'text-slate-500 line-through' : 'text-slate-400 line-through'
-              }`}>
-                {topic.title}
-              </span>
-              {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />}
+              <FolderOpen className={`w-4 h-4 flex-shrink-0 ${section.isSelected ? 'text-amber-400' : 'text-slate-600'}`} />
+              <ExpandableText
+                text={section.title}
+                className={`text-[13px] font-semibold ${
+                  section.isSelected ? 'text-slate-200' : 'text-slate-500 line-through'
+                }`}
+              />
+              {section.isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />}
             </button>
-          );
-        })}
+
+            {/* Subtopics indented under section */}
+            {section.isSelected && section.subtopics.length > 0 && (
+              <div className="ml-7 space-y-0.5 mt-0.5">
+                {section.subtopics.map((st, stIdx) => (
+                  <div
+                    key={stIdx}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-md"
+                  >
+                    <ExpandableText
+                      text={st.title}
+                      className="text-[12px] text-slate-400"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Instruction + Deselect */}
-      <p className={`text-[12px] mb-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+      <p className="text-[12px] mb-3 text-slate-500">
         Look good? Tap any to remove.
       </p>
 
-      {/* CTA */}
       <Button
         onClick={onConfirm}
         disabled={selectedCount === 0}
@@ -194,10 +236,9 @@ function Step1Topics({ isDark, lesson, topLevelTopics, deselected, toggleTopic, 
         Perfect, Let's Start <ArrowRight className="w-4 h-4 ml-1.5" />
       </Button>
 
-      {/* Deselect all */}
       <button
         onClick={handleDeselectAll}
-        className={`w-full text-center text-[11px] mt-2.5 py-1 font-semibold ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}
+        className="w-full text-center text-[11px] mt-2.5 py-1 font-semibold text-purple-400 hover:text-purple-300"
       >
         {allDeselected ? 'Select All' : 'Deselect All'}
       </button>
@@ -205,22 +246,50 @@ function Step1Topics({ isDark, lesson, topLevelTopics, deselected, toggleTopic, 
   );
 }
 
-function Step2Diagnostic({ isDark, liveReady, onStart, onSkip }) {
+function Step2Diagnostic({ liveReady, onStart, onSkip }) {
+  const [revealed, setRevealed] = useState(false);
+  const timerRef = useRef(null);
+
+  const handlePointerDown = () => {
+    setRevealed(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+  };
+
+  const handlePointerUp = () => {
+    timerRef.current = setTimeout(() => setRevealed(false), 2000);
+  };
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, []);
+
   return (
-    <div className="px-5 sm:px-6 pb-5 pt-2 text-center">
-      {/* Blurred grade pill */}
+    <div className="px-4 sm:px-6 pb-5 pt-2 text-center">
+      {/* Blurred grade pill - hold to reveal */}
       <motion.div
         initial={{ opacity: 0, y: -5 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         className="flex justify-center mb-4 sm:mb-5"
       >
-        <div className={`relative inline-flex items-center gap-2 px-4 py-2 rounded-xl border ${isDark ? 'bg-emerald-900/30 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'}`}>
+        <div
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+          className="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl border bg-emerald-900/30 border-emerald-500/30 cursor-pointer select-none touch-none"
+        >
           {/* Blur overlay */}
-          <div className="absolute inset-0 rounded-xl backdrop-blur-[6px] bg-white/5 z-10" />
+          <div
+            className="absolute inset-0 rounded-xl z-10 transition-all duration-300"
+            style={{
+              backdropFilter: revealed ? 'blur(0px)' : 'blur(4px)',
+              WebkitBackdropFilter: revealed ? 'blur(0px)' : 'blur(4px)',
+              background: revealed ? 'transparent' : 'rgba(255,255,255,0.03)',
+            }}
+          />
           <span className="text-2xl font-black text-emerald-400 select-none" aria-hidden>A</span>
-          <span className={`text-sm font-bold select-none ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`} aria-hidden>??%</span>
-          <div className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700'}`}>
+          <span className="text-sm font-bold select-none text-emerald-300" aria-hidden>??%</span>
+          <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300">
             Unlock <ArrowRight className="w-3 h-3 inline -mt-px" />
           </div>
         </div>
@@ -232,7 +301,7 @@ function Step2Diagnostic({ isDark, liveReady, onStart, onSkip }) {
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className={`text-xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}
+          className="text-xl font-black mb-2 text-white"
         >
           Unlock Your Predicted Grade
         </motion.h2>
@@ -241,7 +310,7 @@ function Step2Diagnostic({ isDark, liveReady, onStart, onSkip }) {
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}
+          className="text-sm mb-4 text-slate-400"
         >
           Answer 5 questions to see:
         </motion.p>
@@ -250,16 +319,16 @@ function Step2Diagnostic({ isDark, liveReady, onStart, onSkip }) {
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25 }}
-          className="space-y-2 mb-4 max-w-[260px] mx-auto text-left"
+          className="space-y-2 mb-4 max-w-[280px] mx-auto text-left"
         >
           {[
             'Your predicted exam grade',
             'Exactly what topics to study',
-            'AI study plan to get you to an A'
+            'Custom study plan to get you to an A+'
           ].map((text, i) => (
             <div key={i} className="flex items-center gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{text}</span>
+              <span className="text-sm font-medium text-slate-200">{text}</span>
             </div>
           ))}
         </motion.div>
@@ -268,19 +337,19 @@ function Step2Diagnostic({ isDark, liveReady, onStart, onSkip }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className={`text-xs mb-5 flex items-center justify-center gap-1.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
+          className="text-xs mb-5 flex items-center justify-center gap-1.5 text-slate-500"
         >
           <Clock className="w-3.5 h-3.5" /> Takes 3 minutes • Unlocks full app
         </motion.p>
       </div>
 
-      {/* Mobile copy - shorter */}
+      {/* Mobile copy */}
       <div className="block sm:hidden">
         <motion.h2
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className={`text-lg font-black mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}
+          className="text-lg font-black mb-3 text-white"
         >
           Unlock Your Grade
         </motion.h2>
@@ -298,7 +367,7 @@ function Step2Diagnostic({ isDark, liveReady, onStart, onSkip }) {
           ].map((text, i) => (
             <div key={i} className="flex items-center gap-2">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-              <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{text}</span>
+              <span className="text-sm font-medium text-slate-200">{text}</span>
             </div>
           ))}
         </motion.div>
@@ -319,9 +388,9 @@ function Step2Diagnostic({ isDark, liveReady, onStart, onSkip }) {
 
       <button
         onClick={onSkip}
-        className={`w-full text-center text-[11px] mt-2.5 py-1 font-medium ${isDark ? 'text-slate-600 hover:text-slate-500' : 'text-slate-400 hover:text-slate-500'}`}
+        className="w-full text-center text-[11px] mt-2.5 py-1 font-medium text-slate-600 hover:text-slate-500"
       >
-        <span className="hidden sm:inline">Skip (flashcards only, no predictions)</span>
+        <span className="hidden sm:inline">Skip for now (you'll miss out on your study plan)</span>
         <span className="sm:hidden">Skip (basic only)</span>
       </button>
     </div>
