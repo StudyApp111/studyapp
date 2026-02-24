@@ -45,9 +45,20 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
     }
   };
 
+  const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
+  const [fileSizeError, setFileSizeError] = useState("");
+
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
+
+    // Validate file size
+    const oversized = files.find(f => f.size > MAX_FILE_SIZE);
+    if (oversized) {
+      setFileSizeError(`"${oversized.name}" exceeds the 20 MB limit.`);
+      return;
+    }
+    setFileSizeError("");
 
     setIsUploading(true);
     const newFiles = [];
@@ -142,6 +153,11 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
             className="hidden"
           />
           
+          {fileSizeError && (
+            <div className="mb-2 p-2 bg-red-500/20 border border-red-500/30 text-red-300 rounded-lg text-sm text-center">
+              {fileSizeError}
+            </div>
+          )}
           {uploadedFiles.length === 0 ? (
             <button
               type="button"
