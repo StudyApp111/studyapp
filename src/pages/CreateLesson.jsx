@@ -10,6 +10,7 @@ import CreateLessonLoader from "@/components/create-lesson/CreateLessonLoader";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import GuestLessonCreatedModal from "@/components/guest/GuestLessonCreatedModal";
+import { usePostHog } from 'posthog-js/react';
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
@@ -17,6 +18,7 @@ export default function CreateLesson() {
   const navigate = useNavigate();
   const { canUpload, incrementUploadCount, triggerUpgradeModal } = useSubscription();
   const { isGuest, guestLessonCreated, setGuestLesson, guestData } = useGuestSession();
+  const posthog = usePostHog();
   const [courseName, setCourseName] = useState("");
   const [materialData, setMaterialData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -207,7 +209,7 @@ export default function CreateLesson() {
         const isFirstLesson = allLessons.length === 1;
 
         // Always track every lesson creation
-        window.posthog?.capture('lesson_created', {
+        posthog?.capture('lesson_created', {
           course_name: courseName.trim(),
           input_type: lessonData.input_type,
           lesson_id: lesson.id,
@@ -219,7 +221,7 @@ export default function CreateLesson() {
 
         if (isFirstLesson) {
           // First lesson — critical conversion event
-          window.posthog?.capture('first_lesson_created', {
+          posthog?.capture('first_lesson_created', {
             course_name: courseName.trim(),
             input_type: lessonData.input_type,
             lesson_id: lesson.id,
@@ -242,7 +244,7 @@ export default function CreateLesson() {
           }
         } else {
           // Returning user lesson — retention signal
-          window.posthog?.capture('returning_lesson_created', {
+          posthog?.capture('returning_lesson_created', {
             course_name: courseName.trim(),
             input_type: lessonData.input_type,
             lesson_id: lesson.id,
