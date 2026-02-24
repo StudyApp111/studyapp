@@ -5,7 +5,6 @@ import { generateFingerprint } from '@/components/utils/browserFingerprint';
 const GuestSessionContext = createContext(null);
 
 const GUEST_STORAGE_KEY = 'studyapp_guest_session';
-const GUEST_TIMER_SECONDS = 300; // 5 minutes
 
 function loadGuestSession() {
   try {
@@ -26,51 +25,19 @@ function clearGuestSession() {
 export function GuestSessionProvider({ children }) {
   const [isGuest, setIsGuest] = useState(false);
   const [guestData, setGuestData] = useState(null); // { name, school, lessonData, startedAt }
-  const [timeRemaining, setTimeRemaining] = useState(GUEST_TIMER_SECONDS);
-  const [isTimerExpired, setIsTimerExpired] = useState(false);
   const [guestLessonCreated, setGuestLessonCreated] = useState(false);
-  const timerRef = useRef(null);
+  const [guestDiagnosticCompleted, setGuestDiagnosticCompleted] = useState(false);
 
   // On mount, check if there's an existing guest session
   useEffect(() => {
     const session = loadGuestSession();
     if (session && session.isGuest) {
-      const elapsed = Math.floor((Date.now() - session.startedAt) / 1000);
-      const remaining = Math.max(0, GUEST_TIMER_SECONDS - elapsed);
-      
-      if (remaining <= 0) {
-        setIsTimerExpired(true);
-        setIsGuest(true);
-        setGuestData(session);
-        setTimeRemaining(0);
-      } else {
-        setIsGuest(true);
-        setGuestData(session);
-        setTimeRemaining(remaining);
-        setGuestLessonCreated(!!session.lessonData);
-      }
+      setIsGuest(true);
+      setGuestData(session);
+      setGuestLessonCreated(!!session.lessonData);
+      setGuestDiagnosticCompleted(!!session.diagnosticCompleted);
     }
   }, []);
-
-  // Timer countdown
-  useEffect(() => {
-    if (!isGuest || isTimerExpired) return;
-    
-    timerRef.current = setInterval(() => {
-      setTimeRemaining(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          setIsTimerExpired(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [isGuest, isTimerExpired]);
 
   const startGuestSession = useCallback(async () => {
     // Check eligibility first
@@ -100,15 +67,15 @@ export function GuestSessionProvider({ children }) {
       fingerprint: fp,
       name: '',
       school: '',
-      lessonData: null
+      lessonData: null,
+      diagnosticCompleted: false
     };
 
     saveGuestSession(session);
     setIsGuest(true);
     setGuestData(session);
-    setTimeRemaining(GUEST_TIMER_SECONDS);
-    setIsTimerExpired(false);
     setGuestLessonCreated(false);
+    setGuestDiagnosticCompleted(false);
 
     return { allowed: true };
   }, []);
@@ -130,6 +97,15 @@ export function GuestSessionProvider({ children }) {
     setGuestLessonCreated(true);
   }, []);
 
+  const markGuestDiagnosticCompleted = useCallback(() => {
+    setGuestDiagnosticCompleted(true);
+    setGuestData(prev => {
+      const updated = { ...prev, diagnosticCompleted: true };
+      saveGuestSession(updated);
+      return updated;
+    });
+  }, []);
+
   const transferGuestData = useCallback(async () => {
     if (!guestData) return null;
     
@@ -143,14 +119,11 @@ export function GuestSessionProvider({ children }) {
         profile_data: { name: guestData.name, school: guestData.school }
       });
 
-      // Update user's display name if guest set one
       if (guestData.name) {
         await base44.auth.updateMe({ display_name: guestData.name });
       }
 
-      // Clean up guest session
       endGuestSession();
-      
       return data;
     } catch (err) {
       console.error('Error transferring guest data:', err);
@@ -159,25 +132,23 @@ export function GuestSessionProvider({ children }) {
   }, [guestData]);
 
   const endGuestSession = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
     clearGuestSession();
     setIsGuest(false);
     setGuestData(null);
-    setTimeRemaining(GUEST_TIMER_SECONDS);
-    setIsTimerExpired(false);
     setGuestLessonCreated(false);
+    setGuestDiagnosticCompleted(false);
   }, []);
 
   return (
     <GuestSessionContext.Provider value={{
       isGuest,
       guestData,
-      timeRemaining,
-      isTimerExpired,
       guestLessonCreated,
+      guestDiagnosticCompleted,
       startGuestSession,
       updateGuestProfile,
       setGuestLesson,
+      markGuestDiagnosticCompleted,
       transferGuestData,
       endGuestSession
     }}>
