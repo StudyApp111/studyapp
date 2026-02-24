@@ -344,7 +344,11 @@ No extra text.`;
       return Response.json({ error: 'Invalid API response format' }, { status: 500 });
     }
     
-    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const candidate = data?.candidates?.[0];
+    const finishReason = candidate?.finishReason;
+    const content = candidate?.content?.parts?.[0]?.text;
+
+    console.log('Finish reason:', finishReason, '| Content length:', content?.length || 0);
 
     if (!content) {
       console.error('No content from Gemini, candidates:', JSON.stringify(data?.candidates));
@@ -352,13 +356,21 @@ No extra text.`;
       return Response.json({ error: 'No content generated' }, { status: 500 });
     }
 
-    console.log('Content length:', content.length);
+    // If finishReason is MAX_TOKENS, the JSON is truncated and will fail to parse — must retry
+    if (finishReason === 'MAX_TOKENS') {
+      console.error('Response truncated (MAX_TOKENS) at', content.length, 'chars — retrying is needed');
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
+      return Response.json({ error: 'Response truncated, retry needed', truncated: true }, { status: 500 });
+    }
 
     let examData;
     try {
       examData = JSON.parse(content);
     } catch (e) {
-      console.error('JSON parse failed:', e?.message);
+      console.error('JSON parse failed:', e?.message, '| finishReason:', finishReason, '| content length:', content.length);
+      // Log first and last 200 chars to diagnose where truncation happened
+      console.error('Content start:', content.substring(0, 200));
+      console.error('Content end:', content.substring(content.length - 200));
       await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to parse exam response' }, { status: 500 });
     }
