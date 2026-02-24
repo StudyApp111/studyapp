@@ -100,11 +100,35 @@ export default function StepProfile({ user, isGuest, onComplete, onBack }) {
     await onComplete({ name: name.trim(), school: school.trim() });
   };
 
-  const filteredSuggestions = school.trim()
-    ? suggestions.filter((s) =>
-        s.name.toLowerCase().includes(school.toLowerCase())
-      )
-    : suggestions;
+  const filteredSuggestions = React.useMemo(() => {
+    if (!school.trim()) return suggestions;
+    const query = school.toLowerCase().trim();
+    const words = query.split(/\s+/).filter(w => w.length > 0);
+    
+    // Score each suggestion: higher = better match
+    const scored = suggestions.map(s => {
+      const name = s.name.toLowerCase();
+      let score = 0;
+      // Exact match
+      if (name === query) score += 100;
+      // Starts with query
+      else if (name.startsWith(query)) score += 50;
+      // Contains full query
+      else if (name.includes(query)) score += 30;
+      // All words match somewhere in name
+      else if (words.every(w => name.includes(w))) score += 20;
+      // Some words match
+      else {
+        const matchCount = words.filter(w => name.includes(w)).length;
+        if (matchCount > 0) score += matchCount * 5;
+      }
+      return { ...s, _score: score };
+    });
+    
+    return scored
+      .filter(s => s._score > 0)
+      .sort((a, b) => b._score - a._score);
+  }, [school, suggestions]);
 
   return (
     <motion.div
