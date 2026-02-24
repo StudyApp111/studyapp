@@ -1365,6 +1365,11 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         console.log('📊 TikTok Pixel: SubmitApplication tracked for diagnostic quiz');
       }
 
+      // Mark guest diagnostic as completed — triggers sign-up modal
+      if (isGuest) {
+        markGuestDiagnosticCompleted();
+      }
+
       // Stay on exam tab and show the completed exam results
       // Reload exams to get the updated data with AI feedback
       if (onExamComplete) await onExamComplete();
