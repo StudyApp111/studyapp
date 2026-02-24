@@ -488,35 +488,60 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           return;
         } else {
           // Exam exists but no questions yet - autoGenerateExam1 is still processing
-          // Show loading state and wait for it
-          console.log('⏳ Exam 1 exists but questions not ready - waiting for autoGenerateExam1...');
+          // Use 2-phase approach: poll 25s, then retry + poll
+          console.log('⏳ Exam 1 exists but questions not ready - starting poll + retry logic...');
           setIsGenerating(true);
 
-          // Poll for questions to appear (autoGenerateExam1 is running)
-          // Use exponential backoff to avoid 429 rate limits
-          const pollForQuestions = async () => {
-            for (let i = 0; i < 15; i++) {
-              const delay = Math.min(2000 * Math.pow(1.3, i), 6000); // Start at 2s, grow to max 6s
-              await new Promise(r => setTimeout(r, delay));
+          const pollAndRetry = async () => {
+            // Phase 1: Poll for ~25s
+            for (let i = 0; i < 8; i++) {
+              await new Promise(r => setTimeout(r, 3000));
               try {
                 const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
                 if (refreshed[0]?.questions?.length > 0) {
-                  console.log('✅ Questions appeared after polling');
+                  console.log('✅ Questions appeared during phase-1 polling');
                   setExam(refreshed[0]);
                   setIsGenerating(false);
                   return;
                 }
               } catch (pollErr) {
-                console.warn('Exam poll error:', pollErr.message);
-                // On rate limit, wait longer before next attempt
-                await new Promise(r => setTimeout(r, 3000));
+                console.warn('Phase-1 poll error:', pollErr.message);
               }
             }
-            // Timeout - something went wrong
-            console.error('Timeout waiting for exam questions');
+
+            // Phase 2: Retry autoGenerateExam1 + continue polling
+            console.log('🔄 Phase-1 timed out, retrying autoGenerateExam1...');
+            const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+              .catch(err => console.warn('Retry error:', err.message));
+
+            for (let i = 0; i < 12; i++) {
+              await new Promise(r => setTimeout(r, 4000));
+              try {
+                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+                if (refreshed[0]?.questions?.length > 0) {
+                  console.log('✅ Questions appeared during phase-2 polling');
+                  setExam(refreshed[0]);
+                  setIsGenerating(false);
+                  return;
+                }
+              } catch (pollErr) {
+                console.warn('Phase-2 poll error:', pollErr.message);
+              }
+            }
+
+            await retryPromise;
+            const finalCheck = await base44.entities.Exam.filter({ id: loadedExam.id });
+            if (finalCheck[0]?.questions?.length > 0) {
+              setExam(finalCheck[0]);
+              setIsGenerating(false);
+              return;
+            }
+
+            console.error('❌ Exam generation failed after poll + retry');
             setIsGenerating(false);
+            setError('Exam generation is taking longer than expected. Please refresh the page to try again.');
           };
-          pollForQuestions();
+          pollAndRetry();
           return;
         }
       }
