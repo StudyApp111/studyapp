@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CheckCircle2, Play, Sparkles, BookOpen, Filter, X, Brain } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Check, ChevronDown, ChevronRight, FolderOpen, Search, Play, CheckCircle2, Target, Sparkles, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import TopicSelectionModal from "@/components/study-plan/TopicSelectionModal";
 
 export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diagnosticReady, diagnosticCompleted }) {
   const { isDark } = useTheme();
   const [dismissed, setDismissed] = useState(false);
+  const [step, setStep] = useState(1); // 1 = topics, 2 = diagnostic prompt
   const [liveReady, setLiveReady] = useState(diagnosticReady);
-  const [showTopicSelection, setShowTopicSelection] = useState(false);
-  const [selectedCount, setSelectedCount] = useState(null);
+
+  // Topic selection state
+  const [selectedTopics, setSelectedTopics] = useState([]);
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   const topics = lesson?.topics || [];
-  const dismissKey = `topic_banner_dismissed_${lesson?.id}`;
+  const dismissKey = `topic_flow_dismissed_${lesson?.id}`;
   const topLevelTopics = topics.filter(t => t.title);
 
   useEffect(() => {
@@ -36,140 +40,292 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
     return () => unsubscribe();
   }, [lesson?.id, liveReady]);
 
+  // Initialize topic selection
   useEffect(() => {
-    if (lesson?.selected_topics?.length > 0) {
-      setSelectedCount(lesson.selected_topics.length);
+    if (!lesson?.id || topLevelTopics.length === 0) return;
+    const saved = lesson?.selected_topics;
+    if (saved?.length > 0) {
+      setSelectedTopics(saved);
+    } else {
+      const all = [];
+      topics.forEach(t => {
+        all.push(t.title);
+        t.subtopics?.forEach(st => all.push(st.title));
+      });
+      setSelectedTopics(all);
     }
-  }, [lesson?.selected_topics]);
+    const map = {};
+    topics.forEach(t => { map[t.title] = true; });
+    setExpandedGroups(map);
+  }, [lesson?.id, topLevelTopics.length]);
 
   if (topLevelTopics.length === 0 || dismissed || diagnosticCompleted) return null;
 
-  const showModal = !dismissed && topLevelTopics.length > 0;
+  const getAllTitles = () => {
+    const titles = [];
+    topics.forEach(t => {
+      titles.push(t.title);
+      t.subtopics?.forEach(st => titles.push(st.title));
+    });
+    return titles;
+  };
+  const allTitles = getAllTitles();
+  const totalCount = allTitles.length;
+  const selectedCount = selectedTopics.length;
 
-  const handleDismiss = () => {
-    localStorage.setItem(dismissKey, 'true');
-    setDismissed(true);
+  const toggleTopic = (title) => {
+    setSelectedTopics(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
   };
 
-  const handleGoToDiagnostic = () => {
-    handleDismiss();
+  const toggleGroup = (parentTitle, subtopics) => {
+    const groupTitles = [parentTitle, ...(subtopics || []).map(st => st.title)];
+    const allSelected = groupTitles.every(t => selectedTopics.includes(t));
+    if (allSelected) {
+      setSelectedTopics(prev => prev.filter(t => !groupTitles.includes(t)));
+    } else {
+      setSelectedTopics(prev => [...new Set([...prev, ...groupTitles])]);
+    }
+  };
+
+  const handleSelectAll = () => setSelectedTopics([...allTitles]);
+  const handleDeselectAll = () => setSelectedTopics([]);
+
+  const handleConfirmTopics = async () => {
+    await base44.entities.Lesson.update(lesson.id, { selected_topics: selectedTopics });
+    window.dispatchEvent(new Event('reloadLesson'));
+    setStep(2);
+  };
+
+  const handleStartDiagnostic = () => {
+    localStorage.setItem(dismissKey, 'true');
+    setDismissed(true);
     onGoToDiagnostic();
   };
 
-  return (
-    <>
-      <Dialog open={showModal} onOpenChange={(open) => { if (!open) handleDismiss(); }}>
-        <DialogContent className={`max-w-[calc(100vw-24px)] sm:max-w-md p-0 overflow-hidden border-0 bg-transparent [&>button]:hidden`}>
-          <DialogTitle className="sr-only">Your Material Analysis</DialogTitle>
-          <DialogDescription className="sr-only">AI has analyzed and organized your study material into topics</DialogDescription>
-          
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`relative overflow-hidden rounded-2xl border shadow-2xl ${isDark ? 'bg-[#12121a] border-purple-500/30' : 'bg-white border-slate-200'}`}
-          >
-            {/* Close button */}
-            <button 
-              onClick={handleDismiss}
-              className={`absolute top-3 right-3 z-20 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isDark ? 'bg-white/10 hover:bg-white/20 text-white/70 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-700'}`}
-            >
-              <X className="w-4 h-4" />
-            </button>
+  const handleSkipDiagnostic = () => {
+    localStorage.setItem(dismissKey, 'true');
+    localStorage.setItem(`diagnostic_skipped_${lesson?.id}`, 'true');
+    setDismissed(true);
+    window.dispatchEvent(new CustomEvent('diagnosticSkipped', { detail: { lessonId: lesson.id } }));
+  };
 
-            {/* Hero section */}
-            <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 px-6 pt-7 pb-5 text-center relative overflow-hidden">
-              {/* Decorative glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-              
+  const filteredTopics = topics.filter(t => {
+    const q = searchQuery.toLowerCase();
+    return t.title.toLowerCase().includes(q) || t.subtopics?.some(st => st.title.toLowerCase().includes(q));
+  });
+
+  return (
+    <Dialog open={!dismissed} onOpenChange={() => {}}>
+      <DialogContent 
+        className={`sm:max-w-[500px] max-h-[85vh] p-0 gap-0 overflow-hidden rounded-2xl flex flex-col max-w-[calc(100vw-24px)] border-0 ${isDark ? 'bg-[#12121a]' : 'bg-white'} [&>button]:hidden`}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
+        <DialogTitle className="sr-only">{step === 1 ? 'Select Topics' : 'Start Diagnostic'}</DialogTitle>
+        <DialogDescription className="sr-only">{step === 1 ? 'Choose topics to study' : 'Take diagnostic quiz'}</DialogDescription>
+
+        {step === 1 ? (
+          <>
+            {/* Step 1: Topic Selection */}
+            <div className={`px-5 pt-5 pb-3 border-b ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
+              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Select Topics</h3>
+              <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                {selectedCount} of {totalCount} selected
+              </p>
+
+              <div className="flex items-center gap-2 mt-3">
+                <div className="flex-1 relative">
+                  <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search topics..."
+                    className={`pl-9 h-9 text-sm rounded-lg ${isDark ? 'bg-white/5 border-white/10 text-slate-200 placeholder:text-slate-500' : ''}`}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectedCount === totalCount ? handleDeselectAll : handleSelectAll}
+                  className={`text-xs h-9 px-3 whitespace-nowrap ${isDark ? 'border-white/10 text-slate-300 hover:bg-white/10' : ''}`}
+                >
+                  {selectedCount === totalCount ? 'Deselect All' : 'Select All'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Topic List */}
+            <div className="flex-1 overflow-y-auto px-5 py-3 space-y-1.5 max-h-[50vh]">
+              {filteredTopics.map((topic) => {
+                const hasSubtopics = topic.subtopics?.length > 0;
+                const isExpanded = expandedGroups[topic.title];
+                const isParentSelected = selectedTopics.includes(topic.title);
+                const groupTitles = [topic.title, ...(topic.subtopics || []).map(st => st.title)];
+                const allGroupSelected = groupTitles.every(t => selectedTopics.includes(t));
+
+                return (
+                  <div key={topic.title}>
+                    <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all cursor-pointer ${
+                      isParentSelected
+                        ? isDark ? 'bg-purple-600/20 border border-purple-500/30' : 'bg-purple-50 border border-purple-200'
+                        : isDark ? 'bg-white/5 border border-white/5 hover:bg-white/10' : 'bg-slate-50 border border-slate-100 hover:bg-slate-100'
+                    }`}>
+                      {hasSubtopics && (
+                        <button onClick={() => setExpandedGroups(prev => ({ ...prev, [topic.title]: !prev[topic.title] }))} className="p-0.5 flex-shrink-0">
+                          {isExpanded
+                            ? <ChevronDown className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                            : <ChevronRight className={`w-4 h-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`} />
+                          }
+                        </button>
+                      )}
+                      {hasSubtopics && <FolderOpen className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-amber-400' : 'text-amber-500'}`} />}
+                      <span
+                        onClick={() => hasSubtopics ? toggleGroup(topic.title, topic.subtopics) : toggleTopic(topic.title)}
+                        className={`flex-1 text-sm font-semibold truncate ${isDark ? 'text-slate-100' : 'text-slate-800'}`}
+                      >
+                        {topic.title}
+                      </span>
+                      <button
+                        onClick={() => hasSubtopics ? toggleGroup(topic.title, topic.subtopics) : toggleTopic(topic.title)}
+                        className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
+                          (hasSubtopics ? allGroupSelected : isParentSelected)
+                            ? 'bg-purple-600 text-white'
+                            : isDark ? 'border border-white/20 bg-white/5' : 'border border-slate-300 bg-white'
+                        }`}
+                      >
+                        {(hasSubtopics ? allGroupSelected : isParentSelected) && <Check className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                    {hasSubtopics && isExpanded && (
+                      <div className="ml-6 mt-1 space-y-1">
+                        {topic.subtopics
+                          .filter(st => !searchQuery || st.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                          .map((st) => {
+                            const isSubSelected = selectedTopics.includes(st.title);
+                            return (
+                              <div
+                                key={st.title}
+                                onClick={() => toggleTopic(st.title)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all cursor-pointer ${
+                                  isSubSelected
+                                    ? isDark ? 'bg-purple-600/15 border border-purple-500/20' : 'bg-purple-50/80 border border-purple-200/60'
+                                    : isDark ? 'bg-white/[0.03] border border-transparent hover:bg-white/5' : 'bg-white/50 border border-transparent hover:bg-slate-50'
+                                }`}
+                              >
+                                <span className={`flex-1 text-sm truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{st.title}</span>
+                                <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-all ${
+                                  isSubSelected ? 'bg-purple-600 text-white' : isDark ? 'border border-white/20 bg-white/5' : 'border border-slate-300 bg-white'
+                                }`}>
+                                  {isSubSelected && <Check className="w-3.5 h-3.5" />}
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Confirm Topics CTA */}
+            <div className={`px-5 py-4 border-t ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
+              <Button
+                onClick={handleConfirmTopics}
+                disabled={selectedCount === 0}
+                className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20"
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Confirm Topics
+                {selectedCount > 0 && selectedCount < totalCount && (
+                  <span className="ml-2 bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">{selectedCount}/{totalCount}</span>
+                )}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Step 2: Diagnostic Prompt */}
+            <div className="px-6 pt-8 pb-6 text-center">
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1, type: "spring" }}
-                className="relative mb-3"
+                transition={{ type: "spring", delay: 0.1 }}
+                className="mb-5"
               >
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                  <Brain className="w-8 h-8 text-white" />
+                <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
+                  <Target className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                 </div>
               </motion.div>
 
               <motion.h2 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-xl font-black text-white mb-1.5"
+                transition={{ delay: 0.15 }}
+                className={`text-xl font-black mb-3 ${isDark ? 'text-white' : 'text-slate-900'}`}
               >
-                Material Analysis Complete
+                One More Step Before You Start Studying
               </motion.h2>
+
               <motion.p 
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-emerald-100/80 text-sm leading-relaxed max-w-[280px] mx-auto"
+                transition={{ delay: 0.2 }}
+                className={`text-sm mb-5 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}
               >
-                Our AI analyzed your <span className="font-bold text-white">{lesson?.course_name || 'material'}</span> and identified <span className="font-bold text-white">{topLevelTopics.length} key section{topLevelTopics.length !== 1 ? 's' : ''}</span>
+                Take a quick 5-question diagnostic so we can:
               </motion.p>
-            </div>
 
-            {/* Topics list */}
-            <div className={`px-5 py-4 ${isDark ? '' : ''}`}>
-              <div className="flex flex-wrap gap-1.5 max-h-[180px] overflow-y-auto">
-                {topLevelTopics.map((topic, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.35 + idx * 0.04 }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium ${isDark ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/20' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}
-                  >
-                    <CheckCircle2 className={`w-3 h-3 flex-shrink-0 ${isDark ? 'text-emerald-400' : 'text-emerald-500'}`} />
-                    <span className="truncate max-w-[200px]">{topic.title}</span>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Filter option */}
-              <button
-                onClick={() => setShowTopicSelection(true)}
-                className={`flex items-center gap-1.5 mt-3 text-xs font-semibold transition-colors ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="space-y-2.5 mb-6 max-w-[280px] mx-auto text-left"
               >
-                <Filter className="w-3.5 h-3.5" />
-                {selectedCount ? `${selectedCount} topics selected — tap to change` : 'Select specific topics to focus on'}
-              </button>
-            </div>
+                {[
+                  'Predict your exam grade',
+                  'Find your weak spots',
+                  'Build your personalized study plan'
+                ].map((text, i) => (
+                  <div key={i} className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <span className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{text}</span>
+                  </div>
+                ))}
+              </motion.div>
 
-            {/* CTA */}
-            <div className={`px-5 pb-5 pt-1`}>
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className={`text-xs mb-6 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}
+              >
+                This takes 3 minutes and makes everything else work better.
+              </motion.p>
+
               <Button
-                onClick={handleGoToDiagnostic}
+                onClick={handleStartDiagnostic}
                 disabled={!liveReady}
-                className={`w-full font-bold text-sm h-12 rounded-xl shadow-lg ${liveReady ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/20' : 'bg-slate-400 text-white/70 cursor-not-allowed'}`}
+                className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20"
               >
                 {liveReady ? (
-                  <><Play className="w-4 h-4 mr-2" /> Take Diagnostic Quiz</>
+                  <>Start 5-Question Diagnostic <Play className="w-4 h-4 ml-2" /></>
                 ) : (
-                  <><Sparkles className="w-4 h-4 mr-2 animate-pulse" /> Preparing Quiz...</>
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Preparing Quiz...</>
                 )}
               </Button>
+
               <button
-                onClick={handleDismiss}
-                className={`w-full text-center text-[11px] mt-2.5 py-1 font-medium ${isDark ? 'text-slate-500 hover:text-slate-400' : 'text-slate-400 hover:text-slate-500'}`}
+                onClick={handleSkipDiagnostic}
+                className={`w-full text-center text-[11px] mt-3 py-1 font-medium ${isDark ? 'text-slate-600 hover:text-slate-500' : 'text-slate-400 hover:text-slate-500'}`}
               >
-                I'll take the quiz later
+                Skip for now (you'll miss out on predictions)
               </button>
             </div>
-          </motion.div>
-        </DialogContent>
-      </Dialog>
-
-      <TopicSelectionModal
-        open={showTopicSelection}
-        onOpenChange={setShowTopicSelection}
-        lesson={lesson}
-        onConfirm={(selected) => {
-          setSelectedCount(selected.length);
-          window.dispatchEvent(new Event('reloadLesson'));
-        }}
-      />
-    </>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
