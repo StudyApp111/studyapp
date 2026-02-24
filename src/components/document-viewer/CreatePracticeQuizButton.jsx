@@ -7,7 +7,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import CustomizeGenerationModal from "@/components/modals/CustomizeGenerationModal";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
-export default function CreatePracticeQuizButton({ lesson, extractedContent, onExamCreated }) {
+export default function CreatePracticeQuizButton({ lesson, extractedContent, onExamCreated, diagnosticCompleted = false }) {
   const { isDark } = useTheme();
   const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -50,6 +50,9 @@ export default function CreatePracticeQuizButton({ lesson, extractedContent, onE
       generatingRef.current = false;
     }
   };
+
+  // Hide the button if diagnostic is not yet completed
+  if (!diagnosticCompleted) return null;
 
   return (
     <>

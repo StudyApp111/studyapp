@@ -33,15 +33,14 @@ export default function NotesTab({ lesson }) {
   const [fontSize, setFontSize] = useState('base'); // 'sm', 'base', 'lg'
   const [tocCollapsed, setTocCollapsed] = useState(false);
 
-  // Track if notes have been loaded to prevent redundant calls
-  const [notesLoaded, setNotesLoaded] = useState(false);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   
   useEffect(() => {
-    if (lesson?.id && !notesLoaded) {
+    if (lesson?.id && !initialLoadDone) {
       loadNotes();
-      setNotesLoaded(true);
+      setInitialLoadDone(true);
     }
-  }, [lesson?.id, notesLoaded]);
+  }, [lesson?.id, initialLoadDone]);
 
   const [allNotes, setAllNotes] = useState([]);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
