@@ -1541,10 +1541,11 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           </div>
         </div>
 
-        {/* Create Practice Quiz Button - below Official Exams */}
+        {/* Create Practice Quiz Button - below Official Exams, only when diagnostic is done */}
         <CreatePracticeQuizButton 
           lesson={lesson}
           extractedContent={extractedContent}
+          diagnosticCompleted={!!diagnosticExam?.completed}
           onExamCreated={(newExam) => {
             setExam(newExam);
             setCurrentQuestion(0);
