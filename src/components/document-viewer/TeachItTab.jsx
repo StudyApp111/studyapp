@@ -537,11 +537,14 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                         <button
                           key={set.topic}
                           onClick={() => {
-                            const firstIdx = cards.findIndex(c => (c.topic || 'General Concepts') === set.topic);
+                            const setCards = cards.filter(c => (c.topic || 'General Concepts') === set.topic);
+                            const setCardIds = setCards.map(c => c.id);
+                            const firstIdx = cards.findIndex(c => c.id === setCards[0]?.id);
                             if (firstIdx >= 0) {
                               setCurrentCardIndex(firstIdx);
                               setUserAnswer(cards[firstIdx].user_answer || "");
                               setShowFeedback(cards[firstIdx].completed);
+                              setCurrentSetCardIds(setCardIds);
                             }
                             setShowSetsList(false);
                           }}
