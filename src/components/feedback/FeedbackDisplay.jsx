@@ -525,7 +525,59 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
         {/* Strengths */}
         {strengths.length > 0 && (
           <motion.div
-...
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className={`border-0 shadow-lg overflow-hidden group hover:shadow-xl transition-all ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+              <CardHeader className={`pb-3 ${isDark ? 'bg-gradient-to-br from-emerald-600/20 to-teal-600/20' : 'bg-gradient-to-br from-emerald-50 to-teal-50'}`}>
+                <CardTitle className={`flex items-center gap-2 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                  <Star className="w-5 h-5 fill-emerald-600" />
+                  <span className="text-base font-bold">What You Nailed</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-2">
+                {strengths.slice(0, 3).map((strength, idx) => (
+                  <div key={idx} className={`flex items-start gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <span>{strength}</span>
+                  </div>
+                ))}
+                {strengths.length > 3 && (
+                  <p className={`text-xs italic pt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>+{strengths.length - 3} more strengths</p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Growth Areas */}
+        {weaknesses.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card className={`border-0 shadow-lg overflow-hidden group hover:shadow-xl transition-all ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+              <CardHeader className={`pb-3 ${isDark ? 'bg-gradient-to-br from-purple-600/20 to-indigo-600/20' : 'bg-gradient-to-br from-purple-50 to-indigo-50'}`}>
+                <CardTitle className={`flex items-center gap-2 ${isDark ? 'text-purple-400' : 'text-purple-700'}`}>
+                  <Rocket className="w-5 h-5" />
+                  <span className="text-base font-bold">Focus On This</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-2">
+                {weaknesses.slice(0, 3).map((weakness, idx) => (
+                  <div key={idx} className={`flex items-start gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <Target className="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" />
+                    <span>{weakness}</span>
+                  </div>
+                ))}
+                {weaknesses.length > 3 && (
+                  <p className={`text-xs italic pt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>+{weaknesses.length - 3} more areas</p>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
       </div>
 
