@@ -109,37 +109,31 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Lesson not found' }, { status: 400 });
     }
 
-    // Build content from whatever is available — DO NOT bail if compressed_content is missing
-    // PRIORITY: compressed_content (small) > topics (structured) > extracted (raw, needs truncation)
+    // Build content description — STRICTLY prefer compressed_content
+    // CreateLesson guarantees compressed_content exists for all input types before autoGenerateExam1 is called.
+    // Only fall back to extracted_content (capped) if compressed_content is somehow missing.
     let contentDescription = "";
-    if (lesson.input_type === "description" && lesson.description) {
-      contentDescription = lesson.description;
-    } else if (lesson.compressed_content) {
+    let contentSource = "";
+
+    if (lesson.compressed_content) {
       contentDescription = lesson.compressed_content;
-    } else if (lesson.topics?.length > 0) {
-      // Use structured topics as content source — much smaller than raw extracted content
-      contentDescription = lesson.topics.map(t => {
-        let section = `Topic: ${t.title}\n${t.description || ''}`;
-        if (t.key_content) section += `\nKey content: ${t.key_content}`;
-        if (t.subtopics?.length > 0) {
-          section += '\nSubtopics: ' + t.subtopics.map(st => `${st.title} - ${st.description || ''}`).join('; ');
-        }
-        return section;
-      }).join('\n\n');
+      contentSource = "compressed";
     } else if (lesson.extracted_content) {
-      // Use extracted content — cap at 15K chars to stay within safe prompt limits
-      // For huge documents (180+ pages), 30K was still causing context window issues
-      const MAX_EXTRACTED = 15000;
-      contentDescription = lesson.extracted_content.length > MAX_EXTRACTED
-        ? lesson.extracted_content.substring(0, MAX_EXTRACTED / 2) + "\n\n...[content truncated for brevity]...\n\n" + lesson.extracted_content.substring(lesson.extracted_content.length - MAX_EXTRACTED / 2)
+      // Fallback: cap raw OCR at 4000 chars to keep prompt small and fast
+      const MAX_RAW = 4000;
+      contentDescription = lesson.extracted_content.length > MAX_RAW
+        ? lesson.extracted_content.substring(0, MAX_RAW)
         : lesson.extracted_content;
+      contentSource = "extracted_fallback";
     } else if (lesson.description) {
       contentDescription = lesson.description;
+      contentSource = "description";
     } else {
       contentDescription = `Course: ${lesson.course_name}`;
+      contentSource = "course_name_only";
     }
 
-    console.log(`Content source: ${lesson.compressed_content ? 'compressed' : lesson.topics?.length ? 'topics' : lesson.extracted_content ? 'extracted' : lesson.description ? 'description' : 'course_name'}, length: ${contentDescription.length}`);
+    console.log(`Content source: ${contentSource}, length: ${contentDescription.length}`);
 
     // Get learning profile
     let learningProfile = {};
