@@ -10,7 +10,7 @@ import CreateLessonLoader from "@/components/create-lesson/CreateLessonLoader";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import GuestLessonCreatedModal from "@/components/guest/GuestLessonCreatedModal";
-import { usePostHog } from 'posthog-js/react';
+import posthog from 'posthog-js';
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
@@ -18,7 +18,7 @@ export default function CreateLesson() {
   const navigate = useNavigate();
   const { canUpload, incrementUploadCount, triggerUpgradeModal } = useSubscription();
   const { isGuest, guestLessonCreated, setGuestLesson, guestData } = useGuestSession();
-  const posthog = usePostHog();
+
   const [courseName, setCourseName] = useState("");
   const [materialData, setMaterialData] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
