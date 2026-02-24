@@ -101,6 +101,37 @@ export default function DocumentViewer() {
   const completedExamCount = (exams || []).filter(e => e.completed).length;
   const diagnosticCompleted = (exams || []).some(e => e.exam_number === 1 && e.completed);
   
+  // Track if user explicitly skipped diagnostic (locks content generation)
+  const [diagnosticSkipped, setDiagnosticSkipped] = useState(false);
+  
+  useEffect(() => {
+    if (lesson?.id) {
+      setDiagnosticSkipped(!!localStorage.getItem(`diagnostic_skipped_${lesson.id}`));
+    }
+  }, [lesson?.id]);
+  
+  useEffect(() => {
+    const handleSkip = (e) => {
+      if (e.detail?.lessonId === lesson?.id) {
+        setDiagnosticSkipped(true);
+      }
+    };
+    window.addEventListener('diagnosticSkipped', handleSkip);
+    return () => window.removeEventListener('diagnosticSkipped', handleSkip);
+  }, [lesson?.id]);
+  
+  // Clear skip flag if diagnostic gets completed
+  useEffect(() => {
+    if (diagnosticCompleted && lesson?.id) {
+      localStorage.removeItem(`diagnostic_skipped_${lesson.id}`);
+      setDiagnosticSkipped(false);
+    }
+  }, [diagnosticCompleted, lesson?.id]);
+  
+  // Content locked = diagnostic not completed (and either not skipped, or skipped)
+  // If skipped: ALL generation tabs locked. If not skipped and not completed: also locked.
+  const contentLocked = !diagnosticCompleted;
+  
   // Red dot logic based on Study Plan tasks
   const getTaskStatus = (taskType) => {
     if (!activePlan?.tasks) return { needsAction: false };
