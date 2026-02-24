@@ -15,6 +15,15 @@ import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
 
 const TOTAL_STEPS = 7;
 
+// New step order:
+// 1 = Profile (name + school)
+// 2 = Welcome
+// 3 = HowItWorks
+// 4 = Materials
+// 5 = Features
+// 6 = SignIn (authenticate)
+// 7 = Ready ("You're all set")
+
 export default function OnboardingModal({ onComplete }) {
   const { isDark } = useTheme();
   const [step, setStep] = useState(1);
@@ -32,10 +41,17 @@ export default function OnboardingModal({ onComplete }) {
           const currentUser = await base44.auth.me();
           setUser(currentUser);
           setDisplayName(currentUser.full_name?.split(" ")[0] || "");
-          // Authenticated users skip sign-in, start at step 2 (profile)
-          setStep(2);
+          // Authenticated users who return after sign-in: jump to step 7 (Ready)
+          // Check if they were mid-onboarding (sessionStorage flag)
+          const wasOnboarding = sessionStorage.getItem("onboarding_v2_active");
+          if (wasOnboarding) {
+            setStep(7);
+          } else {
+            // Fresh authenticated user who hasn't completed onboarding — start at profile
+            setStep(1);
+          }
         }
-        // Guests always start at step 1 (sign-in) — they go through full onboarding
+        // Not authenticated — start at step 1 (profile)
       } catch {
         // Not authenticated - stay on step 1
       } finally {
@@ -61,11 +77,10 @@ export default function OnboardingModal({ onComplete }) {
   }, [step]);
 
   const handleBack = useCallback(() => {
-    // Users who logged in land on step 2 — can't go back from there
-    if (step > 2 || (step === 2 && !user)) {
+    if (step > 1) {
       setStep((s) => s - 1);
     }
-  }, [step, user]);
+  }, [step]);
 
   const handleSignIn = (method) => {
     try { posthog.capture('onboarding_sign_in_clicked', { method }); } catch {}
@@ -78,7 +93,8 @@ export default function OnboardingModal({ onComplete }) {
     try { posthog.capture('guest_session_started'); } catch {}
     const result = await startGuestSession();
     if (result.allowed) {
-      setStep(2); // Go to profile step
+      // Guest skips sign-in (step 6) entirely — go straight to step 7
+      setStep(7);
     }
     return result;
   };
@@ -88,9 +104,14 @@ export default function OnboardingModal({ onComplete }) {
       posthog.capture('onboarding_profile_completed', { has_school: !!school });
     } catch {}
 
-    // Guest mode: store profile data locally, skip API calls
-    if (isGuest) {
-      updateGuestProfile(name, school);
+    // At step 1, user may not be authenticated yet — store locally for now
+    if (isGuest || !user) {
+      if (isGuest) {
+        updateGuestProfile(name, school);
+      }
+      // Store in sessionStorage so we can save after auth
+      sessionStorage.setItem("onboarding_profile_name", name);
+      sessionStorage.setItem("onboarding_profile_school", school);
       setDisplayName(name);
       handleNext();
       return;
@@ -128,13 +149,37 @@ export default function OnboardingModal({ onComplete }) {
     // Guest mode: skip updateMe, just complete
     if (isGuest) {
       sessionStorage.removeItem("onboarding_v2_active");
+      sessionStorage.removeItem("onboarding_profile_name");
+      sessionStorage.removeItem("onboarding_profile_school");
       onComplete?.();
       return;
     }
 
     try {
-      await base44.auth.updateMe({ onboarding_completed: true });
+      // Save profile data that was collected before authentication
+      const savedName = sessionStorage.getItem("onboarding_profile_name");
+      const savedSchool = sessionStorage.getItem("onboarding_profile_school");
+      
+      if (savedName) {
+        await base44.auth.updateMe({ display_name: savedName, onboarding_completed: true });
+      } else {
+        await base44.auth.updateMe({ onboarding_completed: true });
+      }
+
+      if (savedSchool && user) {
+        const existingProfiles = await base44.entities.LearningProfile.filter({
+          created_by: user.email,
+        });
+        if (existingProfiles.length > 0) {
+          await base44.entities.LearningProfile.update(existingProfiles[0].id, { school: savedSchool });
+        } else {
+          await base44.entities.LearningProfile.create({ school: savedSchool });
+        }
+      }
+
       sessionStorage.removeItem("onboarding_v2_active");
+      sessionStorage.removeItem("onboarding_profile_name");
+      sessionStorage.removeItem("onboarding_profile_school");
       window.dispatchEvent(new Event("userSubscriptionUpdated"));
     } catch (err) {
       console.error("Error completing onboarding:", err);
@@ -145,7 +190,6 @@ export default function OnboardingModal({ onComplete }) {
   if (isCheckingAuth) return null;
 
   const progress = (step / TOTAL_STEPS) * 100;
-  const canGoBack = step > 2 || (step === 2 && !user);
 
   return (
     <>
@@ -200,54 +244,55 @@ export default function OnboardingModal({ onComplete }) {
           <div className="px-6 pb-6">
             <AnimatePresence mode="wait">
               {step === 1 && (
-                <StepSignIn 
-                  key="step1" 
-                  onSignIn={handleSignIn} 
-                  onGuestStart={checkIsInAppBrowser() ? handleGuestStart : null}
-                />
-              )}
-              {step === 2 && (
                 <StepProfile
-                  key="step2"
+                  key="step1"
                   user={user}
                   isGuest={isGuest}
                   onComplete={handleProfileComplete}
-                  onBack={canGoBack ? handleBack : null}
+                  onBack={null}
                 />
               )}
-              {step === 3 && (
+              {step === 2 && (
                 <StepWelcome
-                  key="step3"
+                  key="step2"
                   displayName={displayName}
                   onNext={handleNext}
                   onBack={handleBack}
                 />
               )}
-              {step === 4 && (
+              {step === 3 && (
                 <StepHowItWorks
+                  key="step3"
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
+              {step === 4 && (
+                <StepMaterials
                   key="step4"
                   onNext={handleNext}
                   onBack={handleBack}
                 />
               )}
               {step === 5 && (
-                <StepMaterials
+                <StepFeatures
                   key="step5"
                   onNext={handleNext}
                   onBack={handleBack}
                 />
               )}
               {step === 6 && (
-                <StepFeatures
+                <StepSignIn
                   key="step6"
-                  onNext={handleNext}
+                  onSignIn={handleSignIn}
+                  onGuestStart={checkIsInAppBrowser() ? handleGuestStart : null}
                   onBack={handleBack}
                 />
               )}
               {step === 7 && (
                 <StepReady
                   key="step7"
-                  displayName={displayName}
+                  displayName={displayName || sessionStorage.getItem("onboarding_profile_name") || ""}
                   onComplete={handleComplete}
                   onBack={handleBack}
                 />

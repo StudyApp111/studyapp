@@ -10,7 +10,8 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   const { isDark } = useTheme();
   const [dismissed, setDismissed] = useState(false);
   const [step, setStep] = useState(1);
-  const [deselected, setDeselected] = useState(new Set());
+  const [deselectedSections, setDeselectedSections] = useState(new Set());
+  const [deselectedSubtopics, setDeselectedSubtopics] = useState(new Set());
 
   const topics = lesson?.topics || [];
   const dismissKey = `topic_flow_dismissed_${lesson?.id}`;
@@ -26,33 +27,79 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
     if (saved?.length > 0 && saved.length < topLevelTopics.length) {
       const allTitles = topLevelTopics.map(t => t.title);
       const removed = new Set(allTitles.filter(t => !saved.includes(t)));
-      setDeselected(removed);
+      setDeselectedSections(removed);
     }
   }, [lesson?.id]);
 
   if (topLevelTopics.length === 0 || dismissed || diagnosticCompleted) return null;
 
-  const toggleTopic = (title) => {
-    setDeselected(prev => {
+  const toggleSection = (title) => {
+    setDeselectedSections(prev => {
       const next = new Set(prev);
-      if (next.has(title)) next.delete(title);
-      else next.add(title);
+      if (next.has(title)) {
+        next.delete(title);
+        // Re-select all subtopics for this section
+        const section = topLevelTopics.find(t => t.title === title);
+        if (section?.subtopics) {
+          setDeselectedSubtopics(prevSub => {
+            const nextSub = new Set(prevSub);
+            section.subtopics.forEach(st => nextSub.delete(`${title}::${st.title}`));
+            return nextSub;
+          });
+        }
+      } else {
+        next.add(title);
+        // Deselect all subtopics for this section too
+        const section = topLevelTopics.find(t => t.title === title);
+        if (section?.subtopics) {
+          setDeselectedSubtopics(prevSub => {
+            const nextSub = new Set(prevSub);
+            section.subtopics.forEach(st => nextSub.add(`${title}::${st.title}`));
+            return nextSub;
+          });
+        }
+      }
+      return next;
+    });
+  };
+
+  const toggleSubtopic = (sectionTitle, subtopicTitle) => {
+    const key = `${sectionTitle}::${subtopicTitle}`;
+    setDeselectedSubtopics(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
 
   const handleDeselectAll = () => {
-    if (deselected.size === topLevelTopics.length) setDeselected(new Set());
-    else setDeselected(new Set(topLevelTopics.map(t => t.title)));
+    if (deselectedSections.size === topLevelTopics.length) {
+      setDeselectedSections(new Set());
+      setDeselectedSubtopics(new Set());
+    } else {
+      setDeselectedSections(new Set(topLevelTopics.map(t => t.title)));
+      const allSubKeys = new Set();
+      topLevelTopics.forEach(s => {
+        s.subtopics?.forEach(st => allSubKeys.add(`${s.title}::${st.title}`));
+      });
+      setDeselectedSubtopics(allSubKeys);
+    }
   };
 
-  const selectedTopics = topLevelTopics.filter(t => !deselected.has(t.title));
+  const selectedSections = topLevelTopics.filter(t => !deselectedSections.has(t.title));
+  const selectedCount = selectedSections.length;
 
   const handleConfirmTopics = async () => {
     const allTitles = [];
-    selectedTopics.forEach(t => {
+    selectedSections.forEach(t => {
       allTitles.push(t.title);
-      t.subtopics?.forEach(st => allTitles.push(st.title));
+      t.subtopics?.forEach(st => {
+        const key = `${t.title}::${st.title}`;
+        if (!deselectedSubtopics.has(key)) {
+          allTitles.push(st.title);
+        }
+      });
     });
     await base44.entities.Lesson.update(lesson.id, { selected_topics: allTitles });
     window.dispatchEvent(new Event('reloadLesson'));
@@ -75,12 +122,12 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
     window.dispatchEvent(new CustomEvent('diagnosticSkipped', { detail: { lessonId: lesson.id } }));
   };
 
-  const allDeselected = deselected.size === topLevelTopics.length;
+  const allDeselected = deselectedSections.size === topLevelTopics.length;
 
   return (
     <Dialog open={!dismissed} onOpenChange={() => {}}>
       <DialogContent
-        className="w-[calc(100vw-40px)] sm:w-[400px] max-w-[400px] p-0 gap-0 overflow-hidden rounded-2xl border-0 bg-[#14141e] [&>button]:hidden"
+        className="w-[calc(100vw-40px)] sm:w-[440px] max-w-[440px] p-0 gap-0 overflow-hidden rounded-2xl border-0 bg-[#14141e] [&>button]:hidden"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -97,11 +144,13 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
           <Step1Topics
             lesson={lesson}
             topLevelTopics={topLevelTopics}
-            deselected={deselected}
-            toggleTopic={toggleTopic}
+            deselectedSections={deselectedSections}
+            deselectedSubtopics={deselectedSubtopics}
+            toggleSection={toggleSection}
+            toggleSubtopic={toggleSubtopic}
             handleDeselectAll={handleDeselectAll}
             allDeselected={allDeselected}
-            selectedCount={selectedTopics.length}
+            selectedCount={selectedCount}
             onConfirm={handleConfirmTopics}
           />
         ) : (
@@ -116,9 +165,7 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
 }
 
 /* ─── Step 1: Topic selection ─── */
-function Step1Topics({ lesson, topLevelTopics, deselected, toggleTopic, handleDeselectAll, allDeselected, selectedCount, onConfirm }) {
-  const [expanded, setExpanded] = useState(null); // track which topic title is expanded
-
+function Step1Topics({ lesson, topLevelTopics, deselectedSections, deselectedSubtopics, toggleSection, toggleSubtopic, handleDeselectAll, allDeselected, selectedCount, onConfirm }) {
   return (
     <div className="px-5 pb-5 pt-2">
       {/* Header */}
@@ -135,41 +182,53 @@ function Step1Topics({ lesson, topLevelTopics, deselected, toggleTopic, handleDe
 
       <div className="h-px mb-3 bg-white/10" />
 
-      {/* Section/topic list */}
-      <div className="space-y-0.5 mb-3 max-h-[40vh] overflow-y-auto -mx-1 px-1">
+      {/* Section/topic list — NO vertical scroll, text wraps */}
+      <div className="space-y-0.5 mb-3 -mx-1 px-1">
         {topLevelTopics.map((section, idx) => {
-          const isSelected = !deselected.has(section.title);
-          const isExpanded = expanded === section.title;
+          const isSectionSelected = !deselectedSections.has(section.title);
           const subtopics = section.subtopics || [];
 
           return (
             <div key={idx}>
               {/* Section row */}
               <button
-                onClick={() => toggleTopic(section.title)}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-all ${
-                  isSelected ? 'bg-white/[0.04]' : 'bg-white/[0.02] opacity-40'
+                onClick={() => toggleSection(section.title)}
+                className={`w-full flex items-start gap-2 px-3 py-2 rounded-lg text-left transition-all ${
+                  isSectionSelected ? 'bg-white/[0.04]' : 'bg-white/[0.02] opacity-40'
                 }`}
               >
-                <FolderOpen className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-amber-400' : 'text-slate-600'}`} />
+                <FolderOpen className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isSectionSelected ? 'text-amber-400' : 'text-slate-600'}`} />
                 <span
-                  className={`text-[13px] font-semibold flex-1 truncate ${
-                    isSelected ? 'text-slate-200' : 'text-slate-500 line-through'
+                  className={`text-[13px] font-semibold flex-1 break-words ${
+                    isSectionSelected ? 'text-slate-200' : 'text-slate-500 line-through'
                   }`}
                 >
                   {section.title}
                 </span>
-                {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />}
+                {isSectionSelected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />}
               </button>
 
-              {/* Subtopics */}
-              {isSelected && subtopics.length > 0 && (
+              {/* Subtopics — selectable */}
+              {isSectionSelected && subtopics.length > 0 && (
                 <div className="ml-8 mt-0.5 space-y-0.5">
-                  {subtopics.map((st, stIdx) => (
-                    <div key={stIdx} className="py-1 px-2">
-                      <span className="text-[12px] text-slate-500 truncate block">{st.title}</span>
-                    </div>
-                  ))}
+                  {subtopics.map((st, stIdx) => {
+                    const subKey = `${section.title}::${st.title}`;
+                    const isSubSelected = !deselectedSubtopics.has(subKey);
+                    return (
+                      <button
+                        key={stIdx}
+                        onClick={() => toggleSubtopic(section.title, st.title)}
+                        className={`w-full flex items-start gap-2 py-1 px-2 rounded text-left transition-all ${
+                          isSubSelected ? '' : 'opacity-40'
+                        }`}
+                      >
+                        <span className={`text-[12px] flex-1 break-words ${isSubSelected ? 'text-slate-400' : 'text-slate-600 line-through'}`}>
+                          {st.title}
+                        </span>
+                        {isSubSelected && <CheckCircle2 className="w-3 h-3 text-emerald-500/60 flex-shrink-0 mt-0.5" />}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -267,7 +326,7 @@ function Step2Diagnostic({ onStart, onSkip }) {
         </div>
       </div>
 
-      {/* CTA — always enabled, takes user directly to exam tab */}
+      {/* CTA */}
       <Button
         onClick={onStart}
         className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20"

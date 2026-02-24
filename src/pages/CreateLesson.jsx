@@ -9,7 +9,7 @@ import MaterialUploader from "@/components/onboarding/MaterialUploader";
 import CreateLessonLoader from "@/components/create-lesson/CreateLessonLoader";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
-import GuestLessonCreatedModal from "@/components/guest/GuestLessonCreatedModal";
+// GuestLessonCreatedModal removed — guests proceed directly to DocumentViewer
 import posthog from 'posthog-js';
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
@@ -29,7 +29,7 @@ export default function CreateLesson() {
   const [user, setUser] = useState(null);
   const [learningProfile, setLearningProfile] = useState(null);
   const [stepStatuses, setStepStatuses] = useState({ extracted: false, compressed: false, examGenerated: false });
-  const [showGuestLessonModal, setShowGuestLessonModal] = useState(false);
+  // Guest modal removed — guests go straight to DocumentViewer
 
   useEffect(() => {
     // Guest users who already created a lesson cannot create another
@@ -195,7 +195,6 @@ export default function CreateLesson() {
         setGuestLesson(lessonData);
         setStepStatuses(prev => ({ ...prev, examGenerated: true }));
         setLoaderComplete(true);
-        setShowGuestLessonModal(true);
         return;
       }
 
@@ -305,9 +304,9 @@ export default function CreateLesson() {
   };
 
   const handleLoaderComplete = () => {
-    // For guests, show the "lesson created" modal instead of navigating
+    // For guests, navigate directly to DocumentViewer
     if (isGuest) {
-      setShowGuestLessonModal(true);
+      navigate(createPageUrl("DocumentViewer"), { replace: true });
       return;
     }
     if (createdLessonId) {
@@ -320,23 +319,12 @@ export default function CreateLesson() {
   // Show loader when processing
   if (showLoader) {
     return (
-      <>
-        <CreateLessonLoader 
-          fileName={materialData?.type === "file" ? materialData.files?.[0]?.name : null}
-          isComplete={loaderComplete}
-          onAnimationComplete={handleLoaderComplete}
-          stepStatuses={stepStatuses}
-        />
-        {showGuestLessonModal && (
-          <GuestLessonCreatedModal 
-            onDismiss={() => {
-              setShowGuestLessonModal(false);
-              // Navigate guest to DocumentViewer with their local lesson data
-              navigate(createPageUrl("DocumentViewer"), { replace: true });
-            }}
-          />
-        )}
-      </>
+      <CreateLessonLoader 
+        fileName={materialData?.type === "file" ? materialData.files?.[0]?.name : null}
+        isComplete={loaderComplete}
+        onAnimationComplete={handleLoaderComplete}
+        stepStatuses={stepStatuses}
+      />
     );
   }
 

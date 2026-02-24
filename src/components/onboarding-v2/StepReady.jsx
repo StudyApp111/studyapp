@@ -47,37 +47,39 @@ export default function StepReady({ displayName, onComplete, onBack }) {
             isDark ? "text-slate-300" : "text-slate-700"
           }`}
         >
-          Are you ready to lock in? 🧠
+          Are you ready to lock in?
         </p>
         <p
           className={`text-sm ${
             isDark ? "text-slate-400" : "text-slate-500"
           }`}
         >
-          Click 'Upload Notes' to get started
+          Click 'Start Studying' to get started
         </p>
       </div>
 
       {/* Navigation */}
       <div className="flex items-center gap-3 pt-2">
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className={`${
-            isDark
-              ? "text-slate-400 hover:text-white"
-              : "text-slate-500 hover:text-slate-900"
-          }`}
-        >
-          <ChevronLeft className="w-4 h-4 mr-1" />
-          Back
-        </Button>
+        {onBack && (
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className={`${
+              isDark
+                ? "text-slate-400 hover:text-white"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back
+          </Button>
+        )}
         <Button
           onClick={handleGetStarted}
           className="flex-1 h-12 text-base font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-purple-500/20"
         >
           <Rocket className="w-5 h-5 mr-2" />
-          Get Started
+          Start Studying
         </Button>
       </div>
     </motion.div>

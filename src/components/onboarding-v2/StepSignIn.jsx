@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { Mail, ExternalLink, Smartphone, Loader2, Eye } from "lucide-react";
+import { Mail, Smartphone, Loader2, Eye, ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
 
-export default function StepSignIn({ onSignIn, onGuestStart }) {
+export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
   const { isDark } = useTheme();
   const [showBrowserWarning, setShowBrowserWarning] = useState(false);
   const [guestLoading, setGuestLoading] = useState(false);
@@ -38,18 +39,6 @@ export default function StepSignIn({ onSignIn, onGuestStart }) {
       transition={{ duration: 0.25 }}
       className="text-center space-y-6 py-4"
     >
-      {/* Logo */}
-      <div className="flex items-center justify-center gap-3">
-        <img
-          src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/6afa508f0_LogoOnly.png"
-          alt="StudyApp Logo"
-          className="w-12 h-12"
-        />
-        <span className={`text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
-          StudyApp
-        </span>
-      </div>
-
       <AnimatePresence mode="wait">
         {showBrowserWarning ? (
           <motion.div
@@ -132,15 +121,17 @@ export default function StepSignIn({ onSignIn, onGuestStart }) {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-            <div className="space-y-2">
+            {/* New messaging for step 6 */}
+            <div className="space-y-3">
               <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
-                Welcome to StudyApp
+                Find out what grade you'd get today.
               </h2>
               <p className={`text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                Sign up or sign in to continue
+                Sign in and upload your first lesson — we'll run a diagnostic and predict your actual grade.
               </p>
             </div>
 
+            {/* Sign-in buttons only — no CTA */}
             <div className="space-y-3 max-w-sm mx-auto">
               <button
                 onClick={() => handleSignIn("google")}
@@ -177,6 +168,24 @@ export default function StepSignIn({ onSignIn, onGuestStart }) {
               <a href="#" className="underline">Terms of Service</a> and{" "}
               <a href="#" className="underline">Privacy Policy</a>
             </p>
+
+            {/* Back button */}
+            {onBack && (
+              <div className="pt-1">
+                <Button
+                  variant="ghost"
+                  onClick={onBack}
+                  className={`${
+                    isDark
+                      ? "text-slate-400 hover:text-white"
+                      : "text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Back
+                </Button>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
