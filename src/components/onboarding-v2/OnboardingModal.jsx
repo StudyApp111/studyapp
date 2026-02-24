@@ -11,17 +11,17 @@ import StepFeatures from "./StepFeatures";
 import StepReady from "./StepReady";
 import StepMaterials from "./StepMaterials";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
-import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
+import { checkIsMobile } from "@/components/utils/BrowserCompatibility";
 
 const TOTAL_STEPS = 7;
 
-// New step order:
+// Step order:
 // 1 = Profile (name + school)
 // 2 = Welcome
 // 3 = HowItWorks
 // 4 = Materials
 // 5 = Features
-// 6 = SignIn (authenticate)
+// 6 = SignIn (authenticate) — guest preview available on ALL mobile
 // 7 = Ready ("You're all set")
 
 export default function OnboardingModal({ onComplete }) {
@@ -32,7 +32,6 @@ export default function OnboardingModal({ onComplete }) {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { isGuest, startGuestSession, updateGuestProfile } = useGuestSession();
 
-  // On mount, check if user is already authenticated
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -41,19 +40,15 @@ export default function OnboardingModal({ onComplete }) {
           const currentUser = await base44.auth.me();
           setUser(currentUser);
           setDisplayName(currentUser.full_name?.split(" ")[0] || "");
-          // Authenticated users who return after sign-in: jump to step 7 (Ready)
-          // Check if they were mid-onboarding (sessionStorage flag)
           const wasOnboarding = sessionStorage.getItem("onboarding_v2_active");
           if (wasOnboarding) {
             setStep(7);
           } else {
-            // Fresh authenticated user who hasn't completed onboarding — start at profile
             setStep(1);
           }
         }
-        // Not authenticated — start at step 1 (profile)
       } catch {
-        // Not authenticated - stay on step 1
+        // Not authenticated
       } finally {
         setIsCheckingAuth(false);
       }
@@ -61,7 +56,6 @@ export default function OnboardingModal({ onComplete }) {
     checkAuth();
   }, [isGuest]);
 
-  // Track step changes in PostHog
   useEffect(() => {
     try {
       posthog.capture('onboarding_step_viewed', { step, total_steps: TOTAL_STEPS });
@@ -93,7 +87,7 @@ export default function OnboardingModal({ onComplete }) {
     try { posthog.capture('guest_session_started'); } catch {}
     const result = await startGuestSession();
     if (result.allowed) {
-      // Guest skips sign-in (step 6) entirely — go straight to step 7
+      // Guest skips sign-in and ready steps — go straight to complete
       setStep(7);
     }
     return result;
@@ -104,12 +98,10 @@ export default function OnboardingModal({ onComplete }) {
       posthog.capture('onboarding_profile_completed', { has_school: !!school });
     } catch {}
 
-    // At step 1, user may not be authenticated yet — store locally for now
     if (isGuest || !user) {
       if (isGuest) {
         updateGuestProfile(name, school);
       }
-      // Store in sessionStorage so we can save after auth
       sessionStorage.setItem("onboarding_profile_name", name);
       sessionStorage.setItem("onboarding_profile_school", school);
       setDisplayName(name);
@@ -121,14 +113,11 @@ export default function OnboardingModal({ onComplete }) {
       await base44.auth.updateMe({ display_name: name });
       setDisplayName(name);
 
-      // Save learning profile
       const existingProfiles = await base44.entities.LearningProfile.filter({
         created_by: user.email,
       });
       if (existingProfiles.length > 0) {
-        await base44.entities.LearningProfile.update(existingProfiles[0].id, {
-          school,
-        });
+        await base44.entities.LearningProfile.update(existingProfiles[0].id, { school });
       } else {
         await base44.entities.LearningProfile.create({ school });
       }
@@ -136,7 +125,6 @@ export default function OnboardingModal({ onComplete }) {
       handleNext();
     } catch (err) {
       console.error("Error saving profile:", err);
-      // Still advance even if save fails
       handleNext();
     }
   };
@@ -146,7 +134,6 @@ export default function OnboardingModal({ onComplete }) {
       posthog.capture('onboarding_completed', { total_steps: TOTAL_STEPS, is_guest: isGuest });
     } catch {}
 
-    // Guest mode: skip updateMe, just complete
     if (isGuest) {
       sessionStorage.removeItem("onboarding_v2_active");
       sessionStorage.removeItem("onboarding_profile_name");
@@ -156,7 +143,6 @@ export default function OnboardingModal({ onComplete }) {
     }
 
     try {
-      // Save profile data that was collected before authentication
       const savedName = sessionStorage.getItem("onboarding_profile_name");
       const savedSchool = sessionStorage.getItem("onboarding_profile_school");
       
@@ -191,46 +177,31 @@ export default function OnboardingModal({ onComplete }) {
 
   const progress = (step / TOTAL_STEPS) * 100;
 
+  // Show guest preview on ALL mobile devices
+  const isMobile = checkIsMobile();
+
   return (
     <>
-      {/* Dimmed overlay — no blur, just dim */}
       <div className="fixed inset-0 z-[9998] bg-black/60" />
-
-      {/* Modal container */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
           className={`pointer-events-auto w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl border ${
-            isDark
-              ? "bg-[#12121a] border-white/10"
-              : "bg-white border-slate-200"
+            isDark ? "bg-[#12121a] border-white/10" : "bg-white border-slate-200"
           }`}
         >
-          {/* Progress bar header */}
           <div className="sticky top-0 z-10 px-6 pt-5 pb-3">
             <div className="flex items-center justify-between mb-2">
-              <span
-                className={`text-xs font-medium ${
-                  isDark ? "text-slate-400" : "text-slate-500"
-                }`}
-              >
+              <span className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                 Step {step} of {TOTAL_STEPS}
               </span>
-              <span
-                className={`text-xs font-medium ${
-                  isDark ? "text-slate-400" : "text-slate-500"
-                }`}
-              >
+              <span className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                 {Math.round(progress)}%
               </span>
             </div>
-            <div
-              className={`h-1.5 rounded-full overflow-hidden ${
-                isDark ? "bg-white/10" : "bg-slate-200"
-              }`}
-            >
+            <div className={`h-1.5 rounded-full overflow-hidden ${isDark ? "bg-white/10" : "bg-slate-200"}`}>
               <motion.div
                 className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 rounded-full"
                 initial={{ width: 0 }}
@@ -240,52 +211,28 @@ export default function OnboardingModal({ onComplete }) {
             </div>
           </div>
 
-          {/* Step content */}
           <div className="px-6 pb-6">
             <AnimatePresence mode="wait">
               {step === 1 && (
-                <StepProfile
-                  key="step1"
-                  user={user}
-                  isGuest={isGuest}
-                  onComplete={handleProfileComplete}
-                  onBack={null}
-                />
+                <StepProfile key="step1" user={user} isGuest={isGuest} onComplete={handleProfileComplete} onBack={null} />
               )}
               {step === 2 && (
-                <StepWelcome
-                  key="step2"
-                  displayName={displayName}
-                  onNext={handleNext}
-                  onBack={handleBack}
-                />
+                <StepWelcome key="step2" displayName={displayName} onNext={handleNext} onBack={handleBack} />
               )}
               {step === 3 && (
-                <StepHowItWorks
-                  key="step3"
-                  onNext={handleNext}
-                  onBack={handleBack}
-                />
+                <StepHowItWorks key="step3" onNext={handleNext} onBack={handleBack} />
               )}
               {step === 4 && (
-                <StepMaterials
-                  key="step4"
-                  onNext={handleNext}
-                  onBack={handleBack}
-                />
+                <StepMaterials key="step4" onNext={handleNext} onBack={handleBack} />
               )}
               {step === 5 && (
-                <StepFeatures
-                  key="step5"
-                  onNext={handleNext}
-                  onBack={handleBack}
-                />
+                <StepFeatures key="step5" onNext={handleNext} onBack={handleBack} />
               )}
               {step === 6 && (
                 <StepSignIn
                   key="step6"
                   onSignIn={handleSignIn}
-                  onGuestStart={checkIsInAppBrowser() ? handleGuestStart : null}
+                  onGuestStart={isMobile ? handleGuestStart : null}
                   onBack={handleBack}
                 />
               )}

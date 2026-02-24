@@ -102,7 +102,7 @@ export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
                     ) : (
                       <>
                         <Eye className="w-4 h-4" />
-                        Preview as Guest (5 min)
+                        Preview as Guest
                       </>
                     )}
                   </button>
@@ -121,7 +121,6 @@ export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-            {/* New messaging for step 6 */}
             <div className="space-y-3">
               <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
                 Find out what grade you'd get today.
@@ -131,7 +130,7 @@ export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
               </p>
             </div>
 
-            {/* Sign-in buttons only — no CTA */}
+            {/* Sign-in buttons */}
             <div className="space-y-3 max-w-sm mx-auto">
               <button
                 onClick={() => handleSignIn("google")}
@@ -163,23 +162,42 @@ export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
               </button>
             </div>
 
+            {/* Guest preview for mobile users */}
+            {onGuestStart && (
+              <div className="space-y-2 max-w-sm mx-auto pt-1">
+                <div className={`h-px ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
+                <button
+                  onClick={handleGuestStart}
+                  disabled={guestLoading}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50"
+                >
+                  {guestLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4" />
+                      Preview as Guest
+                    </>
+                  )}
+                </button>
+                {guestError && (
+                  <p className="text-xs text-red-400 text-center">{guestError}</p>
+                )}
+              </div>
+            )}
+
             <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>
               By continuing, you agree to our{" "}
               <a href="#" className="underline">Terms of Service</a> and{" "}
               <a href="#" className="underline">Privacy Policy</a>
             </p>
 
-            {/* Back button */}
             {onBack && (
               <div className="pt-1">
                 <Button
                   variant="ghost"
                   onClick={onBack}
-                  className={`${
-                    isDark
-                      ? "text-slate-400 hover:text-white"
-                      : "text-slate-500 hover:text-slate-900"
-                  }`}
+                  className={`${isDark ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}`}
                 >
                   <ChevronLeft className="w-4 h-4 mr-1" />
                   Back
