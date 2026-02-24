@@ -535,37 +535,70 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       }
       
       if (dbExam && !dbExam.questions?.length) {
-        // Exam record exists but no questions — check if generation is stale (>90s old)
-        const updatedAt = new Date(dbExam.updated_date || dbExam.created_date);
-        const secondsSinceUpdate = (Date.now() - updatedAt.getTime()) / 1000;
-        const isStale = secondsSinceUpdate > 90;
-        
-        if (!isStale) {
-          // Recently updated — poll with exponential backoff to avoid rate limits
-          console.log('⏳ Exam 1 record exists in DB, generation in progress — polling...');
-          setIsGenerating(true);
-          
-          for (let i = 0; i < 15; i++) {
-            const delay = Math.min(2000 * Math.pow(1.3, i), 6000);
-            await new Promise(r => setTimeout(r, delay));
+        // Exam record exists but no questions — poll, then retry autoGenerateExam1 if needed
+        console.log('⏳ Exam 1 record exists in DB but no questions — starting poll + retry logic...');
+        setIsGenerating(true);
+
+        // Phase 1: Poll for 25s (the initial autoGenerateExam1 call from CreateLesson may still be running)
+        const PHASE1_POLLS = 8;
+        for (let i = 0; i < PHASE1_POLLS; i++) {
+          await new Promise(r => setTimeout(r, 3000));
+          try {
+            const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
+            if (refreshed[0]?.questions?.length > 0) {
+              console.log('✅ Questions appeared during phase-1 polling');
+              setExam(refreshed[0]);
+              setIsGenerating(false);
+              return;
+            }
+          } catch (pollErr) {
+            console.warn('Phase-1 poll error:', pollErr.message);
+          }
+        }
+
+        // Phase 2: No questions after ~25s — retrigger autoGenerateExam1
+        console.log('🔄 Phase-1 timed out, retrying autoGenerateExam1...');
+        try {
+          // Fire retry — but also keep polling in case the ORIGINAL call eventually succeeds
+          const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+            .catch(err => console.warn('Retry autoGenerateExam1 error:', err.message));
+
+          // Poll while retry is running (up to 50s more)
+          const PHASE2_POLLS = 12;
+          for (let i = 0; i < PHASE2_POLLS; i++) {
+            await new Promise(r => setTimeout(r, 4000));
             try {
               const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
               if (refreshed[0]?.questions?.length > 0) {
-                console.log('✅ Questions appeared after DB polling');
+                console.log('✅ Questions appeared during phase-2 polling');
                 setExam(refreshed[0]);
                 setIsGenerating(false);
                 return;
               }
             } catch (pollErr) {
-              console.warn('Exam poll error:', pollErr.message);
-              await new Promise(r => setTimeout(r, 3000));
+              console.warn('Phase-2 poll error:', pollErr.message);
             }
           }
-          // Polling timed out — fall through to trigger generation below
-          console.log('⚠️ Polling timed out, will trigger autoGenerateExam1');
-        } else {
-          console.log('⚠️ Stale exam record (no questions after ' + Math.round(secondsSinceUpdate) + 's), will regenerate');
+
+          // Wait for retry to finish
+          await retryPromise;
+          // One final check
+          const finalCheck = await base44.entities.Exam.filter({ id: dbExam.id });
+          if (finalCheck[0]?.questions?.length > 0) {
+            console.log('✅ Questions appeared after retry completed');
+            setExam(finalCheck[0]);
+            setIsGenerating(false);
+            return;
+          }
+        } catch (retryErr) {
+          console.error('Retry phase error:', retryErr);
         }
+
+        // All phases exhausted
+        console.error('❌ Exam generation failed after poll + retry');
+        setIsGenerating(false);
+        setError('Exam generation is taking longer than expected. Please refresh the page to try again.');
+        return;
       }
 
       // No exam 1 exists at all - trigger autoGenerateExam1 with retry on 502
