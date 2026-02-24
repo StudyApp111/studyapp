@@ -12,6 +12,7 @@ import EducationalLoader from "@/components/ui/EducationalLoader";
 import { logError } from "@/components/utils/errorLogger";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
+import posthog from 'posthog-js';
 import FeedbackDisplay from "@/components/feedback/FeedbackDisplay";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import CreatePracticeQuizButton from "./CreatePracticeQuizButton";
@@ -1301,6 +1302,52 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           total_questions: questionsWithGrading.length
         }
       });
+
+      // PostHog: check if this is the user's first-ever diagnostic completion
+      try {
+        const allCompletedExams = (exams || []).filter(e => e.completed && e.exam_type !== 'practice');
+        // Only the current exam is completed (others were not completed before this submit)
+        const isFirstDiagnostic = allCompletedExams.length === 0;
+        
+        posthog?.capture('diagnostic_exam_completed', {
+          lesson_id: lesson.id,
+          course_name: lesson.course_name,
+          predicted_grade: aiGrade,
+          predicted_score: aiScore,
+          time_taken_seconds: elapsedSeconds,
+          correct_count: correctCount,
+          total_questions: questionsWithGrading.length,
+          is_first_diagnostic: isFirstDiagnostic
+        });
+
+        if (isFirstDiagnostic) {
+          posthog?.capture('first_diagnostic_completed', {
+            lesson_id: lesson.id,
+            course_name: lesson.course_name,
+            predicted_grade: aiGrade,
+            predicted_score: aiScore,
+            time_taken_seconds: elapsedSeconds
+          });
+
+          // TikTok pixel for first diagnostic
+          if (window.ttq) {
+            window.ttq.track('CompleteRegistration', {
+              content_name: 'first_diagnostic_completed',
+              content_id: exam.id,
+            });
+          }
+
+          // Google Analytics for first diagnostic
+          if (window.gtag) {
+            window.gtag('event', 'first_diagnostic_completed', {
+              event_category: 'conversion',
+              event_label: lesson.course_name,
+            });
+          }
+        }
+      } catch (phErr) {
+        console.warn('PostHog diagnostic tracking error:', phErr);
+      }
 
       // TikTok Pixel: Track Submit Application for diagnostic quiz submission
       if (window.ttq) {

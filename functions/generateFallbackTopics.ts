@@ -24,6 +24,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Lesson not found' }, { status: 400 });
     }
 
+    // PRIMARY GUARD: Only run when total content is under 100 characters
+    // This means: file with nothing parsed, short topic input, or very small paste
+    const totalContent = (lesson.compressed_content || lesson.extracted_content || lesson.description || "").trim();
+    if (totalContent.length >= 100) {
+      console.log(`Content is ${totalContent.length} chars (>= 100), skipping fallback — enough content exists`);
+      return Response.json({ success: true, skipped: true });
+    }
+
     // Skip if lesson already has good topic structure
     if (lesson.topics?.length >= 2) {
       console.log('Lesson already has topics, skipping fallback generation');
@@ -35,6 +43,8 @@ Deno.serve(async (req) => {
       console.log('Topic suggestions already exist, skipping');
       return Response.json({ success: true, skipped: true });
     }
+
+    console.log(`Content is only ${totalContent.length} chars — generating fallback topics`);
 
     const apiKey = Deno.env.get('GEMINIAPIKEY');
     if (!apiKey) {
