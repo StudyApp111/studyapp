@@ -163,6 +163,13 @@ export default function NotesTab({ lesson }) {
     }
   };
 
+  const extractText = (children) => {
+    if (typeof children === 'string') return children;
+    if (Array.isArray(children)) return children.map(c => extractText(c)).join('');
+    if (children?.props?.children) return extractText(children.props.children);
+    return String(children || '');
+  };
+
   const slugify = (text) => {
     return text.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
   };
@@ -378,27 +385,17 @@ export default function NotesTab({ lesson }) {
                     <ReactMarkdown
                       components={{
                         h1: ({ children }) => {
-                          const text = typeof children === 'string' ? children : (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : String(children || ''));
+                          const text = extractText(children);
                           return <h1 id={`heading-${slugify(text)}`}>{children}</h1>;
                         },
                         h2: ({ children }) => {
-                          const text = typeof children === 'string' ? children : (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : String(children || ''));
+                          const text = extractText(children);
                           return <h2 id={`heading-${slugify(text)}`}>{children}</h2>;
                         },
                         h3: ({ children }) => {
-                          const text = typeof children === 'string' ? children : (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : String(children || ''));
+                          const text = extractText(children);
                           return <h3 id={`heading-${slugify(text)}`}>{children}</h3>;
                         },
-                        p: ({ children }) => {
-                          const text = typeof children === 'string' ? children : 
-                            (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
-                          return <p dangerouslySetInnerHTML={{ __html: renderMathText(text) }} />;
-                        },
-                        li: ({ children }) => {
-                          const text = typeof children === 'string' ? children : 
-                            (Array.isArray(children) ? children.map(c => typeof c === 'string' ? c : '').join('') : '');
-                          return <li dangerouslySetInnerHTML={{ __html: renderMathText(text) }} />;
-                        }
                       }}
                     >
                       {note.content}
