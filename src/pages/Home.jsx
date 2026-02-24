@@ -46,8 +46,10 @@ export default function Home() {
         if (guestData?.lessonData) {
           const result = await transferGuestData();
           if (result?.lesson_id) {
-            // Redirect to the transferred lesson
-            navigate(createPageUrl("DocumentViewer") + `?id=${result.lesson_id}`, { replace: true });
+            // Redirect to the transferred lesson (question review / exam tab)
+            const wasReturning = sessionStorage.getItem("guest_returning_to_lesson");
+            sessionStorage.removeItem("guest_returning_to_lesson");
+            navigate(createPageUrl("DocumentViewer") + `?id=${result.lesson_id}${wasReturning ? '&tab=exam' : ''}`, { replace: true });
             return;
           }
         } else if (isGuest) {
