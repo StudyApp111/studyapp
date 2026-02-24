@@ -185,7 +185,7 @@ export function SubscriptionProvider({ children }) {
     };
   };
 
-  // Tasks - free users get 1 generation each of flashcards, teach-it, practice quiz per lesson
+  // Tasks - free users get 1 generation each of flashcards, teach-it, practice quiz, notes per lesson
   const canDoTask = async (taskType = null) => {
     if (isPro()) return { allowed: true };
     if (!taskType) {
@@ -193,8 +193,8 @@ export function SubscriptionProvider({ children }) {
       const currentUser = await checkAndResetCounters();
       if (!currentUser) return { allowed: false, requiresPro: true };
       const totalUsed = currentUser.total_tasks_used || 0;
-      // Allow up to 3 total tasks (1 flashcard + 1 teach-it + 1 practice quiz)
-      return { allowed: totalUsed < 3, requiresPro: totalUsed >= 3 };
+      // Allow up to 4 total tasks (1 flashcard + 1 teach-it + 1 practice quiz + 1 notes)
+      return { allowed: totalUsed < 4, requiresPro: totalUsed >= 4 };
     }
     
     const currentUser = await checkAndResetCounters();
