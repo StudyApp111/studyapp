@@ -34,6 +34,7 @@ export default function NotesTab({ lesson }) {
   const [tocCollapsed, setTocCollapsed] = useState(false);
 
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   
   useEffect(() => {
     if (lesson?.id && !initialLoadDone) {
@@ -46,6 +47,7 @@ export default function NotesTab({ lesson }) {
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
   
   const loadNotes = async () => {
+    setInitialLoading(true);
     try {
       const notes = await base44.entities.LessonNote.filter({ lesson_id: lesson.id }, '-created_date', 50);
       if (notes && notes.length > 0) {
@@ -59,6 +61,8 @@ export default function NotesTab({ lesson }) {
       }
     } catch (error) {
       console.error("Error loading notes:", error);
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -214,6 +218,14 @@ export default function NotesTab({ lesson }) {
         title="Crafting Your Notes" 
         description={`Our AI is synthesizing a perfect ${settings.noteType.toLowerCase()} for you...`} 
       />
+    );
+  }
+
+  if (initialLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className={`w-6 h-6 animate-spin ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+      </div>
     );
   }
 
