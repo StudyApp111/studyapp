@@ -23,6 +23,7 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
       currentSet = { 
         label: topicLabel || `Set ${setNum}`, 
         cards: [], 
+        cardIds: [],
         mastered: 0,
         completed: 0,
         firstIndex: -1,
@@ -33,6 +34,7 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
     
     currentSet.lastTime = cardTime;
     currentSet.cards.push({ ...card, globalIndex });
+    currentSet.cardIds.push(card.id);
     if (card.mastered) currentSet.mastered++;
     if (card.completed) currentSet.completed++;
   });
@@ -74,7 +76,7 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              onClick={() => onSelectCard(set.firstIndex)}
+              onClick={() => onSelectCard(set.firstIndex, set.cardIds)}
               className={`group relative w-full overflow-hidden p-3 md:p-4 rounded-xl transition-all text-left shadow-sm hover:shadow-md ${
                 allMastered
                   ? 'bg-gradient-to-r from-violet-500 to-purple-600'
