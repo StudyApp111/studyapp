@@ -133,6 +133,44 @@ Deno.serve(async (req) => {
       contentSource = "course_name_only";
     }
 
+    // If content is very short (topic-only input, e.g. "Photosynthesis"), enrich via Google Search grounding
+    const needsSearchGrounding = contentDescription.length < 100 && contentSource !== "course_name_only";
+    if (needsSearchGrounding) {
+      console.log(`Short content (${contentDescription.length} chars), enriching with Google Search grounding...`);
+      try {
+        const searchPrompt = `Provide a concise educational summary (under 1500 characters) of the following topic for a university/college level student. Include key concepts, definitions, and important details that would appear on an exam.\n\nTopic: ${contentDescription}\nCourse: ${lesson.course_name}`;
+        
+        const searchResp = await fetchWithRetry(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: searchPrompt }] }],
+              tools: [{ googleSearch: {} }],
+              generationConfig: { temperature: 0.2, maxOutputTokens: 2048 }
+            })
+          },
+          2,
+          15000
+        );
+        
+        if (searchResp.ok) {
+          const searchData = await searchResp.json();
+          const searchContent = searchData?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (searchContent && searchContent.length > contentDescription.length) {
+            contentDescription = searchContent;
+            contentSource = "google_search_enriched";
+            console.log(`Enriched content via Google Search, new length: ${contentDescription.length}`);
+          }
+        } else {
+          console.warn('Google Search grounding failed, proceeding with original content');
+        }
+      } catch (searchErr) {
+        console.warn('Google Search grounding error:', searchErr.message);
+      }
+    }
+
     console.log(`Content source: ${contentSource}, length: ${contentDescription.length}`);
 
     // Get learning profile
