@@ -40,6 +40,7 @@ export default function CreatePracticeQuizButton({ lesson, extractedContent, onE
       });
 
       if (data?.success && data.exam) {
+        await incrementTaskCount('practice_exam');
         if (onExamCreated) onExamCreated(data.exam);
       }
     } catch (error) {
