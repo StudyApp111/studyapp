@@ -597,11 +597,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               <button onClick={() => setShowMoreSections(!showMoreSections)} className={`w-full text-center py-2 text-xs font-semibold flex items-center justify-center gap-1 ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}>
                 {showMoreSections ? <><ChevronDown className="w-3 h-3" /> Show less</> : <><ChevronRight className="w-3 h-3" /> {remainingSections.length} more section{remainingSections.length !== 1 ? 's' : ''}</>}
               </button>
-              <AnimatePresence>
-                {showMoreSections && remainingSections.map((section, idx) => (
-                  <SectionCard key={idx + 3} section={section} index={idx + 3} defaultExpanded={false} onTopicClick={handleSuggestedTopicClick} onAllTopicsClick={handleAllTopicsClick} studyPlan={studyPlan} />
-                ))}
-              </AnimatePresence>
+              {showMoreSections && remainingSections.map((section, idx) => (
+                <SectionCard key={idx + 3} section={section} index={idx + 3} defaultExpanded={false} onTopicClick={handleSuggestedTopicClick} onAllTopicsClick={handleAllTopicsClick} studyPlan={studyPlan} />
+              ))}
             </>
           )}
         </div>
