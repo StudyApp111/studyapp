@@ -201,16 +201,57 @@ export default function CreateLesson() {
       setCreatedLessonId(lesson.id);
       console.log("✅ Lesson created:", lesson.id);
 
-      // Fire TikTok SubmitApplication on first lesson creation
+      // Analytics: track lesson creation events
       try {
         const allLessons = await base44.entities.Lesson.list('-created_date', 2);
-        if (allLessons.length === 1 && window.ttq) {
-          window.ttq.track('SubmitForm', {
-            content_name: 'first_lesson_created',
-            content_id: lesson.id
+        const isFirstLesson = allLessons.length === 1;
+
+        // Always track every lesson creation
+        window.posthog?.capture('lesson_created', {
+          course_name: courseName.trim(),
+          input_type: lessonData.input_type,
+          lesson_id: lesson.id,
+          is_first_lesson: isFirstLesson,
+          has_file: lessonData.input_type === 'file',
+          file_count: lessonData.file_urls?.length || 0,
+          content_length: (compressedContent || extractedContent || '').length,
+        });
+
+        if (isFirstLesson) {
+          // First lesson — critical conversion event
+          window.posthog?.capture('first_lesson_created', {
+            course_name: courseName.trim(),
+            input_type: lessonData.input_type,
+            lesson_id: lesson.id,
+          });
+
+          // TikTok pixel
+          if (window.ttq) {
+            window.ttq.track('SubmitForm', {
+              content_name: 'first_lesson_created',
+              content_id: lesson.id,
+            });
+          }
+
+          // Google Analytics
+          if (window.gtag) {
+            window.gtag('event', 'first_lesson_created', {
+              event_category: 'conversion',
+              event_label: courseName.trim(),
+            });
+          }
+        } else {
+          // Returning user lesson — retention signal
+          window.posthog?.capture('returning_lesson_created', {
+            course_name: courseName.trim(),
+            input_type: lessonData.input_type,
+            lesson_id: lesson.id,
+            total_lessons: allLessons.length,
           });
         }
-      } catch {}
+      } catch (trackErr) {
+        console.warn('Analytics tracking error:', trackErr);
+      }
 
 
       // Fire-and-forget: Generate Exam 1 + Topic Suggestions simultaneously
