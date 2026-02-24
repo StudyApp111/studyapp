@@ -109,7 +109,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     
     isGeneratingRef.current = true;
     setIsGenerating(true);
-    await incrementTaskCount('flashcards');
     
     try {
       let contentForFlashcards = lesson.compressed_content || extractedContent || lesson.description || 'General course material';
@@ -155,6 +154,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         });
         savedCards.push(saved);
       }
+      await incrementTaskCount('flashcards');
       // Reload all cards so sets list shows all sets including new one
       const allCards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
       setCards(allCards);

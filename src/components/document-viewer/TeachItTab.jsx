@@ -100,7 +100,6 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
     
     isGeneratingRef.current = true;
     setIsGenerating(true);
-    await incrementTaskCount('teach_it');
     
     try {
       const user = await base44.auth.me();
@@ -203,6 +202,7 @@ Return exactly ${cardCount} cards with question and model_answer fields, each ba
         )
       );
       pendingStudyTaskRef.current = null;
+      await incrementTaskCount('teach_it');
 
       // Reload all cards so sets list shows all sets including the new one
       const allCards = await base44.entities.TeachItCard.filter({ lesson_id: lesson.id });
