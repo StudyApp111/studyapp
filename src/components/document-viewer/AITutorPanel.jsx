@@ -127,6 +127,21 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
     return () => window.removeEventListener('askAIFromContext', handleAskAI);
   }, [messages]);
 
+  // Listen for study plan CTA actions
+  useEffect(() => {
+    const handleStudyPlanAction = (event) => {
+      const { message } = event.detail || {};
+      if (message) {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: message
+        }]);
+      }
+    };
+    window.addEventListener('pollyStudyPlanAction', handleStudyPlanAction);
+    return () => window.removeEventListener('pollyStudyPlanAction', handleStudyPlanAction);
+  }, []);
+
   // Listen for diagnostic completion to add Polly message directing to study plan
   useEffect(() => {
     const handleDiagnosticComplete = (event) => {

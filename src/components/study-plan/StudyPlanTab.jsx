@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import SectionCard from "./SectionCard";
 import PickFormatModal from "./PickFormatModal";
 import TopicSelectionModal from "./TopicSelectionModal";
+import InsightsHero from "./InsightsHero";
+import StartStudyPlanCTA from "./StartStudyPlanCTA";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
@@ -498,67 +500,54 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
         </div>
       </motion.div>
 
-      {/* AI Insights — unified card */}
-      {(behavioralInsights || studyPlan?.mastery_gap || studyPlan?.priority_focus || studyPlan?.weak_competencies?.length > 0) && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="px-3 md:px-4 w-full">
-          <div className={`rounded-2xl p-4 border ${isDark ? 'bg-gradient-to-br from-indigo-950/50 to-purple-950/50 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200/60'}`}>
-            {/* Header row with title + stat pills */}
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <div className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isDark ? 'bg-indigo-500/20' : 'bg-indigo-100'}`}>
-                  <Lightbulb className={`w-3.5 h-3.5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
-                </div>
-                <span className={`text-xs font-bold uppercase tracking-wide ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>Insights</span>
-              </div>
-              {behavioralInsights?.estimated_hours_to_target && (
-                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
-                  <Clock className="w-3 h-3" />~{Math.round(behavioralInsights.estimated_hours_to_target)}h to A+
-                </div>
-              )}
-              {behavioralInsights?.is_guessing_detected && (
-                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
-                  <AlertCircle className="w-3 h-3" />Guessing detected
-                </div>
-              )}
-              {behavioralInsights?.is_inefficient_studying && (
-                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700'}`}>
-                  <AlertCircle className="w-3 h-3" />Try active recall
-                </div>
-              )}
-            </div>
+      {/* AI Insights Hero — dynamic personalized message */}
+      {(studyPlan?.mastery_gap || studyPlan?.priority_focus || studyPlan?.weak_competencies?.length > 0 || behavioralInsights) && (
+        <InsightsHero 
+          lesson={lesson}
+          studyPlan={studyPlan}
+          behavioralInsights={behavioralInsights}
+        />
+      )}
 
-            {/* Focus area + weak competencies in one block */}
-            <div className={`rounded-xl p-3 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-              {(studyPlan?.mastery_gap || studyPlan?.priority_focus) && (
-                <div className="mb-2">
-                  <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                    <Target className="w-3 h-3 inline mr-1" />#1 Focus Area
-                  </p>
-                  <p className={`text-sm font-bold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-                    {studyPlan?.mastery_gap || studyPlan?.priority_focus}
-                  </p>
-                </div>
-              )}
-              {studyPlan?.weak_competencies?.length > 1 && (
-                <div className={`${(studyPlan?.mastery_gap || studyPlan?.priority_focus) ? 'pt-2 mt-2 border-t ' + (isDark ? 'border-white/10' : 'border-slate-100') : ''}`}>
-                  <p className={`text-[10px] font-bold uppercase tracking-wide mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Also improve</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {studyPlan.weak_competencies.filter(c => c !== studyPlan?.mastery_gap).slice(0, 4).map((comp, idx) => (
-                      <span key={idx} className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
-                        {comp}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+      {/* Start / Continue Study Plan CTA */}
+      {filteredSuggestions.length > 0 && studyPlan && (
+        <StartStudyPlanCTA
+          studyPlan={studyPlan}
+          topicSuggestions={filteredSuggestions}
+          onNavigate={onNavigate}
+          onStartTask={(task) => {
+            // Navigate to the appropriate tab and trigger generation
+            const formatMap = {
+              "Review Notes": "notes",
+              "Flashcards": "flashcards",
+              "Practice Test": "exam",
+              "Feynman Technique": "teachit"
+            };
+            const tab = formatMap[task.format] || "flashcards";
 
-            {/* Recommended focus text */}
-            {behavioralInsights?.recommended_focus && (
-              <p className={`text-xs leading-relaxed mt-3 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{behavioralInsights.recommended_focus}</p>
-            )}
-          </div>
-        </motion.div>
+            const eventMap = {
+              "flashcards": "generateFromStudyTask",
+              "teachit": "generateFromStudyTask",
+              "exam": "generatePracticeExamFromTask"
+            };
+            const eventName = eventMap[tab];
+            if (eventName) {
+              window.dispatchEvent(new CustomEvent(eventName, {
+                detail: {
+                  taskType: tab === "teachit" ? "teach_it" : tab === "exam" ? "practice_exam" : tab,
+                  task: {
+                    focus_topics: [task.topicTitle],
+                    target_competency: task.topicTitle,
+                    title: `${task.sectionTitle}: ${task.topicTitle}`,
+                    section_title: task.sectionTitle,
+                    target_count: tab === "flashcards" ? 10 : tab === "exam" ? 1 : 3
+                  }
+                }
+              }));
+            }
+            onNavigate(tab);
+          }}
+        />
       )}
 
       {/* Section-based Study Guide */}
