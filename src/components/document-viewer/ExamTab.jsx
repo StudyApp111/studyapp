@@ -16,6 +16,7 @@ import posthog from 'posthog-js';
 import FeedbackDisplay from "@/components/feedback/FeedbackDisplay";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import CreatePracticeQuizButton from "./CreatePracticeQuizButton";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
