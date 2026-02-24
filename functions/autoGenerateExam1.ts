@@ -109,6 +109,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Lesson not found' }, { status: 400 });
     }
 
+    // Get API key early — needed for both search grounding and exam generation
+    const apiKey = Deno.env.get('GEMINIAPIKEY');
+    if (!apiKey) {
+      return Response.json({ error: 'Service configuration error' }, { status: 500 });
+    }
+
     // Build content description — STRICTLY prefer compressed_content
     // CreateLesson guarantees compressed_content exists for all input types before autoGenerateExam1 is called.
     // Only fall back to extracted_content (capped) if compressed_content is somehow missing.
@@ -268,12 +274,6 @@ assessed_competencies (2 MAX), targeted_misconception (2 MAX)
 Output Format
 Return ONE valid JSON object matching the required schema.
 No extra text.`;
-
-    // Call Gemini directly with gemini-flash-latest
-    const apiKey = Deno.env.get('GEMINIAPIKEY');
-    if (!apiKey) {
-      return Response.json({ error: 'Service configuration error' }, { status: 500 });
-    }
 
     const responseSchema = {
       type: "object",
