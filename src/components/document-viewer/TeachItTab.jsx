@@ -29,6 +29,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [studyPlanTopics, setStudyPlanTopics] = useState(null);
   const [showSetsList, setShowSetsList] = useState(true);
   const [showCustomize, setShowCustomize] = useState(false);
+  const [currentSetCardIds, setCurrentSetCardIds] = useState(null); // IDs of cards in the active set
   const tabContainerRef = useRef(null);
 
   const isGeneratingRef = useRef(false);
@@ -99,6 +100,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
     
     isGeneratingRef.current = true;
     setIsGenerating(true);
+    await incrementTaskCount('teach_it');
     
     try {
       const user = await base44.auth.me();
@@ -207,6 +209,7 @@ Return exactly ${cardCount} cards with question and model_answer fields, each ba
       setCards(allCards);
       const newFirstIndex = allCards.findIndex(c => c.id === savedCards[0]?.id);
       setCurrentCardIndex(newFirstIndex >= 0 ? newFirstIndex : 0);
+      setCurrentSetCardIds(savedCards.map(c => c.id));
       setShowSetsList(false);
     } catch (error) {
       console.error("Error generating cards:", error);
@@ -301,18 +304,22 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
   };
 
   const handleNext = () => {
-    if (currentCardIndex < cards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
-      setUserAnswer(cards[currentCardIndex + 1].user_answer || "");
-      setShowFeedback(cards[currentCardIndex + 1].completed);
+    const nextPosInSet = posInSet + 1;
+    if (nextPosInSet < setSize) {
+      const nextIdx = setIndices[nextPosInSet];
+      setCurrentCardIndex(nextIdx);
+      setUserAnswer(cards[nextIdx].user_answer || "");
+      setShowFeedback(cards[nextIdx].completed);
     }
   };
 
   const handlePrevious = () => {
-    if (currentCardIndex > 0) {
-      setCurrentCardIndex(currentCardIndex - 1);
-      setUserAnswer(cards[currentCardIndex - 1].user_answer || "");
-      setShowFeedback(cards[currentCardIndex - 1].completed);
+    const prevPosInSet = posInSet - 1;
+    if (prevPosInSet >= 0) {
+      const prevIdx = setIndices[prevPosInSet];
+      setCurrentCardIndex(prevIdx);
+      setUserAnswer(cards[prevIdx].user_answer || "");
+      setShowFeedback(cards[prevIdx].completed);
     }
   };
 
@@ -385,10 +392,11 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
     return (
       <TeachItSetsList 
         cards={cards}
-        onSelectCard={(idx) => {
+        onSelectCard={(idx, setCardIds) => {
           setCurrentCardIndex(idx);
           setUserAnswer(cards[idx].user_answer || "");
           setShowFeedback(cards[idx].completed);
+          setCurrentSetCardIds(setCardIds || null);
           setShowSetsList(false);
         }}
         onGenerateNew={handleRegenerate}
@@ -448,9 +456,15 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
     );
   }
 
+  // Compute set-scoped indices for navigation
+  const setIndices = currentSetCardIds
+    ? cards.map((c, i) => currentSetCardIds.includes(c.id) ? i : -1).filter(i => i >= 0)
+    : cards.map((_, i) => i);
+  const posInSet = setIndices.indexOf(currentCardIndex);
+  const setSize = setIndices.length;
   const currentCard = cards[currentCardIndex];
-  const progress = ((currentCardIndex + 1) / cards.length) * 100;
-  const completedCount = cards.filter(c => c.completed).length;
+  const progress = setSize > 0 ? ((posInSet + 1) / setSize) * 100 : 0;
+  const setCompletedCount = setIndices.filter(i => cards[i]?.completed).length;
 
   return (
     <div ref={tabContainerRef} className={`relative flex flex-col w-full max-w-full pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
@@ -566,10 +580,10 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         {/* Centered counter */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
           <span className="text-sm font-bold text-white">
-            {currentCardIndex + 1} / {cards.length}
+            {posInSet + 1} / {setSize}
           </span>
           <span className="text-xs text-white/50">•</span>
-          <span className="text-xs text-white/70">{completedCount} done</span>
+          <span className="text-xs text-white/70">{setCompletedCount} done</span>
         </div>
         <Button
           variant="ghost"
@@ -736,14 +750,14 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
           <Button
             variant="outline"
             onClick={handlePrevious}
-            disabled={currentCardIndex === 0}
+            disabled={posInSet <= 0}
             className={`flex-1 h-10 md:h-12 rounded-xl border-2 disabled:opacity-30 font-semibold text-sm md:text-base ${isDark ? 'border-purple-500/30 hover:bg-purple-600/20 text-slate-200' : 'border-purple-300 hover:bg-purple-50 text-slate-900'}`}
           >
             Previous
           </Button>
           <Button
             onClick={handleNext}
-            disabled={currentCardIndex === cards.length - 1}
+            disabled={posInSet >= setSize - 1}
             className="flex-1 h-10 md:h-12 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl shadow-lg disabled:opacity-30 font-semibold text-sm md:text-base"
           >
             Next
