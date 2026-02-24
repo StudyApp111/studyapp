@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, GraduationCap, FileText, Download, Notebook, Eye, EyeOff, Highlighter, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { renderMathText } from "@/components/math/MathText";
 import NoteSettingsModal from "@/components/modals/NoteSettingsModal";
 import { toast } from "sonner";
 import EducationalLoader from "@/components/ui/EducationalLoader";
