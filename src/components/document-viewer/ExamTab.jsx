@@ -126,6 +126,7 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
 
 export default function ExamTab({ lesson, exams, onExamComplete, extractedContent }) {
   const { isDark } = useTheme();
+  const { isGuest, markGuestDiagnosticCompleted } = useGuestSession();
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
