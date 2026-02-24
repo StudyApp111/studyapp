@@ -5,9 +5,11 @@ import { Sparkles, Loader2, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import CustomizeGenerationModal from "@/components/modals/CustomizeGenerationModal";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 export default function CreatePracticeQuizButton({ lesson, extractedContent, onExamCreated }) {
   const { isDark } = useTheme();
+  const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
   const [isGenerating, setIsGenerating] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
 
@@ -15,6 +17,13 @@ export default function CreatePracticeQuizButton({ lesson, extractedContent, onE
 
   const handleGenerate = async (customOptions = null) => {
     if (isGenerating || generatingRef.current) return;
+    
+    const taskCheck = await canDoTask('practice_exam');
+    if (!taskCheck.allowed) {
+      triggerUpgradeModal('tasks');
+      return;
+    }
+    
     generatingRef.current = true;
     setIsGenerating(true);
 
