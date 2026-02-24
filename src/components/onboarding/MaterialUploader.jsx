@@ -109,8 +109,8 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
   return (
     <div className={`space-y-4 ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
       {/* Course name required hint */}
-      {isDisabled && (
-        <p className="text-xs text-amber-400 text-center">Enter a course name above first</p>
+      {!courseName?.trim() && (
+        <p className="text-sm text-red-400 font-semibold text-center animate-pulse">⚠️ Enter a course name above first</p>
       )}
       {/* Tab selector - more visual */}
       <div className="grid grid-cols-3 gap-2 p-1 bg-slate-800/50 rounded-xl">
@@ -162,6 +162,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
                   <div>
                     <p className="font-bold text-xl text-white mb-1">Drop your files here</p>
                     <p className="text-sm text-slate-400">PDF, Word, PowerPoint, Images</p>
+                    <p className="text-xs text-slate-500 mt-1">Max 20 MB per file</p>
                   </div>
                   <div className="flex items-center gap-2 text-purple-300 text-sm font-medium">
                     <span>Tap to browse</span>

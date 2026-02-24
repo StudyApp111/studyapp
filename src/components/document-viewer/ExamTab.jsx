@@ -801,6 +801,8 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
     }
   };
 
+  const fallbackTopicsTriggeredRef = useRef(false);
+
   const handleAnswer = (answer) => {
     const updatedQuestions = [...exam.questions];
     updatedQuestions[currentQuestion].user_answer = answer;
@@ -809,6 +811,20 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       ...prev,
       questions: updatedQuestions
     }));
+
+    // On first answer submitted, trigger fallback topic generation if lesson lacks topics
+    if (!fallbackTopicsTriggeredRef.current && lesson?.id) {
+      fallbackTopicsTriggeredRef.current = true;
+      // Fire-and-forget: generate fallback topics if needed (function checks internally and skips if topics exist)
+      base44.functions.invoke('generateFallbackTopics', { lesson_id: lesson.id })
+        .then(res => {
+          if (res?.data?.success && !res?.data?.skipped) {
+            console.log('✅ Fallback topics generated, refreshing lesson');
+            window.dispatchEvent(new Event('reloadLesson'));
+          }
+        })
+        .catch(err => console.warn('Fallback topic generation error:', err.message));
+    }
 
     if (autoSaveTimeoutRef.current) {
       clearTimeout(autoSaveTimeoutRef.current);

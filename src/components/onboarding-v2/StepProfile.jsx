@@ -90,12 +90,8 @@ export default function StepProfile({ user, isGuest, onComplete, onBack }) {
   const handleSchoolInput = (e) => {
     const q = e.target.value;
     setSchool(q);
-    if (q.length >= 2) {
-      clearTimeout(window._schoolSearchTimeout);
-      window._schoolSearchTimeout = setTimeout(() => loadSchools(q), 400);
-    } else if (q.length === 0) {
-      loadSchools("");
-    }
+    // No re-fetching on type — just filter the already-loaded suggestions client-side
+    // The initial loadSchools() call on mount fetches nearby schools once
   };
 
   const handleSubmit = async () => {
