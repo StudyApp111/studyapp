@@ -147,7 +147,7 @@ function LayoutContent({ children, currentPageName }) {
               // Not authenticated
               setUser(null);
               // Allow guests to access CreateLesson and DocumentViewer
-              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer'];
+              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer', 'Settings'];
               const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
                 currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
               );
