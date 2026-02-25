@@ -298,10 +298,31 @@ Return JSON:
                     required: ["task_type", "title", "target_count"]
                   }
                 },
+                insights_panel: {
+                  type: "object",
+                  properties: {
+                    headline: { type: "string" },
+                    support_text: { type: "string" },
+                    pills: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          id: { type: "string" },
+                          label: { type: "string" },
+                          type: { type: "string" }
+                        },
+                        required: ["id", "label", "type"]
+                      }
+                    }
+                  },
+                  required: ["headline", "support_text", "pills"]
+                },
+                mastery_gap: { type: "string" },
                 plan_rationale: { type: "string", maxLength: 500 },
                 priority_focus: { type: "string", maxLength: 150 }
               },
-              required: ["tasks", "plan_rationale", "priority_focus"]
+              required: ["tasks", "insights_panel", "mastery_gap", "plan_rationale", "priority_focus"]
             }
           }
         })
