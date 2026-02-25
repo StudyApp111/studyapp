@@ -177,6 +177,13 @@ export default function OnboardingModal({ onComplete }) {
 
       // Fire-and-forget: enrich learning profile with city/country from IP geo
       base44.functions.invoke('enrichLearningProfile', {}).catch(() => {});
+
+      // Fire-and-forget: trigger signup email via Resend
+      base44.functions.invoke('sendResendEmail', {
+        trigger_type: 'signup',
+        user_email: user?.email,
+        context: { reference_id: `signup_${new Date().toISOString()}` }
+      }).catch(() => {});
     } catch (err) {
       console.error("Error completing onboarding:", err);
     }
