@@ -526,7 +526,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             for (let i = 0; i < 8; i++) {
               await new Promise(r => setTimeout(r, 3000));
               try {
-                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+                const refreshed = await fetchExamById(loadedExam.id);
                 if (refreshed[0]?.questions?.length > 0) {
                   console.log('✅ Questions appeared during phase-1 polling');
                   setExam(refreshed[0]);
@@ -546,7 +546,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             for (let i = 0; i < 12; i++) {
               await new Promise(r => setTimeout(r, 4000));
               try {
-                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+                const refreshed = await fetchExamById(loadedExam.id);
                 if (refreshed[0]?.questions?.length > 0) {
                   console.log('✅ Questions appeared during phase-2 polling');
                   setExam(refreshed[0]);
@@ -559,7 +559,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             }
 
             await retryPromise;
-            const finalCheck = await base44.entities.Exam.filter({ id: loadedExam.id });
+            const finalCheck = await fetchExamById(loadedExam.id);
             if (finalCheck[0]?.questions?.length > 0) {
               setExam(finalCheck[0]);
               setIsGenerating(false);
