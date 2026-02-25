@@ -190,9 +190,30 @@ export default function CreateLesson() {
         setStepStatuses(prev => ({ ...prev, extracted: true, compressed: true }));
       }
 
-      // Guest mode: store lesson data locally, don't create on server
+      // Guest mode: create a REAL lesson via service-role backend + trigger exam
       if (isGuest) {
-        setGuestLesson(lessonData);
+        try {
+          const { data: guestResult } = await base44.functions.invoke('checkGuestEligibility', {
+            fingerprint: guestData?.fingerprint,
+            action: 'createLesson',
+            lesson_data: lessonData
+          });
+          
+          if (guestResult?.lesson_id) {
+            setGuestLesson({ ...lessonData, lesson_id: guestResult.lesson_id });
+            setCreatedLessonId(guestResult.lesson_id);
+            console.log("✅ Guest lesson created:", guestResult.lesson_id);
+          } else {
+            throw new Error('Failed to create guest lesson');
+          }
+        } catch (guestErr) {
+          console.error("❌ Guest lesson creation error:", guestErr);
+          setError("Failed to create lesson. Please try again.");
+          setIsSubmitting(false);
+          setShowLoader(false);
+          return;
+        }
+        
         setStepStatuses(prev => ({ ...prev, examGenerated: true }));
         setLoaderComplete(true);
         return;
