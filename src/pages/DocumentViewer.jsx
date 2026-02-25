@@ -60,6 +60,7 @@ export default function DocumentViewer() {
   const [pomodoroEnabled, setPomodoroEnabled] = useState(false);
   const [showUploadPrompt, setShowUploadPrompt] = useState(false);
   const { isPro } = useSubscription();
+  const { isGuest, guestData } = useGuestSession();
   
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
