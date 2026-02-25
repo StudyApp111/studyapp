@@ -27,6 +27,7 @@ import TopicConfirmationBanner from "@/components/document-viewer/TopicConfirmat
 import PostDiagnosticPaywall from "@/components/document-viewer/PostDiagnosticPaywall";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
 import { useTheme } from "@/components/theme/ThemeProvider";
