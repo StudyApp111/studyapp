@@ -56,7 +56,8 @@ Deno.serve(async (req) => {
     if (profiles.length > 0) profile = profiles[0];
 
     // Build user variables to pass to Resend template
-    // Resend reserves FIRST_NAME, LAST_NAME, EMAIL, UNSUBSCRIBE_URL — we provide both formats
+    // Resend uses {{{contact.first_name}}} syntax — the contact.* variables are auto-resolved
+    // by Resend from the recipient's contact record. We only need to pass custom variables.
     const fullName = targetUser.full_name || 'there';
     const firstName = fullName.split(' ')[0];
     const lastName = fullName.split(' ').slice(1).join(' ') || '';
@@ -72,8 +73,9 @@ Deno.serve(async (req) => {
       trialEndFormatted = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
-    // Build variables object — only include non-empty values so Resend
-    // template fallback defaults work and rendering never fails on empty strings
+    // Build variables object — only include non-empty values
+    // Note: contact.first_name is auto-resolved by Resend from the contact record,
+    // NOT from template variables. We pass custom vars only.
     const rawVars = {
       user_name: fullName,
       name: fullName,
@@ -122,32 +124,14 @@ Deno.serve(async (req) => {
 
       // Send via Resend Emails API using template
       try {
-        // Fetch the template definition from Resend to discover which variables it expects
-        const templateInfoRes = await fetch(`https://api.resend.com/templates/${template.resend_template_id}`, {
-          headers: { 'Authorization': `Bearer ${resendApiKey}` }
-        });
-        
-        let templateVars = {};
-        if (templateInfoRes.ok) {
-          const templateInfo = await templateInfoRes.json();
-          const expectedKeys = (templateInfo.variables || []).map(v => v.key);
-          // Only include variables that the template actually defines
-          for (const key of expectedKeys) {
-            if (userVars[key] !== undefined) {
-              templateVars[key] = userVars[key];
-            }
-          }
-        }
-        // If we can't fetch template info, send empty variables (safer than sending unexpected ones)
-
+        // Template uses {{{contact.first_name}}} which Resend resolves from the
+        // contact record automatically — no need to pass it as a variable.
+        // Only pass explicitly defined template variables (if any).
+        // Since current template has variables: [], send empty object.
         const emailPayload = {
           from: 'StudyApp.AI <updates@updates.studyappai.com>',
           reply_to: 'info@studyappai.com',
-          to: [user_email],
-          template: {
-            id: template.resend_template_id,
-            variables: templateVars
-          }
+          to: [user_email]
         };
 
         const response = await fetch('https://api.resend.com/emails', {

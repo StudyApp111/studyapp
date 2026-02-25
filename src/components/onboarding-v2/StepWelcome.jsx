@@ -3,8 +3,9 @@ import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
-export default function StepWelcome({ displayName, onNext, onBack }) {
+export default function StepWelcome({ displayName, onNext, onBack, onSignIn }) {
   const { isDark } = useTheme();
 
   return (
@@ -39,27 +40,39 @@ export default function StepWelcome({ displayName, onNext, onBack }) {
       </div>
 
       {/* Navigation */}
-      <div className="flex items-center gap-3 pt-2">
-        {onBack && (
+      <div className="flex flex-col items-center gap-3 pt-2">
+        <div className="flex items-center gap-3 w-full">
+          {onBack && (
+            <Button
+              variant="ghost"
+              onClick={onBack}
+              className={`${
+                isDark
+                  ? "text-slate-400 hover:text-white"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+          )}
           <Button
-            variant="ghost"
-            onClick={onBack}
-            className={`${
-              isDark
-                ? "text-slate-400 hover:text-white"
-                : "text-slate-500 hover:text-slate-900"
-            }`}
+            onClick={onNext}
+            className="flex-1 h-12 text-base font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-purple-500/20"
           >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Back
+            Continue
           </Button>
-        )}
-        <Button
-          onClick={onNext}
-          className="flex-1 h-12 text-base font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-purple-500/20"
+        </div>
+        <button
+          onClick={() => {
+            sessionStorage.setItem("onboarding_v2_active", "true");
+            const returnUrl = window.location.pathname + window.location.search;
+            base44.auth.redirectToLogin(returnUrl);
+          }}
+          className={`text-sm font-medium ${isDark ? 'text-slate-400 hover:text-purple-400' : 'text-slate-500 hover:text-purple-600'} transition-colors`}
         >
-          Continue
-        </Button>
+          Already have an account? <span className="underline">Log in</span>
+        </button>
       </div>
     </motion.div>
   );
