@@ -122,6 +122,7 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
 
   const closeDismiss = () => {
     localStorage.setItem(dismissKey, 'true');
+    localStorage.removeItem(topicsConfirmedKey);
     setDismissed(true);
   };
 
