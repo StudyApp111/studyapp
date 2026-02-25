@@ -31,10 +31,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
     }
 
+    // Use service role for guest mode
+    const entities = isGuestMode ? base44.asServiceRole.entities : base44.entities;
+
     // Fetch lesson — retry briefly if topics/content not ready yet (race with compressDocument)
     let lesson = null;
     for (let attempt = 0; attempt < 5; attempt++) {
-      const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
+      const lessons = await entities.Lesson.filter({ id: lesson_id });
       lesson = lessons[0];
       if (!lesson) {
         return Response.json({ error: 'Lesson not found' }, { status: 400 });
