@@ -203,7 +203,7 @@ export default function EmailManager() {
         </Alert>
       )}
       {success && (
-        <Alert className="mb-4 bg-green-900/20 text-green-400 border-green-800">
+        <Alert className="mb-4 bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30">
           <CheckCircle className="h-4 w-4" />
           <AlertDescription>{success}</AlertDescription>
         </Alert>
