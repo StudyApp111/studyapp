@@ -11,7 +11,47 @@ import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
-export default function ExamQuestion({ question, answer, onAnswer, showFeedback = false, lesson = null }) {
+// Social proof messages for diagnostic quizzes
+const SOCIAL_PROOF_MESSAGES = [
+  { emoji: "🧠", text: "Wrong answers teach more than skipped ones" },
+  { emoji: "💡", text: "Guessing still helps — it shows us where to focus your plan" },
+  { emoji: "🎯", text: "Every question you answer makes your grade prediction more accurate" },
+  { emoji: "⚡", text: "The students who improve fastest are the ones who finish, not the ones who score highest" }
+];
+
+function DiagnosticSocialProof() {
+  const { isDark } = useTheme();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % SOCIAL_PROOF_MESSAGES.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="mt-3">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -5 }}
+          transition={{ duration: 0.3 }}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-100'}`}
+        >
+          <span className="text-base flex-shrink-0">{SOCIAL_PROOF_MESSAGES[currentIndex].emoji}</span>
+          <p className={`text-xs ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>
+            {SOCIAL_PROOF_MESSAGES[currentIndex].text}
+          </p>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export default function ExamQuestion({ question, answer, onAnswer, showFeedback = false, lesson = null, isDiagnostic = false }) {
   const { isDark } = useTheme();
   const [hasAnswered, setHasAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(answer || "");
@@ -357,6 +397,11 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
 
       {/* Options */}
       <div>{renderInput()}</div>
+
+      {/* Diagnostic Social Proof - rotating messages */}
+      {isDiagnostic && !hasAnswered && (
+        <DiagnosticSocialProof />
+      )}
 
       {/* Instant Feedback for Objective Questions */}
       {hasAnswered && isObjective && (

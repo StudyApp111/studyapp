@@ -100,7 +100,7 @@ export default function AskAIButton({ type, data, lesson, size = "sm" }) {
       className={`inline-flex items-center ${sizeClasses} bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-medium rounded-full shadow-md hover:shadow-lg transition-all active:scale-95`}
     >
       <HelpCircle className={size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} />
-      <span>I don't know</span>
+      <span>Get a Hint</span>
     </button>
   );
 }
