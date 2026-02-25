@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     }
 
     // Get lesson data
-    const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
+    const lessons = await entities.Lesson.filter({ id: lesson_id });
     const lesson = lessons[0];
     if (!lesson) {
       return Response.json({ error: 'Lesson not found' }, { status: 400 });
