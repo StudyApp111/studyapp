@@ -293,9 +293,10 @@ Return JSON:
                      target_competency: { type: "string", maxLength: 150 },
                      focus_topics: { type: "array", items: { type: "string" } },
                      misconception_addressed: { type: "string", maxLength: 150 },
-                     is_focus_factor: { type: "boolean" }
+                     is_focus_factor: { type: "boolean" },
+                     order: { type: "integer" }
                     },
-                    required: ["task_type", "title", "target_count"]
+                    required: ["task_type", "title", "target_count", "order"]
                   }
                 },
                 insights_panel: {
