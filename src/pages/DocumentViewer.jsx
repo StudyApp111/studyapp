@@ -60,6 +60,7 @@ export default function DocumentViewer() {
   const [isGeneratingStudyPlan, setIsGeneratingStudyPlan] = useState(false);
   const [pomodoroEnabled, setPomodoroEnabled] = useState(false);
   const [showUploadPrompt, setShowUploadPrompt] = useState(false);
+  const [showTaskConfetti, setShowTaskConfetti] = useState(false);
   const { isPro } = useSubscription();
   
   // Check if lesson has a document
