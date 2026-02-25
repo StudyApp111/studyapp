@@ -596,15 +596,31 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         console.log('⏳ Exam 1 record exists in DB but no questions — starting poll + retry logic...');
         setIsGenerating(true);
 
+        // Helper to poll exam status (works for both guest and auth users)
+        const pollExamById = async (examId) => {
+          if (isGuest) {
+            try {
+              const { data } = await base44.functions.invoke('getGuestLesson', {
+                fingerprint: window.__guestFingerprint || JSON.parse(localStorage.getItem('guest_session') || '{}')?.fingerprint,
+                lesson_id: lesson.id,
+                include_exams: true
+              });
+              return (data?.exams || []).find(e => e.id === examId) || null;
+            } catch { return null; }
+          }
+          const result = await base44.entities.Exam.filter({ id: examId });
+          return result[0] || null;
+        };
+
         // Phase 1: Poll for 25s (the initial autoGenerateExam1 call from CreateLesson may still be running)
         const PHASE1_POLLS = 8;
         for (let i = 0; i < PHASE1_POLLS; i++) {
           await new Promise(r => setTimeout(r, 3000));
           try {
-            const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
-            if (refreshed[0]?.questions?.length > 0) {
+            const refreshed = await pollExamById(dbExam.id);
+            if (refreshed?.questions?.length > 0) {
               console.log('✅ Questions appeared during phase-1 polling');
-              setExam(refreshed[0]);
+              setExam(refreshed);
               setIsGenerating(false);
               return;
             }
@@ -613,22 +629,24 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           }
         }
 
-        // Phase 2: No questions after ~25s — retrigger autoGenerateExam1
-        console.log('🔄 Phase-1 timed out, retrying autoGenerateExam1...');
+        // Phase 2: No questions after ~25s — retrigger autoGenerateExam1 (skip for guests)
+        console.log('🔄 Phase-1 timed out, retrying...');
         try {
-          // Fire retry — but also keep polling in case the ORIGINAL call eventually succeeds
-          const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-            .catch(err => console.warn('Retry autoGenerateExam1 error:', err.message));
+          if (!isGuest) {
+            const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+              .catch(err => console.warn('Retry autoGenerateExam1 error:', err.message));
+            await retryPromise;
+          }
 
           // Poll while retry is running (up to 50s more)
           const PHASE2_POLLS = 12;
           for (let i = 0; i < PHASE2_POLLS; i++) {
             await new Promise(r => setTimeout(r, 4000));
             try {
-              const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
-              if (refreshed[0]?.questions?.length > 0) {
+              const refreshed = await pollExamById(dbExam.id);
+              if (refreshed?.questions?.length > 0) {
                 console.log('✅ Questions appeared during phase-2 polling');
-                setExam(refreshed[0]);
+                setExam(refreshed);
                 setIsGenerating(false);
                 return;
               }
@@ -637,10 +655,8 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             }
           }
 
-          // Wait for retry to finish
-          await retryPromise;
           // One final check
-          const finalCheck = await base44.entities.Exam.filter({ id: dbExam.id });
+          const finalCheck = [await pollExamById(dbExam.id)].filter(Boolean);
           if (finalCheck[0]?.questions?.length > 0) {
             console.log('✅ Questions appeared after retry completed');
             setExam(finalCheck[0]);
