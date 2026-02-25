@@ -842,7 +842,7 @@ export default function DocumentViewer() {
             </div>
             
             {/* Spacer for fixed tabs + info */}
-            <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 90px)' }} />
+            <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 100px)' }} />
 
             {/* Scrollable content area */}
             <div className="overflow-x-hidden w-full pb-28">
