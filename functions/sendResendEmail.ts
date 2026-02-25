@@ -131,7 +131,10 @@ Deno.serve(async (req) => {
         const emailPayload = {
           from: 'StudyApp.AI <updates@updates.studyappai.com>',
           reply_to: 'info@studyappai.com',
-          to: [user_email]
+          to: [user_email],
+          template: {
+            id: template.resend_template_id
+          }
         };
 
         const response = await fetch('https://api.resend.com/emails', {
