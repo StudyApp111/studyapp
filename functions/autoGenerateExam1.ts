@@ -58,8 +58,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
     }
 
+    // Use service role for entity operations when user is not authenticated (guest flow)
+    const entities = useServiceRole ? base44.asServiceRole.entities : base44.entities;
+
     // STEP 1: Check if exam 1 already exists with questions
-    const existingExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
+    const existingExams = await entities.Exam.filter({ lesson_id, exam_number: 1 });
     const officialExam = existingExams.find(e => e.exam_type !== 'practice');
     
     if (officialExam?.questions?.length > 0) {
