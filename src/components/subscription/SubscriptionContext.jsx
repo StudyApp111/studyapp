@@ -27,6 +27,12 @@ export function SubscriptionProvider({ children }) {
 
   const loadUser = async () => {
     try {
+      const isAuthenticated = await base44.auth.isAuthenticated();
+      if (!isAuthenticated) {
+        // Not logged in — don't set user, just stop loading
+        setLoading(false);
+        return;
+      }
       const currentUser = await base44.auth.me();
       setUser(currentUser);
     } catch (error) {
