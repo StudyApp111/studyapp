@@ -242,17 +242,21 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     };
 
     const eventName = eventMap[tab];
+    const taskTitle = `${section.section_title}: ${topic.topic_title}`;
     if (eventName) {
       window.dispatchEvent(new CustomEvent(eventName, {
         detail: {
           taskType: tab === "teachit" ? "teach_it" : tab === "exam" ? "practice_exam" : tab,
           task: {
+            task_id: `${section.section_title}_${topic.topic_title}_${tab}`,
             focus_topics: [topic.topic_title],
             target_competency: topic.topic_title,
-            title: `${section.section_title}: ${topic.topic_title}`,
+            title: taskTitle,
             section_title: section.section_title,
             target_count: tab === "flashcards" ? 10 : tab === "exam" ? 1 : 3
-          }
+          },
+          focus_topics: [topic.topic_title],
+          target_competency: topic.topic_title
         }
       }));
     }
