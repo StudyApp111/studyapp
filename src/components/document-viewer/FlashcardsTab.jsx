@@ -324,6 +324,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           if (isComplete && !wasComplete) {
             taskJustCompleted = true;
             markedOne = true;
+            // Fire full-screen confetti
+            window.dispatchEvent(new Event('studyTaskCompleted'));
           }
           
           return {
