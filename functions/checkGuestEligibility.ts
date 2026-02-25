@@ -193,6 +193,27 @@ Deno.serve(async (req) => {
       // Mark onboarding as completed for new user
       await base44.auth.updateMe({ onboarding_completed: true });
 
+      // Mark the transfer in the abuse log so it won't be repeated
+      if (lessonId && fingerprint) {
+        const fpHash2 = await hashString(fingerprint);
+        const allGuestLogs2 = await base44.asServiceRole.entities.AbuseLog.filter({
+          action_type: 'guest_session'
+        });
+        const sessionLog2 = allGuestLogs2.find(log => log.fingerprint === fpHash2 && !log.blocked);
+        if (sessionLog2) {
+          await base44.asServiceRole.entities.AbuseLog.update(sessionLog2.id, {
+            metadata: {
+              ...sessionLog2.metadata,
+              transferred: true,
+              transferred_lesson_id: lessonId,
+              transferred_exam_id: transferredExamId,
+              transferred_at: new Date().toISOString(),
+              transferred_to: user.email
+            }
+          });
+        }
+      }
+
       // Transfer study plans from guest lesson to new lesson
       if (lessonId && transferredExamId && lesson_data?.id) {
         try {
