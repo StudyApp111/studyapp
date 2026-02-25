@@ -88,14 +88,14 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
 
   return (
     <>
-      <Card className={`${trigger.enabled ? 'border-green-500/40 bg-green-500/5' : 'border-slate-700'} transition-all`}>
+      <Card className={`${trigger.enabled ? 'border-green-500/40 bg-green-500/5' : ''} transition-all`}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Zap className={`w-5 h-5 ${trigger.enabled ? 'text-green-500' : 'text-slate-500'}`} />
+              <Zap className={`w-5 h-5 ${trigger.enabled ? 'text-green-500' : 'text-muted-foreground'}`} />
               <div>
-                <CardTitle className="text-base text-white">{trigger.name}</CardTitle>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <CardTitle className="text-base text-foreground">{trigger.name}</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {TRIGGER_LABELS[trigger.trigger_type] || trigger.trigger_type}
                 </p>
               </div>
@@ -110,37 +110,37 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Resend Template Info */}
-          <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700">
-            <p className="text-xs text-slate-400 mb-1">Resend Template</p>
+          <div className="p-3 rounded-lg bg-muted/50 border">
+            <p className="text-xs text-muted-foreground mb-1">Resend Template</p>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-white font-medium">
+              <p className="text-sm text-foreground font-medium">
                 {matchedTemplate?.name || trigger.resend_template_name || 'Unknown template'}
               </p>
               <a 
                 href="https://resend.com/templates" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-purple-400 hover:text-purple-300"
+                className="text-purple-500 hover:text-purple-400"
               >
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5 font-mono">{trigger.resend_template_id}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 font-mono">{trigger.resend_template_id}</p>
           </div>
 
           {/* Milestone config display */}
           {(trigger.trigger_type === 'streak_milestone' || trigger.trigger_type === 'level_milestone') && (
-            <p className="text-xs text-slate-400">
-              Milestone value: <span className="text-white font-medium">{trigger.trigger_config?.milestone_value || 'Not set'}</span>
+            <p className="text-xs text-muted-foreground">
+              Milestone value: <span className="text-foreground font-medium">{trigger.trigger_config?.milestone_value || 'Not set'}</span>
             </p>
           )}
 
-          <p className="text-xs text-slate-500">Sent: {trigger.send_count || 0} times</p>
+          <p className="text-xs text-muted-foreground">Sent: {trigger.send_count || 0} times</p>
 
           {/* Test Send */}
           <div className="flex gap-2 items-end">
             <div className="flex-1">
-              <Label className="text-xs text-slate-400">Send Test</Label>
+              <Label className="text-xs text-muted-foreground">Send Test</Label>
               <Select value={testRecipient} onValueChange={setTestRecipient}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="Select user..." />
