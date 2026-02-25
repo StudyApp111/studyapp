@@ -372,6 +372,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         all_tasks_completed: allComplete,
         official_exam_unlocked: allComplete
       });
+      if (taskJustCompleted) {
+        window.dispatchEvent(new Event('studyPlanTaskCompleted'));
+      }
       return taskJustCompleted;
     } catch (error) {
       console.error("Error updating study plan:", error);
