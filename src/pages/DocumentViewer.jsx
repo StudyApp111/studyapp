@@ -19,6 +19,7 @@ import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import ParsingLoader from "@/components/document-viewer/ParsingLoader";
 import NotesTab from "@/components/document-viewer/NotesTab";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
+import GlobalStudyPlanBanner from "@/components/study-plan/GlobalStudyPlanBanner";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import MaterialUploadPrompt from "@/components/document-viewer/MaterialUploadPrompt";
 import DiagnosticLockOverlay from "@/components/document-viewer/DiagnosticLockOverlay";
