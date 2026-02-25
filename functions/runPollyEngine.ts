@@ -240,8 +240,6 @@ Daily XP: ${user.daily_xp || 0}
 
 [COGNITIVE PROCESSING RULES]
 
-COGNITIVE PROCESSING RULES]
-
 A. PREDICTION LOGIC
 - Scope: Grade based on ASSESSED content only. Unassessed competencies reduce confidence, not the predicted grade.
 - Weighting:
