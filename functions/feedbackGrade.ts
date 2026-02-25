@@ -30,10 +30,15 @@ Deno.serve(async (req) => {
     console.log('=== feedbackGrade Function Start ===');
     try {
         const base44 = createClientFromRequest(req);
-        const user = await base44.auth.me();
-
-        if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        
+        // Try to get user but allow guests (grading doesn't require user context for core functionality)
+        let user = null;
+        let isGuest = false;
+        try {
+            user = await base44.auth.me();
+        } catch (authError) {
+            console.log('ℹ️ No user authentication - proceeding as guest');
+            isGuest = true;
         }
 
         const { prompt, response_json_schema, exam_id, lesson_id } = await req.json();
@@ -43,8 +48,11 @@ Deno.serve(async (req) => {
         let finalPrompt = prompt;
         
         if (exam_id && lesson_id && !prompt) {
-            const exams = await base44.entities.Exam.filter({ id: exam_id });
-            const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
+            // Use service role for guests
+            const entities = isGuest ? base44.asServiceRole.entities : base44.entities;
+            
+            const exams = await entities.Exam.filter({ id: exam_id });
+            const lessons = await entities.Lesson.filter({ id: lesson_id });
             const exam = exams[0];
             const lesson = lessons[0];
             
@@ -52,8 +60,16 @@ Deno.serve(async (req) => {
                 return Response.json({ error: 'Exam or lesson not found' }, { status: 400 });
             }
 
-            const profiles = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
-            const learningProfile = profiles[0] || {};
+            // Get learning profile only for authenticated users
+            let learningProfile = {};
+            if (user && user.learning_profile_id) {
+                try {
+                    const profiles = await entities.LearningProfile.filter({ id: user.learning_profile_id });
+                    learningProfile = profiles[0] || {};
+                } catch (e) {
+                    console.warn('Could not load learning profile:', e.message);
+                }
+            }
 
             const examPerformanceData = (exam.questions || []).map(q => ({
                 question_number: q.question_number,
