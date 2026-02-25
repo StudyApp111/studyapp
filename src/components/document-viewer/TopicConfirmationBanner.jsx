@@ -144,7 +144,7 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   return (
     <Dialog open={!dismissed} onOpenChange={() => {}}>
       <DialogContent
-        className="w-[calc(100vw-40px)] sm:w-[440px] max-w-[440px] p-0 gap-0 overflow-hidden rounded-2xl border-0 bg-[#14141e] [&>button]:hidden"
+        className="w-[calc(100vw-40px)] sm:w-[440px] max-w-[440px] max-h-[90vh] p-0 gap-0 overflow-hidden rounded-2xl border-0 bg-[#14141e] [&>button]:hidden flex flex-col"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
