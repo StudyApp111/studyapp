@@ -242,19 +242,22 @@ export default function DocumentViewer() {
       const isGenerating = e.detail?.generating ?? true;
       setIsGeneratingStudyPlan(isGenerating);
       if (!isGenerating) {
-        // When generation completes, reload lesson to get study plan
         loadLesson();
       }
     };
+
+    const handleTaskCompleted = () => setShowTaskConfetti(true);
     
     window.addEventListener('switchToStudyPlanTab', handleSwitchToStudyPlan);
     window.addEventListener('switchToExamTab', handleSwitchToExam);
     window.addEventListener('studyPlanGenerating', handleStudyPlanGenerating);
+    window.addEventListener('studyPlanTaskCompleted', handleTaskCompleted);
     
     return () => {
       window.removeEventListener('switchToStudyPlanTab', handleSwitchToStudyPlan);
       window.removeEventListener('switchToExamTab', handleSwitchToExam);
       window.removeEventListener('studyPlanGenerating', handleStudyPlanGenerating);
+      window.removeEventListener('studyPlanTaskCompleted', handleTaskCompleted);
     };
   }, []);
 
