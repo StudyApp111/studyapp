@@ -420,7 +420,7 @@ No extra text.`;
       // Log first and last 200 chars to diagnose where truncation happened
       console.error('Content start:', content.substring(0, 200));
       console.error('Content end:', content.substring(content.length - 200));
-      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
+      await entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to parse exam response' }, { status: 500 });
     }
 
