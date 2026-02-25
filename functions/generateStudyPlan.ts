@@ -220,7 +220,7 @@ Pill 2 (type: "warning"): Behavior pattern detected:
   Procedural errors → "Pattern: skipping steps"
   Inconsistent recall → "Pattern: recall under pressure"
 Pill 3 (type: "info"): "First session closes [round((primary_gap_weight × 0.25 × 100) to nearest 5)]% of your gap"
-Headline: "You're predicted [grade] in [course] — here's exactly why, and how to fix it."
+Headline: "Your predicted grade in [course] is [a/an] [grade] — here's exactly why, and how to fix it." Use "an" before A grades, "a" before B/C/D/F.
 Support (1 sentence): State the primary failure mode plainly.
 
 RULES:
