@@ -198,6 +198,7 @@ Core Competencies: ${JSON.stringify(lesson.curriculum_map?.core_competencies?.ma
 Competency Weightings: ${JSON.stringify(lesson.curriculum_map?.competency_weightings || [])}
 High Yield Focal Points: ${JSON.stringify(lesson.curriculum_map?.high_yield_focal_points || [])}
 Common Misconceptions: ${JSON.stringify(lesson.curriculum_map?.common_misconceptions || [])}
+Topic Sections: ${JSON.stringify((lesson.topics || []).map(t => t.title).slice(0, 20))}
 
 3. EXAM PERFORMANCE DATA (${completedExams.length} completed exams):
 ${JSON.stringify(examPerformanceData, null, 2)}
