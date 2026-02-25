@@ -317,11 +317,6 @@ export default function CreateLesson() {
   };
 
   const handleLoaderComplete = () => {
-    // For guests, navigate directly to DocumentViewer
-    if (isGuest) {
-      navigate(createPageUrl("DocumentViewer"), { replace: true });
-      return;
-    }
     if (createdLessonId) {
       navigate(createPageUrl("DocumentViewer") + `?lessonId=${createdLessonId}`, { replace: true });
     } else {
