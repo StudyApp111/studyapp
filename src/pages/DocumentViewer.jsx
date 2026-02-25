@@ -667,6 +667,14 @@ export default function DocumentViewer() {
               </div>
 
               <div className="w-full flex-1 overflow-auto">
+                {/* Global Study Plan Banner - shows on all tabs except studyplan */}
+                {lesson?.id && (
+                  <GlobalStudyPlanBanner
+                    lessonId={lesson.id}
+                    activeTab={activeTab}
+                    onNavigate={(tab) => setActiveTab(tab)}
+                  />
+                )}
                 {hasDocument && (
                   <TabsContent value="doc" className="mt-0 p-0 h-full">
                     {!lesson ? (
