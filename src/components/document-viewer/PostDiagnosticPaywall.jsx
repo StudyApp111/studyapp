@@ -76,39 +76,33 @@ export default function PostDiagnosticPaywall({ lessonId }) {
             </motion.div>
 
             <h2 className="text-lg font-black text-white mb-1.5 leading-tight">
-              Don't worry, we can fix this.
+              You're one study plan away from knowing your grade.
             </h2>
             
-            {gradeData.mastery_gap && (
-              <motion.div 
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/30 mb-3"
-              >
-                <Target className="w-3 h-3 text-red-400" />
-                <span className="text-red-200 text-[11px] font-semibold">
-                  Mastery gap: <span className="font-bold text-white">{gradeData.mastery_gap}</span>
-                </span>
-              </motion.div>
-            )}
-
-            <p className="text-purple-200/80 text-xs leading-relaxed max-w-[280px] mx-auto">
-              We've created a <span className="font-bold text-white">custom study plan</span> to get you to an A. Unlock it with a free trial.
+            <p className="text-purple-200/80 text-sm leading-relaxed max-w-[300px] mx-auto">
+              Try everything free for 7 days — no credit card needed.
             </p>
           </div>
 
           {/* CTA area */}
           <div className="bg-[#1a1040] px-5 pb-5 pt-3 space-y-3">
+            {/* Price display */}
+            <div className="text-center mb-1">
+              <p className="text-purple-200/90 text-xs font-medium">
+                $4.99/mo after trial · Only $0.16/day · Cancel anytime
+              </p>
+            </div>
+
             {/* Feature bullets */}
             <div className="space-y-1.5 mb-1">
               {[
-                'Full personalized study plan',
-                'Unlimited lessons & AI feedback',
-                'Advanced grade predictions'
+                'Know your predicted grade before you study',
+                'A study plan built around your exact gaps',
+                'Unlimited courses and diagnostics',
+                'AI tutor that knows your material'
               ].map((f, i) => (
                 <div key={i} className="flex items-center gap-2 text-[11px] text-white/80">
-                  <Sparkles className="w-3 h-3 text-purple-400 flex-shrink-0" />
+                  <span className="text-emerald-400 flex-shrink-0">✓</span>
                   <span>{f}</span>
                 </div>
               ))}
@@ -118,10 +112,9 @@ export default function PostDiagnosticPaywall({ lessonId }) {
               onClick={handleUpgrade}
               className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold py-3.5 text-sm rounded-xl shadow-lg shadow-purple-500/30"
             >
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Start 7-Day Free Trial
+              Start My Free 7 Days →
             </Button>
-            <p className="text-center text-[9px] text-purple-300/40">No charge today · Cancel anytime</p>
+            <p className="text-center text-[9px] text-purple-300/40">No credit card required. We'll remind you before your trial ends.</p>
 
             <button
               onClick={() => setShow(false)}
