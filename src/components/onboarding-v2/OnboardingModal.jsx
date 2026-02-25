@@ -217,19 +217,19 @@ export default function OnboardingModal({ onComplete }) {
           <div className="px-6 pb-6">
             <AnimatePresence mode="wait">
               {step === 1 && (
-                <StepProfile key="step1" user={user} isGuest={isGuest} onComplete={handleProfileComplete} onBack={null} />
+                <StepWelcome key="step1" displayName={displayName} onNext={handleNext} onBack={null} />
               )}
               {step === 2 && (
-                <StepWelcome key="step2" displayName={displayName} onNext={handleNext} onBack={handleBack} />
+                <StepHowItWorks key="step2" onNext={handleNext} onBack={handleBack} />
               )}
               {step === 3 && (
-                <StepHowItWorks key="step3" onNext={handleNext} onBack={handleBack} />
+                <StepMaterials key="step3" onNext={handleNext} onBack={handleBack} />
               )}
               {step === 4 && (
-                <StepMaterials key="step4" onNext={handleNext} onBack={handleBack} />
+                <StepFeatures key="step4" onNext={handleNext} onBack={handleBack} />
               )}
               {step === 5 && (
-                <StepFeatures key="step5" onNext={handleNext} onBack={handleBack} />
+                <StepProfile key="step5" user={user} isGuest={isGuest} onComplete={handleProfileComplete} onBack={handleBack} />
               )}
               {step === 6 && (
                 <StepSignIn
