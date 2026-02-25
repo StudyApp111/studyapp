@@ -393,7 +393,7 @@ No extra text.`;
 
     if (!content) {
       console.error('No content from Gemini, candidates:', JSON.stringify(data?.candidates));
-      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
+      await entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'No content generated' }, { status: 500 });
     }
 
