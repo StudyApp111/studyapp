@@ -61,6 +61,17 @@ Deno.serve(async (req) => {
     const firstName = fullName.split(' ')[0];
     const lastName = fullName.split(' ').slice(1).join(' ') || '';
     
+    // Build trial-related variables
+    const trialEndDate = targetUser.trial_end_date || targetUser.data?.trial_end_date;
+    let trialDaysLeft = '';
+    let trialEndFormatted = '';
+    if (trialEndDate) {
+      const endDate = new Date(trialEndDate);
+      const daysLeft = Math.max(0, Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24)));
+      trialDaysLeft = String(daysLeft);
+      trialEndFormatted = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
     const userVars = {
       // Resend reserved variable names (uppercase)
       FIRST_NAME: firstName,
@@ -77,7 +88,10 @@ Deno.serve(async (req) => {
       level: String(targetUser.level || 1),
       total_points: String(targetUser.total_points || 0),
       current_streak: String(targetUser.current_streak || 0),
-      questions_completed: String(targetUser.questions_completed || 0)
+      questions_completed: String(targetUser.questions_completed || 0),
+      plan_type: targetUser.subscription_plan_type || targetUser.data?.subscription_plan_type || '',
+      trial_days_left: trialDaysLeft,
+      trial_end_date: trialEndFormatted
     };
 
     let sentCount = 0;
