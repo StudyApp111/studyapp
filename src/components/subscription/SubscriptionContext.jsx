@@ -191,14 +191,14 @@ export function SubscriptionProvider({ children }) {
     if (!taskType) {
       // Legacy callers without taskType — check user's total_tasks_used
       const currentUser = await checkAndResetCounters();
-      if (!currentUser) return { allowed: false, requiresPro: true };
+      if (!currentUser) return { allowed: true }; // Fail open: don't block if we can't load user
       const totalUsed = currentUser.total_tasks_used || 0;
       // Allow up to 4 total tasks (1 flashcard + 1 teach-it + 1 practice quiz + 1 notes)
       return { allowed: totalUsed < 4, requiresPro: totalUsed >= 4 };
     }
     
     const currentUser = await checkAndResetCounters();
-    if (!currentUser) return { allowed: false, requiresPro: true };
+    if (!currentUser) return { allowed: true }; // Fail open: don't block if we can't load user
     
     const fieldMap = {
       flashcards: 'total_flashcard_sets',
@@ -207,7 +207,7 @@ export function SubscriptionProvider({ children }) {
       review_notes: 'total_note_generations'
     };
     const field = fieldMap[taskType];
-    if (!field) return { allowed: false, requiresPro: true };
+    if (!field) return { allowed: true }; // Unknown task type — don't block
     
     const count = currentUser[field] || 0;
     const limit = 1;
