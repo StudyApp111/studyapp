@@ -238,8 +238,8 @@ export default function EducationalLoader({ title = "Creating Your Lesson", desc
     <div className="flex flex-col items-center justify-center py-8 px-4">
       {/* Animated loader */}
       <div className="relative mb-6">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full blur-xl opacity-30 animate-pulse" />
-        <div className="relative w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full flex items-center justify-center shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full blur-xl opacity-30 animate-pulse" />
+        <div className="relative w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-600 rounded-full flex items-center justify-center shadow-xl">
           <Loader2 className="w-8 h-8 text-white animate-spin" />
         </div>
       </div>
@@ -270,7 +270,7 @@ export default function EducationalLoader({ title = "Creating Your Lesson", desc
               <span className="text-4xl">{currentFact.icon || "💡"}</span>
               
               <div className="space-y-2">
-                <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${isDark ? 'text-purple-300 bg-purple-500/20' : 'text-purple-600 bg-purple-50'}`}>
+                <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-400 border border-pink-500/30">
                   {currentFact.category || "Fun Fact"}
                 </span>
                 <p className={`text-sm font-medium leading-relaxed max-w-xs ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
@@ -288,7 +288,7 @@ export default function EducationalLoader({ title = "Creating Your Lesson", desc
           <div
             key={i}
             className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-              i === factIndex % 3 ? 'bg-purple-500' : (isDark ? 'bg-slate-600' : 'bg-slate-200')
+              i === factIndex % 3 ? 'bg-pink-500' : (isDark ? 'bg-slate-600' : 'bg-slate-200')
             }`}
           />
         ))}
