@@ -403,18 +403,41 @@ export default function DocumentViewer() {
         return;
       }
 
-      const lessons = await base44.entities.Lesson.filter({ id: lessonId });
-      
-      if (!lessons || lessons.length === 0) {
-        setError("Lesson not found");
-        setLoading(false);
-        return;
+      let lessonData = null;
+      let examsData = [];
+
+      // Guest users: load via backend function (service role) since RLS blocks direct access
+      if (isGuest && guestData?.fingerprint) {
+        console.log("👤 Guest mode: loading lesson via getGuestLesson...");
+        const { data } = await base44.functions.invoke('getGuestLesson', {
+          fingerprint: guestData.fingerprint,
+          lesson_id: lessonId,
+          include_exams: true
+        });
+        
+        if (!data?.lesson) {
+          setError("Lesson not found");
+          setLoading(false);
+          return;
+        }
+        
+        lessonData = data.lesson;
+        examsData = data.exams || [];
+      } else {
+        // Authenticated user: load directly
+        const lessons = await base44.entities.Lesson.filter({ id: lessonId });
+        
+        if (!lessons || lessons.length === 0) {
+          setError("Lesson not found");
+          setLoading(false);
+          return;
+        }
+
+        lessonData = lessons[0];
+        examsData = await base44.entities.Exam.filter({ lesson_id: lessonId }).catch(() => []);
       }
 
-      const lessonData = lessons[0];
       setLesson(lessonData);
-      
-      // Upload prompt removed - users can upload via doc tab if needed
       
       // Initialize study time from saved lesson data
       setStudyTime(lessonData.total_study_time_seconds || 0);
@@ -424,9 +447,7 @@ export default function DocumentViewer() {
         setExtractedContent(lessonData.extracted_content);
       }
 
-      // Load ALL exams including practice exams (needed for red dot logic and exam list)
-      const examsData = await base44.entities.Exam.filter({ lesson_id: lessonId }).catch(() => []);
-      // Sort by exam_number for official, then by created_date for practice
+      // Sort exams
       const sortedExams = examsData.filter(e => e?.id).sort((a, b) => {
         if (a.exam_type === 'practice' && b.exam_type !== 'practice') return 1;
         if (a.exam_type !== 'practice' && b.exam_type === 'practice') return -1;
@@ -445,9 +466,6 @@ export default function DocumentViewer() {
       if (examWithGrade) {
         setPredictedGrade(examWithGrade.predicted_grade);
       }
-
-      // NOTE: Exam 1 generation is handled ONLY by autoGenerateExam1 function
-      // Called from CreateLessonModal. Do NOT duplicate calls here.
 
       setLoading(false);
     } catch (error) {
