@@ -72,6 +72,7 @@ export function GuestSessionProvider({ children }) {
     };
 
     saveGuestSession(session);
+    sessionStorage.setItem('guest_session_active', 'true');
     setIsGuest(true);
     setGuestData(session);
     setGuestLessonCreated(false);
