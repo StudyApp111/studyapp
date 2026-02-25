@@ -109,6 +109,8 @@ Deno.serve(async (req) => {
             extracted_content: guestLesson.extracted_content,
             compressed_content: guestLesson.compressed_content,
             topics: guestLesson.topics,
+            topic_suggestions: guestLesson.topic_suggestions,
+            selected_topics: guestLesson.selected_topics,
             curriculum_map: guestLesson.curriculum_map,
             status: 'diagnostic_completed'
           });
@@ -172,15 +174,46 @@ Deno.serve(async (req) => {
       // Mark onboarding as completed for new user
       await base44.auth.updateMe({ onboarding_completed: true });
 
-      // Generate study plan for transferred completed exam
-      if (lessonId && transferredExamId) {
+      // Transfer study plans from guest lesson to new lesson
+      if (lessonId && transferredExamId && lesson_data?.id) {
         try {
-          await base44.functions.invoke('generateStudyPlan', { 
-            exam_id: transferredExamId, 
-            lesson_id: lessonId 
-          });
+          const guestPlans = await base44.asServiceRole.entities.StudyPlan.filter({ lesson_id: lesson_data.id });
+          if (guestPlans.length > 0) {
+            const guestPlan = guestPlans[0];
+            await base44.entities.StudyPlan.create({
+              lesson_id: lessonId,
+              generated_from_exam_id: transferredExamId,
+              cycle_number: guestPlan.cycle_number,
+              initial_predicted_grade: guestPlan.initial_predicted_grade,
+              initial_score: guestPlan.initial_score,
+              initial_confidence: guestPlan.initial_confidence,
+              current_predicted_grade: guestPlan.current_predicted_grade,
+              current_score: guestPlan.current_score,
+              current_confidence: guestPlan.current_confidence,
+              mastery_gap: guestPlan.mastery_gap,
+              weak_competencies: guestPlan.weak_competencies,
+              suggested_tasks: guestPlan.suggested_tasks,
+              tasks: guestPlan.tasks,
+              plan_rationale: guestPlan.plan_rationale,
+              priority_focus: guestPlan.priority_focus,
+              insights_panel: guestPlan.insights_panel,
+              behavioral_insights: guestPlan.behavioral_insights,
+              status: 'active'
+            });
+            console.log('✅ GUEST STUDY PLAN TRANSFERRED');
+            // Clean up guest study plans
+            for (const p of guestPlans) {
+              await base44.asServiceRole.entities.StudyPlan.delete(p.id);
+            }
+          } else {
+            // No existing plan - generate one
+            await base44.functions.invoke('generateStudyPlan', { 
+              exam_id: transferredExamId, 
+              lesson_id: lessonId 
+            });
+          }
         } catch (planErr) {
-          console.warn('Study plan generation failed:', planErr.message);
+          console.warn('Study plan transfer/generation failed:', planErr.message);
         }
       }
 
