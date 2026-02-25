@@ -154,7 +154,6 @@ Deno.serve(async (req) => {
 
     const sessionConfig = {
       customer: customerId,
-      payment_method_types: ['card'],
       line_items: [
         {
           price: priceId,
@@ -170,9 +169,22 @@ Deno.serve(async (req) => {
         plan_type: planType
       },
       subscription_data: subscriptionData,
-      payment_method_collection: 'always',
       allow_promotion_codes: true,
     };
+
+    // For trials: no credit card required, cancel if no payment method at end
+    if (canHaveTrial) {
+      sessionConfig.payment_method_collection = 'if_required';
+      subscriptionData.trial_settings = {
+        end_behavior: {
+          missing_payment_method: 'cancel'
+        }
+      };
+      console.log("No-credit-card trial mode enabled");
+    } else {
+      sessionConfig.payment_method_types = ['card'];
+      sessionConfig.payment_method_collection = 'always';
+    }
 
     console.log("Session config prepared:", {
       customer: customerId,
