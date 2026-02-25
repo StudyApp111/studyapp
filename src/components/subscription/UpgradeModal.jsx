@@ -201,10 +201,10 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
               ) : (
                 <Zap className="w-4 h-4 mr-2" />
               )}
-              Start Free Trial
+              Start Free — 7 Days On Us
             </Button>
             <p className="text-center text-[9px] text-purple-300/60 mt-2">
-              You won't be charged until the trial ends
+              Cancel anytime · No credit card required
             </p>
 
             {/* Promo Code */}
