@@ -41,9 +41,15 @@ Deno.serve(async (req) => {
   console.log('=== autoGenerateExam1 Start ===');
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    // Support both authenticated users and guest sessions (service role fallback)
+    let user = null;
+    let useServiceRole = false;
+    try {
+      user = await base44.auth.me();
+    } catch (authErr) {
+      console.log('No authenticated user - checking if called with service role context');
+      useServiceRole = true;
     }
 
     const { lesson_id } = await req.json();
