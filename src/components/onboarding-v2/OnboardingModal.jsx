@@ -167,6 +167,9 @@ export default function OnboardingModal({ onComplete }) {
       sessionStorage.removeItem("onboarding_profile_name");
       sessionStorage.removeItem("onboarding_profile_school");
       window.dispatchEvent(new Event("userSubscriptionUpdated"));
+
+      // Fire-and-forget: enrich learning profile with city/country from IP geo
+      base44.functions.invoke('enrichLearningProfile', {}).catch(() => {});
     } catch (err) {
       console.error("Error completing onboarding:", err);
     }
