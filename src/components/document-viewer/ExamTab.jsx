@@ -997,6 +997,20 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         const aiConfidence = result.prediction_confidence;
         const feedbackMasteryGap = result.mastery_gap;
         
+        // PostHog: Guest quiz completion
+        try {
+          posthog?.capture('guest_quiz_completed', {
+            lesson_id: lesson.id,
+            course_name: lesson.course_name,
+            predicted_grade: aiGrade,
+            predicted_score: aiScore,
+            time_taken_seconds: elapsedSeconds,
+            correct_count: correctCount,
+            total_questions: totalQuestions,
+            mastery_gap: feedbackMasteryGap,
+          });
+        } catch {}
+
         // Track analytics
         base44.analytics.track({
           eventName: "diagnostic_exam_completed",
