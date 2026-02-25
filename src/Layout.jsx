@@ -154,7 +154,8 @@ function LayoutContent({ children, currentPageName }) {
             if (transferData?.lesson_id) {
               // Clear any stale lesson IDs from sessionStorage so DocumentViewer uses the URL ID
               sessionStorage.removeItem('currentLessonId');
-              navigate(createPageUrl("DocumentViewer") + `?id=${transferData.lesson_id}&tab=studyplan`, { replace: true });
+              // Load into exam review so user can see their diagnostic results after sign-up
+              navigate(createPageUrl("DocumentViewer") + `?id=${transferData.lesson_id}&tab=exam&viewResults=1`, { replace: true });
               return;
             }
           } catch (transferErr) {
