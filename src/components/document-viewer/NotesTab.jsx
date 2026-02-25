@@ -349,38 +349,39 @@ export default function NotesTab({ lesson }) {
           <div className="flex gap-0 overflow-hidden">
             {/* Table of Contents - Desktop Only, Collapsible */}
             {tableOfContents.length > 0 && (
-              <div className={`hidden lg:flex flex-col border-r transition-all duration-300 ${tocCollapsed ? 'w-10' : 'w-64'} ${isDark ? 'bg-[#0a0a12] border-white/10' : 'bg-slate-50 border-slate-200'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
-                <div className="p-2 flex items-center justify-between">
-                  {!tocCollapsed && (
-                    <h3 className={`text-xs font-bold uppercase tracking-wider px-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contents</h3>
-                  )}
-                  <button
-                    onClick={() => setTocCollapsed(!tocCollapsed)}
-                    className={`p-1 rounded-md transition-colors ${isDark ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-                    title={tocCollapsed ? 'Expand contents' : 'Collapse contents'}
-                  >
-                    {tocCollapsed ? <ChevronRightIcon className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                  </button>
-                </div>
+              <div className={`hidden lg:flex flex-col border-r transition-all duration-300 relative ${tocCollapsed ? 'w-3' : 'w-64'} ${isDark ? 'bg-[#0a0a12] border-white/10' : 'bg-slate-50 border-slate-200'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
+                {/* Collapse/expand toggle centered on the right edge */}
+                <button
+                  onClick={() => setTocCollapsed(!tocCollapsed)}
+                  className={`absolute top-1/2 -translate-y-1/2 -right-3.5 z-20 w-7 h-7 rounded-full border-2 shadow-md flex items-center justify-center transition-colors ${isDark ? 'bg-[#1a1a2e] border-purple-500/40 hover:bg-purple-500/20 text-purple-400' : 'bg-white border-purple-300 hover:bg-purple-50 text-purple-600'}`}
+                  title={tocCollapsed ? 'Expand contents' : 'Collapse contents'}
+                >
+                  {tocCollapsed ? <ChevronRightIcon className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                </button>
                 {!tocCollapsed && (
-                  <nav className="space-y-1 px-4 pb-4 overflow-y-auto">
-                    {tableOfContents.map((item, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          const element = document.getElementById(item.id);
-                          if (element) {
-                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }
-                        }}
-                        className={`block w-full text-left text-sm py-1.5 px-2 rounded transition-colors ${
-                          item.level === 1 ? 'font-bold' : item.level === 2 ? 'font-semibold pl-3' : 'pl-5'
-                        } ${isDark ? 'text-slate-300 hover:bg-purple-500/10 hover:text-purple-300' : 'text-slate-700 hover:bg-purple-50 hover:text-purple-700'}`}
-                      >
-                        {item.text}
-                      </button>
-                    ))}
-                  </nav>
+                  <>
+                    <div className="p-2 flex items-center">
+                      <h3 className={`text-xs font-bold uppercase tracking-wider px-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contents</h3>
+                    </div>
+                    <nav className="space-y-1 px-4 pb-4 overflow-y-auto">
+                      {tableOfContents.map((item, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            const element = document.getElementById(item.id);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                          }}
+                          className={`block w-full text-left text-sm py-1.5 px-2 rounded transition-colors ${
+                            item.level === 1 ? 'font-bold' : item.level === 2 ? 'font-semibold pl-3' : 'pl-5'
+                          } ${isDark ? 'text-slate-300 hover:bg-purple-500/10 hover:text-purple-300' : 'text-slate-700 hover:bg-purple-50 hover:text-purple-700'}`}
+                        >
+                          {item.text}
+                        </button>
+                      ))}
+                    </nav>
+                  </>
                 )}
               </div>
             )}
