@@ -127,32 +127,6 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
 export default function ExamTab({ lesson, exams, onExamComplete, extractedContent }) {
   const { isDark } = useTheme();
   const { isGuest, guestData, markGuestDiagnosticCompleted } = useGuestSession();
-
-  // Guest-safe exam fetcher: guests can't use base44.entities.Exam directly (RLS blocks it)
-  // Must go through getGuestLesson backend function which uses service role
-  const fetchExamsForLesson = async () => {
-    if (isGuest && guestData?.fingerprint && lesson?.id) {
-      const { data } = await base44.functions.invoke('getGuestLesson', {
-        fingerprint: guestData.fingerprint,
-        lesson_id: lesson.id,
-        include_exams: true
-      });
-      return data?.exams || [];
-    }
-    return base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
-  };
-
-  const fetchExamById = async (examId) => {
-    if (isGuest && guestData?.fingerprint && lesson?.id) {
-      const { data } = await base44.functions.invoke('getGuestLesson', {
-        fingerprint: guestData.fingerprint,
-        lesson_id: lesson.id,
-        include_exams: true
-      });
-      return (data?.exams || []).filter(e => e.id === examId);
-    }
-    return base44.entities.Exam.filter({ id: examId });
-  };
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -526,7 +500,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             for (let i = 0; i < 8; i++) {
               await new Promise(r => setTimeout(r, 3000));
               try {
-                const refreshed = await fetchExamById(loadedExam.id);
+                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
                 if (refreshed[0]?.questions?.length > 0) {
                   console.log('✅ Questions appeared during phase-1 polling');
                   setExam(refreshed[0]);
@@ -546,7 +520,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             for (let i = 0; i < 12; i++) {
               await new Promise(r => setTimeout(r, 4000));
               try {
-                const refreshed = await fetchExamById(loadedExam.id);
+                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
                 if (refreshed[0]?.questions?.length > 0) {
                   console.log('✅ Questions appeared during phase-2 polling');
                   setExam(refreshed[0]);
@@ -559,7 +533,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             }
 
             await retryPromise;
-            const finalCheck = await fetchExamById(loadedExam.id);
+            const finalCheck = await base44.entities.Exam.filter({ id: loadedExam.id });
             if (finalCheck[0]?.questions?.length > 0) {
               setExam(finalCheck[0]);
               setIsGenerating(false);
@@ -577,8 +551,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       
       // SECOND: Double-check database directly before triggering generation
       // This catches race conditions where exams prop hasn't updated yet
-      const allDbExams = await fetchExamsForLesson();
-      const dbExams = allDbExams.filter(e => e.exam_number === 1);
+      const dbExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
       const dbExam = dbExams.find(e => e.exam_type !== 'practice');
       
       if (dbExam?.questions?.length > 0) {
@@ -599,7 +572,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         for (let i = 0; i < PHASE1_POLLS; i++) {
           await new Promise(r => setTimeout(r, 3000));
           try {
-            const refreshed = await fetchExamById(dbExam.id);
+            const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
             if (refreshed[0]?.questions?.length > 0) {
               console.log('✅ Questions appeared during phase-1 polling');
               setExam(refreshed[0]);
@@ -623,7 +596,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           for (let i = 0; i < PHASE2_POLLS; i++) {
             await new Promise(r => setTimeout(r, 4000));
             try {
-              const refreshed = await fetchExamById(dbExam.id);
+              const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
               if (refreshed[0]?.questions?.length > 0) {
                 console.log('✅ Questions appeared during phase-2 polling');
                 setExam(refreshed[0]);
@@ -638,7 +611,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           // Wait for retry to finish
           await retryPromise;
           // One final check
-          const finalCheck = await fetchExamById(dbExam.id);
+          const finalCheck = await base44.entities.Exam.filter({ id: dbExam.id });
           if (finalCheck[0]?.questions?.length > 0) {
             console.log('✅ Questions appeared after retry completed');
             setExam(finalCheck[0]);
