@@ -95,12 +95,12 @@ Deno.serve(async (req) => {
     // STEP 3: Create or update a placeholder exam record as a lock
     let lockExam;
     if (officialExam) {
-      lockExam = await base44.entities.Exam.update(officialExam.id, {
+      lockExam = await entities.Exam.update(officialExam.id, {
         status: "generating"
       });
       console.log('Refreshed lock on existing exam record:', lockExam.id);
     } else {
-      lockExam = await base44.entities.Exam.create({
+      lockExam = await entities.Exam.create({
         lesson_id,
         exam_number: 1,
         exam_type: "official",
