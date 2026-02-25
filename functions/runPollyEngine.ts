@@ -188,7 +188,6 @@ School: ${learningProfile.school || 'Unknown'}
 Grade: ${learningProfile.grade || 'Unknown'}
 City: ${learningProfile.city || 'Unknown'}
 Country: ${learningProfile.country || 'Unknown'}
-Study Type: ${learningProfile.study_type || 'academics'}
 
 2. LESSON CONTEXT:
 Course: ${lesson.course_name}
