@@ -393,15 +393,19 @@ export default function DocumentViewer() {
       const urlParams = new URLSearchParams(window.location.search);
       let lessonId = urlParams.get('id') || urlParams.get('lessonId');
 
-      // If not in URL, fall back to ref or session
+      // If not in URL, fall back to ref, session, or guest data
       if (!lessonId || lessonId === 'null' || lessonId === 'undefined') {
         lessonId = lessonIdRef.current || sessionStorage.getItem('currentLessonId');
-      } else {
-        // URL has valid ID, sync ref
+      }
+      // Guest fallback: check guestData for lesson_id
+      if ((!lessonId || lessonId === 'null' || lessonId === 'undefined') && isGuest && guestData?.lessonData?.lesson_id) {
+        lessonId = guestData.lessonData.lesson_id;
+      }
+      if (lessonId && lessonId !== 'null' && lessonId !== 'undefined') {
         lessonIdRef.current = lessonId;
       }
 
-      console.log("Loading lesson with ID:", lessonId);
+      console.log("Loading lesson with ID:", lessonId, isGuest ? "(guest)" : "");
 
       if (!lessonId || lessonId === 'null' || lessonId === 'undefined') {
         setError("No lesson ID found");
@@ -409,18 +413,34 @@ export default function DocumentViewer() {
         return;
       }
 
-      const lessons = await base44.entities.Lesson.filter({ id: lessonId });
-      
-      if (!lessons || lessons.length === 0) {
-        setError("Lesson not found");
-        setLoading(false);
-        return;
+      let lessonData, examsData;
+
+      if (isGuest) {
+        // Guest: load lesson via service-role backend (bypasses RLS)
+        const { data } = await base44.functions.invoke('checkGuestEligibility', {
+          fingerprint: guestData?.fingerprint,
+          action: 'loadLesson',
+          lesson_id: lessonId
+        });
+        if (!data?.lesson) {
+          setError("Lesson not found");
+          setLoading(false);
+          return;
+        }
+        lessonData = data.lesson;
+        examsData = data.exams || [];
+      } else {
+        const lessons = await base44.entities.Lesson.filter({ id: lessonId });
+        if (!lessons || lessons.length === 0) {
+          setError("Lesson not found");
+          setLoading(false);
+          return;
+        }
+        lessonData = lessons[0];
+        examsData = await base44.entities.Exam.filter({ lesson_id: lessonId }).catch(() => []);
       }
 
-      const lessonData = lessons[0];
       setLesson(lessonData);
-      
-      // Upload prompt removed - users can upload via doc tab if needed
       
       // Initialize study time from saved lesson data
       setStudyTime(lessonData.total_study_time_seconds || 0);
@@ -430,8 +450,7 @@ export default function DocumentViewer() {
         setExtractedContent(lessonData.extracted_content);
       }
 
-      // Load ALL exams including practice exams (needed for red dot logic and exam list)
-      const examsData = await base44.entities.Exam.filter({ lesson_id: lessonId }).catch(() => []);
+      // examsData already loaded above
       // Sort by exam_number for official, then by created_date for practice
       const sortedExams = examsData.filter(e => e?.id).sort((a, b) => {
         if (a.exam_type === 'practice' && b.exam_type !== 'practice') return 1;
