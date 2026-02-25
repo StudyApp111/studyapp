@@ -823,6 +823,14 @@ export default function DocumentViewer() {
 
             {/* Scrollable content area */}
             <div className="overflow-x-hidden w-full pb-28">
+              {/* Global Study Plan Banner - Mobile */}
+              {lesson?.id && (
+                <GlobalStudyPlanBanner
+                  lessonId={lesson.id}
+                  activeTab={activeTab}
+                  onNavigate={(tab) => setActiveTab(tab)}
+                />
+              )}
               {hasDocument && (
                 <TabsContent value="doc" className="mt-0 p-0 w-full overflow-x-hidden">
                   {!lesson ? (
