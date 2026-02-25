@@ -88,42 +88,55 @@ Deno.serve(async (req) => {
             const competenciesCovered = new Set(examPerformanceData.flatMap(q => q.assessed_competencies || [])).size;
             const totalCompetencies = (lesson.curriculum_map?.core_competencies || []).length || 1;
             
-            finalPrompt = `Expert educator for ${courseName} (grade ${grade}). Analyze exam performance using curriculum map to predict grade as if you were a teacher at this school teaching this course.
+            finalPrompt = `You are grading a ${grade}-level ${courseName} exam. Calculate predicted score using the algorithm below. Output JSON only, no explanation.
 
-Input: Grade ${grade}, ${courseName}, Exam ${examNumber}/6
-Curriculum: ${curriculumJson}
 Performance: ${performanceJson}
-
-Data Points Available:
-- Questions answered: ${answeredQuestions}/${totalQuestions}
-- Competencies assessed: ${competenciesCovered}/${totalCompetencies}
+Curriculum: ${curriculumJson}
+Exam: ${examNumber}/6
+Coverage: ${answeredQuestions}/${totalQuestions} questions, ${competenciesCovered}/${totalCompetencies} competencies
 
 Fields: question_number, question_type, difficulty_index, question_text, options, student_answer, correct_answer, explanation, assessed_competencies[], targeted_misconception, is_correct, ai_grading{score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[]}.
 
-Prediction Algorithm:
-1) Per-item: base=0.90(correct) or 0.20. Blend w/ai_grading partial=(score/10). Apply difficulty multipliers: Correct→High×1.05(cap 0.98), Challenging×1.02(cap 0.96), Moderate×1.01(cap 0.92); Incorrect→High×0.90(floor 0.10), Challenging×0.80(floor 0.08), Moderate×0.70(floor 0.05). Misconception penalty -0.05/-0.07/-0.09. Clamp [0.05,0.98].
-2) Competency mastery: mean scores per competency from curriculum_map.core_competencies; if none→0.50.
-3) Weighted aggregate: parse competency_weightings ("30%"→0.30), normalize, Σ(mastery×weight)×100.
-4) Question-type adjust: AvgTypeScore vs curriculum_map.question_formats frequency. If <0.40 & ≥30%→-3 to -6; if ≥0.80 & ≥30%→+0 to +2. Cap [-8,+4].
-5) Coverage: competency weight≥25% & <2 items→-2 each (max -4); ≥80% assessed→+1 to +2. Cap [-8,+4].
-6) Final: round(aggregate+modifier) [0,100]+"%". If 0/10→"Not Calculable".
+ALGORITHM:
 
-Confidence Calculation (MIN 20% MAX 65%):
-- Base confidence = (questions_answered/total_questions * 40) + (competencies_covered/total_competencies * 40) + 20
-- Adjust: If exam_number=1 (diagnostic only), cap at 65%. 
-- confidence_level: "Low" (<40%), "Medium" (40-65%) 
+1) Per-item score:
+   binary = 0.85 if correct, 0.25 if incorrect
+   final_item = (binary × 0.35) + (ai_score/10 × 0.65)
+   
+   Difficulty adjustment:
+   Correct+High: ×1.03, cap 0.95
+   Correct+Challenging: ×1.01, cap 0.92
+   Incorrect+High: ×0.88, floor 0.15
+   Incorrect+Challenging: ×0.78, floor 0.12
+   Incorrect+Moderate: ×0.68, floor 0.10
+   
+   Misconception penalty (only if incorrect AND ai_score < 4):
+   High: -0.06, Challenging: -0.04, Moderate: -0.02
+   Clamp each item [0.10, 0.95]
 
-Mastery Gap Analysis:
-- Identify the SINGLE weakest competency based on question performance
-- This is the "mastery_gap" - the biggest barrier to grade improvement
+2) Competency mastery:
+   Mean final_item per competency
+   Single-question competency: multiply mastery × 0.65
+   Zero-question competency: mark UNASSESSED, exclude from aggregate
+
+3) Weighted aggregate:
+   Normalize weights of ASSESSED competencies to sum 1.0
+   predicted_score = round(Σ(mastery × normalized_weight) × 100)
+   Clamp [0, 100]
+   If answeredQuestions < 3: predicted_score = null
+
+4) Confidence:
+   base = (${answeredQuestions}/${totalQuestions} × 35) + (${competenciesCovered}/${totalCompetencies} × 35) + 15
+   If examNumber = 1: cap at 55
+   If any competency weight ≥ 25% is UNASSESSED: cap at 45
+   If answeredQuestions < 5: cap at 30
+   confidence_level: Low if <35, Medium if 35-55
 
 JSON Output (exact schema):
 - feedback_session_title: "Exam ${examNumber} Performance & Grade Prediction"
 - predicted_exam_score_percentage: "%"|"Not Calculable"
 - prediction_confidence_percentage: number (20-65)
-- confidence_level: "Low"|"Medium"|
-- mastery_gap: string (the single weakest competency name)
-- mastery_gap_description: string (why this is the biggest weakness)`;
+- confidence_level: "Low"|"Medium"|`;
         }
 
         if (!finalPrompt) {
