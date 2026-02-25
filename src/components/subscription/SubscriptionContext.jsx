@@ -172,7 +172,7 @@ export function SubscriptionProvider({ children }) {
   const canUpload = async () => {
     if (isPro()) return { allowed: true };
     const currentUser = await checkAndResetCounters();
-    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.lessons_total, remaining: 0 };
+    if (!currentUser) return { allowed: true }; // Fail open: don't block if we can't load user
     
     const totalLessons = currentUser.total_lessons_created || currentUser.daily_lessons_count || 0;
     const allowed = totalLessons < FREE_TIER_LIMITS.lessons_total;
