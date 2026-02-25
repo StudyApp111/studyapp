@@ -10,7 +10,20 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { recipient, subject, body } = await req.json();
+        const { recipient, subject, body, debug_template_id } = await req.json();
+
+        // Debug mode: fetch template details from Resend
+        if (debug_template_id) {
+          const resendApiKey = Deno.env.get("RESEND_API_KEY");
+          const templateRes = await fetch(`https://api.resend.com/templates/${debug_template_id}`, {
+            headers: { 'Authorization': `Bearer ${resendApiKey}` }
+          });
+          const templateData = await templateRes.json();
+          console.log('Template status:', templateData.status);
+          console.log('Template variables:', JSON.stringify(templateData.variables));
+          console.log('Template HTML preview:', templateData.html?.substring(0, 500));
+          return Response.json({ template: templateData });
+        }
 
         if (!recipient || !subject || !body) {
             return Response.json({ error: 'Recipient, subject, and body are required' }, { status: 400 });
