@@ -437,7 +437,7 @@ No extra text.`;
     }));
 
     // Update the lock exam record with the generated questions
-    const exam = await base44.entities.Exam.update(lockExam.id, {
+    const exam = await entities.Exam.update(lockExam.id, {
       questions: questionsWithPlaceholder,
       status: "not_started",
       time_taken_seconds: 0,
