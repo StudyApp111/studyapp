@@ -90,7 +90,8 @@ export function GuestSessionProvider({ children }) {
 
   const setGuestLesson = useCallback((lessonData) => {
     setGuestData(prev => {
-      const updated = { ...prev, lessonData };
+      // Preserve the lesson ID for transfer
+      const updated = { ...prev, lessonData: { ...lessonData, id: lessonData.id } };
       saveGuestSession(updated);
       return updated;
     });

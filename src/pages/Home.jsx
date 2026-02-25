@@ -43,13 +43,19 @@ export default function Home() {
         }
 
         // If user just authenticated after being a guest, transfer data
-        if (guestData?.lessonData || guestData?.diagnosticCompleted) {
-          console.log('🎯 Guest data detected after auth, transferring...');
+        const wasGuestReturning = sessionStorage.getItem("guest_returning_to_lesson");
+        if (guestData?.lessonData || guestData?.diagnosticCompleted || wasGuestReturning) {
+          console.log('🎯 Guest data detected after auth, transferring...', { 
+            hasLessonData: !!guestData?.lessonData, 
+            diagnosticCompleted: guestData?.diagnosticCompleted,
+            wasReturning: wasGuestReturning
+          });
+          sessionStorage.removeItem("guest_returning_to_lesson");
+          
           const result = await transferGuestData();
+          console.log('🎯 Transfer result:', result);
+          
           if (result?.lesson_id) {
-            // Redirect to the transferred lesson with exam tab active (to show results)
-            const wasReturning = sessionStorage.getItem("guest_returning_to_lesson");
-            sessionStorage.removeItem("guest_returning_to_lesson");
             // ALWAYS go to exam tab after guest transfer to see question review
             navigate(createPageUrl("DocumentViewer") + `?id=${result.lesson_id}&tab=exam`, { replace: true });
             return;
