@@ -286,6 +286,7 @@ export default function DocumentViewer() {
   }, [location.search]);
 
   const loadUserStats = async () => {
+    if (isGuest) return; // Guests don't have user stats
     try {
       // Use centralized daily reset
       const resetResult = await handleDailyReset();
