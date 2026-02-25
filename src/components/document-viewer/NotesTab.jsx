@@ -349,19 +349,20 @@ export default function NotesTab({ lesson }) {
           <div className="flex gap-0 overflow-hidden">
             {/* Table of Contents - Desktop Only, Collapsible */}
             {tableOfContents.length > 0 && (
-              <div className={`hidden lg:flex flex-col border-r transition-all duration-300 ${tocCollapsed ? 'w-10' : 'w-64'} ${isDark ? 'bg-[#0a0a12] border-white/10' : 'bg-slate-50 border-slate-200'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
-                <div className="p-2 flex items-center justify-between">
-                  {!tocCollapsed && (
+              <div className={`hidden lg:flex flex-col border-r transition-all duration-300 relative ${tocCollapsed ? 'w-10' : 'w-64'} ${isDark ? 'bg-[#0a0a12] border-white/10' : 'bg-slate-50 border-slate-200'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
+                {!tocCollapsed && (
+                  <div className="p-2">
                     <h3 className={`text-xs font-bold uppercase tracking-wider px-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contents</h3>
-                  )}
-                  <button
-                    onClick={() => setTocCollapsed(!tocCollapsed)}
-                    className={`p-1 rounded-md transition-colors ${isDark ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-                    title={tocCollapsed ? 'Expand contents' : 'Collapse contents'}
-                  >
-                    {tocCollapsed ? <ChevronRightIcon className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                  </button>
-                </div>
+                  </div>
+                )}
+                {/* Collapse toggle button - centered vertically on the right edge */}
+                <button
+                  onClick={() => setTocCollapsed(!tocCollapsed)}
+                  className={`absolute top-1/2 -translate-y-1/2 -right-3 z-10 w-6 h-12 rounded-r-md border border-l-0 flex items-center justify-center transition-colors shadow-sm ${isDark ? 'bg-[#1a1a2e] border-white/10 hover:bg-white/10 text-slate-300' : 'bg-white border-slate-200 hover:bg-slate-100 text-slate-600'}`}
+                  title={tocCollapsed ? 'Expand contents' : 'Collapse contents'}
+                >
+                  {tocCollapsed ? <ChevronRightIcon className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                </button>
                 {!tocCollapsed && (
                   <nav className="space-y-1 px-4 pb-4 overflow-y-auto">
                     {tableOfContents.map((item, idx) => (
