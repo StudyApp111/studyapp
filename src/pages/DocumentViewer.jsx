@@ -913,6 +913,9 @@ export default function DocumentViewer() {
         )}
       </div>
 
+      {/* Full-screen confetti on task completion */}
+      <ConfettiEffect show={showTaskConfetti} onComplete={() => setShowTaskConfetti(false)} />
+
       {/* Post-Diagnostic Paywall for free users */}
       {lesson?.id && <PostDiagnosticPaywall lessonId={lesson.id} />}
 
