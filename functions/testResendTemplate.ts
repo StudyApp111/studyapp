@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
     const { template_id, to_email, variables } = await req.json();
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
 
-    // Test 1: Try sending with the template and provided variables
+    // Test 1: With variables
     const payload1 = {
       from: 'StudyApp.AI <updates@updates.studyappai.com>',
       to: [to_email || user.email],
@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
       }
     };
 
-    console.log('Test 1 - With variables:', JSON.stringify(payload1));
+    console.log('Test 1 payload:', JSON.stringify(payload1));
     const res1 = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const body1 = await res1.text();
     console.log('Test 1 result:', res1.status, body1);
 
-    // Test 2: Try sending with NO variables at all
+    // Test 2: No variables
     const payload2 = {
       from: 'StudyApp.AI <updates@updates.studyappai.com>',
       to: [to_email || user.email],
@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       }
     };
 
-    console.log('Test 2 - Empty variables:', JSON.stringify(payload2));
+    console.log('Test 2 payload:', JSON.stringify(payload2));
     const res2 = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -55,15 +55,14 @@ Deno.serve(async (req) => {
     const body2 = await res2.text();
     console.log('Test 2 result:', res2.status, body2);
 
-    // Test 3: Try a simple HTML email (no template) to verify sending works at all
+    // Test 3: Plain HTML (no template)
     const payload3 = {
       from: 'StudyApp.AI <updates@updates.studyappai.com>',
       to: [to_email || user.email],
       subject: 'Test Email - No Template',
-      html: '<h1>Hello!</h1><p>This is a test email without a template.</p>'
+      html: '<h1>Hello!</h1><p>This is a test without template.</p>'
     };
 
-    console.log('Test 3 - Plain HTML:', JSON.stringify(payload3));
     const res3 = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
