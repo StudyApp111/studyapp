@@ -328,9 +328,9 @@ export default function DocumentViewer() {
       clearInterval(saveProgressRef.current);
     }
 
-    // Save every 1 second for accurate timer
+    // Save every 1 second for accurate timer (skip for guests)
     saveProgressRef.current = setInterval(async () => {
-      if (!isTimerRunning) return;
+      if (!isTimerRunning || isGuest) return;
       
       const now = Date.now();
       const secondsSinceLastSave = Math.floor((now - lastSaveTimeRef.current) / 1000);
