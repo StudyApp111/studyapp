@@ -421,6 +421,9 @@ Return JSON:
 
     console.log(`⏱️ [generateStudyPlan] Pre-create: ${Date.now() - startTime}ms`);
     
+    // Use mastery_gap from LLM response if available, fallback to exam data
+    const finalMasteryGap = response.mastery_gap || masteryGap;
+
     // Create new study plan with enriched data
     const studyPlan = await base44.entities.StudyPlan.create({
       lesson_id,
@@ -432,7 +435,7 @@ Return JSON:
       current_predicted_grade: predictedGrade,
       current_score: totalScore,
       current_confidence: initialConfidence,
-      mastery_gap: masteryGap,
+      mastery_gap: finalMasteryGap,
       target_grade: "A+",
       weak_competencies: weakestCompetencies.map(c => c.name),
       tasks: validatedTasks,
@@ -447,6 +450,7 @@ Return JSON:
       }],
       plan_rationale: response.plan_rationale,
       priority_focus: response.priority_focus,
+      insights_panel: response.insights_panel || null,
       all_tasks_completed: false,
       official_exam_unlocked: false,
       status: 'active'
