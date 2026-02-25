@@ -83,6 +83,25 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Must be authenticated to transfer' }, { status: 401 });
       }
 
+      // IDEMPOTENCY GUARD: Check if this guest lesson was already transferred
+      // Prevents duplicate lessons when transfer is called from multiple places
+      if (lesson_data?.id) {
+        const fpHash = fingerprint ? await hashString(fingerprint) : 'none';
+        const allGuestLogs = await base44.asServiceRole.entities.AbuseLog.filter({
+          action_type: 'guest_session'
+        });
+        const sessionLog = allGuestLogs.find(log => log.fingerprint === fpHash && !log.blocked);
+        if (sessionLog?.metadata?.transferred_lesson_id) {
+          console.log(`⚠️ TRANSFER ALREADY DONE: returning existing lesson ${sessionLog.metadata.transferred_lesson_id}`);
+          return Response.json({ 
+            success: true, 
+            lesson_id: sessionLog.metadata.transferred_lesson_id,
+            exam_id: sessionLog.metadata.transferred_exam_id || null,
+            already_transferred: true
+          });
+        }
+      }
+
       let lessonId = null;
       let transferredExamId = null;
 
