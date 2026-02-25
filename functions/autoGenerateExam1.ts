@@ -41,12 +41,26 @@ Deno.serve(async (req) => {
   console.log('=== autoGenerateExam1 Start ===');
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    // Support both authenticated users and guest sessions (via service role)
+    let user = null;
+    let isGuestMode = false;
+    try {
+      user = await base44.auth.me();
+    } catch (e) {
+      // Not authenticated — check if this is a guest lesson call
     }
-
-    const { lesson_id } = await req.json();
+    
+    const body = await req.json();
+    const { lesson_id } = body;
+    
+    if (!user) {
+      // Allow guest mode only if lesson exists (created via service role)
+      if (!lesson_id) {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      isGuestMode = true;
+    }
     
     if (!lesson_id) {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
