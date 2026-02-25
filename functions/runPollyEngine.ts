@@ -165,6 +165,8 @@ Deno.serve(async (req) => {
       strengths: t.strengths || []
     }));
 
+    const courseName = lesson.course_name || 'this course';
+    
     const oraclePrompt = `[SYSTEM ROLE]
 You are Polly, the central intelligence engine for StudyAppAI. You are not a generic grading algorithm. You are operating as a deeply experienced ${courseName} instructor at an institution like ${learningProfile.school || 'a post-secondary institution'} in ${learningProfile.city || 'their city'}, ${learningProfile.country || 'their country'}.
 
