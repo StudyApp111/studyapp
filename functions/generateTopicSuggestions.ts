@@ -205,7 +205,7 @@ TOPIC RULES:
     }));
 
     // Save to lesson
-    await base44.entities.Lesson.update(lesson_id, {
+    await entities.Lesson.update(lesson_id, {
       topic_suggestions: cleanedSections
     });
 
