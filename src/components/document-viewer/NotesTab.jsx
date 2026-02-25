@@ -127,18 +127,20 @@ export default function NotesTab({ lesson }) {
               return task;
             });
             
-            const allComplete = updatedTasks?.every(t => t.completed);
-            await base44.entities.StudyPlan.update(plan.id, { 
-              tasks: updatedTasks,
-              all_tasks_completed: allComplete,
-              official_exam_unlocked: allComplete
-            });
-            
-            // Trigger Polly engine after notes task completion
-            base44.functions.invoke('runPollyEngine', {
-              trigger_event: 'review_notes_completed',
-              lesson_id: lesson.id
-            }).catch(err => console.warn('Polly trigger failed:', err.message));
+            if (markedOne) {
+              const allComplete = updatedTasks?.every(t => t.completed);
+              await base44.entities.StudyPlan.update(plan.id, { 
+                tasks: updatedTasks,
+                all_tasks_completed: allComplete,
+                official_exam_unlocked: allComplete
+              });
+              
+              // Trigger Polly engine after notes task completion
+              base44.functions.invoke('runPollyEngine', {
+                trigger_event: 'review_notes_completed',
+                lesson_id: lesson.id
+              }).catch(err => console.warn('Polly trigger failed:', err.message));
+            }
           }
         } catch (planError) {
           console.error("Error updating study plan for notes:", planError);
