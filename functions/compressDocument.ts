@@ -51,9 +51,17 @@ Deno.serve(async (req) => {
         console.log('🚀 Starting Phase 1 (topics) + Phase 2 (compression) in PARALLEL...');
 
         // ── PHASE 1: Extract structured topics (async) ──
-        const topicInputContent = workingContent.length > 60000 
-            ? workingContent.substring(0, 30000) + "\n\n...[middle content omitted]...\n\n" + workingContent.substring(workingContent.length - 30000)
-            : workingContent;
+        // Limit topic extraction input for faster processing (target ~5s per LLM call)
+        // For large documents, sample beginning + end only (structure is usually in headers/TOC)
+        const MAX_TOPIC_INPUT = 25000;
+        let topicInputContent;
+        if (workingContent.length > MAX_TOPIC_INPUT) {
+            const halfMax = Math.floor(MAX_TOPIC_INPUT / 2);
+            topicInputContent = workingContent.substring(0, halfMax) + "\n\n...[middle content omitted]...\n\n" + workingContent.substring(workingContent.length - halfMax);
+            console.log(`📐 Topic input capped at ${topicInputContent.length} chars (from ${workingContent.length})`);
+        } else {
+            topicInputContent = workingContent;
+        }
 
         const topicPrompt = `You are a document structure analyzer. Your task is to extract the HIERARCHICAL structure from this educational document.
 
