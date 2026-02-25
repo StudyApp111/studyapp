@@ -1093,27 +1093,134 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       total_seconds: questionTimesRef.current[key]
     }));
 
+    // Grade questions locally first
+    const questionsWithGrading = exam.questions.map((q) => {
+      if (isSubjectiveQuestion(q.question_type)) {
+        if (q.ai_score_out_of_10 !== undefined) {
+          return { ...q, is_correct: q.ai_score_out_of_10 >= 7.5 };
+        }
+      }
+      const isCorrect = checkAnswerCorrect(q.user_answer, q.correct_answer, q.options, q.question_type);
+      return { ...q, is_correct: isCorrect };
+    });
+
+    const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
+    const totalQuestions = questionsWithGrading.length;
+
+    const questionFeedback = questionsWithGrading.map((q, idx) => {
+      let feedback = "";
+      let pointsEarned = 0;
+      
+      if (isSubjectiveQuestion(q.question_type) && q.ai_score_out_of_10 !== undefined) {
+        feedback = q.ai_rationale_short || "Your answer shows understanding.";
+        pointsEarned = q.ai_score_out_of_10;
+      } else {
+        if (q.is_correct) {
+          feedback = `Excellent! Your answer demonstrates strong understanding.`;
+          pointsEarned = 10;
+        } else {
+          feedback = `Review the explanation to strengthen your understanding.`;
+          pointsEarned = 0;
+        }
+      }
+      
+      return { question_index: idx, is_correct: q.is_correct, feedback, points_earned: pointsEarned };
+    });
+
     try {
+      // GUEST PATH: Use backend function for all operations
+      if (isGuest) {
+        console.log('🎯 Guest exam submission - using backend function');
+        
+        const { data: result } = await base44.functions.invoke('submitGuestExam', {
+          exam_id: exam.id,
+          lesson_id: lesson.id,
+          questions_with_grading: questionsWithGrading,
+          question_feedback: questionFeedback,
+          time_taken_seconds: elapsedSeconds,
+          question_time_laps: questionTimeLaps
+        });
+        
+        if (!result?.success) {
+          throw new Error(result?.error || 'Failed to submit exam');
+        }
+        
+        const aiGrade = result.predicted_grade;
+        const aiScore = result.total_score;
+        const aiConfidence = result.prediction_confidence;
+        const feedbackMasteryGap = result.mastery_gap;
+        
+        // Track analytics
+        base44.analytics.track({
+          eventName: "diagnostic_exam_completed",
+          properties: {
+            lesson_id: lesson.id,
+            course_name: lesson.course_name,
+            time_taken_seconds: elapsedSeconds,
+            correct_count: correctCount,
+            total_questions: totalQuestions,
+            is_guest: true
+          }
+        });
+        
+        // TikTok Pixel
+        if (window.ttq) {
+          window.ttq.track('SubmitApplication', {
+            contents: [{ content_id: exam.id, content_type: 'product', content_name: 'Diagnostic Quiz Submission' }],
+            value: 0, currency: 'USD'
+          });
+        }
+        
+        // Mark guest diagnostic as completed — triggers sign-up modal
+        markGuestDiagnosticCompleted();
+        
+        // Build completed exam object
+        const completedExam = {
+          ...exam,
+          questions: questionsWithGrading,
+          feedback: questionFeedback,
+          completed: true,
+          predicted_grade: aiGrade,
+          total_score: aiScore,
+          prediction_confidence: aiConfidence,
+          ai_feedback: result.ai_feedback
+        };
+        
+        window.dispatchEvent(new CustomEvent('pollyDiagnosticComplete', {
+          detail: { predicted_grade: aiGrade, total_score: aiScore, confidence: aiConfidence, mastery_gap: feedbackMasteryGap }
+        }));
+        
+        if (onExamComplete) await onExamComplete();
+        setViewingCompletedExam(completedExam);
+        setExam(null);
+        setSelectedExamNumber(null);
+        hasAutoSelectedRef.current = false;
+        setIsSubmitting(false);
+        return;
+      }
+
+      // AUTHENTICATED USER PATH (existing logic)
       const user = await base44.auth.me();
       const learningProfile = await getLearningProfile();
 
-      const questionsWithGrading = exam.questions.map((q) => {
-        // Use AI grading for subjective questions
-        if (isSubjectiveQuestion(q.question_type)) {
-          if (q.ai_score_out_of_10 !== undefined) {
-            return {
-              ...q,
-              is_correct: q.ai_score_out_of_10 >= 7.5 
-            };
-          }
-        }
+      // Save exam with questions and feedback
+      await retryOperation(() => 
+        base44.entities.Exam.update(exam.id, {
+          questions: questionsWithGrading,
+          feedback: questionFeedback,
+          time_taken_seconds: elapsedSeconds,
+          question_time_laps: questionTimeLaps,
+          status: "completed",
+          completed: true
+        })
+      );
 
-        // Use letter-based comparison for objective questions
-        const isCorrect = checkAnswerCorrect(q.user_answer, q.correct_answer, q.options, q.question_type);
-        return { ...q, is_correct: isCorrect };
-      });
+      // Dispatch study plan loading state
+      window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
 
-      let contentDescription = lesson.compressed_content || lesson.extracted_content || lesson.description || "N/A";
+      // Refresh lesson to get curriculum_map
+      const refreshedLessons = await base44.entities.Lesson.filter({ id: lesson.id });
+      let currentLesson = refreshedLessons.length > 0 ? refreshedLessons[0] : lesson;
 
       const examPerformanceData = questionsWithGrading.map((q) => ({
         question_number: q.question_number,
@@ -1136,59 +1243,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         } : null
       }));
 
-      // Always refresh lesson to get latest curriculum_map if available
-      const refreshedLessons = await base44.entities.Lesson.filter({ id: lesson.id });
-      let currentLesson = refreshedLessons.length > 0 ? refreshedLessons[0] : lesson;
-      
-      // Note: curriculum_map is optional - feedbackGrade will handle missing data gracefully
-
-// NOTE: Grading is done via feedbackGrade backend function ONLY
-      // This prompt is NOT used - it's passed to feedbackGrade which handles it
-
-      const correctCount = questionsWithGrading.filter(q => q.is_correct).length;
-      const totalQuestions = questionsWithGrading.length;
-
-      const questionFeedback = questionsWithGrading.map((q, idx) => {
-        let feedback = "";
-        let pointsEarned = 0;
-        
-        if (isSubjectiveQuestion(q.question_type) && q.ai_score_out_of_10 !== undefined) {
-          feedback = q.ai_rationale_short || "Your answer shows understanding.";
-          pointsEarned = q.ai_score_out_of_10;
-        } else {
-          if (q.is_correct) {
-            feedback = `Excellent! Your answer demonstrates strong understanding.`;
-            pointsEarned = 10;
-          } else {
-            feedback = `Review the explanation to strengthen your understanding.`;
-            pointsEarned = 0;
-          }
-        }
-        
-        return {
-          question_index: idx,
-          is_correct: q.is_correct,
-          feedback,
-          points_earned: pointsEarned
-        };
-      });
-
-      // Save exam with questions and feedback
-      await retryOperation(() => 
-        base44.entities.Exam.update(exam.id, {
-          questions: questionsWithGrading,
-          feedback: questionFeedback,
-          time_taken_seconds: elapsedSeconds,
-          question_time_laps: questionTimeLaps,
-          status: "completed",
-          completed: true
-        })
-      );
-
-      // Dispatch study plan loading state (but don't navigate away from exam tab)
-      window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: true } }));
-
-      // Get AI feedback FIRST (blocking) so we have the grade before generating the study plan
+      // Get AI feedback
       let aiGrade = null;
       let aiScore = null;
       let aiConfidence = null;
@@ -1223,9 +1278,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             aiConfidence = feedbackData.prediction_confidence_percentage || 45;
             feedbackMasteryGap = feedbackData.mastery_gap || null;
             
-            console.log(`📊 AI Feedback: Score=${aiScore}%, Grade=${aiGrade}, Confidence=${aiConfidence}`);
-            
-            // Update exam with AI feedback
             await base44.entities.Exam.update(exam.id, {
               total_score: aiScore,
               predicted_grade: aiGrade,
@@ -1237,39 +1289,34 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           }
         }
       } catch (err) {
-        console.warn("AI feedback error (non-blocking):", err.message);
+        console.warn("AI feedback error:", err.message);
       }
 
-      // Now generate study plan - exam already has grade so plan will pick it up
-      base44.functions.invoke('generateStudyPlan', {
-        exam_id: exam.id,
-        lesson_id: lesson.id
-      }).then(() => {
-        window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
-        window.dispatchEvent(new Event('reloadLesson'));
-      }).catch(planError => {
-        console.error("Error generating study plan:", planError);
-        window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
-      });
+      // Generate study plan
+      base44.functions.invoke('generateStudyPlan', { exam_id: exam.id, lesson_id: lesson.id })
+        .then(() => {
+          window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
+          window.dispatchEvent(new Event('reloadLesson'));
+        })
+        .catch(planError => {
+          console.error("Study plan error:", planError);
+          window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
+        });
 
-      // Award XP and track stats
-      const examXP = 25 + (correctCount >= 8 ? 25 : 0) + (correctCount === questionsWithGrading.length ? 50 : 0);
-      
+      // Award XP
+      const examXP = 25 + (correctCount >= 8 ? 25 : 0) + (correctCount === totalQuestions ? 50 : 0);
       try {
         const xpResult = await awardDailyXP(examXP, 'Diagnostic completed!');
         const currentUserXP = await base44.auth.me();
         
-        // Track badges
         const earnedBadges = [...(currentUserXP.badges || [])];
         const badgeIds = earnedBadges.map(b => b.badge_id);
         const earnedNow = [];
 
         if (!badgeIds.includes('first_exam')) {
           earnedBadges.push({
-            badge_id: 'first_exam',
-            badge_name: 'First Exam',
-            badge_description: 'Completed your first exam!',
-            badge_icon: '📝',
+            badge_id: 'first_exam', badge_name: 'First Exam',
+            badge_description: 'Completed your first exam!', badge_icon: '📝',
             earned_date: new Date().toISOString()
           });
           earnedNow.push(earnedBadges[earnedBadges.length - 1]);
@@ -1277,118 +1324,65 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
 
         await base44.auth.updateMe({
           total_exams_completed: (currentUserXP.total_exams_completed || 0) + 1,
-          questions_completed: (currentUserXP.questions_completed || 0) + questionsWithGrading.length,
+          questions_completed: (currentUserXP.questions_completed || 0) + totalQuestions,
           time_spent_seconds: (currentUserXP.time_spent_seconds || 0) + elapsedSeconds,
           badges: earnedBadges
         });
 
         if (xpResult.success) {
-          const xpReason = correctCount === questionsWithGrading.length ? 'Perfect exam! 🌟' : 
-                          correctCount >= 8 ? 'Great score! 🎯' : 'Exam completed!';
+          const xpReason = correctCount === totalQuestions ? 'Perfect exam! 🌟' : correctCount >= 8 ? 'Great score! 🎯' : 'Exam completed!';
           setXpToast({ show: true, xp: examXP, reason: xpReason });
         }
-
         if (earnedNow.length > 0 || correctCount >= 8) {
           setShowConfetti(true);
           setNewBadges(earnedNow);
         }
       } catch (xpError) {
-        console.error("Error awarding exam XP:", xpError);
+        console.error("XP error:", xpError);
       }
 
-      // Track lesson completion (first exam = diagnostic complete) - FUNNEL STEP 3
+      // Analytics
       base44.analytics.track({
         eventName: "diagnostic_exam_completed",
-        properties: {
-          lesson_id: lesson.id,
-          course_name: lesson.course_name,
-          time_taken_seconds: elapsedSeconds,
-          correct_count: correctCount,
-          total_questions: questionsWithGrading.length
-        }
+        properties: { lesson_id: lesson.id, course_name: lesson.course_name, time_taken_seconds: elapsedSeconds, correct_count: correctCount, total_questions: totalQuestions }
       });
 
-      // PostHog: check if this is the user's first-ever diagnostic completion
       try {
         const allCompletedExams = (exams || []).filter(e => e.completed && e.exam_type !== 'practice');
-        // Only the current exam is completed (others were not completed before this submit)
         const isFirstDiagnostic = allCompletedExams.length === 0;
         
         posthog?.capture('diagnostic_exam_completed', {
-          lesson_id: lesson.id,
-          course_name: lesson.course_name,
-          predicted_grade: aiGrade,
-          predicted_score: aiScore,
-          time_taken_seconds: elapsedSeconds,
-          correct_count: correctCount,
-          total_questions: questionsWithGrading.length,
-          is_first_diagnostic: isFirstDiagnostic
+          lesson_id: lesson.id, course_name: lesson.course_name, predicted_grade: aiGrade,
+          predicted_score: aiScore, time_taken_seconds: elapsedSeconds, correct_count: correctCount,
+          total_questions: totalQuestions, is_first_diagnostic: isFirstDiagnostic
         });
 
         if (isFirstDiagnostic) {
           posthog?.capture('first_diagnostic_completed', {
-            lesson_id: lesson.id,
-            course_name: lesson.course_name,
-            predicted_grade: aiGrade,
-            predicted_score: aiScore,
-            time_taken_seconds: elapsedSeconds
+            lesson_id: lesson.id, course_name: lesson.course_name,
+            predicted_grade: aiGrade, predicted_score: aiScore, time_taken_seconds: elapsedSeconds
           });
-
-          // TikTok pixel for first diagnostic
-          if (window.ttq) {
-            window.ttq.track('CompleteRegistration', {
-              content_name: 'first_diagnostic_completed',
-              content_id: exam.id,
-            });
-          }
-
-          // Google Analytics for first diagnostic
-          if (window.gtag) {
-            window.gtag('event', 'first_diagnostic_completed', {
-              event_category: 'conversion',
-              event_label: lesson.course_name,
-            });
-          }
+          if (window.ttq) window.ttq.track('CompleteRegistration', { content_name: 'first_diagnostic_completed', content_id: exam.id });
+          if (window.gtag) window.gtag('event', 'first_diagnostic_completed', { event_category: 'conversion', event_label: lesson.course_name });
         }
       } catch (phErr) {
-        console.warn('PostHog diagnostic tracking error:', phErr);
+        console.warn('PostHog error:', phErr);
       }
 
-      // TikTok Pixel: Track Submit Application for diagnostic quiz submission
       if (window.ttq) {
         window.ttq.track('SubmitApplication', {
-          contents: [{
-            content_id: exam.id,
-            content_type: 'product',
-            content_name: 'Diagnostic Quiz Submission'
-          }],
-          value: 0,
-          currency: 'USD'
+          contents: [{ content_id: exam.id, content_type: 'product', content_name: 'Diagnostic Quiz Submission' }],
+          value: 0, currency: 'USD'
         });
-        console.log('📊 TikTok Pixel: SubmitApplication tracked for diagnostic quiz');
       }
 
-      // Mark guest diagnostic as completed — triggers sign-up modal
-      if (isGuest) {
-        markGuestDiagnosticCompleted();
-      }
-
-      // Stay on exam tab and show the completed exam results
-      // Reload exams to get the updated data with AI feedback
       if (onExamComplete) await onExamComplete();
       
-      // Fetch the freshly updated exam with AI feedback
       const freshExams = await base44.entities.Exam.filter({ id: exam.id });
-      const freshExam = freshExams[0] || { ...exam, completed: true, predicted_grade: aiGrade, total_score: aiScore, prediction_confidence: aiConfidence, ai_feedback: null };
+      const freshExam = freshExams[0] || { ...exam, completed: true, predicted_grade: aiGrade, total_score: aiScore, prediction_confidence: aiConfidence };
       
-      // Send Polly message directing user to the study plan
       window.dispatchEvent(new CustomEvent('pollyDiagnosticComplete', {
-        detail: {
-          predicted_grade: aiGrade,
-          total_score: aiScore,
-          confidence: aiConfidence,
-          mastery_gap: feedbackMasteryGap
-        }
+        detail: { predicted_grade: aiGrade, total_score: aiScore, confidence: aiConfidence, mastery_gap: feedbackMasteryGap }
       }));
 
       setViewingCompletedExam(freshExam);
