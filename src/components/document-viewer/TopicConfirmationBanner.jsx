@@ -101,9 +101,15 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
         }
       });
     });
-    await base44.entities.Lesson.update(lesson.id, { selected_topics: allTitles });
-    window.dispatchEvent(new Event('reloadLesson'));
+    // Move to step 2 FIRST, then save in background
     setStep(2);
+    try {
+      await base44.entities.Lesson.update(lesson.id, { selected_topics: allTitles });
+      // Dispatch reload AFTER step transition is stable
+      window.dispatchEvent(new Event('reloadLesson'));
+    } catch (err) {
+      console.error('Error saving topics:', err);
+    }
   };
 
   const closeDismiss = () => {
