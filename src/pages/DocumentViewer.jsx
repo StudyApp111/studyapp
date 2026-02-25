@@ -24,6 +24,7 @@ import MaterialUploadPrompt from "@/components/document-viewer/MaterialUploadPro
 import DiagnosticLockOverlay from "@/components/document-viewer/DiagnosticLockOverlay";
 import TopicConfirmationBanner from "@/components/document-viewer/TopicConfirmationBanner";
 import PostDiagnosticPaywall from "@/components/document-viewer/PostDiagnosticPaywall";
+import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
