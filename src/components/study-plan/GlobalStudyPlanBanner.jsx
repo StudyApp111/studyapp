@@ -94,6 +94,9 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
   const targetCount = nextTask.target_count || 0;
   const doneCount = nextTask.completed_count || 0;
 
+  // Build display title from task title (e.g. "Section: Topic")
+  const taskTitle = nextTask.title || formatLabel;
+
   // Build progress string like "3/10 cards mastered"
   const progressLabel = targetCount > 0 ? `${doneCount}/${targetCount} ${unit}` : `${completedCount}/${totalCount} tasks`;
 
