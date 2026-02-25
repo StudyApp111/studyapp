@@ -495,15 +495,31 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           console.log('⏳ Exam 1 exists but questions not ready - starting poll + retry logic...');
           setIsGenerating(true);
 
+          // Helper to poll exam (works for guest and auth)
+          const pollExam = async (examId) => {
+            if (isGuest) {
+              try {
+                const { data } = await base44.functions.invoke('getGuestLesson', {
+                  fingerprint: window.__guestFingerprint || JSON.parse(localStorage.getItem('guest_session') || '{}')?.fingerprint,
+                  lesson_id: lesson.id,
+                  include_exams: true
+                });
+                return (data?.exams || []).find(e => e.id === examId) || null;
+              } catch { return null; }
+            }
+            const result = await base44.entities.Exam.filter({ id: examId });
+            return result[0] || null;
+          };
+
           const pollAndRetry = async () => {
             // Phase 1: Poll for ~25s
             for (let i = 0; i < 8; i++) {
               await new Promise(r => setTimeout(r, 3000));
               try {
-                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
-                if (refreshed[0]?.questions?.length > 0) {
+                const refreshed = await pollExam(loadedExam.id);
+                if (refreshed?.questions?.length > 0) {
                   console.log('✅ Questions appeared during phase-1 polling');
-                  setExam(refreshed[0]);
+                  setExam(refreshed);
                   setIsGenerating(false);
                   return;
                 }
