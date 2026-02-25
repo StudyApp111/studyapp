@@ -55,28 +55,64 @@ Deno.serve(async (req) => {
             ? workingContent.substring(0, 30000) + "\n\n...[middle content omitted]...\n\n" + workingContent.substring(workingContent.length - 30000)
             : workingContent;
 
-        const topicPrompt = `You are a document structure analyzer. Analyze this educational document and extract its hierarchical organizational structure.
+        const topicPrompt = `You are a document structure analyzer. Your task is to extract the HIERARCHICAL structure from this educational document.
 
-STEP 1 — IDENTIFY THE TOP-LEVEL STRUCTURE:
-Look for the document's major divisions. These are typically marked by:
-- Numbered headings: "Lecture 1", "Chapter 1", "Unit 1", "Module 1", "Week 1", "Part 1", "Section 1", "Class 1", "Session 1", "Topic 1"
-- Roman numerals: "I.", "II.", "III."
-- Textbook chapters with titles
-- Slide deck separators or title slides
-- Bold/uppercase section headers
-- Any other clear top-level organizational pattern
+═══════════════════════════════════════════════════════════════
+CRITICAL: OUTPUT MUST BE A 2-LEVEL HIERARCHY
+═══════════════════════════════════════════════════════════════
 
-STEP 2 — EXTRACT SUBTOPICS WITHIN EACH TOP-LEVEL SECTION:
-For each major section identified above, find the specific topics, concepts, or sub-headings discussed WITHIN that section. These become subtopics.
+LEVEL 1 = SECTIONS (the document's major organizational divisions)
+LEVEL 2 = TOPICS (the specific concepts discussed WITHIN each section)
 
-CRITICAL RULES:
-1. HIERARCHY IS MANDATORY: Every document has at least 2 levels. Top-level sections contain subtopics. NEVER output a flat list of topics with no subtopics — always nest specific concepts under their parent section.
-2. If the document has "Lecture 1" covering topics A, B, C and "Lecture 2" covering topics D, E, F — output 2 top-level items, each with their respective subtopics nested inside.
-3. Preserve the original naming exactly (e.g., "Lecture 1: Introduction to Hinduism", "Chapter 3: Cell Division").
-4. Each top-level section MUST have at least 2 subtopics. If a section seems to have only one concept, break it into finer-grained subtopics.
-5. If NO clear structural divisions exist (e.g., a single essay or notes dump), create 3-5 thematic sections yourself and nest specific concepts under each.
-6. Subtopics should be specific and actionable (e.g., "Karma and Dharma" not "Key Concepts").
-7. Each description should be 2-3 sentences with enough detail for an AI to generate study materials about it.
+Think of it like a textbook Table of Contents:
+- "Chapter 1: Introduction" ← SECTION (Level 1)
+  - "What is Biology?" ← TOPIC (Level 2)
+  - "The Scientific Method" ← TOPIC (Level 2)
+- "Chapter 2: Cells" ← SECTION (Level 1)
+  - "Cell Structure" ← TOPIC (Level 2)
+  - "Organelles" ← TOPIC (Level 2)
+
+═══════════════════════════════════════════════════════════════
+STEP 1: IDENTIFY SECTIONS (Top-Level Divisions)
+═══════════════════════════════════════════════════════════════
+
+Scan for the document's major organizational markers:
+• "Lecture 1", "Lecture 2", "Lecture 3"...
+• "Chapter 1", "Chapter 2"...
+• "Unit 1", "Module 1", "Week 1", "Part I"...
+• Roman numerals: I., II., III.
+• Slide deck title pages
+• Bold/large headings that separate content blocks
+• "Class 1", "Session 1", "Day 1"...
+
+These become your TOP-LEVEL items in the output array.
+PRESERVE THE ORIGINAL NAMES EXACTLY (e.g., "Lecture 3: The Roman Empire", "Chapter 5: Thermodynamics").
+
+═══════════════════════════════════════════════════════════════
+STEP 2: EXTRACT TOPICS WITHIN EACH SECTION
+═══════════════════════════════════════════════════════════════
+
+For EACH section identified above, list the specific concepts/topics discussed WITHIN that section as "subtopics".
+
+Example: If "Lecture 2" discusses photosynthesis and cellular respiration, output:
+{
+  "title": "Lecture 2: Energy in Cells",
+  "description": "...",
+  "subtopics": [
+    { "title": "Photosynthesis", "description": "..." },
+    { "title": "Cellular Respiration", "description": "..." }
+  ]
+}
+
+═══════════════════════════════════════════════════════════════
+MANDATORY RULES
+═══════════════════════════════════════════════════════════════
+
+1. EVERY top-level item MUST have a "subtopics" array with AT LEAST 2 items.
+2. NEVER output a flat list of topics without subtopics. That is WRONG.
+3. If the document has no clear sections, create 3-5 thematic groupings yourself.
+4. Subtopics must be SPECIFIC (e.g., "Krebs Cycle" not "Key Concepts").
+5. Descriptions should be 2-3 sentences with enough detail to generate study materials.
 
 DOCUMENT CONTENT:
 ${topicInputContent}`;
