@@ -131,8 +131,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         return;
       }
       
-      // Determine set label from study task or custom options
-      const setLabel = pendingStudyTaskRef.current?.title || customOptions?.title || null;
+      // Determine set label from study task section + topic or custom options
+      const taskRef = pendingStudyTaskRef.current;
+      const setLabel = taskRef?.title || customOptions?.title || null;
       
       const savedCards = [];
       for (const card of generatedCards) {
