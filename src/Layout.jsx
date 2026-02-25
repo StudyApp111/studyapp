@@ -22,6 +22,7 @@ import { base44 } from "@/api/base44Client";
 import { trackUserSession, trackSessionDuration } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
 import { PostHogProvider } from '@posthog/react';
+import posthog from 'posthog-js';
 
 // Google Analytics initialization
 const initGoogleAnalytics = () => {
