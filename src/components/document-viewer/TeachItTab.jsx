@@ -187,8 +187,9 @@ Return exactly ${cardCount} cards with question and model_answer fields, each ba
       const generatedCards = result?.cards || [];
       if (generatedCards.length === 0) throw new Error("No cards generated");
 
-      // Determine set label from study task or custom options
-      const setLabel = pendingStudyTaskRef.current?.title || customOptions?.title || null;
+      // Determine set label from study task section + topic or custom options
+      const taskRef = pendingStudyTaskRef.current;
+      const setLabel = taskRef?.title || customOptions?.title || null;
       
       const savedCards = await Promise.all(
         generatedCards.map(card =>
