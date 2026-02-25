@@ -762,9 +762,18 @@ export default function DocumentViewer() {
               {/* Info strip - course and timer */}
               <div className="px-4 py-3 flex items-center justify-between gap-3">
                 <span className="text-white font-bold text-base truncate">{lesson?.course_name || 'Loading...'}</span>
-                <div className="flex items-center gap-2 flex-shrink-0 bg-white/15 rounded-full px-3 py-1">
-                  <Clock className="w-4 h-4 text-white/80" />
-                  <span className="text-white text-sm font-mono font-semibold">{formatStudyTime(studyTime)}</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {/* Next Step Banner - Mobile */}
+                  {lesson?.id && (
+                    <NextStepBanner 
+                      lessonId={lesson.id} 
+                      onNavigateToStudyPlan={() => setActiveTab('studyplan')} 
+                    />
+                  )}
+                  <div className="bg-white/15 rounded-full px-3 py-1 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-white/80" />
+                    <span className="text-white text-sm font-mono font-semibold">{formatStudyTime(studyTime)}</span>
+                  </div>
                 </div>
               </div>
               

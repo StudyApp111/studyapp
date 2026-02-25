@@ -366,7 +366,7 @@ function LayoutContent({ children, currentPageName }) {
                       className="w-6 h-6"
                     />
                     <span className="font-bold text-sm">
-                          <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
+                          <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Study</span>
                           <span className="text-white">App</span>
                         </span>
                   </Link>
