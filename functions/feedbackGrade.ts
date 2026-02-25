@@ -113,17 +113,11 @@ Confidence Calculation (MIN 20% MAX 65%):
 - Adjust: If exam_number=1 (diagnostic only), cap at 65%. 
 - confidence_level: "Low" (<40%), "Medium" (40-65%) 
 
-Mastery Gap Analysis:
-- Identify the SINGLE weakest competency based on question performance
-- This is the "mastery_gap" - the biggest barrier to grade improvement
-
 JSON Output (exact schema):
 - feedback_session_title: "Exam ${examNumber} Performance & Grade Prediction"
 - predicted_exam_score_percentage: "%"|"Not Calculable"
 - prediction_confidence_percentage: number (20-65)
-- confidence_level: "Low"|"Medium"|
-- mastery_gap: string (the single weakest competency name)
-- mastery_gap_description: string (why this is the biggest weakness)`;
+- confidence_level: "Low"|"Medium"|`;
         }
 
         if (!finalPrompt) {
