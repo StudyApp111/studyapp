@@ -135,6 +135,7 @@ export function GuestSessionProvider({ children }) {
 
   const endGuestSession = useCallback(() => {
     clearGuestSession();
+    sessionStorage.removeItem('guest_session_active');
     setIsGuest(false);
     setGuestData(null);
     setGuestLessonCreated(false);
