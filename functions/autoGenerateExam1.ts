@@ -400,7 +400,7 @@ No extra text.`;
     // If finishReason is MAX_TOKENS, the JSON is truncated and will fail to parse — must retry
     if (finishReason === 'MAX_TOKENS') {
       console.error('Response truncated (MAX_TOKENS) at', content.length, 'chars — retrying is needed');
-      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
+      await entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Response truncated, retry needed', truncated: true }, { status: 500 });
     }
 
