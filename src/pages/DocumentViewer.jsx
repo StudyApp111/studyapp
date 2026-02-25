@@ -25,6 +25,7 @@ import DiagnosticLockOverlay from "@/components/document-viewer/DiagnosticLockOv
 import TopicConfirmationBanner from "@/components/document-viewer/TopicConfirmationBanner";
 import PostDiagnosticPaywall from "@/components/document-viewer/PostDiagnosticPaywall";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
 import { useTheme } from "@/components/theme/ThemeProvider";
