@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import { generateFingerprint } from '@/components/utils/browserFingerprint';
+import posthog from 'posthog-js';
 
 const GuestSessionContext = createContext(null);
 
