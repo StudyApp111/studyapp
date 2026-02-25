@@ -368,7 +368,7 @@ No extra text.`;
       const errText = await resp.text();
       console.error('Gemini error:', resp.status, errText);
       // Reset status so it can be retried
-      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
+      await entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to generate exam', details: errText }, { status: 500 });
     }
 
