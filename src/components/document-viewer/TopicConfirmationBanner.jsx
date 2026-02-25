@@ -9,16 +9,23 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diagnosticReady, diagnosticCompleted }) {
   const { isDark } = useTheme();
   const [dismissed, setDismissed] = useState(false);
-  const [step, setStep] = useState(1);
   const [deselectedSections, setDeselectedSections] = useState(new Set());
   const [deselectedSubtopics, setDeselectedSubtopics] = useState(new Set());
 
   const topics = lesson?.topics || [];
   const dismissKey = `topic_flow_dismissed_${lesson?.id}`;
+  const topicsConfirmedKey = `topic_flow_step1_done_${lesson?.id}`;
   const topLevelTopics = topics.filter(t => t.title);
+  
+  // Persist step across re-renders/reloads — if step 1 was done, go straight to step 2
+  const [step, setStep] = useState(() => {
+    if (lesson?.id && localStorage.getItem(topicsConfirmedKey)) return 2;
+    return 1;
+  });
 
   useEffect(() => {
     if (lesson?.id && localStorage.getItem(dismissKey)) setDismissed(true);
+    if (lesson?.id && localStorage.getItem(topicsConfirmedKey)) setStep(2);
   }, [lesson?.id]);
 
   useEffect(() => {
