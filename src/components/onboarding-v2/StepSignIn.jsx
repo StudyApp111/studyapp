@@ -130,6 +130,34 @@ export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
               </p>
             </div>
 
+            {/* Guest preview for mobile users - shown ABOVE auth buttons */}
+            {onGuestStart && (
+              <div className="space-y-2 max-w-sm mx-auto pb-1">
+                <button
+                  onClick={handleGuestStart}
+                  disabled={guestLoading}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm transition-all bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50"
+                >
+                  {guestLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4" />
+                      Preview as Guest
+                    </>
+                  )}
+                </button>
+                {guestError && (
+                  <p className="text-xs text-red-400 text-center">{guestError}</p>
+                )}
+                <div className={`flex items-center gap-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <div className={`flex-1 h-px ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
+                  <span className="text-xs font-medium">or sign up</span>
+                  <div className={`flex-1 h-px ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
+                </div>
+              </div>
+            )}
+
             {/* Sign-in buttons */}
             <div className="space-y-3 max-w-sm mx-auto">
               <button
@@ -161,30 +189,6 @@ export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
                 Continue with Email
               </button>
             </div>
-
-            {/* Guest preview for mobile users */}
-            {onGuestStart && (
-              <div className="space-y-2 max-w-sm mx-auto pt-1">
-                <div className={`h-px ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
-                <button
-                  onClick={handleGuestStart}
-                  disabled={guestLoading}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50"
-                >
-                  {guestLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Eye className="w-4 h-4" />
-                      Preview as Guest
-                    </>
-                  )}
-                </button>
-                {guestError && (
-                  <p className="text-xs text-red-400 text-center">{guestError}</p>
-                )}
-              </div>
-            )}
 
             <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>
               By continuing, you agree to our{" "}
