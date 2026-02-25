@@ -106,7 +106,7 @@ export default function CreateLessonLoader({ fileName, isComplete, onAnimationCo
             className="w-10 h-10"
           />
           <h1 className="text-3xl md:text-4xl font-black">
-            <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
+            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Study</span>
             <span className="text-white">App</span>
           </h1>
         </motion.div>
