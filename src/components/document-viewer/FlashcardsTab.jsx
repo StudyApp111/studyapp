@@ -47,20 +47,15 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   useEffect(() => {
     const handleStudyTask = async (e) => {
-      if (e.detail.taskType === 'flashcards') {
-        if (isGeneratingRef.current) {
-          console.log('🎯 Flashcard event already generating, skipping');
-          return;
-        }
-        
-        console.log('🎯 Received flashcard generation request from study plan');
-        pendingStudyTaskRef.current = e.detail.task;
-        
-        // Always generate new set when coming from study plan (don't skip)
-        if (!isGeneratingRef.current) {
-          handleGenerate();
-        }
+      if (e.detail.taskType !== 'flashcards') return;
+      if (isGeneratingRef.current) {
+        console.log('🎯 Flashcard event already generating, skipping');
+        return;
       }
+      
+      console.log('🎯 Received flashcard generation request from study plan');
+      pendingStudyTaskRef.current = e.detail.task;
+      handleGenerate();
     };
     
     window.addEventListener('generateFromStudyTask', handleStudyTask);
