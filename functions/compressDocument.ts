@@ -114,7 +114,7 @@ ${topicInputContent}`;
                                             }
                                         }
                                     },
-                                    required: ["title", "description"]
+                                    required: ["title", "description", "subtopics"]
                                 }
                             }
                         },
