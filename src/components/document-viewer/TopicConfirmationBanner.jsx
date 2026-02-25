@@ -5,8 +5,10 @@ import { CheckCircle2, Sparkles, ArrowRight, FolderOpen, Clock, Loader2 } from "
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diagnosticReady, diagnosticCompleted }) {
+  const { isGuest, guestData } = useGuestSession();
   const { isDark } = useTheme();
   const [dismissed, setDismissed] = useState(false);
   const [step, setStep] = useState(1);
@@ -101,7 +103,22 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
         }
       });
     });
-    await base44.entities.Lesson.update(lesson.id, { selected_topics: allTitles });
+    
+    // For guests, use backend function; for auth users, use direct entity update
+    if (isGuest && guestData?.fingerprint) {
+      try {
+        await base44.functions.invoke('updateGuestLesson', {
+          fingerprint: guestData.fingerprint,
+          lesson_id: lesson.id,
+          updates: { selected_topics: allTitles }
+        });
+      } catch (err) {
+        console.error('Error updating guest lesson:', err);
+      }
+    } else {
+      await base44.entities.Lesson.update(lesson.id, { selected_topics: allTitles });
+    }
+    
     window.dispatchEvent(new Event('reloadLesson'));
     setStep(2);
   };

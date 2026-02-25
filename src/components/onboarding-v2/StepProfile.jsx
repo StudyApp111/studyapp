@@ -8,8 +8,15 @@ import { base44 } from "@/api/base44Client";
 
 export default function StepProfile({ user, isGuest, onComplete, onBack }) {
   const { isDark } = useTheme();
-  const [name, setName] = useState(user?.full_name?.split(" ")[0] || "");
-  const [school, setSchool] = useState("");
+  // Initialize from sessionStorage (if going back) or user data
+  const [name, setName] = useState(() => {
+    const saved = sessionStorage.getItem("onboarding_profile_name");
+    if (saved) return saved;
+    return user?.full_name?.split(" ")[0] || "";
+  });
+  const [school, setSchool] = useState(() => {
+    return sessionStorage.getItem("onboarding_profile_school") || "";
+  });
   const [suggestions, setSuggestions] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
@@ -18,8 +25,8 @@ export default function StepProfile({ user, isGuest, onComplete, onBack }) {
   const loadTimeoutRef = useRef(null);
 
   useEffect(() => {
-    // Load saved school from learning profile (skip for guests)
-    if (!isGuest) {
+    // Load saved school from learning profile (skip for guests) only if not already set from sessionStorage
+    if (!isGuest && !sessionStorage.getItem("onboarding_profile_school")) {
       const loadSavedSchool = async () => {
         try {
           const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
@@ -145,7 +152,7 @@ export default function StepProfile({ user, isGuest, onComplete, onBack }) {
             isDark ? "text-white" : "text-slate-900"
           }`}
         >
-          Hi There 👋
+          Hi {name ? name : 'There'} 👋
         </h2>
         <p
           className={`text-sm ${
