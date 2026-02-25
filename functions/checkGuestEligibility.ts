@@ -102,6 +102,26 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, lesson_id: lessonId });
     }
 
+    if (action === 'loadLesson') {
+      // Guest loads a lesson by ID via service role (bypasses RLS)
+      const { lesson_id } = body;
+      if (!lesson_id) {
+        return Response.json({ error: 'Missing lesson_id' }, { status: 400 });
+      }
+
+      const lessons = await base44.asServiceRole.entities.Lesson.filter({ id: lesson_id });
+      if (!lessons || lessons.length === 0) {
+        return Response.json({ error: 'Lesson not found' }, { status: 404 });
+      }
+
+      const lesson = lessons[0];
+
+      // Load exams for this lesson
+      const exams = await base44.asServiceRole.entities.Exam.filter({ lesson_id }).catch(() => []);
+
+      return Response.json({ success: true, lesson, exams });
+    }
+
     if (action === 'transfer') {
       // Transfer guest lesson to authenticated user
       const { lesson_data, user_email, profile_data } = body;
