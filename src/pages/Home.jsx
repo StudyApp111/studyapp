@@ -26,7 +26,15 @@ export default function Home() {
   
   const [learningProfile, setLearningProfile] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const { isGuest, guestData, transferGuestData, endGuestSession } = useGuestSession();
+  
+  // Safe access to guest session - may not be available if context not mounted yet
+  let guestCtx = { isGuest: false, guestData: null, transferGuestData: () => null, endGuestSession: () => {} };
+  try {
+    guestCtx = useGuestSession();
+  } catch (e) {
+    // Context not available yet - use defaults
+  }
+  const { isGuest, guestData, transferGuestData, endGuestSession } = guestCtx;
 
   useEffect(() => {
     const init = async () => {
