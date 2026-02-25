@@ -253,7 +253,8 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           lesson_id: lesson.id,
           focus_topics: focus_topics || [],
           target_competency: target_competency || '',
-          misconception_addressed: misconception_addressed || ''
+          misconception_addressed: misconception_addressed || '',
+          title: task?.title || (focus_topics?.[0] ? `${task?.section_title || ''}: ${focus_topics[0]}`.replace(/^:\s*/, '') : '')
         });
 
         if (data?.success && data.exam) {
