@@ -25,7 +25,7 @@ export default function StepWelcome({ displayName, onNext, onBack }) {
           />
           <h2 className={`text-2xl md:text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
             Welcome to{' '}
-            <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
+            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Study</span>
             <span className={isDark ? "text-white" : "text-slate-900"}>App</span>!
           </h2>
         </div>
