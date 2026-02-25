@@ -152,6 +152,15 @@ function LayoutContent({ children, currentPageName }) {
             
             endGuestSession();
             
+            // PostHog: Guest → signup conversion
+            try {
+              posthog.capture('guest_signup_conversion', {
+                user_email: currentUser.email,
+                lesson_id: transferData?.lesson_id || returningGuestLessonId,
+                transfer_success: !!transferData?.lesson_id,
+              });
+            } catch {}
+
             if (transferData?.lesson_id) {
               // Clear any stale lesson IDs from sessionStorage so DocumentViewer uses the URL ID
               sessionStorage.removeItem('currentLessonId');
