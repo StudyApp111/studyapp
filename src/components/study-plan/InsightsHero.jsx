@@ -1,11 +1,72 @@
 import React from "react";
-import { Sparkles, Target, Clock, AlertCircle, TrendingUp, TrendingDown, Minus, ArrowRight, Flame } from "lucide-react";
+import { Sparkles, Target, Clock, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+
+const PILL_STYLES = {
+  danger: { bg: "bg-red-500/15 text-red-300 border-red-500/20", bgLight: "bg-red-50 text-red-700 border-red-200", icon: Target },
+  warning: { bg: "bg-amber-500/15 text-amber-300 border-amber-500/20", bgLight: "bg-amber-50 text-amber-700 border-amber-200", icon: AlertTriangle },
+  info: { bg: "bg-blue-500/15 text-blue-300 border-blue-500/20", bgLight: "bg-blue-50 text-blue-700 border-blue-200", icon: Info },
+};
 
 export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) {
   const { isDark } = useTheme();
 
+  const insightsPanel = studyPlan?.insights_panel;
+
+  // If we have the new insights_panel from generateStudyPlan, use it directly
+  if (insightsPanel?.headline) {
+    const pills = insightsPanel.pills || [];
+
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ delay: 0.1 }}
+        className="px-3 md:px-4 w-full"
+      >
+        <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-gradient-to-br from-indigo-950/60 via-purple-950/40 to-slate-950/60 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-white border-indigo-200/60'}`}>
+          {/* Main message */}
+          <div className="px-4 pt-4 pb-3">
+            <div className="flex items-start gap-3">
+              <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30' : 'bg-gradient-to-br from-purple-100 to-indigo-100'}`}>
+                <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm md:text-base font-bold leading-snug ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  {insightsPanel.headline}
+                </p>
+                <p className={`text-xs md:text-sm leading-relaxed mt-1.5 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                  {insightsPanel.support_text}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Pills strip */}
+          {pills.length > 0 && (
+            <div className={`px-4 py-2.5 flex flex-wrap items-center gap-2 border-t ${isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200/60 bg-slate-50/50'}`}>
+              {pills.map((pill, idx) => {
+                const style = PILL_STYLES[pill.type] || PILL_STYLES.info;
+                const Icon = style.icon;
+                return (
+                  <div 
+                    key={pill.id || idx} 
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${isDark ? style.bg : style.bgLight}`}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {pill.label}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Fallback: legacy behavior using studyPlan fields + behavioralInsights
   const currentGrade = studyPlan?.current_predicted_grade || studyPlan?.initial_predicted_grade || '—';
   const masteryGap = studyPlan?.mastery_gap || studyPlan?.priority_focus;
   const weakComps = studyPlan?.weak_competencies?.filter(c => c !== masteryGap) || [];
@@ -15,7 +76,6 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
   const isInefficient = behavioralInsights?.is_inefficient_studying;
   const recommendedFocus = behavioralInsights?.recommended_focus;
 
-  // Build the dynamic hero message
   const gradeIsGood = currentGrade.startsWith('A');
   const gradeIsBad = currentGrade.startsWith('D') || currentGrade.startsWith('F');
 
@@ -47,7 +107,6 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
       className="px-3 md:px-4 w-full"
     >
       <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-gradient-to-br from-indigo-950/60 via-purple-950/40 to-slate-950/60 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-white border-indigo-200/60'}`}>
-        {/* Main message */}
         <div className="px-4 pt-4 pb-3">
           <div className="flex items-start gap-3">
             <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30' : 'bg-gradient-to-br from-purple-100 to-indigo-100'}`}>
@@ -64,7 +123,6 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
           </div>
         </div>
 
-        {/* Stats strip */}
         <div className={`px-4 py-2.5 flex flex-wrap items-center gap-2 border-t ${isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200/60 bg-slate-50/50'}`}>
           {masteryGap && (
             <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${isDark ? 'bg-red-500/15 text-red-300 border border-red-500/20' : 'bg-red-50 text-red-700 border border-red-200'}`}>
@@ -93,7 +151,6 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
           ))}
         </div>
 
-        {/* Recommended focus */}
         {recommendedFocus && (
           <div className={`px-4 py-2 border-t ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
             <p className={`text-[11px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
