@@ -191,8 +191,8 @@ Deno.serve(async (req) => {
     // Get learning profile
     let learningProfile = {};
     try {
-      if (user.learning_profile_id) {
-        const profiles = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
+      if (user?.learning_profile_id) {
+        const profiles = await entities.LearningProfile.filter({ id: user.learning_profile_id });
         learningProfile = profiles[0] || {};
       }
     } catch (e) {
