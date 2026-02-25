@@ -347,21 +347,14 @@ export default function NotesTab({ lesson }) {
           <div className="flex gap-0 overflow-hidden">
             {/* Table of Contents - Desktop Only, Collapsible */}
             {tableOfContents.length > 0 && (
-              <div className={`hidden lg:flex flex-col border-r transition-all duration-300 ${tocCollapsed ? 'w-10' : 'w-64'} ${isDark ? 'bg-[#0a0a12] border-white/10' : 'bg-slate-50 border-slate-200'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
-                <div className="p-2 flex items-center justify-between">
-                  {!tocCollapsed && (
-                    <h3 className={`text-xs font-bold uppercase tracking-wider px-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contents</h3>
-                  )}
-                  <button
-                    onClick={() => setTocCollapsed(!tocCollapsed)}
-                    className={`p-1 rounded-md transition-colors ${isDark ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-slate-200 text-slate-500'}`}
-                    title={tocCollapsed ? 'Expand contents' : 'Collapse contents'}
-                  >
-                    {tocCollapsed ? <ChevronRightIcon className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                  </button>
-                </div>
+              <div className={`hidden lg:flex flex-col border-r transition-all duration-300 relative ${tocCollapsed ? 'w-10' : 'w-64'} ${isDark ? 'bg-[#0a0a12] border-white/10' : 'bg-slate-50 border-slate-200'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
                 {!tocCollapsed && (
-                  <nav className="space-y-1 px-4 pb-4 overflow-y-auto">
+                  <div className="p-2">
+                    <h3 className={`text-xs font-bold uppercase tracking-wider px-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contents</h3>
+                  </div>
+                )}
+                {!tocCollapsed && (
+                  <nav className="space-y-1 px-4 pb-4 overflow-y-auto flex-1">
                     {tableOfContents.map((item, idx) => (
                       <button
                         key={idx}
@@ -380,6 +373,18 @@ export default function NotesTab({ lesson }) {
                     ))}
                   </nav>
                 )}
+                {/* Centered collapse/expand toggle on the right edge */}
+                <button
+                  onClick={() => setTocCollapsed(!tocCollapsed)}
+                  className={`absolute top-1/2 -translate-y-1/2 -right-3.5 z-10 w-7 h-7 rounded-full border-2 shadow-lg flex items-center justify-center transition-all ${
+                    isDark 
+                      ? 'bg-[#1a1a2e] border-purple-500/40 text-purple-400 hover:bg-purple-500/20 hover:border-purple-400' 
+                      : 'bg-white border-purple-300 text-purple-600 hover:bg-purple-50 hover:border-purple-400'
+                  }`}
+                  title={tocCollapsed ? 'Expand contents' : 'Collapse contents'}
+                >
+                  {tocCollapsed ? <ChevronRightIcon className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                </button>
               </div>
             )}
 
