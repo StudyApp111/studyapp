@@ -109,10 +109,10 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
         </div>
         <div className="flex-1 min-w-0">
           <p className={`text-xs font-semibold leading-tight truncate ${isDark ? 'text-emerald-300/80' : 'text-emerald-700/80'}`}>
-            {formatLabel}
+            {taskTitle}
           </p>
           <p className={`text-[10px] truncate ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-            {progressLabel}
+            {formatLabel} · {progressLabel}
           </p>
         </div>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isDark ? 'bg-emerald-500/15 text-emerald-400/70' : 'bg-emerald-100 text-emerald-600/70'}`}>
