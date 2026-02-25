@@ -1853,6 +1853,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
                 onAnswer={handleAnswer}
                 showFeedback={true}
                 lesson={lesson}
+                isDiagnostic={!isPracticeExam}
               />
             </AnimatePresence>
           </div>
