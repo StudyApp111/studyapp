@@ -37,10 +37,11 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
           device_type: window.innerWidth >= 768 ? 'desktop' : 'mobile',
         });
       } catch {}
+      const pricingUrl = `${window.location.origin}/PricingPlans`;
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: planType,
         trial: true,
-        success_url: window.location.href,
+        success_url: `${pricingUrl}?success=true&plan=${planType}`,
         cancel_url: window.location.href
       });
       

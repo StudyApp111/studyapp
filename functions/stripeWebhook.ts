@@ -3,6 +3,29 @@ import Stripe from 'npm:stripe@14.21.0';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_API_KEY"));
 
+// PostHog server-side event helper
+async function capturePostHogEvent(distinctId, event, properties = {}) {
+  const apiKey = Deno.env.get("POSTHOG_API_KEY");
+  const host = Deno.env.get("POSTHOG_HOST") || "https://us.i.posthog.com";
+  if (!apiKey) return;
+  try {
+    await fetch(`${host}/capture/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: apiKey,
+        event,
+        distinct_id: distinctId,
+        properties: { ...properties, $lib: "server" },
+        timestamp: new Date().toISOString(),
+      }),
+    });
+    console.log(`PostHog event sent: ${event} for ${distinctId}`);
+  } catch (err) {
+    console.warn("PostHog capture error (non-blocking):", err.message);
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -97,6 +120,15 @@ Deno.serve(async (req) => {
         });
 
         console.log(`User ${userEmail} upgraded to pro (${planType})`);
+
+        // PostHog: trial_started or subscription_started
+        const phEvent = subscriptionStatus === 'trialing' ? 'trial_started' : 'subscription_started';
+        await capturePostHogEvent(userEmail, phEvent, {
+          plan_type: planType,
+          subscription_status: subscriptionStatus,
+          trial_end_date: trialEndDate,
+          source: 'stripe_webhook',
+        });
         
         // Send TikTok Subscribe event via server-side API
         try {
@@ -209,6 +241,7 @@ Deno.serve(async (req) => {
             console.log(`User ${user.email} cancel_at_period_end=true, keeping cancelled status, end: ${updates.subscription_end_date}`);
           } else {
             // Trial ended, now active paying customer OR user resubscribed after cancellation
+            const previousStatus = user.subscription_status || user.data?.subscription_status;
             const updates = {
               subscription_status: 'active',
               subscription_tier: 'pro',
@@ -222,6 +255,15 @@ Deno.serve(async (req) => {
             
             await base44.asServiceRole.entities.User.update(user.id, updates);
             console.log(`User ${user.email} status: active, end: ${updates.subscription_end_date}`);
+
+            // PostHog: trial_converted_to_paid (trialing → active)
+            if (previousStatus === 'trialing') {
+              const planType = user.subscription_plan_type || user.data?.subscription_plan_type || 'monthly';
+              await capturePostHogEvent(user.email, 'trial_converted_to_paid', {
+                plan_type: planType,
+                source: 'stripe_webhook',
+              });
+            }
           }
         } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
           // Only downgrade to free if current_period_end has passed
@@ -266,14 +308,24 @@ Deno.serve(async (req) => {
       });
 
       if (users.length > 0) {
-        // Subscription fully deleted - downgrade to free
-        await base44.asServiceRole.entities.User.update(users[0].id, {
+        const deletedUser = users[0];
+        const previousStatus = deletedUser.subscription_status || deletedUser.data?.subscription_status;
+        
+        await base44.asServiceRole.entities.User.update(deletedUser.id, {
           subscription_tier: 'free',
           subscription_status: 'canceled',
           trial_end_date: null,
           subscription_end_date: null
         });
-        console.log(`User ${users[0].email} subscription fully deleted - downgraded to free`);
+        console.log(`User ${deletedUser.email} subscription fully deleted - downgraded to free`);
+
+        // PostHog: distinguish trial_expired vs subscription_cancelled
+        const phEvent = previousStatus === 'trialing' ? 'trial_expired' : 'subscription_cancelled';
+        await capturePostHogEvent(deletedUser.email, phEvent, {
+          previous_status: previousStatus,
+          plan_type: deletedUser.subscription_plan_type || deletedUser.data?.subscription_plan_type || 'unknown',
+          source: 'stripe_webhook',
+        });
       }
     }
 
