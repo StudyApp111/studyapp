@@ -490,13 +490,8 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
               )}
             </div>
           </div>
-          {/* Live grade explanation */}
-          <div className="relative mt-2 pt-2 border-t border-white/20">
-            <p className="text-white/70 text-[10px] leading-relaxed">
-              <Sparkles className="w-3 h-3 inline mr-0.5 text-yellow-300" />
-              This grade updates live as you complete tasks below — every flashcard, quiz, and review improves your prediction.
-            </p>
-          </div>
+          {/* Live progress counts */}
+          <LiveProgressCounts lessonId={lesson?.id} />
         </div>
       </motion.div>
 
