@@ -82,21 +82,24 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
   let headline = '';
   let subtext = '';
 
+  // Use "an" before A grades, "a" before everything else
+  const gradeArticle = currentGrade.startsWith('A') ? 'an' : 'a';
+
   if (gradeIsGood) {
-    headline = `You're on track for an ${currentGrade} in ${courseName}.`;
+    headline = `You're on track for ${gradeArticle} ${currentGrade} in ${courseName}.`;
     subtext = masteryGap 
       ? `Keep it up! Fine-tune your understanding of "${masteryGap}" to lock in that top grade.`
       : `Keep completing tasks below to maintain your edge.`;
   } else if (gradeIsBad) {
-    headline = `Your predicted grade for ${courseName} is a ${currentGrade} — but we've got a plan.`;
+    headline = `Your predicted grade in ${courseName} is ${gradeArticle} ${currentGrade} — but we've got a plan.`;
     subtext = masteryGap
       ? `Your biggest gap is "${masteryGap}." The study plan below is designed to close it. Let's get you to an A.`
       : `The tasks below target your weakest areas. Every one you complete moves the needle.`;
   } else {
     headline = `Welcome to your study hub for ${courseName}.`;
     subtext = masteryGap
-      ? `Your predicted grade is a ${currentGrade}. We've identified "${masteryGap}" as your #1 gap — your custom plan below targets it directly to get you to an A.`
-      : `Your predicted grade is a ${currentGrade}. Complete the tasks below and watch your grade climb.`;
+      ? `Your predicted grade is ${gradeArticle} ${currentGrade}. We've identified "${masteryGap}" as your #1 gap — your custom plan below targets it directly.`
+      : `Your predicted grade is ${gradeArticle} ${currentGrade}. Complete the tasks below and watch your grade climb.`;
   }
 
   return (
