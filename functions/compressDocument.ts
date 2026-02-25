@@ -55,28 +55,28 @@ Deno.serve(async (req) => {
             ? workingContent.substring(0, 30000) + "\n\n...[middle content omitted]...\n\n" + workingContent.substring(workingContent.length - 30000)
             : workingContent;
 
-        const topicPrompt = `You are a document structure analyzer. Your job is to extract a TWO-LEVEL hierarchy from this educational document.
+        const topicPrompt = `You are a document structure analyzer. Analyze this educational document and extract its hierarchical organizational structure.
 
-OUTPUT STRUCTURE (MANDATORY):
-- Level 1 = SECTIONS: The document's major structural divisions (chapters, lectures, units, modules, weeks, parts, etc.)
-- Level 2 = TOPICS: The specific concepts, ideas, or sub-headings discussed WITHIN each section. These go in the "subtopics" array.
+STEP 1 — IDENTIFY THE TOP-LEVEL STRUCTURE:
+Look for the document's major divisions. These are typically marked by:
+- Numbered headings: "Lecture 1", "Chapter 1", "Unit 1", "Module 1", "Week 1", "Part 1", "Section 1", "Class 1", "Session 1", "Topic 1"
+- Roman numerals: "I.", "II.", "III."
+- Textbook chapters with titles
+- Slide deck separators or title slides
+- Bold/uppercase section headers
+- Any other clear top-level organizational pattern
 
-HOW TO IDENTIFY SECTIONS (Level 1):
-Look for headings like "Lecture 1", "Chapter 1", "Unit 1", "Module 1", "Week 1", "Part 1", "Section 1", etc.
-Also look for: Roman numerals (I, II, III), bold/uppercase headers, slide deck title pages, or any clear top-level organizational markers.
-Preserve the original naming exactly as it appears in the document (e.g., "LECTURE 1: INTRODUCTION TO HINDUISM").
+STEP 2 — EXTRACT SUBTOPICS WITHIN EACH TOP-LEVEL SECTION:
+For each major section identified above, find the specific topics, concepts, or sub-headings discussed WITHIN that section. These become subtopics.
 
-HOW TO IDENTIFY TOPICS (Level 2):
-For EACH section above, list the specific concepts, themes, or sub-headings covered within it.
-Topics should be specific and study-able (e.g., "Karma and Dharma", "The Four Noble Truths") — NOT vague labels like "Key Concepts" or "Main Ideas".
-
-ABSOLUTE RULES:
-1. The top-level array items are ONLY sections (chapters/lectures/units). Individual topics MUST go inside subtopics.
-2. Every section MUST have at least 2 items in its subtopics array.
-3. A topic must NEVER appear at the top level. If you find a concept like "Karma and Dharma", it belongs inside the subtopics of whichever section covers it.
-4. If the document has 2 lectures with 4 topics each, output 2 items (not 8). The 4 topics go in each section's subtopics.
-5. If NO clear structural divisions exist (single essay or notes dump), create 2-4 thematic sections and nest concepts under each.
-6. Each description should be 2-3 sentences summarizing the content.
+CRITICAL RULES:
+1. HIERARCHY IS MANDATORY: Every document has at least 2 levels. Top-level sections contain subtopics. NEVER output a flat list of topics with no subtopics — always nest specific concepts under their parent section.
+2. If the document has "Lecture 1" covering topics A, B, C and "Lecture 2" covering topics D, E, F — output 2 top-level items, each with their respective subtopics nested inside.
+3. Preserve the original naming exactly (e.g., "Lecture 1: Introduction to Hinduism", "Chapter 3: Cell Division").
+4. Each top-level section MUST have at least 2 subtopics. If a section seems to have only one concept, break it into finer-grained subtopics.
+5. If NO clear structural divisions exist (e.g., a single essay or notes dump), create 3-5 thematic sections yourself and nest specific concepts under each.
+6. Subtopics should be specific and actionable (e.g., "Karma and Dharma" not "Key Concepts").
+7. Each description should be 2-3 sentences with enough detail for an AI to generate study materials about it.
 
 DOCUMENT CONTENT:
 ${topicInputContent}`;
@@ -114,7 +114,7 @@ ${topicInputContent}`;
                                             }
                                         }
                                     },
-                                    required: ["title", "description", "subtopics"]
+                                    required: ["title", "description"]
                                 }
                             }
                         },

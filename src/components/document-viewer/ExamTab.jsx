@@ -495,31 +495,15 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           console.log('⏳ Exam 1 exists but questions not ready - starting poll + retry logic...');
           setIsGenerating(true);
 
-          // Helper to poll exam (works for guest and auth)
-          const pollExam = async (examId) => {
-            if (isGuest) {
-              try {
-                const { data } = await base44.functions.invoke('getGuestLesson', {
-                  fingerprint: window.__guestFingerprint || JSON.parse(localStorage.getItem('guest_session') || '{}')?.fingerprint,
-                  lesson_id: lesson.id,
-                  include_exams: true
-                });
-                return (data?.exams || []).find(e => e.id === examId) || null;
-              } catch { return null; }
-            }
-            const result = await base44.entities.Exam.filter({ id: examId });
-            return result[0] || null;
-          };
-
           const pollAndRetry = async () => {
             // Phase 1: Poll for ~25s
             for (let i = 0; i < 8; i++) {
               await new Promise(r => setTimeout(r, 3000));
               try {
-                const refreshed = await pollExam(loadedExam.id);
-                if (refreshed?.questions?.length > 0) {
+                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+                if (refreshed[0]?.questions?.length > 0) {
                   console.log('✅ Questions appeared during phase-1 polling');
-                  setExam(refreshed);
+                  setExam(refreshed[0]);
                   setIsGenerating(false);
                   return;
                 }
@@ -530,31 +514,16 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
 
             // Phase 2: Retry autoGenerateExam1 + continue polling
             console.log('🔄 Phase-1 timed out, retrying autoGenerateExam1...');
-            // For guests, use getGuestLesson to poll; for auth users, retry autoGenerateExam1
-            if (!isGuest) {
-              const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-                .catch(err => console.warn('Retry error:', err.message));
-              await retryPromise;
-            }
+            const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+              .catch(err => console.warn('Retry error:', err.message));
 
             for (let i = 0; i < 12; i++) {
               await new Promise(r => setTimeout(r, 4000));
               try {
-                let refreshedExam;
-                if (isGuest) {
-                  const { data } = await base44.functions.invoke('getGuestLesson', {
-                    fingerprint: window.__guestFingerprint || JSON.parse(localStorage.getItem('guest_session') || '{}')?.fingerprint,
-                    lesson_id: lesson.id,
-                    include_exams: true
-                  });
-                  refreshedExam = (data?.exams || []).find(e => e.id === loadedExam.id);
-                } else {
-                  const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
-                  refreshedExam = refreshed[0];
-                }
-                if (refreshedExam?.questions?.length > 0) {
+                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+                if (refreshed[0]?.questions?.length > 0) {
                   console.log('✅ Questions appeared during phase-2 polling');
-                  setExam(refreshedExam);
+                  setExam(refreshed[0]);
                   setIsGenerating(false);
                   return;
                 }
@@ -563,7 +532,8 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
               }
             }
 
-            const finalCheck = isGuest ? [] : await base44.entities.Exam.filter({ id: loadedExam.id });
+            await retryPromise;
+            const finalCheck = await base44.entities.Exam.filter({ id: loadedExam.id });
             if (finalCheck[0]?.questions?.length > 0) {
               setExam(finalCheck[0]);
               setIsGenerating(false);
@@ -581,22 +551,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       
       // SECOND: Double-check database directly before triggering generation
       // This catches race conditions where exams prop hasn't updated yet
-      // For guests, use getGuestLesson since they can't query entities directly
-      let dbExams = [];
-      if (isGuest) {
-        try {
-          const { data } = await base44.functions.invoke('getGuestLesson', {
-            fingerprint: window.__guestFingerprint || JSON.parse(localStorage.getItem('guest_session') || '{}')?.fingerprint,
-            lesson_id: lesson.id,
-            include_exams: true
-          });
-          dbExams = (data?.exams || []).filter(e => e.exam_number === 1);
-        } catch (gErr) {
-          console.warn('Guest DB check error:', gErr.message);
-        }
-      } else {
-        dbExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
-      }
+      const dbExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
       const dbExam = dbExams.find(e => e.exam_type !== 'practice');
       
       if (dbExam?.questions?.length > 0) {
@@ -612,31 +567,15 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         console.log('⏳ Exam 1 record exists in DB but no questions — starting poll + retry logic...');
         setIsGenerating(true);
 
-        // Helper to poll exam status (works for both guest and auth users)
-        const pollExamById = async (examId) => {
-          if (isGuest) {
-            try {
-              const { data } = await base44.functions.invoke('getGuestLesson', {
-                fingerprint: window.__guestFingerprint || JSON.parse(localStorage.getItem('guest_session') || '{}')?.fingerprint,
-                lesson_id: lesson.id,
-                include_exams: true
-              });
-              return (data?.exams || []).find(e => e.id === examId) || null;
-            } catch { return null; }
-          }
-          const result = await base44.entities.Exam.filter({ id: examId });
-          return result[0] || null;
-        };
-
         // Phase 1: Poll for 25s (the initial autoGenerateExam1 call from CreateLesson may still be running)
         const PHASE1_POLLS = 8;
         for (let i = 0; i < PHASE1_POLLS; i++) {
           await new Promise(r => setTimeout(r, 3000));
           try {
-            const refreshed = await pollExamById(dbExam.id);
-            if (refreshed?.questions?.length > 0) {
+            const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
+            if (refreshed[0]?.questions?.length > 0) {
               console.log('✅ Questions appeared during phase-1 polling');
-              setExam(refreshed);
+              setExam(refreshed[0]);
               setIsGenerating(false);
               return;
             }
@@ -645,24 +584,22 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           }
         }
 
-        // Phase 2: No questions after ~25s — retrigger autoGenerateExam1 (skip for guests)
-        console.log('🔄 Phase-1 timed out, retrying...');
+        // Phase 2: No questions after ~25s — retrigger autoGenerateExam1
+        console.log('🔄 Phase-1 timed out, retrying autoGenerateExam1...');
         try {
-          if (!isGuest) {
-            const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-              .catch(err => console.warn('Retry autoGenerateExam1 error:', err.message));
-            await retryPromise;
-          }
+          // Fire retry — but also keep polling in case the ORIGINAL call eventually succeeds
+          const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+            .catch(err => console.warn('Retry autoGenerateExam1 error:', err.message));
 
           // Poll while retry is running (up to 50s more)
           const PHASE2_POLLS = 12;
           for (let i = 0; i < PHASE2_POLLS; i++) {
             await new Promise(r => setTimeout(r, 4000));
             try {
-              const refreshed = await pollExamById(dbExam.id);
-              if (refreshed?.questions?.length > 0) {
+              const refreshed = await base44.entities.Exam.filter({ id: dbExam.id });
+              if (refreshed[0]?.questions?.length > 0) {
                 console.log('✅ Questions appeared during phase-2 polling');
-                setExam(refreshed);
+                setExam(refreshed[0]);
                 setIsGenerating(false);
                 return;
               }
@@ -671,8 +608,10 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             }
           }
 
+          // Wait for retry to finish
+          await retryPromise;
           // One final check
-          const finalCheck = [await pollExamById(dbExam.id)].filter(Boolean);
+          const finalCheck = await base44.entities.Exam.filter({ id: dbExam.id });
           if (finalCheck[0]?.questions?.length > 0) {
             console.log('✅ Questions appeared after retry completed');
             setExam(finalCheck[0]);
@@ -691,34 +630,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       }
 
       // No exam 1 exists at all - trigger autoGenerateExam1 with retry on 502
-      // For guest users, exam is generated by createGuestLesson - just poll for it
-      if (isGuest) {
-        console.log('👤 Guest user - exam should be generating via createGuestLesson, polling...');
-        setIsGenerating(true);
-        for (let i = 0; i < 15; i++) {
-          await new Promise(r => setTimeout(r, 3000));
-          try {
-            const { data } = await base44.functions.invoke('getGuestLesson', {
-              fingerprint: window.__guestFingerprint || JSON.parse(localStorage.getItem('guest_session') || '{}')?.fingerprint,
-              lesson_id: lesson.id,
-              include_exams: true
-            });
-            const guestExam = (data?.exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice' && e.questions?.length > 0);
-            if (guestExam) {
-              console.log('✅ Guest exam ready');
-              setExam(guestExam);
-              setIsGenerating(false);
-              return;
-            }
-          } catch (pollErr) {
-            console.warn('Guest poll error:', pollErr.message);
-          }
-        }
-        setIsGenerating(false);
-        setError('Exam generation is taking longer than expected. Please refresh the page.');
-        return;
-      }
-
       console.log('🎯 No Exam 1 found anywhere, triggering autoGenerateExam1...');
       setIsGenerating(true);
 

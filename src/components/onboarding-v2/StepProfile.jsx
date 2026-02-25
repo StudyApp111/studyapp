@@ -3,9 +3,8 @@ import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, School, ChevronLeft, LogIn } from "lucide-react";
+import { Loader2, MapPin, School, ChevronLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
 
 export default function StepProfile({ user, isGuest, onComplete, onBack }) {
   const { isDark } = useTheme();
@@ -146,7 +145,7 @@ export default function StepProfile({ user, isGuest, onComplete, onBack }) {
             isDark ? "text-white" : "text-slate-900"
           }`}
         >
-          {user?.full_name ? `Hi ${user.full_name.split(" ")[0]}` : "Hi There"} 👋
+          Hi There 👋
         </h2>
         <p
           className={`text-sm ${
@@ -288,27 +287,6 @@ export default function StepProfile({ user, isGuest, onComplete, onBack }) {
           )}
         </Button>
       </div>
-
-      {/* Returning user login link */}
-      {!user && (
-        <div className="text-center pt-1">
-          <button
-            onClick={() => {
-              if (checkIsInAppBrowser()) {
-                // Can't sign in from in-app browser — show alert
-                alert("Please open this page in your browser (Safari/Chrome) to sign in.");
-                return;
-              }
-              const returnUrl = window.location.pathname + window.location.search;
-              base44.auth.redirectToLogin(returnUrl);
-            }}
-            className={`text-sm font-medium ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-500'} transition-colors`}
-          >
-            <LogIn className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
-            Already have an account? Log in
-          </button>
-        </div>
-      )}
     </motion.div>
   );
 }
