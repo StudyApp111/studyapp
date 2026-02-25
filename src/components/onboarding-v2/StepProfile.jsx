@@ -139,7 +139,7 @@ export default function StepProfile({ user, isGuest, onComplete, onBack }) {
       className="space-y-5 py-2"
     >
       {/* Greeting */}
-      <div className="text-center space-y-1">
+      <div className="text-center space-y-1 flex flex-col items-center">
         <h2
           className={`text-2xl font-black ${
             isDark ? "text-white" : "text-slate-900"
