@@ -216,7 +216,7 @@ export default function NotesTab({ lesson }) {
     return (
       <EducationalLoader 
         title="Crafting Your Notes" 
-        description={`Our AI is synthesizing a perfect ${settings.noteType.toLowerCase()} for you...`} 
+        description={`Our AI is synthesizing your ${settings.noteType.toLowerCase()} now...`} 
       />
     );
   }

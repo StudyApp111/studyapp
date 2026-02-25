@@ -215,7 +215,7 @@ export default function Home() {
             className="w-14 h-14 md:w-16 md:h-16"
           />
           <span className="text-4xl md:text-5xl font-black">
-            <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
+            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Study</span>
             <span className={isDark ? 'text-white' : 'text-slate-900'}>App</span>
           </span>
           <UpgradeButton compact />
