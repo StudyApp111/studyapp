@@ -3,8 +3,9 @@ import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, School, ChevronLeft } from "lucide-react";
+import { Loader2, MapPin, School, ChevronLeft, LogIn } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
 
 export default function StepProfile({ user, isGuest, onComplete, onBack }) {
   const { isDark } = useTheme();
