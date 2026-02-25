@@ -82,37 +82,10 @@ export default function StartStudyPlanCTA({ studyPlan, topicSuggestions, onNavig
   const handleClick = () => {
     if (!nextTask) return;
     
-    // Dispatch the Polly chat message
-    const taskStep = completedCount + 1;
-    let pollyMessage = '';
-    
-    if (!hasStarted) {
-      // First task
-      pollyMessage = `🚀 **You've started on the path to an A!**\n\nYour first task is **${formatLabel}** on "${nextTask.topicTitle}" (${nextTask.sectionTitle}).`;
-    } else {
-      pollyMessage = `📈 **Great progress!** Step ${taskStep} is **${formatLabel}** on "${nextTask.topicTitle}" (${nextTask.sectionTitle}).`;
-    }
-
-    // Add format-specific guidance
-    if (nextTask.format === "Review Notes") {
-      pollyMessage += `\n\nReview these notes carefully. Focus on understanding the key concepts in "${nextTask.topicTitle}." When you feel confident, come back to the Study Plan to continue to step ${taskStep + 1}.`;
-    } else if (nextTask.format === "Flashcards") {
-      pollyMessage += `\n\nMaster these flashcards on "${nextTask.topicTitle}." Aim to get each one right — when you're done, come back to continue.`;
-    } else if (nextTask.format === "Practice Test") {
-      pollyMessage += `\n\nTake this practice quiz on "${nextTask.topicTitle}." Don't worry about getting everything right — focus on understanding the explanations. Head back to the Study Plan when you're done.`;
-    } else if (nextTask.format === "Feynman Technique") {
-      pollyMessage += `\n\nExplain "${nextTask.topicTitle}" in your own words. If you can teach it simply, you understand it. Come back to the Study Plan when you're done.`;
-    }
-
-    // Fire Polly message event
-    window.dispatchEvent(new CustomEvent('pollyStudyPlanAction', {
-      detail: { message: pollyMessage }
-    }));
-
-    // Call the onStartTask callback which handles navigation
-    if (onStartTask) {
-      onStartTask(nextTask);
-    }
+    // Just navigate to the correct tab — do NOT trigger generation
+    // The tabs show existing sets when content exists, and let users generate from there
+    const tab = FORMAT_TO_TAB[nextTask.format] || "flashcards";
+    onNavigate(tab);
   };
 
   return (
