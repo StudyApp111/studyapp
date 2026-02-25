@@ -73,6 +73,35 @@ Deno.serve(async (req) => {
       return Response.json({ allowed: true, claimed: true });
     }
 
+    if (action === 'createLesson') {
+      // Guest creates a real lesson via service role — no auth required
+      const { lesson_data } = body;
+      
+      if (!lesson_data || !lesson_data.course_name) {
+        return Response.json({ error: 'Missing lesson data' }, { status: 400 });
+      }
+
+      // Create lesson using service role (guest has no user account)
+      const lesson = await base44.asServiceRole.entities.Lesson.create({
+        ...lesson_data,
+        status: 'created'
+      });
+      
+      const lessonId = lesson.id;
+      console.log(`✅ GUEST LESSON CREATED (service role): ${lessonId}`);
+
+      // Fire-and-forget: generate exam + topic suggestions for the guest lesson
+      base44.asServiceRole.functions.invoke('autoGenerateExam1', { lesson_id: lessonId })
+        .then(res => console.log('✅ Guest exam 1 generated:', res?.data?.exam_id))
+        .catch(err => console.warn('Guest exam generation error:', err.message));
+
+      base44.asServiceRole.functions.invoke('generateTopicSuggestions', { lesson_id: lessonId })
+        .then(res => console.log('✅ Guest topic suggestions generated'))
+        .catch(err => console.warn('Guest topic suggestions error:', err.message));
+
+      return Response.json({ success: true, lesson_id: lessonId });
+    }
+
     if (action === 'transfer') {
       // Transfer guest lesson to authenticated user
       const { lesson_data, user_email, profile_data } = body;
