@@ -894,6 +894,19 @@ export default function DocumentViewer() {
         )}
       </div>
 
+      {/* Topic Confirmation Modal - rendered once globally */}
+      {lesson && hasDocument && !diagnosticCompleted && (
+        <TopicConfirmationBanner
+          lesson={lesson}
+          diagnosticReady={!!((exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice' && e.questions?.length > 0))}
+          diagnosticCompleted={diagnosticCompleted}
+          onGoToDiagnostic={() => {
+            window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
+            setActiveTab('exam');
+          }}
+        />
+      )}
+
       {/* Full-screen confetti on task completion */}
       <ConfettiEffect show={showTaskConfetti} onComplete={() => setShowTaskConfetti(false)} />
 
