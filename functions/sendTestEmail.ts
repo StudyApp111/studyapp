@@ -21,8 +21,23 @@ Deno.serve(async (req) => {
           const templateData = await templateRes.json();
           console.log('Template status:', templateData.status);
           console.log('Template variables:', JSON.stringify(templateData.variables));
-          console.log('Template HTML preview:', templateData.html?.substring(0, 500));
-          return Response.json({ template: templateData });
+          
+          // Check for variable-like patterns in HTML
+          const html = templateData.html || '';
+          const varPatterns = html.match(/\{\{\{?\w+\}\}\}?/g) || [];
+          console.log('Variable patterns found in HTML:', JSON.stringify(varPatterns));
+          
+          return Response.json({ 
+            template: {
+              id: templateData.id,
+              name: templateData.name,
+              status: templateData.status,
+              variables: templateData.variables,
+              variable_patterns_in_html: varPatterns,
+              has_unpublished_versions: templateData.has_unpublished_versions,
+              html_length: html.length
+            }
+          });
         }
 
         if (!recipient || !subject || !body) {
