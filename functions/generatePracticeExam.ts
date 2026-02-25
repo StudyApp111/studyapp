@@ -235,10 +235,12 @@ ALL question text and answers MUST be readable as plain text without any LaTeX r
       return normalized;
     });
 
-    // Create title based on focus topics or target competency
-    let examTitle = (focus_topics && focus_topics.length > 0)
-      ? focus_topics[0]
-      : target_competency || 'Practice Quiz';
+    // Create title based on provided title, focus topics, or target competency
+    let examTitle = requestTitle || (
+      (focus_topics && focus_topics.length > 0)
+        ? focus_topics[0]
+        : target_competency || 'Practice Quiz'
+    );
     
     // Clean up any prefixes
     examTitle = examTitle.replace(/^Diagnostic Quiz:\s*/i, '').replace(/\s*Practice Quiz$/i, '');
