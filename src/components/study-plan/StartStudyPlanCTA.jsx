@@ -82,9 +82,41 @@ export default function StartStudyPlanCTA({ studyPlan, topicSuggestions, onNavig
   const handleClick = () => {
     if (!nextTask) return;
     
-    // Just navigate to the correct tab — do NOT trigger generation
-    // The tabs show existing sets when content exists, and let users generate from there
     const tab = FORMAT_TO_TAB[nextTask.format] || "flashcards";
+    
+    // Dispatch generation event for the specific task type so it starts immediately
+    if (tab === "exam") {
+      window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
+        detail: {
+          task: {
+            task_id: `cta_${nextTask.sectionTitle}_${nextTask.topicTitle}`,
+            focus_topics: [nextTask.topicTitle],
+            target_competency: nextTask.topicTitle,
+            title: `${nextTask.sectionTitle}: ${nextTask.topicTitle}`,
+            section_title: nextTask.sectionTitle,
+            target_count: 1
+          },
+          focus_topics: [nextTask.topicTitle],
+          target_competency: nextTask.topicTitle
+        }
+      }));
+    } else if (tab === "flashcards" || tab === "teachit") {
+      const taskType = tab === "teachit" ? "teach_it" : "flashcards";
+      window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+        detail: {
+          taskType,
+          task: {
+            focus_topics: [nextTask.topicTitle],
+            target_competency: nextTask.topicTitle,
+            title: `${nextTask.sectionTitle}: ${nextTask.topicTitle}`,
+            section_title: nextTask.sectionTitle,
+            target_count: tab === "flashcards" ? 10 : 3
+          }
+        }
+      }));
+    }
+    // For notes, just navigate — notes tab has its own generate CTA
+    
     onNavigate(tab);
   };
 
