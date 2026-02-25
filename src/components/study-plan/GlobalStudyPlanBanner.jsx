@@ -24,6 +24,13 @@ const TASK_ICONS = {
   teach_it: Brain,
 };
 
+const TASK_UNIT = {
+  review_notes: "notes",
+  flashcards: "cards",
+  practice_exam: "quizzes",
+  teach_it: "concepts"
+};
+
 export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate }) {
   const { isDark } = useTheme();
   const [studyPlan, setStudyPlan] = useState(null);
