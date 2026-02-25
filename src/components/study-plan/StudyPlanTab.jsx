@@ -511,38 +511,6 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           studyPlan={studyPlan}
           topicSuggestions={filteredSuggestions}
           onNavigate={onNavigate}
-          onStartTask={(task) => {
-            // Navigate to the appropriate tab and trigger generation
-            const formatMap = {
-              "Review Notes": "notes",
-              "Flashcards": "flashcards",
-              "Practice Test": "exam",
-              "Feynman Technique": "teachit"
-            };
-            const tab = formatMap[task.format] || "flashcards";
-
-            const eventMap = {
-              "flashcards": "generateFromStudyTask",
-              "teachit": "generateFromStudyTask",
-              "exam": "generatePracticeExamFromTask"
-            };
-            const eventName = eventMap[tab];
-            if (eventName) {
-              window.dispatchEvent(new CustomEvent(eventName, {
-                detail: {
-                  taskType: tab === "teachit" ? "teach_it" : tab === "exam" ? "practice_exam" : tab,
-                  task: {
-                    focus_topics: [task.topicTitle],
-                    target_competency: task.topicTitle,
-                    title: `${task.sectionTitle}: ${task.topicTitle}`,
-                    section_title: task.sectionTitle,
-                    target_count: tab === "flashcards" ? 10 : tab === "exam" ? 1 : 3
-                  }
-                }
-              }));
-            }
-            onNavigate(tab);
-          }}
         />
       )}
 
