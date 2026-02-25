@@ -1341,7 +1341,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
                 const correctCount = e.correct_count || 0;
                 const totalQuestions = e.questions?.length || 0;
                 // Use title if available, otherwise fall back to a generic name
-                const displayTitle = e.title || `Practice Quiz`;
+                const displayTitle = e.title || e.focus_description || `Practice Quiz`;
                 
                 return (
                   <button
