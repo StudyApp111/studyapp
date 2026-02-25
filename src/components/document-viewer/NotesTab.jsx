@@ -135,6 +135,9 @@ export default function NotesTab({ lesson }) {
                 official_exam_unlocked: allComplete
               });
               
+              // Fire full-screen confetti for task completion
+              window.dispatchEvent(new Event('studyTaskCompleted'));
+              
               // Trigger Polly engine after notes task completion
               base44.functions.invoke('runPollyEngine', {
                 trigger_event: 'review_notes_completed',
