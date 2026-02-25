@@ -16,7 +16,7 @@ import posthog from "posthog-js";
 
 export default function PricingPlans() {
   const navigate = useNavigate();
-  const [isYearly, setIsYearly] = useState(true);
+  const [isYearly, setIsYearly] = useState(false);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -118,10 +118,10 @@ export default function PricingPlans() {
       const planType = isYearly ? 'yearly' : 'monthly';
       console.log('Starting checkout with plan_type:', planType, 'isYearly:', isYearly);
       
-      // PricingPlans page = direct payment, NO trial
+      // PricingPlans page = 7-day free trial, no credit card
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: planType,
-        trial: false,
+        trial: true,
         success_url: `${window.location.origin}${createPageUrl("PricingPlans")}?success=true&plan=${planType}`,
         cancel_url: `${window.location.origin}${createPageUrl("PricingPlans")}?canceled=true`
       });
@@ -286,7 +286,7 @@ export default function PricingPlans() {
               Stop Guessing. <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Start Mastering</span>
             </h1>
             <p className="text-purple-200 text-lg max-w-xl mx-auto">
-              Join 10,000+ students locking in their A+ for less than the price of a coffee.
+              Try free for 7 days — no credit card needed. Then as little as $4.99/month.
             </p>
           </motion.div>
 
@@ -399,12 +399,12 @@ export default function PricingPlans() {
                 ) : (
                   <>
                     <Zap className="w-5 h-5 mr-2" />
-                    Get Locked In
+                    Start Free — 7 Days On Us
                   </>
                 )}
               </Button>
               <p className="text-center text-purple-300 text-sm mt-3">
-                Cancel anytime • 7-day money back guarantee
+                Cancel anytime · No credit card required
               </p>
               {checkoutError && (
                 <p className="text-center text-red-400 text-xs mt-2">
