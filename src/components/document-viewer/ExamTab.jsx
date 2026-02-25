@@ -565,7 +565,22 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       
       // SECOND: Double-check database directly before triggering generation
       // This catches race conditions where exams prop hasn't updated yet
-      const dbExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
+      // For guests, use getGuestLesson since they can't query entities directly
+      let dbExams = [];
+      if (isGuest) {
+        try {
+          const { data } = await base44.functions.invoke('getGuestLesson', {
+            fingerprint: window.__guestFingerprint || JSON.parse(localStorage.getItem('guest_session') || '{}')?.fingerprint,
+            lesson_id: lesson.id,
+            include_exams: true
+          });
+          dbExams = (data?.exams || []).filter(e => e.exam_number === 1);
+        } catch (gErr) {
+          console.warn('Guest DB check error:', gErr.message);
+        }
+      } else {
+        dbExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
+      }
       const dbExam = dbExams.find(e => e.exam_type !== 'practice');
       
       if (dbExam?.questions?.length > 0) {
