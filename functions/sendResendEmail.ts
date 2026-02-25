@@ -122,13 +122,31 @@ Deno.serve(async (req) => {
 
       // Send via Resend Emails API using template
       try {
+        // Fetch the template definition from Resend to discover which variables it expects
+        const templateInfoRes = await fetch(`https://api.resend.com/templates/${template.resend_template_id}`, {
+          headers: { 'Authorization': `Bearer ${resendApiKey}` }
+        });
+        
+        let templateVars = {};
+        if (templateInfoRes.ok) {
+          const templateInfo = await templateInfoRes.json();
+          const expectedKeys = (templateInfo.variables || []).map(v => v.key);
+          // Only include variables that the template actually defines
+          for (const key of expectedKeys) {
+            if (userVars[key] !== undefined) {
+              templateVars[key] = userVars[key];
+            }
+          }
+        }
+        // If we can't fetch template info, send empty variables (safer than sending unexpected ones)
+
         const emailPayload = {
           from: 'StudyApp.AI <updates@updates.studyappai.com>',
           reply_to: 'info@studyappai.com',
           to: [user_email],
           template: {
             id: template.resend_template_id,
-            variables: userVars
+            variables: templateVars
           }
         };
 
