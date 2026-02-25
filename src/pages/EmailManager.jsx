@@ -184,12 +184,12 @@ export default function EmailManager() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <Mail className="w-8 h-8 text-purple-500" />
-          <h1 className="text-3xl font-bold text-white">Email Manager</h1>
+          <h1 className="text-3xl font-bold text-foreground">Email Manager</h1>
           <Badge variant="destructive" className="ml-2">Admin</Badge>
         </div>
-        <p className="text-slate-400">
+        <p className="text-muted-foreground">
           Connect Resend templates to in-app triggers. Templates are designed in{" "}
-          <a href="https://resend.com/templates" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:underline inline-flex items-center gap-1">
+          <a href="https://resend.com/templates" target="_blank" rel="noopener noreferrer" className="text-purple-500 hover:underline inline-flex items-center gap-1">
             Resend <ExternalLink className="w-3 h-3" />
           </a>, triggers fire them here.
         </p>
@@ -211,14 +211,14 @@ export default function EmailManager() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Card className="bg-slate-900/50 border-slate-700">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Users className="w-7 h-7 text-blue-400" />
+                <Users className="w-7 h-7 text-blue-500" />
                 <div>
-                  <p className="text-xs text-slate-400">Total Users</p>
-                  <p className="text-2xl font-bold text-white">{userCount}</p>
+                  <p className="text-xs text-muted-foreground">Total Users</p>
+                  <p className="text-2xl font-bold text-foreground">{userCount}</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={handleExportUsers} className="gap-1">
@@ -228,26 +228,26 @@ export default function EmailManager() {
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-700">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center gap-3">
-              <Zap className="w-7 h-7 text-green-400" />
+              <Zap className="w-7 h-7 text-green-500" />
               <div>
-                <p className="text-xs text-slate-400">Active Triggers</p>
-                <p className="text-2xl font-bold text-white">{triggers.filter(t => t.enabled).length}</p>
+                <p className="text-xs text-muted-foreground">Active Triggers</p>
+                <p className="text-2xl font-bold text-foreground">{triggers.filter(t => t.enabled).length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-900/50 border-slate-700">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Mail className="w-7 h-7 text-purple-400" />
+                <Mail className="w-7 h-7 text-purple-500" />
                 <div>
-                  <p className="text-xs text-slate-400">Resend Templates</p>
-                  <p className="text-2xl font-bold text-white">{resendTemplates.length}</p>
+                  <p className="text-xs text-muted-foreground">Resend Templates</p>
+                  <p className="text-2xl font-bold text-foreground">{resendTemplates.length}</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={loadResendTemplates} disabled={loadingTemplates} className="gap-1">
@@ -260,24 +260,24 @@ export default function EmailManager() {
 
       {/* Available Resend Templates */}
       {resendTemplates.length > 0 && (
-        <div className="mb-6 p-4 rounded-xl bg-purple-900/10 border border-purple-800/30">
-          <p className="text-xs font-semibold text-purple-300 mb-2">Available Resend Templates</p>
+        <div className="mb-6 p-4 rounded-xl bg-purple-500/5 border border-purple-500/20">
+          <p className="text-xs font-semibold text-purple-600 dark:text-purple-300 mb-2">Available Resend Templates</p>
           <div className="flex flex-wrap gap-2">
             {resendTemplates.map(t => (
-              <Badge key={t.id} variant="outline" className="text-xs text-purple-300 border-purple-700">
+              <Badge key={t.id} variant="outline" className="text-xs">
                 {t.name}
               </Badge>
             ))}
           </div>
-          <p className="text-xs text-slate-500 mt-2">
-            Variables passed: <code className="text-purple-400">name, first_name, email, school, grade, level, total_points, current_streak, questions_completed</code>
+          <p className="text-xs text-muted-foreground mt-2">
+            Variables passed (only non-empty): <code className="text-purple-600 dark:text-purple-400">name, first_name, school, grade, level, total_points, current_streak, questions_completed, plan_type, trial_days_left, trial_end_date</code>
           </p>
         </div>
       )}
 
       {/* Create Button */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold text-white">Email Triggers</h2>
+        <h2 className="text-lg font-semibold text-foreground">Email Triggers</h2>
         <Button onClick={() => setShowCreate(true)} className="bg-purple-600 hover:bg-purple-700 gap-2">
           <Plus className="w-4 h-4" /> New Trigger
         </Button>
@@ -286,7 +286,7 @@ export default function EmailManager() {
       {/* Action Triggers */}
       {actionTriggers.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Action Triggers</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Action Triggers</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {actionTriggers.map(t => (
               <TriggerCard
@@ -305,7 +305,7 @@ export default function EmailManager() {
       {/* Milestone Triggers */}
       {milestoneTriggers.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Milestone Triggers</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Milestone Triggers</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {milestoneTriggers.map(t => (
               <TriggerCard
@@ -324,7 +324,7 @@ export default function EmailManager() {
       {/* Inactivity Triggers */}
       {inactivityTriggers.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-400 mb-3 uppercase tracking-wider">Inactivity Triggers</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Inactivity Triggers</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {inactivityTriggers.map(t => (
               <TriggerCard
@@ -341,11 +341,11 @@ export default function EmailManager() {
       )}
 
       {triggers.length === 0 && (
-        <Card className="bg-slate-900/50 border-slate-700 border-dashed">
+        <Card className="border-dashed">
           <CardContent className="p-12 text-center">
-            <Mail className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400 mb-2">No email triggers yet</p>
-            <p className="text-xs text-slate-500 mb-4">Create your first trigger to start sending automated emails via Resend</p>
+            <Mail className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground mb-2">No email triggers yet</p>
+            <p className="text-xs text-muted-foreground mb-4">Create your first trigger to start sending automated emails via Resend</p>
             <Button onClick={() => setShowCreate(true)} className="bg-purple-600 hover:bg-purple-700">
               <Plus className="w-4 h-4 mr-2" /> Create First Trigger
             </Button>

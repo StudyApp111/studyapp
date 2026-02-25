@@ -72,27 +72,28 @@ Deno.serve(async (req) => {
       trialEndFormatted = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
-    const userVars = {
-      // Resend reserved variable names (uppercase)
-      FIRST_NAME: firstName,
-      LAST_NAME: lastName,
-      EMAIL: targetUser.email,
-      // Custom variables (lowercase)
+    // Build variables object — only include non-empty values so Resend
+    // template fallback defaults work and rendering never fails on empty strings
+    const rawVars = {
       user_name: fullName,
-      user_first_name: firstName,
-      user_email: targetUser.email,
       name: fullName,
       first_name: firstName,
-      school: profile?.school || '',
-      grade: profile?.grade || '',
+      school: profile?.school,
+      grade: profile?.grade,
       level: String(targetUser.level || 1),
       total_points: String(targetUser.total_points || 0),
       current_streak: String(targetUser.current_streak || 0),
       questions_completed: String(targetUser.questions_completed || 0),
-      plan_type: targetUser.subscription_plan_type || targetUser.data?.subscription_plan_type || '',
-      trial_days_left: trialDaysLeft,
-      trial_end_date: trialEndFormatted
+      plan_type: targetUser.subscription_plan_type || targetUser.data?.subscription_plan_type,
+      trial_days_left: trialDaysLeft || undefined,
+      trial_end_date: trialEndFormatted || undefined
     };
+
+    // Strip out any key with falsy/empty value
+    const userVars = {};
+    for (const [k, v] of Object.entries(rawVars)) {
+      if (v != null && v !== '') userVars[k] = v;
+    }
 
     let sentCount = 0;
 
@@ -121,16 +122,13 @@ Deno.serve(async (req) => {
 
       // Send via Resend Emails API using template
       try {
-        // Resend reserves FIRST_NAME, LAST_NAME, EMAIL, UNSUBSCRIBE_URL — strip them from variables
-        const { FIRST_NAME, LAST_NAME, EMAIL, ...safeVars } = userVars;
-
         const emailPayload = {
           from: 'StudyApp.AI <updates@updates.studyappai.com>',
           reply_to: 'info@studyappai.com',
           to: [user_email],
           template: {
             id: template.resend_template_id,
-            variables: safeVars
+            variables: userVars
           }
         };
 
