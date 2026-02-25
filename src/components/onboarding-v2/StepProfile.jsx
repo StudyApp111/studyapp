@@ -161,6 +161,19 @@ export default function StepProfile({ user, isGuest, onComplete, onBack }) {
         >
           Let's personalize your experience
         </p>
+        
+        {/* Sign In option for returning users */}
+        {!user && !isGuest && (
+          <button
+            onClick={() => {
+              sessionStorage.setItem("onboarding_v2_active", "true");
+              base44.auth.redirectToLogin(window.location.pathname);
+            }}
+            className={`text-sm font-medium underline ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}
+          >
+            Already have an account? Sign in
+          </button>
+        )}
       </div>
 
       {/* Name input */}

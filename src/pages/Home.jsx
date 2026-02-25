@@ -43,13 +43,15 @@ export default function Home() {
         }
 
         // If user just authenticated after being a guest, transfer data
-        if (guestData?.lessonData) {
+        if (guestData?.lessonData || guestData?.diagnosticCompleted) {
+          console.log('🎯 Guest data detected after auth, transferring...');
           const result = await transferGuestData();
           if (result?.lesson_id) {
-            // Redirect to the transferred lesson (question review / exam tab)
+            // Redirect to the transferred lesson with exam tab active (to show results)
             const wasReturning = sessionStorage.getItem("guest_returning_to_lesson");
             sessionStorage.removeItem("guest_returning_to_lesson");
-            navigate(createPageUrl("DocumentViewer") + `?id=${result.lesson_id}${wasReturning ? '&tab=exam' : ''}`, { replace: true });
+            // ALWAYS go to exam tab after guest transfer to see question review
+            navigate(createPageUrl("DocumentViewer") + `?id=${result.lesson_id}&tab=exam`, { replace: true });
             return;
           }
         } else if (isGuest) {
@@ -207,7 +209,7 @@ export default function Home() {
             className="w-14 h-14 md:w-16 md:h-16"
           />
           <span className="text-4xl md:text-5xl font-black">
-            <span className={`bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent ${!isDark ? 'from-slate-900 to-slate-900' : ''}`}>Study</span>
+            <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
             <span className={isDark ? 'text-white' : 'text-slate-900'}>App</span>
           </span>
           <UpgradeButton compact />
