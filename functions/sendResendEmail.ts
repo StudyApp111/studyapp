@@ -121,14 +121,16 @@ Deno.serve(async (req) => {
 
       // Send via Resend Emails API using template
       try {
+        // Resend reserves FIRST_NAME, LAST_NAME, EMAIL, UNSUBSCRIBE_URL — strip them from variables
+        const { FIRST_NAME, LAST_NAME, EMAIL, ...safeVars } = userVars;
+
         const emailPayload = {
           from: 'StudyApp.AI <updates@updates.studyappai.com>',
           reply_to: 'info@studyappai.com',
           to: [user_email],
-          subject: template.name || 'StudyApp.AI',
           template: {
             id: template.resend_template_id,
-            variables: userVars
+            variables: safeVars
           }
         };
 
