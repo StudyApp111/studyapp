@@ -83,7 +83,12 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
   const isOnCorrectTab = activeTab === nextTab;
   const formatLabel = TASK_TYPE_TO_FORMAT[nextTask.task_type] || 'Task';
   const Icon = TASK_ICONS[nextTask.task_type] || Target;
-  const topicLabel = nextTask.focus_topics?.[0] || nextTask.title || formatLabel;
+  
+  // Build progress label: e.g. "3/10 mastered" for flashcards, "2/5 done" for teach_it
+  const taskProgress = nextTask.completed_count || 0;
+  const taskTarget = nextTask.target_count || 0;
+  const progressLabel = taskTarget > 0 ? `${taskProgress}/${taskTarget}` : '';
+  const topicLabel = nextTask.title || nextTask.focus_topics?.[0] || formatLabel;
 
   // If user is already on the tab for this task, show greyed-out "current" state
   if (isOnCorrectTab) {
@@ -94,10 +99,10 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
         </div>
         <div className="flex-1 min-w-0">
           <p className={`text-xs font-semibold leading-tight truncate ${isDark ? 'text-emerald-300/80' : 'text-emerald-700/80'}`}>
-            Study Plan: {formatLabel}
+            {formatLabel}: {topicLabel}
           </p>
           <p className={`text-[10px] truncate ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-            {topicLabel} · {completedCount}/{totalCount} done
+            {progressLabel && <><span className="font-semibold">{progressLabel}</span> completed · </>}{completedCount}/{totalCount} tasks done
           </p>
         </div>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isDark ? 'bg-emerald-500/15 text-emerald-400/70' : 'bg-emerald-100 text-emerald-600/70'}`}>
@@ -107,27 +112,10 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
     );
   }
 
-  // Active CTA to navigate to the next task's tab
+  // Active CTA - just navigate to the tab, do NOT dispatch generation events
   return (
     <button
-      onClick={() => {
-        // Dispatch generation event for the task
-        const eventMap = {
-          flashcards: "generateFromStudyTask",
-          teachit: "generateFromStudyTask",
-          exam: "generatePracticeExamFromTask"
-        };
-        const eventName = eventMap[nextTab];
-        if (eventName) {
-          window.dispatchEvent(new CustomEvent(eventName, {
-            detail: {
-              taskType: nextTask.task_type,
-              task: nextTask
-            }
-          }));
-        }
-        onNavigate(nextTab);
-      }}
+      onClick={() => onNavigate(nextTab)}
       className={`mx-2 mt-2 w-[calc(100%-16px)] rounded-xl border px-3 py-2 flex items-center gap-2.5 transition-all active:scale-[0.99] ${
         isDark 
           ? 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20 hover:border-emerald-500/40' 
@@ -139,10 +127,10 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
       </div>
       <div className="flex-1 min-w-0 text-left">
         <p className={`text-xs font-bold leading-tight truncate ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
-          {hasStarted ? `Continue: ${formatLabel}` : `Start Study Plan: ${formatLabel}`}
+          {hasStarted ? `Continue: ${formatLabel}` : `Start: ${formatLabel}`}
         </p>
         <p className={`text-[10px] truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-          {topicLabel} · {completedCount}/{totalCount} done
+          {topicLabel} · {progressLabel && <><span className="font-semibold">{progressLabel}</span> completed · </>}{completedCount}/{totalCount} tasks
         </p>
       </div>
       <ArrowRight className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />
