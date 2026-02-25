@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
 
     // Generate intelligent study plan - use predictedGrade which is always set
     const gradeForPrompt = predictedGrade || 'current level';
-    const planPrompt = `You are an expert learning scientist and instructional designer. Design a PRECISE, chronologically-ordered study plan that will measurably improve the student's grade from ${gradeForPrompt} toward an A+/90%.
+    const planPrompt = `You are an expert learning scientist. Generate a precise study plan calibrated to this student's diagnostic results. Output valid JSON only.
 
 PEDAGOGICAL FRAMEWORK (Bloom's Taxonomy + Spaced Retrieval):
 The tasks MUST follow this evidence-based learning sequence. Each step builds on the previous:
@@ -192,36 +192,68 @@ AI FEEDBACK SUMMARY:
 COURSE CONTENT OVERVIEW:
 ${contentSummary.substring(0, 2000)}
 
-MASTERY GAP: "${masteryGap}" — ALL tasks should converge on addressing this weakness as the primary thread.
+STEP 1 — CLASSIFY COURSE TYPE (silent):
+DECLARATIVE (History/Bio/Law/Philosophy) → use: review_notes, flashcards, teach_it
+PROCEDURAL (Math/Accounting/Physics/Programming) → use: review_notes (worked examples only), practice_exam (high volume), teach_it (explain steps not concepts). NEVER flashcards for procedures.
+CONCEPTUAL-APPLIED (Economics/OrganicChem/Engineering) → all types, flashcards only for terminology
+INTERPRETIVE (Literature/Essays/SocialScience) → review_notes, teach_it, practice_exam
+
+STEP 2 — CLASSIFY EACH WEAK COMPETENCY (score < 75%, silent):
+CONCEPTUAL GAP (wrong due to misunderstanding) → review_notes + teach_it mandatory
+PROCEDURAL GAP (wrong due to execution error) → review_notes with worked examples + high-volume practice_exam
+RECALL GAP (inconsistent retrieval) → flashcards + practice_exam
+TRANSFER GAP (fails novel applications) → teach_it + practice_exam, skip notes and flashcards
+
+STEP 3 — BUILD TASKS:
+- Score ≥ 75%: maintenance only (1-2 questions in practice_exam)
+- Score 50-74%: skip review_notes unless conceptual gap confirmed
+- Score < 50%: full sequence for identified failure mode
+- Guessing detected: always include teach_it
+- Do NOT force 4 tasks. Include only what the failure mode requires.
+- PRIMARY MASTERY GAP task → is_focus_factor: true
+
+STEP 4 — INSIGHTS PANEL:
+Pill 1 (type: "danger"): "#1 Gap: [lowest competency below 65%]"
+Pill 2 (type: "warning"): Behavior pattern detected:
+  Guessing → "Pattern: rushing questions"
+  Conceptual < 40% → "Pattern: surface-level reading"  
+  Procedural errors → "Pattern: skipping steps"
+  Inconsistent recall → "Pattern: recall under pressure"
+Pill 3 (type: "info"): "First session closes [round((primary_gap_weight × 0.25 × 100) to nearest 5)]% of your gap"
+Headline: "You're predicted [grade] in [course] — here's exactly why, and how to fix it."
+Support (1 sentence): State the primary failure mode plainly.
 
 RULES:
-- Output EXACTLY 4 tasks in this fixed order: review_notes → flashcards → teach_it → practice_exam
-- Task 1 (review_notes) is_focus_factor=true — directly targets the mastery gap, gets "Grade Booster" highlighting
-- Each task's focus_topics MUST reference SPECIFIC concepts from the course content (not generic advice)
-- Each task's description must explain WHY this step matters for the student's specific weaknesses
-- For flashcards: target_count 10-20
-- For teach_it: target_count 3-5
-- For review_notes: target_count 1
-- For practice_exam: target_count 1
-- NEVER use "Diagnostic" in any title. Use "Practice Quiz", "Focus Practice", etc.
-- target_competency must be a single competency name (max 150 chars, no explanations)
+- focus_topics: SPECIFIC concept names only, never subject area names
+- task titles: specific to this student's content, max 80 chars. NEVER use "Diagnostic"
+- target_competency: single competency, max 150 chars
+- flashcards: target_count 10 | teach_it: 5 | review_notes: 1 | practice_exam: 1
 
 Return JSON:
 {
+  "insights_panel": {
+    "headline": "string",
+    "support_text": "string",
+    "pills": [
+      { "id": "gap", "label": "string", "type": "danger" },
+      { "id": "behavior", "label": "string", "type": "warning" },
+      { "id": "hook", "label": "string", "type": "info" }
+    ]
+  },
+  "mastery_gap": "string",
   "tasks": [
     {
-      "task_type": "review_notes" | "flashcards" | "teach_it" | "practice_exam",
-      "title": "Clear action title (max 100 chars)",
-      "description": "What this helps with and why (max 300 chars)",
+      "task_type": "review_notes | flashcards | teach_it | practice_exam",
+      "title": "string",
+      "target_competency": "string",
+      "focus_topics": ["string"],
       "target_count": number,
-      "target_competency": "Single competency name (max 150 chars)",
-      "focus_topics": ["specific topic 1", "specific topic 2", "specific topic 3"],
-      "misconception_addressed": "Single misconception only (max 150 chars)",
-      "is_focus_factor": boolean
+      "is_focus_factor": boolean,
+      "order": number
     }
   ],
-  "plan_rationale": "2-3 sentences explaining the pedagogical reasoning (max 500 chars)",
-  "priority_focus": "Single sentence (max 150 chars)"
+  "plan_rationale": "string (max 300 chars)",
+  "priority_focus": "string (max 150 chars)"
 }`;
 
     console.log(`⏱️ [generateStudyPlan] Pre-LLM prep: ${Date.now() - startTime}ms`);
