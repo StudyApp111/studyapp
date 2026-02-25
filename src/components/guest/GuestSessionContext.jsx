@@ -140,6 +140,51 @@ export function GuestSessionProvider({ children }) {
     setGuestDiagnosticCompleted(false);
   }, []);
 
+  // Auto-transfer: when guest session exists and user becomes authenticated (after sign-up redirect)
+  const transferAttemptedRef = useRef(false);
+  useEffect(() => {
+    if (!isGuest || !guestData?.fingerprint || transferAttemptedRef.current) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user || cancelled) return;
+
+        transferAttemptedRef.current = true;
+        console.log('🔄 Guest authenticated as', user.email, '— auto-transferring data...');
+
+        const { data } = await base44.functions.invoke('checkGuestEligibility', {
+          fingerprint: guestData.fingerprint,
+          action: 'transfer',
+          lesson_data: guestData.lessonData,
+          user_email: user.email,
+          profile_data: { name: guestData.name, school: guestData.school }
+        });
+
+        if (cancelled) return;
+
+        await base44.auth.updateMe({
+          ...(guestData.name ? { display_name: guestData.name } : {}),
+          onboarding_completed: true
+        });
+
+        endGuestSession();
+
+        if (data?.lesson_id) {
+          window.dispatchEvent(new CustomEvent('guestTransferComplete', {
+            detail: { lesson_id: data.lesson_id, exam_id: data.exam_id }
+          }));
+        }
+      } catch {
+        // Not authenticated — stay as guest
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [isGuest, guestData]);
+
   return (
     <GuestSessionContext.Provider value={{
       isGuest,
