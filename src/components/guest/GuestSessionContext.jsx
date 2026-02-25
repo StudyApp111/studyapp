@@ -163,8 +163,24 @@ export function GuestSessionProvider({ children }) {
   );
 }
 
+const GUEST_SESSION_DEFAULTS = {
+  isGuest: false,
+  guestData: null,
+  guestLessonCreated: false,
+  guestDiagnosticCompleted: false,
+  startGuestSession: async () => ({ allowed: false }),
+  updateGuestProfile: () => {},
+  setGuestLesson: () => {},
+  markGuestDiagnosticCompleted: () => {},
+  transferGuestData: async () => null,
+  endGuestSession: () => {}
+};
+
 export function useGuestSession() {
   const ctx = useContext(GuestSessionContext);
-  if (!ctx) throw new Error('useGuestSession must be used within GuestSessionProvider');
+  if (!ctx) {
+    console.warn('useGuestSession called outside GuestSessionProvider — using defaults');
+    return GUEST_SESSION_DEFAULTS;
+  }
   return ctx;
 }
