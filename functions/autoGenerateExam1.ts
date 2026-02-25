@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
     }
     
     // STEP 4: Double-check no other process created questions while we were creating the lock
-    const recheckExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
+    const recheckExams = await entities.Exam.filter({ lesson_id, exam_number: 1 });
     const recheckExam = recheckExams.find(e => e.exam_type !== 'practice' && e.questions?.length > 0);
     if (recheckExam) {
       console.log('Another process already generated questions, skipping');
