@@ -90,7 +90,9 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
   const isOnCorrectTab = activeTab === nextTab;
   const formatLabel = TASK_TYPE_TO_FORMAT[nextTask.task_type] || 'Task';
   const Icon = TASK_ICONS[nextTask.task_type] || Target;
-  const topicLabel = nextTask.focus_topics?.[0] || nextTask.title || formatLabel;
+  const unit = TASK_UNIT[nextTask.task_type] || 'items';
+  const targetCount = nextTask.target_count || 0;
+  const doneCount = nextTask.completed_count || 0;
 
   // If user is already on the tab for this task, show greyed-out "current" state
   if (isOnCorrectTab) {
