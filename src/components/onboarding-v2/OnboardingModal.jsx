@@ -16,11 +16,11 @@ import { checkIsMobile } from "@/components/utils/BrowserCompatibility";
 const TOTAL_STEPS = 7;
 
 // Step order:
-// 1 = Profile (name + school)
-// 2 = Welcome
-// 3 = HowItWorks
-// 4 = Materials
-// 5 = Features
+// 1 = Welcome
+// 2 = HowItWorks
+// 3 = Materials
+// 4 = Features
+// 5 = Profile (name + school)
 // 6 = SignIn (authenticate) — guest preview available on ALL mobile
 // 7 = Ready ("You're all set")
 
