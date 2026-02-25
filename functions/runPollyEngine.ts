@@ -346,6 +346,7 @@ Flag for chat intervention if ANY of:
                     properties: {
                       task_type: { type: "string" },
                       topic_name: { type: "string" },
+                      section_title: { type: "string" },
                       task_description: { type: "string" },
                       task_reason: { type: "string" }
                     }
