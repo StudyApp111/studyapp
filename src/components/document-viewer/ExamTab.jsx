@@ -126,7 +126,7 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
 
 export default function ExamTab({ lesson, exams, onExamComplete, extractedContent }) {
   const { isDark } = useTheme();
-  const { isGuest, markGuestDiagnosticCompleted } = useGuestSession();
+  const { isGuest, guestData, markGuestDiagnosticCompleted } = useGuestSession();
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -644,18 +644,20 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           ]);
           
           if (result?.data?.success && result?.data?.exam_id) {
-            const createdExams = await base44.entities.Exam.filter({ id: result.data.exam_id });
-            if (createdExams[0]) {
+            // Fetch the exam immediately - works for both new generation and skipped
+            const createdExams = isGuest 
+              ? (await base44.functions.invoke('getGuestLesson', { 
+                  fingerprint: guestData?.fingerprint, 
+                  lesson_id: lesson.id, 
+                  include_exams: true 
+                })).data?.exams?.filter(e => e.id === result.data.exam_id) || []
+              : await base44.entities.Exam.filter({ id: result.data.exam_id });
+              
+            if (createdExams[0]?.questions?.length > 0) {
+              console.log('✅ Exam loaded immediately after generation/skip:', createdExams[0].questions.length, 'questions');
               setExam(createdExams[0]);
-            }
-          } else if (result?.data?.skipped) {
-            console.log('✅ autoGenerateExam1 returned skipped - exam already exists');
-            const existingExamId = result?.data?.exam_id;
-            if (existingExamId) {
-              const existingExam = await base44.entities.Exam.filter({ id: existingExamId });
-              if (existingExam[0]?.questions?.length > 0) {
-                setExam(existingExam[0]);
-              }
+              setIsGenerating(false);
+              break;
             }
           }
           break; // Success - exit retry loop

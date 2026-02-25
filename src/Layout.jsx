@@ -106,10 +106,7 @@ function LayoutContent({ children, currentPageName }) {
     const [user, setUser] = React.useState(null);
     const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
     const { isDark, toggleTheme } = useTheme();
-    
-    // Safe access to guest session - context is always available since we're inside GuestSessionProvider
-    const guestSession = useGuestSession();
-    const isGuest = guestSession?.isGuest || false;
+    const { isGuest } = useGuestSession();
 
   const pathLowerEarly = location.pathname.toLowerCase();
   const isHomePageEarly = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
