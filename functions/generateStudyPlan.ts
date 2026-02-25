@@ -22,11 +22,16 @@ Deno.serve(async (req) => {
   
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    console.log(`⏱️ [generateStudyPlan] Auth check: ${Date.now() - startTime}ms`);
     
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    // Try to get user but allow guests
+    let user = null;
+    let isGuest = false;
+    try {
+      user = await base44.auth.me();
+      console.log(`⏱️ [generateStudyPlan] Auth check: ${Date.now() - startTime}ms`);
+    } catch (authError) {
+      console.log('ℹ️ No user authentication - proceeding as guest');
+      isGuest = true;
     }
 
     const body = await req.json();
@@ -41,9 +46,12 @@ Deno.serve(async (req) => {
     let totalScore = 0;
     let initialConfidence = 45;
     
+    // Use service role for guests
+    const entities = isGuest ? base44.asServiceRole.entities : base44.entities;
+    
     if (exam_id) {
       // In-app flow: fetch existing exam
-      const exams = await base44.entities.Exam.filter({ id: exam_id });
+      const exams = await entities.Exam.filter({ id: exam_id });
       exam = exams[0];
       console.log(`⏱️ [generateStudyPlan] Exam fetch: ${Date.now() - startTime}ms`);
       
@@ -71,7 +79,7 @@ Deno.serve(async (req) => {
     }
 
     // Get lesson data
-    const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
+    const lessons = await entities.Lesson.filter({ id: lesson_id });
     const lesson = lessons[0];
     console.log(`⏱️ [generateStudyPlan] Lesson fetch: ${Date.now() - startTime}ms`);
 
@@ -352,24 +360,24 @@ Return JSON:
     }));
 
     // Check for existing active plan
-    const existingPlans = await base44.entities.StudyPlan.filter({ 
+    const existingPlans = await entities.StudyPlan.filter({ 
       lesson_id, 
       status: 'active' 
     });
 
     // Mark existing plans as superseded
     for (const plan of existingPlans) {
-      await base44.entities.StudyPlan.update(plan.id, { status: 'superseded' });
+      await entities.StudyPlan.update(plan.id, { status: 'superseded' });
     }
 
     // Get cycle number
-    const allPlans = await base44.entities.StudyPlan.filter({ lesson_id });
+    const allPlans = await entities.StudyPlan.filter({ lesson_id });
     const cycleNumber = allPlans.length + 1;
 
     console.log(`⏱️ [generateStudyPlan] Pre-create: ${Date.now() - startTime}ms`);
     
     // Create new study plan with enriched data
-    const studyPlan = await base44.entities.StudyPlan.create({
+    const studyPlan = await entities.StudyPlan.create({
       lesson_id,
       generated_from_exam_id: exam_id || null,
       cycle_number: cycleNumber,
