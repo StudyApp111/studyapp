@@ -577,7 +577,8 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       
       // SECOND: Double-check database directly before triggering generation
       // This catches race conditions where exams prop hasn't updated yet
-      const dbExams = await base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
+      const allDbExams = await fetchExamsForLesson();
+      const dbExams = allDbExams.filter(e => e.exam_number === 1);
       const dbExam = dbExams.find(e => e.exam_type !== 'practice');
       
       if (dbExam?.questions?.length > 0) {
