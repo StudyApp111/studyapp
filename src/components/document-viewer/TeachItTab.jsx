@@ -284,8 +284,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       const totalCompleted = updatedCards.filter(c => c.completed).length;
       const taskJustCompleted = await updateStudyPlanProgress(totalCompleted);
 
-      // Trigger Polly after teach-it task completion
+      // Trigger confetti + Polly after teach-it task completion
       if (taskJustCompleted) {
+        window.dispatchEvent(new Event('studyTaskCompleted'));
         base44.functions.invoke('runPollyEngine', {
           trigger_event: 'teach_it_task_completed',
           lesson_id: lesson.id
