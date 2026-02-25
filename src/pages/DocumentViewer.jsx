@@ -842,17 +842,7 @@ export default function DocumentViewer() {
                   {!lesson ? (
                     <ParsingLoader />
                   ) : (
-                    <>
-                      <TopicConfirmationBanner
-                        lesson={lesson}
-                        diagnosticCompleted={diagnosticCompleted}
-                        onGoToDiagnostic={() => {
-                          window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
-                          setActiveTab('exam');
-                        }}
-                      />
-                      <DocumentViewerTabs lesson={lesson} />
-                    </>
+                    <DocumentViewerTabs lesson={lesson} />
                   )}
                 </TabsContent>
               )}
