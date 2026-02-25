@@ -334,22 +334,25 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         setWaitingForCompression(false);
       }, 10000);
       
-      // Subscribe to lesson updates
-      const unsubscribe = base44.entities.Lesson.subscribe((event) => {
-        if (event.id === lesson.id && event.type === 'update') {
-          const updated = event.data;
-          if (updated?.extracted_content?.length > 0 && updated?.compressed_content?.length > 0) {
-            console.log('✅ Content ready via realtime update!');
-            clearTimeout(maxWaitTimeout);
-            setWaitingForCompression(false);
-            window.dispatchEvent(new Event('reloadLesson'));
+      // Subscribe to lesson updates (skip for guests - requires auth)
+      let unsubscribe = null;
+      if (!isGuest) {
+        unsubscribe = base44.entities.Lesson.subscribe((event) => {
+          if (event.id === lesson.id && event.type === 'update') {
+            const updated = event.data;
+            if (updated?.extracted_content?.length > 0 && updated?.compressed_content?.length > 0) {
+              console.log('✅ Content ready via realtime update!');
+              clearTimeout(maxWaitTimeout);
+              setWaitingForCompression(false);
+              window.dispatchEvent(new Event('reloadLesson'));
+            }
           }
-        }
-      });
+        });
+      }
       
       return () => {
         clearTimeout(maxWaitTimeout);
-        unsubscribe();
+        if (unsubscribe) unsubscribe();
       };
     } else {
       setWaitingForCompression(false);
