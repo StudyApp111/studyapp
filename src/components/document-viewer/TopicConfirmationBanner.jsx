@@ -276,6 +276,7 @@ function Step1Topics({ lesson, topLevelTopics, deselectedSections, deselectedSub
 /* ─── Step 2: Diagnostic prompt ─── */
 function Step2Diagnostic({ onStart, onSkip }) {
   const [revealed, setRevealed] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const timerRef = useRef(null);
 
   const handlePointerDown = () => {
@@ -286,6 +287,18 @@ function Step2Diagnostic({ onStart, onSkip }) {
     timerRef.current = setTimeout(() => setRevealed(false), 2000);
   };
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+
+  const handleStartClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isStarting) return;
+    setIsStarting(true);
+    console.log('🎯 Start Quiz clicked');
+    // Small delay to ensure UI feedback
+    setTimeout(() => {
+      onStart();
+    }, 50);
+  };
 
   return (
     <div className="px-5 pb-5 pt-2 text-center">
@@ -343,17 +356,24 @@ function Step2Diagnostic({ onStart, onSkip }) {
         </div>
       </div>
 
-      {/* CTA */}
-      <Button
-        onClick={onStart}
-        className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20"
+      {/* CTA - use native button with explicit touch handling */}
+      <button
+        type="button"
+        onClick={handleStartClick}
+        onTouchEnd={handleStartClick}
+        disabled={isStarting}
+        className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:from-emerald-700 active:to-teal-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 disabled:opacity-70 touch-manipulation"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
-        Start 5-Question Quiz <ArrowRight className="w-4 h-4 ml-1.5" />
-      </Button>
+        {isStarting ? 'Starting...' : 'Start 5-Question Quiz'} <ArrowRight className="w-4 h-4" />
+      </button>
 
       <button
-        onClick={onSkip}
-        className="w-full text-center text-[11px] mt-2.5 py-1 font-medium text-slate-600 hover:text-slate-500"
+        type="button"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSkip(); }}
+        onTouchEnd={(e) => { e.preventDefault(); onSkip(); }}
+        className="w-full text-center text-[11px] mt-2.5 py-2 font-medium text-slate-600 hover:text-slate-500 touch-manipulation"
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <span className="hidden sm:inline">Skip for now (you'll miss out on your study plan)</span>
         <span className="sm:hidden">Skip (basic only)</span>

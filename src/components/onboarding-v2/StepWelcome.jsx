@@ -16,13 +16,19 @@ export default function StepWelcome({ displayName, onNext, onBack }) {
       className="text-center space-y-6 py-6"
     >
       <div className="space-y-3">
-        <h2
-          className={`text-2xl md:text-3xl font-black ${
-            isDark ? "text-white" : "text-slate-900"
-          }`}
-        >
-          Hi {displayName || 'There'} 👋
-        </h2>
+        {/* Welcome to StudyApp header with logo */}
+        <div className="flex items-center justify-center gap-2">
+          <img 
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+            alt="StudyApp"
+            className="w-8 h-8"
+          />
+          <h2 className={`text-2xl md:text-3xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
+            Welcome to{' '}
+            <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">Study</span>
+            <span className={isDark ? "text-white" : "text-slate-900"}>App</span>!
+          </h2>
+        </div>
         <p
           className={`text-base ${
             isDark ? "text-slate-400" : "text-slate-600"
