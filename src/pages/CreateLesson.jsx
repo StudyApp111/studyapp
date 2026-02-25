@@ -190,9 +190,30 @@ export default function CreateLesson() {
         setStepStatuses(prev => ({ ...prev, extracted: true, compressed: true }));
       }
 
-      // Guest mode: store lesson data locally, don't create on server
+      // For guests: create lesson via the transfer backend function (service role)
+      // so that backend functions (exam gen, topic suggestions) can find the lesson
       if (isGuest) {
-        setGuestLesson(lessonData);
+        try {
+          const { data: transferResult } = await base44.functions.invoke('checkGuestEligibility', {
+            fingerprint: guestData?.fingerprint || 'guest',
+            action: 'create_guest_lesson',
+            lesson_data: lessonData
+          });
+          
+          if (transferResult?.lesson_id) {
+            const guestLessonId = transferResult.lesson_id;
+            setCreatedLessonId(guestLessonId);
+            setGuestLesson({ ...lessonData, id: guestLessonId });
+            
+            // Fire-and-forget: Generate exam + topic suggestions for the guest lesson
+            base44.functions.invoke('autoGenerateExam1', { lesson_id: guestLessonId })
+              .catch(err => console.error("❌ Guest exam gen error:", err.message));
+            base44.functions.invoke('generateTopicSuggestions', { lesson_id: guestLessonId })
+              .catch(err => console.error("❌ Guest topic suggestions error:", err.message));
+          }
+        } catch (guestErr) {
+          console.error("❌ Guest lesson creation error:", guestErr);
+        }
         setStepStatuses(prev => ({ ...prev, examGenerated: true }));
         setLoaderComplete(true);
         return;
@@ -207,7 +228,6 @@ export default function CreateLesson() {
         const allLessons = await base44.entities.Lesson.list('-created_date', 2);
         const isFirstLesson = allLessons.length === 1;
 
-        // Always track every lesson creation
         posthog?.capture('lesson_created', {
           course_name: courseName.trim(),
           input_type: lessonData.input_type,
@@ -219,22 +239,17 @@ export default function CreateLesson() {
         });
 
         if (isFirstLesson) {
-          // First lesson — critical conversion event
           posthog?.capture('first_lesson_created', {
             course_name: courseName.trim(),
             input_type: lessonData.input_type,
             lesson_id: lesson.id,
           });
-
-          // TikTok pixel
           if (window.ttq) {
             window.ttq.track('SubmitForm', {
               content_name: 'first_lesson_created',
               content_id: lesson.id,
             });
           }
-
-          // Google Analytics
           if (window.gtag) {
             window.gtag('event', 'first_lesson_created', {
               event_category: 'conversion',
@@ -242,7 +257,6 @@ export default function CreateLesson() {
             });
           }
         } else {
-          // Returning user lesson — retention signal
           posthog?.capture('returning_lesson_created', {
             course_name: courseName.trim(),
             input_type: lessonData.input_type,
@@ -253,7 +267,6 @@ export default function CreateLesson() {
       } catch (trackErr) {
         console.warn('Analytics tracking error:', trackErr);
       }
-
 
       // Fire-and-forget: Generate Exam 1 + Topic Suggestions simultaneously
       console.log("🎯 Triggering diagnostic exam + topic suggestions in background...");
