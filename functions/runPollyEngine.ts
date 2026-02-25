@@ -278,7 +278,7 @@ C. CONFIDENCE CALIBRATION
 - confidence_level: "Low" (<35%), "Medium" (35-62%)
 
 D. STUDY TASK RECOMMENDATION
-Identify exactly 2 tasks:
+Identify exactly 1-2 tasks:
 - Mastery Gap Task: Target the lowest-scoring assessed competency using the failure mode framework:
   Conceptual gap (wrong due to misunderstanding) → teach_it
   Procedural gap (wrong due to execution error) → practice_exam with worked examples
