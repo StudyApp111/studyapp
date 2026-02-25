@@ -40,6 +40,15 @@ export default function OnboardingModal({ onComplete }) {
           const currentUser = await base44.auth.me();
           setUser(currentUser);
           setDisplayName(currentUser.full_name?.split(" ")[0] || "");
+          const onboardingDone = currentUser?.onboarding_completed || currentUser?.data?.onboarding_completed;
+          
+          // Returning user who already completed onboarding — skip everything
+          if (onboardingDone) {
+            setIsCheckingAuth(false);
+            onComplete?.();
+            return;
+          }
+          
           const wasOnboarding = sessionStorage.getItem("onboarding_v2_active");
           if (wasOnboarding) {
             setStep(7);
