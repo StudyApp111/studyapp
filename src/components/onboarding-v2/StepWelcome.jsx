@@ -21,7 +21,7 @@ export default function StepWelcome({ displayName, onNext, onBack }) {
             isDark ? "text-white" : "text-slate-900"
           }`}
         >
-          Welcome to StudyApp, {displayName || "there"}! 👋
+          Hi There 👋
         </h2>
         <p
           className={`text-base ${
