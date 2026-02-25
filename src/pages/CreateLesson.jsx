@@ -207,6 +207,20 @@ export default function CreateLesson() {
         setGuestLesson({ ...lessonData, id: guestResult.lesson_id });
         setStepStatuses(prev => ({ ...prev, examGenerated: true }));
         setLoaderComplete(true);
+
+        // PostHog: Guest lesson creation
+        try {
+          posthog?.capture('lesson_created', {
+            course_name: courseName.trim(),
+            input_type: lessonData.input_type,
+            lesson_id: guestResult.lesson_id,
+            is_guest: true,
+            has_file: lessonData.input_type === 'file',
+            file_count: lessonData.file_urls?.length || 0,
+            content_length: (compressedContent || extractedContent || '').length,
+          });
+        } catch {}
+
         return;
       }
 
