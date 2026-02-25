@@ -42,26 +42,10 @@ export default function Home() {
           return;
         }
 
-        // If user just authenticated after being a guest, transfer data
-        const wasGuestReturning = sessionStorage.getItem("guest_returning_to_lesson");
-        if (guestData?.lessonData || guestData?.diagnosticCompleted || wasGuestReturning) {
-          console.log('🎯 Guest data detected after auth, transferring...', { 
-            hasLessonData: !!guestData?.lessonData, 
-            diagnosticCompleted: guestData?.diagnosticCompleted,
-            wasReturning: wasGuestReturning
-          });
-          sessionStorage.removeItem("guest_returning_to_lesson");
-          
-          const result = await transferGuestData();
-          console.log('🎯 Transfer result:', result);
-          
-          if (result?.lesson_id) {
-            // ALWAYS go to exam tab after guest transfer to see question review
-            navigate(createPageUrl("DocumentViewer") + `?id=${result.lesson_id}&tab=exam`, { replace: true });
-            return;
-          }
-        } else if (isGuest) {
-          // Guest session active but no lesson — end it since they're now authenticated
+        // Guest transfer is handled EXCLUSIVELY by Layout.js (returning guest handler).
+        // Home should NOT attempt transfer to avoid creating duplicate lessons.
+        // Just clean up any stale guest state if user is authenticated.
+        if (isGuest) {
           endGuestSession();
         }
 
