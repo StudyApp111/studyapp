@@ -514,16 +514,31 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
 
             // Phase 2: Retry autoGenerateExam1 + continue polling
             console.log('🔄 Phase-1 timed out, retrying autoGenerateExam1...');
-            const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
-              .catch(err => console.warn('Retry error:', err.message));
+            // For guests, use getGuestLesson to poll; for auth users, retry autoGenerateExam1
+            if (!isGuest) {
+              const retryPromise = base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
+                .catch(err => console.warn('Retry error:', err.message));
+              await retryPromise;
+            }
 
             for (let i = 0; i < 12; i++) {
               await new Promise(r => setTimeout(r, 4000));
               try {
-                const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
-                if (refreshed[0]?.questions?.length > 0) {
+                let refreshedExam;
+                if (isGuest) {
+                  const { data } = await base44.functions.invoke('getGuestLesson', {
+                    fingerprint: window.__guestFingerprint || JSON.parse(localStorage.getItem('guest_session') || '{}')?.fingerprint,
+                    lesson_id: lesson.id,
+                    include_exams: true
+                  });
+                  refreshedExam = (data?.exams || []).find(e => e.id === loadedExam.id);
+                } else {
+                  const refreshed = await base44.entities.Exam.filter({ id: loadedExam.id });
+                  refreshedExam = refreshed[0];
+                }
+                if (refreshedExam?.questions?.length > 0) {
                   console.log('✅ Questions appeared during phase-2 polling');
-                  setExam(refreshed[0]);
+                  setExam(refreshedExam);
                   setIsGenerating(false);
                   return;
                 }
@@ -532,8 +547,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
               }
             }
 
-            await retryPromise;
-            const finalCheck = await base44.entities.Exam.filter({ id: loadedExam.id });
+            const finalCheck = isGuest ? [] : await base44.entities.Exam.filter({ id: loadedExam.id });
             if (finalCheck[0]?.questions?.length > 0) {
               setExam(finalCheck[0]);
               setIsGenerating(false);
