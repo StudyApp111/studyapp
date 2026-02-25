@@ -419,7 +419,7 @@ No extra text.`;
     const examQuestions = examData?.exam_questions || [];
     if (!Array.isArray(examQuestions) || examQuestions.length === 0) {
       console.error('Invalid exam_questions:', examData);
-      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
+      await entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to generate exam questions' }, { status: 500 });
     }
 
