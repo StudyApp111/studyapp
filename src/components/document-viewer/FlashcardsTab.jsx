@@ -53,13 +53,33 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           return;
         }
         
-        console.log('🎯 Received flashcard generation request from study plan');
-        pendingStudyTaskRef.current = e.detail.task;
+        const task = e.detail.task;
+        const taskLabel = task?.title || '';
+        console.log('🎯 Received flashcard request for:', taskLabel);
         
-        // Always generate new set when coming from study plan (don't skip)
-        if (!isGeneratingRef.current) {
-          handleGenerate();
+        // Check if a set already exists for this task's label/topic
+        if (taskLabel && cards && cards.length > 0) {
+          const matchingCards = cards.filter(c => c.topics?.includes(taskLabel));
+          if (matchingCards.length > 0) {
+            console.log('✅ Found existing set for this task, navigating to it instead of regenerating');
+            const idSet = new Set(matchingCards.map(c => c.id));
+            const indices = cards.map((c, i) => idSet.has(c.id) ? i : -1).filter(i => i >= 0);
+            if (indices.length > 0) {
+              setCurrentIndex(indices[0]);
+              setCurrentSetStart(indices[0]);
+              setCurrentSetEnd(indices[indices.length - 1]);
+              setIsFlipped(false);
+              setShowSetsList(false);
+              setSessionComplete(false);
+              setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
+              return;
+            }
+          }
         }
+        
+        // No existing set found — generate new
+        pendingStudyTaskRef.current = task;
+        handleGenerate();
       }
     };
     
