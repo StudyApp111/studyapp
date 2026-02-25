@@ -40,18 +40,20 @@ export default function StepWelcome({ displayName, onNext, onBack }) {
 
       {/* Navigation */}
       <div className="flex items-center gap-3 pt-2">
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className={`${
-            isDark
-              ? "text-slate-400 hover:text-white"
-              : "text-slate-500 hover:text-slate-900"
-          }`}
-        >
-          <ChevronLeft className="w-4 h-4 mr-1" />
-          Back
-        </Button>
+        {onBack && (
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className={`${
+              isDark
+                ? "text-slate-400 hover:text-white"
+                : "text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            Back
+          </Button>
+        )}
         <Button
           onClick={onNext}
           className="flex-1 h-12 text-base font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-lg shadow-purple-500/20"
