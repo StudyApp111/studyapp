@@ -28,11 +28,11 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
         <div className={`rounded-2xl overflow-hidden border ${isDark ? 'bg-gradient-to-br from-indigo-950/60 via-purple-950/40 to-slate-950/60 border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 via-purple-50 to-white border-indigo-200/60'}`}>
           {/* Main message */}
           <div className="px-4 pt-4 pb-3">
-            <div className="flex items-start gap-3">
-              <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30' : 'bg-gradient-to-br from-purple-100 to-indigo-100'}`}>
+            <div className="flex flex-col items-center text-center gap-2">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-purple-500/30 to-indigo-500/30' : 'bg-gradient-to-br from-purple-100 to-indigo-100'}`}>
                 <Sparkles className={`w-4 h-4 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
               </div>
-              <div className="flex-1 min-w-0">
+              <div>
                 <p className={`text-sm md:text-base font-bold leading-snug ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {insightsPanel.headline}
                 </p>
