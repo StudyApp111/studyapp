@@ -84,15 +84,74 @@ Deno.serve(async (req) => {
       }
 
       let lessonId = null;
+      let transferredExamId = null;
 
-      // Create lesson using USER-scoped client so created_by = user's email (RLS)
-      if (lesson_data && lesson_data.course_name) {
+      // Check if there's an existing lesson from guest session (by fingerprint)
+      if (lesson_data?.id) {
+        // Guest may have created a real lesson via createGuestLesson service role
+        // Transfer it by finding any exams associated with it
+        const guestLessonId = lesson_data.id;
+        
+        // Look for the guest's lesson and exams using service role
+        const guestLessons = await base44.asServiceRole.entities.Lesson.filter({ id: guestLessonId });
+        const guestExams = await base44.asServiceRole.entities.Exam.filter({ lesson_id: guestLessonId });
+        
+        if (guestLessons.length > 0) {
+          const guestLesson = guestLessons[0];
+          
+          // Create a new lesson for the authenticated user with the guest's data
+          const newLesson = await base44.entities.Lesson.create({
+            course_name: guestLesson.course_name,
+            description: guestLesson.description,
+            file_url: guestLesson.file_url,
+            file_urls: guestLesson.file_urls,
+            input_type: guestLesson.input_type,
+            extracted_content: guestLesson.extracted_content,
+            compressed_content: guestLesson.compressed_content,
+            topics: guestLesson.topics,
+            curriculum_map: guestLesson.curriculum_map,
+            status: 'diagnostic_completed'
+          });
+          lessonId = newLesson.id;
+          console.log(`✅ GUEST LESSON TRANSFERRED: ${lessonId} for ${user.email}`);
+          
+          // Transfer exams to the new lesson
+          for (const guestExam of guestExams) {
+            const newExam = await base44.entities.Exam.create({
+              lesson_id: lessonId,
+              exam_type: guestExam.exam_type,
+              exam_number: guestExam.exam_number,
+              title: guestExam.title,
+              questions: guestExam.questions,
+              feedback: guestExam.feedback,
+              predicted_grade: guestExam.predicted_grade,
+              total_score: guestExam.total_score,
+              prediction_confidence: guestExam.prediction_confidence,
+              confidence_level: guestExam.confidence_level,
+              mastery_gap: guestExam.mastery_gap,
+              ai_feedback: guestExam.ai_feedback,
+              time_taken_seconds: guestExam.time_taken_seconds,
+              status: guestExam.status,
+              completed: guestExam.completed
+            });
+            transferredExamId = newExam.id;
+            console.log(`✅ GUEST EXAM TRANSFERRED: ${newExam.id} for ${user.email}`);
+          }
+          
+          // Clean up guest data using service role
+          for (const guestExam of guestExams) {
+            await base44.asServiceRole.entities.Exam.delete(guestExam.id);
+          }
+          await base44.asServiceRole.entities.Lesson.delete(guestLessonId);
+        }
+      } else if (lesson_data && lesson_data.course_name) {
+        // Fallback: create lesson from scratch (old flow)
         const lesson = await base44.entities.Lesson.create({
           ...lesson_data,
           status: 'created'
         });
         lessonId = lesson.id;
-        console.log(`✅ GUEST LESSON TRANSFERRED: ${lessonId} for ${user.email}`);
+        console.log(`✅ GUEST LESSON CREATED: ${lessonId} for ${user.email}`);
       }
 
       // Create learning profile using user-scoped client
@@ -110,7 +169,22 @@ Deno.serve(async (req) => {
         await base44.auth.updateMe({ display_name: profile_data.name });
       }
 
-      return Response.json({ success: true, lesson_id: lessonId });
+      // Mark onboarding as completed for new user
+      await base44.auth.updateMe({ onboarding_completed: true });
+
+      // Generate study plan for transferred completed exam
+      if (lessonId && transferredExamId) {
+        try {
+          await base44.functions.invoke('generateStudyPlan', { 
+            exam_id: transferredExamId, 
+            lesson_id: lessonId 
+          });
+        } catch (planErr) {
+          console.warn('Study plan generation failed:', planErr.message);
+        }
+      }
+
+      return Response.json({ success: true, lesson_id: lessonId, exam_id: transferredExamId });
     }
 
     return Response.json({ error: 'Invalid action' }, { status: 400 });
