@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import posthog from "posthog-js";
 
 export default function PostDiagnosticPaywall({ lessonId }) {
   const { isDark } = useTheme();
@@ -27,6 +28,15 @@ export default function PostDiagnosticPaywall({ lessonId }) {
       setTimeout(() => {
         sessionStorage.setItem(key, 'true');
         setShow(true);
+        try {
+          posthog.capture('paywall_shown', {
+            reason: 'post_diagnostic',
+            predicted_grade: predicted_grade,
+            predicted_score: total_score,
+            device_type: window.innerWidth >= 768 ? 'desktop' : 'mobile',
+            page: window.location.pathname,
+          });
+        } catch {}
       }, 2500);
     };
 

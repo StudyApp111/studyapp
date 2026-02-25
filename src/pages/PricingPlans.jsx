@@ -116,6 +116,13 @@ export default function PricingPlans() {
     setCheckoutError(null);
     try {
       const planType = isYearly ? 'yearly' : 'monthly';
+      try {
+        posthog.capture('checkout_started', {
+          plan_type: planType,
+          source: 'pricing_page',
+          device_type: window.innerWidth >= 768 ? 'desktop' : 'mobile',
+        });
+      } catch {}
       console.log('Starting checkout with plan_type:', planType, 'isYearly:', isYearly);
       
       // PricingPlans page = 7-day free trial, no credit card

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useSubscription } from './SubscriptionContext';
 import UpgradeModal from './UpgradeModal';
+import posthog from 'posthog-js';
 
 export default function UpgradeModalWrapper() {
   const { showUpgradeModal, setShowUpgradeModal, upgradeReason, upgradeCallback, setUpgradeCallback } = useSubscription();
@@ -10,9 +11,19 @@ export default function UpgradeModalWrapper() {
 
   // Desktop users: redirect to pricing page instead of showing modal
   useEffect(() => {
-    if (showUpgradeModal && window.innerWidth >= 768) {
-      setShowUpgradeModal(false);
-      navigate(createPageUrl('PricingPlans'));
+    if (showUpgradeModal) {
+      try {
+        posthog.capture('paywall_shown', {
+          reason: upgradeReason || 'default',
+          device_type: window.innerWidth >= 768 ? 'desktop' : 'mobile',
+          page: window.location.pathname,
+        });
+      } catch {}
+
+      if (window.innerWidth >= 768) {
+        setShowUpgradeModal(false);
+        navigate(createPageUrl('PricingPlans'));
+      }
     }
   }, [showUpgradeModal]);
 

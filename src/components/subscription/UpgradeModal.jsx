@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useSubscription } from './SubscriptionContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
+import posthog from 'posthog-js';
 
 export default function UpgradeModal({ open, onOpenChange, reason = 'default' }) {
   const { refreshUser } = useSubscription();
@@ -29,6 +30,13 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
     setCheckoutLoading(true);
     try {
       const planType = isYearly ? 'yearly' : 'monthly';
+      try {
+        posthog.capture('checkout_started', {
+          plan_type: planType,
+          source: 'upgrade_modal',
+          device_type: window.innerWidth >= 768 ? 'desktop' : 'mobile',
+        });
+      } catch {}
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: planType,
         trial: true,
