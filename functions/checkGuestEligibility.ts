@@ -73,6 +73,22 @@ Deno.serve(async (req) => {
       return Response.json({ allowed: true, claimed: true });
     }
 
+    if (action === 'create_guest_lesson') {
+      // Create a lesson using service role so it persists in DB for backend functions
+      const { lesson_data } = body;
+      if (!lesson_data || !lesson_data.course_name) {
+        return Response.json({ error: 'lesson_data required' }, { status: 400 });
+      }
+
+      const lesson = await base44.asServiceRole.entities.Lesson.create({
+        ...lesson_data,
+        status: 'created'
+      });
+
+      console.log(`✅ GUEST LESSON CREATED: ${lesson.id} (service role)`);
+      return Response.json({ success: true, lesson_id: lesson.id });
+    }
+
     if (action === 'transfer') {
       // Transfer guest lesson to authenticated user
       const { lesson_data, user_email, profile_data } = body;
