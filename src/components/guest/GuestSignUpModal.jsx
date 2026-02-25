@@ -26,9 +26,10 @@ export default function GuestSignUpModal({ predictedGrade, predictedScore }) {
     }
     sessionStorage.setItem("guest_returning_to_lesson", "true");
     
-    const returnUrl = window.location.pathname + window.location.search;
+    // Redirect to Home after login — Layout will detect guest_returning_* sessionStorage
+    // and handle the transfer + redirect to the correct new lesson
     setTimeout(() => {
-      base44.auth.redirectToLogin(returnUrl);
+      base44.auth.redirectToLogin(window.location.origin);
     }, 100);
   };
 
