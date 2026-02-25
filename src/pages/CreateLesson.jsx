@@ -190,30 +190,9 @@ export default function CreateLesson() {
         setStepStatuses(prev => ({ ...prev, extracted: true, compressed: true }));
       }
 
-      // Guest mode: create a REAL lesson via service-role backend + trigger exam
+      // Guest mode: store lesson data locally, don't create on server
       if (isGuest) {
-        try {
-          const { data: guestResult } = await base44.functions.invoke('checkGuestEligibility', {
-            fingerprint: guestData?.fingerprint,
-            action: 'createLesson',
-            lesson_data: lessonData
-          });
-          
-          if (guestResult?.lesson_id) {
-            setGuestLesson({ ...lessonData, lesson_id: guestResult.lesson_id });
-            setCreatedLessonId(guestResult.lesson_id);
-            console.log("✅ Guest lesson created:", guestResult.lesson_id);
-          } else {
-            throw new Error('Failed to create guest lesson');
-          }
-        } catch (guestErr) {
-          console.error("❌ Guest lesson creation error:", guestErr);
-          setError("Failed to create lesson. Please try again.");
-          setIsSubmitting(false);
-          setShowLoader(false);
-          return;
-        }
-        
+        setGuestLesson(lessonData);
         setStepStatuses(prev => ({ ...prev, examGenerated: true }));
         setLoaderComplete(true);
         return;
@@ -325,13 +304,9 @@ export default function CreateLesson() {
   };
 
   const handleLoaderComplete = () => {
-    // For guests, navigate to DocumentViewer with the real lesson ID
+    // For guests, navigate directly to DocumentViewer
     if (isGuest) {
-      if (createdLessonId) {
-        navigate(createPageUrl("DocumentViewer") + `?lessonId=${createdLessonId}`, { replace: true });
-      } else {
-        navigate(createPageUrl("DocumentViewer"), { replace: true });
-      }
+      navigate(createPageUrl("DocumentViewer"), { replace: true });
       return;
     }
     if (createdLessonId) {

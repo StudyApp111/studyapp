@@ -49,34 +49,11 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
     const handleStudyTask = async (e) => {
       if (e.detail.taskType !== 'teach_it') return;
       if (studyTaskHandledRef.current || isGeneratingRef.current) return;
-      
-      const task = e.detail.task;
-      const taskLabel = task?.title || '';
-      console.log('🎯 Received teach_it request for:', taskLabel);
-      
-      // Check if a set already exists for this task's topic label
-      if (taskLabel && cards.length > 0) {
-        const matchingCards = cards.filter(c => c.topic === taskLabel);
-        if (matchingCards.length > 0) {
-          console.log('✅ Found existing Feynman set for this task, navigating to it');
-          const setCardIds = matchingCards.map(c => c.id);
-          const firstIdx = cards.findIndex(c => c.id === matchingCards[0].id);
-          if (firstIdx >= 0) {
-            setCurrentCardIndex(firstIdx);
-            setUserAnswer(cards[firstIdx].user_answer || "");
-            setShowFeedback(cards[firstIdx].completed);
-            setCurrentSetCardIds(setCardIds);
-            setShowSetsList(false);
-            return;
-          }
-        }
-      }
-      
-      // No existing set — generate new
       studyTaskHandledRef.current = true;
-      pendingStudyTaskRef.current = task;
+      pendingStudyTaskRef.current = e.detail.task;
       
       try {
+        // Always generate new set when coming from study plan
         generateCards();
       } finally {
         setTimeout(() => { studyTaskHandledRef.current = false; }, 2000);
@@ -85,7 +62,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
     
     window.addEventListener('generateFromStudyTask', handleStudyTask);
     return () => window.removeEventListener('generateFromStudyTask', handleStudyTask);
-  }, [lesson?.id, cards]);
+  }, [lesson?.id]);
   
   const loadStudyPlanTopics = async () => {
     if (!lesson?.id) return;
@@ -395,9 +372,6 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         all_tasks_completed: allComplete,
         official_exam_unlocked: allComplete
       });
-      if (taskJustCompleted) {
-        window.dispatchEvent(new Event('studyPlanTaskCompleted'));
-      }
       return taskJustCompleted;
     } catch (error) {
       console.error("Error updating study plan:", error);

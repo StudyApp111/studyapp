@@ -24,13 +24,6 @@ const TASK_ICONS = {
   teach_it: Brain,
 };
 
-const TASK_UNIT = {
-  review_notes: "notes",
-  flashcards: "cards",
-  practice_exam: "quizzes",
-  teach_it: "concepts"
-};
-
 export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate }) {
   const { isDark } = useTheme();
   const [studyPlan, setStudyPlan] = useState(null);
@@ -90,15 +83,7 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
   const isOnCorrectTab = activeTab === nextTab;
   const formatLabel = TASK_TYPE_TO_FORMAT[nextTask.task_type] || 'Task';
   const Icon = TASK_ICONS[nextTask.task_type] || Target;
-  const unit = TASK_UNIT[nextTask.task_type] || 'items';
-  const targetCount = nextTask.target_count || 0;
-  const doneCount = nextTask.completed_count || 0;
-
-  // Build display title from task title (e.g. "Section: Topic")
-  const taskTitle = nextTask.title || formatLabel;
-
-  // Build progress string like "3/10 cards mastered"
-  const progressLabel = targetCount > 0 ? `${doneCount}/${targetCount} ${unit}` : `${completedCount}/${totalCount} tasks`;
+  const topicLabel = nextTask.focus_topics?.[0] || nextTask.title || formatLabel;
 
   // If user is already on the tab for this task, show greyed-out "current" state
   if (isOnCorrectTab) {
@@ -109,10 +94,10 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
         </div>
         <div className="flex-1 min-w-0">
           <p className={`text-xs font-semibold leading-tight truncate ${isDark ? 'text-emerald-300/80' : 'text-emerald-700/80'}`}>
-            {taskTitle}
+            Study Plan: {formatLabel}
           </p>
           <p className={`text-[10px] truncate ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-            {formatLabel} · {progressLabel}
+            {topicLabel} · {completedCount}/{totalCount} done
           </p>
         </div>
         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isDark ? 'bg-emerald-500/15 text-emerald-400/70' : 'bg-emerald-100 text-emerald-600/70'}`}>
@@ -126,6 +111,7 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
   return (
     <button
       onClick={() => {
+        // Dispatch generation event for the task
         const eventMap = {
           flashcards: "generateFromStudyTask",
           teachit: "generateFromStudyTask",
@@ -153,10 +139,10 @@ export default function GlobalStudyPlanBanner({ lessonId, activeTab, onNavigate 
       </div>
       <div className="flex-1 min-w-0 text-left">
         <p className={`text-xs font-bold leading-tight truncate ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
-          {hasStarted ? `Continue: ${taskTitle}` : `Start: ${taskTitle}`}
+          {hasStarted ? `Continue: ${formatLabel}` : `Start Study Plan: ${formatLabel}`}
         </p>
         <p className={`text-[10px] truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-          {formatLabel} · {progressLabel}
+          {topicLabel} · {completedCount}/{totalCount} done
         </p>
       </div>
       <ArrowRight className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />

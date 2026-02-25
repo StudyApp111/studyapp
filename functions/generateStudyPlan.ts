@@ -220,12 +220,12 @@ Pill 2 (type: "warning"): Behavior pattern detected:
   Procedural errors → "Pattern: skipping steps"
   Inconsistent recall → "Pattern: recall under pressure"
 Pill 3 (type: "info"): "First session closes [round((primary_gap_weight × 0.25 × 100) to nearest 5)]% of your gap"
-Headline: "Your predicted grade in [course] is [a/an] [grade] — here's exactly why, and how to fix it." Use "an" before A grades, "a" before B/C/D/F.
+Headline: "You're predicted [grade] in [course] — here's exactly why, and how to fix it."
 Support (1 sentence): State the primary failure mode plainly.
 
 RULES:
 - focus_topics: SPECIFIC concept names only, never subject area names
-- task titles: MUST follow format "Section Name: Topic Name" (e.g. "Cell Biology: Mitosis vs Meiosis"). Max 80 chars. NEVER use "Diagnostic"
+- task titles: specific to this student's content, max 80 chars. NEVER use "Diagnostic"
 - target_competency: single competency, max 150 chars
 - flashcards: target_count 10 | teach_it: 5 | review_notes: 1 | practice_exam: 1
 

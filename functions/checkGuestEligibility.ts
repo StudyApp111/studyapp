@@ -73,55 +73,6 @@ Deno.serve(async (req) => {
       return Response.json({ allowed: true, claimed: true });
     }
 
-    if (action === 'createLesson') {
-      // Guest creates a real lesson via service role — no auth required
-      const { lesson_data } = body;
-      
-      if (!lesson_data || !lesson_data.course_name) {
-        return Response.json({ error: 'Missing lesson data' }, { status: 400 });
-      }
-
-      // Create lesson using service role (guest has no user account)
-      const lesson = await base44.asServiceRole.entities.Lesson.create({
-        ...lesson_data,
-        status: 'created'
-      });
-      
-      const lessonId = lesson.id;
-      console.log(`✅ GUEST LESSON CREATED (service role): ${lessonId}`);
-
-      // Fire-and-forget: generate exam + topic suggestions for the guest lesson
-      base44.asServiceRole.functions.invoke('autoGenerateExam1', { lesson_id: lessonId })
-        .then(res => console.log('✅ Guest exam 1 generated:', res?.data?.exam_id))
-        .catch(err => console.warn('Guest exam generation error:', err.message));
-
-      base44.asServiceRole.functions.invoke('generateTopicSuggestions', { lesson_id: lessonId })
-        .then(res => console.log('✅ Guest topic suggestions generated'))
-        .catch(err => console.warn('Guest topic suggestions error:', err.message));
-
-      return Response.json({ success: true, lesson_id: lessonId });
-    }
-
-    if (action === 'loadLesson') {
-      // Guest loads a lesson by ID via service role (bypasses RLS)
-      const { lesson_id } = body;
-      if (!lesson_id) {
-        return Response.json({ error: 'Missing lesson_id' }, { status: 400 });
-      }
-
-      const lessons = await base44.asServiceRole.entities.Lesson.filter({ id: lesson_id });
-      if (!lessons || lessons.length === 0) {
-        return Response.json({ error: 'Lesson not found' }, { status: 404 });
-      }
-
-      const lesson = lessons[0];
-
-      // Load exams for this lesson
-      const exams = await base44.asServiceRole.entities.Exam.filter({ lesson_id }).catch(() => []);
-
-      return Response.json({ success: true, lesson, exams });
-    }
-
     if (action === 'transfer') {
       // Transfer guest lesson to authenticated user
       const { lesson_data, user_email, profile_data } = body;

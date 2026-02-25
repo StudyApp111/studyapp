@@ -25,9 +25,7 @@ import MaterialUploadPrompt from "@/components/document-viewer/MaterialUploadPro
 import DiagnosticLockOverlay from "@/components/document-viewer/DiagnosticLockOverlay";
 import TopicConfirmationBanner from "@/components/document-viewer/TopicConfirmationBanner";
 import PostDiagnosticPaywall from "@/components/document-viewer/PostDiagnosticPaywall";
-import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
-import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -38,7 +36,6 @@ export default function DocumentViewer() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
-  const { isGuest, guestData } = useGuestSession();
   const [activeTab, setActiveTab] = useState("doc");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,7 +59,6 @@ export default function DocumentViewer() {
   const [isGeneratingStudyPlan, setIsGeneratingStudyPlan] = useState(false);
   const [pomodoroEnabled, setPomodoroEnabled] = useState(false);
   const [showUploadPrompt, setShowUploadPrompt] = useState(false);
-  const [showTaskConfetti, setShowTaskConfetti] = useState(false);
   const { isPro } = useSubscription();
   
   // Check if lesson has a document
@@ -244,22 +240,19 @@ export default function DocumentViewer() {
       const isGenerating = e.detail?.generating ?? true;
       setIsGeneratingStudyPlan(isGenerating);
       if (!isGenerating) {
+        // When generation completes, reload lesson to get study plan
         loadLesson();
       }
     };
-
-    const handleTaskCompleted = () => setShowTaskConfetti(true);
     
     window.addEventListener('switchToStudyPlanTab', handleSwitchToStudyPlan);
     window.addEventListener('switchToExamTab', handleSwitchToExam);
     window.addEventListener('studyPlanGenerating', handleStudyPlanGenerating);
-    window.addEventListener('studyPlanTaskCompleted', handleTaskCompleted);
     
     return () => {
       window.removeEventListener('switchToStudyPlanTab', handleSwitchToStudyPlan);
       window.removeEventListener('switchToExamTab', handleSwitchToExam);
       window.removeEventListener('studyPlanGenerating', handleStudyPlanGenerating);
-      window.removeEventListener('studyPlanTaskCompleted', handleTaskCompleted);
     };
   }, []);
 
@@ -286,7 +279,6 @@ export default function DocumentViewer() {
   }, [location.search]);
 
   const loadUserStats = async () => {
-    if (isGuest) return; // Guests don't have user stats
     try {
       // Use centralized daily reset
       const resetResult = await handleDailyReset();
@@ -394,19 +386,15 @@ export default function DocumentViewer() {
       const urlParams = new URLSearchParams(window.location.search);
       let lessonId = urlParams.get('id') || urlParams.get('lessonId');
 
-      // If not in URL, fall back to ref, session, or guest data
+      // If not in URL, fall back to ref or session
       if (!lessonId || lessonId === 'null' || lessonId === 'undefined') {
         lessonId = lessonIdRef.current || sessionStorage.getItem('currentLessonId');
-      }
-      // Guest fallback: check guestData for lesson_id
-      if ((!lessonId || lessonId === 'null' || lessonId === 'undefined') && isGuest && guestData?.lessonData?.lesson_id) {
-        lessonId = guestData.lessonData.lesson_id;
-      }
-      if (lessonId && lessonId !== 'null' && lessonId !== 'undefined') {
+      } else {
+        // URL has valid ID, sync ref
         lessonIdRef.current = lessonId;
       }
 
-      console.log("Loading lesson with ID:", lessonId, isGuest ? "(guest)" : "");
+      console.log("Loading lesson with ID:", lessonId);
 
       if (!lessonId || lessonId === 'null' || lessonId === 'undefined') {
         setError("No lesson ID found");
@@ -414,34 +402,18 @@ export default function DocumentViewer() {
         return;
       }
 
-      let lessonData, examsData;
-
-      if (isGuest) {
-        // Guest: load lesson via service-role backend (bypasses RLS)
-        const { data } = await base44.functions.invoke('checkGuestEligibility', {
-          fingerprint: guestData?.fingerprint,
-          action: 'loadLesson',
-          lesson_id: lessonId
-        });
-        if (!data?.lesson) {
-          setError("Lesson not found");
-          setLoading(false);
-          return;
-        }
-        lessonData = data.lesson;
-        examsData = data.exams || [];
-      } else {
-        const lessons = await base44.entities.Lesson.filter({ id: lessonId });
-        if (!lessons || lessons.length === 0) {
-          setError("Lesson not found");
-          setLoading(false);
-          return;
-        }
-        lessonData = lessons[0];
-        examsData = await base44.entities.Exam.filter({ lesson_id: lessonId }).catch(() => []);
+      const lessons = await base44.entities.Lesson.filter({ id: lessonId });
+      
+      if (!lessons || lessons.length === 0) {
+        setError("Lesson not found");
+        setLoading(false);
+        return;
       }
 
+      const lessonData = lessons[0];
       setLesson(lessonData);
+      
+      // Upload prompt removed - users can upload via doc tab if needed
       
       // Initialize study time from saved lesson data
       setStudyTime(lessonData.total_study_time_seconds || 0);
@@ -451,7 +423,8 @@ export default function DocumentViewer() {
         setExtractedContent(lessonData.extracted_content);
       }
 
-      // examsData already loaded above
+      // Load ALL exams including practice exams (needed for red dot logic and exam list)
+      const examsData = await base44.entities.Exam.filter({ lesson_id: lessonId }).catch(() => []);
       // Sort by exam_number for official, then by created_date for practice
       const sortedExams = examsData.filter(e => e?.id).sort((a, b) => {
         if (a.exam_type === 'practice' && b.exam_type !== 'practice') return 1;
@@ -927,9 +900,6 @@ export default function DocumentViewer() {
 
       {/* Post-Diagnostic Paywall for free users */}
       {lesson?.id && <PostDiagnosticPaywall lessonId={lesson.id} />}
-
-      {/* Full-screen confetti on task completion */}
-      <ConfettiEffect show={showTaskConfetti} onComplete={() => setShowTaskConfetti(false)} />
 
       {/* XP Gain Toast */}
       <XPGainToast 
