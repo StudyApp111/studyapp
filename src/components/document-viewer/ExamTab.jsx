@@ -661,8 +661,8 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       questions: updatedQuestions
     }));
 
-    // On first answer submitted, trigger fallback topic generation if lesson lacks topics
-    if (!fallbackTopicsTriggeredRef.current && lesson?.id) {
+    // On first answer submitted, trigger fallback topic generation if lesson lacks topics (skip for guests)
+    if (!fallbackTopicsTriggeredRef.current && lesson?.id && !isGuest) {
       fallbackTopicsTriggeredRef.current = true;
       // Fire-and-forget: generate fallback topics if needed (function checks internally and skips if topics exist)
       base44.functions.invoke('generateFallbackTopics', { lesson_id: lesson.id })
