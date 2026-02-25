@@ -12,6 +12,7 @@ import PickFormatModal from "./PickFormatModal";
 import TopicSelectionModal from "./TopicSelectionModal";
 import InsightsHero from "./InsightsHero";
 import StartStudyPlanCTA from "./StartStudyPlanCTA";
+import LiveProgressCounts from "./LiveProgressCounts";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
