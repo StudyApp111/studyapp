@@ -270,8 +270,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         const totalReviewed = updatedCards.filter(c => c.review_count > 0).length;
         const taskJustCompleted = await updateStudyPlanProgress('flashcards', totalReviewed);
         
-        // Trigger Polly after flashcard task completion
+        // Trigger confetti + Polly after flashcard task completion
         if (taskJustCompleted) {
+          window.dispatchEvent(new Event('studyTaskCompleted'));
           base44.functions.invoke('runPollyEngine', {
             trigger_event: 'flashcard_task_completed',
             lesson_id: lesson.id
