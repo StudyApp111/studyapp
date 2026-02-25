@@ -44,7 +44,14 @@ export default function OnboardingModal({ onComplete }) {
           if (wasOnboarding) {
             setStep(7);
           } else {
-            setStep(1);
+            // User already authenticated — skip to profile step (5)
+            const savedName = sessionStorage.getItem("onboarding_profile_name");
+            if (savedName) {
+              // Already filled profile, skip ahead
+              setStep(6);
+            } else {
+              setStep(1);
+            }
           }
         }
       } catch {
