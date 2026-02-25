@@ -127,6 +127,32 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
 export default function ExamTab({ lesson, exams, onExamComplete, extractedContent }) {
   const { isDark } = useTheme();
   const { isGuest, guestData, markGuestDiagnosticCompleted } = useGuestSession();
+
+  // Guest-safe exam fetcher: guests can't use base44.entities.Exam directly (RLS blocks it)
+  // Must go through getGuestLesson backend function which uses service role
+  const fetchExamsForLesson = async () => {
+    if (isGuest && guestData?.fingerprint && lesson?.id) {
+      const { data } = await base44.functions.invoke('getGuestLesson', {
+        fingerprint: guestData.fingerprint,
+        lesson_id: lesson.id,
+        include_exams: true
+      });
+      return data?.exams || [];
+    }
+    return base44.entities.Exam.filter({ lesson_id: lesson.id, exam_number: 1 });
+  };
+
+  const fetchExamById = async (examId) => {
+    if (isGuest && guestData?.fingerprint && lesson?.id) {
+      const { data } = await base44.functions.invoke('getGuestLesson', {
+        fingerprint: guestData.fingerprint,
+        lesson_id: lesson.id,
+        include_exams: true
+      });
+      return (data?.exams || []).filter(e => e.id === examId);
+    }
+    return base44.entities.Exam.filter({ id: examId });
+  };
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
