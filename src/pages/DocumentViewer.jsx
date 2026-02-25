@@ -19,7 +19,6 @@ import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import ParsingLoader from "@/components/document-viewer/ParsingLoader";
 import NotesTab from "@/components/document-viewer/NotesTab";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
-import GlobalStudyPlanBanner from "@/components/study-plan/GlobalStudyPlanBanner";
 import XPGainToast from "@/components/gamification/XPGainToast";
 import MaterialUploadPrompt from "@/components/document-viewer/MaterialUploadPrompt";
 import DiagnosticLockOverlay from "@/components/document-viewer/DiagnosticLockOverlay";
@@ -667,14 +666,6 @@ export default function DocumentViewer() {
               </div>
 
               <div className="w-full flex-1 overflow-auto">
-                {/* Global Study Plan Banner - shows on all tabs except studyplan */}
-                {lesson?.id && (
-                  <GlobalStudyPlanBanner
-                    lessonId={lesson.id}
-                    activeTab={activeTab}
-                    onNavigate={(tab) => setActiveTab(tab)}
-                  />
-                )}
                 {hasDocument && (
                   <TabsContent value="doc" className="mt-0 p-0 h-full">
                     {!lesson ? (
@@ -823,14 +814,6 @@ export default function DocumentViewer() {
 
             {/* Scrollable content area */}
             <div className="overflow-x-hidden w-full pb-28">
-              {/* Global Study Plan Banner - Mobile */}
-              {lesson?.id && (
-                <GlobalStudyPlanBanner
-                  lessonId={lesson.id}
-                  activeTab={activeTab}
-                  onNavigate={(tab) => setActiveTab(tab)}
-                />
-              )}
               {hasDocument && (
                 <TabsContent value="doc" className="mt-0 p-0 w-full overflow-x-hidden">
                   {!lesson ? (

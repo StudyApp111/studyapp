@@ -312,10 +312,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       
       const plan = plans[0];
       let taskJustCompleted = false;
-      let markedOne = false;
       
       const updatedTasks = plan.tasks.map(task => {
-        if (task.task_type === taskType && !markedOne) {
+        if (task.task_type === taskType) {
           const newCount = completedCount;
           const wasComplete = task.completed;
           const targetCount = task.target_count || 10;
@@ -323,9 +322,6 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           
           if (isComplete && !wasComplete) {
             taskJustCompleted = true;
-            markedOne = true;
-            // Fire full-screen confetti
-            window.dispatchEvent(new Event('studyTaskCompleted'));
           }
           
           return {
@@ -676,6 +672,16 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           <Copy className="w-3.5 h-3.5" />
           All Sets
         </button>
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 0.3 }}
+          key={currentIndex}
+          className="absolute left-1/2 -translate-x-1/2"
+        >
+          <span className={`text-sm font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+            Card {positionInSet + 1} of {setSize}
+          </span>
+        </motion.div>
         <button
           onClick={() => setShowHowTo(true)}
           className={`flex items-center gap-1 text-xs font-medium flex-shrink-0 ${isDark ? 'text-purple-400 hover:text-purple-300' : 'text-purple-600 hover:text-purple-700'}`}

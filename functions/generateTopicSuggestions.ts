@@ -9,14 +9,9 @@ Deno.serve(async (req) => {
   
   try {
     const base44 = createClientFromRequest(req);
-    
-    // Support both authenticated users and guest sessions
-    let user = null;
-    let isGuestMode = false;
-    try {
-      user = await base44.auth.me();
-    } catch (e) {
-      isGuestMode = true;
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     let body;
@@ -31,13 +26,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
     }
 
-    // Use service role for guest mode
-    const entities = isGuestMode ? base44.asServiceRole.entities : base44.entities;
-
     // Fetch lesson — retry briefly if topics/content not ready yet (race with compressDocument)
     let lesson = null;
     for (let attempt = 0; attempt < 5; attempt++) {
-      const lessons = await entities.Lesson.filter({ id: lesson_id });
+      const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
       lesson = lessons[0];
       if (!lesson) {
         return Response.json({ error: 'Lesson not found' }, { status: 400 });
@@ -205,7 +197,7 @@ TOPIC RULES:
     }));
 
     // Save to lesson
-    await entities.Lesson.update(lesson_id, {
+    await base44.entities.Lesson.update(lesson_id, {
       topic_suggestions: cleanedSections
     });
 

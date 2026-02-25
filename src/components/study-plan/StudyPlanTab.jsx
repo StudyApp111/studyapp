@@ -501,7 +501,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       </motion.div>
 
       {/* AI Insights Hero — dynamic personalized message */}
-      {(studyPlan?.insights_panel || studyPlan?.mastery_gap || studyPlan?.priority_focus || studyPlan?.weak_competencies?.length > 0 || behavioralInsights) && (
+      {(studyPlan?.mastery_gap || studyPlan?.priority_focus || studyPlan?.weak_competencies?.length > 0 || behavioralInsights) && (
         <InsightsHero 
           lesson={lesson}
           studyPlan={studyPlan}

@@ -165,8 +165,6 @@ Deno.serve(async (req) => {
       strengths: t.strengths || []
     }));
 
-    const courseName = lesson.course_name || 'this course';
-    
     const oraclePrompt = `[SYSTEM ROLE]
 You are Polly, the central intelligence engine for StudyAppAI. You are not a generic grading algorithm. You are operating as a deeply experienced ${courseName} instructor at an institution like ${learningProfile.school || 'a post-secondary institution'} in ${learningProfile.city || 'their city'}, ${learningProfile.country || 'their country'}.
 
@@ -198,7 +196,6 @@ Core Competencies: ${JSON.stringify(lesson.curriculum_map?.core_competencies?.ma
 Competency Weightings: ${JSON.stringify(lesson.curriculum_map?.competency_weightings || [])}
 High Yield Focal Points: ${JSON.stringify(lesson.curriculum_map?.high_yield_focal_points || [])}
 Common Misconceptions: ${JSON.stringify(lesson.curriculum_map?.common_misconceptions || [])}
-Topic Sections: ${JSON.stringify((lesson.topics || []).map(t => t.title).slice(0, 20))}
 
 3. EXAM PERFORMANCE DATA (${completedExams.length} completed exams):
 ${JSON.stringify(examPerformanceData, null, 2)}
@@ -241,6 +238,8 @@ Daily XP: ${user.daily_xp || 0}
 
 [COGNITIVE PROCESSING RULES]
 
+COGNITIVE PROCESSING RULES]
+
 A. PREDICTION LOGIC
 - Scope: Grade based on ASSESSED content only. Unassessed competencies reduce confidence, not the predicted grade.
 - Weighting:
@@ -279,13 +278,12 @@ C. CONFIDENCE CALIBRATION
 - confidence_level: "Low" (<35%), "Medium" (35-62%)
 
 D. STUDY TASK RECOMMENDATION
-Identify exactly 1-2 tasks. Each task MUST include a section_title matching the section/topic area it belongs to from the lesson's topic structure.
+Identify exactly 1-2 tasks:
 - Mastery Gap Task: Target the lowest-scoring assessed competency using the failure mode framework:
   Conceptual gap (wrong due to misunderstanding) → teach_it
   Procedural gap (wrong due to execution error) → practice_exam with worked examples
   Recall gap (inconsistent performance) → flashcards
 - Next Step Task: The next unassessed competency in competency_weightings order — introductory difficulty only
-- section_title: The section/topic area this task falls under (from the lesson's topic structure or competency groupings). This MUST be populated so tasks stay scoped to their section.
 
 E. INTERVENTION TRIGGER
 Flag for chat intervention if ANY of:
@@ -347,7 +345,6 @@ Flag for chat intervention if ANY of:
                     properties: {
                       task_type: { type: "string" },
                       topic_name: { type: "string" },
-                      section_title: { type: "string" },
                       task_description: { type: "string" },
                       task_reason: { type: "string" }
                     }

@@ -355,10 +355,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
           const wasComplete = task.completed;
           const targetCount = task.target_count || 3;
           const isComplete = newCount >= targetCount;
-          if (isComplete && !wasComplete) {
-            taskJustCompleted = true;
-            window.dispatchEvent(new Event('studyTaskCompleted'));
-          }
+          if (isComplete && !wasComplete) taskJustCompleted = true;
           return {
             ...task,
             completed_count: newCount,

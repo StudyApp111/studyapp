@@ -41,36 +41,19 @@ Deno.serve(async (req) => {
   console.log('=== autoGenerateExam1 Start ===');
   try {
     const base44 = createClientFromRequest(req);
-    
-    // Support both authenticated users and guest sessions (via service role)
-    let user = null;
-    let isGuestMode = false;
-    try {
-      user = await base44.auth.me();
-    } catch (e) {
-      // Not authenticated — check if this is a guest lesson call
-    }
-    
-    const body = await req.json();
-    const { lesson_id } = body;
-    
+    const user = await base44.auth.me();
     if (!user) {
-      // Allow guest mode only if lesson exists (created via service role)
-      if (!lesson_id) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      isGuestMode = true;
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { lesson_id } = await req.json();
     
     if (!lesson_id) {
       return Response.json({ error: 'lesson_id is required' }, { status: 400 });
     }
 
-    // Use service role for guest mode, user-scoped for authenticated users
-    const entities = isGuestMode ? base44.asServiceRole.entities : base44.entities;
-
     // STEP 1: Check if exam 1 already exists with questions
-    const existingExams = await entities.Exam.filter({ lesson_id, exam_number: 1 });
+    const existingExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
     const officialExam = existingExams.find(e => e.exam_type !== 'practice');
     
     if (officialExam?.questions?.length > 0) {
@@ -95,12 +78,12 @@ Deno.serve(async (req) => {
     // STEP 3: Create or update a placeholder exam record as a lock
     let lockExam;
     if (officialExam) {
-      lockExam = await entities.Exam.update(officialExam.id, {
+      lockExam = await base44.entities.Exam.update(officialExam.id, {
         status: "generating"
       });
       console.log('Refreshed lock on existing exam record:', lockExam.id);
     } else {
-      lockExam = await entities.Exam.create({
+      lockExam = await base44.entities.Exam.create({
         lesson_id,
         exam_number: 1,
         exam_type: "official",
@@ -112,7 +95,7 @@ Deno.serve(async (req) => {
     }
     
     // STEP 4: Double-check no other process created questions while we were creating the lock
-    const recheckExams = await entities.Exam.filter({ lesson_id, exam_number: 1 });
+    const recheckExams = await base44.entities.Exam.filter({ lesson_id, exam_number: 1 });
     const recheckExam = recheckExams.find(e => e.exam_type !== 'practice' && e.questions?.length > 0);
     if (recheckExam) {
       console.log('Another process already generated questions, skipping');
@@ -120,7 +103,7 @@ Deno.serve(async (req) => {
     }
 
     // Get lesson data
-    const lessons = await entities.Lesson.filter({ id: lesson_id });
+    const lessons = await base44.entities.Lesson.filter({ id: lesson_id });
     const lesson = lessons[0];
     if (!lesson) {
       return Response.json({ error: 'Lesson not found' }, { status: 400 });
@@ -199,8 +182,8 @@ Deno.serve(async (req) => {
     // Get learning profile
     let learningProfile = {};
     try {
-      if (user?.learning_profile_id) {
-        const profiles = await entities.LearningProfile.filter({ id: user.learning_profile_id });
+      if (user.learning_profile_id) {
+        const profiles = await base44.entities.LearningProfile.filter({ id: user.learning_profile_id });
         learningProfile = profiles[0] || {};
       }
     } catch (e) {
@@ -376,7 +359,7 @@ No extra text.`;
       const errText = await resp.text();
       console.error('Gemini error:', resp.status, errText);
       // Reset status so it can be retried
-      await entities.Exam.update(lockExam.id, { status: "not_started" });
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to generate exam', details: errText }, { status: 500 });
     }
 
@@ -389,7 +372,7 @@ No extra text.`;
       data = JSON.parse(responseText);
     } catch (parseErr) {
       console.error('Failed to parse Gemini API response:', parseErr.message);
-      await entities.Exam.update(lockExam.id, { status: "not_started" });
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Invalid API response format' }, { status: 500 });
     }
     
@@ -408,7 +391,7 @@ No extra text.`;
     // If finishReason is MAX_TOKENS, the JSON is truncated and will fail to parse — must retry
     if (finishReason === 'MAX_TOKENS') {
       console.error('Response truncated (MAX_TOKENS) at', content.length, 'chars — retrying is needed');
-      await entities.Exam.update(lockExam.id, { status: "not_started" });
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Response truncated, retry needed', truncated: true }, { status: 500 });
     }
 
@@ -420,14 +403,14 @@ No extra text.`;
       // Log first and last 200 chars to diagnose where truncation happened
       console.error('Content start:', content.substring(0, 200));
       console.error('Content end:', content.substring(content.length - 200));
-      await entities.Exam.update(lockExam.id, { status: "not_started" });
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to parse exam response' }, { status: 500 });
     }
 
     const examQuestions = examData?.exam_questions || [];
     if (!Array.isArray(examQuestions) || examQuestions.length === 0) {
       console.error('Invalid exam_questions:', examData);
-      await entities.Exam.update(lockExam.id, { status: "not_started" });
+      await base44.entities.Exam.update(lockExam.id, { status: "not_started" });
       return Response.json({ error: 'Failed to generate exam questions' }, { status: 500 });
     }
 
@@ -437,7 +420,7 @@ No extra text.`;
     }));
 
     // Update the lock exam record with the generated questions
-    const exam = await entities.Exam.update(lockExam.id, {
+    const exam = await base44.entities.Exam.update(lockExam.id, {
       questions: questionsWithPlaceholder,
       status: "not_started",
       time_taken_seconds: 0,
