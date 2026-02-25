@@ -235,6 +235,15 @@ export default function DocumentViewer() {
     trackFirstLesson();
   }, [lesson?.id]);
 
+  // Listen for study task completion events → trigger full-screen confetti
+  useEffect(() => {
+    const handleTaskCompleted = () => {
+      setShowTaskConfetti(true);
+    };
+    window.addEventListener('studyTaskCompleted', handleTaskCompleted);
+    return () => window.removeEventListener('studyTaskCompleted', handleTaskCompleted);
+  }, []);
+
   useEffect(() => {
     const handleSwitchToStudyPlan = () => setActiveTab('studyplan');
     const handleSwitchToExam = () => setActiveTab('exam');
