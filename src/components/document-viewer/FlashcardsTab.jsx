@@ -312,9 +312,10 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       
       const plan = plans[0];
       let taskJustCompleted = false;
+      let markedOne = false;
       
       const updatedTasks = plan.tasks.map(task => {
-        if (task.task_type === taskType) {
+        if (task.task_type === taskType && !markedOne) {
           const newCount = completedCount;
           const wasComplete = task.completed;
           const targetCount = task.target_count || 10;
@@ -322,6 +323,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
           
           if (isComplete && !wasComplete) {
             taskJustCompleted = true;
+            markedOne = true;
           }
           
           return {
