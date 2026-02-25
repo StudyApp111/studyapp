@@ -145,7 +145,7 @@ export default function StepProfile({ user, isGuest, onComplete, onBack }) {
             isDark ? "text-white" : "text-slate-900"
           }`}
         >
-          Hi There 👋
+          {user?.full_name ? `Hi ${user.full_name.split(" ")[0]}` : "Hi There"} 👋
         </h2>
         <p
           className={`text-sm ${
