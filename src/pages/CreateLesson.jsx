@@ -239,6 +239,7 @@ export default function CreateLesson() {
           input_type: lessonData.input_type,
           lesson_id: lesson.id,
           is_first_lesson: isFirstLesson,
+          is_guest: false,
           has_file: lessonData.input_type === 'file',
           file_count: lessonData.file_urls?.length || 0,
           content_length: (compressedContent || extractedContent || '').length,
