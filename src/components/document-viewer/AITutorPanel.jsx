@@ -143,8 +143,13 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
   }, []);
 
   // Listen for diagnostic completion to add Polly message directing to study plan
+  // SKIP for guest sessions — we don't want the chat to auto-popup and spoil the surprise
   useEffect(() => {
     const handleDiagnosticComplete = (event) => {
+      // Check if this is a guest session by looking at URL or sessionStorage
+      const isGuestSession = sessionStorage.getItem('guest_session_active') === 'true';
+      if (isGuestSession) return; // Don't auto-populate chat for guests
+      
       const { predicted_grade, total_score, mastery_gap } = event.detail || {};
       
       let gradeInfo = '';
