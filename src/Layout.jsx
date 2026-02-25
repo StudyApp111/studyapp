@@ -106,7 +106,7 @@ function LayoutContent({ children, currentPageName }) {
     const [user, setUser] = React.useState(null);
     const [feedbackModalOpen, setFeedbackModalOpen] = React.useState(false);
     const { isDark, toggleTheme } = useTheme();
-    const { isGuest } = useGuestSession();
+    const { isGuest, endGuestSession } = useGuestSession();
 
   const pathLowerEarly = location.pathname.toLowerCase();
   const isHomePageEarly = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
@@ -127,6 +127,36 @@ function LayoutContent({ children, currentPageName }) {
       try {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
+
+        // Handle returning guest: transfer lesson data to newly authenticated user
+        const returningGuestLessonId = sessionStorage.getItem('guest_returning_lesson_id');
+        const returningGuestFP = sessionStorage.getItem('guest_returning_fingerprint');
+        if (returningGuestLessonId && returningGuestFP) {
+          sessionStorage.removeItem('guest_returning_lesson_id');
+          sessionStorage.removeItem('guest_returning_fingerprint');
+          sessionStorage.removeItem('guest_returning_to_lesson');
+          
+          try {
+            const { data: transferData } = await base44.functions.invoke('checkGuestEligibility', {
+              fingerprint: returningGuestFP,
+              action: 'transfer',
+              lesson_data: { id: returningGuestLessonId },
+              user_email: currentUser.email,
+              profile_data: {}
+            });
+            
+            await base44.auth.updateMe({ onboarding_completed: true });
+            endGuestSession();
+            
+            if (transferData?.lesson_id) {
+              navigate(createPageUrl("DocumentViewer") + `?id=${transferData.lesson_id}&tab=exam&viewResults=1`, { replace: true });
+              return;
+            }
+          } catch (transferErr) {
+            console.error('Guest transfer error:', transferErr);
+            endGuestSession();
+          }
+        }
 
         const onboardingDone = currentUser?.onboarding_completed || currentUser?.data?.onboarding_completed;
           const isAdmin = currentUser?.role === 'admin';

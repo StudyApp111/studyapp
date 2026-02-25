@@ -4,22 +4,29 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { Mail, Smartphone, Lock, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 export default function GuestSignUpModal({ predictedGrade, predictedScore }) {
   const { isDark } = useTheme();
+  const { guestData } = useGuestSession();
   const isInApp = checkIsInAppBrowser();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleSignIn = (method) => {
     setIsRedirecting(true);
-    const returnUrl = window.location.pathname + window.location.search;
+    
+    // Save guest data for post-auth transfer in Layout
+    const urlParams = new URLSearchParams(window.location.search);
+    const lessonId = urlParams.get('id') || urlParams.get('lessonId') || guestData?.lessonData?.id;
+    if (lessonId) {
+      sessionStorage.setItem("guest_returning_lesson_id", lessonId);
+    }
+    if (guestData?.fingerprint) {
+      sessionStorage.setItem("guest_returning_fingerprint", guestData.fingerprint);
+    }
     sessionStorage.setItem("guest_returning_to_lesson", "true");
-    sessionStorage.setItem("guest_auth_method", method);
-    // Prefetch auth page immediately to reduce modal delay
-    const preloadLink = document.createElement('link');
-    preloadLink.rel = 'prefetch';
-    preloadLink.href = '/login';
-    document.head.appendChild(preloadLink);
+    
+    const returnUrl = window.location.pathname + window.location.search;
     setTimeout(() => {
       base44.auth.redirectToLogin(returnUrl);
     }, 100);
