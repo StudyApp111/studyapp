@@ -184,91 +184,95 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
 /* ─── Step 1: Topic selection ─── */
 function Step1Topics({ lesson, topLevelTopics, deselectedSections, deselectedSubtopics, toggleSection, toggleSubtopic, handleDeselectAll, allDeselected, selectedCount, onConfirm }) {
   return (
-    <div className="px-5 pb-5 pt-2">
-      {/* Header */}
-      <div className="text-center mb-4">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <Sparkles className="w-4 h-4 text-amber-400" />
-          <span className="text-sm font-bold tracking-wide text-white">Document Analyzed</span>
+    <div className="flex flex-col max-h-[80vh] sm:max-h-none">
+      {/* Fixed header */}
+      <div className="px-5 pt-2 pb-2 flex-shrink-0">
+        <div className="text-center mb-3">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span className="text-sm font-bold tracking-wide text-white">Document Analyzed</span>
+          </div>
+          <p className="text-[13px] leading-relaxed text-slate-400 px-2">
+            We read your <span className="font-semibold text-slate-200">{lesson?.course_name || 'document'}</span> and found{' '}
+            <span className="font-semibold text-slate-200">{topLevelTopics.length} key topics</span> to help you study.
+          </p>
         </div>
-        <p className="text-[13px] leading-relaxed text-slate-400 px-2">
-          We read your <span className="font-semibold text-slate-200">{lesson?.course_name || 'document'}</span> and found{' '}
-          <span className="font-semibold text-slate-200">{topLevelTopics.length} key topics</span> to help you study.
-        </p>
+        <div className="h-px bg-white/10" />
       </div>
 
-      <div className="h-px mb-3 bg-white/10" />
+      {/* Scrollable topic list */}
+      <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-2" style={{ WebkitOverflowScrolling: 'touch', minHeight: 0 }}>
+        <div className="space-y-0.5 -mx-1 px-1">
+          {topLevelTopics.map((section, idx) => {
+            const isSectionSelected = !deselectedSections.has(section.title);
+            const subtopics = section.subtopics || [];
 
-      {/* Section/topic list — NO vertical scroll, text wraps */}
-      <div className="space-y-0.5 mb-3 -mx-1 px-1">
-        {topLevelTopics.map((section, idx) => {
-          const isSectionSelected = !deselectedSections.has(section.title);
-          const subtopics = section.subtopics || [];
-
-          return (
-            <div key={idx}>
-              {/* Section row */}
-              <button
-                onClick={() => toggleSection(section.title)}
-                className={`w-full flex items-start gap-2 px-3 py-2 rounded-lg text-left transition-all ${
-                  isSectionSelected ? 'bg-white/[0.04]' : 'bg-white/[0.02] opacity-40'
-                }`}
-              >
-                <FolderOpen className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isSectionSelected ? 'text-amber-400' : 'text-slate-600'}`} />
-                <span
-                  className={`text-[13px] font-semibold flex-1 break-words ${
-                    isSectionSelected ? 'text-slate-200' : 'text-slate-500 line-through'
+            return (
+              <div key={idx}>
+                <button
+                  onClick={() => toggleSection(section.title)}
+                  className={`w-full flex items-start gap-2 px-3 py-2 rounded-lg text-left transition-all ${
+                    isSectionSelected ? 'bg-white/[0.04]' : 'bg-white/[0.02] opacity-40'
                   }`}
                 >
-                  {section.title}
-                </span>
-                {isSectionSelected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />}
-              </button>
+                  <FolderOpen className={`w-4 h-4 flex-shrink-0 mt-0.5 ${isSectionSelected ? 'text-amber-400' : 'text-slate-600'}`} />
+                  <span
+                    className={`text-[13px] font-semibold flex-1 break-words ${
+                      isSectionSelected ? 'text-slate-200' : 'text-slate-500 line-through'
+                    }`}
+                  >
+                    {section.title}
+                  </span>
+                  {isSectionSelected && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />}
+                </button>
 
-              {/* Subtopics — selectable */}
-              {isSectionSelected && subtopics.length > 0 && (
-                <div className="ml-8 mt-0.5 space-y-0.5">
-                  {subtopics.map((st, stIdx) => {
-                    const subKey = `${section.title}::${st.title}`;
-                    const isSubSelected = !deselectedSubtopics.has(subKey);
-                    return (
-                      <button
-                        key={stIdx}
-                        onClick={() => toggleSubtopic(section.title, st.title)}
-                        className={`w-full flex items-start gap-2 py-1 px-2 rounded text-left transition-all ${
-                          isSubSelected ? '' : 'opacity-40'
-                        }`}
-                      >
-                        <span className={`text-[12px] flex-1 break-words ${isSubSelected ? 'text-slate-400' : 'text-slate-600 line-through'}`}>
-                          {st.title}
-                        </span>
-                        {isSubSelected && <CheckCircle2 className="w-3 h-3 text-emerald-500/60 flex-shrink-0 mt-0.5" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                {isSectionSelected && subtopics.length > 0 && (
+                  <div className="ml-8 mt-0.5 space-y-0.5">
+                    {subtopics.map((st, stIdx) => {
+                      const subKey = `${section.title}::${st.title}`;
+                      const isSubSelected = !deselectedSubtopics.has(subKey);
+                      return (
+                        <button
+                          key={stIdx}
+                          onClick={() => toggleSubtopic(section.title, st.title)}
+                          className={`w-full flex items-start gap-2 py-1 px-2 rounded text-left transition-all ${
+                            isSubSelected ? '' : 'opacity-40'
+                          }`}
+                        >
+                          <span className={`text-[12px] flex-1 break-words ${isSubSelected ? 'text-slate-400' : 'text-slate-600 line-through'}`}>
+                            {st.title}
+                          </span>
+                          {isSubSelected && <CheckCircle2 className="w-3 h-3 text-emerald-500/60 flex-shrink-0 mt-0.5" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      <p className="text-[12px] mb-3 text-slate-500">Look good? Tap any to remove.</p>
+      {/* Fixed footer */}
+      <div className="px-5 pb-5 pt-2 flex-shrink-0 border-t border-white/5">
+        <p className="text-[12px] mb-3 text-slate-500">Look good? Tap any to remove.</p>
 
-      <Button
-        onClick={onConfirm}
-        disabled={selectedCount === 0}
-        className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20"
-      >
-        Perfect, Let's Start <ArrowRight className="w-4 h-4 ml-1.5" />
-      </Button>
+        <Button
+          onClick={onConfirm}
+          disabled={selectedCount === 0}
+          className="w-full h-11 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20"
+        >
+          Perfect, Let's Start <ArrowRight className="w-4 h-4 ml-1.5" />
+        </Button>
 
-      <button
-        onClick={handleDeselectAll}
-        className="w-full text-center text-[11px] mt-2.5 py-1 font-semibold text-purple-400 hover:text-purple-300"
-      >
-        {allDeselected ? 'Select All' : 'Deselect All'}
-      </button>
+        <button
+          onClick={handleDeselectAll}
+          className="w-full text-center text-[11px] mt-2.5 py-1 font-semibold text-purple-400 hover:text-purple-300"
+        >
+          {allDeselected ? 'Select All' : 'Deselect All'}
+        </button>
+      </div>
     </div>
   );
 }
