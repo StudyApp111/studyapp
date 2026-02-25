@@ -284,19 +284,21 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       const targetTab = FORMAT_TO_TAB[format];
       
       if (format === "practice_exam") {
+        const taskTitle = opts.section_title ? `${opts.section_title}: ${(opts.topics || []).slice(0, 2).join(', ')}` : 'Custom Quiz';
         window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
           detail: {
-            task: { focus_topics: opts.topics, target_competency: opts.section_title || '', title: opts.section_title || 'Custom Quiz', section_title: opts.section_title || '' },
+            task: { task_id: `pick_${opts.section_title}_${format}`, focus_topics: opts.topics, target_competency: opts.section_title || '', title: taskTitle, section_title: opts.section_title || '' },
             focus_topics: opts.topics,
             target_competency: opts.section_title || '',
             custom_instructions: opts.custom_instructions || ''
           }
         }));
       } else if (format === "flashcards" || format === "teach_it") {
+        const taskTitle = opts.section_title ? `${opts.section_title}: ${(opts.topics || []).slice(0, 2).join(', ')}` : 'Custom';
         window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
           detail: {
             taskType: format,
-            task: { focus_topics: opts.topics, title: opts.section_title || 'Custom', section_title: opts.section_title || '', target_count: format === "flashcards" ? 10 : 3 },
+            task: { focus_topics: opts.topics, title: taskTitle, section_title: opts.section_title || '', target_count: format === "flashcards" ? 10 : 3 },
             custom_instructions: opts.custom_instructions || ''
           }
         }));
