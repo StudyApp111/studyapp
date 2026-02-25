@@ -39,28 +39,32 @@ export default function PricingPlans() {
     // Check for success parameter
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'true') {
-      // Track successful subscription payment
+      const planType = urlParams.get('plan') || 'monthly';
+      
+      // PostHog: trial/subscription started — single reliable event on redirect back
+      try {
+        posthog.capture('trial_started', {
+          plan_type: planType,
+          source: 'pricing_page',
+          value: planType === 'yearly' ? 59.88 : 6.99,
+          device_type: window.innerWidth >= 768 ? 'desktop' : 'mobile',
+        });
+      } catch {}
+
+      // TikTok pixel
       const trackSubscription = async () => {
         try {
           const user = await base44.auth.me();
           if (user && window.ttq) {
-            // Hash user ID for privacy
             const encoder = new TextEncoder();
             const data = encoder.encode(user.id);
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             
-            // Identify user
-            window.ttq.identify({
-              external_id: hashedId
-            });
+            window.ttq.identify({ external_id: hashedId });
             
-            // Determine plan type from URL or default
-            const planType = urlParams.get('plan') || 'yearly';
             const value = planType === 'yearly' ? 59.88 : 6.99;
-            
-            // Track Subscribe event
             window.ttq.track('Subscribe', {
               contents: [{
                 content_id: `pro_${planType}`,
@@ -77,9 +81,18 @@ export default function PricingPlans() {
       };
       
       trackSubscription();
+
+      // Google Analytics
       try {
-        posthog.capture('subscription_started', { source: 'pricing_page' });
+        if (window.gtag) {
+          window.gtag('event', 'trial_started', {
+            event_category: 'conversion',
+            event_label: planType,
+            value: planType === 'yearly' ? 59.88 : 6.99,
+          });
+        }
       } catch {}
+
       setShowSuccess(true);
       // Clear the URL parameter
       window.history.replaceState({}, '', createPageUrl("PricingPlans"));
