@@ -137,6 +137,10 @@ function LayoutContent({ children, currentPageName }) {
           sessionStorage.removeItem('guest_returning_to_lesson');
           
           try {
+            // Mark onboarding complete FIRST so subsequent Layout re-renders don't redirect to Home
+            await base44.auth.updateMe({ onboarding_completed: true });
+            setUser({ ...currentUser, onboarding_completed: true });
+            
             const { data: transferData } = await base44.functions.invoke('checkGuestEligibility', {
               fingerprint: returningGuestFP,
               action: 'transfer',
@@ -145,11 +149,12 @@ function LayoutContent({ children, currentPageName }) {
               profile_data: {}
             });
             
-            await base44.auth.updateMe({ onboarding_completed: true });
             endGuestSession();
             
             if (transferData?.lesson_id) {
-              navigate(createPageUrl("DocumentViewer") + `?id=${transferData.lesson_id}&tab=exam&viewResults=1`, { replace: true });
+              // Clear any stale lesson IDs from sessionStorage so DocumentViewer uses the URL ID
+              sessionStorage.removeItem('currentLessonId');
+              navigate(createPageUrl("DocumentViewer") + `?id=${transferData.lesson_id}&tab=studyplan`, { replace: true });
               return;
             }
           } catch (transferErr) {
