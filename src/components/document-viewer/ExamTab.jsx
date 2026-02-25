@@ -211,14 +211,33 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       handleGeneratePracticeExam._lastCall = now;
 
       const { task, focus_topics, target_competency, misconception_addressed } = e.detail;
+      const taskTitle = task?.title || '';
       
-      console.log('🎯 Practice exam task details:', { title: task?.title, section: task?.section_title, topics: focus_topics });
+      console.log('🎯 Practice exam task details:', { title: taskTitle, section: task?.section_title, topics: focus_topics });
       
       // Check if we've already generated an exam for this specific task
       const taskId = task?.task_id;
       if (taskId && generatedTaskIdsRef.current.has(taskId)) {
         console.log('⚠️ Already generated exam for this task, skipping duplicate');
         return;
+      }
+      
+      // Check if there's already a practice exam matching this task's title/focus
+      if (taskTitle) {
+        const matchingExam = (exams || []).find(e => 
+          e.exam_type === 'practice' && e.title === taskTitle
+        );
+        if (matchingExam) {
+          console.log('✅ Found existing practice exam for this task, loading it:', matchingExam.id);
+          if (matchingExam.completed) {
+            setViewingCompletedExam(matchingExam);
+          } else {
+            setExam(matchingExam);
+            setCurrentQuestion(0);
+            hasAutoSelectedRef.current = true;
+          }
+          return;
+        }
       }
       
       // Check if there's already an incomplete practice exam for this lesson we can resume
