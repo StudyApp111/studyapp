@@ -1032,7 +1032,10 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             official_exam_unlocked: allComplete
           });
           
-          // Task completion toast removed - was blocking UI
+          // Trigger confetti on task completion
+          if (taskJustCompleted) {
+            window.dispatchEvent(new Event('studyTaskCompleted'));
+          }
         }
       } catch (planError) {
         console.error("Error updating study plan:", planError);
