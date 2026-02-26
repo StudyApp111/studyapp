@@ -11,17 +11,12 @@ import { Loader2, Upload, FileCheck, AlertCircle, History, FileText, X, CheckCir
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
+import GuestAuthGate from "@/components/guest/GuestAuthGate";
+import { FileCheck } from "lucide-react";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
   const { isGuest } = useGuestSession();
-
-  // Block guests from accessing Smart Grader
-  useEffect(() => {
-    if (isGuest) {
-      navigate(createPageUrl("Home"), { replace: true });
-    }
-  }, [isGuest]);
   const { isDark } = useTheme();
   const { canGradeAssignment, incrementAssignmentCount, triggerUpgradeModal } = useSubscription();
   const [courseName, setCourseName] = useState("");
@@ -362,6 +357,17 @@ Output valid JSON matching the expected schema.`;
       setProcessingStep("");
     }
   };
+
+  // Guest users see auth gate
+  if (isGuest) {
+    return (
+      <GuestAuthGate
+        icon={FileCheck}
+        title="Sign Up to Grade Your Essay"
+        subtitle="Create a free account to use our AI-powered Smart Grader"
+      />
+    );
+  }
 
   return (
     <div className={`min-h-screen w-full max-w-full p-4 md:p-10 pb-28 md:pb-10 ${isDark ? 'bg-gradient-to-br from-purple-900/20 via-purple-800/10 to-purple-900/20' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`} style={{ overflowX: 'hidden', boxSizing: 'border-box' }}>
