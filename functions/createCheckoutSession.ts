@@ -181,9 +181,11 @@ Deno.serve(async (req) => {
         }
       };
       console.log("No-credit-card trial mode enabled");
+      console.log("payment_method_collection:", sessionConfig.payment_method_collection);
+      console.log("trial_settings:", JSON.stringify(subscriptionData.trial_settings));
     } else {
-      sessionConfig.payment_method_types = ['card'];
       sessionConfig.payment_method_collection = 'always';
+      console.log("Standard checkout (no trial) - payment always required");
     }
 
     console.log("Session config prepared:", {
