@@ -24,6 +24,47 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+// Social proof messages for diagnostic quizzes — lives at ExamTab level so it
+// doesn't reset when the user moves between questions
+const SOCIAL_PROOF_MESSAGES = [
+  { emoji: "🧠", text: "Wrong answers teach more than skipped ones" },
+  { emoji: "💡", text: "Guessing still helps — it shows us where to focus your plan" },
+  { emoji: "🎯", text: "Every question you answer makes your grade prediction more accurate" },
+  { emoji: "⚡", text: "The students who improve fastest are the ones who finish, not the ones who score highest" }
+];
+
+function DiagnosticSocialProof() {
+  const { isDark } = useTheme();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % SOCIAL_PROOF_MESSAGES.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="px-3 md:px-5 pb-3">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentIndex}
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -5 }}
+          transition={{ duration: 0.3 }}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-100'}`}
+        >
+          <span className="text-base flex-shrink-0">{SOCIAL_PROOF_MESSAGES[currentIndex].emoji}</span>
+          <p className={`text-xs ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>
+            {SOCIAL_PROOF_MESSAGES[currentIndex].text}
+          </p>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // Unified progress loader for exam generation - with fun facts
 function ExamGeneratingLoader({ isPractice }) {
   const { isDark } = useTheme();
@@ -1720,7 +1761,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
           </div>
 
           <div className="shrink-0 border-t dark:border-white/10 border-purple-100 dark:bg-[#12121a]/95 bg-white/95 backdrop-blur-sm">
-            <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-3">
+            <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-2">
               <Button
                 variant="outline"
                 onClick={handlePrevious}
@@ -1753,6 +1794,8 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
                 </Button>
               )}
             </div>
+            {/* Social proof carousel below buttons — only for diagnostic exams */}
+            {!isPracticeExam && <DiagnosticSocialProof />}
           </div>
         </div>
       </div>
