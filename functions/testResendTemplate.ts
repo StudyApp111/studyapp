@@ -11,15 +11,8 @@ Deno.serve(async (req) => {
     const { template_id, to_email } = await req.json();
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
 
-    // First, fetch template info to understand its structure
-    const tmplInfoRes = await fetch(`https://api.resend.com/templates/${template_id}`, {
-      headers: { 'Authorization': `Bearer ${resendApiKey}` }
-    });
-    const tmplInfoBody = await tmplInfoRes.text();
-    console.log('Template GET response:', tmplInfoRes.status, tmplInfoBody);
-
-    // Test with subject included (Resend requires subject when template doesn't have default)
-    const payload = {
+    // Test 1: template as nested object (current approach)
+    const payload1 = {
       from: 'StudyApp.AI <updates@updates.studyappai.com>',
       to: [to_email || user.email],
       subject: 'Welcome to StudyApp.AI',
@@ -29,21 +22,41 @@ Deno.serve(async (req) => {
       }
     };
 
-    console.log('Sending payload:', JSON.stringify(payload));
-    const res = await fetch('https://api.resend.com/emails', {
+    console.log('Test 1 - nested template object:', JSON.stringify(payload1));
+    const res1 = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${resendApiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload1)
     });
-    const body = await res.text();
-    console.log('Send result:', res.status, body);
+    const body1 = await res1.text();
+    console.log('Test 1 result:', res1.status, body1);
+
+    // Test 2: template_id as top-level field (alternative format)
+    const payload2 = {
+      from: 'StudyApp.AI <updates@updates.studyappai.com>',
+      to: [to_email || user.email],
+      subject: 'Welcome to StudyApp.AI',
+      template_id: template_id
+    };
+
+    console.log('Test 2 - template_id top-level:', JSON.stringify(payload2));
+    const res2 = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload2)
+    });
+    const body2 = await res2.text();
+    console.log('Test 2 result:', res2.status, body2);
 
     return Response.json({
-      template_info: { status: tmplInfoRes.status, body: tmplInfoBody },
-      send_result: { status: res.status, body }
+      test1_nested: { status: res1.status, body: body1 },
+      test2_toplevel: { status: res2.status, body: body2 }
     });
 
   } catch (error) {
