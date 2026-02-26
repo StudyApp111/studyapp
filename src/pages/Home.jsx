@@ -38,7 +38,18 @@ export default function Home() {
         const isAuth = await base44.auth.isAuthenticated();
 
         if (!isAuth) {
-          // Always show onboarding for unauthenticated users (including guests)
+          // If guest has an active session with a lesson, redirect back to it
+          // This handles the back-button case where guest navigates away
+          if (isGuest && guestData?.lessonData?.id) {
+            navigate(createPageUrl("DocumentViewer") + `?id=${guestData.lessonData.id}`, { replace: true });
+            return;
+          }
+          // If guest has started but hasn't created a lesson, send to CreateLesson
+          if (isGuest && !guestData?.lessonData) {
+            navigate(createPageUrl("CreateLesson"), { replace: true });
+            return;
+          }
+          // Show onboarding for unauthenticated non-guest users
           setShowOnboarding(true);
           return;
         }
