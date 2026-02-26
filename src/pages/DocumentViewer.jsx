@@ -14,6 +14,7 @@ import TeachItTab from "@/components/document-viewer/TeachItTab";
 import LearnTab from "@/components/document-viewer/LearnTab";
 import StudyPlanTab from "@/components/study-plan/StudyPlanTab";
 import NextStepBanner from "@/components/study-plan/NextStepBanner";
+import StudyPlanBannerInline from "@/components/study-plan/StudyPlanBannerInline";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import ParsingLoader from "@/components/document-viewer/ParsingLoader";
