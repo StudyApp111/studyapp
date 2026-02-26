@@ -224,24 +224,31 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Stats Row - School, Year, Streak, XP */}
-              <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
-                {learningProfile?.school && (
-                  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200'}`}>
-                    <BookOpen className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
-                    <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{learningProfile.school}</span>
-                  </div>
-                )}
+              {/* Stats Row - School, Year, Streak, XP (hide for guests) */}
+              {!isGuest && (
+                <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                  {learningProfile?.school && (
+                    <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200'}`}>
+                      <BookOpen className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                      <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{learningProfile.school}</span>
+                    </div>
+                  )}
 
-                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/20 border-orange-500/30' : (isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200')}`}>
-                  <Flame className="w-4 h-4 text-orange-400" />
-                  <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : (isDark ? 'text-slate-200' : 'text-slate-700')}`}>{user?.current_streak || 0} day streak</span>
+                  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/20 border-orange-500/30' : (isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200')}`}>
+                    <Flame className="w-4 h-4 text-orange-400" />
+                    <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : (isDark ? 'text-slate-200' : 'text-slate-700')}`}>{user?.current_streak || 0} day streak</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/30">
+                    <Zap className="w-4 h-4 text-yellow-400" />
+                    <span className="text-sm font-bold text-yellow-300">{dailyXP}/50 XP</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/30">
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                  <span className="text-sm font-bold text-yellow-300">{dailyXP}/50 XP</span>
-                </div>
-              </div>
+              )}
+              {isGuest && (
+                <p className={`text-sm ${isDark ? 'text-purple-200' : 'text-purple-600'}`}>
+                  Guest Preview — sign up free to save your progress
+                </p>
+              )}
 
               {/* CTA Buttons - Right in the hero */}
               <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md mt-2">
@@ -418,17 +425,19 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Column - Goals */}
-          <div className="space-y-4">
-            <LearningTrajectory studyPlans={studyPlans} lessons={lessons} />
-            
-            <DailyChallenge 
-              studyMinutes={studyMinutesToday}
-              questionsAnswered={questionsToday}
-              flashcardsReviewed={flashcardsToday}
-              compact={false}
-            />
-          </div>
+          {/* Right Column - Goals (hide for guests) */}
+          {!isGuest && (
+            <div className="space-y-4">
+              <LearningTrajectory studyPlans={studyPlans} lessons={lessons} />
+              
+              <DailyChallenge 
+                studyMinutes={studyMinutesToday}
+                questionsAnswered={questionsToday}
+                flashcardsReviewed={flashcardsToday}
+                compact={false}
+              />
+            </div>
+          )}
         </div>
       </div>
 
