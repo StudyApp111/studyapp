@@ -176,8 +176,9 @@ export default function Home() {
   };
 
   // Derive first name: prefer display_name > full_name
-  const firstName = user?.display_name || user?.data?.display_name || user?.full_name?.split(' ')[0] || '';
-  const schoolName = learningProfile?.school || '';
+  const guestName = isGuest ? (guestData?.name || '') : '';
+  const firstName = user?.display_name || user?.data?.display_name || user?.full_name?.split(' ')[0] || guestName || '';
+  const schoolName = learningProfile?.school || (isGuest ? guestData?.school : '') || '';
   const subtitle = schoolName;
 
   return (
