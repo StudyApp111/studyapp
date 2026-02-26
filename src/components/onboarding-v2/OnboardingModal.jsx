@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import posthog from "posthog-js";
 import StepSignIn from "./StepSignIn";
-import StepProfile from "./StepProfile";
+import StepSchool from "./StepSchool";
+import StepName from "./StepName";
 import StepWelcome from "./StepWelcome";
 import StepHowItWorks from "./StepHowItWorks";
 import StepFeatures from "./StepFeatures";
@@ -13,16 +14,17 @@ import StepMaterials from "./StepMaterials";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import { checkIsMobile } from "@/components/utils/BrowserCompatibility";
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 
 // Step order:
-// 1 = Welcome
+// 1 = Welcome (also fires IP-based school fetch in background)
 // 2 = HowItWorks
 // 3 = Materials
 // 4 = Features
-// 5 = Profile (name + school)
-// 6 = SignIn (authenticate) — guest preview available on ALL mobile
-// 7 = Ready ("You're all set")
+// 5 = School (with pre-loaded nearby schools dropdown)
+// 6 = Name (optional)
+// 7 = SignIn (authenticate) — guest preview available on ALL mobile
+// 8 = Ready ("You're all set")
 
 export default function OnboardingModal({ onComplete }) {
   const { isDark } = useTheme();
@@ -31,6 +33,45 @@ export default function OnboardingModal({ onComplete }) {
   const [displayName, setDisplayName] = useState("");
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { isGuest, startGuestSession, updateGuestProfile } = useGuestSession();
+
+  // School suggestions loaded once on mount via IP geolocation (no user interaction needed)
+  const [schoolSuggestions, setSchoolSuggestions] = useState([]);
+  const [schoolsLoading, setSchoolsLoading] = useState(true);
+  const [schoolLocation, setSchoolLocation] = useState(null);
+  const schoolsFetchedRef = useRef(false);
+
+  // Fetch nearby schools immediately on mount using IP-based geolocation
+  useEffect(() => {
+    if (schoolsFetchedRef.current) return;
+    schoolsFetchedRef.current = true;
+
+    const fetchSchools = async () => {
+      setSchoolsLoading(true);
+      try {
+        // Race against a 5s timeout so we never block the user
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => resolve({ data: { success: true, schools: [], location: {} } }), 5000)
+        );
+        const result = await Promise.race([
+          base44.functions.invoke("getNearbySchools", { searchQuery: "" }),
+          timeoutPromise,
+        ]);
+
+        if (result?.data?.success) {
+          setSchoolSuggestions(result.data.schools || []);
+          if (result.data.location?.city) {
+            setSchoolLocation(result.data.location);
+          }
+        }
+      } catch (err) {
+        console.error("Error pre-loading schools:", err);
+      } finally {
+        setSchoolsLoading(false);
+      }
+    };
+
+    fetchSchools();
+  }, []);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -42,13 +83,11 @@ export default function OnboardingModal({ onComplete }) {
           setDisplayName(currentUser.full_name?.split(" ")[0] || "");
           const wasOnboarding = sessionStorage.getItem("onboarding_v2_active");
           if (wasOnboarding) {
-            setStep(7);
+            setStep(8);
           } else {
-            // User already authenticated — skip to profile step (5)
-            const savedName = sessionStorage.getItem("onboarding_profile_name");
-            if (savedName) {
-              // Already filled profile, skip ahead
-              setStep(6);
+            const savedSchool = sessionStorage.getItem("onboarding_profile_school");
+            if (savedSchool) {
+              setStep(7);
             } else {
               setStep(1);
             }
@@ -65,7 +104,7 @@ export default function OnboardingModal({ onComplete }) {
 
   useEffect(() => {
     try {
-      posthog.capture('onboarding_step_viewed', { step, total_steps: TOTAL_STEPS });
+      posthog.capture("onboarding_step_viewed", { step, total_steps: TOTAL_STEPS });
     } catch {}
   }, [step]);
 
@@ -84,61 +123,75 @@ export default function OnboardingModal({ onComplete }) {
   }, [step]);
 
   const handleSignIn = (method) => {
-    try { posthog.capture('onboarding_sign_in_clicked', { method }); } catch {}
+    try { posthog.capture("onboarding_sign_in_clicked", { method }); } catch {}
     sessionStorage.setItem("onboarding_v2_active", "true");
     const returnUrl = window.location.pathname + window.location.search;
     base44.auth.redirectToLogin(returnUrl);
   };
 
   const handleGuestStart = async () => {
-    try { posthog.capture('guest_session_started'); } catch {}
+    try { posthog.capture("guest_session_started"); } catch {}
     const result = await startGuestSession();
     if (result.allowed) {
-      // Guest skips sign-in and ready steps — go straight to complete
-      setStep(7);
+      setStep(8);
     }
     return result;
   };
 
-  const handleProfileComplete = async ({ name, school }) => {
-    try {
-      posthog.capture('onboarding_profile_completed', { has_school: !!school });
-    } catch {}
+  const handleSchoolComplete = async ({ school }) => {
+    try { posthog.capture("onboarding_school_completed", { has_school: !!school }); } catch {}
 
-    if (isGuest || !user) {
-      if (isGuest) {
-        updateGuestProfile(name, school);
-      }
+    sessionStorage.setItem("onboarding_profile_school", school);
+
+    if (isGuest) {
+      updateGuestProfile(displayName || "", school);
+    }
+
+    handleNext();
+  };
+
+  const handleNameComplete = async ({ name }) => {
+    try { posthog.capture("onboarding_name_completed", { has_name: !!name }); } catch {}
+
+    if (name) {
       sessionStorage.setItem("onboarding_profile_name", name);
-      sessionStorage.setItem("onboarding_profile_school", school);
       setDisplayName(name);
-      handleNext();
-      return;
+    } else {
+      sessionStorage.removeItem("onboarding_profile_name");
     }
 
-    try {
-      await base44.auth.updateMe({ display_name: name });
-      setDisplayName(name);
+    if (isGuest) {
+      const school = sessionStorage.getItem("onboarding_profile_school") || "";
+      updateGuestProfile(name || "", school);
+    }
 
-      const existingProfiles = await base44.entities.LearningProfile.filter({
-        created_by: user.email,
-      });
-      if (existingProfiles.length > 0) {
-        await base44.entities.LearningProfile.update(existingProfiles[0].id, { school });
-      } else {
-        await base44.entities.LearningProfile.create({ school });
+    if (!isGuest && user) {
+      try {
+        if (name) {
+          await base44.auth.updateMe({ display_name: name });
+        }
+        const school = sessionStorage.getItem("onboarding_profile_school");
+        if (school) {
+          const existingProfiles = await base44.entities.LearningProfile.filter({
+            created_by: user.email,
+          });
+          if (existingProfiles.length > 0) {
+            await base44.entities.LearningProfile.update(existingProfiles[0].id, { school });
+          } else {
+            await base44.entities.LearningProfile.create({ school });
+          }
+        }
+      } catch (err) {
+        console.error("Error saving profile:", err);
       }
-
-      handleNext();
-    } catch (err) {
-      console.error("Error saving profile:", err);
-      handleNext();
     }
+
+    handleNext();
   };
 
   const handleComplete = async () => {
     try {
-      posthog.capture('onboarding_completed', { total_steps: TOTAL_STEPS, is_guest: isGuest });
+      posthog.capture("onboarding_completed", { total_steps: TOTAL_STEPS, is_guest: isGuest });
     } catch {}
 
     if (isGuest) {
@@ -152,7 +205,7 @@ export default function OnboardingModal({ onComplete }) {
     try {
       const savedName = sessionStorage.getItem("onboarding_profile_name");
       const savedSchool = sessionStorage.getItem("onboarding_profile_school");
-      
+
       if (savedName) {
         await base44.auth.updateMe({ display_name: savedName, onboarding_completed: true });
       } else {
@@ -175,14 +228,11 @@ export default function OnboardingModal({ onComplete }) {
       sessionStorage.removeItem("onboarding_profile_school");
       window.dispatchEvent(new Event("userSubscriptionUpdated"));
 
-      // Fire-and-forget: enrich learning profile with city/country from IP geo
-      base44.functions.invoke('enrichLearningProfile', {}).catch(() => {});
-
-      // Fire-and-forget: trigger signup email via Resend
-      base44.functions.invoke('sendResendEmail', {
-        trigger_type: 'signup',
+      base44.functions.invoke("enrichLearningProfile", {}).catch(() => {});
+      base44.functions.invoke("sendResendEmail", {
+        trigger_type: "signup",
         user_email: user?.email,
-        context: { reference_id: `signup_${new Date().toISOString()}` }
+        context: { reference_id: `signup_${new Date().toISOString()}` },
       }).catch(() => {});
     } catch (err) {
       console.error("Error completing onboarding:", err);
@@ -193,8 +243,6 @@ export default function OnboardingModal({ onComplete }) {
   if (isCheckingAuth) return null;
 
   const progress = (step / TOTAL_STEPS) * 100;
-
-  // Show guest preview on ALL mobile devices
   const isMobile = checkIsMobile();
 
   return (
@@ -243,19 +291,36 @@ export default function OnboardingModal({ onComplete }) {
                 <StepFeatures key="step4" onNext={handleNext} onBack={handleBack} />
               )}
               {step === 5 && (
-                <StepProfile key="step5" user={user} isGuest={isGuest} onComplete={handleProfileComplete} onBack={handleBack} />
+                <StepSchool
+                  key="step5"
+                  user={user}
+                  isGuest={isGuest}
+                  schoolSuggestions={schoolSuggestions}
+                  schoolsLoading={schoolsLoading}
+                  schoolLocation={schoolLocation}
+                  onComplete={handleSchoolComplete}
+                  onBack={handleBack}
+                />
               )}
               {step === 6 && (
-                <StepSignIn
+                <StepName
                   key="step6"
+                  user={user}
+                  onComplete={handleNameComplete}
+                  onBack={handleBack}
+                />
+              )}
+              {step === 7 && (
+                <StepSignIn
+                  key="step7"
                   onSignIn={handleSignIn}
                   onGuestStart={isMobile ? handleGuestStart : null}
                   onBack={handleBack}
                 />
               )}
-              {step === 7 && (
+              {step === 8 && (
                 <StepReady
-                  key="step7"
+                  key="step8"
                   displayName={displayName || sessionStorage.getItem("onboarding_profile_name") || ""}
                   onComplete={handleComplete}
                   onBack={handleBack}
