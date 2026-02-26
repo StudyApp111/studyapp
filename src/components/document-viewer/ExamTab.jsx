@@ -781,23 +781,32 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
     const userTrimmed = userAnswer.trim();
     const correctTrimmed = correctAnswer.trim();
     
-    // For MCQ where correct_answer should be just a letter (A, B, C, D)
-    if (type.includes('multiple') || type.includes('choice') || type.includes('mcq')) {
-      if (/^[A-Da-d]$/i.test(correctTrimmed)) {
-        // Extract letter from user's selection
-        const letterMatch = userTrimmed.match(/^([A-Da-d])[\.\)\:\s]/i);
-        if (letterMatch) {
-          return letterMatch[1].toUpperCase() === correctTrimmed.toUpperCase();
-        }
-        // Find option index and compare
-        const optionIndex = options?.findIndex(opt => opt === userTrimmed);
-        if (optionIndex >= 0) {
-          const userLetter = String.fromCharCode(65 + optionIndex);
-          return userLetter === correctTrimmed.toUpperCase();
-        }
+    // Extract a clean single letter from correct_answer (handles "C", ",C", "C.", "C. text" etc.)
+    const correctLetterMatch = correctTrimmed.match(/[A-Da-d]/i);
+    const correctLetter = correctLetterMatch ? correctLetterMatch[0].toUpperCase() : null;
+    
+    // For MCQ: compare by letter position
+    const isMCQ = type.includes('multiple') || type.includes('choice') || type.includes('mcq');
+    if (isMCQ && correctLetter && options?.length > 0) {
+      // Extract letter from user's selection (e.g. "C. is twice...")
+      const userLetterMatch = userTrimmed.match(/^([A-Da-d])[\.\)\:\s]/i);
+      if (userLetterMatch) {
+        if (userLetterMatch[1].toUpperCase() === correctLetter) return true;
       }
-      // Fallback to exact match
-      return userTrimmed.toLowerCase() === correctTrimmed.toLowerCase();
+      // Find option index and compare
+      const optionIndex = options.findIndex(opt => opt === userTrimmed);
+      if (optionIndex >= 0) {
+        const userLetter = String.fromCharCode(65 + optionIndex);
+        if (userLetter === correctLetter) return true;
+      }
+      // Exact match fallback
+      if (userTrimmed.toLowerCase() === correctTrimmed.toLowerCase()) return true;
+      
+      // Index-based: correct letter → index, check if user's option is at that index
+      const correctIndex = correctLetter.charCodeAt(0) - 65;
+      if (correctIndex >= 0 && correctIndex < options.length && userTrimmed === options[correctIndex]) return true;
+      
+      return false;
     }
     
     // For True/False
