@@ -197,8 +197,8 @@ function LayoutContent({ children, currentPageName }) {
           } catch (error) {
               // Not authenticated
               setUser(null);
-              // Allow guests to access these pages (they see auth gates on locked pages)
-              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer', 'Settings', 'SmartGrader', 'LessonHistory'];
+              // Allow guests to access CreateLesson and DocumentViewer
+              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer', 'Settings'];
               const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
                 currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
               );
@@ -240,8 +240,8 @@ function LayoutContent({ children, currentPageName }) {
 
   const onboardingDone = user?.onboarding_completed || user?.data?.onboarding_completed;
   const isAdmin = user?.role === 'admin';
-  // Show navigation if user exists AND (onboarding done OR admin), OR if guest with a lesson created
-  const showNavigation = (!!user && (!!onboardingDone || !!isAdmin)) || (isGuest && !!guestData?.lessonData);
+  // Show navigation if user exists AND (onboarding done OR admin), OR if guest
+  const showNavigation = (!!user && (!!onboardingDone || !!isAdmin)) || false; // Never show nav for guests
   const showSidebar = showNavigation;
   
   const pagesWithCustomNav = ["Worksheet"];
@@ -314,19 +314,17 @@ function LayoutContent({ children, currentPageName }) {
                 );
               })}
 
-              {/* Feedback/Email icon - hide for guests */}
-              {!isGuest && (
-                <button
-                  onClick={() => setFeedbackModalOpen(true)}
-                  className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
-                  title="Send Feedback"
-                >
-                  <Mail className="w-5 h-5" />
-                </button>
-              )}
+              {/* Feedback/Email icon */}
+              <button
+                onClick={() => setFeedbackModalOpen(true)}
+                className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                title="Send Feedback"
+              >
+                <Mail className="w-5 h-5" />
+              </button>
 
-              {/* Upgrade Badge - hide for guests */}
-              {!isGuest && <UpgradeNavBadge isDark={isDark} />}
+              {/* Upgrade Badge */}
+              <UpgradeNavBadge isDark={isDark} />
 
               {/* Theme Toggle */}
               <button
@@ -354,15 +352,15 @@ function LayoutContent({ children, currentPageName }) {
               </Link>
               
               {/* Profile Avatar */}
-              {(user || isGuest) && (
+              {user && (
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}
                   className="w-full aspect-square rounded-xl bg-white/5 hover:bg-purple-600/20 flex items-center justify-center transition-all"
-                  title={user?.full_name || guestData?.name || 'Guest'}
+                  title={user.full_name || 'Profile'}
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-sm">
-                      {user?.full_name?.[0]?.toUpperCase() || guestData?.name?.[0]?.toUpperCase() || 'G'}
+                      {user.full_name?.[0]?.toUpperCase() || 'U'}
                     </span>
                   </div>
                 </button>
@@ -419,26 +417,12 @@ function LayoutContent({ children, currentPageName }) {
                   <Home className="w-6 h-6" />
                 </Link>
 
-                {!isGuest && (
-                  <button
-                    onClick={() => setFeedbackModalOpen(true)}
-                    className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${isDark ? 'text-slate-400' : 'text-slate-600'} hover:text-purple-400 hover:bg-purple-600/20`}
-                  >
-                    <Mail className="w-6 h-6" />
-                  </button>
-                )}
-                {isGuest && (
-                  <Link
-                    to={createPageUrl("SmartGrader")}
-                    className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
-                      location.pathname.toLowerCase().includes('smartgrader')
-                        ? 'text-purple-400 bg-purple-600/20'
-                        : isDark ? 'text-slate-400' : 'text-slate-600'
-                    }`}
-                  >
-                    <FileCheck className="w-6 h-6" />
-                  </Link>
-                )}
+                <button
+                  onClick={() => setFeedbackModalOpen(true)}
+                  className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${isDark ? 'text-slate-400' : 'text-slate-600'} hover:text-purple-400 hover:bg-purple-600/20`}
+                >
+                  <Mail className="w-6 h-6" />
+                </button>
 
                 {/* Space for center CTA */}
                 <div className="w-16" />
@@ -491,8 +475,8 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-        {/* Floating AI Tutor Button - hide for guests */}
-        {showNavigation && !isGuest && <AITutorFloatingButton hidden={false} />}
+        {/* Floating AI Tutor Button */}
+        {showNavigation && <AITutorFloatingButton hidden={false} />}
 
         {/* Feedback Modal */}
         <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />

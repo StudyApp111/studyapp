@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, Crown, Lock } from "lucide-react";
+import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, Crown } from "lucide-react";
 import { UpgradeButton } from "@/components/subscription/UpgradeBadge";
 import { motion } from "framer-motion";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
@@ -38,10 +38,19 @@ export default function Home() {
         const isAuth = await base44.auth.isAuthenticated();
 
         if (!isAuth) {
-          if (!isGuest) {
-            // Show onboarding for unauthenticated non-guest users
-            setShowOnboarding(true);
+          // If guest has an active session with a lesson, redirect back to it
+          // This handles the back-button case where guest navigates away
+          if (isGuest && guestData?.lessonData?.id) {
+            navigate(createPageUrl("DocumentViewer") + `?id=${guestData.lessonData.id}`, { replace: true });
+            return;
           }
+          // If guest has started but hasn't created a lesson, send to CreateLesson
+          if (isGuest && !guestData?.lessonData) {
+            navigate(createPageUrl("CreateLesson"), { replace: true });
+            return;
+          }
+          // Show onboarding for unauthenticated non-guest users
+          setShowOnboarding(true);
           return;
         }
 
@@ -92,14 +101,14 @@ export default function Home() {
     init();
   }, [isGuest]);
 
-  const isOnboarded = (!!user && !showOnboarding) || (isGuest && !!guestData?.lessonData);
+  const isOnboarded = !!user && !showOnboarding;
 
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons'],
     queryFn: () => base44.entities.Lesson.list('-created_date', 100),
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: isOnboarded && !isGuest,
+    enabled: isOnboarded,
   });
 
   const { data: allExams = [] } = useQuery({
@@ -107,7 +116,7 @@ export default function Home() {
     queryFn: () => base44.entities.Exam.list('-created_date'),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: isOnboarded && !isGuest,
+    enabled: isOnboarded,
   });
 
   const { data: studyPlans = [] } = useQuery({
@@ -115,7 +124,7 @@ export default function Home() {
     queryFn: () => base44.entities.StudyPlan.filter({ status: 'active' }),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: isOnboarded && !isGuest,
+    enabled: isOnboarded,
   });
 
   const studyPlansByLesson = React.useMemo(() => {
@@ -176,15 +185,14 @@ export default function Home() {
   };
 
   // Derive first name: prefer display_name > full_name
-  const guestName = isGuest ? (guestData?.name || '') : '';
-  const firstName = user?.display_name || user?.data?.display_name || user?.full_name?.split(' ')[0] || guestName || '';
-  const schoolName = learningProfile?.school || (isGuest ? guestData?.school : '') || '';
+  const firstName = user?.display_name || user?.data?.display_name || user?.full_name?.split(' ')[0] || '';
+  const schoolName = learningProfile?.school || '';
   const subtitle = schoolName;
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0a12]' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
       {/* Onboarding Modal */}
-      {showOnboarding && !isGuest && (
+      {showOnboarding && (
         <OnboardingModal onComplete={handleOnboardingComplete} />
       )}
 
@@ -224,31 +232,24 @@ export default function Home() {
                 )}
               </div>
 
-              {/* Stats Row - School, Year, Streak, XP (hide for guests) */}
-              {!isGuest && (
-                <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
-                  {learningProfile?.school && (
-                    <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200'}`}>
-                      <BookOpen className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
-                      <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{learningProfile.school}</span>
-                    </div>
-                  )}
+              {/* Stats Row - School, Year, Streak, XP */}
+              <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+                {learningProfile?.school && (
+                  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200'}`}>
+                    <BookOpen className={`w-4 h-4 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                    <span className={`text-sm font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{learningProfile.school}</span>
+                  </div>
+                )}
 
-                  <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/20 border-orange-500/30' : (isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200')}`}>
-                    <Flame className="w-4 h-4 text-orange-400" />
-                    <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : (isDark ? 'text-slate-200' : 'text-slate-700')}`}>{user?.current_streak || 0} day streak</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/30">
-                    <Zap className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm font-bold text-yellow-300">{dailyXP}/50 XP</span>
-                  </div>
+                <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm border ${(user?.current_streak || 0) > 0 ? 'bg-orange-500/20 border-orange-500/30' : (isDark ? 'bg-white/10 border-white/10' : 'bg-white/80 border-purple-200')}`}>
+                  <Flame className="w-4 h-4 text-orange-400" />
+                  <span className={`text-sm font-bold ${(user?.current_streak || 0) > 0 ? 'text-orange-300' : (isDark ? 'text-slate-200' : 'text-slate-700')}`}>{user?.current_streak || 0} day streak</span>
                 </div>
-              )}
-              {isGuest && (
-                <p className={`text-sm ${isDark ? 'text-purple-200' : 'text-purple-600'}`}>
-                  Guest Preview — sign up free to save your progress
-                </p>
-              )}
+                <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/30">
+                  <Zap className="w-4 h-4 text-yellow-400" />
+                  <span className="text-sm font-bold text-yellow-300">{dailyXP}/50 XP</span>
+                </div>
+              </div>
 
               {/* CTA Buttons - Right in the hero */}
               <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md mt-2">
@@ -261,11 +262,10 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => navigate(createPageUrl("SmartGrader"))}
-                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:from-emerald-500 hover:to-teal-500 transition-all hover:scale-[1.02] border border-emerald-500/50 ${isGuest ? 'relative' : ''}`}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:from-emerald-500 hover:to-teal-500 transition-all hover:scale-[1.02] border border-emerald-500/50"
                 >
                   <FileCheck className="w-5 h-5" />
                   Grade Essay
-                  {isGuest && <Lock className="w-3.5 h-3.5 ml-1 opacity-70" />}
                 </button>
               </div>
             </div>
@@ -293,11 +293,11 @@ export default function Home() {
                 </button>
               </div>
 
-              {(lessonsLoading && !isGuest) ? (
+              {lessonsLoading ? (
                 <div className="p-4 space-y-3">
                   {[1, 2, 3].map(i => <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />)}
                 </div>
-              ) : lessons.length === 0 && !isGuest ? (
+              ) : lessons.length === 0 ? (
                 <div className="p-8 text-center">
                   <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
                     <BookOpen className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
@@ -307,30 +307,6 @@ export default function Home() {
                   <Button onClick={() => navigate(createPageUrl("CreateLesson"))} className="bg-purple-600 hover:bg-purple-700">
                     <Sparkles className="w-4 h-4 mr-2" /> Start Studying
                   </Button>
-                </div>
-              ) : lessons.length === 0 && isGuest && guestData?.lessonData ? (
-                <div className="divide-y divide-white/5">
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${guestData.lessonData.id}`)}
-                    className={`p-4 transition-colors cursor-pointer group ${isDark ? 'hover:bg-white/5' : 'hover:bg-purple-50/50'}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-400 to-slate-500 flex flex-col items-center justify-center shadow-lg flex-shrink-0">
-                        <Target className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold truncate transition-colors ${isDark ? 'text-slate-100 group-hover:text-purple-400' : 'text-slate-900 group-hover:text-purple-600'}`}>
-                          {guestData.lessonData.course_name || 'Guest Lesson'}
-                        </h3>
-                        <p className={`text-xs mt-1 flex items-center gap-1 font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-                          <Sparkles className="w-3 h-3" /> Continue studying →
-                        </p>
-                      </div>
-                      <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isDark ? 'text-slate-600 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
-                    </div>
-                  </motion.div>
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">
@@ -425,19 +401,17 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Column - Goals (hide for guests) */}
-          {!isGuest && (
-            <div className="space-y-4">
-              <LearningTrajectory studyPlans={studyPlans} lessons={lessons} />
-              
-              <DailyChallenge 
-                studyMinutes={studyMinutesToday}
-                questionsAnswered={questionsToday}
-                flashcardsReviewed={flashcardsToday}
-                compact={false}
-              />
-            </div>
-          )}
+          {/* Right Column - Goals */}
+          <div className="space-y-4">
+            <LearningTrajectory studyPlans={studyPlans} lessons={lessons} />
+            
+            <DailyChallenge 
+              studyMinutes={studyMinutesToday}
+              questionsAnswered={questionsToday}
+              flashcardsReviewed={flashcardsToday}
+              compact={false}
+            />
+          </div>
         </div>
       </div>
 

@@ -45,13 +45,10 @@ import FeedbackModal from "@/components/feedback/FeedbackModal";
 import PromoCodeGenerator from "@/components/admin/PromoCodeGenerator";
 import PromoCodeRedeem from "@/components/subscription/PromoCodeRedeem";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
-import { useGuestSession } from "@/components/guest/GuestSessionContext";
-import GuestAuthGate from "@/components/guest/GuestAuthGate";
 
 export default function Settings() {
   const navigate = useNavigate();
   const { refreshUser, getPromoRemainingDays } = useSubscription();
-  const { isGuest } = useGuestSession();
   const [user, setUser] = useState(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -186,16 +183,6 @@ export default function Settings() {
       setIsDeleting(false);
     }
   };
-
-  // Guest users see auth gate
-  if (isGuest) {
-    return (
-      <GuestAuthGate
-        title="Sign Up to Access Settings"
-        subtitle="Create a free account to manage your profile and preferences"
-      />
-    );
-  }
 
   if (isLoading) {
     return (

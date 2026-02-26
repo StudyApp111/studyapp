@@ -12,8 +12,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { useGuestSession } from "@/components/guest/GuestSessionContext";
-import GuestAuthGate from "@/components/guest/GuestAuthGate";
 
 const formatTime = (seconds) => {
   if (!seconds || seconds === 0) return '0m';
@@ -26,26 +24,13 @@ const formatTime = (seconds) => {
 export default function LessonHistory() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const { isGuest } = useGuestSession();
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
 
-  useEffect(() => {
-    if (!isGuest) {
-      base44.auth.me().then(setUser).catch(console.error);
-    }
-  }, [isGuest]);
 
-  // Guest users see auth gate
-  if (isGuest) {
-    return (
-      <GuestAuthGate
-        icon={BookOpen}
-        title="Sign Up to See Your History"
-        subtitle="Create a free account to track all your lessons and progress"
-      />
-    );
-  }
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(console.error);
+  }, []);
 
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons-history'],
