@@ -74,14 +74,17 @@ Deno.serve(async (req) => {
     console.log("Price validation passed");
 
     // TRIAL ABUSE PREVENTION: Check if user has ever had a trial before
-    const hasHadTrial = user.has_used_trial === true || 
-                        user.trial_end_date || 
-                        user.stripe_subscription_id;
+    // Only check explicit flags — stripe_subscription_id alone doesn't mean trial was used
+    // (it could be set from a failed/abandoned checkout)
+    const hasHadTrial = user.has_used_trial === true;
     
     // Only allow trial for users who have never had one
     const canHaveTrial = includeTrial && !hasHadTrial;
     
     console.log("=== Trial Check ===");
+    console.log("has_used_trial:", user.has_used_trial);
+    console.log("trial_end_date:", user.trial_end_date);
+    console.log("stripe_subscription_id:", user.stripe_subscription_id);
     console.log("Has had trial before:", hasHadTrial);
     console.log("Can have trial:", canHaveTrial);
 
