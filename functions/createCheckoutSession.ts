@@ -110,23 +110,6 @@ Deno.serve(async (req) => {
         stripe_customer_id: customerId
       });
       console.log("Updated user with customer ID");
-    } else if (canHaveTrial) {
-      // Double-check with Stripe if customer has had any subscriptions before
-      try {
-        console.log("Checking for existing subscriptions...");
-        const existingSubscriptions = await stripe.subscriptions.list({
-          customer: customerId,
-          limit: 1
-        });
-        console.log("Existing subscriptions found:", existingSubscriptions.data.length);
-        if (existingSubscriptions.data.length > 0) {
-          console.log("Customer has existing Stripe subscriptions, no trial");
-          // Mark user as having used trial to prevent future abuse
-          await base44.auth.updateMe({ has_used_trial: true });
-        }
-      } catch (e) {
-        console.error("Error checking existing subscriptions:", e.message);
-      }
     }
 
     // Create checkout session with trial only if eligible
