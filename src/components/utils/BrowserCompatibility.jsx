@@ -138,6 +138,17 @@ export const checkIsInAppBrowser = () => {
          (ua.includes('wv') && !ua.includes('Chrome'));
 };
 
+// Specifically detect TikTok and Instagram in-app browsers
+// These browsers CANNOT do OAuth at all — auth buttons must be completely hidden
+export const checkIsSocialInAppBrowser = () => {
+  const ua = navigator.userAgent;
+  return ua.includes('BytedanceWebview') || 
+         ua.includes('musical_ly') || 
+         ua.includes('Instagram') ||
+         ua.includes('FBAN') || 
+         ua.includes('FBAV');
+};
+
 // Detect if user is on a mobile device (used for guest preview availability)
 export const checkIsMobile = () => {
   // Primary check: touch support + screen width
