@@ -71,11 +71,24 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
     const userTrimmed = userAns.trim();
     const correctTrimmed = correctAns.trim();
     
-    // For MCQ where correct_answer should be just a letter (A, B, C, D)
-    if (/^[A-Da-d]$/i.test(correctTrimmed)) {
-      // User selected an option - extract the letter from their selection
+    // Extract a clean single letter from correct_answer if present
+    // Handles: "C", ",C", "C.", "C)", "C. some text", etc.
+    const correctLetterMatch = correctTrimmed.match(/[A-Da-d]/i);
+    const correctLetter = correctLetterMatch ? correctLetterMatch[0].toUpperCase() : null;
+    
+    // For MCQ: compare by letter position
+    if (isMCQ && correctLetter && question.options?.length > 0) {
       const userLetter = extractOptionLetter(userTrimmed, optionIndex);
-      return userLetter.toUpperCase() === correctTrimmed.toUpperCase();
+      if (userLetter.toUpperCase() === correctLetter) return true;
+      
+      // Also check if correct_answer is the full option text (exact match fallback)
+      if (userTrimmed.toLowerCase() === correctTrimmed.toLowerCase()) return true;
+      
+      // Check by index: if user selected the option at the correct letter's index
+      const correctIndex = correctLetter.charCodeAt(0) - 65;
+      if (optionIndex >= 0 && optionIndex === correctIndex) return true;
+      
+      return false;
     }
     
     // For True/False
