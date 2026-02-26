@@ -1667,7 +1667,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30"
+            className="fixed inset-0 z-[99990] flex items-center justify-center p-4 bg-black/30"
             onClick={() => setNewBadges([])}
           >
             <motion.div

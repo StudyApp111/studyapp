@@ -639,23 +639,23 @@ export default function DocumentViewer() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
               <div className="flex-shrink-0 relative z-0 overflow-x-auto scrollbar-hide">
                 <TabsList className={`flex w-max min-w-full border p-1 gap-1 h-auto rounded-lg ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
-                  {hasDocument && (
-                    <TabsTrigger 
-                      value="doc"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                    >
-                      <FileText className="w-4 h-4 flex-shrink-0" />
-                      <span className="text-xs font-medium">Doc</span>
-                    </TabsTrigger>
-                  )}
+                {hasDocument && (
                   <TabsTrigger 
-                    value="studyplan"
-                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                    value="doc"
+                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
                   >
-                    {showStudyPlanDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                    <Target className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Study Plan</span>
+                    <FileText className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Doc</span>
                   </TabsTrigger>
+                )}
+                <TabsTrigger 
+                  value="studyplan"
+                  className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-amber-400/80 data-[state=inactive]:bg-amber-500/10' : 'data-[state=inactive]:text-amber-700 data-[state=inactive]:bg-amber-50'}`}
+                >
+                  {showStudyPlanDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
+                  <Target className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-xs font-medium">Study Plan</span>
+                </TabsTrigger>
                   <TabsTrigger 
                     value="notes"
                     className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
@@ -792,7 +792,7 @@ export default function DocumentViewer() {
                     )}
                     <TabsTrigger 
                       value="studyplan"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-amber-400/80 data-[state=inactive]:bg-amber-500/10' : 'data-[state=inactive]:text-amber-700 data-[state=inactive]:bg-amber-50'}`}
                     >
                       {showStudyPlanDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                       <Target className="w-3.5 h-3.5" />
