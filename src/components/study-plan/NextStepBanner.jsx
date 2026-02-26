@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { ChevronRight, Target, FileText, Zap, Brain, BookOpen, Sparkles, Trophy } from "lucide-react";
 
@@ -14,13 +14,8 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan }) {
   const [allComplete, setAllComplete] = useState(false);
   const [noStudyPlan, setNoStudyPlan] = useState(false);
 
-  useEffect(() => {
-    if (lessonId) {
-      loadNextStep();
-    }
-  }, [lessonId]);
-
-  const loadNextStep = async () => {
+  const loadNextStep = useCallback(async () => {
+    if (!lessonId) return;
     try {
       const plans = await base44.entities.StudyPlan.filter({ 
         lesson_id: lessonId,
@@ -29,16 +24,21 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan }) {
 
       if (plans.length === 0) {
         setNoStudyPlan(true);
+        setNextTask(null);
+        setAllComplete(false);
         return;
       }
 
+      setNoStudyPlan(false);
       const plan = plans[0];
       
       if (plan.all_tasks_completed) {
         setAllComplete(true);
+        setNextTask(null);
         return;
       }
 
+      setAllComplete(false);
       const incomplete = plan.tasks?.find(t => !t.completed);
       if (incomplete) {
         setNextTask(incomplete);
@@ -46,7 +46,25 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan }) {
     } catch (error) {
       console.error("Error loading next step:", error);
     }
-  };
+  }, [lessonId]);
+
+  useEffect(() => {
+    loadNextStep();
+  }, [loadNextStep]);
+
+  // Re-check when study plan finishes generating or lesson reloads
+  useEffect(() => {
+    const handleReload = () => loadNextStep();
+    const handlePlanDone = (e) => {
+      if (!e.detail?.generating) loadNextStep();
+    };
+    window.addEventListener('reloadLesson', handleReload);
+    window.addEventListener('studyPlanGenerating', handlePlanDone);
+    return () => {
+      window.removeEventListener('reloadLesson', handleReload);
+      window.removeEventListener('studyPlanGenerating', handlePlanDone);
+    };
+  }, [loadNextStep]);
 
   // No study plan yet
   if (noStudyPlan) {
