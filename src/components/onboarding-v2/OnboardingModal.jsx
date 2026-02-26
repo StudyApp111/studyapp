@@ -195,7 +195,7 @@ export default function OnboardingModal({ onComplete }) {
     }
 
     if (isGuest) {
-      const school = sessionStorage.getItem("onboarding_profile_school") || "";
+      const school = sessionStorage.getItem(ONBOARDING_SCHOOL_KEY) || localStorage.getItem(ONBOARDING_SCHOOL_KEY) || "";
       updateGuestProfile(name || "", school);
     }
 
@@ -204,7 +204,7 @@ export default function OnboardingModal({ onComplete }) {
         if (name) {
           await base44.auth.updateMe({ display_name: name });
         }
-        const school = sessionStorage.getItem("onboarding_profile_school");
+        const school = sessionStorage.getItem(ONBOARDING_SCHOOL_KEY) || localStorage.getItem(ONBOARDING_SCHOOL_KEY);
         if (school) {
           const existingProfiles = await base44.entities.LearningProfile.filter({
             created_by: user.email,
@@ -361,7 +361,7 @@ export default function OnboardingModal({ onComplete }) {
               {step === 8 && (
                 <StepReady
                   key="step8"
-                  displayName={displayName || sessionStorage.getItem("onboarding_profile_name") || ""}
+                  displayName={displayName || sessionStorage.getItem(ONBOARDING_NAME_KEY) || localStorage.getItem(ONBOARDING_NAME_KEY) || ""}
                   onComplete={handleComplete}
                   onBack={handleBack}
                 />
