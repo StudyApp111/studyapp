@@ -290,7 +290,7 @@ export default function Home() {
                 <div className="p-4 space-y-3">
                   {[1, 2, 3].map(i => <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />)}
                 </div>
-              ) : lessons.length === 0 ? (
+              ) : lessons.length === 0 && !isGuest ? (
                 <div className="p-8 text-center">
                   <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${isDark ? 'bg-purple-600/20' : 'bg-purple-100'}`}>
                     <BookOpen className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
@@ -300,6 +300,30 @@ export default function Home() {
                   <Button onClick={() => navigate(createPageUrl("CreateLesson"))} className="bg-purple-600 hover:bg-purple-700">
                     <Sparkles className="w-4 h-4 mr-2" /> Start Studying
                   </Button>
+                </div>
+              ) : lessons.length === 0 && isGuest && guestData?.lessonData ? (
+                <div className="divide-y divide-white/5">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    onClick={() => navigate(`${createPageUrl("DocumentViewer")}?id=${guestData.lessonData.id}`)}
+                    className={`p-4 transition-colors cursor-pointer group ${isDark ? 'hover:bg-white/5' : 'hover:bg-purple-50/50'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-slate-400 to-slate-500 flex flex-col items-center justify-center shadow-lg flex-shrink-0">
+                        <Target className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className={`font-semibold truncate transition-colors ${isDark ? 'text-slate-100 group-hover:text-purple-400' : 'text-slate-900 group-hover:text-purple-600'}`}>
+                          {guestData.lessonData.course_name || 'Guest Lesson'}
+                        </h3>
+                        <p className={`text-xs mt-1 flex items-center gap-1 font-medium ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
+                          <Sparkles className="w-3 h-3" /> Continue studying →
+                        </p>
+                      </div>
+                      <ChevronRight className={`w-5 h-5 flex-shrink-0 ${isDark ? 'text-slate-600 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
+                    </div>
+                  </motion.div>
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">
