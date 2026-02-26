@@ -491,8 +491,8 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-        {/* Floating AI Tutor Button */}
-        {showNavigation && <AITutorFloatingButton hidden={false} />}
+        {/* Floating AI Tutor Button - hide for guests */}
+        {showNavigation && !isGuest && <AITutorFloatingButton hidden={false} />}
 
         {/* Feedback Modal */}
         <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />
