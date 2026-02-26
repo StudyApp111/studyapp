@@ -40,6 +40,12 @@ export default function OnboardingModal({ onComplete }) {
   const [schoolLocation, setSchoolLocation] = useState(null);
   const schoolsFetchedRef = useRef(false);
 
+  // Persist onboarding step to localStorage for cross-browser continuity
+  // (TikTok/Instagram → real browser, or back-button recovery)
+  const ONBOARDING_STEP_KEY = 'studyapp_onboarding_step';
+  const ONBOARDING_SCHOOL_KEY = 'onboarding_profile_school';
+  const ONBOARDING_NAME_KEY = 'onboarding_profile_name';
+
   // Fetch nearby schools immediately on mount using IP-based geolocation
   useEffect(() => {
     if (schoolsFetchedRef.current) return;
@@ -81,20 +87,42 @@ export default function OnboardingModal({ onComplete }) {
           const currentUser = await base44.auth.me();
           setUser(currentUser);
           setDisplayName(currentUser.full_name?.split(" ")[0] || "");
-          const wasOnboarding = sessionStorage.getItem("onboarding_v2_active");
+          const wasOnboarding = sessionStorage.getItem("onboarding_v2_active") || localStorage.getItem("onboarding_v2_active");
           if (wasOnboarding) {
             setStep(8);
           } else {
-            const savedSchool = sessionStorage.getItem("onboarding_profile_school");
+            const savedSchool = sessionStorage.getItem(ONBOARDING_SCHOOL_KEY) || localStorage.getItem(ONBOARDING_SCHOOL_KEY);
             if (savedSchool) {
               setStep(7);
             } else {
               setStep(1);
             }
           }
+        } else {
+          // Not authenticated — restore onboarding step from localStorage for continuity
+          const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY);
+          const savedName = localStorage.getItem(ONBOARDING_NAME_KEY);
+          const savedSchool = localStorage.getItem(ONBOARDING_SCHOOL_KEY);
+          
+          if (savedName) setDisplayName(savedName);
+          if (savedSchool) sessionStorage.setItem(ONBOARDING_SCHOOL_KEY, savedSchool);
+          if (savedName) sessionStorage.setItem(ONBOARDING_NAME_KEY, savedName);
+          
+          if (savedStep) {
+            const restored = parseInt(savedStep, 10);
+            // Only restore to steps that make sense without auth (1-7)
+            if (restored >= 1 && restored <= 7) {
+              setStep(restored);
+            }
+          }
         }
       } catch {
-        // Not authenticated
+        // Not authenticated — same restore logic
+        const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY);
+        if (savedStep) {
+          const restored = parseInt(savedStep, 10);
+          if (restored >= 1 && restored <= 7) setStep(restored);
+        }
       } finally {
         setIsCheckingAuth(false);
       }
@@ -106,6 +134,8 @@ export default function OnboardingModal({ onComplete }) {
     try {
       posthog.capture("onboarding_step_viewed", { step, total_steps: TOTAL_STEPS });
     } catch {}
+    // Persist step to localStorage for cross-browser and back-button continuity
+    localStorage.setItem(ONBOARDING_STEP_KEY, String(step));
   }, [step]);
 
   const handleNext = useCallback(() => {
@@ -125,6 +155,7 @@ export default function OnboardingModal({ onComplete }) {
   const handleSignIn = (method) => {
     try { posthog.capture("onboarding_sign_in_clicked", { method }); } catch {}
     sessionStorage.setItem("onboarding_v2_active", "true");
+    localStorage.setItem("onboarding_v2_active", "true");
     const returnUrl = window.location.pathname + window.location.search;
     base44.auth.redirectToLogin(returnUrl);
   };
@@ -141,7 +172,8 @@ export default function OnboardingModal({ onComplete }) {
   const handleSchoolComplete = async ({ school }) => {
     try { posthog.capture("onboarding_school_completed", { has_school: !!school }); } catch {}
 
-    sessionStorage.setItem("onboarding_profile_school", school);
+    sessionStorage.setItem(ONBOARDING_SCHOOL_KEY, school);
+    localStorage.setItem(ONBOARDING_SCHOOL_KEY, school);
 
     if (isGuest) {
       updateGuestProfile(displayName || "", school);
@@ -154,10 +186,12 @@ export default function OnboardingModal({ onComplete }) {
     try { posthog.capture("onboarding_name_completed", { has_name: !!name }); } catch {}
 
     if (name) {
-      sessionStorage.setItem("onboarding_profile_name", name);
+      sessionStorage.setItem(ONBOARDING_NAME_KEY, name);
+      localStorage.setItem(ONBOARDING_NAME_KEY, name);
       setDisplayName(name);
     } else {
-      sessionStorage.removeItem("onboarding_profile_name");
+      sessionStorage.removeItem(ONBOARDING_NAME_KEY);
+      localStorage.removeItem(ONBOARDING_NAME_KEY);
     }
 
     if (isGuest) {
