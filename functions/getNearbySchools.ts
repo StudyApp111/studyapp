@@ -63,20 +63,20 @@ Deno.serve(async (req) => {
 
     let nearbySchools = [];
 
-    // Only try Overpass if we have coordinates (tight 3s timeout)
+    // Only try Overpass if we have coordinates (5s timeout)
     if (userLat && userLon) {
       try {
-        const overpassQuery = `[out:json][timeout:3];
+        const overpassQuery = `[out:json][timeout:5];
 (
-  node["amenity"="university"](around:50000,${userLat},${userLon});
-  node["amenity"="college"](around:50000,${userLat},${userLon});
-  way["amenity"="university"](around:50000,${userLat},${userLon});
-  way["amenity"="college"](around:50000,${userLat},${userLon});
+  node["amenity"="university"](around:80000,${userLat},${userLon});
+  node["amenity"="college"](around:80000,${userLat},${userLon});
+  way["amenity"="university"](around:80000,${userLat},${userLon});
+  way["amenity"="college"](around:80000,${userLat},${userLon});
 );
 out center tags 15;`;
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
 
         const overpassResponse = await fetch('https://overpass-api.de/api/interpreter', {
           method: 'POST',
