@@ -419,12 +419,26 @@ function LayoutContent({ children, currentPageName }) {
                   <Home className="w-6 h-6" />
                 </Link>
 
-                <button
-                  onClick={() => setFeedbackModalOpen(true)}
-                  className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${isDark ? 'text-slate-400' : 'text-slate-600'} hover:text-purple-400 hover:bg-purple-600/20`}
-                >
-                  <Mail className="w-6 h-6" />
-                </button>
+                {!isGuest && (
+                  <button
+                    onClick={() => setFeedbackModalOpen(true)}
+                    className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${isDark ? 'text-slate-400' : 'text-slate-600'} hover:text-purple-400 hover:bg-purple-600/20`}
+                  >
+                    <Mail className="w-6 h-6" />
+                  </button>
+                )}
+                {isGuest && (
+                  <Link
+                    to={createPageUrl("SmartGrader")}
+                    className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
+                      location.pathname.toLowerCase().includes('smartgrader')
+                        ? 'text-purple-400 bg-purple-600/20'
+                        : isDark ? 'text-slate-400' : 'text-slate-600'
+                    }`}
+                  >
+                    <FileCheck className="w-6 h-6" />
+                  </Link>
+                )}
 
                 {/* Space for center CTA */}
                 <div className="w-16" />
