@@ -130,12 +130,17 @@ function LayoutContent({ children, currentPageName }) {
         setUser(currentUser);
 
         // Handle returning guest: transfer lesson data to newly authenticated user
-        const returningGuestLessonId = sessionStorage.getItem('guest_returning_lesson_id');
-        const returningGuestFP = sessionStorage.getItem('guest_returning_fingerprint');
+        // Check both localStorage and sessionStorage — localStorage survives cross-browser
+        // handoff (e.g. TikTok in-app browser → Safari/Chrome)
+        const returningGuestLessonId = sessionStorage.getItem('guest_returning_lesson_id') || localStorage.getItem('guest_returning_lesson_id');
+        const returningGuestFP = sessionStorage.getItem('guest_returning_fingerprint') || localStorage.getItem('guest_returning_fingerprint');
         if (returningGuestLessonId && returningGuestFP) {
           sessionStorage.removeItem('guest_returning_lesson_id');
           sessionStorage.removeItem('guest_returning_fingerprint');
           sessionStorage.removeItem('guest_returning_to_lesson');
+          localStorage.removeItem('guest_returning_lesson_id');
+          localStorage.removeItem('guest_returning_fingerprint');
+          localStorage.removeItem('guest_returning_to_lesson');
           
           try {
             // Mark onboarding complete FIRST so subsequent Layout re-renders don't redirect to Home
