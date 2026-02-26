@@ -133,7 +133,8 @@ Deno.serve(async (req) => {
           reply_to: 'info@studyappai.com',
           to: [user_email],
           template: {
-            id: template.resend_template_id
+            id: template.resend_template_id,
+            variables: userVars
           }
         };
 
