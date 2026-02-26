@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, Crown } from "lucide-react";
+import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, Crown, Lock } from "lucide-react";
 import { UpgradeButton } from "@/components/subscription/UpgradeBadge";
 import { motion } from "framer-motion";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
@@ -262,10 +262,11 @@ export default function Home() {
                 </button>
                 <button
                   onClick={() => navigate(createPageUrl("SmartGrader"))}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:from-emerald-500 hover:to-teal-500 transition-all hover:scale-[1.02] border border-emerald-500/50"
+                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:from-emerald-500 hover:to-teal-500 transition-all hover:scale-[1.02] border border-emerald-500/50 ${isGuest ? 'relative' : ''}`}
                 >
                   <FileCheck className="w-5 h-5" />
                   Grade Essay
+                  {isGuest && <Lock className="w-3.5 h-3.5 ml-1 opacity-70" />}
                 </button>
               </div>
             </div>
