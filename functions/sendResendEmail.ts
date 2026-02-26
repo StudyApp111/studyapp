@@ -124,65 +124,55 @@ Deno.serve(async (req) => {
 
       // Send via Resend Emails API using template
       try {
-        // First, fetch the template to check if it's published and what variables it needs
-        let templateValid = true;
-        let templateVarsNeeded = [];
+        // Fetch the template HTML and render it ourselves to avoid Resend's
+        // template engine choking on {{{contact.first_name}}} syntax
+        let templateHtml = null;
+        let templateSubject = null;
         try {
           const tmplRes = await fetch(`https://api.resend.com/templates/${template.resend_template_id}`, {
             headers: { 'Authorization': `Bearer ${resendApiKey}` }
           });
           if (tmplRes.ok) {
             const tmplData = await tmplRes.json();
-            console.log('Template info:', JSON.stringify({ 
-              id: tmplData.id, 
-              name: tmplData.name, 
-              status: tmplData.status,
-              variables: tmplData.variables 
-            }));
-            // Extract variable names the template expects
-            if (tmplData.variables && Array.isArray(tmplData.variables)) {
-              templateVarsNeeded = tmplData.variables.map(v => v.name || v);
-            }
+            templateHtml = tmplData.html || null;
+            templateSubject = tmplData.subject || null;
           } else {
-            const tmplErr = await tmplRes.text();
-            console.error('Template fetch error:', tmplRes.status, tmplErr);
-            // Template may not exist or not be published — fall back to plain HTML
-            templateValid = false;
+            console.error('Template fetch error:', tmplRes.status, await tmplRes.text());
           }
         } catch (tmplCheckErr) {
           console.warn('Template check failed:', tmplCheckErr.message);
         }
 
-        // Filter userVars to only include variables the template expects
-        // Resend reserved vars (FIRST_NAME, LAST_NAME, EMAIL, UNSUBSCRIBE_URL) cannot be passed
-        const reservedVars = new Set(['FIRST_NAME', 'LAST_NAME', 'EMAIL', 'UNSUBSCRIBE_URL']);
-        const filteredVars = {};
-        if (templateVarsNeeded.length > 0) {
-          for (const varName of templateVarsNeeded) {
-            if (reservedVars.has(varName.toUpperCase())) continue;
-            if (userVars[varName] != null) {
-              filteredVars[varName] = userVars[varName];
-            } else {
-              // Provide a fallback so template doesn't fail on missing vars
-              filteredVars[varName] = '';
-            }
-          }
-        }
-
         let emailPayload;
-        if (templateValid) {
+        if (templateHtml) {
+          // Replace all Handlebars-style variables in the HTML ourselves
+          // Handles both {{{contact.first_name}}} and {{variable_name}} patterns
+          const allVars = {
+            ...userVars,
+            'contact.first_name': firstName,
+            'contact.last_name': lastName,
+            'contact.email': user_email,
+          };
+          let renderedHtml = templateHtml;
+          for (const [key, val] of Object.entries(allVars)) {
+            // Replace triple braces (unescaped) and double braces
+            const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            renderedHtml = renderedHtml.replace(new RegExp(`\\{\\{\\{${escaped}\\}\\}\\}`, 'g'), val || '');
+            renderedHtml = renderedHtml.replace(new RegExp(`\\{\\{${escaped}\\}\\}`, 'g'), val || '');
+          }
+          // Clean up any remaining unresolved variables
+          renderedHtml = renderedHtml.replace(/\{\{\{[^}]+\}\}\}/g, '');
+          renderedHtml = renderedHtml.replace(/\{\{[^}]+\}\}/g, '');
+
           emailPayload = {
             from: 'StudyApp.AI <updates@updates.studyappai.com>',
             reply_to: 'info@studyappai.com',
             to: [user_email],
-            subject: template.resend_template_name || 'StudyApp.AI',
-            template: {
-              id: template.resend_template_id,
-              variables: filteredVars
-            }
+            subject: templateSubject || template.resend_template_name || 'StudyApp.AI',
+            html: renderedHtml
           };
         } else {
-          // Fallback: send a simple HTML email if template is invalid
+          // Fallback: send a simple HTML email if template fetch failed
           emailPayload = {
             from: 'StudyApp.AI <updates@updates.studyappai.com>',
             reply_to: 'info@studyappai.com',
@@ -191,8 +181,6 @@ Deno.serve(async (req) => {
             html: `<p>Hi ${firstName},</p><p>Welcome to StudyApp.AI! We're excited to have you.</p>`
           };
         }
-
-        console.log('Sending email payload:', JSON.stringify(emailPayload));
 
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
