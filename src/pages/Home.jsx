@@ -92,14 +92,14 @@ export default function Home() {
     init();
   }, [isGuest]);
 
-  const isOnboarded = !!user && !showOnboarding;
+  const isOnboarded = (!!user && !showOnboarding) || (isGuest && !!guestData?.lessonData);
 
   const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
     queryKey: ['lessons'],
     queryFn: () => base44.entities.Lesson.list('-created_date', 100),
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: isOnboarded,
+    enabled: isOnboarded && !isGuest,
   });
 
   const { data: allExams = [] } = useQuery({
@@ -107,7 +107,7 @@ export default function Home() {
     queryFn: () => base44.entities.Exam.list('-created_date'),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: isOnboarded,
+    enabled: isOnboarded && !isGuest,
   });
 
   const { data: studyPlans = [] } = useQuery({
@@ -115,7 +115,7 @@ export default function Home() {
     queryFn: () => base44.entities.StudyPlan.filter({ status: 'active' }),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: isOnboarded,
+    enabled: isOnboarded && !isGuest,
   });
 
   const studyPlansByLesson = React.useMemo(() => {
