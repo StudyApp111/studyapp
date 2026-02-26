@@ -197,8 +197,8 @@ function LayoutContent({ children, currentPageName }) {
           } catch (error) {
               // Not authenticated
               setUser(null);
-              // Allow guests to access CreateLesson and DocumentViewer
-              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer', 'Settings'];
+              // Allow guests to access these pages (they see auth gates on locked pages)
+              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer', 'Settings', 'SmartGrader', 'LessonHistory'];
               const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
                 currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
               );
