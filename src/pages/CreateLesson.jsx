@@ -32,7 +32,12 @@ export default function CreateLesson() {
   // Guest modal removed — guests go straight to DocumentViewer
 
   useEffect(() => {
-    // Guest users who already created a lesson cannot create another
+    // Guest users who already created a lesson — redirect back to it
+    if (isGuest && guestLessonCreated && guestData?.lessonData?.id) {
+      navigate(createPageUrl("DocumentViewer") + `?id=${guestData.lessonData.id}`, { replace: true });
+      return;
+    }
+    
     if (isGuest && guestLessonCreated) {
       setError("Guest preview allows only 1 lesson. Sign up to create more!");
       return;
