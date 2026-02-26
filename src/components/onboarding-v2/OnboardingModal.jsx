@@ -223,22 +223,30 @@ export default function OnboardingModal({ onComplete }) {
     handleNext();
   };
 
+  const clearOnboardingStorage = () => {
+    sessionStorage.removeItem("onboarding_v2_active");
+    sessionStorage.removeItem(ONBOARDING_NAME_KEY);
+    sessionStorage.removeItem(ONBOARDING_SCHOOL_KEY);
+    localStorage.removeItem("onboarding_v2_active");
+    localStorage.removeItem(ONBOARDING_STEP_KEY);
+    localStorage.removeItem(ONBOARDING_NAME_KEY);
+    localStorage.removeItem(ONBOARDING_SCHOOL_KEY);
+  };
+
   const handleComplete = async () => {
     try {
       posthog.capture("onboarding_completed", { total_steps: TOTAL_STEPS, is_guest: isGuest });
     } catch {}
 
     if (isGuest) {
-      sessionStorage.removeItem("onboarding_v2_active");
-      sessionStorage.removeItem("onboarding_profile_name");
-      sessionStorage.removeItem("onboarding_profile_school");
+      clearOnboardingStorage();
       onComplete?.();
       return;
     }
 
     try {
-      const savedName = sessionStorage.getItem("onboarding_profile_name");
-      const savedSchool = sessionStorage.getItem("onboarding_profile_school");
+      const savedName = sessionStorage.getItem(ONBOARDING_NAME_KEY) || localStorage.getItem(ONBOARDING_NAME_KEY);
+      const savedSchool = sessionStorage.getItem(ONBOARDING_SCHOOL_KEY) || localStorage.getItem(ONBOARDING_SCHOOL_KEY);
 
       if (savedName) {
         await base44.auth.updateMe({ display_name: savedName, onboarding_completed: true });
@@ -257,9 +265,7 @@ export default function OnboardingModal({ onComplete }) {
         }
       }
 
-      sessionStorage.removeItem("onboarding_v2_active");
-      sessionStorage.removeItem("onboarding_profile_name");
-      sessionStorage.removeItem("onboarding_profile_school");
+      clearOnboardingStorage();
       window.dispatchEvent(new Event("userSubscriptionUpdated"));
 
       base44.functions.invoke("enrichLearningProfile", {}).catch(() => {});
