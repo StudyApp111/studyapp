@@ -198,7 +198,7 @@ function LayoutContent({ children, currentPageName }) {
               // Not authenticated
               setUser(null);
               // Allow guests to access CreateLesson and DocumentViewer
-              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer', 'Settings'];
+              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer'];
               const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
                 currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
               );
@@ -240,13 +240,17 @@ function LayoutContent({ children, currentPageName }) {
 
   const onboardingDone = user?.onboarding_completed || user?.data?.onboarding_completed;
   const isAdmin = user?.role === 'admin';
-  // Show navigation if user exists AND (onboarding done OR admin), OR if guest
-  const showNavigation = (!!user && (!!onboardingDone || !!isAdmin)) || false; // Never show nav for guests
+  // Show navigation if user exists AND (onboarding done OR admin)
+  const showNavigation = (!!user && (!!onboardingDone || !!isAdmin));
   const showSidebar = showNavigation;
+  // Show mobile bottom nav for guests on key pages (CreateLesson, DocumentViewer) so they can navigate
+  const isGuestOnActivePage = isGuest && (
+    currentPageName === "CreateLesson" || currentPageName === "DocumentViewer"
+  );
   
   const pagesWithCustomNav = ["Worksheet"];
   const showMobileHeader = showNavigation && !isDocumentViewerPage && !isHomePage;
-  const showMobileBottomNav = showNavigation && !pagesWithCustomNav.includes(currentPageName);
+  const showMobileBottomNav = (showNavigation && !pagesWithCustomNav.includes(currentPageName)) || isGuestOnActivePage;
 
 
 
@@ -438,16 +442,19 @@ function LayoutContent({ children, currentPageName }) {
                   <History className="w-6 h-6" />
                 </Link>
 
-                <Link
-                  to={createPageUrl("Settings")}
-                  className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
-                    location.pathname === createPageUrl("Settings")
-                      ? 'text-purple-400 bg-purple-600/20'
-                      : isDark ? 'text-slate-400' : 'text-slate-600'
-                  }`}
-                >
-                  <Settings className="w-6 h-6" />
-                </Link>
+                {/* Settings: hide for guests — they don't need it */}
+                {!isGuest && (
+                  <Link
+                    to={createPageUrl("Settings")}
+                    className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
+                      location.pathname === createPageUrl("Settings")
+                        ? 'text-purple-400 bg-purple-600/20'
+                        : isDark ? 'text-slate-400' : 'text-slate-600'
+                    }`}
+                  >
+                    <Settings className="w-6 h-6" />
+                  </Link>
+                )}
 
                 {/* Upload CTA Button */}
                 <Link
