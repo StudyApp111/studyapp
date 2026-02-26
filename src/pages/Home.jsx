@@ -184,7 +184,7 @@ export default function Home() {
   return (
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0a12]' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
       {/* Onboarding Modal */}
-      {showOnboarding && (
+      {showOnboarding && !isGuest && (
         <OnboardingModal onComplete={handleOnboardingComplete} />
       )}
 
