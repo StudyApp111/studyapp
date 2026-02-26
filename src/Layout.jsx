@@ -314,17 +314,19 @@ function LayoutContent({ children, currentPageName }) {
                 );
               })}
 
-              {/* Feedback/Email icon */}
-              <button
-                onClick={() => setFeedbackModalOpen(true)}
-                className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
-                title="Send Feedback"
-              >
-                <Mail className="w-5 h-5" />
-              </button>
+              {/* Feedback/Email icon - hide for guests */}
+              {!isGuest && (
+                <button
+                  onClick={() => setFeedbackModalOpen(true)}
+                  className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                  title="Send Feedback"
+                >
+                  <Mail className="w-5 h-5" />
+                </button>
+              )}
 
-              {/* Upgrade Badge */}
-              <UpgradeNavBadge isDark={isDark} />
+              {/* Upgrade Badge - hide for guests */}
+              {!isGuest && <UpgradeNavBadge isDark={isDark} />}
 
               {/* Theme Toggle */}
               <button
@@ -352,15 +354,15 @@ function LayoutContent({ children, currentPageName }) {
               </Link>
               
               {/* Profile Avatar */}
-              {user && (
+              {(user || isGuest) && (
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}
                   className="w-full aspect-square rounded-xl bg-white/5 hover:bg-purple-600/20 flex items-center justify-center transition-all"
-                  title={user.full_name || 'Profile'}
+                  title={user?.full_name || guestData?.name || 'Guest'}
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-sm">
-                      {user.full_name?.[0]?.toUpperCase() || 'U'}
+                      {user?.full_name?.[0]?.toUpperCase() || guestData?.name?.[0]?.toUpperCase() || 'G'}
                     </span>
                   </div>
                 </button>
