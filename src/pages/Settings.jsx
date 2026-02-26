@@ -45,10 +45,12 @@ import FeedbackModal from "@/components/feedback/FeedbackModal";
 import PromoCodeGenerator from "@/components/admin/PromoCodeGenerator";
 import PromoCodeRedeem from "@/components/subscription/PromoCodeRedeem";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 export default function Settings() {
   const navigate = useNavigate();
   const { refreshUser, getPromoRemainingDays } = useSubscription();
+  const { isGuest } = useGuestSession();
   const [user, setUser] = useState(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +58,13 @@ export default function Settings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+
+  // Block guests from accessing Settings
+  useEffect(() => {
+    if (isGuest) {
+      navigate(createPageUrl("Home"), { replace: true });
+    }
+  }, [isGuest]);
 
   useEffect(() => {
     loadUser();
