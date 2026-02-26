@@ -12,7 +12,6 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import GuestAuthGate from "@/components/guest/GuestAuthGate";
-import { FileCheck } from "lucide-react";
 
 export default function SmartGrader() {
   const navigate = useNavigate();
