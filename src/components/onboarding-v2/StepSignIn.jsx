@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { Mail, Smartphone, Loader2, Eye, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { checkIsInAppBrowser } from "@/components/utils/BrowserCompatibility";
+import { checkIsInAppBrowser, checkIsSocialInAppBrowser } from "@/components/utils/BrowserCompatibility";
+import InAppBrowserGate from "@/components/guest/InAppBrowserGate";
 
 export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
   const { isDark } = useTheme();
@@ -11,6 +12,7 @@ export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
   const [guestLoading, setGuestLoading] = useState(false);
   const [guestError, setGuestError] = useState(null);
   const isInApp = checkIsInAppBrowser();
+  const isSocialInApp = checkIsSocialInAppBrowser();
 
   const handleSignIn = (method) => {
     if (isInApp) {
@@ -30,6 +32,74 @@ export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
     }
     setGuestLoading(false);
   };
+
+  // TikTok/Instagram: completely gate auth — only show guest preview + open-in-browser
+  if (isSocialInApp) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 30 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -30 }}
+        transition={{ duration: 0.25 }}
+        className="text-center space-y-6 py-4"
+      >
+        {/* Guest preview CTA first */}
+        {onGuestStart && (
+          <div className="space-y-3 max-w-sm mx-auto">
+            <div className="space-y-2">
+              <h2 className={`text-2xl font-black ${isDark ? "text-white" : "text-slate-900"}`}>
+                Try it out — no sign in needed
+              </h2>
+              <p className={`text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                Upload your notes and get your predicted grade instantly.
+              </p>
+            </div>
+            <button
+              onClick={handleGuestStart}
+              disabled={guestLoading}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm transition-all bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50"
+            >
+              {guestLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" />
+                  Preview as Guest
+                </>
+              )}
+            </button>
+            {guestError && (
+              <p className="text-xs text-red-400 text-center">{guestError}</p>
+            )}
+            <div className={`flex items-center gap-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              <div className={`flex-1 h-px ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
+              <span className="text-xs font-medium">or to save progress</span>
+              <div className={`flex-1 h-px ${isDark ? 'bg-white/10' : 'bg-slate-200'}`} />
+            </div>
+          </div>
+        )}
+
+        {/* Open in browser gate — NO auth buttons */}
+        <InAppBrowserGate
+          title="Open in your browser to sign in"
+          subtitle="This app browser doesn't support Google or email sign in. Open in Safari or Chrome first!"
+        />
+
+        {onBack && (
+          <div className="pt-1">
+            <Button
+              variant="ghost"
+              onClick={onBack}
+              className={`${isDark ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}`}
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+          </div>
+        )}
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
