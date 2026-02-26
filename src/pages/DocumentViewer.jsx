@@ -958,8 +958,8 @@ export default function DocumentViewer() {
       {/* Full-screen confetti on task completion */}
       <ConfettiEffect show={showTaskConfetti} onComplete={() => setShowTaskConfetti(false)} />
 
-      {/* Post-Diagnostic Paywall for free users */}
-      {lesson?.id && <PostDiagnosticPaywall lessonId={lesson.id} />}
+      {/* Post-Diagnostic Paywall for free authenticated users only (guests get GuestSignUpModal instead) */}
+      {lesson?.id && !isGuest && <PostDiagnosticPaywall lessonId={lesson.id} />}
 
       {/* XP Gain Toast */}
       <XPGainToast 
