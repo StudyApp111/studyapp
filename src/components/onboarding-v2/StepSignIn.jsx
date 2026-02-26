@@ -192,8 +192,8 @@ export default function StepSignIn({ onSignIn, onGuestStart, onBack }) {
 
             <p className={`text-xs ${isDark ? "text-slate-500" : "text-slate-400"}`}>
               By continuing, you agree to our{" "}
-              <a href="#" className="underline">Terms of Service</a> and{" "}
-              <a href="#" className="underline">Privacy Policy</a>
+              <a href="https://studyappai.com/terms-of-service" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a> and{" "}
+              <a href="https://studyappai.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a>
             </p>
 
             {onBack && (

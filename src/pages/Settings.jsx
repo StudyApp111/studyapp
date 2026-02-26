@@ -445,12 +445,12 @@ export default function Settings() {
               <SettingsItem
                 icon={Lock}
                 label="Privacy Policy"
-                onClick={() => window.open("https://study-app.ai/privacy_policy", "_blank")}
+                onClick={() => window.open("https://studyappai.com/privacy-policy", "_blank")}
               />
               <SettingsItem
                 icon={FileText}
                 label="Terms of Service"
-                onClick={() => window.open("https://study-app.ai/terms_service", "_blank")}
+                onClick={() => window.open("https://studyappai.com/terms-of-service", "_blank")}
               />
               <SettingsItem
                 icon={HelpCircle}
