@@ -16,17 +16,23 @@ export default function GuestSignUpModal({ predictedGrade, predictedScore }) {
     setIsRedirecting(true);
     
     // Save guest data for post-auth transfer in Layout
+    // IMPORTANT: Use localStorage (NOT sessionStorage) because opening in an external browser
+    // (e.g. from TikTok/Instagram in-app browser → Safari/Chrome) creates a new session.
+    // sessionStorage is per-tab and per-browser, so it would be empty in the new browser.
     const urlParams = new URLSearchParams(window.location.search);
     const lessonId = urlParams.get('id') || urlParams.get('lessonId') || guestData?.lessonData?.id;
     if (lessonId) {
+      localStorage.setItem("guest_returning_lesson_id", lessonId);
       sessionStorage.setItem("guest_returning_lesson_id", lessonId);
     }
     if (guestData?.fingerprint) {
+      localStorage.setItem("guest_returning_fingerprint", guestData.fingerprint);
       sessionStorage.setItem("guest_returning_fingerprint", guestData.fingerprint);
     }
+    localStorage.setItem("guest_returning_to_lesson", "true");
     sessionStorage.setItem("guest_returning_to_lesson", "true");
     
-    // Redirect to Home after login — Layout will detect guest_returning_* sessionStorage
+    // Redirect to Home after login — Layout will detect guest_returning_* storage
     // and handle the transfer + redirect to the correct new lesson
     setTimeout(() => {
       base44.auth.redirectToLogin(window.location.origin);
