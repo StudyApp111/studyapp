@@ -188,13 +188,16 @@ Deno.serve(async (req) => {
       console.log("Standard checkout (no trial) - payment always required");
     }
 
-    console.log("Session config prepared:", {
+    console.log("Session config prepared:", JSON.stringify({
       customer: customerId,
       priceId: priceId,
       mode: 'subscription',
       hasTrial: !!subscriptionData.trial_period_days,
-      planType: planType
-    });
+      planType: planType,
+      payment_method_collection: sessionConfig.payment_method_collection,
+      trial_settings: subscriptionData.trial_settings,
+      trial_period_days: subscriptionData.trial_period_days
+    }));
 
     console.log("Calling Stripe API...");
     const session = await stripe.checkout.sessions.create(sessionConfig);
