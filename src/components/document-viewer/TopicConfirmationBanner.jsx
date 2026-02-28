@@ -184,7 +184,7 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
 /* ─── Step 1: Topic selection ─── */
 function Step1Topics({ lesson, topLevelTopics, deselectedSections, deselectedSubtopics, toggleSection, toggleSubtopic, handleDeselectAll, allDeselected, selectedCount, onConfirm }) {
   return (
-    <div className="flex flex-col max-h-[80vh] sm:max-h-none">
+    <div className="flex flex-col max-h-[80vh] sm:max-h-[80vh]">
       {/* Fixed header */}
       <div className="px-5 pt-2 pb-2 flex-shrink-0">
         <div className="text-center mb-3">
