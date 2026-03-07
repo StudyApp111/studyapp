@@ -152,7 +152,8 @@ JSON Output (exact schema):
 - feedback_session_title: "Exam ${examNumber} Performance & Grade Prediction"
 - predicted_exam_score_percentage: "%"|"Not Calculable"
 - prediction_confidence_percentage: number (20-65)
-- confidence_level: "Low"|"Medium"|`;
+- confidence_level: "Low"|"Medium"
+- mastery_gap: A short, 2-4 word phrase identifying the specific topic or competency that is the weakest (e.g., "Cellular Respiration"). Do NOT write a sentence.`;
         }
 
         if (!finalPrompt) {
