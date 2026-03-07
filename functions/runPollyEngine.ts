@@ -414,7 +414,7 @@ Flag for chat intervention if ANY of:
         predicted_grade: pollyResponse.engine_state.predicted_grade_letter,
         score: pollyResponse.engine_state.predicted_score_percent,
         confidence: pollyResponse.engine_state.prediction_confidence_percent,
-        source: 'polly_engine'
+        source: trigger_event || 'polly_engine'
       };
 
       const updatedHistory = [...(studyPlan.grade_history || []), newGradeEntry];
