@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, FileCheck, ArrowRight, Sparkles, Upload, Flame, Zap, Target, Trophy, ChevronRight, Brain, Copy, Crown, Loader2 } from "lucide-react";
 import { UpgradeButton } from "@/components/subscription/UpgradeBadge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
 import { handleDailyReset } from "@/components/utils/dailyReset";
