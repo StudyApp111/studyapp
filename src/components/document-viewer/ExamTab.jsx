@@ -1050,6 +1050,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         // PostHog: Guest quiz completion
         try {
           posthog?.capture('guest_quiz_completed', {
+            is_guest: true,
             lesson_id: lesson.id,
             course_name: lesson.course_name,
             predicted_grade: aiGrade,
