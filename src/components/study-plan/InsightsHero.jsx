@@ -35,32 +35,57 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
       : `Your predicted grade is a ${currentGrade}. Complete the tasks below and watch your grade climb.`;
   }
 
+  // Format source to short task name
+  const formatSource = (source) => {
+    if (!source || source === 'polly_engine') return 'Update';
+    if (source.includes('practice_exam')) return 'Quiz';
+    if (source.includes('flashcard')) return 'Cards';
+    if (source.includes('teach_it')) return 'Feynman';
+    if (source.includes('notes')) return 'Notes';
+    return 'Update';
+  };
+
   // Build chart data
   const gradeHistory = studyPlan?.grade_history || [];
-  const chartData = [];
+  const baseData = [];
   
   if (gradeHistory.length > 0) {
     gradeHistory.forEach((entry, idx) => {
-      chartData.push({
-        name: idx === 0 ? 'Diagnostic' : `Update ${idx}`,
-        score: entry.score || 0,
+      baseData.push({
+        name: idx === 0 ? 'Diagnostic' : formatSource(entry.source),
+        actualScore: entry.score || 0,
         grade: entry.predicted_grade || 'F'
       });
     });
   } else {
-    chartData.push({
+    baseData.push({
       name: 'Diagnostic',
-      score: studyPlan?.initial_score || 0,
+      actualScore: studyPlan?.initial_score || 0,
       grade: studyPlan?.initial_predicted_grade || 'F'
     });
     if (studyPlan?.current_score && studyPlan.current_score !== studyPlan.initial_score) {
-      chartData.push({
+      baseData.push({
         name: 'Current',
-        score: studyPlan.current_score,
+        actualScore: studyPlan.current_score,
         grade: studyPlan.current_predicted_grade
       });
     }
   }
+
+  // Add future target point
+  const lastPoint = baseData[baseData.length - 1];
+  const targetScore = 95;
+  
+  const chartData = [...baseData];
+  chartData[chartData.length - 1].futureScore = lastPoint.actualScore;
+  chartData.push({
+    name: 'Target',
+    futureScore: targetScore,
+    grade: 'A+',
+    isFuture: true
+  });
+
+  const estimatedHours = behavioralInsights?.estimated_hours_to_target;
 
   return (
     <motion.div 
@@ -89,6 +114,15 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
 
         {/* Grade Progress Chart */}
         <div className={`px-4 py-4 border-t ${isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200/60 bg-slate-50/50'}`}>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Grade Trajectory</h4>
+            {estimatedHours && (
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${isDark ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600'}`}>
+                <Clock className="w-3 h-3" />
+                ~{Math.round(estimatedHours)}h to A+
+              </div>
+            )}
+          </div>
           <div className="h-36 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
@@ -115,17 +149,29 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
                     fontSize: '12px',
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                   }}
-                  formatter={(value, name, props) => [`${value}% (${props.payload.grade})`, 'Score']}
+                  formatter={(value, name, props) => {
+                    if (name === 'futureScore') return [`${value}% (${props.payload.grade})`, 'Target Score'];
+                    return [`${value}% (${props.payload.grade})`, 'Score'];
+                  }}
                   labelStyle={{ color: isDark ? '#cbd5e1' : '#475569', fontWeight: 'bold', marginBottom: '4px' }}
                 />
                 <ReferenceLine y={90} stroke={isDark ? '#22c55e50' : '#22c55e50'} strokeDasharray="3 3" />
                 <Line 
                   type="monotone" 
-                  dataKey="score" 
+                  dataKey="actualScore" 
                   stroke="#8b5cf6" 
                   strokeWidth={3}
                   dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 2, stroke: isDark ? '#0f172a' : '#fff' }}
                   activeDot={{ r: 6, fill: '#8b5cf6', strokeWidth: 0 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="futureScore" 
+                  stroke="#10b981" 
+                  strokeWidth={3}
+                  strokeDasharray="5 5"
+                  dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: isDark ? '#0f172a' : '#fff' }}
+                  activeDot={{ r: 6, fill: '#10b981', strokeWidth: 0 }}
                 />
               </LineChart>
             </ResponsiveContainer>
