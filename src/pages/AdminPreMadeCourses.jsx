@@ -94,6 +94,22 @@ export default function AdminPreMadeCourses() {
                                 <label className="text-sm font-medium mb-1 block">Icon (Emoji)</label>
                                 <Input value={editingCourse.icon || ''} onChange={e => setEditingCourse({...editingCourse, icon: e.target.value})} placeholder="🧬" />
                             </div>
+                            <div>
+                                <label className="text-sm font-medium mb-1 block">Education Level</label>
+                                <Select value={editingCourse.education_level || 'university'} onValueChange={v => setEditingCourse({...editingCourse, education_level: v})}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select level" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="university">University / College</SelectItem>
+                                        <SelectItem value="k12">K-12</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium mb-1 block">Institution / Geography</label>
+                                <Input value={editingCourse.institution || ''} onChange={e => setEditingCourse({...editingCourse, institution: e.target.value})} placeholder="e.g. Harvard or New York" />
+                            </div>
                             <div className="flex items-center gap-2 mt-6">
                                 <Switch checked={editingCourse.is_published} onCheckedChange={c => setEditingCourse({...editingCourse, is_published: c})} />
                                 <label className="text-sm font-medium">Published</label>
