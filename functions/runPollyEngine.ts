@@ -324,7 +324,7 @@ Flag for chat intervention if ANY of:
                     predicted_grade_letter: { type: "string" },
                     predicted_score_percent: { type: "number" },
                     prediction_confidence_percent: { type: "number" },
-                    current_mastery_gap: { type: "string" },
+                    current_mastery_gap: { type: "string", description: "A short, 2-4 word phrase identifying the specific topic, section, or competency that is the weakest (e.g., 'Cellular Respiration', 'Socio-Historical Mapping'). Do NOT write a sentence or paragraph." },
                     learning_velocity: { type: "string" }
                   },
                   required: ["predicted_grade_letter", "predicted_score_percent", "prediction_confidence_percent"]
