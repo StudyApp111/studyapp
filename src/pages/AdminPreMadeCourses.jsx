@@ -224,7 +224,7 @@ export default function AdminPreMadeCourses() {
                                                                     category: '',
                                                                     icon: '📚',
                                                                     is_published: false,
-                                                                    education_level: lesson.curriculum_map?.grade?.toLowerCase().includes('high') ? 'k12' : 'university',
+                                                                    education_level: (lesson.curriculum_map?.grade || '').toLowerCase().includes('high') ? 'k12' : 'university',
                                                                     institution: lesson.curriculum_map?.school || lesson.curriculum_map?.city || '',
                                                                     extracted_content: lesson.extracted_content || '',
                                                                     compressed_content: lesson.compressed_content || ''
