@@ -70,7 +70,7 @@ export default function AdminPreMadeCourses() {
         <div className="p-8 max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">Manage Pre-Made Courses</h1>
-                <Button onClick={() => setEditingCourse({ course_name: '', description: '', category: '', icon: '📚', is_published: false })}>
+                <Button onClick={() => setEditingCourse({ course_name: '', description: '', category: '', icon: '📚', is_published: false, education_level: 'university', institution: '' })}>
                     <Plus className="w-4 h-4 mr-2" /> New Course
                 </Button>
             </div>
