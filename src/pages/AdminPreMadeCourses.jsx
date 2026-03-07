@@ -28,6 +28,12 @@ export default function AdminPreMadeCourses() {
         enabled: !!user
     });
 
+    const { data: allLessons = [], isLoading: lessonsLoading } = useQuery({
+        queryKey: ['adminAllLessons'],
+        queryFn: () => base44.entities.Lesson.list('-created_date', 500),
+        enabled: !!user
+    });
+
     const createCourseMutation = useMutation({
         mutationFn: (data) => base44.entities.PreMadeCourse.create(data),
         onSuccess: () => {
