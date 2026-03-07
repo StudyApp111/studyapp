@@ -127,6 +127,36 @@ export default function Home() {
     enabled: isOnboarded,
   });
 
+  const { data: preMadeCourses = [], isLoading: preMadeLoading } = useQuery({
+    queryKey: ['preMadeCourses'],
+    queryFn: () => base44.entities.PreMadeCourse.filter({ is_published: true }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [startingCourseId, setStartingCourseId] = useState(null);
+
+  const handleStartPreMadeCourse = async (courseId) => {
+    try {
+      setStartingCourseId(courseId);
+      const payload = { pre_made_course_id: courseId };
+      if (isGuest && guestData?.fingerprint) {
+        payload.fingerprint = guestData.fingerprint;
+      }
+      
+      const res = await base44.functions.invoke('startPreMadeCourse', payload);
+      if (res.data?.success && res.data?.lesson_id) {
+        navigate(`${createPageUrl("DocumentViewer")}?id=${res.data.lesson_id}&tab=exam`);
+      } else {
+        throw new Error(res.data?.error || 'Failed to start course');
+      }
+    } catch (error) {
+      console.error("Error starting pre-made course:", error);
+      alert("Failed to start course. Please try again.");
+    } finally {
+      setStartingCourseId(null);
+    }
+  };
+
   const studyPlansByLesson = React.useMemo(() => {
     const map = {};
     studyPlans.forEach(sp => {
@@ -280,7 +310,53 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Left Column - Courses */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Pre-Made Courses */}
+            {preMadeCourses.length > 0 && (
+              <div>
+                <h2 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  <Zap className="w-5 h-5 text-yellow-500" />
+                  Start Instantly
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {preMadeCourses.map(course => (
+                    <button
+                      key={course.id}
+                      onClick={() => handleStartPreMadeCourse(course.id)}
+                      disabled={startingCourseId === course.id}
+                      className={`text-left p-4 rounded-xl border transition-all hover:shadow-md group ${isDark ? 'bg-[#12121a] border-white/10 hover:border-purple-500/50' : 'bg-white border-slate-200 hover:border-purple-300'}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="text-3xl flex-shrink-0">{course.icon || '📚'}</div>
+                        <div>
+                          <h3 className={`font-bold text-sm mb-1 group-hover:text-purple-500 transition-colors ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                            {course.course_name}
+                          </h3>
+                          <p className={`text-xs line-clamp-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                            {course.description}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className={`text-[10px] font-medium px-2 py-1 rounded-md ${isDark ? 'bg-white/5 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                          {course.category || 'General'}
+                        </span>
+                        {startingCourseId === course.id ? (
+                          <span className="text-xs text-purple-500 font-medium flex items-center gap-1">
+                            <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                          </span>
+                        ) : (
+                          <span className="text-xs text-purple-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            Start <ArrowRight className="w-3 h-3" />
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Your Courses */}
             <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-purple-200'}`}>
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-800 via-purple-700 to-indigo-700">

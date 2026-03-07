@@ -342,6 +342,21 @@ function LayoutContent({ children, currentPageName }) {
 
             {/* Bottom: Settings + Profile */}
             <div className="p-2 space-y-1">
+              {/* Admin Dashboard (if admin) */}
+              {user?.role === 'admin' && (
+                <Link
+                  to={createPageUrl("AdminPreMadeCourses")}
+                  className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                    location.pathname.replace(/\/$/, '') === createPageUrl("AdminPreMadeCourses").replace(/\/$/, '')
+                      ? 'bg-purple-600/20 text-purple-400 shadow-sm' 
+                      : isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                  title="Admin Dashboard"
+                >
+                  <Sparkles className="w-5 h-5" />
+                </Link>
+              )}
+              
               {/* Settings Icon */}
               <Link
                 to={createPageUrl("Settings")}
