@@ -24,46 +24,7 @@ const formatTime = (seconds) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Social proof messages for diagnostic quizzes — lives at ExamTab level so it
-// doesn't reset when the user moves between questions
-const SOCIAL_PROOF_MESSAGES = [
-  { emoji: "🧠", text: "Wrong answers teach more than skipped ones" },
-  { emoji: "💡", text: "Guessing still helps — it shows us where to focus your plan" },
-  { emoji: "🎯", text: "Every question you answer makes your grade prediction more accurate" },
-  { emoji: "⚡", text: "The students who improve fastest are the ones who finish, not the ones who score highest" }
-];
-
-function DiagnosticSocialProof() {
-  const { isDark } = useTheme();
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex(prev => (prev + 1) % SOCIAL_PROOF_MESSAGES.length);
-    }, 7000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="px-3 md:px-5 pb-3">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentIndex}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -5 }}
-          transition={{ duration: 0.3 }}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg ${isDark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-100'}`}
-        >
-          <span className="text-base flex-shrink-0">{SOCIAL_PROOF_MESSAGES[currentIndex].emoji}</span>
-          <p className={`text-xs ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>
-            {SOCIAL_PROOF_MESSAGES[currentIndex].text}
-          </p>
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}
+// Social proof messages removed as per request
 
 // Unified progress loader for exam generation - with fun facts
 function ExamGeneratingLoader({ isPractice }) {
@@ -1804,10 +1765,20 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
                 </Button>
               )}
             </div>
-            {/* Social proof carousel below buttons — only for diagnostic exams */}
-            {!isPracticeExam && <DiagnosticSocialProof />}
           </div>
         </div>
+        
+        {/* Diagnostic Explanation Paragraph */}
+        {!isPracticeExam && (
+          <div className={`mt-4 p-5 rounded-2xl border mx-3 md:mx-0 shadow-sm ${isDark ? 'bg-purple-900/10 border-purple-500/20' : 'bg-purple-50/50 border-purple-200'}`}>
+            <h4 className={`font-bold flex items-center gap-2 mb-2 text-base ${isDark ? 'text-purple-300' : 'text-purple-800'}`}>
+              <Sparkles className="w-5 h-5" /> Why take this diagnostic?
+            </h4>
+            <p className={`text-sm leading-relaxed ${isDark ? 'text-purple-100/80' : 'text-purple-900/80'}`}>
+              This quick quiz is the secret to your personalized study plan. <strong>Don't worry if you don't know the answers yet!</strong> Guessing actually helps StudyApp pinpoint exactly what you need to learn. By seeing where you stand right now, we can cut out the fluff and build a custom roadmap that focuses only on closing your specific knowledge gaps, saving you hours of studying and getting you to an A much faster.
+            </p>
+          </div>
+        )}
       </div>
     </>
   );

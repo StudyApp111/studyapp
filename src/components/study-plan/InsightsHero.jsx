@@ -2,18 +2,14 @@ import React from "react";
 import { Sparkles, Target, Clock, AlertCircle, TrendingUp, TrendingDown, Minus, ArrowRight, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) {
   const { isDark } = useTheme();
 
   const currentGrade = studyPlan?.current_predicted_grade || studyPlan?.initial_predicted_grade || '—';
   const masteryGap = studyPlan?.mastery_gap || studyPlan?.priority_focus;
-  const weakComps = studyPlan?.weak_competencies?.filter(c => c !== masteryGap) || [];
   const courseName = lesson?.course_name || 'your course';
-  const estimatedHours = behavioralInsights?.estimated_hours_to_target;
-  const isGuessing = behavioralInsights?.is_guessing_detected;
-  const isInefficient = behavioralInsights?.is_inefficient_studying;
-  const recommendedFocus = behavioralInsights?.recommended_focus;
 
   // Build the dynamic hero message
   const gradeIsGood = currentGrade.startsWith('A');
@@ -37,6 +33,33 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
     subtext = masteryGap
       ? `Your predicted grade is a ${currentGrade}. We've identified "${masteryGap}" as your #1 gap — your custom plan below targets it directly to get you to an A.`
       : `Your predicted grade is a ${currentGrade}. Complete the tasks below and watch your grade climb.`;
+  }
+
+  // Build chart data
+  const gradeHistory = studyPlan?.grade_history || [];
+  const chartData = [];
+  
+  if (gradeHistory.length > 0) {
+    gradeHistory.forEach((entry, idx) => {
+      chartData.push({
+        name: idx === 0 ? 'Diagnostic' : `Update ${idx}`,
+        score: entry.score || 0,
+        grade: entry.predicted_grade || 'F'
+      });
+    });
+  } else {
+    chartData.push({
+      name: 'Diagnostic',
+      score: studyPlan?.initial_score || 0,
+      grade: studyPlan?.initial_predicted_grade || 'F'
+    });
+    if (studyPlan?.current_score && studyPlan.current_score !== studyPlan.initial_score) {
+      chartData.push({
+        name: 'Current',
+        score: studyPlan.current_score,
+        grade: studyPlan.current_predicted_grade
+      });
+    }
   }
 
   return (
@@ -64,43 +87,61 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
           </div>
         </div>
 
-        {/* Stats strip */}
-        <div className={`px-4 py-2.5 flex flex-wrap items-center gap-2 border-t ${isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200/60 bg-slate-50/50'}`}>
-          {masteryGap && (
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${isDark ? 'bg-red-500/15 text-red-300 border border-red-500/20' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-              <Target className="w-3 h-3" />#1 Gap: {masteryGap}
-            </div>
-          )}
-          {estimatedHours && (
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${isDark ? 'bg-purple-500/15 text-purple-300 border border-purple-500/20' : 'bg-purple-50 text-purple-700 border border-purple-200'}`}>
-              <Clock className="w-3 h-3" />~{Math.round(estimatedHours)}h to A+
-            </div>
-          )}
-          {isGuessing && (
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${isDark ? 'bg-amber-500/15 text-amber-300 border border-amber-500/20' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
-              <AlertCircle className="w-3 h-3" />Guessing detected
-            </div>
-          )}
-          {isInefficient && (
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${isDark ? 'bg-amber-500/15 text-amber-300 border border-amber-500/20' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
-              <AlertCircle className="w-3 h-3" />Try active recall
-            </div>
-          )}
-          {weakComps.length > 0 && weakComps.slice(0, 3).map((comp, idx) => (
-            <span key={idx} className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${isDark ? 'bg-white/5 text-slate-400 border border-white/10' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
-              {comp}
-            </span>
-          ))}
-        </div>
-
-        {/* Recommended focus */}
-        {recommendedFocus && (
-          <div className={`px-4 py-2 border-t ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
-            <p className={`text-[11px] leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              <Sparkles className="w-3 h-3 inline mr-1 text-purple-400" />{recommendedFocus}
-            </p>
+        {/* Grade Progress Chart */}
+        <div className={`px-4 py-4 border-t ${isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200/60 bg-slate-50/50'}`}>
+          <div className="h-36 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#334155' : '#e2e8f0'} />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: isDark ? '#94a3b8' : '#64748b' }} 
+                  dy={10}
+                />
+                <YAxis 
+                  domain={[0, 100]} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: isDark ? '#94a3b8' : '#64748b' }}
+                  ticks={[0, 50, 100]}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: isDark ? '#1e293b' : '#fff',
+                    borderColor: isDark ? '#334155' : '#e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  }}
+                  formatter={(value, name, props) => [`${value}% (${props.payload.grade})`, 'Score']}
+                  labelStyle={{ color: isDark ? '#cbd5e1' : '#475569', fontWeight: 'bold', marginBottom: '4px' }}
+                />
+                <ReferenceLine y={90} stroke={isDark ? '#22c55e50' : '#22c55e50'} strokeDasharray="3 3" />
+                <Line 
+                  type="monotone" 
+                  dataKey="score" 
+                  stroke="#8b5cf6" 
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 2, stroke: isDark ? '#0f172a' : '#fff' }}
+                  activeDot={{ r: 6, fill: '#8b5cf6', strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-        )}
+          <div className="flex justify-between items-center mt-4 px-2">
+            <span className={`text-[10px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Diagnostic: {studyPlan?.initial_predicted_grade || '—'}
+            </span>
+            <span className={`text-[10px] font-medium px-2 py-1 rounded-full ${isDark ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-100 text-purple-700'}`}>
+              Current: {currentGrade}
+            </span>
+            <span className={`text-[10px] font-medium ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+              Target: A+
+            </span>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
