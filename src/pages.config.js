@@ -54,13 +54,14 @@ import DocumentViewer from './pages/DocumentViewer';
 import EmailManager from './pages/EmailManager';
 import Feedback from './pages/Feedback';
 import GradeResults from './pages/GradeResults';
+import Home from './pages/Home';
+import LessonHistory from './pages/LessonHistory';
 import ManageSubscription from './pages/ManageSubscription';
 import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
-import Home from './pages/Home';
-import LessonHistory from './pages/LessonHistory';
 import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
+import AdminPreMadeCourses from './pages/AdminPreMadeCourses';
 import __Layout from './Layout.jsx';
 
 
@@ -72,13 +73,14 @@ export const PAGES = {
     "EmailManager": EmailManager,
     "Feedback": Feedback,
     "GradeResults": GradeResults,
+    "Home": Home,
+    "LessonHistory": LessonHistory,
     "ManageSubscription": ManageSubscription,
     "PricingPlans": PricingPlans,
     "ProfileInformation": ProfileInformation,
-    "Home": Home,
-    "LessonHistory": LessonHistory,
     "Settings": Settings,
     "SmartGrader": SmartGrader,
+    "AdminPreMadeCourses": AdminPreMadeCourses,
 }
 
 export const pagesConfig = {
