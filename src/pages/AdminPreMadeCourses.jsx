@@ -75,6 +75,13 @@ export default function AdminPreMadeCourses() {
                 </Button>
             </div>
 
+            <Tabs defaultValue="courses" className="w-full">
+                <TabsList className="mb-8">
+                    <TabsTrigger value="courses">Manage Courses</TabsTrigger>
+                    <TabsTrigger value="cached">Cached Lessons</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="courses">
             {editingCourse && (
                 <Card className="mb-8 border-purple-200">
                     <CardHeader>
