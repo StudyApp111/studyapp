@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AdminPreMadeCourses() {
+    // Admin dashboard for managing pre-made courses
     const [user, setUser] = useState(null);
     const [editingCourse, setEditingCourse] = useState(null);
     const queryClient = useQueryClient();
