@@ -147,7 +147,12 @@ export default function AdminPreMadeCourses() {
                             <div className="flex justify-between items-start mb-2">
                                 <div className="flex items-center gap-2">
                                     <span className="text-2xl">{course.icon || '📚'}</span>
-                                    <h3 className="font-bold text-lg">{course.course_name}</h3>
+                                    <div>
+                                        <h3 className="font-bold text-lg leading-tight">{course.course_name}</h3>
+                                        <p className="text-xs text-slate-500 font-medium mt-0.5">
+                                            {course.education_level === 'k12' ? 'K-12' : 'University'} • {course.institution || 'No institution'}
+                                        </p>
+                                    </div>
                                 </div>
                                 {course.is_published ? <Globe className="w-4 h-4 text-emerald-500" /> : <Lock className="w-4 h-4 text-slate-400" />}
                             </div>
@@ -177,6 +182,69 @@ export default function AdminPreMadeCourses() {
                     </Card>
                 ))}
             </div>
+                </TabsContent>
+
+                <TabsContent value="cached">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Cached Lessons</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {lessonsLoading ? (
+                                <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-purple-500" /></div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="text-xs text-slate-500 bg-slate-50 uppercase">
+                                            <tr>
+                                                <th className="px-4 py-3">Course Name</th>
+                                                <th className="px-4 py-3">School</th>
+                                                <th className="px-4 py-3">Grade/Level</th>
+                                                <th className="px-4 py-3">City/Geography</th>
+                                                <th className="px-4 py-3">Created</th>
+                                                <th className="px-4 py-3">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {allLessons.map(lesson => (
+                                                <tr key={lesson.id} className="hover:bg-slate-50">
+                                                    <td className="px-4 py-3 font-medium">{lesson.course_name}</td>
+                                                    <td className="px-4 py-3">{lesson.curriculum_map?.school || '-'}</td>
+                                                    <td className="px-4 py-3">{lesson.curriculum_map?.grade || '-'}</td>
+                                                    <td className="px-4 py-3">{lesson.curriculum_map?.city || '-'}</td>
+                                                    <td className="px-4 py-3">{new Date(lesson.created_date).toLocaleDateString()}</td>
+                                                    <td className="px-4 py-3">
+                                                        <Button 
+                                                            size="sm" 
+                                                            variant="outline"
+                                                            onClick={() => {
+                                                                setEditingCourse({
+                                                                    course_name: lesson.course_name,
+                                                                    description: lesson.description || '',
+                                                                    category: '',
+                                                                    icon: '📚',
+                                                                    is_published: false,
+                                                                    education_level: lesson.curriculum_map?.grade?.toLowerCase().includes('high') ? 'k12' : 'university',
+                                                                    institution: lesson.curriculum_map?.school || lesson.curriculum_map?.city || '',
+                                                                    extracted_content: lesson.extracted_content || '',
+                                                                    compressed_content: lesson.compressed_content || ''
+                                                                });
+                                                                window.scrollTo(0, 0);
+                                                            }}
+                                                        >
+                                                            Create Course
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
