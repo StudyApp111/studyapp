@@ -254,18 +254,15 @@ export default function PricingPlans() {
             <CheckCircle2 className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-black text-slate-900 mb-2">
-            {isTrialing ? "Trial Started! 🎉" : "You're Locked In! 🔥"}
+            You're Locked In! 🔥
           </h1>
           <p className="text-slate-600 mb-6">
-            {isTrialing 
-              ? "Your 7-day free trial is now active. Enjoy unlimited access to everything!"
-              : "Welcome to the pro squad. You now have unlimited access to everything."
-            }
+            Welcome to the pro squad. You now have unlimited access to everything.
           </p>
           <div className="flex items-center justify-center gap-2 mb-6">
             <Crown className="w-5 h-5 text-amber-500" />
             <span className="font-bold text-purple-700">
-              {isTrialing ? "Free Trial Active" : "Locked In Member"}
+              Locked In Member
             </span>
           </div>
           <Button
@@ -418,12 +415,12 @@ export default function PricingPlans() {
                 ) : (
                   <>
                     <Zap className="w-5 h-5 mr-2" />
-                    Start Free — 7 Days On Us
+                    Upgrade to Pro
                   </>
                 )}
               </Button>
               <p className="text-center text-purple-300 text-sm mt-3">
-                Cancel anytime · No credit card required
+                Cancel anytime
               </p>
               {checkoutError && (
                 <p className="text-center text-red-400 text-xs mt-2">
