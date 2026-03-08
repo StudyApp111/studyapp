@@ -165,10 +165,14 @@ function LayoutContent({ children, currentPageName }) {
             
             // PostHog: Guest → signup conversion
             try {
+              const { detectDeviceInfo } = require('@/components/utils/userTracking');
+              const deviceInfo = detectDeviceInfo();
               posthog.capture('guest_signup_conversion', {
                 user_email: currentUser.email,
                 lesson_id: transferData?.lesson_id || returningGuestLessonId,
                 transfer_success: !!transferData?.lesson_id,
+                device_type: deviceInfo.device_type,
+                app_type: deviceInfo.app_type
               });
             } catch {}
 
