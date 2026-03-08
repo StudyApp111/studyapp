@@ -17,6 +17,7 @@ import FeedbackDisplay from "@/components/feedback/FeedbackDisplay";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import CreatePracticeQuizButton from "./CreatePracticeQuizButton";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -365,6 +366,19 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
   useEffect(() => {
     if (exam && !exam.completed && exam.id !== examIdRef.current) {
       examIdRef.current = exam.id;
+      
+      if (exam.exam_type !== 'practice') {
+        try {
+          const deviceInfo = detectDeviceInfo();
+          posthog.capture('diagnostic_quiz_viewed', {
+            lesson_id: lesson?.id,
+            course_name: lesson?.course_name,
+            exam_id: exam.id,
+            device_type: deviceInfo.device_type,
+            app_type: deviceInfo.app_type
+          });
+        } catch {}
+      }
       
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -1224,10 +1238,20 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         const allCompletedExams = (exams || []).filter(e => e.completed && e.exam_type !== 'practice');
         const isFirstDiagnostic = allCompletedExams.length === 0;
         
+        const deviceInfo = detectDeviceInfo();
         posthog?.capture('diagnostic_exam_completed', {
           lesson_id: lesson.id, course_name: lesson.course_name, predicted_grade: aiGrade,
           predicted_score: aiScore, time_taken_seconds: elapsedSeconds, correct_count: correctCount,
-          total_questions: totalQuestions, is_first_diagnostic: isFirstDiagnostic
+          total_questions: totalQuestions, is_first_diagnostic: isFirstDiagnostic,
+          device_type: deviceInfo.device_type,
+          app_type: deviceInfo.app_type
+        });
+        posthog?.capture('diagnostic_quiz_completed', {
+          lesson_id: lesson.id, course_name: lesson.course_name, predicted_grade: aiGrade,
+          predicted_score: aiScore, time_taken_seconds: elapsedSeconds, correct_count: correctCount,
+          total_questions: totalQuestions, is_first_diagnostic: isFirstDiagnostic,
+          device_type: deviceInfo.device_type,
+          app_type: deviceInfo.app_type
         });
 
         if (isFirstDiagnostic) {
