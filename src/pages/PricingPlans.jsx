@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import posthog from "posthog-js";
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 export default function PricingPlans() {
   const navigate = useNavigate();
@@ -43,11 +44,13 @@ export default function PricingPlans() {
       
       // PostHog: trial/subscription started — single reliable event on redirect back
       try {
+        const deviceInfo = detectDeviceInfo();
         posthog.capture('subscription_started', {
           plan_type: planType,
           source: 'pricing_page',
           value: planType === 'yearly' ? 59.88 : 6.99,
-          device_type: window.innerWidth >= 768 ? 'desktop' : 'mobile',
+          device_type: deviceInfo.device_type,
+          app_type: deviceInfo.app_type,
         });
       } catch {}
 
@@ -130,10 +133,12 @@ export default function PricingPlans() {
     try {
       const planType = isYearly ? 'yearly' : 'monthly';
       try {
+        const deviceInfo = detectDeviceInfo();
         posthog.capture('checkout_started', {
           plan_type: planType,
           source: 'pricing_page',
-          device_type: window.innerWidth >= 768 ? 'desktop' : 'mobile',
+          device_type: deviceInfo.device_type,
+          app_type: deviceInfo.app_type,
         });
       } catch {}
       console.log('Starting checkout with plan_type:', planType, 'isYearly:', isYearly);
