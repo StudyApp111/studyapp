@@ -43,7 +43,7 @@ export default function PricingPlans() {
       
       // PostHog: trial/subscription started — single reliable event on redirect back
       try {
-        posthog.capture('trial_started', {
+        posthog.capture('subscription_started', {
           plan_type: planType,
           source: 'pricing_page',
           value: planType === 'yearly' ? 59.88 : 6.99,
@@ -138,10 +138,9 @@ export default function PricingPlans() {
       } catch {}
       console.log('Starting checkout with plan_type:', planType, 'isYearly:', isYearly);
       
-      // PricingPlans page = 7-day free trial, no credit card
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: planType,
-        trial: true,
+        trial: false,
         success_url: `${window.location.origin}${createPageUrl("PricingPlans")}?success=true&plan=${planType}`,
         cancel_url: `${window.location.origin}${createPageUrl("PricingPlans")}?canceled=true`
       });
@@ -306,7 +305,7 @@ export default function PricingPlans() {
               Stop Guessing. <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Start Mastering</span>
             </h1>
             <p className="text-purple-200 text-lg max-w-xl mx-auto">
-              Try free for 7 days — no credit card needed. Then as little as $4.99/month.
+              Upgrade to Pro for unlimited access. As little as $4.99/month.
             </p>
           </motion.div>
 

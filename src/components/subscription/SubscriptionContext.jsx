@@ -11,7 +11,8 @@ export const FREE_TIER_LIMITS = {
   practice_quizzes_total: 1,  // 1 practice quiz per lesson
   polly_messages_total: 10,   // 10 Polly chat messages ever
   diagnostic_exams_per_day: 3,  // diagnostics stay generous
-  ai_messages_per_day: 10     // kept for backward compat (not used for paywall)
+  ai_messages_per_day: 10,    // kept for backward compat (not used for paywall)
+  assignments_total: 1        // 1 assignment graded ever
 };
 
 export function SubscriptionProvider({ children }) {
@@ -256,8 +257,12 @@ export function SubscriptionProvider({ children }) {
 
   const canGradeAssignment = async () => {
     if (isPro()) return { allowed: true };
-    // Hard paywall - must be pro to grade
-    return { allowed: false, requiresPro: true };
+    const currentUser = await checkAndResetCounters();
+    if (!currentUser) return { allowed: true };
+    
+    const count = currentUser.total_assignments_graded || 0;
+    const limit = FREE_TIER_LIMITS.assignments_total;
+    return { allowed: count < limit, current: count, limit, requiresPro: count >= limit };
   };
 
   // Increment counters
@@ -307,7 +312,14 @@ export function SubscriptionProvider({ children }) {
     await refreshUser();
   };
 
-  const incrementAssignmentCount = async () => { /* No-op - hard paywall */ };
+  const incrementAssignmentCount = async () => {
+    if (isPro()) return;
+    const freshUser = await checkAndResetCounters();
+    if (!freshUser) return;
+    const newCount = (freshUser.total_assignments_graded || 0) + 1;
+    await base44.auth.updateMe({ total_assignments_graded: newCount });
+    await refreshUser();
+  };
 
   // Trigger upgrade modal with optional callback
   const triggerUpgradeModal = (reason, options = {}) => {

@@ -129,18 +129,7 @@ Deno.serve(async (req) => {
           source: 'stripe_webhook',
         });
 
-        // Trigger trial_started email via Resend (fire-and-forget)
-        if (subscriptionStatus === 'trialing') {
-          base44.asServiceRole.functions.invoke('sendResendEmail', {
-            trigger_type: 'trial_started',
-            user_email: userEmail,
-            context: { 
-              reference_id: `trial_started_${user.id}`,
-              plan_type: planType,
-              trial_end_date: trialEndDate
-            }
-          }).catch(err => console.warn('Trial started email error:', err.message));
-        }
+        // Trial emails removed
         
         // Send TikTok Subscribe event via server-side API
         try {

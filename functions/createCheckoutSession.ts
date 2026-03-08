@@ -33,9 +33,8 @@ Deno.serve(async (req) => {
     
     const { plan_type, trial, success_url, cancel_url } = body;
     
-    // Default to yearly, trial must be explicitly set to true
+    // Default to yearly
     const planType = plan_type || 'yearly';
-    const includeTrial = trial === true;
     
     console.log("Resolved plan_type:", planType, "from request plan_type:", plan_type);
     
@@ -45,7 +44,6 @@ Deno.serve(async (req) => {
     
     console.log("=== Stripe Config ===");
     console.log("Plan type:", planType);
-    console.log("Include trial:", includeTrial);
     console.log("STRIPE_PRICE_MONTHLY:", STRIPE_PRICE_MONTHLY || "NOT SET");
     console.log("STRIPE_PRICE_YEARLY:", STRIPE_PRICE_YEARLY || "NOT SET");
     console.log("STRIPE_API_KEY exists:", !!Deno.env.get("STRIPE_API_KEY"));
@@ -73,21 +71,6 @@ Deno.serve(async (req) => {
     
     console.log("Price validation passed");
 
-    // TRIAL ABUSE PREVENTION: Check if user has ever had a trial before
-    // Only check explicit flags — stripe_subscription_id alone doesn't mean trial was used
-    // (it could be set from a failed/abandoned checkout)
-    const hasHadTrial = user.has_used_trial === true;
-    
-    // Only allow trial for users who have never had one
-    const canHaveTrial = includeTrial && !hasHadTrial;
-    
-    console.log("=== Trial Check ===");
-    console.log("has_used_trial:", user.has_used_trial);
-    console.log("trial_end_date:", user.trial_end_date);
-    console.log("stripe_subscription_id:", user.stripe_subscription_id);
-    console.log("Has had trial before:", hasHadTrial);
-    console.log("Can have trial:", canHaveTrial);
-
     // Check if user already has a Stripe customer ID
     let customerId = user.stripe_customer_id;
     
@@ -112,7 +95,6 @@ Deno.serve(async (req) => {
       console.log("Updated user with customer ID");
     }
 
-    // Create checkout session with trial only if eligible
     const subscriptionData = {
       metadata: {
         user_email: user.email,
@@ -120,14 +102,6 @@ Deno.serve(async (req) => {
         plan_type: planType
       }
     };
-    
-    // Only add trial_period_days if canHaveTrial is true
-    if (canHaveTrial) {
-      subscriptionData.trial_period_days = 7;
-      console.log("Trial added: 7 days");
-    } else {
-      console.log("No trial (user not eligible or not requested)");
-    }
 
     console.log("=== Building Checkout Session ===");
     
@@ -156,33 +130,15 @@ Deno.serve(async (req) => {
       },
       subscription_data: subscriptionData,
       allow_promotion_codes: true,
+      payment_method_collection: 'always'
     };
-
-    // For trials: no credit card required, cancel if no payment method at end
-    if (canHaveTrial) {
-      sessionConfig.payment_method_collection = 'if_required';
-      subscriptionData.trial_settings = {
-        end_behavior: {
-          missing_payment_method: 'cancel'
-        }
-      };
-      console.log("No-credit-card trial mode enabled");
-      console.log("payment_method_collection:", sessionConfig.payment_method_collection);
-      console.log("trial_settings:", JSON.stringify(subscriptionData.trial_settings));
-    } else {
-      sessionConfig.payment_method_collection = 'always';
-      console.log("Standard checkout (no trial) - payment always required");
-    }
 
     console.log("Session config prepared:", JSON.stringify({
       customer: customerId,
       priceId: priceId,
       mode: 'subscription',
-      hasTrial: !!subscriptionData.trial_period_days,
       planType: planType,
       payment_method_collection: sessionConfig.payment_method_collection,
-      trial_settings: subscriptionData.trial_settings,
-      trial_period_days: subscriptionData.trial_period_days
     }));
 
     console.log("Calling Stripe API...");
