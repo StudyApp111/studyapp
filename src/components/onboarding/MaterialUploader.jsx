@@ -109,6 +109,17 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (tabId === "upload") {
+      onMaterialReady(uploadedFiles.length > 0 ? { type: "file", files: uploadedFiles } : null);
+    } else if (tabId === "paste") {
+      onMaterialReady(pastedNotes.trim() ? { type: "notes", content: pastedNotes } : null);
+    } else if (tabId === "topic") {
+      onMaterialReady(topicDescription.trim() ? { type: "topic", content: topicDescription } : null);
+    }
+  };
+
   const tabs = [
     { id: "upload", label: "Upload", icon: Upload, emoji: "📄" },
     { id: "topic", label: "Topic", icon: Type, emoji: "💡" },
@@ -121,7 +132,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
     <div className={`space-y-4 ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
       {/* Course name required hint */}
       {!courseName?.trim() && (
-        <p className="text-sm text-red-400 font-semibold text-center animate-pulse">⚠️ Enter a course name above first</p>
+        <p className="text-sm text-emerald-400 font-semibold text-center animate-pulse">Enter a course name above first</p>
       )}
       {/* Tab selector - more visual */}
       <div className="grid grid-cols-3 gap-2 p-1 bg-slate-800/50 rounded-xl">
@@ -129,7 +140,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
           <button
             key={tab.id}
             type="button"
-            onClick={() => !isDisabled && setActiveTab(tab.id)}
+            onClick={() => !isDisabled && handleTabChange(tab.id)}
             className={`flex items-center justify-center gap-2 py-3 px-2 rounded-lg font-medium transition-all ${
               activeTab === tab.id
                 ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg'
