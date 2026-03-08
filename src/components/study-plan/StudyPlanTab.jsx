@@ -15,6 +15,8 @@ import StartStudyPlanCTA from "./StartStudyPlanCTA";
 import LiveProgressCounts from "./LiveProgressCounts";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import posthog from "posthog-js";
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 const TASK_CONFIG = {
   flashcards: { icon: Copy, gradient: "from-amber-500 to-orange-600", label: "Flashcards", action: "Master", unit: "cards" },
@@ -225,6 +227,17 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     const taskCheck = await canDoTask();
     if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
 
+    try {
+      const deviceInfo = detectDeviceInfo();
+      posthog.capture('task_started_after_diagnostic', {
+        lesson_id: lesson?.id,
+        course_name: lesson?.course_name,
+        task_type: topic.format,
+        device_type: deviceInfo.device_type,
+        app_type: deviceInfo.app_type
+      });
+    } catch {}
+
     const formatMap = {
       "Review Notes": "notes",
       "Flashcards": "flashcards",
@@ -274,6 +287,17 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
   const handlePickFormatGenerate = async (opts) => {
     const taskCheck = await canDoTask();
     if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
+
+    try {
+      const deviceInfo = detectDeviceInfo();
+      posthog.capture('task_started_after_diagnostic', {
+        lesson_id: lesson?.id,
+        course_name: lesson?.course_name,
+        task_type: opts.formats.join(','),
+        device_type: deviceInfo.device_type,
+        app_type: deviceInfo.app_type
+      });
+    } catch {}
 
     // Navigate to the first selected format's tab
     const firstFormat = opts.formats[0];
