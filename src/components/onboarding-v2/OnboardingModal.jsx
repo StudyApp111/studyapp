@@ -7,6 +7,7 @@ import StepSchool from "./StepSchool";
 import StepName from "./StepName";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import { checkIsMobile } from "@/components/utils/BrowserCompatibility";
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 const TOTAL_STEPS = 2;
 
@@ -93,7 +94,13 @@ export default function OnboardingModal({ onComplete }) {
 
   useEffect(() => {
     try {
-      posthog.capture("onboarding_step_viewed", { step, total_steps: TOTAL_STEPS });
+      const deviceInfo = detectDeviceInfo();
+      posthog.capture("onboarding_step_viewed", { 
+        step, 
+        total_steps: TOTAL_STEPS,
+        device_type: deviceInfo.device_type,
+        app_type: deviceInfo.app_type
+      });
     } catch {}
     // Persist step to localStorage for cross-browser and back-button continuity
     localStorage.setItem(ONBOARDING_STEP_KEY, String(step));
@@ -179,7 +186,13 @@ export default function OnboardingModal({ onComplete }) {
 
   const handleComplete = async () => {
     try {
-      posthog.capture("onboarding_completed", { total_steps: TOTAL_STEPS, is_guest: isGuest });
+      const deviceInfo = detectDeviceInfo();
+      posthog.capture("onboarding_completed", { 
+        total_steps: TOTAL_STEPS, 
+        is_guest: isGuest,
+        device_type: deviceInfo.device_type,
+        app_type: deviceInfo.app_type
+      });
     } catch {}
 
     if (isGuest) {
