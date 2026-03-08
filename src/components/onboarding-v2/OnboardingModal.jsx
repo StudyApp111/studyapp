@@ -76,8 +76,15 @@ export default function OnboardingModal({ onComplete }) {
           const currentUser = await base44.auth.me();
           setUser(currentUser);
           setDisplayName(currentUser.full_name?.split(" ")[0] || "");
-          const savedSchool = sessionStorage.getItem(ONBOARDING_SCHOOL_KEY) || localStorage.getItem(ONBOARDING_SCHOOL_KEY);
-          if (savedSchool) {
+          const savedSchool = sessionStorage.getItem(ONBOARDING_SCHOOL_KEY);
+          
+          let hasProfile = false;
+          try {
+            const profiles = await base44.entities.LearningProfile.filter({ created_by: currentUser.email });
+            hasProfile = profiles.length > 0;
+          } catch (e) {}
+
+          if (hasProfile || savedSchool) {
             setStep(2);
           } else {
             setStep(1);
