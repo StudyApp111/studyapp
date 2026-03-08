@@ -55,8 +55,32 @@ export function SubscriptionProvider({ children }) {
     return user[field] !== undefined ? user[field] : user.data?.[field];
   };
 
+  // Check if user is on native iOS/Android app
+  const isNativeApp = () => {
+    if (typeof window === 'undefined') return false;
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    
+    // Check for common app wrappers
+    if (window.ReactNativeWebView || window.Capacitor || window.cordova || window.PhoneGap || window.Android) {
+      return true;
+    }
+
+    // iOS WebView (not Safari, Chrome, Firefox, Edge, etc.)
+    const isIOS = /(iPhone|iPod|iPad)/i.test(ua);
+    const isWebKit = /AppleWebKit/i.test(ua);
+    const isSafari = /Safari/i.test(ua);
+    const isOtherBrowser = /(CriOS|FxiOS|EdgiOS|OPiOS|mercury)/i.test(ua);
+    const isIOSWebView = isIOS && isWebKit && !isSafari && !isOtherBrowser;
+
+    // Android WebView
+    const isAndroidWebView = /wv\)/i.test(ua);
+
+    return isIOSWebView || isAndroidWebView;
+  };
+
   // Check if user has pro subscription OR is in trial period
   const isPro = () => {
+    if (isNativeApp()) return true; // Bypass paywalls for native app users
     if (!user) return false;
     
     const now = new Date();

@@ -3,28 +3,16 @@ import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import posthog from "posthog-js";
-import StepSignIn from "./StepSignIn";
 import StepSchool from "./StepSchool";
 import StepName from "./StepName";
-import StepWelcome from "./StepWelcome";
-import StepHowItWorks from "./StepHowItWorks";
-import StepFeatures from "./StepFeatures";
-import StepReady from "./StepReady";
-import StepMaterials from "./StepMaterials";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import { checkIsMobile } from "@/components/utils/BrowserCompatibility";
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 2;
 
 // Step order:
-// 1 = Welcome (also fires IP-based school fetch in background)
-// 2 = HowItWorks
-// 3 = Materials
-// 4 = Features
-// 5 = School (with pre-loaded nearby schools dropdown)
-// 6 = Name (optional)
-// 7 = SignIn (authenticate) — guest preview available on ALL mobile
-// 8 = Ready ("You're all set")
+// 1 = School
+// 2 = Name
 
 export default function OnboardingModal({ onComplete }) {
   const { isDark } = useTheme();
@@ -87,42 +75,15 @@ export default function OnboardingModal({ onComplete }) {
           const currentUser = await base44.auth.me();
           setUser(currentUser);
           setDisplayName(currentUser.full_name?.split(" ")[0] || "");
-          const wasOnboarding = sessionStorage.getItem("onboarding_v2_active") || localStorage.getItem("onboarding_v2_active");
-          if (wasOnboarding) {
-            setStep(8);
+          const savedSchool = sessionStorage.getItem(ONBOARDING_SCHOOL_KEY) || localStorage.getItem(ONBOARDING_SCHOOL_KEY);
+          if (savedSchool) {
+            setStep(2);
           } else {
-            const savedSchool = sessionStorage.getItem(ONBOARDING_SCHOOL_KEY) || localStorage.getItem(ONBOARDING_SCHOOL_KEY);
-            if (savedSchool) {
-              setStep(7);
-            } else {
-              setStep(1);
-            }
-          }
-        } else {
-          // Not authenticated — restore onboarding step from localStorage for continuity
-          const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY);
-          const savedName = localStorage.getItem(ONBOARDING_NAME_KEY);
-          const savedSchool = localStorage.getItem(ONBOARDING_SCHOOL_KEY);
-          
-          if (savedName) setDisplayName(savedName);
-          if (savedSchool) sessionStorage.setItem(ONBOARDING_SCHOOL_KEY, savedSchool);
-          if (savedName) sessionStorage.setItem(ONBOARDING_NAME_KEY, savedName);
-          
-          if (savedStep) {
-            const restored = parseInt(savedStep, 10);
-            // Only restore to steps that make sense without auth (1-7)
-            if (restored >= 1 && restored <= 7) {
-              setStep(restored);
-            }
+            setStep(1);
           }
         }
       } catch {
-        // Not authenticated — same restore logic
-        const savedStep = localStorage.getItem(ONBOARDING_STEP_KEY);
-        if (savedStep) {
-          const restored = parseInt(savedStep, 10);
-          if (restored >= 1 && restored <= 7) setStep(restored);
-        }
+        // Ignore
       } finally {
         setIsCheckingAuth(false);
       }
@@ -151,23 +112,6 @@ export default function OnboardingModal({ onComplete }) {
       setStep((s) => s - 1);
     }
   }, [step]);
-
-  const handleSignIn = (method) => {
-    try { posthog.capture("onboarding_sign_in_clicked", { method }); } catch {}
-    sessionStorage.setItem("onboarding_v2_active", "true");
-    localStorage.setItem("onboarding_v2_active", "true");
-    const returnUrl = window.location.pathname + window.location.search;
-    base44.auth.redirectToLogin(returnUrl);
-  };
-
-  const handleGuestStart = async () => {
-    try { posthog.capture("guest_session_started"); } catch {}
-    const result = await startGuestSession();
-    if (result.allowed) {
-      setStep(8);
-    }
-    return result;
-  };
 
   const handleSchoolComplete = async ({ school }) => {
     try { posthog.capture("onboarding_school_completed", { has_school: !!school }); } catch {}
@@ -319,50 +263,22 @@ export default function OnboardingModal({ onComplete }) {
           <div className="px-6 pb-6">
             <AnimatePresence mode="wait">
               {step === 1 && (
-                <StepWelcome key="step1" displayName={displayName} onNext={handleNext} onBack={null} />
-              )}
-              {step === 2 && (
-                <StepHowItWorks key="step2" onNext={handleNext} onBack={handleBack} />
-              )}
-              {step === 3 && (
-                <StepMaterials key="step3" onNext={handleNext} onBack={handleBack} />
-              )}
-              {step === 4 && (
-                <StepFeatures key="step4" onNext={handleNext} onBack={handleBack} />
-              )}
-              {step === 5 && (
                 <StepSchool
-                  key="step5"
+                  key="step1"
                   user={user}
-                  isGuest={isGuest}
+                  isGuest={false}
                   schoolSuggestions={schoolSuggestions}
                   schoolsLoading={schoolsLoading}
                   schoolLocation={schoolLocation}
                   onComplete={handleSchoolComplete}
-                  onBack={handleBack}
+                  onBack={null}
                 />
               )}
-              {step === 6 && (
+              {step === 2 && (
                 <StepName
-                  key="step6"
+                  key="step2"
                   user={user}
                   onComplete={handleNameComplete}
-                  onBack={handleBack}
-                />
-              )}
-              {step === 7 && (
-                <StepSignIn
-                  key="step7"
-                  onSignIn={handleSignIn}
-                  onGuestStart={isMobile ? handleGuestStart : null}
-                  onBack={handleBack}
-                />
-              )}
-              {step === 8 && (
-                <StepReady
-                  key="step8"
-                  displayName={displayName || sessionStorage.getItem(ONBOARDING_NAME_KEY) || localStorage.getItem(ONBOARDING_NAME_KEY) || ""}
-                  onComplete={handleComplete}
                   onBack={handleBack}
                 />
               )}
