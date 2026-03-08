@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AdminPreMadeCourses from './pages/AdminPreMadeCourses';
 import AssignmentHistory from './pages/AssignmentHistory';
 import ChangePassword from './pages/ChangePassword';
 import CreateLesson from './pages/CreateLesson';
@@ -61,11 +62,11 @@ import PricingPlans from './pages/PricingPlans';
 import ProfileInformation from './pages/ProfileInformation';
 import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
-import AdminPreMadeCourses from './pages/AdminPreMadeCourses';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AdminPreMadeCourses": AdminPreMadeCourses,
     "AssignmentHistory": AssignmentHistory,
     "ChangePassword": ChangePassword,
     "CreateLesson": CreateLesson,
@@ -80,7 +81,6 @@ export const PAGES = {
     "ProfileInformation": ProfileInformation,
     "Settings": Settings,
     "SmartGrader": SmartGrader,
-    "AdminPreMadeCourses": AdminPreMadeCourses,
 }
 
 export const pagesConfig = {

@@ -15,8 +15,7 @@ async function capturePostHogEvent(distinctId, event, properties = {}) {
       body: JSON.stringify({
         api_key: apiKey,
         event,
-        distinct_id: distinctId,
-        properties: { ...properties, $lib: "server" },
+        properties: { ...properties, distinct_id: distinctId, $lib: "server" },
         timestamp: new Date().toISOString(),
       }),
     });

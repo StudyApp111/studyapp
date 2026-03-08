@@ -128,6 +128,12 @@ function LayoutContent({ children, currentPageName }) {
       try {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
+        
+        if (currentUser && currentUser.email) {
+          try {
+            posthog.identify(currentUser.email);
+          } catch (e) {}
+        }
 
         // Handle returning guest: transfer lesson data to newly authenticated user
         // Check both localStorage and sessionStorage — localStorage survives cross-browser

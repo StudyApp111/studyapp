@@ -155,7 +155,13 @@ export default function AdminPreMadeCourses() {
                                         </p>
                                     </div>
                                 </div>
-                                {course.is_published ? <Globe className="w-4 h-4 text-emerald-500" /> : <Lock className="w-4 h-4 text-slate-400" />}
+                                <div className="flex items-center gap-2">
+                                    <Switch 
+                                        checked={course.is_published} 
+                                        onCheckedChange={(c) => updateCourseMutation.mutate({ id: course.id, data: { ...course, is_published: c } })} 
+                                    />
+                                    {course.is_published ? <Globe className="w-4 h-4 text-emerald-500" /> : <Lock className="w-4 h-4 text-slate-400" />}
+                                </div>
                             </div>
                             <p className="text-sm text-slate-500 mb-4 flex-1">{course.description}</p>
                             
