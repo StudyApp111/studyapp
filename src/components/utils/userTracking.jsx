@@ -40,9 +40,23 @@ export const detectDeviceInfo = () => {
   // PWA detection
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
                 window.navigator.standalone === true;
+                
+  // App type detection
+  let appType = 'desktop_web';
+  if (window.ReactNativeWebView || window.Capacitor || window.cordova || window.PhoneGap || window.Android) {
+    if (/(iPhone|iPod|iPad)/i.test(ua)) appType = 'ios_app';
+    else appType = 'android_app';
+  } else if (/(iPhone|iPod|iPad)/i.test(ua) && /AppleWebKit/i.test(ua) && !/Safari/i.test(ua) && !/(CriOS|FxiOS|EdgiOS|OPiOS|mercury)/i.test(ua)) {
+    appType = 'ios_app'; // iOS WebView
+  } else if (/wv\)/i.test(ua)) {
+    appType = 'android_app'; // Android WebView
+  } else if (deviceType === 'mobile' || deviceType === 'tablet') {
+    appType = 'mobile_web';
+  }
   
   return {
     device_type: deviceType,
+    app_type: appType,
     operating_system: os,
     browser: browser,
     browser_version: browserVersion,
