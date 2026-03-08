@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
+import posthog from "posthog-js";
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diagnosticReady, diagnosticCompleted }) {
   const { isGuest, guestData } = useGuestSession();
@@ -22,6 +24,21 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   useEffect(() => {
     if (lesson?.id && localStorage.getItem(dismissKey)) setDismissed(true);
   }, [lesson?.id]);
+
+  useEffect(() => {
+    if (topLevelTopics.length > 0 && !dismissed && !diagnosticCompleted) {
+      try {
+        const deviceInfo = detectDeviceInfo();
+        posthog.capture('document_analysis_viewed', {
+          lesson_id: lesson?.id,
+          course_name: lesson?.course_name,
+          topic_count: topLevelTopics.length,
+          device_type: deviceInfo.device_type,
+          app_type: deviceInfo.app_type
+        });
+      } catch {}
+    }
+  }, [topLevelTopics.length, dismissed, diagnosticCompleted, lesson?.id]);
 
   useEffect(() => {
     if (!lesson?.id || topLevelTopics.length === 0) return;
@@ -93,6 +110,17 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   const selectedCount = selectedSections.length;
 
   const handleConfirmTopics = async () => {
+    try {
+      const deviceInfo = detectDeviceInfo();
+      posthog.capture('document_analysis_completed', {
+        lesson_id: lesson?.id,
+        course_name: lesson?.course_name,
+        selected_count: selectedCount,
+        device_type: deviceInfo.device_type,
+        app_type: deviceInfo.app_type
+      });
+    } catch {}
+
     const allTitles = [];
     selectedSections.forEach(t => {
       allTitles.push(t.title);
