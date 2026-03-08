@@ -69,10 +69,7 @@ export default function CreateLesson() {
         }
       }
     } catch (error) {
-      // Allow guests through without redirecting
-      if (!isGuest) {
-        base44.auth.redirectToLogin(window.location.pathname);
-      }
+      base44.auth.redirectToLogin(window.location.pathname);
     }
   };
 

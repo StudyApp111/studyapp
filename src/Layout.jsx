@@ -207,14 +207,8 @@ function LayoutContent({ children, currentPageName }) {
           } catch (error) {
               // Not authenticated
               setUser(null);
-              // Allow guests to access CreateLesson and DocumentViewer
-              const guestAllowedPages = ['Home', 'CreateLesson', 'DocumentViewer'];
-              const isGuestAllowed = isGuest && guestAllowedPages.some(p => 
-                currentPageName === p || location.pathname.toLowerCase().includes(p.toLowerCase())
-              );
-              if (isAssignmentHistory || (!currentIsHome && !isGuestAllowed)) {
-                navigate(createPageUrl("Home"), { replace: true });
-              }
+              base44.auth.redirectToLogin(window.location.pathname);
+              return;
       }
     })();
 
