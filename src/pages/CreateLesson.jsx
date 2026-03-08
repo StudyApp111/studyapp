@@ -11,6 +11,7 @@ import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 // GuestLessonCreatedModal removed — guests proceed directly to DocumentViewer
 import posthog from 'posthog-js';
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 const LOGO_URL = "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/ea1c6b1a9_StudyAppAI1024x1024px.png";
 
@@ -215,6 +216,7 @@ export default function CreateLesson() {
 
         // PostHog: Guest lesson creation
         try {
+          const deviceInfo = detectDeviceInfo();
           posthog?.capture('lesson_created', {
             course_name: courseName.trim(),
             input_type: lessonData.input_type,
@@ -223,6 +225,8 @@ export default function CreateLesson() {
             has_file: lessonData.input_type === 'file',
             file_count: lessonData.file_urls?.length || 0,
             content_length: (compressedContent || extractedContent || '').length,
+            device_type: deviceInfo.device_type,
+            app_type: deviceInfo.app_type
           });
         } catch {}
 
@@ -237,6 +241,7 @@ export default function CreateLesson() {
       try {
         const allLessons = await base44.entities.Lesson.list('-created_date', 2);
         const isFirstLesson = allLessons.length === 1;
+        const deviceInfo = detectDeviceInfo();
 
         // Always track every lesson creation
         posthog?.capture('lesson_created', {
@@ -248,6 +253,8 @@ export default function CreateLesson() {
           has_file: lessonData.input_type === 'file',
           file_count: lessonData.file_urls?.length || 0,
           content_length: (compressedContent || extractedContent || '').length,
+          device_type: deviceInfo.device_type,
+          app_type: deviceInfo.app_type
         });
 
         if (isFirstLesson) {
@@ -256,6 +263,8 @@ export default function CreateLesson() {
             course_name: courseName.trim(),
             input_type: lessonData.input_type,
             lesson_id: lesson.id,
+            device_type: deviceInfo.device_type,
+            app_type: deviceInfo.app_type
           });
 
           // TikTok pixel
@@ -280,6 +289,8 @@ export default function CreateLesson() {
             input_type: lessonData.input_type,
             lesson_id: lesson.id,
             total_lessons: allLessons.length,
+            device_type: deviceInfo.device_type,
+            app_type: deviceInfo.app_type
           });
         }
       } catch (trackErr) {
