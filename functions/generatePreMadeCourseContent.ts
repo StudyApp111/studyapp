@@ -121,7 +121,7 @@ Generate EXACTLY 5 questions. Return ONE valid JSON object.`;
 
         // Update PreMadeCourse with all generated data
         await entities.PreMadeCourse.update(course.id, {
-            diagnostic_questions: questions,
+            diagnostic_questions_list: questions,
             compressed_content: compressedContent,
             topics: topics,
             curriculum_map: curriculumMap
