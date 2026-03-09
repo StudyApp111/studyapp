@@ -11,7 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@base44/sdk": "^0.8.3",
+    "@base44/sdk": "^0.8.0",
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^4.1.2",
     "@radix-ui/react-accordion": "^1.2.3",
@@ -73,7 +73,8 @@
     "html2pdf.js": "^0.10.1",
     "mammoth": "^1.6.0",
     "posthog-js": "^1.200.0",
-    "@posthog/react": "latest"
+    "@posthog/react": "latest",
+    "@base44/vite-plugin": "^1.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
