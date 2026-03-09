@@ -9,11 +9,13 @@ import { Plus, Edit, Trash2, Globe, Lock, Loader2, RefreshCw } from "lucide-reac
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MaterialUploader from "@/components/onboarding/MaterialUploader";
 
 export default function AdminPreMadeCourses() {
     // Admin dashboard for managing pre-made courses
     const [user, setUser] = useState(null);
     const [editingCourse, setEditingCourse] = useState(null);
+    const [isExtracting, setIsExtracting] = useState(false);
     const queryClient = useQueryClient();
 
     useEffect(() => {
