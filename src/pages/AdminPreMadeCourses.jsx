@@ -67,6 +67,32 @@ export default function AdminPreMadeCourses() {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminPreMadeCourses'] })
     });
 
+    const handleMaterialReady = async (data) => {
+        if (!data) return;
+        
+        if (data.type === "file" && data.files?.length > 0) {
+            setIsExtracting(true);
+            try {
+                const extractionResults = await Promise.allSettled(
+                    data.files.map(f => base44.functions.invoke('extractDocumentContent', { file_url: f.url }))
+                );
+                
+                const extractedParts = extractionResults
+                    .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
+                    .map(r => r.value.data.extracted_content);
+                
+                const extractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
+                setEditingCourse(prev => ({ ...prev, extracted_content: extractedContent }));
+            } catch (err) {
+                console.error("Extraction error:", err);
+            } finally {
+                setIsExtracting(false);
+            }
+        } else if (data.type === "notes" || data.type === "topic") {
+            setEditingCourse(prev => ({ ...prev, extracted_content: data.content }));
+        }
+    };
+
     if (!user) return null;
 
     return (
