@@ -19,13 +19,51 @@ Deno.serve(async (req) => {
         if (!apiKey) return Response.json({ error: 'GEMINIAPIKEY missing' }, { status: 500 });
 
         const content = course.extracted_content || course.description || course.course_name;
-        const truncatedContent = content.substring(0, 8000);
+        
+        console.log(`Starting generation for course ${course.course_name}, content length: ${content.length}`);
 
+        // 1. Compress Document and Extract Topics
+        let compressedContent = content.substring(0, 8000);
+        let topics = [];
+        
+        if (content.length > 2000) {
+            try {
+                console.log("Calling compressDocument...");
+                const compRes = await base44.asServiceRole.functions.invoke('compressDocument', { content });
+                if (compRes.data?.compressed_content) {
+                    compressedContent = compRes.data.compressed_content;
+                }
+                if (compRes.data?.topics) {
+                    topics = compRes.data.topics;
+                }
+            } catch (e) {
+                console.error("compressDocument failed:", e);
+            }
+        }
+
+        // 2. Generate Curriculum Map
+        let curriculumMap = {};
+        try {
+            console.log("Calling curriculumMapping...");
+            const cmRes = await base44.asServiceRole.functions.invoke('curriculumMapping', {
+                courseName: course.course_name,
+                learningProfile: { school: course.institution || "N/A", grade: course.education_level || "N/A" },
+                extractedContent: compressedContent
+            });
+            if (cmRes.data) {
+                curriculumMap = cmRes.data;
+            }
+        } catch (e) {
+            console.error("curriculumMapping failed:", e);
+        }
+
+        // 3. Generate Diagnostic Questions
+        console.log("Generating diagnostic questions...");
         const aiPrompt = `[Context]
 You are an expert assessment designer. Generate a 5-question exam-authentic DIAGNOSTIC worksheet for ${course.course_name}.
 
 Content Summary:
-${truncatedContent}
+${compressedContent}
 
 Internal Rules:
 • Difficulty Progression: Q1–2: Moderate, Q3–4: Challenging, Q5: High Challenge
@@ -81,11 +119,15 @@ Generate EXACTLY 5 questions. Return ONE valid JSON object.`;
         const examData = JSON.parse(text);
         const questions = (examData.exam_questions || []).map(q => ({ ...q, user_answer: '' }));
 
+        // Update PreMadeCourse with all generated data
         await entities.PreMadeCourse.update(course.id, {
             diagnostic_questions: questions,
-            compressed_content: truncatedContent
+            compressed_content: compressedContent,
+            topics: topics,
+            curriculum_map: curriculumMap
         });
 
+        console.log("Successfully generated pre-made course content.");
         return Response.json({ success: true });
     } catch (error) {
         return Response.json({ error: error.message }, { status: 500 });
