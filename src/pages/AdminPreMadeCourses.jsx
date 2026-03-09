@@ -157,6 +157,19 @@ export default function AdminPreMadeCourses() {
                         </div>
                         <div>
                             <label className="text-sm font-medium mb-1 block">Source Material (Extracted Content)</label>
+                            <div className="mb-4">
+                                <MaterialUploader 
+                                    courseName={editingCourse.course_name || "New Course"} 
+                                    school={editingCourse.institution}
+                                    onMaterialReady={handleMaterialReady} 
+                                />
+                            </div>
+                            {isExtracting && (
+                                <div className="flex items-center gap-2 text-purple-500 mb-4">
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span className="text-sm">Extracting text from files...</span>
+                                </div>
+                            )}
                             <Textarea className="h-32" value={editingCourse.extracted_content || ''} onChange={e => setEditingCourse({...editingCourse, extracted_content: e.target.value})} placeholder="Paste course syllabus, notes, or textbook chapters here..." />
                         </div>
                         <div className="flex justify-end gap-2 pt-4">
