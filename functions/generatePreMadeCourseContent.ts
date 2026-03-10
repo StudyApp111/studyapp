@@ -41,6 +41,12 @@ Deno.serve(async (req) => {
             }
         }
 
+        // Save compressed content first so curriculumMapping can fetch it without WAF issues
+        await entities.PreMadeCourse.update(course.id, {
+            compressed_content: compressedContent,
+            topics: topics
+        });
+
         // 2. Generate Curriculum Map
         let curriculumMap = {};
         try {
@@ -48,7 +54,7 @@ Deno.serve(async (req) => {
             const cmRes = await base44.asServiceRole.functions.invoke('curriculumMapping', {
                 courseName: course.course_name,
                 learningProfile: { school: course.institution || "N/A", grade: course.education_level || "N/A" },
-                extractedContent: compressedContent
+                pre_made_course_id: course.id
             });
             if (cmRes.data) {
                 curriculumMap = cmRes.data;
