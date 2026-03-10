@@ -48,17 +48,17 @@ Deno.serve(async (req) => {
         const MAX_TOTAL_INPUT = 200000; // Cap total input to ~200K chars
 
         // For very large documents (180+ pages), sample strategically
-        let workingContent = content;
-        if (content.length > MAX_TOTAL_INPUT) {
-            console.log(`⚠️ Very large document (${content.length} chars), sampling strategically...`);
+        let workingContent = contentToUse;
+        if (contentToUse.length > MAX_TOTAL_INPUT) {
+            console.log(`⚠️ Very large document (${contentToUse.length} chars), sampling strategically...`);
             const third = Math.floor(MAX_TOTAL_INPUT / 3);
-            const midStart = Math.floor(content.length / 2) - Math.floor(third / 2);
-            workingContent = content.substring(0, third) + 
+            const midStart = Math.floor(contentToUse.length / 2) - Math.floor(third / 2);
+            workingContent = contentToUse.substring(0, third) + 
                 "\n\n...[beginning section ends, middle section begins]...\n\n" + 
-                content.substring(midStart, midStart + third) + 
+                contentToUse.substring(midStart, midStart + third) + 
                 "\n\n...[middle section ends, final section begins]...\n\n" + 
-                content.substring(content.length - third);
-            console.log(`📐 Sampled down to ${workingContent.length} chars (from ${content.length})`);
+                contentToUse.substring(contentToUse.length - third);
+            console.log(`📐 Sampled down to ${workingContent.length} chars (from ${contentToUse.length})`);
         }
 
         // ── Run Phase 1 (topic extraction) and Phase 2 (compression) in PARALLEL ──
