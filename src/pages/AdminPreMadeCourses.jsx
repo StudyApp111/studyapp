@@ -208,11 +208,11 @@ export default function AdminPreMadeCourses() {
                             
                             <div className="flex items-center justify-between mt-4 pt-4 border-t">
                                 <div className="text-xs text-slate-500">
-                                    {course.diagnostic_questions?.length ? (
-                                        <span className="text-emerald-600 font-medium">✓ Ready (5 questions)</span>
-                                    ) : (
-                                        <span className="text-amber-600 font-medium">⚠️ Needs Generation</span>
-                                    )}
+                                    {course.diagnostic_questions_list?.length ? (
+                                         <span className="text-emerald-600 font-medium">✓ Ready ({course.diagnostic_questions_list.length} questions)</span>
+                                     ) : (
+                                         <span className="text-amber-600 font-medium">⚠️ Needs Generation</span>
+                                     )}
                                 </div>
                                 <div className="flex gap-2">
                                     <Button size="sm" variant="outline" onClick={() => generateContentMutation.mutate(course.id)} disabled={generateContentMutation.isPending}>
