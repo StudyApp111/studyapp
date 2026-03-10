@@ -16,10 +16,24 @@ Deno.serve(async (req) => {
             console.log('ℹ️ No user authentication - proceeding for onboarding flow');
         }
 
-        const { content } = await req.json();
-        console.log('✅ Request body parsed, content length:', content?.length);
+        const { content, lessonId, pre_made_course_id } = await req.json();
+        
+        let contentToUse = content;
+        if (!contentToUse && lessonId) {
+            const lessons = await base44.asServiceRole.entities.Lesson.filter({ id: lessonId });
+            if (lessons.length > 0) {
+                contentToUse = lessons[0].extracted_content || lessons[0].description;
+            }
+        } else if (!contentToUse && pre_made_course_id) {
+            const courses = await base44.asServiceRole.entities.PreMadeCourse.filter({ id: pre_made_course_id });
+            if (courses.length > 0) {
+                contentToUse = courses[0].extracted_content || courses[0].description || courses[0].course_name;
+            }
+        }
 
-        if (!content) {
+        console.log('✅ Request body parsed, content length:', contentToUse?.length);
+
+        if (!contentToUse) {
             console.error('❌ Missing content in request');
             return Response.json({ error: 'Content is required' }, { status: 400 });
         }
