@@ -157,7 +157,7 @@ ${workingContent}`;
         // Save compressed content first
         await entities.PreMadeCourse.update(course.id, {
             compressed_content: compressedContent,
-            topics: topics
+            topics: topics.map(t => typeof t === 'string' ? t : JSON.stringify(t))
         });
 
         // 2. Generate Curriculum Map Inline
