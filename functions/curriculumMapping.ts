@@ -14,13 +14,26 @@ Deno.serve(async (req) => {
             console.log('No user authentication - proceeding for onboarding flow');
         }
 
-        const { courseName, learningProfile, extractedContent, lessonId } = await req.json();
+        const { courseName, learningProfile, extractedContent, lessonId, pre_made_course_id } = await req.json();
 
         if (!courseName) {
             return Response.json({ error: 'Course name is required' }, { status: 400 });
         }
 
-        console.log('Request params:', { courseName, lessonId, hasLearningProfile: !!learningProfile, hasExtractedContent: !!extractedContent });
+        let contentToUse = extractedContent;
+        if (!contentToUse && lessonId) {
+            const lessons = await base44.asServiceRole.entities.Lesson.filter({ id: lessonId });
+            if (lessons.length > 0) {
+                contentToUse = lessons[0].compressed_content || lessons[0].extracted_content;
+            }
+        } else if (!contentToUse && pre_made_course_id) {
+            const courses = await base44.asServiceRole.entities.PreMadeCourse.filter({ id: pre_made_course_id });
+            if (courses.length > 0) {
+                contentToUse = courses[0].compressed_content || courses[0].extracted_content;
+            }
+        }
+
+        console.log('Request params:', { courseName, lessonId, pre_made_course_id, hasLearningProfile: !!learningProfile, hasExtractedContent: !!contentToUse });
 
         const apiKey = Deno.env.get("GEMINIAPIKEY");
         if (!apiKey) {
