@@ -144,22 +144,19 @@ export default function CreateLesson() {
           // Mark step 1 complete
           setStepStatuses(prev => ({ ...prev, extracted: true }));
           
-          // Compress if needed
-          if (extractedContent.length > 2500) {
-            console.log("📦 Compressing content...");
-            try {
-              const compResult = await base44.functions.invoke('compressDocument', { content: extractedContent });
-              compressedContent = compResult?.data?.compressed_content || extractedContent;
-              // Save structured topics if returned
-              if (compResult?.data?.topics?.length > 0) {
-                lessonData.topics = compResult.data.topics;
-                console.log("✅ Extracted", compResult.data.topics.length, "topics from document");
-              }
-            } catch (compErr) {
-              console.warn("⚠️ Compression failed, using raw:", compErr);
-              compressedContent = extractedContent;
+          // Always run compressDocument to extract topics (critical for topic confirmation modal)
+          // For short docs, compressed_content may just be the original, but topics are still extracted
+          console.log("📦 Compressing content and extracting topics...");
+          try {
+            const compResult = await base44.functions.invoke('compressDocument', { content: extractedContent });
+            compressedContent = compResult?.data?.compressed_content || extractedContent;
+            // Save structured topics if returned
+            if (compResult?.data?.topics?.length > 0) {
+              lessonData.topics = compResult.data.topics;
+              console.log("✅ Extracted", compResult.data.topics.length, "topics from document");
             }
-          } else {
+          } catch (compErr) {
+            console.warn("⚠️ Compression failed, using raw:", compErr);
             compressedContent = extractedContent;
           }
           
