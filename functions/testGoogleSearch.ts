@@ -7,7 +7,7 @@ Deno.serve(async (req) => {
         const genAI = new GoogleGenerativeAI(apiKey);
         
         const researchModel = genAI.getGenerativeModel({ 
-            model: 'gemini-2.0-flash', 
+            model: 'gemini-flash-latest', 
             tools: [{ googleSearch: {} }]
         });
         
