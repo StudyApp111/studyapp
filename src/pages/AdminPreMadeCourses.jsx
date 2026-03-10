@@ -128,8 +128,49 @@ export default function AdminPreMadeCourses() {
                             <Textarea value={editingCourse.description || ''} onChange={e => setEditingCourse({...editingCourse, description: e.target.value})} placeholder="Course description..." />
                         </div>
                         <div>
-                            <label className="text-sm font-medium mb-1 block">Source Material (Extracted Content)</label>
-                            <Textarea className="h-32" value={editingCourse.extracted_content || ''} onChange={e => setEditingCourse({...editingCourse, extracted_content: e.target.value})} placeholder="Paste course syllabus, notes, or textbook chapters here..." />
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-sm font-medium block">Source Material (Extracted Content)</label>
+                                <div>
+                                    <input 
+                                        type="file" 
+                                        id="admin-file-upload" 
+                                        className="hidden" 
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            try {
+                                                setEditingCourse(prev => ({...prev, isExtracting: true}));
+                                                const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                const res = await base44.functions.invoke('extractDocumentContent', { file_url });
+                                                if (res.data?.extracted_content) {
+                                                    setEditingCourse(prev => ({
+                                                        ...prev, 
+                                                        extracted_content: (prev.extracted_content ? prev.extracted_content + '\n\n' : '') + res.data.extracted_content,
+                                                        isExtracting: false
+                                                    }));
+                                                } else {
+                                                    throw new Error("Failed to extract");
+                                                }
+                                            } catch (err) {
+                                                console.error(err);
+                                                alert("Failed to extract document content");
+                                                setEditingCourse(prev => ({...prev, isExtracting: false}));
+                                            }
+                                            e.target.value = '';
+                                        }}
+                                    />
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={() => document.getElementById('admin-file-upload').click()}
+                                        disabled={editingCourse.isExtracting}
+                                    >
+                                        {editingCourse.isExtracting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : null}
+                                        Upload Document
+                                    </Button>
+                                </div>
+                            </div>
+                            <Textarea className="h-32" value={editingCourse.extracted_content || ''} onChange={e => setEditingCourse({...editingCourse, extracted_content: e.target.value})} placeholder="Paste course syllabus, notes, or textbook chapters here..." disabled={editingCourse.isExtracting} />
                         </div>
                         <div className="flex justify-end gap-2 pt-4">
                             <Button variant="outline" onClick={() => setEditingCourse(null)}>Cancel</Button>
