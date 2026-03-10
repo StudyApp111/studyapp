@@ -50,6 +50,11 @@ Deno.serve(async (req) => {
             }
         }
 
+        const parsedTopics = (course.topics || []).map(t => {
+            try { return typeof t === 'string' ? JSON.parse(t) : t; }
+            catch(e) { return t; }
+        });
+
         const lessonData = {
             course_name: course.course_name,
             description: course.description,
@@ -57,7 +62,7 @@ Deno.serve(async (req) => {
             extracted_content: course.extracted_content || "Pre-made course content",
             compressed_content: course.compressed_content || "Pre-made course content",
             curriculum_map: course.curriculum_map || {},
-            topics: course.topics || [],
+            topics: parsedTopics,
             status: "created"
         };
 
