@@ -64,7 +64,7 @@ Task: Research and compile a comprehensive curriculum profile for the course def
 Input Context:
 - Course: ${courseName}
 - School: ${learningProfile?.school || "Not specified"}
-- User Notes: ${extractedContent || "None provided"}
+- User Notes: ${contentToUse || "None provided"}
 
 Directives:
 1. Search Execution: Perform a targeted Google Search for the official course syllabus, outline, or calendar description for [${courseName}] at [${learningProfile?.school || "a typical university"}]. Look for:
