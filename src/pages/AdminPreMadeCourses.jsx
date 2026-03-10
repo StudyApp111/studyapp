@@ -9,13 +9,11 @@ import { Plus, Edit, Trash2, Globe, Lock, Loader2, RefreshCw } from "lucide-reac
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import MaterialUploader from "@/components/onboarding/MaterialUploader";
 
 export default function AdminPreMadeCourses() {
     // Admin dashboard for managing pre-made courses
     const [user, setUser] = useState(null);
     const [editingCourse, setEditingCourse] = useState(null);
-    const [isExtracting, setIsExtracting] = useState(false);
     const queryClient = useQueryClient();
 
     useEffect(() => {
@@ -66,32 +64,6 @@ export default function AdminPreMadeCourses() {
         },
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminPreMadeCourses'] })
     });
-
-    const handleMaterialReady = async (data) => {
-        if (!data) return;
-        
-        if (data.type === "file" && data.files?.length > 0) {
-            setIsExtracting(true);
-            try {
-                const extractionResults = await Promise.allSettled(
-                    data.files.map(f => base44.functions.invoke('extractDocumentContent', { file_url: f.url }))
-                );
-                
-                const extractedParts = extractionResults
-                    .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
-                    .map(r => r.value.data.extracted_content);
-                
-                const extractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
-                setEditingCourse(prev => ({ ...prev, extracted_content: extractedContent }));
-            } catch (err) {
-                console.error("Extraction error:", err);
-            } finally {
-                setIsExtracting(false);
-            }
-        } else if (data.type === "notes" || data.type === "topic") {
-            setEditingCourse(prev => ({ ...prev, extracted_content: data.content }));
-        }
-    };
 
     if (!user) return null;
 
@@ -157,19 +129,6 @@ export default function AdminPreMadeCourses() {
                         </div>
                         <div>
                             <label className="text-sm font-medium mb-1 block">Source Material (Extracted Content)</label>
-                            <div className="mb-4">
-                                <MaterialUploader 
-                                    courseName={editingCourse.course_name || "New Course"} 
-                                    school={editingCourse.institution}
-                                    onMaterialReady={handleMaterialReady} 
-                                />
-                            </div>
-                            {isExtracting && (
-                                <div className="flex items-center gap-2 text-purple-500 mb-4">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span className="text-sm">Extracting text from files...</span>
-                                </div>
-                            )}
                             <Textarea className="h-32" value={editingCourse.extracted_content || ''} onChange={e => setEditingCourse({...editingCourse, extracted_content: e.target.value})} placeholder="Paste course syllabus, notes, or textbook chapters here..." />
                         </div>
                         <div className="flex justify-end gap-2 pt-4">
@@ -208,7 +167,7 @@ export default function AdminPreMadeCourses() {
                             
                             <div className="flex items-center justify-between mt-4 pt-4 border-t">
                                 <div className="text-xs text-slate-500">
-                                    {course.diagnostic_questions_list?.length ? (
+                                    {course.diagnostic_questions?.length ? (
                                         <span className="text-emerald-600 font-medium">✓ Ready (5 questions)</span>
                                     ) : (
                                         <span className="text-amber-600 font-medium">⚠️ Needs Generation</span>

@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
             exam_type: "official",
             exam_number: 1,
             title: "Diagnostic Assessment",
-            questions: course.diagnostic_questions_list || [],
+            questions: course.diagnostic_questions || [],
             status: "in_progress",
             completed: false,
             time_taken_seconds: 0,

@@ -16,24 +16,10 @@ Deno.serve(async (req) => {
             console.log('ℹ️ No user authentication - proceeding for onboarding flow');
         }
 
-        const { content, lessonId, pre_made_course_id } = await req.json();
-        
-        let contentToUse = content;
-        if (!contentToUse && lessonId) {
-            const lessons = await base44.asServiceRole.entities.Lesson.filter({ id: lessonId });
-            if (lessons.length > 0) {
-                contentToUse = lessons[0].extracted_content || lessons[0].description;
-            }
-        } else if (!contentToUse && pre_made_course_id) {
-            const courses = await base44.asServiceRole.entities.PreMadeCourse.filter({ id: pre_made_course_id });
-            if (courses.length > 0) {
-                contentToUse = courses[0].extracted_content || courses[0].description || courses[0].course_name;
-            }
-        }
+        const { content } = await req.json();
+        console.log('✅ Request body parsed, content length:', content?.length);
 
-        console.log('✅ Request body parsed, content length:', contentToUse?.length);
-
-        if (!contentToUse) {
+        if (!content) {
             console.error('❌ Missing content in request');
             return Response.json({ error: 'Content is required' }, { status: 400 });
         }
@@ -48,17 +34,17 @@ Deno.serve(async (req) => {
         const MAX_TOTAL_INPUT = 200000; // Cap total input to ~200K chars
 
         // For very large documents (180+ pages), sample strategically
-        let workingContent = contentToUse;
-        if (contentToUse.length > MAX_TOTAL_INPUT) {
-            console.log(`⚠️ Very large document (${contentToUse.length} chars), sampling strategically...`);
+        let workingContent = content;
+        if (content.length > MAX_TOTAL_INPUT) {
+            console.log(`⚠️ Very large document (${content.length} chars), sampling strategically...`);
             const third = Math.floor(MAX_TOTAL_INPUT / 3);
-            const midStart = Math.floor(contentToUse.length / 2) - Math.floor(third / 2);
-            workingContent = contentToUse.substring(0, third) + 
+            const midStart = Math.floor(content.length / 2) - Math.floor(third / 2);
+            workingContent = content.substring(0, third) + 
                 "\n\n...[beginning section ends, middle section begins]...\n\n" + 
-                contentToUse.substring(midStart, midStart + third) + 
+                content.substring(midStart, midStart + third) + 
                 "\n\n...[middle section ends, final section begins]...\n\n" + 
-                contentToUse.substring(contentToUse.length - third);
-            console.log(`📐 Sampled down to ${workingContent.length} chars (from ${contentToUse.length})`);
+                content.substring(content.length - third);
+            console.log(`📐 Sampled down to ${workingContent.length} chars (from ${content.length})`);
         }
 
         // ── Run Phase 1 (topic extraction) and Phase 2 (compression) in PARALLEL ──
