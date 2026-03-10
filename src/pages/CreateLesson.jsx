@@ -321,7 +321,6 @@ export default function CreateLesson() {
           school: learningProfile?.school || "N/A",
           grade: learningProfile?.grade || "N/A"
         },
-        extractedContent: compressedContent || extractedContent || null,
         lessonId: lesson.id
       })
         .then((result) => {
