@@ -346,7 +346,7 @@ Generate EXACTLY 5 questions. Return ONE valid JSON object.`;
         await entities.PreMadeCourse.update(course.id, {
             diagnostic_questions_list: questions,
             compressed_content: compressedContent,
-            topics: topics,
+            topics: topics.map(t => typeof t === 'string' ? t : JSON.stringify(t)),
             curriculum_map: curriculumMap
         });
 
