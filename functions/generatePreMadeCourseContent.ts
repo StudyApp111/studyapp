@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai';
 
 Deno.serve(async (req) => {
     try {
@@ -17,9 +18,9 @@ Deno.serve(async (req) => {
 
         const apiKey = Deno.env.get('GEMINIAPIKEY');
         if (!apiKey) return Response.json({ error: 'GEMINIAPIKEY missing' }, { status: 500 });
+        const genAI = new GoogleGenerativeAI(apiKey);
 
         const content = course.extracted_content || course.description || course.course_name;
-        
         console.log(`Starting generation for course ${course.course_name}, content length: ${content.length}`);
 
         // 1. Compress Document and Extract Topics
@@ -28,39 +29,255 @@ Deno.serve(async (req) => {
         
         if (content.length > 2000) {
             try {
-                console.log("Calling compressDocument...");
-                const compRes = await base44.asServiceRole.functions.invoke('compressDocument', { pre_made_course_id: course.id });
-                if (compRes.data?.compressed_content) {
-                    compressedContent = compRes.data.compressed_content;
+                console.log("Compressing document inline...");
+                const MAX_TOTAL_INPUT = 200000;
+                let workingContent = content;
+                if (content.length > MAX_TOTAL_INPUT) {
+                    const third = Math.floor(MAX_TOTAL_INPUT / 3);
+                    const midStart = Math.floor(content.length / 2) - Math.floor(third / 2);
+                    workingContent = content.substring(0, third) + 
+                        "\n\n...[beginning section ends, middle section begins]...\n\n" + 
+                        content.substring(midStart, midStart + third) + 
+                        "\n\n...[middle section ends, final section begins]...\n\n" + 
+                        content.substring(content.length - third);
                 }
-                if (compRes.data?.topics) {
-                    topics = compRes.data.topics;
+
+                const MAX_TOPIC_INPUT = 25000;
+                let topicInputContent = workingContent;
+                if (workingContent.length > MAX_TOPIC_INPUT) {
+                    const halfMax = Math.floor(MAX_TOPIC_INPUT / 2);
+                    topicInputContent = workingContent.substring(0, halfMax) + "\n\n...[middle content omitted]...\n\n" + workingContent.substring(workingContent.length - halfMax);
                 }
+
+                const topicPrompt = `You are a document structure analyzer. Your task is to extract the HIERARCHICAL structure from this educational document.
+
+CRITICAL: OUTPUT MUST BE A 2-LEVEL HIERARCHY
+LEVEL 1 = SECTIONS (the document's major organizational divisions)
+LEVEL 2 = TOPICS (the specific concepts discussed WITHIN each section)
+
+DOCUMENT CONTENT:
+${topicInputContent}`;
+
+                const topicPromise = fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: topicPrompt }] }],
+                        generationConfig: { 
+                            temperature: 0.1, 
+                            maxOutputTokens: 4000,
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "object",
+                                properties: {
+                                    topics: {
+                                        type: "array",
+                                        items: {
+                                            type: "object",
+                                            properties: {
+                                                title: { type: "string" },
+                                                description: { type: "string" },
+                                                key_content: { type: "string" },
+                                                subtopics: {
+                                                    type: "array",
+                                                    items: {
+                                                        type: "object",
+                                                        properties: {
+                                                            title: { type: "string" },
+                                                            description: { type: "string" },
+                                                            key_content: { type: "string" }
+                                                        },
+                                                        required: ["title", "description"]
+                                                    }
+                                                }
+                                            },
+                                            required: ["title", "description"]
+                                        }
+                                    }
+                                },
+                                required: ["topics"]
+                            }
+                        }
+                    })
+                }).then(async (res) => {
+                    if (res.ok) {
+                        const data = await res.json();
+                        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (text) return JSON.parse(text).topics || [];
+                    }
+                    return [];
+                }).catch(() => []);
+
+                const compressionPrompt = `You are a document compression engine. Extract and compress the key educational content from this document into a structured summary.
+
+OUTPUT (simple text only, EXACT headings):
+KEY TERMS / DEFINITIONS
+- Format: Term: definition
+THEOREMS / FORMULAS / METHODS
+- Format: Name: statement/steps
+READING THEMES / ARGUMENTS
+- Format: • label — 1 sentence
+EXAMPLES TO REUSE IN QUESTIONS
+- Format: Example: brief description
+EMPHASIZED VS OPTIONAL
+Emphasized: items marked important
+Optional: items marked optional
+
+RULES:
+- Total output MUST be ≤ 2000 characters.
+- No extra commentary.
+
+DOCUMENT TO COMPRESS:
+${workingContent}`;
+
+                const compressionPromise = fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=' + apiKey, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: compressionPrompt }] }],
+                        generationConfig: { temperature: 0.1, maxOutputTokens: 2500 }
+                    })
+                }).then(async (res) => {
+                    if (res.ok) {
+                        const data = await res.json();
+                        return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    }
+                    return '';
+                }).catch(() => '');
+
+                const [extractedTopics, compContent] = await Promise.all([topicPromise, compressionPromise]);
+                if (compContent) compressedContent = compContent;
+                if (extractedTopics.length > 0) topics = extractedTopics;
+                
             } catch (e) {
-                console.error("compressDocument failed:", e);
+                console.error("compressDocument inline failed:", e);
             }
         }
 
-        // Save compressed content first so curriculumMapping can fetch it without WAF issues
+        // Save compressed content first
         await entities.PreMadeCourse.update(course.id, {
             compressed_content: compressedContent,
             topics: topics
         });
 
-        // 2. Generate Curriculum Map
+        // 2. Generate Curriculum Map Inline
         let curriculumMap = {};
         try {
-            console.log("Calling curriculumMapping...");
-            const cmRes = await base44.asServiceRole.functions.invoke('curriculumMapping', {
-                courseName: course.course_name,
-                learningProfile: { school: course.institution || "N/A", grade: course.education_level || "N/A" },
-                pre_made_course_id: course.id
+            console.log("Generating curriculum map inline...");
+            const researchModel = genAI.getGenerativeModel({ 
+                model: 'gemini-flash-latest', 
+                tools: [{ googleSearch: {} }]
             });
-            if (cmRes.data) {
-                curriculumMap = cmRes.data;
-            }
+            
+            const researchPrompt = `Role: Curriculum Analyst
+Task: Research and compile a comprehensive curriculum profile for the course defined below. The max length for the curriculum is 2000 characters. 
+Input Context:
+- Course: ${course.course_name}
+- School: ${course.institution || "Not specified"}
+- User Notes: ${compressedContent || "None provided"}
+
+Directives:
+1. Search Execution: Perform a targeted Google Search for the official course syllabus, outline, or calendar description for [${course.course_name}] at [${course.institution || "a typical university"}]. Look for:
+   - Official Learning Outcomes / Core Competencies
+   - Assessment methods (weighting, formats)
+   - Required texts/readings (specifically authors and titles)
+
+2. Data Synthesis: Compile your findings into a detailed report.
+
+Output a curriculum (max 2000 characters) that includes:
+- Core Competencies (what students learn)
+- Assessment Structure (how they are graded)
+- Key Topics/Focal Points
+- Common Misconceptions`;
+
+            const researchResult = await researchModel.generateContent({
+                contents: [{ role: 'user', parts: [{ text: researchPrompt }] }],
+                generationConfig: { temperature: 0.5 }
+            });
+            
+            const researchText = researchResult.response.text();
+
+            const formattingModel = genAI.getGenerativeModel({ 
+                model: 'gemini-flash-lite-latest'
+            });
+
+            const response_json_schema = {
+                type: "object",
+                properties: {
+                    core_competencies: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                competency: { type: "string" },
+                                description: { type: "string" }
+                            },
+                            required: ["competency", "description"]
+                        }
+                    },
+                    competency_weightings: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                topic: { type: "string" },
+                                weight_percentage: { type: "string" }
+                            },
+                            required: ["topic", "weight_percentage"]
+                        }
+                    },
+                    assessment_formats: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                type: { type: "string" },
+                                frequency: { type: "string" },
+                                example_question: { type: "string" },
+                                related_resource: { type: "string" }
+                            },
+                            required: ["type", "frequency", "example_question", "related_resource"]
+                        }
+                    },
+                    high_yield_focal_points: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                concept: { type: "string" },
+                                description: { type: "string" },
+                                key_figures_or_works: { type: "string" }
+                            },
+                            required: ["concept", "description", "key_figures_or_works"]
+                        }
+                    },
+                    common_misconceptions: {
+                        type: "array",
+                        items: { type: "string" }
+                    }
+                },
+                required: ["core_competencies", "competency_weightings", "assessment_formats", "high_yield_focal_points", "common_misconceptions"]
+            };
+
+            const formatPrompt = `Role: Data Formatter
+Task: Convert the provided Curriculum Research data into a specific JSON format.
+Input Data:
+${researchText}
+
+Output: JSON ONLY.`;
+
+            const formatResult = await formattingModel.generateContent({
+                contents: [{ role: 'user', parts: [{ text: formatPrompt }] }],
+                generationConfig: {
+                    temperature: 0.2,
+                    responseMimeType: "application/json",
+                    responseSchema: response_json_schema
+                }
+            });
+
+            curriculumMap = JSON.parse(formatResult.response.text());
         } catch (e) {
-            console.error("curriculumMapping failed:", e);
+            console.error("curriculumMapping inline failed:", e);
         }
 
         // 3. Generate Diagnostic Questions
