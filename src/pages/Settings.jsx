@@ -46,6 +46,7 @@ import PromoCodeGenerator from "@/components/admin/PromoCodeGenerator";
 import PromoCodeRedeem from "@/components/subscription/PromoCodeRedeem";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -58,6 +59,9 @@ export default function Settings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+
+  const deviceInfo = detectDeviceInfo();
+  const isNativeApp = deviceInfo.app_type === 'ios_app' || deviceInfo.app_type === 'android_app';
 
   // Block guests from accessing Settings
   useEffect(() => {
@@ -266,14 +270,16 @@ export default function Settings() {
             <Separator className="my-6" />
 
             <SettingsSection title="Plans & History">
-            <SettingsItem
-              icon={CreditCard}
-              label="Pricing Plans"
-              onClick={() => navigate(createPageUrl("PricingPlans"))}
-            />
+            {!isNativeApp && (
+              <SettingsItem
+                icon={CreditCard}
+                label="Pricing Plans"
+                onClick={() => navigate(createPageUrl("PricingPlans"))}
+              />
+            )}
             
             {/* Promo Access Status - Show if active */}
-            {(() => {
+            {!isNativeApp && (() => {
               const promoEndDate = user?.promo_access_until ? new Date(user.promo_access_until) : null;
               const now = new Date();
               const hasActivePromo = promoEndDate && promoEndDate > now && user?.subscription_tier === 'pro';
@@ -305,7 +311,7 @@ export default function Settings() {
             })()}
             
             {/* Standard subscription status */}
-            {(() => {
+            {!isNativeApp && (() => {
               const isActivePro = user?.subscription_tier === 'pro' && user?.subscription_status === 'active';
               const isCancelled = user?.subscription_status === 'cancelled';
               const endDate = user?.subscription_end_date ? new Date(user.subscription_end_date) : null;
@@ -401,7 +407,7 @@ export default function Settings() {
             />
             
             {/* Promo Code Redemption - For all users */}
-            {user?.subscription_tier !== 'pro' && (
+            {!isNativeApp && user?.subscription_tier !== 'pro' && (
               <div className="mt-4">
                 <PromoCodeRedeem onSuccess={handlePromoRedeemed} />
               </div>

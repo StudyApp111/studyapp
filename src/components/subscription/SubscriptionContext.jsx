@@ -291,7 +291,7 @@ export function SubscriptionProvider({ children }) {
 
   // Increment counters
   const incrementUploadCount = async () => {
-    if (isPro()) return;
+    // Track usage for all users (including native apps) so limits enforce on web
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
     const newCount = (freshUser.total_lessons_created || freshUser.daily_lessons_count || 0) + 1;
@@ -300,7 +300,6 @@ export function SubscriptionProvider({ children }) {
   };
   
   const incrementDiagnosticCount = async () => {
-    if (isPro()) return;
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
     const newCount = (freshUser.daily_diagnostic_exams_count || 0) + 1;
@@ -309,7 +308,6 @@ export function SubscriptionProvider({ children }) {
   };
 
   const incrementTaskCount = async (taskType = null) => {
-    if (isPro()) return;
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
     const updates = { total_tasks_used: (freshUser.total_tasks_used || 0) + 1 };
@@ -328,7 +326,6 @@ export function SubscriptionProvider({ children }) {
   };
   
   const incrementAIMessageCount = async () => {
-    if (isPro()) return;
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
     const newCount = (freshUser.total_polly_messages || freshUser.daily_ai_messages_count || 0) + 1;
@@ -337,7 +334,6 @@ export function SubscriptionProvider({ children }) {
   };
 
   const incrementAssignmentCount = async () => {
-    if (isPro()) return;
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
     const newCount = (freshUser.total_assignments_graded || 0) + 1;

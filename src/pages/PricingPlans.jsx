@@ -27,6 +27,12 @@ export default function PricingPlans() {
   const [promoResult, setPromoResult] = useState(null);
 
   useEffect(() => {
+    const deviceInfo = detectDeviceInfo();
+    if (deviceInfo.app_type === 'ios_app' || deviceInfo.app_type === 'android_app') {
+      navigate(createPageUrl("Home"), { replace: true });
+      return;
+    }
+
     const loadUser = async () => {
       try {
         const currentUser = await base44.auth.me();
