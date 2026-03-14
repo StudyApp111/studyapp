@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   BookOpen, Clock, FileCheck, Trophy, Copy, ChevronRight, Sparkles,
-  Target, TrendingUp, Upload, Flame, Zap
+  Target, TrendingUp, Upload, Flame, Zap, Trash2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -112,6 +112,22 @@ export default function LessonHistory() {
 
   const LessonCard = ({ lesson, index }) => {
     const exams = lessonExams[lesson.id] || [];
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = async (e) => {
+      e.stopPropagation();
+      if (window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
+        setIsDeleting(true);
+        try {
+          await base44.entities.Lesson.delete(lesson.id);
+          handleRefresh();
+        } catch (error) {
+          console.error("Error deleting lesson:", error);
+          alert("Failed to delete course.");
+          setIsDeleting(false);
+        }
+      }
+    };
     const flashcards = lessonFlashcards[lesson.id] || [];
     const studyPlans = lessonStudyPlans[lesson.id] || [];
     
@@ -196,7 +212,17 @@ export default function LessonHistory() {
               )}
             </div>
 
-            <ChevronRight className={`w-4 h-4 flex-shrink-0 self-center ${isDark ? 'text-slate-500 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
+            <div className="flex flex-col items-center justify-center gap-2 self-center flex-shrink-0">
+              <ChevronRight className={`w-4 h-4 ${isDark ? 'text-slate-500 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
+              <button 
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className={`p-1.5 rounded-md transition-colors ${isDark ? 'hover:bg-red-500/20 text-slate-500 hover:text-red-400' : 'hover:bg-red-50 text-slate-400 hover:text-red-500'}`}
+                title="Delete Course"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>

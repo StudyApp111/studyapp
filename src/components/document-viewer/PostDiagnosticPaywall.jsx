@@ -13,6 +13,8 @@ export default function PostDiagnosticPaywall({ lessonId }) {
   const [show, setShow] = useState(false);
   const [gradeData, setGradeData] = useState(null);
 
+  return null; // Disabled for now
+
   useEffect(() => {
     const handleDiagnosticComplete = (e) => {
       // Only show for free users

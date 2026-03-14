@@ -293,7 +293,7 @@ function LayoutContent({ children, currentPageName }) {
                 title="Upload Now"
               >
                 <Plus className="w-5 h-5 text-white" />
-                <span className="text-[10px] font-medium text-center leading-tight px-1 text-white">Create</span>
+                <span className="text-[9px] font-medium text-center leading-tight px-1 text-white">Create</span>
               </Link>
             </div>
 
@@ -317,7 +317,7 @@ function LayoutContent({ children, currentPageName }) {
                     title={item.title}
                   >
                     <item.icon className="w-5 h-5" />
-                    <span className="text-[10px] font-medium text-center leading-tight px-1">{item.title}</span>
+                    <span className="text-[9px] font-medium text-center leading-tight px-1">{item.title}</span>
                     {item.isNew && (
                       <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full" />
                     )}
@@ -332,7 +332,7 @@ function LayoutContent({ children, currentPageName }) {
                 title="Send Feedback"
               >
                 <Mail className="w-5 h-5" />
-                <span className="text-[10px] font-medium text-center leading-tight px-1">Feedback</span>
+                <span className="text-[9px] font-medium text-center leading-tight px-1">Feedback</span>
               </button>
 
               {/* Upgrade Badge */}
@@ -345,7 +345,7 @@ function LayoutContent({ children, currentPageName }) {
                 title={isDark ? 'Light Mode' : 'Dark Mode'}
               >
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                <span className="text-[10px] font-medium text-center leading-tight px-1">Theme</span>
+                <span className="text-[9px] font-medium text-center leading-tight px-1">Theme</span>
               </button>
               </nav>
 
@@ -363,7 +363,7 @@ function LayoutContent({ children, currentPageName }) {
                   title="Admin Dashboard"
                 >
                   <Sparkles className="w-5 h-5" />
-                  <span className="text-[10px] font-medium text-center leading-tight px-1">Admin</span>
+                  <span className="text-[9px] font-medium text-center leading-tight px-1">Admin</span>
                 </Link>
               )}
               
@@ -378,7 +378,7 @@ function LayoutContent({ children, currentPageName }) {
                 title="Settings"
               >
                 <Settings className="w-5 h-5" />
-                <span className="text-[10px] font-medium text-center leading-tight px-1">Settings</span>
+                <span className="text-[9px] font-medium text-center leading-tight px-1">Settings</span>
               </Link>
               
               {/* Profile Avatar */}
@@ -393,7 +393,7 @@ function LayoutContent({ children, currentPageName }) {
                       {user.full_name?.[0]?.toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <span className="text-[10px] font-medium text-center leading-tight px-1 text-slate-500">Profile</span>
+                  <span className="text-[9px] font-medium text-center leading-tight px-1 text-slate-500">Profile</span>
                 </button>
               )}
             </div>

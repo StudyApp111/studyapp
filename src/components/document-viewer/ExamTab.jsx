@@ -698,22 +698,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
     autoSaveTimeoutRef.current = setTimeout(() => {
       saveExamProgress();
     }, 2000);
-
-    if (gradingTimeoutRef.current) {
-      clearTimeout(gradingTimeoutRef.current);
-    }
-
-    if (isSubjectiveQuestion(updatedQuestions[currentQuestion].question_type)) {
-      updatedQuestions[currentQuestion].ai_grading_pending = true;
-      setExam(prev => ({
-        ...prev,
-        questions: updatedQuestions
-      }));
-
-      gradingTimeoutRef.current = setTimeout(() => {
-        gradeSubjectiveQuestion(updatedQuestions[currentQuestion], currentQuestion);
-      }, 2000);
-    }
   };
 
   const handleNext = () => {
@@ -727,11 +711,11 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
     saveExamProgress();
 
     if (currentQuestion < exam.questions.length - 1) {
-      if (gradingTimeoutRef.current) {
-        clearTimeout(gradingTimeoutRef.current);
-        if (isSubjectiveQuestion(currentQ.question_type) && currentQ.user_answer) {
-          gradeSubjectiveQuestion(currentQ, currentQuestion);
-        }
+      if (isSubjectiveQuestion(currentQ.question_type) && currentQ.user_answer && currentQ.ai_score_out_of_10 === undefined) {
+        const updatedQuestions = [...exam.questions];
+        updatedQuestions[currentQuestion].ai_grading_pending = true;
+        setExam(prev => ({ ...prev, questions: updatedQuestions }));
+        gradeSubjectiveQuestion(currentQ, currentQuestion);
       }
 
       currentQuestionStartTimeRef.current = Date.now();
@@ -1706,13 +1690,13 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
       </AnimatePresence>
 
       <div className="flex flex-col h-full md:h-auto md:pb-4">
-        <div className="flex-1 flex flex-col dark:bg-[#12121a]/95 bg-white/95 backdrop-blur-xl md:rounded-2xl border-0 md:border dark:md:border-purple-500/30 border-purple-200/80 shadow-none md:shadow-sm md:mx-0 overflow-hidden">
+        <div className={`flex-1 flex flex-col backdrop-blur-xl md:rounded-2xl border-0 md:border shadow-none md:shadow-sm md:mx-0 overflow-hidden ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200/80'}`}>
           {/* Exam Header with Back Button and Type Indicator */}
-          <div className="flex items-center justify-between px-3 py-2 border-b dark:border-white/10 border-purple-100 dark:bg-[#12121a]/95 bg-white/95 backdrop-blur-sm sticky top-0 z-10 shrink-0 relative">
+          <div className={`flex items-center justify-between px-3 py-2 border-b backdrop-blur-sm sticky top-0 z-10 shrink-0 relative ${isDark ? 'border-white/10 bg-[#12121a]/95' : 'border-purple-100 bg-white/95'}`}>
             <div className="flex items-center gap-2">
                   <button
                     onClick={handleExitExam}
-                    className="flex items-center gap-1 dark:text-slate-300 dark:hover:text-white text-slate-600 hover:text-slate-900 transition-colors"
+                    className={`flex items-center gap-1 transition-colors ${isDark ? 'text-slate-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span className="text-xs font-medium hidden sm:inline">Exit</span>
@@ -1741,7 +1725,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto overscroll-contain p-3 md:p-5 dark:bg-[#0a0a12]" style={{ WebkitOverflowScrolling: 'touch', minHeight: 0 }}>
+          <div className={`flex-1 overflow-y-auto overscroll-contain p-3 md:p-5 ${isDark ? 'bg-[#0a0a12]' : ''}`} style={{ WebkitOverflowScrolling: 'touch', minHeight: 0 }}>
             <AnimatePresence mode="wait">
               <ExamQuestion
                 key={currentQuestion}
@@ -1755,13 +1739,13 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             </AnimatePresence>
           </div>
 
-          <div className="shrink-0 border-t dark:border-white/10 border-purple-100 dark:bg-[#12121a]/95 bg-white/95 backdrop-blur-sm">
+          <div className={`shrink-0 border-t backdrop-blur-sm ${isDark ? 'border-white/10 bg-[#12121a]/95' : 'border-purple-100 bg-white/95'}`}>
             <div className="flex gap-2 px-3 py-3 md:px-5 md:pb-2">
               <Button
                 variant="outline"
                 onClick={handlePrevious}
                 disabled={currentQuestion === 0}
-                className="flex-1 dark:text-white text-xs h-10 rounded-xl font-medium"
+                className={`flex-1 text-xs h-10 rounded-xl font-medium ${isDark ? 'text-white' : ''}`}
               >
                 Previous
               </Button>
