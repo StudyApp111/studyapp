@@ -15,6 +15,7 @@ import LearningTrajectory from "@/components/home/LearningTrajectory";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import OnboardingModal from "@/components/onboarding-v2/OnboardingModal";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
+import PullToRefresh from "@/components/ui/PullToRefresh";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -89,7 +90,7 @@ export default function Home() {
 
   const isOnboarded = !!user && !showOnboarding;
 
-  const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
+  const { data: lessons = [], isLoading: lessonsLoading, refetch: refetchLessons } = useQuery({
     queryKey: ['lessons'],
     queryFn: () => base44.entities.Lesson.list('-created_date', 100),
     staleTime: 2 * 60 * 1000,
@@ -97,7 +98,7 @@ export default function Home() {
     enabled: isOnboarded,
   });
 
-  const { data: allExams = [] } = useQuery({
+  const { data: allExams = [], refetch: refetchExams } = useQuery({
     queryKey: ['exams'],
     queryFn: () => base44.entities.Exam.list('-created_date'),
     staleTime: 5 * 60 * 1000,
@@ -105,7 +106,7 @@ export default function Home() {
     enabled: isOnboarded,
   });
 
-  const { data: studyPlans = [] } = useQuery({
+  const { data: studyPlans = [], refetch: refetchPlans } = useQuery({
     queryKey: ['studyPlans'],
     queryFn: () => base44.entities.StudyPlan.filter({ status: 'active' }),
     staleTime: 5 * 60 * 1000,
@@ -113,11 +114,20 @@ export default function Home() {
     enabled: isOnboarded,
   });
 
-  const { data: preMadeCourses = [], isLoading: preMadeLoading } = useQuery({
+  const { data: preMadeCourses = [], isLoading: preMadeLoading, refetch: refetchCourses } = useQuery({
     queryKey: ['preMadeCourses'],
     queryFn: () => base44.entities.PreMadeCourse.filter({ is_published: true }),
     staleTime: 5 * 60 * 1000,
   });
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchLessons(),
+      refetchExams(),
+      refetchPlans(),
+      refetchCourses()
+    ]);
+  };
 
   const [startingCourseId, setStartingCourseId] = useState(null);
 
@@ -206,6 +216,7 @@ export default function Home() {
   const subtitle = schoolName;
 
   return (
+    <PullToRefresh onRefresh={handleRefresh} isDark={isDark}>
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0a12]' : 'bg-gradient-to-br from-purple-50 via-yellow-50/30 to-purple-100/40'}`}>
       {/* Onboarding Modal */}
       {showOnboarding && (
@@ -514,5 +525,6 @@ export default function Home() {
       {/* CreateLessonModal removed - using CreateLesson page instead */}
 
     </div>
+    </PullToRefresh>
   );
 }

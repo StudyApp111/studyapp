@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import PullToRefresh from "@/components/ui/PullToRefresh";
 
 const formatTime = (seconds) => {
   if (!seconds || seconds === 0) return '0m';
@@ -32,36 +33,46 @@ export default function LessonHistory() {
     base44.auth.me().then(setUser).catch(console.error);
   }, []);
 
-  const { data: lessons = [], isLoading: lessonsLoading } = useQuery({
+  const { data: lessons = [], isLoading: lessonsLoading, refetch: refetchLessons } = useQuery({
     queryKey: ['lessons-history'],
     queryFn: () => base44.entities.Lesson.list('-created_date', 50),
     staleTime: 30 * 1000,
   });
 
-  const { data: gradedAssignments = [], isLoading: assignmentsLoading } = useQuery({
+  const { data: gradedAssignments = [], isLoading: assignmentsLoading, refetch: refetchAssignments } = useQuery({
     queryKey: ['graded-assignments-history'],
     queryFn: () => base44.entities.GradedAssignment.list('-created_date', 50),
     staleTime: 30 * 1000,
   });
 
   // Batch fetch all related data in single queries to avoid rate limiting
-  const { data: allExams = [] } = useQuery({
+  const { data: allExams = [], refetch: refetchExams } = useQuery({
     queryKey: ['exams-history-all'],
     queryFn: () => base44.entities.Exam.list('-created_date', 200),
     staleTime: 60 * 1000,
   });
 
-  const { data: allFlashcards = [] } = useQuery({
+  const { data: allFlashcards = [], refetch: refetchFlashcards } = useQuery({
     queryKey: ['flashcards-history-all'],
     queryFn: () => base44.entities.Flashcard.list('-created_date', 500),
     staleTime: 60 * 1000,
   });
 
-  const { data: allStudyPlans = [] } = useQuery({
+  const { data: allStudyPlans = [], refetch: refetchPlans } = useQuery({
     queryKey: ['study-plans-history-all'],
     queryFn: () => base44.entities.StudyPlan.list('-created_date', 100),
     staleTime: 60 * 1000,
   });
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchLessons(),
+      refetchAssignments(),
+      refetchExams(),
+      refetchFlashcards(),
+      refetchPlans()
+    ]);
+  };
 
   const isLoading = lessonsLoading || assignmentsLoading;
 
@@ -279,6 +290,7 @@ export default function LessonHistory() {
     : allItems.filter(i => i.itemType === 'assignment');
 
   return (
+    <PullToRefresh onRefresh={handleRefresh} isDark={isDark}>
     <div className={`min-h-screen w-full max-w-full pb-20 md:pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ overflowX: 'hidden', boxSizing: 'border-box', maxWidth: '100vw' }}>
       {/* Compact Header */}
       <div className={`border-b ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
@@ -378,5 +390,6 @@ export default function LessonHistory() {
       </div>
 
     </div>
+    </PullToRefresh>
   );
 }

@@ -438,8 +438,14 @@ function LayoutContent({ children, currentPageName }) {
               <div className="flex items-center justify-between max-w-lg mx-auto relative px-6 py-3">
                 <Link
                   to={createPageUrl("Home")}
+                  onClick={(e) => {
+                    if (location.pathname === createPageUrl("Home") || location.pathname === "/") {
+                      e.preventDefault();
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
                   className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
-                    location.pathname === createPageUrl("Home")
+                    location.pathname === createPageUrl("Home") || location.pathname === "/"
                       ? 'text-purple-400 bg-purple-600/20'
                       : isDark ? 'text-slate-400' : 'text-slate-600'
                   }`}
@@ -459,6 +465,12 @@ function LayoutContent({ children, currentPageName }) {
 
                 <Link
                   to={createPageUrl("LessonHistory")}
+                  onClick={(e) => {
+                    if (location.pathname === createPageUrl("LessonHistory")) {
+                      e.preventDefault();
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                  }}
                   className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                     location.pathname === createPageUrl("LessonHistory")
                       ? 'text-purple-400 bg-purple-600/20'
@@ -472,6 +484,12 @@ function LayoutContent({ children, currentPageName }) {
                 {!isGuest && (
                   <Link
                     to={createPageUrl("Settings")}
+                    onClick={(e) => {
+                      if (location.pathname === createPageUrl("Settings")) {
+                        e.preventDefault();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    }}
                     className={`flex items-center justify-center p-2.5 rounded-xl transition-all ${
                       location.pathname === createPageUrl("Settings")
                         ? 'text-purple-400 bg-purple-600/20'
