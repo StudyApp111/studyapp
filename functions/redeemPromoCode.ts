@@ -48,15 +48,7 @@ Deno.serve(async (req) => {
     // Check if user already has active pro subscription
     if (user.subscription_tier === 'pro' && user.subscription_status === 'active') {
       // Check if current subscription is from promo
-      if (user.promo_access_until) {
-        const promoExpiry = new Date(user.promo_access_until);
-        if (promoExpiry > new Date()) {
-          return Response.json({
-            success: false,
-            error: 'You already have an active promo subscription'
-          });
-        }
-      } else {
+      if (!user.promo_access_until) {
         return Response.json({
           success: false,
           error: 'You already have an active paid subscription'
@@ -119,18 +111,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if user has redeemed ANY promo code recently (anti-abuse)
-    const recentRedemptions = await base44.asServiceRole.entities.PromoCodeRedemption.filter({
-      user_email: user.email
-    });
-    
-    if (recentRedemptions.length >= 3) {
-      return Response.json({
-        success: false,
-        error: 'Maximum promo code limit reached for this account'
-      });
-    }
-
     const now = new Date();
     let updateData = {};
     let accessGrantedUntil = null;
@@ -138,7 +118,9 @@ Deno.serve(async (req) => {
     // Apply promo based on type
     if (promoCode.type === 'free_access') {
       const durationDays = promoCode.duration_days || 30;
-      accessGrantedUntil = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
+      const currentExpiry = user.promo_access_until ? new Date(user.promo_access_until) : now;
+      const baseDate = currentExpiry > now ? currentExpiry : now;
+      accessGrantedUntil = new Date(baseDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
       
       updateData = {
         subscription_tier: 'pro',

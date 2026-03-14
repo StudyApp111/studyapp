@@ -216,67 +216,19 @@ export function SubscriptionProvider({ children }) {
     };
   };
 
-  // Tasks - free users get 1 generation each of flashcards, teach-it, practice quiz, notes per lesson
+  // Tasks - unlimited for first lesson
   const canDoTask = async (taskType = null) => {
-    if (isPro()) return { allowed: true };
-    if (!taskType) {
-      // Legacy callers without taskType — check user's total_tasks_used
-      const currentUser = await checkAndResetCounters();
-      if (!currentUser) return { allowed: true }; // Fail open: don't block if we can't load user
-      const totalUsed = currentUser.total_tasks_used || 0;
-      // Allow up to 4 total tasks (1 flashcard + 1 teach-it + 1 practice quiz + 1 notes)
-      return { allowed: totalUsed < 4, requiresPro: totalUsed >= 4 };
-    }
-    
-    const currentUser = await checkAndResetCounters();
-    if (!currentUser) return { allowed: true }; // Fail open: don't block if we can't load user
-    
-    const fieldMap = {
-      flashcards: 'total_flashcard_sets',
-      teach_it: 'total_teachit_sets',
-      practice_exam: 'total_practice_quizzes',
-      review_notes: 'total_note_generations'
-    };
-    const field = fieldMap[taskType];
-    if (!field) return { allowed: true }; // Unknown task type — don't block
-    
-    const count = currentUser[field] || 0;
-    const limit = 1;
-    return { allowed: count < limit, current: count, limit, requiresPro: count >= limit };
+    return { allowed: true };
   };
   
-  // Diagnostic Exams - 3 per day for free, unlimited for pro
+  // Diagnostic Exams - unlimited for first lesson
   const canTakeDiagnostic = async () => {
-    if (isPro()) return { allowed: true };
-    const currentUser = await checkAndResetCounters();
-    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.diagnostic_exams_per_day, remaining: 0 };
-    
-    const count = currentUser.daily_diagnostic_exams_count || 0;
-    const allowed = count < FREE_TIER_LIMITS.diagnostic_exams_per_day;
-    
-    return {
-      allowed,
-      current: count,
-      limit: FREE_TIER_LIMITS.diagnostic_exams_per_day,
-      remaining: Math.max(0, FREE_TIER_LIMITS.diagnostic_exams_per_day - count)
-    };
+    return { allowed: true };
   };
 
-  // Polly chat: 10 messages lifetime for free
+  // Polly chat: unlimited for first lesson
   const canSendAIMessage = async () => {
-    if (isPro()) return { allowed: true };
-    const currentUser = await checkAndResetCounters();
-    if (!currentUser) return { allowed: false, current: 0, limit: FREE_TIER_LIMITS.polly_messages_total, remaining: 0 };
-    
-    const count = currentUser.total_polly_messages || currentUser.daily_ai_messages_count || 0;
-    const allowed = count < FREE_TIER_LIMITS.polly_messages_total;
-    
-    return {
-      allowed,
-      current: count,
-      limit: FREE_TIER_LIMITS.polly_messages_total,
-      remaining: Math.max(0, FREE_TIER_LIMITS.polly_messages_total - count)
-    };
+    return { allowed: true };
   };
 
   const canGradeAssignment = async () => {
