@@ -400,7 +400,7 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
             </div>
             <div className="flex-1">
               <p className={`text-xs font-bold ${question.ai_score_out_of_10 >= 7 ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-amber-400' : 'text-amber-700')}`}>
-                Score: {question.ai_score_out_of_10}/10 - {question.ai_verdict}
+                {question.ai_score_out_of_10 >= 7 ? "🎉 Excellent!" : "Keep learning!"}
               </p>
               <MathText className={`text-xs mt-1.5 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                 {question.ai_rationale_short}
