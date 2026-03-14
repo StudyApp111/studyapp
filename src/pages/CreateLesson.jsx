@@ -9,6 +9,7 @@ import MaterialUploader from "@/components/onboarding/MaterialUploader";
 import CreateLessonLoader from "@/components/create-lesson/CreateLessonLoader";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
+import { useTheme } from "@/components/theme/ThemeProvider";
 // GuestLessonCreatedModal removed — guests proceed directly to DocumentViewer
 import posthog from 'posthog-js';
 import { detectDeviceInfo } from "@/components/utils/userTracking";
@@ -19,6 +20,7 @@ export default function CreateLesson() {
   const navigate = useNavigate();
   const { canUpload, incrementUploadCount, triggerUpgradeModal } = useSubscription();
   const { isGuest, guestLessonCreated, setGuestLesson, guestData } = useGuestSession();
+  const { isDark } = useTheme();
 
   const [courseName, setCourseName] = useState("");
   const [materialData, setMaterialData] = useState(null);
@@ -370,29 +372,29 @@ export default function CreateLesson() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 pb-28 md:pb-4">
+    <div className={`min-h-screen flex items-center justify-center p-4 pb-28 md:pb-4 ${isDark ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' : 'bg-gradient-to-br from-purple-50 via-white to-purple-50'}`}>
       <div className="w-full max-w-lg md:max-w-3xl relative z-10">
         {/* Hero Header - Large like Onboarding */}
         <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-2">
+          <h1 className="text-4xl md:text-5xl font-black mb-2">
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Study</span>
-            <span className="text-white">App</span>
+            <span className={isDark ? "text-white" : "text-slate-900"}>App</span>
           </h1>
-          <p className="text-purple-200 text-lg md:text-xl">
+          <p className={`text-lg md:text-xl ${isDark ? 'text-purple-200' : 'text-purple-800'}`}>
             Upload your materials 📚
           </p>
         </div>
 
         <div className="text-center mb-4 md:mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+          <h2 className={`text-xl md:text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
             Create a new lesson
           </h2>
-          <p className="text-purple-200 text-sm md:text-base">
+          <p className={`text-sm md:text-base ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>
             We'll predict your grade and help you study
           </p>
         </div>
 
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border border-slate-700">
+        <div className={`${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-purple-100'} backdrop-blur-sm rounded-2xl shadow-xl p-4 md:p-5 border`}>
           {error && (
             <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 text-red-300 rounded-xl text-sm">
               {error}
@@ -401,25 +403,27 @@ export default function CreateLesson() {
 
           {/* Course Name Input */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
               Course Name
             </label>
             <Input
               value={courseName}
               onChange={(e) => setCourseName(e.target.value)}
               placeholder="e.g., Biology 101, Calculus II, etc."
-              className="h-12 text-base bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-400 rounded-xl"
+              className={`h-12 text-base rounded-xl ${isDark ? 'bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-400' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-purple-500 shadow-sm'}`}
             />
           </div>
 
           {/* Material Uploader */}
-          <MaterialUploader
-            courseName={courseName}
-            school={learningProfile?.school}
-            onMaterialReady={handleMaterialReady}
-          />
+          {courseName.trim().length > 0 && (
+            <MaterialUploader
+              courseName={courseName}
+              school={learningProfile?.school}
+              onMaterialReady={handleMaterialReady}
+            />
+          )}
 
-          <div className="mt-6 pt-4 border-t border-slate-700">
+          <div className={`mt-6 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
             <Button
               onClick={handleSubmit}
               disabled={!canSubmit || isSubmitting}

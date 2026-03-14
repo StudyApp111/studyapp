@@ -272,7 +272,7 @@ function LayoutContent({ children, currentPageName }) {
         
         {/* Desktop Sidebar - Adaptive theme, fixed to viewport */}
           {showSidebar && (
-            <div className={`hidden md:flex flex-col w-16 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'} border-r fixed top-0 left-0 h-screen z-40`}>
+            <div className={`hidden md:flex flex-col w-20 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'} border-r fixed top-0 left-0 h-screen z-40`}>
             {/* Logo */}
             <div className="p-3 flex justify-center">
               <Link to={createPageUrl("Home")} className="hover:opacity-80 transition-opacity">
@@ -288,10 +288,11 @@ function LayoutContent({ children, currentPageName }) {
             <div className="px-2 py-3">
               <Link
                 to={createPageUrl("CreateLesson")}
-                className="w-full aspect-square rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30 transition-all hover:scale-105"
+                className="w-full py-3 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 flex flex-col items-center justify-center gap-1 shadow-lg shadow-purple-500/30 transition-all hover:scale-105"
                 title="Upload Now"
               >
                 <Plus className="w-5 h-5 text-white" />
+                <span className="text-[10px] font-medium text-center leading-tight px-1 text-white">Create</span>
               </Link>
             </div>
 
@@ -307,7 +308,7 @@ function LayoutContent({ children, currentPageName }) {
                   <Link
                     key={item.title}
                     to={item.url}
-                    className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                    className={`relative w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${
                       isActive 
                         ? 'bg-purple-600/20 text-purple-400 shadow-sm' 
                         : isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -315,8 +316,9 @@ function LayoutContent({ children, currentPageName }) {
                     title={item.title}
                   >
                     <item.icon className="w-5 h-5" />
+                    <span className="text-[10px] font-medium text-center leading-tight px-1">{item.title}</span>
                     {item.isNew && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-500 rounded-full" />
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full" />
                     )}
                   </Link>
                 );
@@ -325,10 +327,11 @@ function LayoutContent({ children, currentPageName }) {
               {/* Feedback/Email icon */}
               <button
                 onClick={() => setFeedbackModalOpen(true)}
-                className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
+                className={`relative w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}
                 title="Send Feedback"
               >
                 <Mail className="w-5 h-5" />
+                <span className="text-[10px] font-medium text-center leading-tight px-1">Feedback</span>
               </button>
 
               {/* Upgrade Badge */}
@@ -337,10 +340,11 @@ function LayoutContent({ children, currentPageName }) {
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'}`}
+                className={`relative w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'}`}
                 title={isDark ? 'Light Mode' : 'Dark Mode'}
               >
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                <span className="text-[10px] font-medium text-center leading-tight px-1">Theme</span>
               </button>
               </nav>
 
@@ -350,7 +354,7 @@ function LayoutContent({ children, currentPageName }) {
               {user?.role === 'admin' && (
                 <Link
                   to={createPageUrl("AdminPreMadeCourses")}
-                  className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                  className={`relative w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${
                     location.pathname.replace(/\/$/, '') === createPageUrl("AdminPreMadeCourses").replace(/\/$/, '')
                       ? 'bg-purple-600/20 text-purple-400 shadow-sm' 
                       : isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -358,13 +362,14 @@ function LayoutContent({ children, currentPageName }) {
                   title="Admin Dashboard"
                 >
                   <Sparkles className="w-5 h-5" />
+                  <span className="text-[10px] font-medium text-center leading-tight px-1">Admin</span>
                 </Link>
               )}
               
               {/* Settings Icon */}
               <Link
                 to={createPageUrl("Settings")}
-                className={`relative w-full aspect-square rounded-xl flex items-center justify-center transition-all ${
+                className={`relative w-full py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${
                   location.pathname.replace(/\/$/, '') === createPageUrl("Settings").replace(/\/$/, '')
                     ? 'bg-purple-600/20 text-purple-400 shadow-sm' 
                     : isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
@@ -372,13 +377,14 @@ function LayoutContent({ children, currentPageName }) {
                 title="Settings"
               >
                 <Settings className="w-5 h-5" />
+                <span className="text-[10px] font-medium text-center leading-tight px-1">Settings</span>
               </Link>
               
               {/* Profile Avatar */}
               {user && (
                 <button
                   onClick={() => navigate(createPageUrl("Settings"))}
-                  className="w-full aspect-square rounded-xl bg-white/5 hover:bg-purple-600/20 flex items-center justify-center transition-all"
+                  className="w-full py-3 rounded-xl hover:bg-purple-600/20 flex flex-col items-center justify-center gap-1 transition-all"
                   title={user.full_name || 'Profile'}
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center">
@@ -386,13 +392,14 @@ function LayoutContent({ children, currentPageName }) {
                       {user.full_name?.[0]?.toUpperCase() || 'U'}
                     </span>
                   </div>
+                  <span className="text-[10px] font-medium text-center leading-tight px-1 text-slate-500">Profile</span>
                 </button>
               )}
             </div>
           </div>
         )}
 
-        <main className={`flex-1 flex flex-col ${showSidebar ? 'md:ml-16' : ''}`}>
+        <main className={`flex-1 flex flex-col ${showSidebar ? 'md:ml-20' : ''}`}>
           {/* Mobile Header */}
             {showMobileHeader && (
             <header className={`${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-slate-200'} backdrop-blur-xl border-b px-3 py-2 md:hidden`}>

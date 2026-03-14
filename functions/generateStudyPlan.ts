@@ -165,14 +165,14 @@ Deno.serve(async (req) => {
     const gradeForPrompt = predictedGrade || 'current level';
     const planPrompt = `You are an expert learning scientist and instructional designer. Design a PRECISE, chronologically-ordered study plan that will measurably improve the student's grade from ${gradeForPrompt} toward an A+/90%.
 
-PEDAGOGICAL FRAMEWORK (Bloom's Taxonomy + Spaced Retrieval):
-The tasks MUST follow this evidence-based learning sequence. Each step builds on the previous:
-1. UNDERSTAND → "review_notes": Re-read the material to rebuild conceptual foundations for weak areas
-2. REMEMBER → "flashcards": Active recall to lock key terms, definitions, relationships into memory
-3. ANALYZE → "teach_it": Feynman technique — explaining concepts forces deep processing and reveals gaps
-4. APPLY → "practice_exam": Test under exam-like conditions to consolidate and identify remaining weaknesses
+PEDAGOGICAL FRAMEWORK:
+Select the most appropriate sequence of tasks based on the student's specific weaknesses and the subject material. You can use any combination of the following task types:
+- "review_notes": Re-read the material to rebuild conceptual foundations for weak areas
+- "flashcards": Active recall to lock key terms, definitions, relationships into memory
+- "teach_it": Feynman technique — explaining concepts forces deep processing and reveals gaps
+- "practice_exam": Test under exam-like conditions to consolidate and identify remaining weaknesses
 
-You MUST output tasks in this chronological order. The student completes them 1→2→3→4.
+Choose 3-4 tasks and order them logically based on what the student needs most. For example, if they lack conceptual understanding, start with review_notes or teach_it. If they just need memorization, start with flashcards.
 
 STUDENT PERFORMANCE DATA:
 - Course: ${lesson.course_name}
@@ -203,8 +203,7 @@ ${contentSummary.substring(0, 2000)}
 MASTERY GAP: "${masteryGap}" — ALL tasks should converge on addressing this weakness as the primary thread.
 
 RULES:
-- Output EXACTLY 4 tasks in this fixed order: review_notes → flashcards → teach_it → practice_exam
-- Task 1 (review_notes) is_focus_factor=true — directly targets the mastery gap, gets "Grade Booster" highlighting
+- Task 1 is_focus_factor=true — directly targets the mastery gap, gets "Grade Booster" highlighting
 - Each task's focus_topics MUST reference SPECIFIC concepts from the course content (not generic advice)
 - Each task's description must explain WHY this step matters for the student's specific weaknesses
 - For flashcards: target_count 10-20
@@ -319,12 +318,8 @@ Return JSON:
       practice_exam: 1
     };
     
-    // Enforce pedagogical order: review_notes → flashcards → teach_it → practice_exam
-    const pedagogicalOrder = ['review_notes', 'flashcards', 'teach_it', 'practice_exam'];
-    
     const validatedTasks = (response.tasks || [])
       .filter(task => validTaskTypes.includes(task.task_type))
-      .sort((a, b) => pedagogicalOrder.indexOf(a.task_type) - pedagogicalOrder.indexOf(b.task_type))
       .map((task, idx) => {
         // Ensure target_count is a valid positive number
         let targetCount = parseInt(task.target_count) || defaultTargetCounts[task.task_type] || 1;

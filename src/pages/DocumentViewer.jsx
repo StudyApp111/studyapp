@@ -622,8 +622,8 @@ export default function DocumentViewer() {
       <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-56px)] overflow-x-hidden">
         {/* Desktop: Flex container for AI tutor + tabs */}
         <div className="hidden md:flex gap-3 h-full w-full max-w-full" style={{ isolation: 'isolate' }}>
-          {/* AI Tutor Panel - Left side, 50% width */}
-          <div className="w-1/2 flex-shrink-0">
+          {/* AI Tutor Panel - Left side, 1/3 width */}
+          <div className="w-1/3 flex-shrink-0">
             <AITutorPanel 
               messages={messages}
               setMessages={setMessages}
@@ -635,8 +635,8 @@ export default function DocumentViewer() {
             />
           </div>
           
-          {/* Tabs - Right side, 50% width */}
-          <div className="w-1/2 min-w-0 relative z-0">
+          {/* Tabs - Right side, 2/3 width */}
+          <div className="w-2/3 min-w-0 relative z-0">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
               <div className="flex-shrink-0 relative z-0 overflow-x-auto scrollbar-hide">
                 <TabsList className={`flex w-max min-w-full border p-1 gap-1 h-auto rounded-lg ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
