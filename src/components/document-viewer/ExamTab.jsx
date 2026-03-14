@@ -1794,13 +1794,18 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
         
         {/* Diagnostic Explanation Paragraph */}
         {!isPracticeExam && (
-          <div className={`mt-4 p-5 rounded-2xl border mx-3 md:mx-0 shadow-sm ${isDark ? 'bg-purple-900/10 border-purple-500/20' : 'bg-purple-50/50 border-purple-200'}`}>
-            <h4 className={`font-bold flex items-center gap-2 mb-2 text-base ${isDark ? 'text-purple-300' : 'text-purple-800'}`}>
-              <Sparkles className="w-5 h-5" /> Why take this diagnostic?
+          <div className={`mt-4 p-5 rounded-2xl border mx-3 md:mx-0 shadow-sm text-center ${isDark ? 'bg-purple-900/10 border-purple-500/20' : 'bg-purple-50/50 border-purple-200'}`}>
+            <h4 className={`font-bold flex items-center justify-center gap-2 mb-3 text-base ${isDark ? 'text-purple-300' : 'text-purple-800'}`}>
+              Why do I have to do this quiz?
             </h4>
-            <p className={`text-sm leading-relaxed ${isDark ? 'text-purple-100/80' : 'text-purple-900/80'}`}>
-              This quick quiz is the secret to your personalized study plan. <strong>Don't worry if you don't know the answers yet!</strong> Guessing actually helps StudyApp pinpoint exactly what you need to learn. By seeing where you stand right now, we can cut out the fluff and build a custom roadmap that focuses only on closing your specific knowledge gaps, saving you hours of studying and getting you to an A much faster.
-            </p>
+            <div className={`text-sm leading-relaxed space-y-3 ${isDark ? 'text-purple-100/80' : 'text-purple-900/80'}`}>
+              <p>
+                This is a 5-question baseline so StudyApp can predict your current grade in <strong>{lesson?.course_name || 'this course'}</strong> and create a custom study plan around exactly what you don't know yet. Try your best on each question, but it's perfectly fine to guess.
+              </p>
+              <p>
+                Completing this unlocks the Notes, Flashcards, Feynman Cards, Practice Quizzes, and Voice Lectures tabs.
+              </p>
+            </div>
           </div>
         )}
       </div>
