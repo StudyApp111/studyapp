@@ -35,32 +35,32 @@ export default function LessonHistory() {
 
   const { data: lessons = [], isLoading: lessonsLoading, refetch: refetchLessons } = useQuery({
     queryKey: ['lessons-history'],
-    queryFn: () => base44.entities.Lesson.list('-created_date', 50),
+    queryFn: () => base44.entities.Lesson.list('-created_date', 20),
     staleTime: 30 * 1000,
   });
 
   const { data: gradedAssignments = [], isLoading: assignmentsLoading, refetch: refetchAssignments } = useQuery({
     queryKey: ['graded-assignments-history'],
-    queryFn: () => base44.entities.GradedAssignment.list('-created_date', 50),
+    queryFn: () => base44.entities.GradedAssignment.list('-created_date', 20),
     staleTime: 30 * 1000,
   });
 
   // Batch fetch all related data in single queries to avoid rate limiting
   const { data: allExams = [], refetch: refetchExams } = useQuery({
     queryKey: ['exams-history-all'],
-    queryFn: () => base44.entities.Exam.list('-created_date', 200),
+    queryFn: () => base44.entities.Exam.list('-created_date', 50),
     staleTime: 60 * 1000,
   });
 
   const { data: allFlashcards = [], refetch: refetchFlashcards } = useQuery({
     queryKey: ['flashcards-history-all'],
-    queryFn: () => base44.entities.Flashcard.list('-created_date', 500),
+    queryFn: () => base44.entities.Flashcard.list('-created_date', 50),
     staleTime: 60 * 1000,
   });
 
   const { data: allStudyPlans = [], refetch: refetchPlans } = useQuery({
     queryKey: ['study-plans-history-all'],
-    queryFn: () => base44.entities.StudyPlan.list('-created_date', 100),
+    queryFn: () => base44.entities.StudyPlan.list('-created_date', 50),
     staleTime: 60 * 1000,
   });
 

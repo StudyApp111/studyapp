@@ -92,7 +92,7 @@ export default function Home() {
 
   const { data: lessons = [], isLoading: lessonsLoading, refetch: refetchLessons } = useQuery({
     queryKey: ['lessons'],
-    queryFn: () => base44.entities.Lesson.list('-created_date', 100),
+    queryFn: () => base44.entities.Lesson.list('-created_date', 10),
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     enabled: isOnboarded,
@@ -100,7 +100,7 @@ export default function Home() {
 
   const { data: allExams = [], refetch: refetchExams } = useQuery({
     queryKey: ['exams'],
-    queryFn: () => base44.entities.Exam.list('-created_date'),
+    queryFn: () => base44.entities.Exam.list('-created_date', 20),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     enabled: isOnboarded,
@@ -108,7 +108,7 @@ export default function Home() {
 
   const { data: studyPlans = [], refetch: refetchPlans } = useQuery({
     queryKey: ['studyPlans'],
-    queryFn: () => base44.entities.StudyPlan.filter({ status: 'active' }),
+    queryFn: () => base44.entities.StudyPlan.filter({ status: 'active' }, '-created_date', 20),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     enabled: isOnboarded,
