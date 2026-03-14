@@ -54,17 +54,23 @@ const SelectContent = React.forwardRef(({ className, children, position = "poppe
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        // Desktop styles
+        "md:data-[state=closed]:zoom-out-95 md:data-[state=open]:zoom-in-95 md:data-[side=bottom]:slide-in-from-top-2 md:data-[side=left]:slide-in-from-right-2 md:data-[side=right]:slide-in-from-left-2 md:data-[side=top]:slide-in-from-bottom-2",
+        // Mobile styles (bottom sheet)
+        "max-md:!fixed max-md:!bottom-0 max-md:!top-auto max-md:!left-0 max-md:!transform-none max-md:!w-full max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-t max-md:border-x-0 max-md:border-b-0 max-md:max-h-[50vh] max-md:data-[state=closed]:slide-out-to-bottom max-md:data-[state=open]:slide-in-from-bottom max-md:shadow-[0_0_0_100vw_rgba(0,0,0,0.5)] max-md:pb-safe max-md:pt-2",
         position === "popper" &&
-          "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
+          "md:data-[side=bottom]:translate-y-1 md:data-[side=left]:-translate-x-1 md:data-[side=right]:translate-x-1 md:data-[side=top]:-translate-y-1",
         className
       )}
       position={position}
       {...props}>
+      <div className="hidden max-md:block w-12 h-1.5 bg-muted rounded-full mx-auto my-2" />
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn("p-1", position === "popper" &&
-          "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]")}>
+          "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] max-md:!min-w-full max-md:!h-auto")}>
         {children}
       </SelectPrimitive.Viewport>
       <SelectScrollDownButton />

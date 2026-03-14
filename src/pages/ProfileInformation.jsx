@@ -94,7 +94,7 @@ export default function ProfileInformation() {
         <Button
           variant="ghost"
           onClick={() => navigate(createPageUrl("Settings"))}
-          className={`mb-4 ${isDark ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-purple-100 text-slate-700'}`}
+          className={`hidden md:flex mb-4 ${isDark ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-purple-100 text-slate-700'}`}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Settings

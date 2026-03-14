@@ -291,7 +291,7 @@ export default function PricingPlans() {
         <Button
           variant="ghost"
           onClick={() => navigate(-1)}
-          className="mb-6 text-white/70 hover:text-white hover:bg-white/10"
+          className="hidden md:flex mb-6 text-white/70 hover:text-white hover:bg-white/10"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back

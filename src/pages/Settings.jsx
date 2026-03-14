@@ -237,7 +237,7 @@ export default function Settings() {
         <Button
           variant="ghost"
           onClick={() => navigate(createPageUrl("Home"))}
-          className={`mb-6 ${isDark ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-slate-100 text-slate-700'}`}
+          className={`hidden md:flex mb-6 ${isDark ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-slate-100 text-slate-700'}`}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home

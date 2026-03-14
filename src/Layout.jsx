@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText, Mail, ChevronDown, ChevronRight, Upload } from "lucide-react";
+import { Home, BookOpen, Trophy, History, LogOut, Settings, Plus, Flame, Award, CheckCircle, Clock, FileCheck, TrendingUp, Map, Sparkles, Users, MessageSquareText, Mail, ChevronDown, ChevronRight, Upload, ArrowLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -255,6 +255,7 @@ function LayoutContent({ children, currentPageName }) {
   const pagesWithCustomNav = ["Worksheet"];
   const showMobileHeader = showNavigation && !isDocumentViewerPage && !isHomePage;
   const showMobileBottomNav = (showNavigation && !pagesWithCustomNav.includes(currentPageName)) || isGuestOnActivePage;
+  const isMainTab = ["Home", "LessonHistory", "SmartGrader", "CreateLesson"].includes(currentPageName);
 
 
 
@@ -402,20 +403,33 @@ function LayoutContent({ children, currentPageName }) {
         <main className={`flex-1 flex flex-col ${showSidebar ? 'md:ml-20' : ''}`}>
           {/* Mobile Header */}
             {showMobileHeader && (
-            <header className={`${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-slate-200'} backdrop-blur-xl border-b px-3 py-2 md:hidden`}>
-              <div className="flex items-center justify-center">
-                {/* Logo + App Name - centered */}
-                <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <img 
-                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
-                      alt="StudyApp Logo"
-                      className="w-6 h-6"
-                    />
-                    <span className="font-bold text-sm">
-                          <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Study</span>
-                          <span className="text-white">App</span>
-                        </span>
+            <header className={`${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-slate-200'} backdrop-blur-xl border-b px-3 py-2 md:hidden sticky top-0 z-50`}>
+              <div className="flex items-center justify-center relative h-8">
+                {!isMainTab ? (
+                  <>
+                    <button 
+                      onClick={() => navigate(-1)}
+                      className={`absolute left-0 p-1.5 rounded-lg ${isDark ? 'text-slate-300 hover:bg-white/10' : 'text-slate-600 hover:bg-slate-100'}`}
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <span className={`font-bold text-sm truncate px-10 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                      {currentPageName.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                  </>
+                ) : (
+                  <Link to={createPageUrl("Home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                      <img 
+                        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68ffadbdd9532e7e7691129d/e6f13a569_LogoOnly.png"
+                        alt="StudyApp Logo"
+                        className="w-6 h-6"
+                      />
+                      <span className="font-bold text-sm">
+                            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Study</span>
+                            <span className={isDark ? 'text-white' : 'text-slate-900'}>App</span>
+                          </span>
                   </Link>
+                )}
               </div>
             </header>
           )}

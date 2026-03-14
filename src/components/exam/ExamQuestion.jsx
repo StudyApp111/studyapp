@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, Lightbulb, Sparkles, Star } from "lucide-react";
+import { CheckCircle, XCircle, Lightbulb, Sparkles, Star, Loader2 } from "lucide-react";
 import MathText from "@/components/math/MathText";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
@@ -372,6 +372,43 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
 
       {/* Options */}
       <div>{renderInput()}</div>
+
+      {/* Optimistic UI for Subjective Questions */}
+      {!isObjective && question.ai_grading_pending && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className={`p-3 rounded-xl border flex items-center gap-3 ${isDark ? 'bg-purple-500/10 border-purple-500/30' : 'bg-purple-50 border-purple-200'}`}
+        >
+          <Loader2 className="w-4 h-4 text-purple-500 animate-spin" />
+          <span className={`text-xs font-medium ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+            Answer submitted. AI is grading...
+          </span>
+        </motion.div>
+      )}
+
+      {/* Show AI Feedback once graded */}
+      {!isObjective && question.ai_score_out_of_10 !== undefined && !question.ai_grading_pending && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className={`p-3 rounded-xl border ${question.ai_score_out_of_10 >= 7 ? (isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200') : (isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200')}`}
+        >
+          <div className="flex items-start gap-2">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${question.ai_score_out_of_10 >= 7 ? 'bg-emerald-500' : 'bg-amber-500'}`}>
+              {question.ai_score_out_of_10 >= 7 ? <CheckCircle className="w-4 h-4 text-white" /> : <Lightbulb className="w-3.5 h-3.5 text-white" />}
+            </div>
+            <div className="flex-1">
+              <p className={`text-xs font-bold ${question.ai_score_out_of_10 >= 7 ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-amber-400' : 'text-amber-700')}`}>
+                Score: {question.ai_score_out_of_10}/10 - {question.ai_verdict}
+              </p>
+              <MathText className={`text-xs mt-1.5 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                {question.ai_rationale_short}
+              </MathText>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Instant Feedback for Objective Questions */}
       {hasAnswered && isObjective && (

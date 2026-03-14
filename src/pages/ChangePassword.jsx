@@ -58,7 +58,7 @@ export default function ChangePassword() {
         <Button
           variant="ghost"
           onClick={() => navigate(createPageUrl("Settings"))}
-          className="mb-6 hover:bg-purple-100"
+          className="hidden md:flex mb-6 hover:bg-purple-100"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Settings

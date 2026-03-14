@@ -94,7 +94,7 @@ export default function GradeResults() {
         <Button
           onClick={() => navigate(createPageUrl("AssignmentHistory"))}
           variant="ghost"
-          className="gap-2 text-white/70 hover:text-white hover:bg-white/10 -ml-2"
+          className="hidden md:flex gap-2 text-white/70 hover:text-white hover:bg-white/10 -ml-2"
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </Button>

@@ -661,7 +661,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       className="w-full h-11 md:h-14 bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 hover:from-purple-700 hover:via-purple-800 hover:to-purple-900 text-white font-semibold rounded-xl shadow-lg text-sm md:text-lg"
                     >
                       {isGrading ? (
-                        <><Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-2 animate-spin" /> Grading...</>
+                        <><Loader2 className="w-4 h-4 md:w-5 md:h-5 mr-2 animate-spin" /> Submitted! AI is grading...</>
                       ) : (
                         <><CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 mr-2" /> Submit</>
                       )}

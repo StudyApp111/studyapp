@@ -5,7 +5,8 @@ import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 import { setupIframeMessaging } from './lib/iframe-messaging';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -21,8 +22,29 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+const PersistentTab = ({ isActive, children }) => {
+  const scrollPosRef = React.useRef(0);
+
+  React.useEffect(() => {
+    if (!isActive) {
+      scrollPosRef.current = window.scrollY;
+    } else {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollPosRef.current);
+      });
+    }
+  }, [isActive]);
+
+  return (
+    <div style={{ display: isActive ? 'block' : 'none', width: '100%' }}>
+      {children}
+    </div>
+  );
+};
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  const location = useLocation();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -44,15 +66,32 @@ const AuthenticatedApp = () => {
     }
   }
 
+  const pathName = location.pathname.replace(/^\//, '');
+  const currentPath = pathName === '' ? mainPageKey : pathName;
+  const mainTabs = ["Home", "LessonHistory", "SmartGrader", "CreateLesson"];
+  const isMainTab = mainTabs.includes(currentPath);
+
   // Render the main app
   return (
-    <LayoutWrapper currentPageName={mainPageKey}>
+    <LayoutWrapper currentPageName={currentPath}>
+      {mainTabs.map(tab => {
+        const PageComponent = Pages[tab];
+        if (!PageComponent) return null;
+        const isActive = currentPath === tab;
+        return (
+          <PersistentTab key={tab} isActive={isActive}>
+            <PageComponent />
+          </PersistentTab>
+        );
+      })}
+
       <Routes>
-        <Route path="/" element={<MainPage />} />
-        {Object.entries(Pages).map(([path, Page]) => (
-          <Route key={path} path={`/${path}`} element={<Page />} />
-        ))}
-        <Route path="*" element={<PageNotFound />} />
+        <Route path="/" element={null} />
+        {Object.entries(Pages).map(([path, Page]) => {
+          if (mainTabs.includes(path)) return null;
+          return <Route key={path} path={`/${path}`} element={<Page />} />
+        })}
+        <Route path="*" element={isMainTab ? null : <PageNotFound />} />
       </Routes>
     </LayoutWrapper>
   );
