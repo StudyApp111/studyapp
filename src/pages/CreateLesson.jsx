@@ -372,7 +372,7 @@ export default function CreateLesson() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 pb-28 md:pb-4 ${isDark ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' : 'bg-gradient-to-br from-purple-50 via-white to-purple-50'}`}>
+    <div className={`min-h-screen flex items-center justify-center p-4 pb-28 md:pb-4 ${isDark ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900' : 'bg-gradient-to-br from-purple-100 via-purple-50 to-purple-200'}`}>
       <div className="w-full max-w-lg md:max-w-3xl relative z-10">
         {/* Hero Header - Large like Onboarding */}
         <div className="text-center mb-6 md:mb-8">
@@ -402,16 +402,21 @@ export default function CreateLesson() {
           )}
 
           {/* Course Name Input */}
-          <div className="mb-4">
-            <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+          <div className="mb-6">
+            <label className={`block text-xl font-bold text-center mb-4 ${isDark ? 'text-slate-200' : 'text-purple-900'}`}>
               Course Name
             </label>
             <Input
               value={courseName}
               onChange={(e) => setCourseName(e.target.value)}
               placeholder="e.g., Biology 101, Calculus II, etc."
-              className={`h-12 text-base rounded-xl ${isDark ? 'bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-400' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-purple-500 shadow-sm'}`}
+              className={`h-14 text-lg text-center rounded-xl ${isDark ? 'bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-400' : 'bg-white border-purple-200 text-slate-900 placeholder:text-slate-400 focus:border-purple-500 shadow-sm'}`}
             />
+            {!courseName.trim() && (
+              <p className={`text-sm font-semibold text-center animate-pulse mt-4 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                Enter a course name above first
+              </p>
+            )}
           </div>
 
           {/* Material Uploader */}

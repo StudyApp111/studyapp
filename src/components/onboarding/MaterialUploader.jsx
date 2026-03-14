@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Upload, FileText, Type, Loader2, X, CheckCircle, Lightbulb, ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function MaterialUploader({ courseName, school, onMaterialReady, disabled = false }) {
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState("upload");
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [pastedNotes, setPastedNotes] = useState("");
@@ -130,12 +132,8 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
 
   return (
     <div className={`space-y-4 ${isDisabled ? 'opacity-50 pointer-events-none' : ''}`}>
-      {/* Course name required hint */}
-      {!courseName?.trim() && (
-        <p className="text-sm text-emerald-400 font-semibold text-center animate-pulse">Enter a course name above first</p>
-      )}
       {/* Tab selector - more visual */}
-      <div className="grid grid-cols-3 gap-2 p-1 bg-slate-800/50 rounded-xl">
+      <div className={`grid grid-cols-3 gap-2 p-1 rounded-xl ${isDark ? 'bg-slate-800/50' : 'bg-purple-100/50'}`}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -144,7 +142,9 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
             className={`flex items-center justify-center gap-2 py-3 px-2 rounded-lg font-medium transition-all ${
               activeTab === tab.id
                 ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg'
-                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                : isDark 
+                  ? 'text-slate-400 hover:text-white hover:bg-slate-700/50' 
+                  : 'text-slate-500 hover:text-purple-700 hover:bg-white/60'
             }`}
           >
             <span className="text-lg">{tab.emoji}</span>
@@ -187,9 +187,9 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
                     <span className="text-4xl">📤</span>
                   </div>
                   <div>
-                    <p className="font-bold text-xl text-white mb-1">Drop your files here</p>
-                    <p className="text-sm text-slate-400">PDF, Word, PowerPoint, Images</p>
-                    <p className="text-xs text-slate-500 mt-1">Max 20 MB per file</p>
+                    <p className={`font-bold text-xl mb-1 ${isDark ? 'text-white' : 'text-purple-900'}`}>Drop your files here</p>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-purple-700/70'}`}>PDF, Word, PowerPoint, Images</p>
+                    <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-purple-700/50'}`}>Max 20 MB per file</p>
                   </div>
                   <div className="flex items-center gap-2 text-purple-300 text-sm font-medium">
                     <span>Tap to browse</span>
@@ -231,7 +231,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
             value={pastedNotes}
             onChange={handleNotesChange}
             placeholder="Paste your notes, textbook excerpts, or any study material..."
-            className="min-h-[180px] resize-none border-2 border-purple-500/30 focus:border-purple-400 rounded-xl p-4 bg-slate-800/80 text-white placeholder:text-slate-500 text-base"
+            className={`min-h-[180px] resize-none border-2 border-purple-500/30 focus:border-purple-400 rounded-xl p-4 text-base ${isDark ? 'bg-slate-800/80 text-white placeholder:text-slate-500' : 'bg-white/80 text-slate-900 placeholder:text-slate-400'}`}
           />
           {pastedNotes && (
             <div className="mt-3 flex items-center gap-2 text-emerald-400 text-sm">
@@ -249,7 +249,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
             value={topicDescription}
             onChange={handleTopicChange}
             placeholder={`What do you want to learn in ${courseName}?\n\nExample: "Photosynthesis - light and dark reactions"`}
-            className="min-h-[120px] resize-none border-2 border-purple-500/30 focus:border-purple-400 rounded-xl p-4 bg-slate-800/80 text-white placeholder:text-slate-500 text-base"
+            className={`min-h-[120px] resize-none border-2 border-purple-500/30 focus:border-purple-400 rounded-xl p-4 text-base ${isDark ? 'bg-slate-800/80 text-white placeholder:text-slate-500' : 'bg-white/80 text-slate-900 placeholder:text-slate-400'}`}
           />
           
           {/* AI Suggestions */}
@@ -257,12 +257,12 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
             <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-500/30 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Lightbulb className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm font-semibold text-purple-200">Popular topics</span>
+                <span className={`text-sm font-semibold ${isDark ? 'text-purple-200' : 'text-purple-800'}`}>Popular topics</span>
                 {loadingSuggestions && <Loader2 className="w-3 h-3 animate-spin text-purple-400 ml-auto" />}
               </div>
               
               {loadingSuggestions && suggestions.length === 0 && (
-                <p className="text-sm text-purple-300">Finding topics for {courseName}...</p>
+                <p className={`text-sm ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>Finding topics for {courseName}...</p>
               )}
               
               {suggestions.length > 0 && (
@@ -275,7 +275,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
                         setTopicDescription(suggestion);
                         onMaterialReady({ type: "topic", content: suggestion });
                       }}
-                      className="text-sm text-white bg-slate-700/70 hover:bg-purple-500/30 border border-slate-600 hover:border-purple-400/50 rounded-lg px-3 py-2 transition-all"
+                      className={`text-sm rounded-lg px-3 py-2 transition-all border ${isDark ? 'text-white bg-slate-700/70 hover:bg-purple-500/30 border-slate-600 hover:border-purple-400/50' : 'text-purple-900 bg-white/60 hover:bg-purple-100 border-purple-200 hover:border-purple-400'}`}
                     >
                       {suggestion.length > 40 ? suggestion.substring(0, 40) + '...' : suggestion}
                     </button>
