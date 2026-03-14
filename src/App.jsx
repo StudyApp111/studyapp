@@ -67,8 +67,21 @@ const AuthenticatedApp = () => {
   }
 
   const pathName = location.pathname.replace(/^\//, '');
-  const currentPath = pathName === '' ? mainPageKey : pathName;
+  let currentPath = pathName === '' ? mainPageKey : pathName;
+  
   const mainTabs = ["Home", "LessonHistory", "SmartGrader", "CreateLesson"];
+  
+  // Handle case-insensitive routing
+  const matchedMainTab = mainTabs.find(t => t.toLowerCase() === currentPath.toLowerCase());
+  if (matchedMainTab) {
+    currentPath = matchedMainTab;
+  } else if (Pages) {
+    const matchedPage = Object.keys(Pages).find(p => p.toLowerCase() === currentPath.toLowerCase());
+    if (matchedPage) {
+      currentPath = matchedPage;
+    }
+  }
+
   const isMainTab = mainTabs.includes(currentPath);
 
   // Render the main app
