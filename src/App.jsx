@@ -7,6 +7,7 @@ import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { setupIframeMessaging } from './lib/iframe-messaging';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -21,6 +22,18 @@ setupIframeMessaging();
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
+
+const PageTransition = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, x: 20 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -20 }}
+    transition={{ duration: 0.25, ease: "easeInOut" }}
+    className="w-full h-full"
+  >
+    {children}
+  </motion.div>
+);
 
 const PersistentTab = ({ isActive, children }) => {
   const scrollPosRef = React.useRef(0);
@@ -37,7 +50,14 @@ const PersistentTab = ({ isActive, children }) => {
 
   return (
     <div style={{ display: isActive ? 'block' : 'none', width: '100%' }}>
-      {children}
+      <motion.div
+        initial={false}
+        animate={{ opacity: isActive ? 1 : 0, x: isActive ? 0 : -20 }}
+        transition={{ duration: 0.25, ease: "easeInOut" }}
+        className="w-full h-full"
+      >
+        {children}
+      </motion.div>
     </div>
   );
 };
@@ -98,14 +118,16 @@ const AuthenticatedApp = () => {
         );
       })}
 
-      <Routes>
-        <Route path="/" element={null} />
-        {Object.entries(Pages).map(([path, Page]) => {
-          if (mainTabs.includes(path)) return null;
-          return <Route key={path} path={`/${path}`} element={<Page />} />
-        })}
-        <Route path="*" element={isMainTab ? null : <PageNotFound />} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={null} />
+          {Object.entries(Pages).map(([path, Page]) => {
+            if (mainTabs.includes(path)) return null;
+            return <Route key={path} path={`/${path}`} element={<PageTransition><Page /></PageTransition>} />
+          })}
+          <Route path="*" element={isMainTab ? null : <PageNotFound />} />
+        </Routes>
+      </AnimatePresence>
     </LayoutWrapper>
   );
 };

@@ -408,7 +408,16 @@ function LayoutContent({ children, currentPageName }) {
                 {!isMainTab ? (
                   <>
                     <button 
-                      onClick={() => navigate(-1)}
+                      onClick={() => {
+                        const settingsPages = ['ProfileInformation', 'ChangePassword', 'ManageSubscription', 'EmailManager', 'PricingPlans'];
+                        if (settingsPages.includes(currentPageName)) {
+                          navigate(createPageUrl("Settings"));
+                        } else if (currentPageName === 'GradeResults' || currentPageName === 'DocumentViewer') {
+                          navigate(createPageUrl("LessonHistory"));
+                        } else {
+                          navigate(createPageUrl("Home"));
+                        }
+                      }}
                       className={`absolute left-0 p-1.5 rounded-lg ${isDark ? 'text-slate-300 hover:bg-white/10' : 'text-slate-600 hover:bg-slate-100'}`}
                     >
                       <ArrowLeft className="w-5 h-5" />
@@ -434,7 +443,7 @@ function LayoutContent({ children, currentPageName }) {
             </header>
           )}
 
-          <div className="flex-1 md:overflow-auto pb-0 md:pb-0">
+          <div className="flex-1 md:overflow-auto pb-0 md:pb-0 scrollbar-hide">
             {children}
           </div>
 

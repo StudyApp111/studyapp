@@ -58,6 +58,8 @@ export default function Settings() {
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteStep, setDeleteStep] = useState(1);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const { isDark, toggleTheme } = useTheme();
 
   const deviceInfo = detectDeviceInfo();
@@ -105,90 +107,10 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") return;
     setIsDeleting(true);
     try {
-      // Delete all user data
-      const [lessons, exams, flashcards, studyPlans, annotations, notes, teachItCards, assignments, courses] = await Promise.all([
-        base44.entities.Lesson.list(),
-        base44.entities.Exam.list(),
-        base44.entities.Flashcard.list(),
-        base44.entities.StudyPlan.list(),
-        base44.entities.Annotation.list(),
-        base44.entities.LessonNote.list(),
-        base44.entities.TeachItCard.list(),
-        base44.entities.GradedAssignment.list(),
-        base44.entities.Course.list()
-      ]);
-      
-      // Also fetch learning profiles, curriculum maps, polly chat histories
-      const [learningProfiles, curriculumMaps, pollyChatHistories] = await Promise.all([
-        base44.entities.LearningProfile.list(),
-        base44.entities.CurriculumMap.list(),
-        base44.entities.PollyChatHistory.list()
-      ]);
-
-      // Delete all entities
-      const deletePromises = [
-        ...lessons.map(l => base44.entities.Lesson.delete(l.id)),
-        ...exams.map(e => base44.entities.Exam.delete(e.id)),
-        ...flashcards.map(f => base44.entities.Flashcard.delete(f.id)),
-        ...studyPlans.map(sp => base44.entities.StudyPlan.delete(sp.id)),
-        ...annotations.map(a => base44.entities.Annotation.delete(a.id)),
-        ...notes.map(n => base44.entities.LessonNote.delete(n.id)),
-        ...teachItCards.map(t => base44.entities.TeachItCard.delete(t.id)),
-        ...assignments.map(a => base44.entities.GradedAssignment.delete(a.id)),
-        ...courses.map(c => base44.entities.Course.delete(c.id)),
-        ...learningProfiles.map(lp => base44.entities.LearningProfile.delete(lp.id)),
-        ...curriculumMaps.map(cm => base44.entities.CurriculumMap.delete(cm.id)),
-        ...pollyChatHistories.map(pc => base44.entities.PollyChatHistory.delete(pc.id))
-      ];
-      
-      await Promise.all(deletePromises);
-      
-      // Reset ALL user data — profile, subscription, gamification, counters
-      await base44.auth.updateMe({ 
-        onboarding_completed: false,
-        display_name: null,
-        school: null,
-        grade: null,
-        city: null,
-        country: null,
-        study_type: null,
-        // Subscription
-        subscription_tier: 'free',
-        subscription_status: null,
-        subscription_plan_type: null,
-        subscription_start_date: null,
-        subscription_end_date: null,
-        trial_end_date: null,
-        stripe_customer_id: null,
-        stripe_subscription_id: null,
-        has_used_trial: false,
-        promo_access_until: null,
-        // Gamification
-        daily_xp: 0,
-        total_xp: 0,
-        current_streak: 0,
-        longest_streak: 0,
-        session_count: 0,
-        level: 0,
-        // Usage counters
-        total_lessons_created: 0,
-        total_tasks_used: 0,
-        total_flashcard_sets: 0,
-        total_teachit_sets: 0,
-        total_practice_quizzes: 0,
-        total_polly_messages: 0,
-        daily_ai_messages_count: 0,
-        daily_lessons_count: 0,
-        daily_diagnostic_exams_count: 0,
-        daily_reset_timestamp: null,
-        // Other
-        notifications_enabled: true,
-        last_active_date: null,
-        learning_style_answers: null
-      });
-      
+      await base44.functions.invoke('deleteUserAccount', {});
       base44.auth.logout(createPageUrl("Home"));
     } catch (error) {
       console.error("Error deleting account:", error);
@@ -236,7 +158,7 @@ export default function Settings() {
   );
 
   return (
-    <div className={`min-h-screen w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'} p-4 md:p-10 pb-28 md:pb-10`} style={{ overflowX: 'hidden', boxSizing: 'border-box' }}>
+    <div className={`min-h-screen w-full max-w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'} p-4 md:p-10 pb-28 md:pb-10 scrollbar-hide`} style={{ overflowX: 'hidden', overflowY: 'auto', boxSizing: 'border-box', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 112px)' }}>
       <div className="max-w-full md:max-w-3xl mx-auto" style={{ boxSizing: 'border-box' }}>
         <Button
           variant="ghost"
@@ -485,7 +407,13 @@ export default function Settings() {
             <Separator className="my-6" />
 
             <SettingsSection title="Danger Zone">
-              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <Dialog open={deleteDialogOpen} onOpenChange={(open) => {
+                setDeleteDialogOpen(open);
+                if (!open) {
+                  setDeleteStep(1);
+                  setDeleteConfirmText("");
+                }
+              }}>
                 <DialogTrigger asChild>
                   <button className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${isDark ? 'border-red-500/30 hover:bg-red-500/10 hover:border-red-500/50' : 'border-red-200 hover:bg-red-50 hover:border-red-300'}`}>
                     <div className="flex items-center gap-3">
@@ -503,35 +431,53 @@ export default function Settings() {
                       </div>
                       <DialogTitle className="text-xl">Delete Account?</DialogTitle>
                     </div>
-                    <DialogDescription className="text-left space-y-3 pt-2">
-                      <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>This will permanently delete:</p>
-                      <ul className={`list-disc list-inside space-y-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                        <li>All your lessons and study materials</li>
-                        <li>Your exam history and grades</li>
-                        <li>Flashcards, notes, and progress data</li>
-                        <li>Your account and profile information</li>
-                      </ul>
-                      <p className="text-red-500 font-medium pt-2">This action cannot be undone.</p>
-                    </DialogDescription>
+                    {deleteStep === 1 ? (
+                      <DialogDescription className="text-left space-y-3 pt-2">
+                        <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>This will permanently delete:</p>
+                        <ul className={`list-disc list-inside space-y-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                          <li>All your lessons and study materials</li>
+                          <li>Your exam history and grades</li>
+                          <li>Flashcards, notes, and progress data</li>
+                          <li>Your account and profile information</li>
+                        </ul>
+                        <p className="text-red-500 font-medium pt-2">This action cannot be undone.</p>
+                      </DialogDescription>
+                    ) : (
+                      <DialogDescription className="text-left space-y-3 pt-2">
+                        <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Please type <strong>DELETE</strong> to confirm.</p>
+                        <Input 
+                          value={deleteConfirmText}
+                          onChange={(e) => setDeleteConfirmText(e.target.value)}
+                          placeholder="DELETE"
+                          className="mt-2"
+                        />
+                      </DialogDescription>
+                    )}
                   </DialogHeader>
                   <DialogFooter className="gap-2 sm:gap-0">
                     <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button 
-                      variant="destructive" 
-                      onClick={handleDeleteAccount}
-                      disabled={isDeleting}
-                    >
-                      {isDeleting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Deleting...
-                        </>
-                      ) : (
-                        "Delete My Account"
-                      )}
-                    </Button>
+                    {deleteStep === 1 ? (
+                      <Button variant="destructive" onClick={() => setDeleteStep(2)}>
+                        Continue
+                      </Button>
+                    ) : (
+                      <Button 
+                        variant="destructive" 
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting || deleteConfirmText !== "DELETE"}
+                      >
+                        {isDeleting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          "Delete My Account"
+                        )}
+                      </Button>
+                    )}
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
