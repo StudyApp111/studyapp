@@ -4,6 +4,7 @@ import { Send, X, Sparkles, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 export default function AITutorFloatingButton({ hidden = false }) {
   // Hide on DocumentViewer page (has its own AI tutor)
@@ -14,6 +15,7 @@ export default function AITutorFloatingButton({ hidden = false }) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState("");
+  const { isDark } = useTheme();
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -127,7 +129,7 @@ Remember: Keep it brief!`,
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="md:hidden fixed left-0 right-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
+              className={`md:hidden fixed left-0 right-0 z-[9999] rounded-t-3xl flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}
               style={{ bottom: 'calc(70px + env(safe-area-inset-bottom, 0px))', height: '50vh' }}
             >
               {/* Header */}
@@ -162,7 +164,7 @@ Remember: Keep it brief!`,
                       className={`max-w-[85%] rounded-2xl px-3 py-2 ${
                         msg.role === "user"
                           ? "bg-purple-600 text-white"
-                          : "bg-slate-100 text-slate-800"
+                          : isDark ? "bg-white/10 text-slate-200" : "bg-slate-100 text-slate-800"
                       }`}
                     >
                       {msg.role === "assistant" ? (
@@ -177,7 +179,7 @@ Remember: Keep it brief!`,
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-slate-100 rounded-2xl px-4 py-3">
+                    <div className={`rounded-2xl px-4 py-3 ${isDark ? 'bg-white/10' : 'bg-slate-100'}`}>
                       <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
                     </div>
                   </div>
@@ -186,7 +188,7 @@ Remember: Keep it brief!`,
               </div>
 
               {/* Input */}
-              <div className="border-t border-slate-200 p-3 flex-shrink-0">
+              <div className={`border-t p-3 flex-shrink-0 ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -194,7 +196,7 @@ Remember: Keep it brief!`,
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSend()}
                     placeholder="Ask me anything..."
-                    className="flex-1 px-3 py-2 border border-slate-200 rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className={`flex-1 px-3 py-2 border rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 ${isDark ? 'bg-white/10 border-white/10 text-white placeholder:text-slate-400' : 'border-slate-200 bg-white text-slate-800'}`}
                   />
                   <Button
                     onClick={handleSend}
