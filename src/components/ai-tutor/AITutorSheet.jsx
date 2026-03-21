@@ -203,7 +203,7 @@ export default function AITutorSheet() {
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
             className={`fixed left-0 right-0 bottom-0 z-[9999] rounded-t-3xl flex flex-col overflow-hidden shadow-2xl md:left-auto md:right-4 md:bottom-4 md:w-[400px] md:h-[600px] md:rounded-2xl ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}
-            style={{ height: '75vh', maxHeight: 'calc(100vh - 60px)' }}
+            style={{ height: '75vh', maxHeight: 'calc(100vh - 60px)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between flex-shrink-0">

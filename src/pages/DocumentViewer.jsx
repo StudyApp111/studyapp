@@ -698,7 +698,7 @@ export default function DocumentViewer() {
                 </TabsList>
               </div>
 
-              <div className="w-full flex-1 overflow-auto">
+              <div className="w-full flex-1 overflow-auto scrollbar-hide">
                 {hasDocument && (
                   <TabsContent value="doc" className="mt-0 p-0 h-full">
                     {!lesson ? (
@@ -864,7 +864,7 @@ export default function DocumentViewer() {
             <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 100px)' }} />
 
             {/* Scrollable content area */}
-            <div className="overflow-x-hidden w-full pb-28">
+            <div className="overflow-x-hidden w-full pb-28 scrollbar-hide" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 112px)' }}>
               {hasDocument && (
                 <TabsContent value="doc" className="mt-0 p-0 w-full overflow-x-hidden">
                   {!lesson ? (

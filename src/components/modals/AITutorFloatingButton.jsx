@@ -93,7 +93,8 @@ Remember: Keep it brief!`,
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="md:hidden fixed bottom-20 right-4 z-50"
+        className="md:hidden fixed right-4 z-50"
+        style={{ bottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
       >
         <Button
           onClick={() => setIsOpen(true)}
@@ -127,7 +128,7 @@ Remember: Keep it brief!`,
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="md:hidden fixed left-0 right-0 z-[9999] bg-white rounded-t-3xl flex flex-col overflow-hidden shadow-2xl"
-              style={{ bottom: 'calc(70px + env(safe-area-inset-bottom))', height: '50vh' }}
+              style={{ bottom: 'calc(70px + env(safe-area-inset-bottom, 0px))', height: '50vh' }}
             >
               {/* Header */}
               <div className="bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 flex items-center justify-between flex-shrink-0">
