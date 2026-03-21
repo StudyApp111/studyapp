@@ -47,7 +47,6 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import React from 'react';
 import AssignmentHistory from './pages/AssignmentHistory';
 import ChangePassword from './pages/ChangePassword';
 import CreateLesson from './pages/CreateLesson';
@@ -62,27 +61,7 @@ import ProfileInformation from './pages/ProfileInformation';
 import Settings from './pages/Settings';
 import SmartGrader from './pages/SmartGrader';
 import __Layout from './Layout.jsx';
-
-const LazyAdminPreMadeCourses = React.lazy(() => import('./pages/AdminPreMadeCourses'));
-const LazyDocumentViewer = React.lazy(() => import('./pages/DocumentViewer'));
-
-const LazyFallback = () => (
-  <div className="fixed inset-0 flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-slate-200 border-t-purple-600 rounded-full animate-spin"></div>
-  </div>
-);
-
-const AdminPreMadeCourses = (props) => (
-  <React.Suspense fallback={<LazyFallback />}>
-    <LazyAdminPreMadeCourses {...props} />
-  </React.Suspense>
-);
-
-const DocumentViewer = (props) => (
-  <React.Suspense fallback={<LazyFallback />}>
-    <LazyDocumentViewer {...props} />
-  </React.Suspense>
-);
+import { AdminPreMadeCourses, DocumentViewer } from './components/LazyPageWrappers.jsx';
 
 export const PAGES = {
     "AdminPreMadeCourses": AdminPreMadeCourses,
