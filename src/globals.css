@@ -157,19 +157,21 @@ button[class*="inline-flex"] {
 
 /* Mobile optimization for touch targets */
 @media (max-width: 768px) {
-  button, a[role="button"], [role="button"] {
+  /* Only apply 44px min-height to standalone buttons, not inline icon buttons or tabs */
+  button:not([class*="rounded-full"]):not([class*="w-5"]):not([class*="w-4"]):not([class*="w-3"]):not([data-radix-collection-item]),
+  a[role="button"],
+  [role="button"] {
     min-height: 44px;
-    min-width: 44px;
   }
 
-  /* Increase tap target size for small buttons on mobile */
+  /* Ensure tab triggers and small icon buttons still get a tappable area via pseudo-element */
   button::before, a[role="button"]::before {
     content: '';
     position: absolute;
-    top: -8px;
-    left: -8px;
-    right: -8px;
-    bottom: -8px;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
     z-index: -1;
   }
 }

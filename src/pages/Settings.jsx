@@ -94,11 +94,13 @@ export default function Settings() {
   };
 
   const handleNotificationsToggle = async (enabled) => {
-    setNotificationsEnabled(enabled);
+    const previous = notificationsEnabled;
+    setNotificationsEnabled(enabled); // optimistic
     try {
       await base44.auth.updateMe({ notifications_enabled: enabled });
     } catch (error) {
       console.error("Error updating notifications:", error);
+      setNotificationsEnabled(previous); // rollback
     }
   };
 
@@ -141,7 +143,7 @@ export default function Settings() {
   const SettingsItem = ({ icon: Icon, label, onClick, variant = "default", rightContent }) => (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${
+      className={`w-full flex items-center justify-between p-4 min-h-[48px] rounded-lg border transition-all ${
         variant === "danger" 
           ? "border-red-500/30 hover:bg-red-500/10 hover:border-red-500/50 bg-red-500/5" 
           : isDark ? "border-white/10 hover:bg-white/5 hover:border-white/20 bg-white/5" : "border-slate-200 hover:bg-slate-50 hover:border-slate-300 bg-slate-50"
@@ -433,48 +435,56 @@ export default function Settings() {
                     </div>
                     {deleteStep === 1 ? (
                       <DialogDescription className="text-left space-y-3 pt-2">
-                        <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>This will permanently delete:</p>
+                        <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>This will <strong>permanently</strong> delete all your data from our servers:</p>
                         <ul className={`list-disc list-inside space-y-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                           <li>All your lessons and study materials</li>
                           <li>Your exam history and grades</li>
                           <li>Flashcards, notes, and progress data</li>
-                          <li>Your account and profile information</li>
+                          <li>Your subscription and payment history</li>
+                          <li>Your account and all profile information</li>
                         </ul>
-                        <p className="text-red-500 font-medium pt-2">This action cannot be undone.</p>
+                        <div className={`mt-3 p-3 rounded-lg border ${isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'}`}>
+                          <p className="text-red-500 font-semibold text-sm">⚠️ This action is irreversible. All data will be permanently wiped from our servers and cannot be recovered.</p>
+                        </div>
                       </DialogDescription>
                     ) : (
                       <DialogDescription className="text-left space-y-3 pt-2">
-                        <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Please type <strong>DELETE</strong> to confirm.</p>
+                        <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>To confirm permanent deletion, type <strong>DELETE</strong> below:</p>
                         <Input 
                           value={deleteConfirmText}
                           onChange={(e) => setDeleteConfirmText(e.target.value)}
-                          placeholder="DELETE"
+                          placeholder="Type DELETE to confirm"
                           className="mt-2"
+                          autoComplete="off"
                         />
+                        <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Your data will be permanently erased from all systems. If you signed in with Apple, this also revokes your app-specific credentials.
+                        </p>
                       </DialogDescription>
                     )}
                   </DialogHeader>
                   <DialogFooter className="gap-2 sm:gap-0">
-                    <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                    <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="min-h-[44px]">
                       Cancel
                     </Button>
                     {deleteStep === 1 ? (
-                      <Button variant="destructive" onClick={() => setDeleteStep(2)}>
-                        Continue
+                      <Button variant="destructive" onClick={() => setDeleteStep(2)} className="min-h-[44px]">
+                        I understand, continue
                       </Button>
                     ) : (
                       <Button 
                         variant="destructive" 
                         onClick={handleDeleteAccount}
                         disabled={isDeleting || deleteConfirmText !== "DELETE"}
+                        className="min-h-[44px]"
                       >
                         {isDeleting ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Deleting...
+                            Permanently deleting...
                           </>
                         ) : (
-                          "Delete My Account"
+                          "Permanently Delete Account"
                         )}
                       </Button>
                     )}

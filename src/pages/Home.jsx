@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -129,28 +129,39 @@ export default function Home() {
     ]);
   };
 
+  const queryClient = useQueryClient();
   const [startingCourseId, setStartingCourseId] = useState(null);
 
-  const handleStartPreMadeCourse = async (courseId) => {
-    try {
-      setStartingCourseId(courseId);
+  const startCourseMutation = useMutation({
+    mutationFn: async (courseId) => {
       const payload = { pre_made_course_id: courseId };
       if (isGuest && guestData?.fingerprint) {
         payload.fingerprint = guestData.fingerprint;
       }
-      
       const res = await base44.functions.invoke('startPreMadeCourse', payload);
       if (res.data?.success && res.data?.lesson_id) {
-        navigate(`${createPageUrl("DocumentViewer")}?id=${res.data.lesson_id}&tab=exam`);
-      } else {
-        throw new Error(res.data?.error || 'Failed to start course');
+        return res.data;
       }
-    } catch (error) {
+      throw new Error(res.data?.error || 'Failed to start course');
+    },
+    onMutate: (courseId) => {
+      setStartingCourseId(courseId);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['lessons'] });
+      navigate(`${createPageUrl("DocumentViewer")}?id=${data.lesson_id}&tab=exam`);
+    },
+    onError: (error) => {
       console.error("Error starting pre-made course:", error);
       alert("Failed to start course. Please try again.");
-    } finally {
+    },
+    onSettled: () => {
       setStartingCourseId(null);
-    }
+    },
+  });
+
+  const handleStartPreMadeCourse = (courseId) => {
+    startCourseMutation.mutate(courseId);
   };
 
   const studyPlansByLesson = React.useMemo(() => {
