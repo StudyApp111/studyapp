@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -110,22 +110,34 @@ export default function LessonHistory() {
     return isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200';
   };
 
+  const queryClient = useQueryClient();
+
+  const deleteLessonMutation = useMutation({
+    mutationFn: (lessonId) => base44.entities.Lesson.delete(lessonId),
+    onMutate: async (lessonId) => {
+      await queryClient.cancelQueries({ queryKey: ['lessons-history'] });
+      const previous = queryClient.getQueryData(['lessons-history']);
+      queryClient.setQueryData(['lessons-history'], (old) =>
+        old ? old.filter(l => l.id !== lessonId) : []
+      );
+      return { previous };
+    },
+    onError: (_err, _id, context) => {
+      queryClient.setQueryData(['lessons-history'], context.previous);
+      alert("Failed to delete course.");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['lessons-history'] });
+    },
+  });
+
   const LessonCard = ({ lesson, index }) => {
     const exams = lessonExams[lesson.id] || [];
-    const [isDeleting, setIsDeleting] = useState(false);
 
-    const handleDelete = async (e) => {
+    const handleDelete = (e) => {
       e.stopPropagation();
       if (window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
-        setIsDeleting(true);
-        try {
-          await base44.entities.Lesson.delete(lesson.id);
-          handleRefresh();
-        } catch (error) {
-          console.error("Error deleting lesson:", error);
-          alert("Failed to delete course.");
-          setIsDeleting(false);
-        }
+        deleteLessonMutation.mutate(lesson.id);
       }
     };
     const flashcards = lessonFlashcards[lesson.id] || [];
@@ -216,8 +228,8 @@ export default function LessonHistory() {
               <ChevronRight className={`w-4 h-4 ${isDark ? 'text-slate-500 group-hover:text-purple-400' : 'text-slate-400 group-hover:text-purple-600'}`} />
               <button 
                 onClick={handleDelete}
-                disabled={isDeleting}
-                className={`p-1.5 rounded-md transition-colors ${isDark ? 'hover:bg-red-500/20 text-slate-500 hover:text-red-400' : 'hover:bg-red-50 text-slate-400 hover:text-red-500'}`}
+                disabled={deleteLessonMutation.isPending}
+                className={`w-11 h-11 flex items-center justify-center rounded-md transition-colors ${isDark ? 'hover:bg-red-500/20 text-slate-500 hover:text-red-400' : 'hover:bg-red-50 text-slate-400 hover:text-red-500'}`}
                 title="Delete Course"
               >
                 <Trash2 className="w-4 h-4" />

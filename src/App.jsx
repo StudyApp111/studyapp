@@ -25,10 +25,10 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 
 const PageTransition = ({ children }) => (
   <motion.div
-    initial={{ opacity: 0, x: 20 }}
+    initial={{ opacity: 0, x: 60 }}
     animate={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: -20 }}
-    transition={{ duration: 0.25, ease: "easeInOut" }}
+    exit={{ opacity: 0, x: -60 }}
+    transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
     className="w-full h-full"
   >
     {children}
