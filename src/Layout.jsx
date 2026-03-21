@@ -403,8 +403,11 @@ function LayoutContent({ children, currentPageName }) {
         <main className={`flex-1 flex flex-col ${showSidebar ? 'md:ml-20' : ''}`}>
           {/* Mobile Header */}
             {showMobileHeader && (
-            <header className={`${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-slate-200'} backdrop-blur-xl border-b px-3 py-2 md:hidden sticky top-0 z-50`}>
-              <div className="flex items-center justify-center relative h-8">
+            <header 
+              className={`${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-slate-200'} backdrop-blur-xl border-b px-3 py-2 md:hidden sticky top-0 z-50`}
+              style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+            >
+              <div className="flex items-center justify-center relative h-11">
                 {!isMainTab ? (
                   <>
                     <button 
@@ -418,7 +421,7 @@ function LayoutContent({ children, currentPageName }) {
                           navigate(createPageUrl("Home"));
                         }
                       }}
-                      className={`absolute left-0 p-1.5 rounded-lg ${isDark ? 'text-slate-300 hover:bg-white/10' : 'text-slate-600 hover:bg-slate-100'}`}
+                      className={`absolute left-0 w-11 h-11 flex items-center justify-center rounded-lg ${isDark ? 'text-slate-300 hover:bg-white/10' : 'text-slate-600 hover:bg-slate-100'}`}
                     >
                       <ArrowLeft className="w-5 h-5" />
                     </button>
