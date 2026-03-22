@@ -16,21 +16,23 @@ export function UpgradeNavBadge() {
     return (
       <Link
         to={createPageUrl("Settings")}
-        className="relative w-full aspect-square rounded-xl flex items-center justify-center transition-all bg-gradient-to-br from-purple-600/30 to-pink-600/30 border border-purple-500/50 hover:border-purple-500 group"
+        className={`relative w-full min-h-[44px] py-3 rounded-xl flex flex-col lg:flex-row items-center lg:justify-start justify-center gap-1 lg:gap-3 lg:px-4 transition-all bg-gradient-to-br from-purple-600/30 to-pink-600/30 border border-purple-500/50 hover:border-purple-500 group ${isDark ? 'text-purple-300' : 'text-purple-600'}`}
         title={`Promo: ${promoDaysLeft} days left`}
       >
-        <div className="flex flex-col items-center gap-0.5">
-          <Gift className="w-4 h-4 text-purple-300" />
-          <span className="text-[8px] font-black text-purple-200">{promoDaysLeft}d</span>
-        </div>
+        <Gift className="w-5 h-5 flex-shrink-0" />
+        <span className="text-[9px] lg:text-xs font-bold text-center lg:text-left leading-tight px-1 truncate">{promoDaysLeft}d</span>
       </Link>
     );
   }
   
   if (isPro()) {
     return (
-      <div className="w-full aspect-square rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center" title="Locked In">
-        <Crown className="w-5 h-5 text-white" />
+      <div
+        className="w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex flex-col lg:flex-row items-center lg:justify-start justify-center gap-1 lg:gap-3 lg:px-4"
+        title="Locked In"
+      >
+        <Crown className="w-5 h-5 text-white flex-shrink-0" />
+        <span className="text-[9px] lg:text-xs font-bold text-white text-center lg:text-left leading-tight px-1 truncate">Pro</span>
       </div>
     );
   }
@@ -38,11 +40,12 @@ export function UpgradeNavBadge() {
   return (
     <Link
       to={createPageUrl("PricingPlans")}
-      className="relative w-full aspect-square rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30 hover:scale-105 transition-transform group"
+      className="relative w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex flex-col lg:flex-row items-center lg:justify-start justify-center gap-1 lg:gap-3 lg:px-4 shadow-lg shadow-purple-500/30 hover:scale-105 transition-transform group"
       title="Upgrade to Locked In"
     >
-      <Zap className="w-5 h-5 text-white group-hover:animate-pulse" />
-      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse" />
+      <Zap className="w-5 h-5 text-white group-hover:animate-pulse flex-shrink-0" />
+      <span className="text-[9px] lg:text-xs font-bold text-white text-center lg:text-left leading-tight px-1 truncate">Upgrade</span>
+      <span className="absolute top-1 right-1 w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
     </Link>
   );
 }
