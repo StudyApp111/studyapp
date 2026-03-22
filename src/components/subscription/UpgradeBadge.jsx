@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Zap, Crown, Gift } from 'lucide-react';
 import { useSubscription } from './SubscriptionContext';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 // Compact badge for sidebar/nav
 export function UpgradeNavBadge() {
+  const { isDark } = useTheme();
   const { isPro, getPromoRemainingDays } = useSubscription();
   
   const promoDaysLeft = getPromoRemainingDays?.();
