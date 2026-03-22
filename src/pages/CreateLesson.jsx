@@ -420,13 +420,12 @@ export default function CreateLesson() {
           </div>
 
           {/* Material Uploader */}
-          {courseName.trim().length > 0 && (
-            <MaterialUploader
-              courseName={courseName}
-              school={learningProfile?.school}
-              onMaterialReady={handleMaterialReady}
-            />
-          )}
+          <MaterialUploader
+            courseName={courseName}
+            school={learningProfile?.school}
+            onMaterialReady={handleMaterialReady}
+            disabled={!courseName.trim()}
+          />
 
           <div className={`mt-6 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
             <Button

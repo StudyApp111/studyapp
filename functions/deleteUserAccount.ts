@@ -9,44 +9,63 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Delete all user entities
+        const userEmail = user.email;
+
+        // Use service role so we can reliably list and delete all user data
+        const sr = base44.asServiceRole;
+
+        // Helper to safely list entities (returns array even if API returns differently)
+        const safeList = async (entity) => {
+            try {
+                const result = await sr.entities[entity].filter({ created_by: userEmail });
+                if (Array.isArray(result)) return result;
+                if (result?.data && Array.isArray(result.data)) return result.data;
+                return [];
+            } catch (e) {
+                console.error(`Error listing ${entity}:`, e.message);
+                return [];
+            }
+        };
+
+        // Fetch all user entities in parallel
         const [lessons, exams, flashcards, studyPlans, annotations, notes, teachItCards, assignments, courses] = await Promise.all([
-            base44.entities.Lesson.list(),
-            base44.entities.Exam.list(),
-            base44.entities.Flashcard.list(),
-            base44.entities.StudyPlan.list(),
-            base44.entities.Annotation.list(),
-            base44.entities.LessonNote.list(),
-            base44.entities.TeachItCard.list(),
-            base44.entities.GradedAssignment.list(),
-            base44.entities.Course.list()
+            safeList('Lesson'),
+            safeList('Exam'),
+            safeList('Flashcard'),
+            safeList('StudyPlan'),
+            safeList('Annotation'),
+            safeList('LessonNote'),
+            safeList('TeachItCard'),
+            safeList('GradedAssignment'),
+            safeList('Course'),
         ]);
         
         const [learningProfiles, curriculumMaps, pollyChatHistories] = await Promise.all([
-            base44.entities.LearningProfile.list(),
-            base44.entities.CurriculumMap.list(),
-            base44.entities.PollyChatHistory.list()
+            safeList('LearningProfile'),
+            safeList('CurriculumMap'),
+            safeList('PollyChatHistory'),
         ]);
 
+        // Delete all records in parallel
         const deletePromises = [
-            ...lessons.map(l => base44.entities.Lesson.delete(l.id)),
-            ...exams.map(e => base44.entities.Exam.delete(e.id)),
-            ...flashcards.map(f => base44.entities.Flashcard.delete(f.id)),
-            ...studyPlans.map(sp => base44.entities.StudyPlan.delete(sp.id)),
-            ...annotations.map(a => base44.entities.Annotation.delete(a.id)),
-            ...notes.map(n => base44.entities.LessonNote.delete(n.id)),
-            ...teachItCards.map(t => base44.entities.TeachItCard.delete(t.id)),
-            ...assignments.map(a => base44.entities.GradedAssignment.delete(a.id)),
-            ...courses.map(c => base44.entities.Course.delete(c.id)),
-            ...learningProfiles.map(lp => base44.entities.LearningProfile.delete(lp.id)),
-            ...curriculumMaps.map(cm => base44.entities.CurriculumMap.delete(cm.id)),
-            ...pollyChatHistories.map(pc => base44.entities.PollyChatHistory.delete(pc.id))
+            ...lessons.map(l => sr.entities.Lesson.delete(l.id)),
+            ...exams.map(e => sr.entities.Exam.delete(e.id)),
+            ...flashcards.map(f => sr.entities.Flashcard.delete(f.id)),
+            ...studyPlans.map(sp => sr.entities.StudyPlan.delete(sp.id)),
+            ...annotations.map(a => sr.entities.Annotation.delete(a.id)),
+            ...notes.map(n => sr.entities.LessonNote.delete(n.id)),
+            ...teachItCards.map(t => sr.entities.TeachItCard.delete(t.id)),
+            ...assignments.map(a => sr.entities.GradedAssignment.delete(a.id)),
+            ...courses.map(c => sr.entities.Course.delete(c.id)),
+            ...learningProfiles.map(lp => sr.entities.LearningProfile.delete(lp.id)),
+            ...curriculumMaps.map(cm => sr.entities.CurriculumMap.delete(cm.id)),
+            ...pollyChatHistories.map(pc => sr.entities.PollyChatHistory.delete(pc.id)),
         ];
         
-        await Promise.all(deletePromises);
+        await Promise.allSettled(deletePromises);
         
-        // Reset ALL user data
-        await base44.auth.updateMe({ 
+        // Reset ALL user data fields
+        await sr.entities.User.update(user.id, { 
             onboarding_completed: false,
             display_name: null,
             school: null,
@@ -82,11 +101,25 @@ Deno.serve(async (req) => {
             daily_reset_timestamp: null,
             notifications_enabled: true,
             last_active_date: null,
-            learning_style_answers: null
+            learning_style_answers: null,
         });
         
-        return Response.json({ success: true });
+        return Response.json({ success: true, deleted_counts: {
+            lessons: lessons.length,
+            exams: exams.length,
+            flashcards: flashcards.length,
+            studyPlans: studyPlans.length,
+            annotations: annotations.length,
+            notes: notes.length,
+            teachItCards: teachItCards.length,
+            assignments: assignments.length,
+            courses: courses.length,
+            learningProfiles: learningProfiles.length,
+            curriculumMaps: curriculumMaps.length,
+            pollyChatHistories: pollyChatHistories.length,
+        }});
     } catch (error) {
+        console.error('Delete account error:', error);
         return Response.json({ error: error.message }, { status: 500 });
     }
 });

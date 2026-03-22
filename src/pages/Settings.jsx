@@ -450,12 +450,16 @@ export default function Settings() {
                     ) : (
                       <DialogDescription className="text-left space-y-3 pt-2">
                         <p className={`font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>To confirm permanent deletion, type <strong>DELETE</strong> below:</p>
-                        <Input 
+                        <input 
+                          type="text"
                           value={deleteConfirmText}
                           onChange={(e) => setDeleteConfirmText(e.target.value)}
                           placeholder="Type DELETE to confirm"
-                          className="mt-2"
+                          className={`mt-2 flex h-9 w-full rounded-md border px-3 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${isDark ? 'bg-background border-input text-foreground placeholder:text-muted-foreground' : 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'}`}
                           autoComplete="off"
+                          spellCheck={false}
+                          autoCorrect="off"
+                          autoCapitalize="off"
                         />
                         <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                           Your data will be permanently erased from all systems. If you signed in with Apple, this also revokes your app-specific credentials.
