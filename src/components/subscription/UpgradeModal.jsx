@@ -22,9 +22,9 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
   const [promoResult, setPromoResult] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-  const monthlyPrice = 6.99;
-  const yearlyPrice = 4.99;
-  const yearlySavings = 29;
+  const monthlyPrice = 14.99;
+  const yearlyPrice = 10.99;
+  const yearlySavings = Math.round(((monthlyPrice * 12 - yearlyPrice * 12) / (monthlyPrice * 12)) * 100);
 
   const handleStartTrial = async () => {
     setCheckoutLoading(true);
@@ -128,7 +128,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
               <span className="text-purple-300 text-sm">/mo</span>
             </div>
             <p className="text-purple-300/70 text-[11px] mt-0.5">
-              Only ${isYearly ? '0.16' : '0.23'}/day · Cancel anytime
+              Only ${isYearly ? '0.37' : '0.50'}/day · Cancel anytime
             </p>
           </div>
             

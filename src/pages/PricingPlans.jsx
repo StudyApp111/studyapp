@@ -54,15 +54,15 @@ export default function PricingPlans() {
         posthog.capture('subscription_started', {
           plan_type: planType,
           source: 'pricing_page',
-          value: planType === 'yearly' ? 59.88 : 6.99,
+          value: planType === 'yearly' ? 131.88 : 14.99,
           device_type: deviceInfo.device_type,
           app_type: deviceInfo.app_type,
-        });
-      } catch {}
+          });
+          } catch {}
 
-      // TikTok pixel
-      const trackSubscription = async () => {
-        try {
+          // TikTok pixel
+          const trackSubscription = async () => {
+          try {
           const user = await base44.auth.me();
           if (user && window.ttq) {
             const encoder = new TextEncoder();
@@ -70,10 +70,10 @@ export default function PricingPlans() {
             const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            
+
             window.ttq.identify({ external_id: hashedId });
-            
-            const value = planType === 'yearly' ? 59.88 : 6.99;
+
+            const value = planType === 'yearly' ? 131.88 : 14.99;
             window.ttq.track('Subscribe', {
               contents: [{
                 content_id: `pro_${planType}`,
@@ -97,7 +97,7 @@ export default function PricingPlans() {
           window.gtag('event', 'trial_started', {
             event_category: 'conversion',
             event_label: planType,
-            value: planType === 'yearly' ? 59.88 : 6.99,
+            value: planType === 'yearly' ? 131.88 : 14.99,
           });
         }
       } catch {}
@@ -126,8 +126,8 @@ export default function PricingPlans() {
     return false;
   })();
 
-  const monthlyPrice = 6.99;
-  const yearlyPrice = 4.99;
+  const monthlyPrice = 14.99;
+  const yearlyPrice = 10.99;
   const yearlyTotal = yearlyPrice * 12;
   const yearlySavings = Math.round(((monthlyPrice * 12 - yearlyTotal) / (monthlyPrice * 12)) * 100);
 
@@ -227,7 +227,7 @@ export default function PricingPlans() {
               
               const urlParams = new URLSearchParams(window.location.search);
               const planType = urlParams.get('plan') || (isYearly ? 'yearly' : 'monthly');
-              const value = planType === 'yearly' ? 59.88 : 6.99;
+              const value = planType === 'yearly' ? 131.88 : 14.99;
               
               window.ttq.track('Subscribe', {
                 contents: [{
@@ -313,7 +313,7 @@ export default function PricingPlans() {
               Stop Guessing. <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Start Mastering</span>
             </h1>
             <p className="text-purple-200 text-lg max-w-xl mx-auto">
-              Upgrade to Pro for unlimited access. As little as $4.99/month.
+              Upgrade to Pro for unlimited access. As little as $10.99/month.
             </p>
           </motion.div>
 

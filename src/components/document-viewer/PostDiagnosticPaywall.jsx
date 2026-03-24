@@ -101,7 +101,7 @@ export default function PostDiagnosticPaywall({ lessonId }) {
             {/* Price display */}
             <div className="text-center mb-1">
               <p className="text-purple-200/90 text-xs font-medium">
-                $4.99/mo after trial · Only $0.16/day · Cancel anytime
+                $10.99/mo after trial · Only $0.37/day · Cancel anytime
               </p>
             </div>
 
