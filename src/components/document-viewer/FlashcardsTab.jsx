@@ -650,6 +650,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const currentCard = cards[currentIndex];
   const setSize = currentSetEnd - currentSetStart + 1;
   const positionInSet = currentIndex - currentSetStart;
+  const isFree = !isPro();
+  const isCardLocked = isFree && positionInSet >= FREE_FLASHCARD_REVIEW_LIMIT;
   const totalReviewed = sessionStats.total;
   const sessionProgress = totalReviewed > 0 ? ((sessionStats.good + sessionStats.excellent) / totalReviewed) * 100 : 0;
   
