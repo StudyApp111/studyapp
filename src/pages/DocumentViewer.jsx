@@ -888,6 +888,13 @@ export default function DocumentViewer() {
                       <Headphones className="w-3.5 h-3.5" />
                       <span className="text-[10px] font-semibold">Learn</span>
                     </TabsTrigger>
+                    <TabsTrigger 
+                      value="cram"
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-orange-400/80 data-[state=inactive]:bg-orange-500/10' : 'data-[state=inactive]:text-orange-700 data-[state=inactive]:bg-orange-50'}`}
+                    >
+                      <FlameKindling className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Cram</span>
+                    </TabsTrigger>
                   </TabsList>
                 </div>
               </div>
