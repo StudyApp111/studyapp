@@ -285,7 +285,10 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         }
       }
       
-      // Milestone celebrations removed - were blocking UI
+      // Trigger grade micro-movement on good/excellent reviews
+      if (rating === 'good' || rating === 'excellent') {
+        window.dispatchEvent(new CustomEvent('studyActivityCompleted'));
+      }
     } catch (error) {
       console.error("Error updating flashcard:", error);
     }
