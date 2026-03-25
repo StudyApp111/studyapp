@@ -298,6 +298,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
       const xpAmount = gradingResult.score >= 90 ? 20 : gradingResult.score >= 75 ? 15 : 10;
       await awardDailyXP(xpAmount, "Taught a concept!");
       setXpToast({ show: true, xp: xpAmount, reason: "Taught a concept!" });
+
+      // Trigger grade micro-movement in header
+      window.dispatchEvent(new CustomEvent('studyActivityCompleted'));
     } catch (error) {
       console.error("Error grading answer:", error);
       alert("Failed to grade answer. Please try again.");
