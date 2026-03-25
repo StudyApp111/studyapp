@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target, StickyNote, Brain, Headphones } from "lucide-react";
+import { FileText, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target, StickyNote, Brain, Headphones, FlameKindling } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 
@@ -28,6 +28,7 @@ import PostDiagnosticPaywall from "@/components/document-viewer/PostDiagnosticPa
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import PostSessionSummary from "@/components/document-viewer/PostSessionSummary";
 import AnimatedGradeBadge from "@/components/document-viewer/AnimatedGradeBadge";
+import CramModeTab from "@/components/document-viewer/CramModeTab";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
