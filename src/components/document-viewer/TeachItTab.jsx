@@ -18,7 +18,7 @@ import CustomizeGenerationModal from "@/components/modals/CustomizeGenerationMod
 import LockedTeachItInput from "@/components/teach-it/LockedTeachItInput";
 
 export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
-  const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
+  const { canDoTask, incrementTaskCount, triggerUpgradeModal, isPro } = useSubscription();
   const { isDark } = useTheme();
   const [cards, setCards] = useState([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
