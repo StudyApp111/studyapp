@@ -468,6 +468,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
   const currentCard = cards[currentCardIndex];
   const progress = setSize > 0 ? ((posInSet + 1) / setSize) * 100 : 0;
   const setCompletedCount = setIndices.filter(i => cards[i]?.completed).length;
+  const FREE_TEACHIT_LIMIT = 1; // Free users can interact with 1 card per set
+  const isCardLocked = !isPro() && posInSet >= FREE_TEACHIT_LIMIT && !currentCard.completed;
 
   return (
     <div ref={tabContainerRef} className={`relative flex flex-col w-full max-w-full pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
