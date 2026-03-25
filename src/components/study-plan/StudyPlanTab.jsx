@@ -13,6 +13,7 @@ import TopicSelectionModal from "./TopicSelectionModal";
 import InsightsHero from "./InsightsHero";
 import StartStudyPlanCTA from "./StartStudyPlanCTA";
 import LiveProgressCounts from "./LiveProgressCounts";
+import ExamDatePicker from "./ExamDatePicker";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import posthog from "posthog-js";
