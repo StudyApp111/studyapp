@@ -569,7 +569,7 @@ export default function DocumentViewer() {
             {/* Left: Back + Course Name */}
             <div className="flex items-center gap-3 flex-shrink-0 min-w-0">
               <button
-                onClick={() => navigate(createPageUrl("Home"))}
+                onClick={handleBackNavigation}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white flex-shrink-0"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -957,7 +957,11 @@ export default function DocumentViewer() {
         {isTimerRunning && (
           <PomodoroTimer 
             elapsedSeconds={studyTime} 
-            onBreakComplete={() => {}}
+            onBreakComplete={() => {
+              if (getSessionElapsed() >= MIN_SESSION_SECONDS) {
+                setShowSessionSummary(true);
+              }
+            }}
             enabled={pomodoroEnabled}
           />
         )}
@@ -981,6 +985,18 @@ export default function DocumentViewer() {
 
       {/* Post-Diagnostic Paywall for free authenticated users only (guests get GuestSignUpModal instead) */}
       {lesson?.id && !isGuest && <PostDiagnosticPaywall lessonId={lesson.id} />}
+
+      {/* Post-Session Summary */}
+      <PostSessionSummary
+        open={showSessionSummary}
+        onClose={() => {
+          setShowSessionSummary(false);
+          navigate(createPageUrl("Home"));
+        }}
+        onContinue={() => setShowSessionSummary(false)}
+        lesson={lesson}
+        studyTimeSeconds={studyTime}
+      />
 
       {/* XP Gain Toast */}
       <XPGainToast 
