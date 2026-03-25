@@ -346,11 +346,12 @@ export default function PricingPlans() {
             transition={{ delay: 0.2 }}
             className="relative bg-gradient-to-br from-purple-600/30 to-indigo-600/30 backdrop-blur-sm rounded-3xl p-8 border-2 border-purple-500 shadow-2xl shadow-purple-500/20 flex flex-col"
           >
-            {/* Popular badge */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-              <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-1 text-xs font-bold shadow-lg">
-                🔥 MOST POPULAR
-              </Badge>
+            {/* Student testimonial */}
+            <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-max max-w-[90%]">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-5 py-2 shadow-lg text-center">
+                <p className="text-white/90 text-xs italic">"I went from a C- to a B+ in three weeks."</p>
+                <p className="text-purple-300 text-[10px] mt-0.5">— Emma, Political Science, UBC</p>
+              </div>
             </div>
 
             <div className="flex items-center gap-3 mb-4 mt-2">
