@@ -373,7 +373,10 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const handleNext = () => {
     setIsFlipped(false);
     setLastRating(null);
-    setCurrentIndex(prev => prev < currentSetEnd ? prev + 1 : currentSetStart);
+    const maxEnd = !isPro() 
+      ? Math.min(currentSetEnd, currentSetStart + FREE_FLASHCARD_REVIEW_LIMIT) 
+      : currentSetEnd;
+    setCurrentIndex(prev => prev < maxEnd ? prev + 1 : currentSetStart);
   };
 
   const handleRegenerate = async () => {
