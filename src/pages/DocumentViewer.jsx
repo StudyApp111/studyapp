@@ -34,6 +34,7 @@ import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { differenceInCalendarDays } from "date-fns";
 
 // Track study minutes every minute
       
