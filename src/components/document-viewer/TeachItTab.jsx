@@ -649,6 +649,9 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
               <div className="p-4 md:p-6 w-full">
                 {!showFeedback ? (
+                  isCardLocked ? (
+                    <LockedTeachItInput />
+                  ) : (
                   <>
                     <Textarea
                       value={userAnswer}
@@ -670,6 +673,7 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
                       )}
                     </Button>
                   </>
+                  )
                 ) : (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="space-y-2 md:space-y-4 w-full">
                     {/* Score Badge */}
