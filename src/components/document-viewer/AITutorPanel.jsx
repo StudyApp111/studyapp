@@ -2,12 +2,14 @@ import React, { useRef, useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Sparkles, FileText, HelpCircle, List, Lightbulb, Lock } from "lucide-react";
+import { Send, Sparkles, FileText, HelpCircle, List, Lightbulb, Lock, Crown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { renderMathContent } from "@/components/utils/MathRenderer";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function AITutorPanel({ messages, setMessages, input, setInput, isLoading, setIsLoading, lesson }) {
   const { canSendAIMessage, incrementAIMessageCount, triggerUpgradeModal, isPro } = useSubscription();
@@ -177,7 +179,14 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
 
     setIsLoading(true);
 
-    // Check AI message limit BEFORE sending
+    // Check per-lesson free limit
+    const currentUserCount = messages.filter(m => m.role === 'user').length;
+    if (!isPro() && currentUserCount >= FREE_POLLY_LIMIT) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Check global AI message limit BEFORE sending
     const aiCheck = await canSendAIMessage();
     console.log('🔒 AITutorPanel: canSendAIMessage result:', aiCheck);
     
@@ -227,6 +236,10 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
   ];
 
   const hasDocument = lesson?.extracted_content || lesson?.file_url;
+
+  const FREE_POLLY_LIMIT = 5;
+  const userMessageCount = messages.filter(m => m.role === 'user').length;
+  const isLimitReached = !isPro() && userMessageCount >= FREE_POLLY_LIMIT;
 
   return (
     <div className={`flex-1 rounded-xl shadow-xl border flex flex-col overflow-hidden relative z-10 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-purple-200'}`} style={{ height: '100%' }}>
@@ -320,12 +333,33 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
             </div>
           </motion.div>
         )}
+        {/* Inline upgrade prompt when limit reached */}
+        {isLimitReached && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`mx-auto max-w-[90%] rounded-2xl px-4 py-3 text-center border ${isDark ? 'bg-purple-900/30 border-purple-500/30' : 'bg-purple-50 border-purple-200'}`}
+          >
+            <Lock className={`w-4 h-4 mx-auto mb-1.5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+            <p className={`text-xs font-medium mb-1.5 ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
+              You've used your free questions for this lesson.
+            </p>
+            <Link
+              to={createPageUrl("PricingPlans")}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 text-white text-xs font-semibold hover:from-purple-500 hover:to-purple-600 transition-all"
+            >
+              <Crown className="w-3 h-3" />
+              Upgrade for unlimited Polly conversations
+            </Link>
+          </motion.div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input with Quick Action Pills */}
       <div className={`p-3 border-t rounded-b-xl flex-shrink-0 space-y-2 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
-        {/* Quick Actions Pills - Always visible */}
+        {/* Quick Actions Pills - Hidden when limit reached */}
+        {!isLimitReached && (
         <div className="flex flex-wrap gap-1.5">
           {quickActions.map((action) => (
             <button
@@ -339,21 +373,22 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
             </button>
           ))}
         </div>
+        )}
         
         <div className="flex gap-2">
           <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder={hasDocument ? "Ask about your document..." : "Ask me anything..."}
-            disabled={isLoading}
-            className={`flex-1 focus-visible:ring-purple-500 text-[13px] rounded-xl h-10 ${isDark ? 'bg-white/5 border-white/10 text-slate-200 placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
+            value={isLimitReached ? '' : input}
+            onChange={(e) => !isLimitReached && setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && !isLimitReached && handleSend()}
+            placeholder={isLimitReached ? "Upgrade to continue chatting..." : (hasDocument ? "Ask about your document..." : "Ask me anything...")}
+            disabled={isLoading || isLimitReached}
+            className={`flex-1 focus-visible:ring-purple-500 text-[13px] rounded-xl h-10 ${isDark ? 'bg-white/5 border-white/10 text-slate-200 placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'} ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}`}
           />
           <Button
             onClick={() => handleSend()}
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !input.trim() || isLimitReached}
             size="icon"
-            className="bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 rounded-xl shadow-md h-9 w-9"
+            className={`bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 rounded-xl shadow-md h-9 w-9 ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <Send className="w-3.5 h-3.5" />
           </Button>
