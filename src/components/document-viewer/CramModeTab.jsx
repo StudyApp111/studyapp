@@ -107,7 +107,8 @@ export default function CramModeTab({ lesson, isCramActive, daysUntilExam }) {
   // Initial state — not generated yet
   if (!review) {
     return (
-      <div className={`flex items-center justify-center p-4 pb-8 w-full ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+      <div className={`flex flex-col items-center p-4 pb-8 w-full gap-4 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+        {isCramActive && <div className="w-full max-w-md"><CramUrgencyBanner daysUntilExam={daysUntilExam} isDark={isDark} /></div>}
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md">
           <Card className={`border-2 shadow-2xl overflow-hidden ${isDark ? 'bg-[#12121a]/95 border-orange-500/30' : 'bg-white/95 border-orange-200'}`}>
             <div className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 px-5 py-6 text-center">
