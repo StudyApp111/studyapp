@@ -5,8 +5,12 @@ import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
+const FREE_TEACHIT_LIMIT = 1;
+
 export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) {
   const { isDark } = useTheme();
+  const { isPro } = useSubscription();
+  const isFree = !isPro();
   const totalMastered = cards.filter(c => c.mastered).length;
 
   // Group cards by generation batch (cards created within 2 min of each other = 1 set)
