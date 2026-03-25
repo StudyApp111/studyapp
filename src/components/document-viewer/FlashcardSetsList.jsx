@@ -1,11 +1,19 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Play, ChevronRight, RotateCcw, Copy, Layers } from "lucide-react";
+import { CheckCircle2, Play, ChevronRight, RotateCcw, Copy, Layers, Lock, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+
+const FREE_FLASHCARD_REVIEW_LIMIT = 5;
 
 export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew }) {
   const { isDark } = useTheme();
+  const { isPro } = useSubscription();
+  const navigate = useNavigate();
+  const isFree = !isPro();
   
   // Group cards by generation batch (cards created within 2 min of each other = 1 set)
   const sorted = [...cards].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
@@ -60,6 +68,8 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
         {sets.map((set, idx) => {
           const isCompleted = set.mastered === set.cards.length && set.cards.length > 0;
           const progress = set.cards.length > 0 ? (set.mastered / set.cards.length) * 100 : 0;
+          const hasLockedCards = isFree && set.cards.length > FREE_FLASHCARD_REVIEW_LIMIT;
+          const lockedCount = hasLockedCards ? set.cards.length - FREE_FLASHCARD_REVIEW_LIMIT : 0;
           
           return (
             <motion.button
@@ -86,9 +96,17 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className={`font-semibold text-sm truncate ${isCompleted ? 'text-white' : (isDark ? 'text-white' : 'text-slate-900')}`}>
-                    {set.label} ({set.cards.length} cards)
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className={`font-semibold text-sm truncate ${isCompleted ? 'text-white' : (isDark ? 'text-white' : 'text-slate-900')}`}>
+                      {set.label} ({set.cards.length} cards)
+                    </h3>
+                    {hasLockedCards && (
+                      <span className={`flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0 ${isDark ? 'bg-purple-500/20 text-purple-400' : 'bg-purple-100 text-purple-600'}`}>
+                        <Lock className="w-2.5 h-2.5" />
+                        {lockedCount} locked
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 mt-1">
                     <div className={`flex-1 h-1.5 rounded-full overflow-hidden max-w-[100px] ${isCompleted ? 'bg-white/30' : (isDark ? 'bg-white/10' : 'bg-amber-100')}`}>
                       <div 
