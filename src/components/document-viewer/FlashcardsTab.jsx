@@ -293,9 +293,15 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     // Move to next card within the current set, or show completion
     setIsFlipped(false);
     setLastRating(null);
+    const effectiveEnd = (isFree && !isPro()) 
+      ? Math.min(currentSetEnd, currentSetStart + FREE_FLASHCARD_REVIEW_LIMIT - 1) 
+      : currentSetEnd;
     setTimeout(() => {
-      if (currentIndex < currentSetEnd) {
+      if (currentIndex < effectiveEnd) {
         setCurrentIndex(currentIndex + 1);
+      } else if (isFree && !isPro() && currentSetEnd > effectiveEnd) {
+        // Free user finished their 5 free cards — show the locked card
+        setCurrentIndex(effectiveEnd + 1);
       } else {
         // Reached end of set — show session complete
         setSessionComplete(true);
