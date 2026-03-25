@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import GradeTrajectoryChart from "./GradeTrajectoryChart";
 
 export default function PersonalizedBanner() {
   const { data: lessons } = useQuery({
@@ -76,7 +77,16 @@ export default function PersonalizedBanner() {
             <span className="text-emerald-400 font-semibold">{activePlan.tasks.filter(t => t.completed).length}</span>.
           </p>
         )}
-        <p className="text-purple-300/70 text-xs mt-1">
+        {/* Grade Trajectory Chart */}
+        <div className="mt-4">
+          <GradeTrajectoryChart
+            currentGrade={grade}
+            currentScore={score}
+            gradeHistory={activePlan?.grade_history}
+          />
+        </div>
+
+        <p className="text-purple-300/70 text-xs mt-2">
           Upgrade to unlock your personalized study plan and improve it.
         </p>
       </div>
