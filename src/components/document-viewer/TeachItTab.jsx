@@ -15,6 +15,7 @@ import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import MathText from "@/components/math/MathText";
 import CustomizeGenerationModal from "@/components/modals/CustomizeGenerationModal";
+import LockedTeachItInput from "@/components/teach-it/LockedTeachItInput";
 
 export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
