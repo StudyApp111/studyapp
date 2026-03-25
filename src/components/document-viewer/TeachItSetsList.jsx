@@ -115,6 +115,12 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
                     <span className={`text-[10px] font-medium ${allMastered || allCompleted ? 'text-white/80' : (isDark ? 'text-slate-400' : 'text-slate-500')}`}>
                       {set.mastered}/{set.cards.length} mastered
                     </span>
+                    {isFree && set.cards.length > FREE_TEACHIT_LIMIT && !allMastered && !allCompleted && (
+                      <span className={`text-[10px] flex items-center gap-0.5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                        <Lock className="w-2.5 h-2.5" />
+                        {set.cards.length - FREE_TEACHIT_LIMIT} locked
+                      </span>
+                    )}
                   </div>
                 </div>
                 
