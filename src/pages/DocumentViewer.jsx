@@ -966,6 +966,10 @@ export default function DocumentViewer() {
                 {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
               </TabsContent>
 
+              <TabsContent value="cram" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
+                {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} />}
+              </TabsContent>
+
             </div>
           </Tabs>
         </div>
