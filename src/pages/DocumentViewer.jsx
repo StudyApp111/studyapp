@@ -209,12 +209,19 @@ export default function DocumentViewer() {
     }
   }, [location.search]);
 
-  // When lesson loads, default to doc tab if document exists and no tab was specified
+  // When lesson loads, default tab: cram if exam within 7 days, else doc/studyplan
   useEffect(() => {
     if (!lesson) return;
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab');
     if (!tabParam) {
+      if (lesson.exam_date) {
+        const days = differenceInCalendarDays(new Date(lesson.exam_date), new Date());
+        if (days >= 0 && days <= 7 && diagnosticCompleted) {
+          setActiveTab("cram");
+          return;
+        }
+      }
       const lessonHasDoc = lesson.file_url || lesson.file_urls?.length > 0;
       setActiveTab(lessonHasDoc ? "doc" : "studyplan");
     }
