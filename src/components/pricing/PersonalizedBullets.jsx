@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Infinity, Target, Brain, MessageSquare, Sparkles, Zap, BookOpen } from "lucide-react";
+import { Infinity, Target, Brain, MessageSquare, Sparkles, Zap, BookOpen, BarChart3 } from "lucide-react";
 
 const GRADE_VALUES = {
   "A+": 97, A: 93, "A-": 90, "B+": 87, B: 83, "B-": 80,
@@ -163,7 +163,20 @@ export default function PersonalizedBullets() {
     }
   }
 
-  // 7. Flashcards — personalized with count
+  // 7. Grade confidence — personalized
+  const confidence = plan?.current_confidence ?? latestExam?.prediction_confidence;
+  if (confidence != null) {
+    const confVal = typeof confidence === 'number' ? confidence : parseFloat(confidence);
+    if (!isNaN(confVal) && confVal < 80) {
+      bullets.push({
+        icon: BarChart3,
+        gradient: "bg-gradient-to-r from-orange-400 to-red-500",
+        text: `📊 Your grade confidence is only ${confVal.toFixed(1)}% — study more to get an accurate prediction`,
+      });
+    }
+  }
+
+  // 8. Flashcards — personalized with count
   if (flashcards.length > 0) {
     const unmasteredCount = flashcards.filter(f => !f.mastered).length;
     if (unmasteredCount > 0) {
