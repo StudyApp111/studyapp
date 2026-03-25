@@ -712,68 +712,25 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
       {/* Flashcard with 3D flip */}
       <div 
-        onClick={handleFlip}
-        className="cursor-pointer select-none w-full max-w-full"
+        onClick={isCardLocked ? undefined : handleFlip}
+        className={`select-none w-full max-w-full relative ${isCardLocked ? '' : 'cursor-pointer'}`}
         style={{ boxSizing: 'border-box', perspective: '1000px' }}
       >
+        {isCardLocked && <LockedFlashcardOverlay totalCards={setSize} />}
         <motion.div
           animate={{ rotateY: isFlipped ? 180 : 0 }}
-          transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
-          style={{ transformStyle: 'preserve-3d' }}
-          className="relative min-h-[280px]"
-        >
-          {/* Question Side */}
-          <Card 
-            className={`absolute inset-0 border-0 shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-purple-900 to-indigo-900' : 'bg-gradient-to-br from-purple-50 to-indigo-50'}`}
-            style={{ backfaceVisibility: 'hidden', transformStyle: 'preserve-3d' }}
-          >
-            <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-white" />
-                <span className="font-semibold text-sm text-white">Question</span>
-              </div>
-              <Badge className={`text-[10px] ${isDark ? 'bg-purple-500/30 text-purple-200' : 'bg-purple-100 text-purple-700'}`}>
-                {currentCard.difficulty}
-              </Badge>
-            </div>
-            <div className="p-6 flex flex-col items-center justify-center min-h-[220px]">
-              <MathText className={`text-lg font-medium leading-relaxed text-center mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {currentCard.question}
-              </MathText>
-              <div className="text-center space-y-2">
-                <p className={`text-xs mb-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Think of the answer, then...</p>
-                <p className={`text-sm font-semibold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Tap to reveal →</p>
-                <div onClick={(e) => e.stopPropagation()}>
-                  <AskAIButton
-                    type="flashcard"
-                    data={{ question: currentCard.question, answer: currentCard.answer, topics: currentCard.topics }}
-                    lesson={lesson}
-                    size="sm"
-                  />
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Answer Side */}
-          <Card 
-            className={`absolute inset-0 border-0 shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-emerald-900 to-teal-900' : 'bg-gradient-to-br from-emerald-50 to-teal-50'}`}
-            style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)', transformStyle: 'preserve-3d' }}
-          >
-            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-3">
-              <span className="font-semibold text-sm text-white">Answer</span>
-            </div>
-            <div className="p-6 flex items-center justify-center min-h-[220px]">
-              <MathText className={`text-base leading-relaxed text-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {currentCard.answer}
-              </MathText>
-            </div>
+...
           </Card>
         </motion.div>
       </div>
 
+      {/* Upgrade banner after hitting free limit */}
+      {isCardLocked && (
+        <FlashcardUpgradeBanner totalCards={setSize} freeLimit={FREE_FLASHCARD_REVIEW_LIMIT} />
+      )}
+
       {/* Rating Buttons - Below Card - Duolingo/Gizmo style fast pop animations */}
-      {isFlipped && (
+      {isFlipped && !isCardLocked && (
         <motion.div 
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
