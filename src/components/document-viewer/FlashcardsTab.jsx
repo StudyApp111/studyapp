@@ -14,11 +14,15 @@ import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import MathText from "@/components/math/MathText";
 import CustomizeGenerationModal from "@/components/modals/CustomizeGenerationModal";
+import FlashcardUpgradeBanner from "@/components/flashcards/FlashcardUpgradeBanner";
+import LockedFlashcardOverlay from "@/components/flashcards/LockedFlashcardOverlay";
+
+const FREE_FLASHCARD_REVIEW_LIMIT = 5;
 
 // Sound effects removed per user request
 
 export default function FlashcardsTab({ lesson, extractedContent, focusTopics }) {
-  const { canDoTask, incrementTaskCount, triggerUpgradeModal } = useSubscription();
+  const { canDoTask, incrementTaskCount, triggerUpgradeModal, isPro } = useSubscription();
   const { isDark } = useTheme();
   const [cards, setCards] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
