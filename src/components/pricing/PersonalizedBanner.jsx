@@ -25,7 +25,20 @@ export default function PersonalizedBanner() {
     initialData: [],
   });
 
+  const { data: studyPlans } = useQuery({
+    queryKey: ["pricing-plans", latestLesson?.id],
+    queryFn: () =>
+      base44.entities.StudyPlan.filter(
+        { lesson_id: latestLesson.id, status: "active" },
+        "-created_date",
+        1
+      ),
+    enabled: !!latestLesson?.id,
+    initialData: [],
+  });
+
   const latestExam = exams[0];
+  const activePlan = studyPlans[0];
 
   if (!latestLesson || !latestExam) return null;
 
@@ -57,6 +70,12 @@ export default function PersonalizedBanner() {
             {grade && scoreDisplay ? `${grade} (${scoreDisplay})` : gradeDisplay}
           </span>
         </p>
+        {activePlan?.tasks?.length > 0 && (
+          <p className="text-purple-200/80 text-sm mt-1.5">
+            Your study plan has <span className="text-white font-semibold">{activePlan.tasks.length} tasks</span> designed to get you to an A. You've completed{" "}
+            <span className="text-emerald-400 font-semibold">{activePlan.tasks.filter(t => t.completed).length}</span>.
+          </p>
+        )}
         <p className="text-purple-300/70 text-xs mt-1">
           Upgrade to unlock your personalized study plan and improve it.
         </p>
