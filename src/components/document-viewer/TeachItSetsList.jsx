@@ -1,8 +1,9 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Brain, CheckCircle2, Play, ChevronRight, RefreshCw } from "lucide-react";
+import { Brain, CheckCircle2, Play, ChevronRight, RefreshCw, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
 export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) {
   const { isDark } = useTheme();
