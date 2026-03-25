@@ -907,8 +907,9 @@ export default function DocumentViewer() {
                     </TabsTrigger>
                     <TabsTrigger 
                       value="cram"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-orange-400/80 data-[state=inactive]:bg-orange-500/10' : 'data-[state=inactive]:text-orange-700 data-[state=inactive]:bg-orange-50'}`}
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isCramActive ? 'data-[state=inactive]:bg-orange-500/20 data-[state=inactive]:text-orange-400 ring-1 ring-orange-500/40' : isDark ? 'data-[state=inactive]:text-orange-400/80 data-[state=inactive]:bg-orange-500/10' : 'data-[state=inactive]:text-orange-700 data-[state=inactive]:bg-orange-50'}`}
                     >
+                      {isCramActive && <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse" />}
                       <FlameKindling className="w-3.5 h-3.5" />
                       <span className="text-[10px] font-semibold">Cram</span>
                     </TabsTrigger>
