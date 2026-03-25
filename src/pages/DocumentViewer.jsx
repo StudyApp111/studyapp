@@ -27,6 +27,7 @@ import TopicConfirmationBanner from "@/components/document-viewer/TopicConfirmat
 import PostDiagnosticPaywall from "@/components/document-viewer/PostDiagnosticPaywall";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import PostSessionSummary from "@/components/document-viewer/PostSessionSummary";
+import AnimatedGradeBadge from "@/components/document-viewer/AnimatedGradeBadge";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
@@ -257,10 +258,11 @@ export default function DocumentViewer() {
     trackFirstLesson();
   }, [lesson?.id]);
 
-  // Listen for study task completion events → trigger full-screen confetti
+  // Listen for study task completion events → trigger full-screen confetti + grade bounce
   useEffect(() => {
     const handleTaskCompleted = () => {
       setShowTaskConfetti(true);
+      window.dispatchEvent(new CustomEvent('studyActivityCompleted'));
     };
     window.addEventListener('studyTaskCompleted', handleTaskCompleted);
     return () => window.removeEventListener('studyTaskCompleted', handleTaskCompleted);
@@ -526,6 +528,7 @@ export default function DocumentViewer() {
   const handleExamComplete = async () => {
     // Reload lesson data to refresh exams list
     await loadLesson();
+    window.dispatchEvent(new CustomEvent('studyActivityCompleted'));
   };
 
 
@@ -595,10 +598,7 @@ export default function DocumentViewer() {
               <div className="h-6 w-px bg-white/20" />
               
               {/* Predicted Grade */}
-              <div className="flex items-center gap-2">
-                <span className="text-white/70 text-xs font-medium">Grade:</span>
-                <span className="text-white text-xl font-bold tracking-tight">{predictedGrade || '—'}</span>
-              </div>
+              <AnimatedGradeBadge grade={predictedGrade} />
               
               {/* Subtle Divider */}
               <div className="h-6 w-px bg-white/20" />
