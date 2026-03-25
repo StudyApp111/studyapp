@@ -809,7 +809,7 @@ export default function DocumentViewer() {
                 </TabsContent>
 
                 <TabsContent value="cram" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} />}
+                  {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />}
                 </TabsContent>
 
               </div>
