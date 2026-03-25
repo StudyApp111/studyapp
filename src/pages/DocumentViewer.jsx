@@ -26,6 +26,7 @@ import DiagnosticLockOverlay from "@/components/document-viewer/DiagnosticLockOv
 import TopicConfirmationBanner from "@/components/document-viewer/TopicConfirmationBanner";
 import PostDiagnosticPaywall from "@/components/document-viewer/PostDiagnosticPaywall";
 import ConfettiEffect from "@/components/gamification/ConfettiEffect";
+import PostSessionSummary from "@/components/document-viewer/PostSessionSummary";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
@@ -64,7 +65,27 @@ export default function DocumentViewer() {
   const { isPro } = useSubscription();
   const { isGuest, guestData } = useGuestSession();
   const [showTaskConfetti, setShowTaskConfetti] = useState(false);
+  const [showSessionSummary, setShowSessionSummary] = useState(false);
+  const sessionStartTimeRef = useRef(null);
   
+  // Record session start time once
+  useEffect(() => {
+    if (!sessionStartTimeRef.current) {
+      sessionStartTimeRef.current = Date.now();
+    }
+  }, []);
+
+  const MIN_SESSION_SECONDS = 300; // 5 minutes
+  const getSessionElapsed = () => Math.floor((Date.now() - (sessionStartTimeRef.current || Date.now())) / 1000);
+
+  const handleBackNavigation = () => {
+    if (getSessionElapsed() >= MIN_SESSION_SECONDS) {
+      setShowSessionSummary(true);
+    } else {
+      navigate(createPageUrl("Home"));
+    }
+  };
+
   // Check if lesson has a document
   const hasDocument = lesson?.file_url || lesson?.file_urls?.length > 0;
   
