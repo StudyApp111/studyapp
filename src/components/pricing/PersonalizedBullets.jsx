@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Infinity, Target, Brain, MessageSquare, Sparkles, Zap } from "lucide-react";
+import { Infinity, Target, Brain, MessageSquare, Sparkles, Zap, BookOpen } from "lucide-react";
 
 const GRADE_VALUES = {
   "A+": 97, A: 93, "A-": 90, "B+": 87, B: 83, "B-": 80,
@@ -37,6 +37,14 @@ export default function PersonalizedBullets() {
         "-created_date",
         1
       ),
+    enabled: !!latestLesson?.id,
+    initialData: [],
+  });
+
+  const { data: flashcards } = useQuery({
+    queryKey: ["pricing-bullets-flashcards", latestLesson?.id],
+    queryFn: () =>
+      base44.entities.Flashcard.filter({ lesson_id: latestLesson.id }),
     enabled: !!latestLesson?.id,
     initialData: [],
   });
@@ -135,12 +143,29 @@ export default function PersonalizedBullets() {
     });
   }
 
-  // 6. Progress tracking
-  bullets.push({
-    icon: Zap,
-    gradient: "bg-gradient-to-r from-purple-400 to-pink-500",
-    text: "Watch your predicted grade climb as you study",
-  });
+  // 6. Flashcards — personalized with count
+  if (flashcards.length > 0) {
+    const unmasteredCount = flashcards.filter(f => !f.mastered).length;
+    if (unmasteredCount > 0) {
+      bullets.push({
+        icon: BookOpen,
+        gradient: "bg-gradient-to-r from-purple-400 to-pink-500",
+        text: `📚 ${unmasteredCount} flashcards waiting for you in ${courseName}`,
+      });
+    } else {
+      bullets.push({
+        icon: BookOpen,
+        gradient: "bg-gradient-to-r from-purple-400 to-pink-500",
+        text: `You've mastered all ${flashcards.length} flashcards in ${courseName} — generate more with Pro`,
+      });
+    }
+  } else {
+    bullets.push({
+      icon: Zap,
+      gradient: "bg-gradient-to-r from-purple-400 to-pink-500",
+      text: "Watch your predicted grade climb as you study",
+    });
+  }
 
   return (
     <ul className="space-y-3 mb-6 flex-1">
