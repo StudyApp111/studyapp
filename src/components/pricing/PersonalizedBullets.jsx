@@ -49,6 +49,14 @@ export default function PersonalizedBullets() {
     initialData: [],
   });
 
+  const { data: teachItCards } = useQuery({
+    queryKey: ["pricing-bullets-teachit", latestLesson?.id],
+    queryFn: () =>
+      base44.entities.TeachItCard.filter({ lesson_id: latestLesson.id }),
+    enabled: !!latestLesson?.id,
+    initialData: [],
+  });
+
   const latestExam = exams[0];
   const plan = studyPlans[0];
   const courseName = latestLesson?.course_name;
@@ -143,7 +151,19 @@ export default function PersonalizedBullets() {
     });
   }
 
-  // 6. Flashcards — personalized with count
+  // 6. Feynman concepts — personalized with count
+  if (teachItCards.length > 0) {
+    const unmasteredTeachIt = teachItCards.filter(t => !t.mastered).length;
+    if (unmasteredTeachIt > 0) {
+      bullets.push({
+        icon: Brain,
+        gradient: "bg-gradient-to-r from-violet-400 to-purple-500",
+        text: `🧠 ${unmasteredTeachIt} Feynman concept${unmasteredTeachIt !== 1 ? 's' : ''} left to master`,
+      });
+    }
+  }
+
+  // 7. Flashcards — personalized with count
   if (flashcards.length > 0) {
     const unmasteredCount = flashcards.filter(f => !f.mastered).length;
     if (unmasteredCount > 0) {
