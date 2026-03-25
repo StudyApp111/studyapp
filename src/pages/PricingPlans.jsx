@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import posthog from "posthog-js";
 import { detectDeviceInfo } from "@/components/utils/userTracking";
+import PersonalizedBanner from "@/components/pricing/PersonalizedBanner";
 
 export default function PricingPlans() {
   const navigate = useNavigate();
@@ -302,6 +303,9 @@ export default function PricingPlans() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
+
+        {/* Personalized Banner */}
+        <PersonalizedBanner />
 
         {/* Header */}
         <div className="text-center mb-10">
