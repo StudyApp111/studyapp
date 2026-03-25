@@ -155,6 +155,7 @@ export default function CramModeTab({ lesson, isCramActive, daysUntilExam }) {
   // Review generated — display it
   return (
     <div className={`px-3 py-4 pb-8 w-full max-w-2xl mx-auto space-y-4 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+      {isCramActive && <CramUrgencyBanner daysUntilExam={daysUntilExam} isDark={isDark} />}
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
         <div className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-600 rounded-2xl px-5 py-4 text-center shadow-lg">
