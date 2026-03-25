@@ -190,6 +190,14 @@ export default function DocumentViewer() {
   const hasIncompleteTasks = activePlan?.tasks?.some(t => !t.completed);
   const showStudyPlanDot = (activePlan && hasIncompleteTasks) || diagnosticExamReady;
 
+  // Cram Mode activation: exam date is set and within 7 days
+  const isCramActive = (() => {
+    if (!lesson?.exam_date) return false;
+    const days = differenceInCalendarDays(new Date(lesson.exam_date), new Date());
+    return days >= 0 && days <= 7;
+  })();
+  const daysUntilExam = lesson?.exam_date ? differenceInCalendarDays(new Date(lesson.exam_date), new Date()) : null;
+
   // Track first lesson view (SubmitApplication)
   const hasTrackedFirstLesson = useRef(false);
   
