@@ -524,6 +524,10 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           </div>
           {/* Live progress counts */}
           <LiveProgressCounts lessonId={lesson?.id} />
+          {/* Exam date picker */}
+          <div className="relative mt-2">
+            <ExamDatePicker lesson={lesson} onUpdate={(updated) => window.dispatchEvent(new Event('reloadLesson'))} />
+          </div>
         </div>
       </motion.div>
 
