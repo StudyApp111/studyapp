@@ -717,6 +717,13 @@ export default function DocumentViewer() {
                     <Headphones className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Learn</span>
                   </TabsTrigger>
+                  <TabsTrigger 
+                    value="cram"
+                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-orange-400/80 data-[state=inactive]:bg-orange-500/10' : 'data-[state=inactive]:text-orange-700 data-[state=inactive]:bg-orange-50'}`}
+                  >
+                    <FlameKindling className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-xs font-medium">Cram</span>
+                  </TabsTrigger>
                 </TabsList>
               </div>
 
