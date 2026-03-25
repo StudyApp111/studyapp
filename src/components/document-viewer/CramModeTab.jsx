@@ -9,7 +9,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import MathText from "@/components/math/MathText";
 import CramSection from "./CramSection";
 
-export default function CramModeTab({ lesson }) {
+export default function CramModeTab({ lesson, isCramActive, daysUntilExam }) {
   const { isDark } = useTheme();
   const [review, setReview] = useState(null);
   const [meta, setMeta] = useState(null);
