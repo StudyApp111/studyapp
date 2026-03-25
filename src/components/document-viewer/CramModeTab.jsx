@@ -8,6 +8,39 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import MathText from "@/components/math/MathText";
 import CramSection from "./CramSection";
+import { Calendar } from "lucide-react";
+
+function CramUrgencyBanner({ daysUntilExam, isDark }) {
+  if (daysUntilExam == null || daysUntilExam < 0) return null;
+  const urgencyText = daysUntilExam === 0 ? "Your exam is TODAY!" 
+    : daysUntilExam === 1 ? "Your exam is TOMORROW!" 
+    : `${daysUntilExam} days until your exam`;
+  const isVeryUrgent = daysUntilExam <= 2;
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`rounded-xl px-4 py-3 flex items-center gap-3 border ${
+        isVeryUrgent 
+          ? 'bg-red-500/15 border-red-500/30' 
+          : 'bg-orange-500/15 border-orange-500/30'
+      }`}
+    >
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isVeryUrgent ? 'bg-red-500/20' : 'bg-orange-500/20'}`}>
+        <Calendar className={`w-4 h-4 ${isVeryUrgent ? 'text-red-400' : 'text-orange-400'}`} />
+      </div>
+      <div>
+        <p className={`text-sm font-bold ${isVeryUrgent ? (isDark ? 'text-red-300' : 'text-red-700') : (isDark ? 'text-orange-300' : 'text-orange-700')}`}>
+          {urgencyText}
+        </p>
+        <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          Focus on your weak spots below
+        </p>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function CramModeTab({ lesson, isCramActive, daysUntilExam }) {
   const { isDark } = useTheme();
