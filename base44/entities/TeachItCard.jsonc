@@ -1,0 +1,74 @@
+{
+  "name": "TeachItCard",
+  "type": "object",
+  "properties": {
+    "lesson_id": {
+      "type": "string",
+      "description": "Associated lesson ID"
+    },
+    "question": {
+      "type": "string",
+      "description": "Foundational concept question"
+    },
+    "model_answer": {
+      "type": "string",
+      "description": "Expert explanation of the concept"
+    },
+    "topic": {
+      "type": "string",
+      "description": "Topic/competency this card covers"
+    },
+    "user_answer": {
+      "type": "string",
+      "description": "User's explanation attempt"
+    },
+    "score": {
+      "type": "number",
+      "description": "Score out of 100"
+    },
+    "feedback": {
+      "type": "string",
+      "description": "Detailed feedback on user's answer"
+    },
+    "strengths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "mastered": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if score >= 70"
+    }
+  },
+  "required": [
+    "lesson_id",
+    "question",
+    "model_answer"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

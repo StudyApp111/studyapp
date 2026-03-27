@@ -1,0 +1,55 @@
+{
+  "name": "ErrorLog",
+  "type": "object",
+  "properties": {
+    "error_type": {
+      "type": "string",
+      "description": "Category of error (api_error, function_error, ui_error, etc.)"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "The error message"
+    },
+    "error_stack": {
+      "type": "string",
+      "description": "Stack trace if available"
+    },
+    "context": {
+      "type": "object",
+      "description": "Additional context (page, function, parameters, etc.)"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of user who encountered the error"
+    },
+    "resolved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this error has been addressed"
+    }
+  },
+  "required": [
+    "error_type",
+    "error_message"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

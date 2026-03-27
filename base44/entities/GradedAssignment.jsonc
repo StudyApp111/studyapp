@@ -1,0 +1,167 @@
+{
+  "name": "GradedAssignment",
+  "type": "object",
+  "properties": {
+    "course_name": {
+      "type": "string",
+      "description": "Name of the course"
+    },
+    "assignment_title": {
+      "type": "string",
+      "description": "Title of the assignment or test"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL of the uploaded assignment file"
+    },
+    "extracted_content": {
+      "type": "string",
+      "description": "Extracted text from the assignment"
+    },
+    "assignment_rubric": {
+      "type": "object",
+      "description": "AI-generated assignment-specific rubric or custom rubric",
+      "properties": {
+        "rubric_criteria": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "criterion": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "weight_percentage": {
+                "type": "number"
+              },
+              "performance_levels": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "level": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "is_custom": {
+          "type": "boolean",
+          "description": "Whether this is a custom uploaded rubric"
+        },
+        "custom_rubric": {
+          "type": "string",
+          "description": "Raw text of custom rubric if uploaded"
+        }
+      }
+    },
+    "grading_result": {
+      "type": "object",
+      "description": "AI grading analysis and feedback",
+      "properties": {
+        "predicted_grade": {
+          "type": "string",
+          "description": "Letter grade (A+, B, C-, etc.)"
+        },
+        "total_score": {
+          "type": "number",
+          "description": "Numerical score percentage"
+        },
+        "overall_performance_summary": {
+          "type": "string"
+        },
+        "identified_strengths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "areas_for_improvement": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "detailed_feedback_by_section": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "section_name": {
+                "type": "string"
+              },
+              "points_earned": {
+                "type": "number"
+              },
+              "points_possible": {
+                "type": "number"
+              },
+              "feedback": {
+                "type": "string"
+              },
+              "competencies_assessed": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "rubric_breakdown": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "criterion": {
+                "type": "string"
+              },
+              "score": {
+                "type": "number"
+              },
+              "max_score": {
+                "type": "number"
+              },
+              "comments": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "course_name",
+    "assignment_title"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

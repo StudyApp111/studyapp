@@ -1,0 +1,323 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "onboarding_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user has completed onboarding"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "User's preferred display name set during onboarding"
+    },
+    "learning_profile_id": {
+      "type": "string",
+      "description": "ID of the user's learning profile"
+    },
+    "subscription_tier": {
+      "type": "string",
+      "enum": [
+        "free",
+        "pro"
+      ],
+      "default": "free",
+      "description": "User subscription tier"
+    },
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "canceled",
+        "past_due",
+        "none"
+      ],
+      "default": "none",
+      "description": "Subscription status"
+    },
+    "subscription_plan_type": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "yearly"
+      ],
+      "description": "Monthly or yearly billing"
+    },
+    "subscription_start_date": {
+      "type": "string",
+      "description": "When subscription started"
+    },
+    "subscription_end_date": {
+      "type": "string",
+      "description": "When subscription ends"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "description": "Stripe customer ID"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "description": "Stripe subscription ID for recurring plans"
+    },
+    "stripe_payment_intent_id": {
+      "type": "string",
+      "description": "Stripe payment intent ID for one-time yearly payments"
+    },
+    "promo_access_until": {
+      "type": "string",
+      "description": "When promo code access expires"
+    },
+    "weekly_uploads_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Documents uploaded this week (free tier limit: 2)"
+    },
+    "weekly_reset_timestamp": {
+      "type": "string",
+      "description": "ISO timestamp when weekly counters were last reset"
+    },
+    "weekly_assignments_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Assignments graded this week (free tier limit: 1)"
+    },
+    "daily_tasks_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Tasks completed today (free tier limit: 1)"
+    },
+    "daily_ai_messages_count": {
+      "type": "number",
+      "default": 0,
+      "description": "AI messages sent today (free tier limit: 10)"
+    },
+    "daily_reset_timestamp": {
+      "type": "string",
+      "description": "ISO timestamp when daily counters were last reset"
+    },
+    "questions_completed": {
+      "type": "number",
+      "default": 0,
+      "description": "Total questions answered"
+    },
+    "time_spent_seconds": {
+      "type": "number",
+      "default": 0,
+      "description": "Total time spent studying in seconds"
+    },
+    "average_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Average score across all worksheets"
+    },
+    "level": {
+      "type": "number",
+      "default": 1,
+      "description": "User's current level"
+    },
+    "total_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Total XP points"
+    },
+    "current_streak": {
+      "type": "number",
+      "default": 0,
+      "description": "Current study streak in days"
+    },
+    "longest_streak": {
+      "type": "number",
+      "default": 0,
+      "description": "Longest study streak achieved"
+    },
+    "last_study_date": {
+      "type": "string",
+      "description": "Last date user studied"
+    },
+    "badges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "badge_id": {
+            "type": "string"
+          },
+          "badge_name": {
+            "type": "string"
+          },
+          "badge_description": {
+            "type": "string"
+          },
+          "badge_icon": {
+            "type": "string"
+          },
+          "earned_date": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Earned badges"
+    },
+    "daily_xp": {
+      "type": "number",
+      "default": 0,
+      "description": "XP earned today"
+    },
+    "daily_goal": {
+      "type": "number",
+      "default": 50,
+      "description": "Daily XP goal"
+    },
+    "weekly_xp": {
+      "type": "number",
+      "default": 0,
+      "description": "XP earned this week"
+    },
+    "total_flashcards_mastered": {
+      "type": "number",
+      "default": 0,
+      "description": "Total flashcards mastered"
+    },
+    "total_exams_completed": {
+      "type": "number",
+      "default": 0,
+      "description": "Total exams completed"
+    },
+    "last_xp_reset_date": {
+      "type": "string",
+      "description": "Last date daily XP was reset"
+    },
+    "study_sessions_today": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of study sessions today"
+    },
+    "device_type": {
+      "type": "string"
+    },
+    "operating_system": {
+      "type": "string"
+    },
+    "browser": {
+      "type": "string"
+    },
+    "browser_version": {
+      "type": "string"
+    },
+    "screen_width": {
+      "type": "number"
+    },
+    "screen_height": {
+      "type": "number"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    },
+    "first_visit_date": {
+      "type": "string"
+    },
+    "last_active_date": {
+      "type": "string"
+    },
+    "session_count": {
+      "type": "number",
+      "default": 0
+    },
+    "referrer": {
+      "type": "string"
+    },
+    "language": {
+      "type": "string"
+    },
+    "is_pwa_installed": {
+      "type": "boolean",
+      "default": false
+    },
+    "average_session_duration": {
+      "type": "number",
+      "default": 0
+    },
+    "total_logins": {
+      "type": "number",
+      "default": 0
+    },
+    "last_session_start_at": {
+      "type": "string"
+    },
+    "last_login_at": {
+      "type": "string"
+    },
+    "total_lessons_completed": {
+      "type": "number",
+      "default": 0
+    },
+    "last_activity_date": {
+      "type": "string"
+    },
+    "last_daily_reset_date": {
+      "type": "string"
+    },
+    "study_minutes_today": {
+      "type": "number",
+      "default": 0
+    },
+    "questions_today": {
+      "type": "number",
+      "default": 0
+    },
+    "flashcards_today": {
+      "type": "number",
+      "default": 0
+    },
+    "daily_challenges_completed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "polly_predicted_grade": {
+      "type": "string"
+    },
+    "polly_predicted_score": {
+      "type": "number"
+    },
+    "polly_confidence": {
+      "type": "number"
+    },
+    "polly_mastery_gap": {
+      "type": "string"
+    },
+    "polly_velocity": {
+      "type": "string"
+    },
+    "polly_last_run": {
+      "type": "string"
+    },
+    "polly_pending_message": {
+      "type": "string"
+    },
+    "polly_intervention_type": {
+      "type": "string"
+    },
+    "polly_next_action": {
+      "type": "object",
+      "properties": {
+        "action_type": {
+          "type": "string"
+        },
+        "action_title": {
+          "type": "string"
+        },
+        "action_rationale": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": []
+}

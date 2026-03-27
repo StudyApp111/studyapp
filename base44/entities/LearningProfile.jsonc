@@ -1,0 +1,50 @@
+{
+  "name": "LearningProfile",
+  "type": "object",
+  "properties": {
+    "school": {
+      "type": "string",
+      "description": "School the student attends"
+    },
+    "grade": {
+      "type": "string",
+      "description": "Current grade level or year"
+    },
+    "city": {
+      "type": "string",
+      "description": "City where the student lives"
+    },
+    "country": {
+      "type": "string",
+      "description": "Country where the student lives"
+    },
+    "study_type": {
+      "type": "string",
+      "enum": [
+        "university",
+        "grad_school",
+        "high_school",
+        "med_school",
+        "professional_cert",
+        "standardized_tests",
+        "other"
+      ],
+      "description": "What the user is studying for"
+    }
+  },
+  "required": [],
+  "rls": {
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

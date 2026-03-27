@@ -1,0 +1,85 @@
+{
+  "name": "AutomaticEmail",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Display name for this email trigger"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "signup",
+        "onboarding_completed",
+        "first_diagnostic_completed",
+        "first_lesson_created",
+        "first_worksheet_completed",
+        "first_assignment_graded",
+        "lesson_all_worksheets_completed",
+        "streak_milestone",
+        "level_milestone",
+        "trial_started",
+        "trial_day_3",
+        "trial_expiring",
+        "inactive_3_days",
+        "inactive_7_days",
+        "inactive_14_days"
+      ],
+      "description": "What in-app action triggers this email"
+    },
+    "resend_template_id": {
+      "type": "string",
+      "description": "Resend template ID to use"
+    },
+    "resend_template_name": {
+      "type": "string",
+      "description": "Resend template name for display"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this trigger is active"
+    },
+    "send_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Total emails sent via this trigger"
+    },
+    "trigger_config": {
+      "type": "object",
+      "description": "Additional config (e.g. milestone_value for streak/level triggers)",
+      "properties": {
+        "milestone_value": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "required": [
+    "name",
+    "trigger_type",
+    "resend_template_id"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

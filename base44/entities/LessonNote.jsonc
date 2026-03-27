@@ -1,0 +1,49 @@
+{
+  "name": "LessonNote",
+  "type": "object",
+  "properties": {
+    "lesson_id": {
+      "type": "string",
+      "description": "The ID of the lesson this note belongs to"
+    },
+    "note_type": {
+      "type": "string",
+      "enum": [
+        "Detailed Notes",
+        "Cheat Sheet",
+        "Short Summary",
+        "Exam Prep"
+      ],
+      "default": "Detailed Notes",
+      "description": "The type of note generated"
+    },
+    "content": {
+      "type": "string",
+      "description": "The markdown content of the note"
+    },
+    "custom_instructions": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "User-provided custom instructions for generation"
+    }
+  },
+  "required": [
+    "lesson_id",
+    "note_type",
+    "content"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}
