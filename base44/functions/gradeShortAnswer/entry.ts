@@ -1,12 +1,15 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
-        const user = await base44.auth.me();
-
-        if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        
+        // Try to get user but allow guests (grading doesn't require user context)
+        let user = null;
+        try {
+            user = await base44.auth.me();
+        } catch (authError) {
+            console.log('ℹ️ No user authentication - proceeding as guest');
         }
 
         const { 
