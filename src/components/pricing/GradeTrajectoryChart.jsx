@@ -25,20 +25,20 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
   // Add history points if available
   if (gradeHistory?.length > 0) {
     gradeHistory.forEach((h, i) => {
-      points.push({ label: `Exam ${i + 1}`, value: h.score || GRADE_VALUES[h.predicted_grade] || 50, type: "history" });
+      points.push({ label: i === gradeHistory.length - 1 ? "Current" : `Past`, value: h.score || GRADE_VALUES[h.predicted_grade] || 50, type: "history" });
     });
   } else {
-    points.push({ label: "Now", value: startVal, type: "current" });
+    points.push({ label: "Current", value: startVal, type: "current" });
   }
 
   // Generate projected milestones toward A+
   const lastVal = points[points.length - 1].value;
   const gap = targetVal - lastVal;
   if (gap > 5) {
-    const steps = Math.min(3, Math.ceil(gap / 10));
+    const steps = 3;
     for (let i = 1; i <= steps; i++) {
       const projVal = Math.round(lastVal + (gap * i) / (steps + 1));
-      points.push({ label: `Week ${i * 2}`, value: projVal, type: "projected" });
+      points.push({ label: `Week ${i}`, value: projVal, type: "projected" });
     }
   }
   points.push({ label: "Target", value: targetVal, type: "target" });
@@ -51,11 +51,15 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
   const chartW = W - padX * 2;
   const chartH = H - padY * 2;
 
-  const minVal = 40;
+  const actualMin = Math.min(...points.map(p => p.value));
+  const minVal = Math.max(0, Math.min(40, actualMin - 10)); // Ensure graph doesn't cut off low scores
   const maxVal = 100;
 
   const getX = (i) => padX + (i / (points.length - 1)) * chartW;
-  const getY = (val) => padY + chartH - ((val - minVal) / (maxVal - minVal)) * chartH;
+  const getY = (val) => {
+    const clampedVal = Math.max(minVal, Math.min(maxVal, val));
+    return padY + chartH - ((clampedVal - minVal) / (maxVal - minVal)) * chartH;
+  };
 
   // Solid path for history/current
   const solidPoints = points.filter((p) => p.type !== "projected" && p.type !== "target");

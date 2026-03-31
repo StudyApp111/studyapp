@@ -349,7 +349,7 @@ export default function PricingPlans() {
             {/* Student testimonial */}
             <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-max max-w-[90%]">
               <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-5 py-2 shadow-lg text-center">
-                <p className="text-white/90 text-xs italic">"I went from a C- to a B+ in three weeks."</p>
+                <p className="text-white/90 text-[11px] italic">"I went from a C- to A+ in three weeks of using StudyApp"</p>
                 <p className="text-purple-300 text-[10px] mt-0.5">— Emma, Political Science, UBC</p>
               </div>
             </div>
@@ -377,7 +377,7 @@ export default function PricingPlans() {
                 </p>
               ) : (
                 <p className="text-purple-300/50 text-xs">
-                  Billed monthly - Less than one coffee
+                  Billed monthly
                 </p>
               )}
             </div>
