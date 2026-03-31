@@ -1,18 +1,18 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { Brain, Target, TrendingUp } from "lucide-react";
+import { Brain, Target, TrendingUp, Flame } from "lucide-react";
 
 export default function CramBriefing({ studyPlan, isDark }) {
   return (
-    <Card className={`p-5 border-2 shadow-sm ${isDark ? 'bg-[#12121a]/95 border-purple-500/20' : 'bg-white border-purple-100'}`}>
+    <Card className={`p-5 border-2 shadow-sm ${isDark ? 'bg-[#12121a]/95 border-red-500/20' : 'bg-white border-red-100'}`}>
       <div className="flex items-start gap-3 mb-4">
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${isDark ? 'bg-gradient-to-br from-purple-500/20 to-indigo-500/20' : 'bg-gradient-to-br from-purple-100 to-indigo-100'}`}>
-          <Brain className={`w-6 h-6 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${isDark ? 'bg-gradient-to-br from-red-500/20 to-rose-500/20' : 'bg-gradient-to-br from-red-100 to-rose-100'}`}>
+          <Flame className={`w-6 h-6 ${isDark ? 'text-red-400' : 'text-red-600'}`} />
         </div>
         <div>
-          <h3 className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>AI Analysis Briefing</h3>
+          <h3 className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>Cram Briefing</h3>
           <p className={`text-xs md:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Polly has identified your current weak spots based on exam performance.
+            Polly has identified your current weak spots. Time to sprint.
           </p>
         </div>
       </div>
@@ -52,7 +52,7 @@ function InfoTile({ icon, label, value, isDark, highlight }) {
       <div className={`flex items-center gap-1.5 mb-1.5 ${
         highlight 
           ? (isDark ? 'text-red-400' : 'text-red-700') 
-          : (isDark ? 'text-purple-400' : 'text-purple-600')
+          : (isDark ? 'text-slate-400' : 'text-slate-600')
       }`}>
         {icon}
         <span className="text-[11px] font-bold uppercase tracking-wider">{label}</span>
