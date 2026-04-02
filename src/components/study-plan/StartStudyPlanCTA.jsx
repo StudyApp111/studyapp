@@ -75,8 +75,21 @@ export default function StartStudyPlanCTA({ studyPlan, topicSuggestions, onNavig
           }
         }
       }));
+    } else if (tab === "notes") {
+      // Dispatch study task event so NotesTab knows which task_id to associate
+      window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+        detail: {
+          taskType: 'review_notes',
+          task: {
+            task_id: nextTask.task_id,
+            task_type: 'review_notes',
+            focus_topics: nextTask.focus_topics || [],
+            target_competency: nextTask.target_competency || '',
+            title: nextTask.title || '',
+          }
+        }
+      }));
     }
-    // For notes, just navigate — notes tab has its own generate CTA
     
     onNavigate(tab);
   };

@@ -247,22 +247,41 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     };
 
     const tab = formatMap[topic.format] || "flashcards";
+    const taskTitle = `${section.section_title}: ${topic.topic_title}`;
+    
+    // Find the matching study plan task to get the real task_id
+    const matchingPlanTask = studyPlan?.tasks?.find(t => {
+      const typeMap = { "Review Notes": "review_notes", "Flashcards": "flashcards", "Practice Test": "practice_exam", "Feynman Technique": "teach_it" };
+      return t.task_type === typeMap[topic.format] && 
+        (t.focus_topics?.includes(topic.topic_title) || t.title?.includes(topic.topic_title));
+    });
+    const taskId = matchingPlanTask?.task_id || `${section.section_title}_${topic.topic_title}_${tab}`;
     
     // Dispatch event with topic info so the target tab can use it
-    const eventMap = {
-      "flashcards": "generateFromStudyTask",
-      "teachit": "generateFromStudyTask",
-      "exam": "generatePracticeExamFromTask"
-    };
-
-    const eventName = eventMap[tab];
-    const taskTitle = `${section.section_title}: ${topic.topic_title}`;
-    if (eventName) {
-      window.dispatchEvent(new CustomEvent(eventName, {
+    if (tab === "exam") {
+      window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
         detail: {
-          taskType: tab === "teachit" ? "teach_it" : tab === "exam" ? "practice_exam" : tab,
+          taskType: "practice_exam",
           task: {
-            task_id: `${section.section_title}_${topic.topic_title}_${tab}`,
+            task_id: taskId,
+            focus_topics: [topic.topic_title],
+            target_competency: topic.topic_title,
+            title: taskTitle,
+            section_title: section.section_title,
+            target_count: 1
+          },
+          focus_topics: [topic.topic_title],
+          target_competency: topic.topic_title
+        }
+      }));
+    } else {
+      const taskType = tab === "teachit" ? "teach_it" : tab === "notes" ? "review_notes" : tab;
+      window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+        detail: {
+          taskType,
+          task: {
+            task_id: taskId,
+            task_type: taskType,
             focus_topics: [topic.topic_title],
             target_competency: topic.topic_title,
             title: taskTitle,

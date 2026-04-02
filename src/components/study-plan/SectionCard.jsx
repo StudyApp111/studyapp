@@ -23,22 +23,41 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
   const [expanded, setExpanded] = useState(defaultExpanded);
   const topics = section.suggested_topics || [];
 
-  // Build a set of completed task types from the study plan
+  // Build a map from study plan tasks to check completion per task
   const allTasks = studyPlan?.tasks || [];
+  const sectionTitle = section.section_title || '';
   
-  // Track completed task types (e.g. "review_notes", "flashcards")
-  // The study plan has one task per type, so checking by task_type is reliable
-  const completedTaskTypes = new Set();
-  allTasks.forEach(task => {
-    if (task.completed) {
-      const format = TASK_TYPE_TO_FORMAT[task.task_type] || '';
-      completedTaskTypes.add(format);
-    }
-  });
-
-  // Check if a topic suggestion is completed by matching its format to a completed study plan task
+  // Check if a topic suggestion is completed by finding the matching study plan task
+  // Each study plan task has focus_topics — we match those against the suggestion's topic_title
   const isTopicCompleted = (topic) => {
-    return completedTaskTypes.has(topic.format);
+    const expectedTaskType = Object.entries(TASK_TYPE_TO_FORMAT).find(([, fmt]) => fmt === topic.format)?.[0];
+    if (!expectedTaskType) return false;
+    
+    // Find all completed tasks of this type
+    const completedOfType = allTasks.filter(t => t.completed && t.task_type === expectedTaskType);
+    if (completedOfType.length === 0) return false;
+    
+    // Check if any completed task specifically covers this topic
+    return completedOfType.some(task => {
+      // If the task has focus_topics, check for a match with the suggestion's topic
+      if (task.focus_topics?.length > 0) {
+        return task.focus_topics.some(ft => 
+          ft === topic.topic_title || 
+          topic.topic_title.includes(ft) || 
+          ft.includes(topic.topic_title)
+        );
+      }
+      // If the task has a title, check for a match
+      if (task.title) {
+        return task.title.includes(topic.topic_title) || topic.topic_title.includes(task.title);
+      }
+      // If the task has a target_competency, check for a match
+      if (task.target_competency) {
+        return task.target_competency === topic.topic_title;
+      }
+      // No specific topic info on the task — don't auto-complete
+      return false;
+    });
   };
 
   // Count completed

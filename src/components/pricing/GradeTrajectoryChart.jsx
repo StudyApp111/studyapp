@@ -7,6 +7,10 @@ const GRADE_VALUES = {
   "C+": 77, C: 73, "C-": 70, "D+": 67, D: 63, "D-": 60, F: 50,
 };
 
+// Y-axis labels: evenly spaced from bottom to top
+const Y_AXIS_GRADES = ["F", "D-", "C-", "B-", "A-", "A+"];
+const Y_AXIS_VALUES = Y_AXIS_GRADES.map(g => GRADE_VALUES[g]);
+
 const gradeFromValue = (val) => {
   const entries = Object.entries(GRADE_VALUES).sort((a, b) => b[1] - a[1]);
   for (const [g, v] of entries) {
@@ -45,20 +49,23 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
 
   // SVG dimensions
   const W = 320;
-  const H = 120;
+  const H = 140;
   const padX = 30;
-  const padY = 16;
+  const padTop = 20;
+  const padBottom = 20;
   const chartW = W - padX * 2;
-  const chartH = H - padY * 2;
+  const chartH = H - padTop - padBottom;
 
-  const actualMin = Math.min(...points.map(p => p.value));
-  const minVal = Math.max(0, Math.min(40, actualMin - 10)); // Ensure graph doesn't cut off low scores
+  // Dynamic scale that includes all data points with proper grade positions
+  const lowestDataPoint = Math.min(...points.map(p => p.value));
+  // Set min to be at least 10 below the lowest data point, but never above 40
+  const minVal = Math.min(40, Math.max(0, lowestDataPoint - 10));
   const maxVal = 100;
 
   const getX = (i) => padX + (i / (points.length - 1)) * chartW;
   const getY = (val) => {
     const clampedVal = Math.max(minVal, Math.min(maxVal, val));
-    return padY + chartH - ((clampedVal - minVal) / (maxVal - minVal)) * chartH;
+    return padTop + chartH - ((clampedVal - minVal) / (maxVal - minVal)) * chartH;
   };
 
   // Solid path for history/current
@@ -89,22 +96,26 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
         </span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
-        {/* Grid lines */}
-        {[50, 60, 70, 80, 90, 100].map((v) => (
-          <g key={v}>
-            <line
-              x1={padX}
-              y1={getY(v)}
-              x2={W - padX}
-              y2={getY(v)}
-              stroke="rgba(255,255,255,0.06)"
-              strokeWidth="0.5"
-            />
-            <text x={padX - 4} y={getY(v) + 3} textAnchor="end" className="fill-purple-300/40" fontSize="7">
-              {gradeFromValue(v)}
-            </text>
-          </g>
-        ))}
+        {/* Grid lines using fixed grade positions, filtered to chart range */}
+        {Y_AXIS_GRADES.map((grade, i) => {
+          const v = Y_AXIS_VALUES[i];
+          if (v < minVal || v > maxVal) return null;
+          return (
+            <g key={grade}>
+              <line
+                x1={padX}
+                y1={getY(v)}
+                x2={W - padX}
+                y2={getY(v)}
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth="0.5"
+              />
+              <text x={padX - 4} y={getY(v) + 3} textAnchor="end" className="fill-purple-300/40" fontSize="7">
+                {grade}
+              </text>
+            </g>
+          );
+        })}
 
         {/* Solid line (actual data) */}
         {solidPoints.length > 1 && (
@@ -192,7 +203,7 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
               </text>
               <text
                 x={cx}
-                y={H - 2}
+                y={H - 4}
                 textAnchor="middle"
                 fontSize="6"
                 className="fill-purple-300/50"

@@ -35,6 +35,7 @@ export default function NotesTab({ lesson }) {
 
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [pendingStudyTaskId, setPendingStudyTaskId] = useState(null);
   
   useEffect(() => {
     if (lesson?.id && !initialLoadDone) {
@@ -42,6 +43,17 @@ export default function NotesTab({ lesson }) {
       setInitialLoadDone(true);
     }
   }, [lesson?.id, initialLoadDone]);
+
+  // Listen for study task events to track which task triggered the generation
+  useEffect(() => {
+    const handleStudyTask = (e) => {
+      if (e.detail?.taskType === 'review_notes' || e.detail?.task?.task_type === 'review_notes') {
+        setPendingStudyTaskId(e.detail?.task?.task_id || null);
+      }
+    };
+    window.addEventListener('generateFromStudyTask', handleStudyTask);
+    return () => window.removeEventListener('generateFromStudyTask', handleStudyTask);
+  }, []);
 
   const [allNotes, setAllNotes] = useState([]);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
@@ -92,12 +104,15 @@ export default function NotesTab({ lesson }) {
 
       if (data?.content) {
         await incrementTaskCount('review_notes');
+        const taskIdForNote = pendingStudyTaskId || null;
         const newNote = await base44.entities.LessonNote.create({
           lesson_id: lesson.id,
+          study_plan_task_id: taskIdForNote,
           note_type: currentSettings.noteType,
           content: data.content,
           custom_instructions: currentSettings.customInstructions
         });
+        setPendingStudyTaskId(null);
         // Reload all notes and show the new one
         const freshNotes = await base44.entities.LessonNote.filter({ lesson_id: lesson.id }, '-created_date', 50);
         setAllNotes(freshNotes);
@@ -105,7 +120,7 @@ export default function NotesTab({ lesson }) {
         setCurrentNoteIndex(0);
         toast.success(`${currentSettings.noteType} generated!`);
         
-        // Mark review_notes task as complete in study plan
+        // Mark the specific review_notes task as complete in study plan
         try {
           const studyPlans = await base44.entities.StudyPlan.filter({ 
             lesson_id: lesson.id, 
@@ -116,6 +131,8 @@ export default function NotesTab({ lesson }) {
             let markedOne = false;
             const updatedTasks = plan.tasks?.map(task => {
               if (task.task_type === 'review_notes' && !task.completed && !markedOne) {
+                // If we have a specific task_id, only mark that one
+                if (taskIdForNote && task.task_id !== taskIdForNote) return task;
                 markedOne = true;
                 return {
                   ...task,

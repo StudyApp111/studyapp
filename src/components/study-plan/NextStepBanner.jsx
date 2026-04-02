@@ -155,8 +155,20 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan, onNavi
           }
         }
       }));
+    } else if (tab === "notes") {
+      window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+        detail: {
+          taskType: 'review_notes',
+          task: {
+            task_id: nextTask.task_id,
+            task_type: 'review_notes',
+            focus_topics: nextTask.focus_topics || [],
+            target_competency: nextTask.target_competency || '',
+            title: nextTask.title || '',
+          }
+        }
+      }));
     }
-    // For notes, just navigate — notes tab has its own generate CTA
     
     onNavigateToTab(tab);
   };
