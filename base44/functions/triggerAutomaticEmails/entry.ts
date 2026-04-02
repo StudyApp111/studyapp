@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 // This function is a thin wrapper that forwards trigger calls to sendResendEmail.
 // Existing in-app code calls triggerAutomaticEmails — this routes to the new Resend-based system.
