@@ -142,7 +142,7 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan, onNavi
       }));
     } else if (tab === "flashcards" || tab === "teachit") {
       const taskType = tab === "teachit" ? "teach_it" : "flashcards";
-      window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+      window.dispatchEvent(new CustomEvent('navigateToStudyTask', {
         detail: {
           taskType,
           task: {

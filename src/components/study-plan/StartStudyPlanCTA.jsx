@@ -62,7 +62,7 @@ export default function StartStudyPlanCTA({ studyPlan, topicSuggestions, onNavig
       }));
     } else if (tab === "flashcards" || tab === "teachit") {
       const taskType = tab === "teachit" ? "teach_it" : "flashcards";
-      window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+      window.dispatchEvent(new CustomEvent('navigateToStudyTask', {
         detail: {
           taskType,
           task: {

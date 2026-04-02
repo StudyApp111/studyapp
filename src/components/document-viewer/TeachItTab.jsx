@@ -47,23 +47,59 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const pendingStudyTaskRef = useRef(null);
   
   useEffect(() => {
-    const handleStudyTask = async (e) => {
+    // navigateToStudyTask: check for existing set first, only generate if none found
+    const handleNavigateToTask = async (e) => {
+      if (e.detail.taskType !== 'teach_it') return;
+      if (studyTaskHandledRef.current || isGeneratingRef.current) return;
+      studyTaskHandledRef.current = true;
+      
+      const task = e.detail.task;
+      const taskTitle = task?.title || '';
+      
+      // Check if a set already exists for this task (match by topic/title)
+      const existingSet = cards.filter(c => {
+        const topic = c.topic || '';
+        return topic === taskTitle || 
+          (task.focus_topics?.some(ft => topic.includes(ft) || ft.includes(topic)));
+      });
+      
+      if (existingSet.length > 0) {
+        // Navigate to existing set
+        const setCardIds = existingSet.map(c => c.id);
+        const firstIdx = cards.findIndex(c => c.id === existingSet[0].id);
+        if (firstIdx >= 0) {
+          setCurrentCardIndex(firstIdx);
+          setUserAnswer(cards[firstIdx].user_answer || "");
+          setShowFeedback(cards[firstIdx].completed);
+          setCurrentSetCardIds(setCardIds);
+          setShowSetsList(false);
+        }
+      } else {
+        // No existing set — generate new
+        pendingStudyTaskRef.current = task;
+        generateCards();
+      }
+      
+      setTimeout(() => { studyTaskHandledRef.current = false; }, 2000);
+    };
+    
+    // generateFromStudyTask: always generate (used by "Pick Format" modal etc.)
+    const handleGenerateTask = async (e) => {
       if (e.detail.taskType !== 'teach_it') return;
       if (studyTaskHandledRef.current || isGeneratingRef.current) return;
       studyTaskHandledRef.current = true;
       pendingStudyTaskRef.current = e.detail.task;
-      
-      try {
-        // Always generate new set when coming from study plan
-        generateCards();
-      } finally {
-        setTimeout(() => { studyTaskHandledRef.current = false; }, 2000);
-      }
+      generateCards();
+      setTimeout(() => { studyTaskHandledRef.current = false; }, 2000);
     };
     
-    window.addEventListener('generateFromStudyTask', handleStudyTask);
-    return () => window.removeEventListener('generateFromStudyTask', handleStudyTask);
-  }, [lesson?.id]);
+    window.addEventListener('navigateToStudyTask', handleNavigateToTask);
+    window.addEventListener('generateFromStudyTask', handleGenerateTask);
+    return () => {
+      window.removeEventListener('navigateToStudyTask', handleNavigateToTask);
+      window.removeEventListener('generateFromStudyTask', handleGenerateTask);
+    };
+  }, [lesson?.id, cards]);
   
   const loadStudyPlanTopics = async () => {
     if (!lesson?.id) return;

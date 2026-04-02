@@ -2,25 +2,47 @@ import React from "react";
 import { motion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
 
-const GRADE_VALUES = {
-  "A+": 97, A: 93, "A-": 90, "B+": 87, B: 83, "B-": 80,
-  "C+": 77, C: 73, "C-": 70, "D+": 67, D: 63, "D-": 60, F: 50,
-};
-
-// Y-axis labels: evenly spaced from bottom to top
-const Y_AXIS_GRADES = ["F", "D-", "C-", "B-", "A-", "A+"];
-const Y_AXIS_VALUES = Y_AXIS_GRADES.map(g => GRADE_VALUES[g]);
+const GRADE_THRESHOLDS = [
+  { grade: "A+", min: 95 },
+  { grade: "A",  min: 90 },
+  { grade: "A-", min: 85 },
+  { grade: "B+", min: 80 },
+  { grade: "B",  min: 75 },
+  { grade: "B-", min: 70 },
+  { grade: "C+", min: 65 },
+  { grade: "C",  min: 60 },
+  { grade: "C-", min: 55 },
+  { grade: "D+", min: 50 },
+  { grade: "D",  min: 45 },
+  { grade: "D-", min: 40 },
+  { grade: "F",  min: 0 },
+];
 
 const gradeFromValue = (val) => {
-  const entries = Object.entries(GRADE_VALUES).sort((a, b) => b[1] - a[1]);
-  for (const [g, v] of entries) {
-    if (val >= v) return g;
+  for (const { grade, min } of GRADE_THRESHOLDS) {
+    if (val >= min) return grade;
   }
   return "F";
 };
 
+// Y-axis: pick ~5 evenly spaced labels based on the data range
+const pickYAxisLabels = (minVal, maxVal) => {
+  const labels = [];
+  // Show a label roughly every 15-20 points
+  const step = Math.max(10, Math.ceil((maxVal - minVal) / 5 / 5) * 5);
+  for (let v = Math.ceil(minVal / step) * step; v <= maxVal; v += step) {
+    labels.push({ value: v, label: gradeFromValue(v) + ` (${v}%)` });
+  }
+  return labels;
+};
+
 export default function GradeTrajectoryChart({ currentGrade, currentScore, gradeHistory }) {
-  const startVal = currentScore || GRADE_VALUES[currentGrade] || 50;
+  // Convert grade to approximate score if no currentScore provided
+  const gradeToScore = (grade) => {
+    const entry = GRADE_THRESHOLDS.find(t => t.grade === grade);
+    return entry ? entry.min + 2 : 50;
+  };
+  const startVal = currentScore || gradeToScore(currentGrade) || 50;
   const targetVal = 97; // A+
 
   // Build data points: current → projected milestones → A+
@@ -29,7 +51,7 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
   // Add history points if available
   if (gradeHistory?.length > 0) {
     gradeHistory.forEach((h, i) => {
-      points.push({ label: i === gradeHistory.length - 1 ? "Current" : `Past`, value: h.score || GRADE_VALUES[h.predicted_grade] || 50, type: "history" });
+      points.push({ label: i === gradeHistory.length - 1 ? "Current" : `Past`, value: h.score || gradeToScore(h.predicted_grade) || 50, type: "history" });
     });
   } else {
     points.push({ label: "Current", value: startVal, type: "current" });
@@ -56,10 +78,9 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
   const chartW = W - padX * 2;
   const chartH = H - padTop - padBottom;
 
-  // Dynamic scale that includes all data points with proper grade positions
+  // Dynamic scale: pad 5% below lowest and 5% above highest
   const lowestDataPoint = Math.min(...points.map(p => p.value));
-  // Set min to be at least 10 below the lowest data point, but never above 40
-  const minVal = Math.min(40, Math.max(0, lowestDataPoint - 10));
+  const minVal = Math.max(0, lowestDataPoint - 5);
   const maxVal = 100;
 
   const getX = (i) => padX + (i / (points.length - 1)) * chartW;
@@ -96,26 +117,22 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
         </span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
-        {/* Grid lines using fixed grade positions, filtered to chart range */}
-        {Y_AXIS_GRADES.map((grade, i) => {
-          const v = Y_AXIS_VALUES[i];
-          if (v < minVal || v > maxVal) return null;
-          return (
-            <g key={grade}>
-              <line
-                x1={padX}
-                y1={getY(v)}
-                x2={W - padX}
-                y2={getY(v)}
-                stroke="rgba(255,255,255,0.06)"
-                strokeWidth="0.5"
-              />
-              <text x={padX - 4} y={getY(v) + 3} textAnchor="end" className="fill-purple-300/40" fontSize="7">
-                {grade}
-              </text>
-            </g>
-          );
-        })}
+        {/* Grid lines with grade labels at evenly spaced intervals */}
+        {pickYAxisLabels(minVal, maxVal).map(({ value, label }) => (
+          <g key={value}>
+            <line
+              x1={padX}
+              y1={getY(value)}
+              x2={W - padX}
+              y2={getY(value)}
+              stroke="rgba(255,255,255,0.06)"
+              strokeWidth="0.5"
+            />
+            <text x={padX - 4} y={getY(value) + 3} textAnchor="end" className="fill-purple-300/40" fontSize="6">
+              {gradeFromValue(value)}
+            </text>
+          </g>
+        ))}
 
         {/* Solid line (actual data) */}
         {solidPoints.length > 1 && (
@@ -190,7 +207,7 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.3 + i * 0.15 }}
               />
-              {/* Labels */}
+              {/* Labels — show grade for current/target, percentage for projected */}
               <text
                 x={cx}
                 y={cy - 8}
@@ -199,7 +216,7 @@ export default function GradeTrajectoryChart({ currentGrade, currentScore, grade
                 fontWeight="bold"
                 className={isTarget ? "fill-emerald-400" : isProjected ? "fill-emerald-300/70" : "fill-amber-400"}
               >
-                {gradeFromValue(p.value)}
+                {isProjected ? `${Math.round(p.value)}%` : gradeFromValue(p.value)}
               </text>
               <text
                 x={cx}

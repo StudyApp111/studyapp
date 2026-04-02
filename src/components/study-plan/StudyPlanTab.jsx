@@ -276,7 +276,9 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       }));
     } else {
       const taskType = tab === "teachit" ? "teach_it" : tab === "notes" ? "review_notes" : tab;
-      window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+      // For flashcards/teachit: navigate to existing set if available, otherwise generate
+      const eventName = (tab === "flashcards" || tab === "teachit") ? 'navigateToStudyTask' : 'generateFromStudyTask';
+      window.dispatchEvent(new CustomEvent(eventName, {
         detail: {
           taskType,
           task: {

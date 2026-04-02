@@ -50,20 +50,58 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   }, [lesson?.id]);
 
   useEffect(() => {
-    const handleStudyTask = async (e) => {
+    // navigateToStudyTask: check for existing set first, only generate if none found
+    const handleNavigateToTask = async (e) => {
       if (e.detail.taskType !== 'flashcards') return;
-      if (isGeneratingRef.current) {
-        console.log('🎯 Flashcard event already generating, skipping');
-        return;
-      }
+      if (isGeneratingRef.current) return;
       
-      console.log('🎯 Received flashcard generation request from study plan');
+      const task = e.detail.task;
+      const taskTitle = task?.title || '';
+      
+      // Check if a set already exists for this task (match by topic label)
+      // Flashcard sets are identified by the first topic containing the task title
+      const existingSetCards = cards.filter(c => {
+        const topics = c.topics || [];
+        return topics.some(t => 
+          t === taskTitle || 
+          (task.focus_topics?.some(ft => t.includes(ft) || ft.includes(t)))
+        );
+      });
+      
+      if (existingSetCards.length > 0) {
+        // Navigate to existing set
+        const idSet = new Set(existingSetCards.map(c => c.id));
+        const indices = cards.map((c, i) => idSet.has(c.id) ? i : -1).filter(i => i >= 0);
+        if (indices.length > 0) {
+          setCurrentIndex(indices[0]);
+          setCurrentSetStart(indices[0]);
+          setCurrentSetEnd(indices[indices.length - 1]);
+          setIsFlipped(false);
+          setShowSetsList(false);
+          setSessionComplete(false);
+          setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
+        }
+      } else {
+        // No existing set — generate new
+        pendingStudyTaskRef.current = task;
+        handleGenerate();
+      }
+    };
+    
+    // generateFromStudyTask: always generate (used by "Pick Format" modal etc.)
+    const handleGenerateTask = async (e) => {
+      if (e.detail.taskType !== 'flashcards') return;
+      if (isGeneratingRef.current) return;
       pendingStudyTaskRef.current = e.detail.task;
       handleGenerate();
     };
     
-    window.addEventListener('generateFromStudyTask', handleStudyTask);
-    return () => window.removeEventListener('generateFromStudyTask', handleStudyTask);
+    window.addEventListener('navigateToStudyTask', handleNavigateToTask);
+    window.addEventListener('generateFromStudyTask', handleGenerateTask);
+    return () => {
+      window.removeEventListener('navigateToStudyTask', handleNavigateToTask);
+      window.removeEventListener('generateFromStudyTask', handleGenerateTask);
+    };
   }, [lesson?.id, cards]);
   
   const loadStudyPlanTopics = async () => {
