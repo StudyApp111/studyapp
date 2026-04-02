@@ -72,12 +72,23 @@ export default function DocumentViewer() {
   const [showSessionSummary, setShowSessionSummary] = useState(false);
   const sessionStartTimeRef = useRef(null);
   
-  // Record session start time once
+  // Record session start time once + save timer on page unload
   useEffect(() => {
     if (!sessionStartTimeRef.current) {
       sessionStartTimeRef.current = Date.now();
     }
-  }, []);
+    
+    const handleBeforeUnload = () => {
+      if (lesson?.id && studyTime > 0 && !isGuest) {
+        // Use sendBeacon for reliable save on unload
+        const payload = JSON.stringify({ total_study_time_seconds: studyTime });
+        // Fall back to sync update attempt
+        base44.entities.Lesson.update(lesson.id, { total_study_time_seconds: studyTime }).catch(() => {});
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [lesson?.id, studyTime, isGuest]);
 
   const MIN_SESSION_SECONDS = 300; // 5 minutes
   const getSessionElapsed = () => Math.floor((Date.now() - (sessionStartTimeRef.current || Date.now())) / 1000);
@@ -107,10 +118,10 @@ export default function DocumentViewer() {
   const [teachItCards, setTeachItCards] = useState([]);
   const [activePlan, setActivePlan] = useState(null);
   
-  // Load micro-interaction data for notification dots
+  // Load micro-interaction data for notification dots (delayed to avoid burst with loadLesson)
   useEffect(() => {
-    const loadNotificationData = async () => {
-      if (!lesson?.id) return;
+    if (!lesson?.id) return;
+    const timer = setTimeout(async () => {
       try {
         const [fc, tic, plans] = await Promise.all([
           base44.entities.Flashcard.filter({ lesson_id: lesson.id }),
@@ -123,8 +134,8 @@ export default function DocumentViewer() {
       } catch (err) {
         console.error('Error loading notification data:', err);
       }
-    };
-    loadNotificationData();
+    }, 2000); // Delay 2s after lesson loads to avoid rate limit burst
+    return () => clearTimeout(timer);
   }, [lesson?.id]);
   
   // Check exam completion status
@@ -327,18 +338,28 @@ export default function DocumentViewer() {
     const capturedId = urlParams.get('id') || urlParams.get('lessonId');
     
     if (capturedId && capturedId !== 'null' && capturedId !== 'undefined') {
-      // If we have a new ID in the URL, update our ref and storage
-      if (capturedId !== lessonIdRef.current) {
+      const isNewId = capturedId !== lessonIdRef.current;
+      lessonIdRef.current = capturedId;
+      sessionStorage.setItem('currentLessonId', capturedId);
+      
+      if (isNewId) {
         console.log("✅ Detected new lesson ID:", capturedId);
-        lessonIdRef.current = capturedId;
-        sessionStorage.setItem('currentLessonId', capturedId);
-        setLesson(null); // Clear previous lesson
+        setLesson(null);
         setLoading(true);
+        loadLesson();
+        loadUserStats();
+      } else if (!lesson) {
+        // Same ID but no lesson data yet (first mount)
+        loadLesson();
+        loadUserStats();
+      }
+    } else {
+      // No ID in URL — try session fallback on first mount
+      if (!lesson) {
+        loadLesson();
+        loadUserStats();
       }
     }
-    
-    loadLesson();
-    loadUserStats();
   }, [location.search]);
 
   const loadUserStats = async () => {
@@ -383,56 +404,51 @@ export default function DocumentViewer() {
     }
   }, [isTimerRunning, studyTime !== null]);
 
-  // Save progress every 1 second for accurate timer persistence
-  // Track study_minutes_today every minute for daily challenges
+  // Save progress periodically — lesson time every 30s, user time every 60s, daily activity every 60s
   useEffect(() => {
     if (saveProgressRef.current) {
       clearInterval(saveProgressRef.current);
     }
 
-    // Save every 1 second for accurate timer (skip for guests)
+    // Check every 30 seconds (not every 1 second!) to avoid rate limits
     saveProgressRef.current = setInterval(async () => {
-      if (!isTimerRunning || isGuest) return;
+      if (!isTimerRunning || isGuest || !lesson?.id) return;
       
       const now = Date.now();
-      const secondsSinceLastSave = Math.floor((now - lastSaveTimeRef.current) / 1000);
       
-      if (secondsSinceLastSave >= 1) {
-        try {
-          // Update lesson-specific study time
-          if (lesson?.id) {
-            await base44.entities.Lesson.update(lesson.id, {
-              total_study_time_seconds: studyTime
-            });
-          }
-          
-          // Update user total time less frequently (every 10 seconds)
-          if (secondsSinceLastSave >= 10) {
-            const user = await base44.auth.me();
-            await base44.auth.updateMe({
-              time_spent_seconds: (user.time_spent_seconds || 0) + secondsSinceLastSave
-            });
-            lastSaveTimeRef.current = now;
-          }
-          
-          // Track study minutes for daily challenges (every 60 seconds)
-          const secondsSinceMinuteTrack = Math.floor((now - lastMinuteTrackRef.current) / 1000);
-          if (secondsSinceMinuteTrack >= 60) {
-            await recordDailyActivity('study_minutes', 1);
-            lastMinuteTrackRef.current = now;
-          }
-        } catch (error) {
-          console.error("Error saving progress:", error);
+      try {
+        // Update lesson-specific study time every 30 seconds
+        await base44.entities.Lesson.update(lesson.id, {
+          total_study_time_seconds: studyTime
+        });
+        
+        // Update user total time every 60 seconds
+        const secondsSinceLastSave = Math.floor((now - lastSaveTimeRef.current) / 1000);
+        if (secondsSinceLastSave >= 60) {
+          const user = await base44.auth.me();
+          await base44.auth.updateMe({
+            time_spent_seconds: (user.time_spent_seconds || 0) + secondsSinceLastSave
+          });
+          lastSaveTimeRef.current = now;
         }
+        
+        // Track study minutes for daily challenges every 60 seconds
+        const secondsSinceMinuteTrack = Math.floor((now - lastMinuteTrackRef.current) / 1000);
+        if (secondsSinceMinuteTrack >= 60) {
+          await recordDailyActivity('study_minutes', 1);
+          lastMinuteTrackRef.current = now;
+        }
+      } catch (error) {
+        console.error("Error saving progress:", error);
       }
-    }, 1000);
+    }, 30000);
 
     return () => {
       if (saveProgressRef.current) {
         clearInterval(saveProgressRef.current);
       }
     };
-  }, [lesson?.id, isTimerRunning, studyTime]);
+  }, [lesson?.id, isTimerRunning]);
 
   const formatStudyTime = (seconds) => {
     const hrs = Math.floor(seconds / 3600);
