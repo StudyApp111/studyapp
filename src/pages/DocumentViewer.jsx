@@ -617,7 +617,8 @@ export default function DocumentViewer() {
               {lesson?.id && (
                 <NextStepBanner 
                   lessonId={lesson.id} 
-                  onNavigateToStudyPlan={() => setActiveTab('studyplan')} 
+                  onNavigateToStudyPlan={() => setActiveTab('studyplan')}
+                  onNavigateToTab={(tab) => setActiveTab(tab)}
                 />
               )}
               
@@ -850,7 +851,8 @@ export default function DocumentViewer() {
                   {lesson?.id && (
                     <NextStepBanner 
                       lessonId={lesson.id} 
-                      onNavigateToStudyPlan={() => setActiveTab('studyplan')} 
+                      onNavigateToStudyPlan={() => setActiveTab('studyplan')}
+                      onNavigateToTab={(tab) => setActiveTab(tab)}
                     />
                   )}
                   <div className="bg-white/15 rounded-full px-3 py-1 flex items-center gap-2">

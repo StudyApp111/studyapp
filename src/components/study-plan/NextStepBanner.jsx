@@ -6,10 +6,18 @@ const TASK_ICONS = {
   flashcards: Zap,
   teach_it: Brain,
   review_notes: BookOpen,
+  practice_exam: Zap,
   practice_questions: Zap // Legacy fallback
 };
 
-export default function NextStepBanner({ lessonId, onNavigateToStudyPlan }) {
+const TASK_TYPE_TO_TAB = {
+  review_notes: "notes",
+  flashcards: "flashcards",
+  practice_exam: "exam",
+  teach_it: "teachit"
+};
+
+export default function NextStepBanner({ lessonId, onNavigateToStudyPlan, onNavigateToTab }) {
   const [nextTask, setNextTask] = useState(null);
   const [allComplete, setAllComplete] = useState(false);
   const [noStudyPlan, setNoStudyPlan] = useState(false);
@@ -60,11 +68,24 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan }) {
     };
     window.addEventListener('reloadLesson', handleReload);
     window.addEventListener('studyPlanGenerating', handlePlanDone);
+    window.addEventListener('studyActivityCompleted', handleReload);
     return () => {
       window.removeEventListener('reloadLesson', handleReload);
       window.removeEventListener('studyPlanGenerating', handlePlanDone);
+      window.removeEventListener('studyActivityCompleted', handleReload);
     };
   }, [loadNextStep]);
+
+  // Subscribe to study plan updates for real-time task completion detection
+  useEffect(() => {
+    if (!lessonId) return;
+    const unsubscribe = base44.entities.StudyPlan.subscribe((event) => {
+      if (event.data?.lesson_id === lessonId) {
+        loadNextStep();
+      }
+    });
+    return () => unsubscribe();
+  }, [lessonId, loadNextStep]);
 
   // No study plan yet
   if (noStudyPlan) {
@@ -94,20 +115,70 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan }) {
     );
   }
 
+  // Navigate directly to the task's tab and dispatch generation events
+  const handleTaskClick = () => {
+    if (!nextTask || !onNavigateToTab) {
+      onNavigateToStudyPlan();
+      return;
+    }
+    
+    const tab = TASK_TYPE_TO_TAB[nextTask.task_type] || "studyplan";
+    
+    // Dispatch generation event so the tab starts the task immediately
+    if (tab === "exam") {
+      window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
+        detail: {
+          task: {
+            task_id: nextTask.task_id,
+            focus_topics: nextTask.focus_topics || [],
+            target_competency: nextTask.target_competency || '',
+            title: nextTask.title || '',
+            section_title: nextTask.section_title || '',
+            target_count: nextTask.target_count || 1
+          },
+          focus_topics: nextTask.focus_topics || [],
+          target_competency: nextTask.target_competency || ''
+        }
+      }));
+    } else if (tab === "flashcards" || tab === "teachit") {
+      const taskType = tab === "teachit" ? "teach_it" : "flashcards";
+      window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+        detail: {
+          taskType,
+          task: {
+            task_id: nextTask.task_id,
+            focus_topics: nextTask.focus_topics || [],
+            target_competency: nextTask.target_competency || '',
+            title: nextTask.title || '',
+            section_title: nextTask.section_title || '',
+            target_count: nextTask.target_count || 10
+          }
+        }
+      }));
+    }
+    // For notes, just navigate — notes tab has its own generate CTA
+    
+    onNavigateToTab(tab);
+  };
+
   // Show next task
   if (nextTask) {
     const Icon = TASK_ICONS[nextTask.task_type] || Target;
-    const remaining = nextTask.target_count - (nextTask.completed_count || 0);
+    const taskLabels = {
+      flashcards: 'Flashcards',
+      teach_it: 'Feynman',
+      review_notes: 'Notes',
+      practice_exam: 'Practice Quiz'
+    };
 
     return (
       <button
-        onClick={onNavigateToStudyPlan}
+        onClick={handleTaskClick}
         className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full px-3 py-1.5 transition-colors group"
       >
         <Icon className="w-3.5 h-3.5 text-yellow-300" />
         <span className="text-xs text-white font-medium truncate max-w-[140px]">
-          {remaining} {nextTask.task_type === 'flashcards' || nextTask.task_type === 'practice_questions' ? 'cards' : 
-                       nextTask.task_type === 'teach_it' ? 'concepts' : 'sections'} left
+          Next: {taskLabels[nextTask.task_type] || nextTask.title}
         </span>
         <ChevronRight className="w-3 h-3 text-white/60 group-hover:translate-x-0.5 transition-transform" />
       </button>

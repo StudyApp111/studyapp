@@ -1,103 +1,63 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Play, ArrowRight, CheckCircle2, Copy, Brain, FileText, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
-const FORMAT_TO_TAB = {
-  "Review Notes": "notes",
-  "Flashcards": "flashcards",
-  "Practice Test": "exam",
-  "Feynman Technique": "teachit"
+const TASK_TYPE_TO_TAB = {
+  review_notes: "notes",
+  flashcards: "flashcards",
+  practice_exam: "exam",
+  teach_it: "teachit"
 };
 
-const FORMAT_ICONS = {
-  "Review Notes": FileText,
-  "Flashcards": Copy,
-  "Practice Test": Zap,
-  "Feynman Technique": Brain
+const TASK_TYPE_ICONS = {
+  review_notes: FileText,
+  flashcards: Copy,
+  practice_exam: Zap,
+  teach_it: Brain
 };
 
-const TASK_TYPE_TO_FORMAT = {
+const TASK_TYPE_LABELS = {
   review_notes: "Review Notes",
   flashcards: "Flashcards",
-  practice_exam: "Practice Test",
-  teach_it: "Feynman Technique"
+  practice_exam: "Practice Quiz",
+  teach_it: "Feynman"
 };
 
-export default function StartStudyPlanCTA({ studyPlan, topicSuggestions, onNavigate, onStartTask }) {
+export default function StartStudyPlanCTA({ studyPlan, topicSuggestions, onNavigate }) {
   const { isDark } = useTheme();
 
-  // Build ordered flat list of all tasks from topic suggestions (sections → topics)
-  const allTasks = useMemo(() => {
-    if (!topicSuggestions || topicSuggestions.length === 0) return [];
-    const tasks = [];
-    for (const section of topicSuggestions) {
-      for (const topic of (section.suggested_topics || [])) {
-        tasks.push({
-          sectionTitle: section.section_title,
-          topicTitle: topic.topic_title,
-          format: topic.format,
-          tab: FORMAT_TO_TAB[topic.format] || "flashcards"
-        });
-      }
-    }
-    return tasks;
-  }, [topicSuggestions]);
-
-  // Build set of completed task keys from study plan
-  const completedKeys = useMemo(() => {
-    const keys = new Set();
-    const planTasks = studyPlan?.tasks || [];
-    for (const task of planTasks) {
-      if (task.completed) {
-        const format = TASK_TYPE_TO_FORMAT[task.task_type] || '';
-        for (const ft of (task.focus_topics || [])) {
-          keys.add(`${ft}::${format}`);
-        }
-        // Section-level completion
-        if (task.section_title) {
-          keys.add(`section::${task.section_title}::${format}`);
-        }
-      }
-    }
-    return keys;
-  }, [studyPlan?.tasks]);
-
-  const isTaskCompleted = (task) => {
-    return completedKeys.has(`${task.topicTitle}::${task.format}`) || 
-           completedKeys.has(`section::${task.sectionTitle}::${task.format}`);
-  };
-
-  // Find the first incomplete task
-  const nextTask = allTasks.find(t => !isTaskCompleted(t));
-  const completedCount = allTasks.filter(t => isTaskCompleted(t)).length;
+  // Use study plan tasks directly — they are the source of truth
+  const planTasks = studyPlan?.tasks || [];
+  const completedCount = planTasks.filter(t => t.completed).length;
+  const nextTask = planTasks.find(t => !t.completed);
   const hasStarted = completedCount > 0;
-  const allComplete = allTasks.length > 0 && completedCount === allTasks.length;
+  const allComplete = planTasks.length > 0 && completedCount === planTasks.length;
 
-  if (allTasks.length === 0 || allComplete) return null;
+  if (planTasks.length === 0 || allComplete) return null;
 
-  const Icon = nextTask ? (FORMAT_ICONS[nextTask.format] || Play) : Play;
-  const formatLabel = nextTask?.format || 'Tasks';
+  const Icon = nextTask ? (TASK_TYPE_ICONS[nextTask.task_type] || Play) : Play;
+  const formatLabel = TASK_TYPE_LABELS[nextTask?.task_type] || 'Tasks';
 
   const handleClick = () => {
     if (!nextTask) return;
     
-    const tab = FORMAT_TO_TAB[nextTask.format] || "flashcards";
+    const tab = TASK_TYPE_TO_TAB[nextTask.task_type] || "notes";
     
-    // Dispatch generation event for the specific task type so it starts immediately
+    // Dispatch generation event so the tab starts the task immediately
     if (tab === "exam") {
       window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
         detail: {
           task: {
-            task_id: `cta_${nextTask.sectionTitle}_${nextTask.topicTitle}`,
-            focus_topics: [nextTask.topicTitle],
-            target_competency: nextTask.topicTitle,
-            title: `${nextTask.sectionTitle}: ${nextTask.topicTitle}`,
-            section_title: nextTask.sectionTitle,
-            target_count: 1
+            task_id: nextTask.task_id,
+            focus_topics: nextTask.focus_topics || [],
+            target_competency: nextTask.target_competency || '',
+            title: nextTask.title || '',
+            section_title: nextTask.section_title || '',
+            target_count: nextTask.target_count || 1
           },
-          focus_topics: [nextTask.topicTitle],
-          target_competency: nextTask.topicTitle
+          focus_topics: nextTask.focus_topics || [],
+          target_competency: nextTask.target_competency || ''
         }
       }));
     } else if (tab === "flashcards" || tab === "teachit") {
@@ -106,11 +66,12 @@ export default function StartStudyPlanCTA({ studyPlan, topicSuggestions, onNavig
         detail: {
           taskType,
           task: {
-            focus_topics: [nextTask.topicTitle],
-            target_competency: nextTask.topicTitle,
-            title: `${nextTask.sectionTitle}: ${nextTask.topicTitle}`,
-            section_title: nextTask.sectionTitle,
-            target_count: tab === "flashcards" ? 10 : 3
+            task_id: nextTask.task_id,
+            focus_topics: nextTask.focus_topics || [],
+            target_competency: nextTask.target_competency || '',
+            title: nextTask.title || '',
+            section_title: nextTask.section_title || '',
+            target_count: nextTask.target_count || 10
           }
         }
       }));
@@ -145,16 +106,16 @@ export default function StartStudyPlanCTA({ studyPlan, topicSuggestions, onNavig
             </p>
             <p className="text-white/70 text-xs mt-0.5 truncate">
               {hasStarted
-                ? `${nextTask.topicTitle} · ${nextTask.sectionTitle}`
-                : `Begin with ${formatLabel} on "${nextTask.topicTitle}"`
+                ? `${nextTask.title || nextTask.target_competency}`
+                : `Begin with ${formatLabel}: "${nextTask.title || nextTask.target_competency}"`
               }
             </p>
             {hasStarted && (
               <div className="flex items-center gap-2 mt-1.5">
                 <div className="flex-1 h-1 bg-white/20 rounded-full max-w-[120px]">
-                  <div className="h-full bg-white/70 rounded-full transition-all" style={{ width: `${Math.round((completedCount / allTasks.length) * 100)}%` }} />
+                  <div className="h-full bg-white/70 rounded-full transition-all" style={{ width: `${Math.round((completedCount / planTasks.length) * 100)}%` }} />
                 </div>
-                <span className="text-white/60 text-[10px] font-medium">{completedCount}/{allTasks.length}</span>
+                <span className="text-white/60 text-[10px] font-medium">{completedCount}/{planTasks.length}</span>
               </div>
             )}
           </div>

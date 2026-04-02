@@ -23,37 +23,22 @@ export default function SectionCard({ section, index, defaultExpanded, onTopicCl
   const [expanded, setExpanded] = useState(defaultExpanded);
   const topics = section.suggested_topics || [];
 
-  // Build a set of completed task types for cross-reference, SCOPED to this section
+  // Build a set of completed task types from the study plan
   const allTasks = studyPlan?.tasks || [];
-  const sectionTitle = section.section_title || '';
   
-  // Track completed tasks scoped by section AND topic
-  const completedTaskKeys = new Set();
-  const completedSectionFormatKeys = new Set();
+  // Track completed task types (e.g. "review_notes", "flashcards")
+  // The study plan has one task per type, so checking by task_type is reliable
+  const completedTaskTypes = new Set();
   allTasks.forEach(task => {
     if (task.completed) {
       const format = TASK_TYPE_TO_FORMAT[task.task_type] || '';
-      const taskTopics = task.focus_topics || [];
-      const taskSection = task.section_title || '';
-      
-      // Track topic-level completion
-      taskTopics.forEach(ft => {
-        completedTaskKeys.add(`${ft}::${format}`);
-      });
-      
-      // Track section-level completion (only if task belongs to THIS section)
-      if (taskSection === sectionTitle) {
-        completedSectionFormatKeys.add(format);
-      }
+      completedTaskTypes.add(format);
     }
   });
 
-  // Check if a topic is completed - match by focus_topics first, then section-scoped format
+  // Check if a topic suggestion is completed by matching its format to a completed study plan task
   const isTopicCompleted = (topic) => {
-    // Direct match: task has this exact topic in focus_topics
-    if (completedTaskKeys.has(`${topic.topic_title}::${topic.format}`)) return true;
-    // Section-scoped fallback: task of this format completed FOR THIS SECTION
-    return completedSectionFormatKeys.has(topic.format);
+    return completedTaskTypes.has(topic.format);
   };
 
   // Count completed
