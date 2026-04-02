@@ -462,10 +462,11 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
             </div>
             <Badge className={`text-[10px] ${
               confidenceLevel === 'High' ? (isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-700') :
+              confidenceLevel === 'Medium-High' ? (isDark ? 'bg-teal-500/20 text-teal-300' : 'bg-teal-100 text-teal-700') :
               confidenceLevel === 'Medium' ? (isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-700') :
               (isDark ? 'bg-red-500/20 text-red-300' : 'bg-red-100 text-red-700')
             }`}>
-              {confidenceLevel} Data
+              {confidenceLevel}
             </Badge>
           </div>
           
@@ -477,6 +478,7 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
               <motion.div 
                 className={`h-full rounded-full ${
                   confidenceLevel === 'High' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
+                  confidenceLevel === 'Medium-High' ? 'bg-gradient-to-r from-teal-500 to-cyan-500' :
                   confidenceLevel === 'Medium' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
                   'bg-gradient-to-r from-red-500 to-rose-500'
                 }`}
@@ -490,7 +492,14 @@ Please explain why ${isCorrect ? 'this answer is correct and what concept it tes
           <div className={`flex items-start gap-2 rounded-xl p-2.5 border ${isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-slate-200'}`}>
             <AlertCircle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
             <p className={`text-xs leading-tight ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-              Complete study tasks to increase confidence to <span className={`font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{Math.min(95, confidencePercent + 15)}%</span> and get a more accurate grade prediction.
+              {confidencePercent < 40 
+                ? 'Complete a flashcard deck or Feynman card to reach Medium confidence.'
+                : confidencePercent < 65
+                ? 'Complete study plan tasks to reach Medium-High confidence.'
+                : confidencePercent < 80
+                ? 'Finish more practice exams and study tasks to reach High confidence.'
+                : 'High confidence — your predicted grade is well-grounded in study data.'
+              }
             </p>
           </div>
         </motion.div>

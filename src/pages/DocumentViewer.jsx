@@ -35,6 +35,7 @@ import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/components/utils/dailyReset";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { differenceInCalendarDays } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 
 // Track study minutes every minute
       
@@ -198,6 +199,15 @@ export default function DocumentViewer() {
   })();
   const daysUntilExam = lesson?.exam_date ? differenceInCalendarDays(new Date(lesson.exam_date), new Date()) : null;
 
+  // Cram mode feature flag
+  const { data: appSettings = [] } = useQuery({
+    queryKey: ['appSettings'],
+    queryFn: () => base44.entities.AppSettings.list(),
+    staleTime: 60000,
+  });
+  const cramFeatureEnabled = appSettings.find(s => s.key === 'cram_mode_enabled')?.value ?? false;
+  const showCramTab = cramFeatureEnabled;
+
   // Track first lesson view (SubmitApplication)
   const hasTrackedFirstLesson = useRef(false);
   
@@ -215,7 +225,7 @@ export default function DocumentViewer() {
     const urlParams = new URLSearchParams(location.search);
     const tabParam = urlParams.get('tab');
     if (!tabParam) {
-      if (lesson.exam_date) {
+      if (showCramTab && lesson.exam_date) {
         const days = differenceInCalendarDays(new Date(lesson.exam_date), new Date());
         if (days >= 0 && days <= 7 && diagnosticCompleted) {
           setActiveTab("cram");
@@ -733,6 +743,7 @@ export default function DocumentViewer() {
                     <Headphones className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Learn</span>
                   </TabsTrigger>
+                  {showCramTab && (
                   <TabsTrigger 
                     value="cram"
                     className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isCramActive ? 'data-[state=inactive]:bg-orange-500/20 data-[state=inactive]:text-orange-400 ring-1 ring-orange-500/40' : isDark ? 'data-[state=inactive]:text-orange-400/80 data-[state=inactive]:bg-orange-500/10' : 'data-[state=inactive]:text-orange-700 data-[state=inactive]:bg-orange-50'}`}
@@ -741,6 +752,7 @@ export default function DocumentViewer() {
                     <FlameKindling className="w-4 h-4 flex-shrink-0" />
                     <span className="text-xs font-medium">Cram</span>
                   </TabsTrigger>
+                  )}
                 </TabsList>
               </div>
 
@@ -808,9 +820,11 @@ export default function DocumentViewer() {
                   {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
                 </TabsContent>
 
+                {showCramTab && (
                 <TabsContent value="cram" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />}
                 </TabsContent>
+                )}
 
               </div>
             </Tabs>
@@ -905,6 +919,7 @@ export default function DocumentViewer() {
                       <Headphones className="w-3.5 h-3.5" />
                       <span className="text-[10px] font-semibold">Learn</span>
                     </TabsTrigger>
+                    {showCramTab && (
                     <TabsTrigger 
                       value="cram"
                       className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isCramActive ? 'data-[state=inactive]:bg-orange-500/20 data-[state=inactive]:text-orange-400 ring-1 ring-orange-500/40' : isDark ? 'data-[state=inactive]:text-orange-400/80 data-[state=inactive]:bg-orange-500/10' : 'data-[state=inactive]:text-orange-700 data-[state=inactive]:bg-orange-50'}`}
@@ -913,6 +928,7 @@ export default function DocumentViewer() {
                       <FlameKindling className="w-3.5 h-3.5" />
                       <span className="text-[10px] font-semibold">Cram</span>
                     </TabsTrigger>
+                    )}
                   </TabsList>
                 </div>
               </div>
@@ -984,9 +1000,11 @@ export default function DocumentViewer() {
                 {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
               </TabsContent>
 
+              {showCramTab && (
               <TabsContent value="cram" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
                 {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />}
               </TabsContent>
+              )}
 
             </div>
           </Tabs>

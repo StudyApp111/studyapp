@@ -269,13 +269,15 @@ B. VELOCITY ANALYSIS
 - Declining: score drops > 15% across 3 or more consecutive assessed tasks (not a single drop)
 - Default to Normalizing when data is sparse — never call Declining on fewer than 3 data points
 
-C. CONFIDENCE CALIBRATION
-- Base: (questions_completed/50 × 40) + (competency_coverage × 40) + 10
-- Cap at 62% if exam_number = 1
-- Cap at 45% if any competency weighted ≥ 25% is unassessed
-- Cap at 35% if total questions_completed < 8
-- Never output confidence > 62% — the data volume at this stage does not support it
-- confidence_level: "Low" (<35%), "Medium" (35-62%)
+C. CONFIDENCE CALIBRATION (grounded in actual study engagement)
+- Base: (questions_completed/50 × 25) + (competency_coverage × 25) + 15
+- Activity bonus: Each completed study task (flashcards mastered, teach-it completed, practice exam done) adds +5%, up to +20%
+- Exam bonus: Each completed exam adds +4%, up to +12%
+- If only diagnostic completed and no study tasks: cap at 55%
+- If any competency weighted ≥ 25% is unassessed: cap at 55%
+- If total questions_completed < 8: cap at 35%
+- Max confidence: 85%
+- confidence_level: "Low" (<40%), "Medium" (40-64%), "Medium-High" (65-79%), "High" (≥80%)
 
 D. STUDY TASK RECOMMENDATION
 Identify exactly 1-2 tasks:

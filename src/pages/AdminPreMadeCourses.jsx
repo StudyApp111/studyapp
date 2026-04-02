@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Edit, Trash2, Globe, Lock, Loader2, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash2, Globe, Lock, Loader2, RefreshCw, FlameKindling } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -65,6 +65,27 @@ export default function AdminPreMadeCourses() {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ['adminPreMadeCourses'] })
     });
 
+    // Feature flags
+    const { data: appSettings = [], isLoading: settingsLoading } = useQuery({
+        queryKey: ['appSettings'],
+        queryFn: () => base44.entities.AppSettings.list(),
+        enabled: !!user
+    });
+
+    const cramSetting = appSettings.find(s => s.key === 'cram_mode_enabled');
+    const cramEnabled = cramSetting?.value ?? false;
+
+    const toggleCramMode = useMutation({
+        mutationFn: async () => {
+            if (cramSetting) {
+                await base44.entities.AppSettings.update(cramSetting.id, { value: !cramEnabled });
+            } else {
+                await base44.entities.AppSettings.create({ key: 'cram_mode_enabled', value: true });
+            }
+        },
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appSettings'] })
+    });
+
     if (!user) return null;
 
     return (
@@ -75,6 +96,29 @@ export default function AdminPreMadeCourses() {
                     <Plus className="w-4 h-4 mr-2" /> New Course
                 </Button>
             </div>
+
+            {/* Feature Flags */}
+            <Card className="mb-8 border-purple-200">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Feature Flags</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <FlameKindling className="w-5 h-5 text-orange-500" />
+                            <div>
+                                <p className="font-medium text-sm">Cram Mode</p>
+                                <p className="text-xs text-slate-500">Show the Cram tab in lessons for all users</p>
+                            </div>
+                        </div>
+                        <Switch 
+                            checked={cramEnabled} 
+                            onCheckedChange={() => toggleCramMode.mutate()} 
+                            disabled={toggleCramMode.isPending || settingsLoading}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
 
             <Tabs defaultValue="courses" className="w-full">
                 <TabsList className="mb-8">

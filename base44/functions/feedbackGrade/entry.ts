@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 // Retry helper with exponential backoff + jitter for rate limits
 async function fetchWithRetry(url, options, maxRetries = 4) {
@@ -104,12 +104,44 @@ Deno.serve(async (req) => {
             const competenciesCovered = new Set(examPerformanceData.flatMap(q => q.assessed_competencies || [])).size;
             const totalCompetencies = (lesson.curriculum_map?.core_competencies || []).length || 1;
             
+            // Count study activities for this lesson to ground confidence in actual engagement
+            let completedStudyActivities = 0;
+            let completedStudyPlanTasks = 0;
+            let totalExamsCompleted = 0;
+            try {
+                const entities = isGuest ? base44.asServiceRole.entities : base44.entities;
+                const [flashcards, teachItCards, allExams, studyPlans] = await Promise.all([
+                    entities.Flashcard.filter({ lesson_id }).catch(() => []),
+                    entities.TeachItCard.filter({ lesson_id }).catch(() => []),
+                    entities.Exam.filter({ lesson_id }).catch(() => []),
+                    entities.StudyPlan.filter({ lesson_id }).catch(() => [])
+                ]);
+                
+                const masteredFlashcards = flashcards.filter(f => f.mastered || f.review_count >= 3).length;
+                const completedTeachIt = teachItCards.filter(t => t.completed).length;
+                totalExamsCompleted = allExams.filter(e => e.completed).length;
+                
+                // Each deck of 5+ mastered flashcards = 1 activity, each teach-it = 1 activity
+                completedStudyActivities = Math.floor(masteredFlashcards / 5) + completedTeachIt;
+                
+                // Count completed study plan tasks
+                const activePlan = studyPlans.find(p => p.status === 'active');
+                if (activePlan?.tasks) {
+                    completedStudyPlanTasks = activePlan.tasks.filter(t => t.completed).length;
+                }
+            } catch (e) {
+                console.warn('Could not count study activities:', e.message);
+            }
+            
             finalPrompt = `You are grading a ${grade}-level ${courseName} exam. Calculate predicted score using the algorithm below. Output JSON only, no explanation.
 
 Performance: ${performanceJson}
 Curriculum: ${curriculumJson}
 Exam: ${examNumber}/6
 Coverage: ${answeredQuestions}/${totalQuestions} questions, ${competenciesCovered}/${totalCompetencies} competencies
+Study Activities Completed: ${completedStudyActivities} (flashcard decks mastered + teach-it cards completed)
+Study Plan Tasks Completed: ${completedStudyPlanTasks}
+Total Exams Completed: ${totalExamsCompleted}
 
 Fields: question_number, question_type, difficulty_index, question_text, options, student_answer, correct_answer, explanation, assessed_competencies[], targeted_misconception, is_correct, ai_grading{score_out_of_10, verdict, rationale, keypoints_hit[], keypoints_missed[]}.
 
@@ -141,18 +173,30 @@ ALGORITHM:
    Clamp [0, 100]
    If answeredQuestions < 3: predicted_score = null
 
-4) Confidence:
-   base = (${answeredQuestions}/${totalQuestions} × 35) + (${competenciesCovered}/${totalCompetencies} × 35) + 15
-   If examNumber = 1: cap at 55
-   If any competency weight ≥ 25% is UNASSESSED: cap at 45
-   If answeredQuestions < 5: cap at 30
-   confidence_level: Low if <35, Medium if 35-55
+4) Confidence (grounded in actual study engagement):
+   base = (${answeredQuestions}/${totalQuestions} × 25) + (${competenciesCovered}/${totalCompetencies} × 25) + 15
+   activity_bonus = min(${completedStudyActivities}, 4) × 5
+   task_bonus = min(${completedStudyPlanTasks}, 3) × 3
+   exam_bonus = min(${totalExamsCompleted}, 3) × 4
+   confidence = base + activity_bonus + task_bonus + exam_bonus
+   
+   Caps:
+   If answeredQuestions < 3: cap at 35
+   If totalExamsCompleted = 1 AND completedStudyActivities = 0: cap at 55
+   If any competency weight ≥ 25% is UNASSESSED: cap at 55
+   Max confidence: 85
+   
+   confidence_level:
+   Low if < 40
+   Medium if 40-64
+   Medium-High if 65-79
+   High if >= 80
 
 JSON Output (exact schema):
 - feedback_session_title: "Exam ${examNumber} Performance & Grade Prediction"
 - predicted_exam_score_percentage: "%"|"Not Calculable"
-- prediction_confidence_percentage: number (20-65)
-- confidence_level: "Low"|"Medium"
+- prediction_confidence_percentage: number (25-85)
+- confidence_level: "Low"|"Medium"|"Medium-High"|"High"
 - mastery_gap: A short, 2-4 word phrase identifying the specific topic or competency that is the weakest (e.g., "Cellular Respiration"). Do NOT write a sentence.`;
         }
 
