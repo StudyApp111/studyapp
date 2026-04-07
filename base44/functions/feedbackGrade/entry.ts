@@ -197,7 +197,15 @@ JSON Output (exact schema):
 - predicted_exam_score_percentage: "%"|"Not Calculable"
 - prediction_confidence_percentage: number (25-85)
 - confidence_level: "Low"|"Medium"|"Medium-High"|"High"
-- mastery_gap: A short, 2-4 word phrase identifying the specific topic or competency that is the weakest (e.g., "Cellular Respiration"). Do NOT write a sentence.`;
+- mastery_gap: A short, 2-4 word phrase identifying the specific topic or competency that is the weakest (e.g., "Cellular Respiration"). Do NOT write a sentence.
+- study_roadmap: An object estimating the REALISTIC number of study tasks needed to go from the current predicted score to an A+ (95%+). Base this on the gap size, subject difficulty, and the student's current mastery profile. Be honest and realistic — don't inflate or deflate. Fields:
+  - flashcard_sets: integer (number of 10-card flashcard sets, typically 2-8)
+  - feynman_cards: integer (number of Feynman technique cards, typically 2-6)
+  - practice_quizzes: integer (number of practice quizzes, typically 2-5)
+  - review_sessions: integer (number of note review sessions, typically 1-3)
+  - estimated_hours: number (total estimated study hours, typically 3-20)
+  - milestone_message: string (a SHORT encouraging 1-sentence message about the path ahead, e.g. "4 focused study sessions could move you from a D to a B+")`;
+
         }
 
         if (!finalPrompt) {
@@ -229,7 +237,18 @@ JSON Output (exact schema):
                 mastery_gap_description: { type: "string" },
                 overall_performance_summary_text: { type: "string" },
                 identified_strengths_list: { type: "array", items: { type: "string" } },
-                key_areas_for_improvement_list: { type: "array", items: { type: "string" } }
+                key_areas_for_improvement_list: { type: "array", items: { type: "string" } },
+                study_roadmap: { 
+                    type: "object", 
+                    properties: {
+                        flashcard_sets: { type: "integer" },
+                        feynman_cards: { type: "integer" },
+                        practice_quizzes: { type: "integer" },
+                        review_sessions: { type: "integer" },
+                        estimated_hours: { type: "number" },
+                        milestone_message: { type: "string" }
+                    }
+                }
             },
             required: ["predicted_exam_score_percentage", "prediction_confidence_percentage", "confidence_level"]
         };

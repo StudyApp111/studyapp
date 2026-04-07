@@ -558,6 +558,7 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
           lesson={lesson}
           studyPlan={studyPlan}
           behavioralInsights={behavioralInsights}
+          latestExam={latestOfficialExam}
         />
       )}
 

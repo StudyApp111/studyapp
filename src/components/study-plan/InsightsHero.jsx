@@ -4,7 +4,23 @@ import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
-export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) {
+const gradeFromScore = (val) => {
+  if (val >= 95) return 'A+';
+  if (val >= 90) return 'A';
+  if (val >= 85) return 'A-';
+  if (val >= 80) return 'B+';
+  if (val >= 75) return 'B';
+  if (val >= 70) return 'B-';
+  if (val >= 65) return 'C+';
+  if (val >= 60) return 'C';
+  if (val >= 55) return 'C-';
+  if (val >= 50) return 'D+';
+  if (val >= 45) return 'D';
+  if (val >= 40) return 'D-';
+  return 'F';
+};
+
+export default function InsightsHero({ lesson, studyPlan, behavioralInsights, latestExam }) {
   const { isDark } = useTheme();
 
   const currentGrade = studyPlan?.current_predicted_grade || studyPlan?.initial_predicted_grade || '—';
@@ -45,8 +61,9 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
     return 'Update';
   };
 
-  // Build chart data
+  // Build chart data with roadmap milestones
   const gradeHistory = studyPlan?.grade_history || [];
+  const roadmap = latestExam?.ai_feedback?.study_roadmap || null;
   const baseData = [];
   
   if (gradeHistory.length > 0) {
@@ -72,20 +89,71 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
     }
   }
 
-  // Add future target point
   const lastPoint = baseData[baseData.length - 1];
+  const lastScore = lastPoint.actualScore || 0;
   const targetScore = 95;
-  
+  const gap = targetScore - lastScore;
+
+  // Build milestone points from roadmap or fall back to generic
+  const milestones = [];
+  if (roadmap) {
+    const totalTasks = (roadmap.flashcard_sets || 0) + (roadmap.feynman_cards || 0) + 
+                       (roadmap.practice_quizzes || 0) + (roadmap.review_sessions || 0);
+    // Create ordered milestones from task types (only include types with count > 0)
+    const taskTypes = [
+      { key: 'review_sessions', label: 'Reviews', count: roadmap.review_sessions || 0, icon: '📖' },
+      { key: 'flashcard_sets', label: 'Flashcards', count: roadmap.flashcard_sets || 0, icon: '🃏' },
+      { key: 'feynman_cards', label: 'Feynman', count: roadmap.feynman_cards || 0, icon: '🧠' },
+      { key: 'practice_quizzes', label: 'Quizzes', count: roadmap.practice_quizzes || 0, icon: '✍️' },
+    ].filter(t => t.count > 0);
+
+    let cumulativeTasks = 0;
+    taskTypes.forEach((task) => {
+      cumulativeTasks += task.count;
+      const progress = cumulativeTasks / totalTasks;
+      const projectedScore = Math.round(lastScore + gap * progress * 0.85); // 85% of gap covered by tasks
+      milestones.push({
+        name: `${task.count} ${task.label}`,
+        projectedScore,
+        taskCount: task.count,
+        taskType: task.key,
+      });
+    });
+  } else {
+    // Fallback: generic weekly milestones
+    for (let i = 1; i <= 3; i++) {
+      milestones.push({
+        name: `Week ${i}`,
+        projectedScore: Math.round(lastScore + (gap * i) / 4),
+      });
+    }
+  }
+
+  // Assemble chart data
   const chartData = [...baseData];
+  // Bridge: last actual point also starts the future line
   chartData[chartData.length - 1].futureScore = lastPoint.actualScore;
+  
+  milestones.forEach(m => {
+    chartData.push({
+      name: m.name,
+      futureScore: m.projectedScore,
+      grade: gradeFromScore(m.projectedScore),
+      isFuture: true,
+      taskCount: m.taskCount,
+      taskType: m.taskType,
+    });
+  });
+  
   chartData.push({
-    name: 'Target',
+    name: 'A+ 🎯',
     futureScore: targetScore,
     grade: 'A+',
     isFuture: true
   });
 
-  const estimatedHours = behavioralInsights?.estimated_hours_to_target;
+  const estimatedHours = roadmap?.estimated_hours || behavioralInsights?.estimated_hours_to_target;
+  const milestoneMessage = roadmap?.milestone_message;
 
   return (
     <motion.div 
@@ -123,7 +191,7 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
               </div>
             )}
           </div>
-          <div className="h-36 w-full">
+          <div className="h-44 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#334155' : '#e2e8f0'} />
@@ -131,8 +199,12 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
                   dataKey="name" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fontSize: 10, fill: isDark ? '#94a3b8' : '#64748b' }} 
+                  tick={{ fontSize: 9, fill: isDark ? '#94a3b8' : '#64748b' }} 
                   dy={10}
+                  interval={0}
+                  angle={-20}
+                  textAnchor="end"
+                  height={40}
                 />
                 <YAxis 
                   domain={[0, 100]} 
@@ -150,8 +222,9 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                   }}
                   formatter={(value, name, props) => {
-                    if (name === 'futureScore') return [`${value}% (${props.payload.grade})`, 'Target Score'];
-                    return [`${value}% (${props.payload.grade})`, 'Score'];
+                    const grade = props.payload.grade || gradeFromScore(value);
+                    if (name === 'futureScore') return [`${value}% (${grade})`, 'Projected'];
+                    return [`${value}% (${grade})`, 'Score'];
                   }}
                   labelStyle={{ color: isDark ? '#cbd5e1' : '#475569', fontWeight: 'bold', marginBottom: '4px' }}
                 />
@@ -176,7 +249,7 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex justify-between items-center mt-4 px-2">
+          <div className="flex justify-between items-center mt-3 px-2">
             <span className={`text-[10px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Diagnostic: {studyPlan?.initial_predicted_grade || '—'}
             </span>
@@ -187,6 +260,11 @@ export default function InsightsHero({ lesson, studyPlan, behavioralInsights }) 
               Target: A+
             </span>
           </div>
+          {milestoneMessage && (
+            <p className={`text-center text-[11px] mt-2 px-3 font-medium ${isDark ? 'text-emerald-400/80' : 'text-emerald-600'}`}>
+              ✨ {milestoneMessage}
+            </p>
+          )}
         </div>
       </div>
     </motion.div>
