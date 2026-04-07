@@ -781,7 +781,7 @@ export default function DocumentViewer() {
                     ) : (
                       <div className="h-full flex flex-col">
                         <div className="px-2 pt-2">
-                          <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                          <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                         </div>
                         <div className="flex-1">
                           <DocumentViewerTabs lesson={lesson} />
@@ -802,14 +802,14 @@ export default function DocumentViewer() {
 
                 <TabsContent value="notes" className="mt-0 p-0 h-full">
                   <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                   </div>
                   {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <NotesTab lesson={lesson} />}
                 </TabsContent>
 
                 <TabsContent value="exam" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                   </div>
                   <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} extractedContent={extractedContent} />
                 </TabsContent>
@@ -818,21 +818,21 @@ export default function DocumentViewer() {
 
                 <TabsContent value="flashcards" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                   </div>
                   {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />}
                 </TabsContent>
 
                 <TabsContent value="teachit" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                   </div>
                   {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <TeachItTab lesson={lesson} />}
                 </TabsContent>
 
                 <TabsContent value="learn" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
                   <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                   </div>
                   {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
                 </TabsContent>
@@ -964,7 +964,7 @@ export default function DocumentViewer() {
                   ) : (
                     <>
                       <div className="px-2 pt-2">
-                        <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                        <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                       </div>
                       <DocumentViewerTabs lesson={lesson} />
                     </>
@@ -983,14 +983,14 @@ export default function DocumentViewer() {
 
               <TabsContent value="notes" className="mt-0 p-0 w-full overflow-x-hidden">
                 <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                 </div>
                 {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <NotesTab lesson={lesson} />}
               </TabsContent>
 
               <TabsContent value="exam" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
                 <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                 </div>
                 <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} extractedContent={extractedContent} />
               </TabsContent>
@@ -999,21 +999,21 @@ export default function DocumentViewer() {
 
               <TabsContent value="flashcards" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
                 <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                 </div>
                 {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />}
               </TabsContent>
 
               <TabsContent value="teachit" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
                 <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                 </div>
                 {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <TeachItTab lesson={lesson} />}
               </TabsContent>
 
               <TabsContent value="learn" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
                 <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} currentTab={activeTab} />
+                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                 </div>
                 {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
               </TabsContent>

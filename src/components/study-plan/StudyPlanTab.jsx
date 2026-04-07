@@ -257,46 +257,32 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     });
     const taskId = matchingPlanTask?.task_id || `${section.section_title}_${topic.topic_title}_${tab}`;
     
-    // Dispatch event with topic info so the target tab can use it
-    if (tab === "exam") {
-      window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
-        detail: {
-          taskType: "practice_exam",
-          task: {
-            task_id: taskId,
-            focus_topics: [topic.topic_title],
-            target_competency: topic.topic_title,
-            title: taskTitle,
-            section_title: section.section_title,
-            target_count: 1
-          },
-          focus_topics: [topic.topic_title],
-          target_competency: topic.topic_title
-        }
-      }));
-    } else {
-      const taskType = tab === "teachit" ? "teach_it" : tab === "notes" ? "review_notes" : tab;
-      // For flashcards/teachit: navigate to existing set if available, otherwise generate
-      const eventName = (tab === "flashcards" || tab === "teachit") ? 'navigateToStudyTask' : 'generateFromStudyTask';
-      window.dispatchEvent(new CustomEvent(eventName, {
-        detail: {
-          taskType,
-          task: {
-            task_id: taskId,
-            task_type: taskType,
-            focus_topics: [topic.topic_title],
-            target_competency: topic.topic_title,
-            title: taskTitle,
-            section_title: section.section_title,
-            target_count: tab === "flashcards" ? 10 : tab === "exam" ? 1 : 3
-          },
-          focus_topics: [topic.topic_title],
-          target_competency: topic.topic_title
-        }
-      }));
-    }
-
+    // Switch tab first, then dispatch event after a tick so the tab component is mounted
     onNavigate(tab);
+    
+    setTimeout(() => {
+      if (tab === "exam") {
+        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
+          detail: {
+            taskType: "practice_exam",
+            task: { task_id: taskId, focus_topics: [topic.topic_title], target_competency: topic.topic_title, title: taskTitle, section_title: section.section_title, target_count: 1 },
+            focus_topics: [topic.topic_title],
+            target_competency: topic.topic_title
+          }
+        }));
+      } else {
+        const taskType = tab === "teachit" ? "teach_it" : tab === "notes" ? "review_notes" : tab;
+        const eventName = (tab === "flashcards" || tab === "teachit") ? 'navigateToStudyTask' : 'generateFromStudyTask';
+        window.dispatchEvent(new CustomEvent(eventName, {
+          detail: {
+            taskType,
+            task: { task_id: taskId, task_type: taskType, focus_topics: [topic.topic_title], target_competency: topic.topic_title, title: taskTitle, section_title: section.section_title, target_count: tab === "flashcards" ? 10 : tab === "exam" ? 1 : 3 },
+            focus_topics: [topic.topic_title],
+            target_competency: topic.topic_title
+          }
+        }));
+      }
+    }, 100);
   };
 
   // Handle "All Topics: Pick Your Format" click
@@ -321,37 +307,35 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
       });
     } catch {}
 
-    // Navigate to the first selected format's tab
+    // Navigate to the first selected format's tab first, then dispatch events
     const firstFormat = opts.formats[0];
     const tab = FORMAT_TO_TAB[firstFormat] || "flashcards";
-
-    // For each format, dispatch appropriate events
-    for (const format of opts.formats) {
-      const targetTab = FORMAT_TO_TAB[format];
-      
-      if (format === "practice_exam") {
-        const taskTitle = opts.section_title ? `${opts.section_title}: ${(opts.topics || []).slice(0, 2).join(', ')}` : 'Custom Quiz';
-        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
-          detail: {
-            task: { task_id: `pick_${opts.section_title}_${format}`, focus_topics: opts.topics, target_competency: opts.section_title || '', title: taskTitle, section_title: opts.section_title || '' },
-            focus_topics: opts.topics,
-            target_competency: opts.section_title || '',
-            custom_instructions: opts.custom_instructions || ''
-          }
-        }));
-      } else if (format === "flashcards" || format === "teach_it") {
-        const taskTitle = opts.section_title ? `${opts.section_title}: ${(opts.topics || []).slice(0, 2).join(', ')}` : 'Custom';
-        window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
-          detail: {
-            taskType: format,
-            task: { focus_topics: opts.topics, title: taskTitle, section_title: opts.section_title || '', target_count: format === "flashcards" ? 10 : 3 },
-            custom_instructions: opts.custom_instructions || ''
-          }
-        }));
-      }
-    }
-
     onNavigate(tab);
+
+    setTimeout(() => {
+      for (const format of opts.formats) {
+        if (format === "practice_exam") {
+          const taskTitle = opts.section_title ? `${opts.section_title}: ${(opts.topics || []).slice(0, 2).join(', ')}` : 'Custom Quiz';
+          window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
+            detail: {
+              task: { task_id: `pick_${opts.section_title}_${format}`, focus_topics: opts.topics, target_competency: opts.section_title || '', title: taskTitle, section_title: opts.section_title || '' },
+              focus_topics: opts.topics,
+              target_competency: opts.section_title || '',
+              custom_instructions: opts.custom_instructions || ''
+            }
+          }));
+        } else if (format === "flashcards" || format === "teach_it") {
+          const taskTitle = opts.section_title ? `${opts.section_title}: ${(opts.topics || []).slice(0, 2).join(', ')}` : 'Custom';
+          window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+            detail: {
+              taskType: format,
+              task: { focus_topics: opts.topics, title: taskTitle, section_title: opts.section_title || '', target_count: format === "flashcards" ? 10 : 3 },
+              custom_instructions: opts.custom_instructions || ''
+            }
+          }));
+        }
+      }
+    }, 100);
   };
 
   // Grade + metrics

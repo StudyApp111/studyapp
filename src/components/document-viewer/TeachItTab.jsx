@@ -47,39 +47,39 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const pendingStudyTaskRef = useRef(null);
   
   useEffect(() => {
-    // navigateToStudyTask: check for existing set first, only generate if none found
+    // navigateToStudyTask: check for existing set by study_plan_task_id, only generate if none found
     const handleNavigateToTask = async (e) => {
       if (e.detail.taskType !== 'teach_it') return;
       if (studyTaskHandledRef.current || isGeneratingRef.current) return;
       studyTaskHandledRef.current = true;
       
       const task = e.detail.task;
-      const taskTitle = task?.title || '';
+      const taskId = task?.task_id;
       
-      // Check if a set already exists for this task (match by topic/title)
-      const existingSet = cards.filter(c => {
-        const topic = c.topic || '';
-        return topic === taskTitle || 
-          (task.focus_topics?.some(ft => topic.includes(ft) || ft.includes(topic)));
-      });
-      
-      if (existingSet.length > 0) {
-        // Navigate to existing set
-        const setCardIds = existingSet.map(c => c.id);
-        const firstIdx = cards.findIndex(c => c.id === existingSet[0].id);
-        if (firstIdx >= 0) {
-          setCurrentCardIndex(firstIdx);
-          setUserAnswer(cards[firstIdx].user_answer || "");
-          setShowFeedback(cards[firstIdx].completed);
-          setCurrentSetCardIds(setCardIds);
-          setShowSetsList(false);
+      // Check by study_plan_task_id in DB (reliable, works even if cards not loaded yet)
+      if (taskId && lesson?.id) {
+        const existing = await base44.entities.TeachItCard.filter({ lesson_id: lesson.id, study_plan_task_id: taskId });
+        if (existing?.length > 0) {
+          // Reload all cards and navigate to the existing set
+          const allCards = await base44.entities.TeachItCard.filter({ lesson_id: lesson.id });
+          setCards(allCards);
+          const setCardIds = existing.map(c => c.id);
+          const firstIdx = allCards.findIndex(c => c.id === existing[0].id);
+          if (firstIdx >= 0) {
+            setCurrentCardIndex(firstIdx);
+            setUserAnswer(allCards[firstIdx].user_answer || "");
+            setShowFeedback(allCards[firstIdx].completed);
+            setCurrentSetCardIds(setCardIds);
+            setShowSetsList(false);
+          }
+          setTimeout(() => { studyTaskHandledRef.current = false; }, 2000);
+          return;
         }
-      } else {
-        // No existing set — generate new
-        pendingStudyTaskRef.current = task;
-        generateCards();
       }
       
+      // No existing set — generate new
+      pendingStudyTaskRef.current = task;
+      generateCards();
       setTimeout(() => { studyTaskHandledRef.current = false; }, 2000);
     };
     
@@ -99,7 +99,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
       window.removeEventListener('navigateToStudyTask', handleNavigateToTask);
       window.removeEventListener('generateFromStudyTask', handleGenerateTask);
     };
-  }, [lesson?.id, cards]);
+  }, [lesson?.id]);
   
   const loadStudyPlanTopics = async () => {
     if (!lesson?.id) return;
@@ -226,12 +226,14 @@ Return exactly ${cardCount} cards with question and model_answer fields, each ba
 
       // Determine set label from study task section + topic or custom options
       const taskRef = pendingStudyTaskRef.current;
+      const taskIdForCards = taskRef?.task_id || null;
       const setLabel = taskRef?.title || customOptions?.title || null;
       
       const savedCards = await Promise.all(
         generatedCards.map(card =>
           base44.entities.TeachItCard.create({
             lesson_id: lesson.id,
+            study_plan_task_id: taskIdForCards,
             question: card.question,
             model_answer: card.model_answer,
             topic: setLabel || card.topic || 'General Concepts',

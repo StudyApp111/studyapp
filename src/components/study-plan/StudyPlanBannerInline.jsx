@@ -17,7 +17,7 @@ const TASK_LABELS = {
   practice_exam: "Practice Quiz"
 };
 
-export default function StudyPlanBannerInline({ lessonId, onNavigateToStudyPlan, currentTab }) {
+export default function StudyPlanBannerInline({ lessonId, onNavigateToStudyPlan, onNavigateToTab, currentTab }) {
   const { isDark } = useTheme();
   const [plan, setPlan] = useState(null);
   const [nextTask, setNextTask] = useState(null);
@@ -60,10 +60,12 @@ export default function StudyPlanBannerInline({ lessonId, onNavigateToStudyPlan,
     window.addEventListener('reloadLesson', handleReload);
     window.addEventListener('studyPlanGenerating', handlePlanDone);
     window.addEventListener('studyTaskCompleted', handleReload);
+    window.addEventListener('studyActivityCompleted', handleReload);
     return () => {
       window.removeEventListener('reloadLesson', handleReload);
       window.removeEventListener('studyPlanGenerating', handlePlanDone);
       window.removeEventListener('studyTaskCompleted', handleReload);
+      window.removeEventListener('studyActivityCompleted', handleReload);
     };
   }, [loadPlan]);
 
@@ -109,9 +111,50 @@ export default function StudyPlanBannerInline({ lessonId, onNavigateToStudyPlan,
   const remaining = (nextTask.target_count || 0) - (nextTask.completed_count || 0);
   const label = TASK_LABELS[nextTask.task_type] || "Task";
 
+  const TASK_TYPE_TO_TAB = {
+    review_notes: "notes",
+    flashcards: "flashcards",
+    practice_exam: "exam",
+    teach_it: "teachit"
+  };
+
+  const handleTaskClick = () => {
+    const tab = TASK_TYPE_TO_TAB[nextTask.task_type];
+    
+    // If the user is already on the target tab, just go to study plan
+    if (!tab || tab === currentTab || !onNavigateToTab) {
+      onNavigateToStudyPlan();
+      return;
+    }
+    
+    // Dispatch the appropriate event so the tab auto-generates
+    const taskPayload = {
+      task_id: nextTask.task_id,
+      task_type: nextTask.task_type,
+      focus_topics: nextTask.focus_topics || [],
+      target_competency: nextTask.target_competency || '',
+      title: nextTask.title || '',
+      section_title: nextTask.section_title || '',
+      target_count: nextTask.target_count || 10
+    };
+
+    // Switch tab first, then dispatch event after a tick so the tab component is mounted
+    onNavigateToTab(tab);
+    
+    setTimeout(() => {
+      if (tab === "exam") {
+        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', { detail: { task: taskPayload, focus_topics: taskPayload.focus_topics, target_competency: taskPayload.target_competency } }));
+      } else if (tab === "flashcards" || tab === "teachit") {
+        window.dispatchEvent(new CustomEvent('navigateToStudyTask', { detail: { taskType: nextTask.task_type, task: taskPayload } }));
+      } else if (tab === "notes") {
+        window.dispatchEvent(new CustomEvent('generateFromStudyTask', { detail: { taskType: 'review_notes', task: taskPayload } }));
+      }
+    }, 100);
+  };
+
   return (
     <button
-      onClick={onNavigateToStudyPlan}
+      onClick={handleTaskClick}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors mb-2 ${
         isDark 
           ? 'bg-amber-500/10 border-amber-500/20 hover:bg-amber-500/20' 

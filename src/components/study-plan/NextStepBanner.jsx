@@ -124,53 +124,35 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan, onNavi
     
     const tab = TASK_TYPE_TO_TAB[nextTask.task_type] || "studyplan";
     
-    // Dispatch generation event so the tab starts the task immediately
-    if (tab === "exam") {
-      window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
-        detail: {
-          task: {
-            task_id: nextTask.task_id,
-            focus_topics: nextTask.focus_topics || [],
-            target_competency: nextTask.target_competency || '',
-            title: nextTask.title || '',
-            section_title: nextTask.section_title || '',
-            target_count: nextTask.target_count || 1
-          },
-          focus_topics: nextTask.focus_topics || [],
-          target_competency: nextTask.target_competency || ''
-        }
-      }));
-    } else if (tab === "flashcards" || tab === "teachit") {
-      const taskType = tab === "teachit" ? "teach_it" : "flashcards";
-      window.dispatchEvent(new CustomEvent('navigateToStudyTask', {
-        detail: {
-          taskType,
-          task: {
-            task_id: nextTask.task_id,
-            focus_topics: nextTask.focus_topics || [],
-            target_competency: nextTask.target_competency || '',
-            title: nextTask.title || '',
-            section_title: nextTask.section_title || '',
-            target_count: nextTask.target_count || 10
-          }
-        }
-      }));
-    } else if (tab === "notes") {
-      window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
-        detail: {
-          taskType: 'review_notes',
-          task: {
-            task_id: nextTask.task_id,
-            task_type: 'review_notes',
-            focus_topics: nextTask.focus_topics || [],
-            target_competency: nextTask.target_competency || '',
-            title: nextTask.title || '',
-          }
-        }
-      }));
-    }
-    
+    // Switch tab first, then dispatch event after a tick so the tab component is mounted
     onNavigateToTab(tab);
+    
+    const taskPayload = {
+      task_id: nextTask.task_id,
+      task_type: nextTask.task_type,
+      focus_topics: nextTask.focus_topics || [],
+      target_competency: nextTask.target_competency || '',
+      title: nextTask.title || '',
+      section_title: nextTask.section_title || '',
+      target_count: nextTask.target_count || 10
+    };
+    
+    setTimeout(() => {
+      if (tab === "exam") {
+        window.dispatchEvent(new CustomEvent('generatePracticeExamFromTask', {
+          detail: { task: taskPayload, focus_topics: taskPayload.focus_topics, target_competency: taskPayload.target_competency }
+        }));
+      } else if (tab === "flashcards" || tab === "teachit") {
+        const taskType = tab === "teachit" ? "teach_it" : "flashcards";
+        window.dispatchEvent(new CustomEvent('navigateToStudyTask', {
+          detail: { taskType, task: taskPayload }
+        }));
+      } else if (tab === "notes") {
+        window.dispatchEvent(new CustomEvent('generateFromStudyTask', {
+          detail: { taskType: 'review_notes', task: taskPayload }
+        }));
+      }
+    }, 100);
   };
 
   // Show next task

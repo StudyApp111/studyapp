@@ -44,16 +44,36 @@ export default function NotesTab({ lesson }) {
     }
   }, [lesson?.id, initialLoadDone]);
 
-  // Listen for study task events to track which task triggered the generation
+  // Listen for study task events — auto-generate notes if no existing note for this task
   useEffect(() => {
-    const handleStudyTask = (e) => {
-      if (e.detail?.taskType === 'review_notes' || e.detail?.task?.task_type === 'review_notes') {
-        setPendingStudyTaskId(e.detail?.task?.task_id || null);
+    const handleStudyTask = async (e) => {
+      if (e.detail?.taskType !== 'review_notes' && e.detail?.task?.task_type !== 'review_notes') return;
+      const taskId = e.detail?.task?.task_id || null;
+      setPendingStudyTaskId(taskId);
+      
+      // Check if notes already exist for this specific task_id
+      if (taskId && lesson?.id) {
+        const existing = await base44.entities.LessonNote.filter({ lesson_id: lesson.id, study_plan_task_id: taskId });
+        if (existing?.length > 0) {
+          // Already generated for this task — just show it
+          const freshNotes = await base44.entities.LessonNote.filter({ lesson_id: lesson.id }, '-created_date', 50);
+          setAllNotes(freshNotes);
+          const idx = freshNotes.findIndex(n => n.study_plan_task_id === taskId);
+          setNote(freshNotes[idx >= 0 ? idx : 0]);
+          setCurrentNoteIndex(idx >= 0 ? idx : 0);
+          setPendingStudyTaskId(null);
+          return;
+        }
+      }
+      
+      // No existing notes for this task — auto-generate
+      if (!isLoading) {
+        generateNotes(settings);
       }
     };
     window.addEventListener('generateFromStudyTask', handleStudyTask);
     return () => window.removeEventListener('generateFromStudyTask', handleStudyTask);
-  }, []);
+  }, [lesson?.id, isLoading, settings]);
 
   const [allNotes, setAllNotes] = useState([]);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);

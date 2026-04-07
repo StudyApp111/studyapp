@@ -50,42 +50,39 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   }, [lesson?.id]);
 
   useEffect(() => {
-    // navigateToStudyTask: check for existing set first, only generate if none found
+    // navigateToStudyTask: check for existing set by study_plan_task_id first, only generate if none found
     const handleNavigateToTask = async (e) => {
       if (e.detail.taskType !== 'flashcards') return;
       if (isGeneratingRef.current) return;
       
       const task = e.detail.task;
-      const taskTitle = task?.title || '';
+      const taskId = task?.task_id;
       
-      // Check if a set already exists for this task (match by topic label)
-      // Flashcard sets are identified by the first topic containing the task title
-      const existingSetCards = cards.filter(c => {
-        const topics = c.topics || [];
-        return topics.some(t => 
-          t === taskTitle || 
-          (task.focus_topics?.some(ft => t.includes(ft) || ft.includes(t)))
-        );
-      });
-      
-      if (existingSetCards.length > 0) {
-        // Navigate to existing set
-        const idSet = new Set(existingSetCards.map(c => c.id));
-        const indices = cards.map((c, i) => idSet.has(c.id) ? i : -1).filter(i => i >= 0);
-        if (indices.length > 0) {
-          setCurrentIndex(indices[0]);
-          setCurrentSetStart(indices[0]);
-          setCurrentSetEnd(indices[indices.length - 1]);
-          setIsFlipped(false);
-          setShowSetsList(false);
-          setSessionComplete(false);
-          setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
+      // Check by study_plan_task_id in DB (reliable, works even if cards not loaded yet)
+      if (taskId && lesson?.id) {
+        const existing = await base44.entities.Flashcard.filter({ lesson_id: lesson.id, study_plan_task_id: taskId });
+        if (existing?.length > 0) {
+          // Reload all cards and navigate to the existing set
+          const allCards = await base44.entities.Flashcard.filter({ lesson_id: lesson.id });
+          setCards(allCards);
+          const idSet = new Set(existing.map(c => c.id));
+          const indices = allCards.map((c, i) => idSet.has(c.id) ? i : -1).filter(i => i >= 0);
+          if (indices.length > 0) {
+            setCurrentIndex(indices[0]);
+            setCurrentSetStart(indices[0]);
+            setCurrentSetEnd(indices[indices.length - 1]);
+            setIsFlipped(false);
+            setShowSetsList(false);
+            setSessionComplete(false);
+            setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
+          }
+          return;
         }
-      } else {
-        // No existing set — generate new
-        pendingStudyTaskRef.current = task;
-        handleGenerate();
       }
+      
+      // No existing set — generate new
+      pendingStudyTaskRef.current = task;
+      handleGenerate();
     };
     
     // generateFromStudyTask: always generate (used by "Pick Format" modal etc.)
@@ -102,7 +99,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       window.removeEventListener('navigateToStudyTask', handleNavigateToTask);
       window.removeEventListener('generateFromStudyTask', handleGenerateTask);
     };
-  }, [lesson?.id, cards]);
+  }, [lesson?.id]);
   
   const loadStudyPlanTopics = async () => {
     if (!lesson?.id) return;
@@ -177,10 +174,12 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
       const taskRef = pendingStudyTaskRef.current;
       const setLabel = taskRef?.title || customOptions?.title || null;
       
+      const taskIdForCards = pendingStudyTaskRef.current?.task_id || null;
       const savedCards = [];
       for (const card of generatedCards) {
         const saved = await base44.entities.Flashcard.create({
           lesson_id: lesson.id,
+          study_plan_task_id: taskIdForCards,
           question: card.question || "Question",
           answer: card.answer || "Answer",
           topics: setLabel ? [setLabel, ...(card.topics || [])] : (card.topics || []),
