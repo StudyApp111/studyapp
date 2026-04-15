@@ -36,6 +36,8 @@ import { handleDailyReset, awardDailyXP, recordDailyActivity } from "@/component
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { differenceInCalendarDays } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
+import posthog from 'posthog-js';
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 // Track study minutes every minute
       
@@ -517,6 +519,23 @@ export default function DocumentViewer() {
       }
 
       setLesson(lessonData);
+
+      // PostHog: track lesson/document view (fires once per unique lesson load)
+      if (!lessonIdRef._tracked || lessonIdRef._tracked !== lessonData.id) {
+        lessonIdRef._tracked = lessonData.id;
+        try {
+          const deviceInfo = detectDeviceInfo();
+          posthog?.capture('document_analysis_viewed', {
+            lesson_id: lessonData.id,
+            course_name: lessonData.course_name,
+            input_type: lessonData.input_type,
+            has_file: !!(lessonData.file_url || lessonData.file_urls?.length),
+            device_type: deviceInfo.device_type,
+            app_type: deviceInfo.app_type,
+            is_guest: isGuest
+          });
+        } catch {}
+      }
       
       // Initialize study time from saved lesson data
       setStudyTime(lessonData.total_study_time_seconds || 0);
@@ -572,6 +591,23 @@ export default function DocumentViewer() {
     // Reload lesson data to refresh exams list
     await loadLesson();
     window.dispatchEvent(new CustomEvent('studyActivityCompleted'));
+
+    // PostHog: document_analysis_completed fires when user finishes the diagnostic (their first exam)
+    try {
+      const freshExams = await base44.entities.Exam.filter({ lesson_id: lessonIdRef.current }).catch(() => []);
+      const completedDiag = freshExams.find(e => e.exam_number === 1 && e.completed && e.exam_type !== 'practice');
+      if (completedDiag) {
+        const deviceInfo = detectDeviceInfo();
+        posthog?.capture('document_analysis_completed', {
+          lesson_id: lessonIdRef.current,
+          predicted_grade: completedDiag.predicted_grade,
+          predicted_score: completedDiag.total_score,
+          device_type: deviceInfo.device_type,
+          app_type: deviceInfo.app_type,
+          is_guest: isGuest
+        });
+      }
+    } catch {}
   };
 
 

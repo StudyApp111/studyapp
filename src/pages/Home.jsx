@@ -16,6 +16,8 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import OnboardingModal from "@/components/onboarding-v2/OnboardingModal";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import PullToRefresh from "@/components/ui/PullToRefresh";
+import posthog from 'posthog-js';
+import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -292,14 +294,20 @@ export default function Home() {
               {/* CTA Buttons - Right in the hero */}
               <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md mt-2">
                 <button
-                  onClick={() => navigate(createPageUrl("CreateLesson"))}
+                  onClick={() => {
+                    try { const d = detectDeviceInfo(); posthog.capture('cta_clicked', { cta: 'start_studying', page: 'home', device_type: d.device_type, app_type: d.app_type }); } catch {}
+                    navigate(createPageUrl("CreateLesson"));
+                  }}
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:from-purple-500 hover:to-indigo-500 transition-all hover:scale-[1.02] border border-purple-500/50"
                 >
                   <Sparkles className="w-5 h-5" />
                   Start Studying
                 </button>
                 <button
-                  onClick={() => navigate(createPageUrl("SmartGrader"))}
+                  onClick={() => {
+                    try { const d = detectDeviceInfo(); posthog.capture('cta_clicked', { cta: 'grade_essay', page: 'home', device_type: d.device_type, app_type: d.app_type }); } catch {}
+                    navigate(createPageUrl("SmartGrader"));
+                  }}
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold rounded-2xl shadow-xl hover:from-emerald-500 hover:to-teal-500 transition-all hover:scale-[1.02] border border-emerald-500/50"
                 >
                   <FileCheck className="w-5 h-5" />
