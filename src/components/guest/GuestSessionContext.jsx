@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { base44 } from '@/api/base44Client';
 import { generateFingerprint } from '@/components/utils/browserFingerprint';
 import posthog from 'posthog-js';
+import { detectDeviceInfo } from '@/components/utils/userTracking';
 
 const GuestSessionContext = createContext(null);
 
@@ -81,7 +82,6 @@ export function GuestSessionProvider({ children }) {
 
     // PostHog: Guest session entry
     try {
-      const { detectDeviceInfo } = require('@/components/utils/userTracking');
       const deviceInfo = detectDeviceInfo();
       posthog.capture('guest_session_entry', {
         fingerprint_hash: fp ? fp.substring(0, 8) : 'unknown',

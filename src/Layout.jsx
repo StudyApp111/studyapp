@@ -165,7 +165,6 @@ function LayoutContent({ children, currentPageName }) {
             
             // PostHog: Guest → signup conversion
             try {
-              const { detectDeviceInfo } = require('@/components/utils/userTracking');
               const deviceInfo = detectDeviceInfo();
               posthog.capture('guest_signup_conversion', {
                 user_email: currentUser.email,
