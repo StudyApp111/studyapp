@@ -132,6 +132,17 @@ function LayoutContent({ children, currentPageName }) {
         if (currentUser && currentUser.email) {
           try {
             posthog.identify(currentUser.email);
+            // Track sign-in once per session
+            if (!sessionStorage.getItem('posthog_session_tracked')) {
+              sessionStorage.setItem('posthog_session_tracked', '1');
+              const deviceInfo = detectDeviceInfo();
+              posthog.capture('user_signed_in', {
+                device_type: deviceInfo.device_type,
+                app_type: deviceInfo.app_type,
+                is_onboarded: !!(currentUser.onboarding_completed || currentUser.data?.onboarding_completed),
+                role: currentUser.role
+              });
+            }
           } catch (e) {}
         }
 
@@ -163,17 +174,7 @@ function LayoutContent({ children, currentPageName }) {
             
             endGuestSession();
             
-            // PostHog: Guest → signup conversion
-            try {
-              const deviceInfo = detectDeviceInfo();
-              posthog.capture('guest_signup_conversion', {
-                user_email: currentUser.email,
-                lesson_id: transferData?.lesson_id || returningGuestLessonId,
-                transfer_success: !!transferData?.lesson_id,
-                device_type: deviceInfo.device_type,
-                app_type: deviceInfo.app_type
-              });
-            } catch {}
+
 
             if (transferData?.lesson_id) {
               // Clear any stale lesson IDs from sessionStorage so DocumentViewer uses the URL ID

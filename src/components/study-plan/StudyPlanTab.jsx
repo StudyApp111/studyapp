@@ -134,7 +134,19 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
             diagnosticData: { predicted_grade: reportData.predicted_grade, predicted_percentage: reportData.predicted_percentage, confidence_level: reportData.confidence_level, weak_areas_detailed: reportData.weak_areas_detailed }
           }).then(result => {
             window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));
-            if (result.data?.success) { loadStudyPlan(); }
+            if (result.data?.success) {
+              try {
+                const deviceInfo = detectDeviceInfo();
+                posthog.capture('study_plan_generated', {
+                  lesson_id: lesson.id,
+                  course_name: lesson.course_name,
+                  predicted_grade: reportData.predicted_grade,
+                  device_type: deviceInfo.device_type,
+                  app_type: deviceInfo.app_type
+                });
+              } catch {}
+              loadStudyPlan();
+            }
             window.history.replaceState({}, '', `${createPageUrl("DocumentViewer")}?id=${lesson.id}&tab=studyplan`);
           }).catch(err => {
             window.dispatchEvent(new CustomEvent('studyPlanGenerating', { detail: { generating: false } }));

@@ -80,19 +80,7 @@ export function GuestSessionProvider({ children }) {
     setGuestLessonCreated(false);
     setGuestDiagnosticCompleted(false);
 
-    // PostHog: Guest session entry
-    try {
-      const deviceInfo = detectDeviceInfo();
-      posthog.capture('guest_session_entry', {
-        fingerprint_hash: fp ? fp.substring(0, 8) : 'unknown',
-        entry_url: window.location.href,
-        referrer: document.referrer || 'direct',
-        device_type: deviceInfo.device_type,
-        app_type: deviceInfo.app_type,
-        user_agent: navigator.userAgent,
-        screen_width: window.screen.width,
-      });
-    } catch {}
+
 
     return { allowed: true };
   }, []);
