@@ -92,11 +92,11 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan, onNavi
     return (
       <button
         onClick={onNavigateToStudyPlan}
-        className="flex items-center gap-2 bg-white/20 hover:bg-white/30 rounded-full px-3 py-1.5 transition-colors"
+        className="flex items-center justify-center gap-2 bg-white/20 hover:bg-white/30 rounded-full px-4 py-1.5 transition-colors md:min-w-[260px]"
       >
-        <Target className="w-3.5 h-3.5 text-white/80" />
-        <span className="text-xs text-white font-medium">Get Study Plan</span>
-        <ChevronRight className="w-3 h-3 text-white/60" />
+        <Target className="w-3.5 h-3.5 text-white/80 flex-shrink-0" />
+        <span className="text-xs md:text-sm text-white font-medium text-center">Get your study plan</span>
+        <ChevronRight className="w-3 h-3 text-white/60 flex-shrink-0" />
       </button>
     );
   }
@@ -106,11 +106,11 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan, onNavi
     return (
       <button
         onClick={onNavigateToStudyPlan}
-        className="flex items-center gap-2 bg-gradient-to-r from-emerald-400/30 to-teal-400/30 hover:from-emerald-400/40 hover:to-teal-400/40 border border-emerald-400/30 rounded-full px-3 py-1.5 transition-colors"
+        className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-400/30 to-teal-400/30 hover:from-emerald-400/40 hover:to-teal-400/40 border border-emerald-400/30 rounded-full px-4 py-1.5 transition-colors md:min-w-[260px]"
       >
-        <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-        <span className="text-xs text-white font-semibold">Ready for Exam!</span>
-        <ChevronRight className="w-3 h-3 text-white/60" />
+        <Sparkles className="w-3.5 h-3.5 text-emerald-300 flex-shrink-0" />
+        <span className="text-xs md:text-sm text-white font-semibold text-center">Ready for your exam!</span>
+        <ChevronRight className="w-3 h-3 text-white/60 flex-shrink-0" />
       </button>
     );
   }
@@ -164,17 +164,20 @@ export default function NextStepBanner({ lessonId, onNavigateToStudyPlan, onNavi
       review_notes: 'Notes',
       practice_exam: 'Practice Quiz'
     };
+    const label = taskLabels[nextTask.task_type] || nextTask.title || 'Task';
+    const fullTitle = nextTask.title && nextTask.title !== label ? nextTask.title : null;
 
     return (
       <button
         onClick={handleTaskClick}
-        className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full px-3 py-1.5 transition-colors group"
+        className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full px-4 py-1.5 transition-colors group md:min-w-[300px] md:max-w-[420px]"
+        title={fullTitle || `Next: ${label}`}
       >
-        <Icon className="w-3.5 h-3.5 text-yellow-300" />
-        <span className="text-xs text-white font-medium truncate max-w-[140px]">
-          Next: {taskLabels[nextTask.task_type] || nextTask.title}
+        <Icon className="w-3.5 h-3.5 text-yellow-300 flex-shrink-0" />
+        <span className="text-xs md:text-sm text-white font-medium text-center truncate">
+          Next up: {label}
         </span>
-        <ChevronRight className="w-3 h-3 text-white/60 group-hover:translate-x-0.5 transition-transform" />
+        <ChevronRight className="w-3 h-3 text-white/60 group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
       </button>
     );
   }

@@ -96,8 +96,9 @@ export default function DocumentViewer() {
   const getSessionElapsed = () => Math.floor((Date.now() - (sessionStartTimeRef.current || Date.now())) / 1000);
 
   const handleBackNavigation = () => {
-    if (getSessionElapsed() >= MIN_SESSION_SECONDS) {
-      setShowSessionSummary(true);
+    // Go back to previous page; fall back to Home if no history
+    if (window.history.length > 1) {
+      navigate(-1);
     } else {
       navigate(createPageUrl("Home"));
     }

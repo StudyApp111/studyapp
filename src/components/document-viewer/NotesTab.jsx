@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, GraduationCap, FileText, Download, Notebook, Eye, EyeOff, Highlighter, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { Loader2, Settings2, RefreshCw, Copy, Check, Zap, Sparkles, BookOpen, GraduationCap, FileText, Download, Notebook, Eye, EyeOff, Highlighter, ChevronLeft, ChevronRight as ChevronRightIcon, Headphones } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import NoteSettingsModal from "@/components/modals/NoteSettingsModal";
+import NotesTTSPlayer from "@/components/document-viewer/NotesTTSPlayer";
 import { toast } from "sonner";
 import EducationalLoader from "@/components/ui/EducationalLoader";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -32,6 +33,8 @@ export default function NotesTab({ lesson }) {
   const [highlightMode, setHighlightMode] = useState(false);
   const [fontSize, setFontSize] = useState('base'); // 'sm', 'base', 'lg'
   const [tocCollapsed, setTocCollapsed] = useState(false);
+  const [ttsOpen, setTtsOpen] = useState(false);
+  const [activeTTSSentence, setActiveTTSSentence] = useState(null);
 
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -280,6 +283,14 @@ export default function NotesTab({ lesson }) {
 
       {note ? (
         <div className="flex flex-col">
+          {/* TTS Player */}
+          {ttsOpen && (
+            <NotesTTSPlayer
+              noteContent={note.content}
+              onClose={() => { setTtsOpen(false); setActiveTTSSentence(null); }}
+              onSentenceActive={(idx, text) => setActiveTTSSentence(text)}
+            />
+          )}
           {/* Header */}
           <div className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:px-4 border-b sticky top-0 z-10 gap-2 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
             <div className="flex items-center gap-3">
@@ -320,6 +331,15 @@ export default function NotesTab({ lesson }) {
                 </button>
               </div>
 
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setTtsOpen(v => !v)}
+                className={`${ttsOpen ? 'bg-purple-500/20 border-purple-500/50 text-purple-600' : (isDark ? 'text-slate-300 border-white/20 hover:bg-white/10' : 'text-slate-600 border-slate-200 hover:bg-slate-50')}`}
+                title="Listen to these notes"
+              >
+                <Headphones className="w-4 h-4" />
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -450,6 +470,22 @@ export default function NotesTab({ lesson }) {
                         h3: ({ children }) => {
                           const text = extractText(children);
                           return <h3 id={`heading-${slugify(text)}`}>{children}</h3>;
+                        },
+                        p: ({ children }) => {
+                          const text = extractText(children);
+                          const isActive = ttsOpen && activeTTSSentence && text && text.toLowerCase().includes(activeTTSSentence.toLowerCase().slice(0, 60));
+                          return (
+                            <p
+                              ref={(el) => {
+                                if (el && isActive) {
+                                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                              }}
+                              style={isActive ? { backgroundColor: isDark ? 'rgba(168,85,247,0.15)' : 'rgba(168,85,247,0.12)', borderRadius: '6px', padding: '4px 8px', margin: '2px -8px', transition: 'background-color 0.3s ease' } : undefined}
+                            >
+                              {children}
+                            </p>
+                          );
                         },
                       }}
                     >
