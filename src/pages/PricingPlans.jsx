@@ -96,7 +96,7 @@ export default function PricingPlans() {
       // Google Analytics
       try {
         if (window.gtag) {
-          window.gtag('event', 'trial_started', {
+          window.gtag('event', 'subscription_started', {
             event_category: 'conversion',
             event_label: planType,
             value: planType === 'yearly' ? 131.88 : 14.99,

@@ -40,7 +40,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
       const pricingUrl = `${window.location.origin}/PricingPlans`;
       const response = await base44.functions.invoke('createCheckoutSession', {
         plan_type: planType,
-        trial: true,
+        trial: false,
         success_url: `${pricingUrl}?success=true&plan=${planType}`,
         cancel_url: window.location.href
       });
@@ -117,7 +117,7 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
             <h2 className="text-xl font-black text-white mb-1 leading-tight">
               Know your grade before the exam.
             </h2>
-            <p className="text-purple-300 text-xs">7 days free — no credit card needed.</p>
+            <p className="text-purple-300 text-xs">Unlimited access — cancel anytime.</p>
           </div>
 
           {/* Price display */}
@@ -168,10 +168,10 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
               ) : (
                 <Zap className="w-4 h-4 mr-2" />
               )}
-              Start My Free 7 Days
+              Upgrade to Pro
             </Button>
             <p className="text-center text-[9px] text-purple-300/60 mt-1.5 leading-tight">
-              No credit card required · You won't be charged until the trial ends
+              Cancel anytime
             </p>
 
             {/* Promo Code */}
