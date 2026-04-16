@@ -92,8 +92,8 @@ export default function StudyPlanBannerInline({ lessonId, onNavigateToStudyPlan,
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
           <Sparkles className="w-4 h-4 text-white" />
         </div>
-        <div className="flex-1 text-left min-w-0">
-          <p className={`text-xs font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
+        <div className="flex-1 min-w-0 flex flex-col items-center text-center">
+          <p className={`text-xs md:text-sm font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
             All tasks complete! Ready for official exam
           </p>
           <p className={`text-[10px] ${isDark ? 'text-emerald-400/70' : 'text-emerald-600/70'}`}>
@@ -164,13 +164,13 @@ export default function StudyPlanBannerInline({ lessonId, onNavigateToStudyPlan,
       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center flex-shrink-0">
         <Icon className="w-4 h-4 text-white" />
       </div>
-      <div className="flex-1 text-left min-w-0">
-        <p className={`text-xs font-bold truncate ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
+      <div className="flex-1 min-w-0 flex flex-col items-center text-center">
+        <p className={`text-xs md:text-sm font-bold truncate max-w-full ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
           Next: {label} — {remaining > 0 ? `${remaining} left` : 'Start'}
         </p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <div className={`flex-1 h-1 rounded-full overflow-hidden max-w-[100px] ${isDark ? 'bg-white/10' : 'bg-amber-200'}`}>
-            <div className="h-full bg-amber-500 rounded-full" style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }} />
+        <div className="flex items-center gap-2 mt-1 w-full justify-center">
+          <div className={`h-1 rounded-full overflow-hidden w-24 md:w-40 ${isDark ? 'bg-white/10' : 'bg-amber-200'}`}>
+            <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }} />
           </div>
           <span className={`text-[10px] ${isDark ? 'text-amber-400/70' : 'text-amber-700/70'}`}>
             {completedTasks}/{totalTasks} tasks • {grade}
