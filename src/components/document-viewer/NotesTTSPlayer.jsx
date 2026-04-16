@@ -68,6 +68,8 @@ export default function NotesTTSPlayer({ noteContent, onClose, onSentenceActive 
   const [chunkAudioCache, setChunkAudioCache] = useState({}); // { chunkIdx: blobUrl }
   const [currentTime, setCurrentTime] = useState(0); // total elapsed seconds across chunks
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const loadedChunkRef = useRef(-1); // last chunk index whose src was assigned to audio element
 
   // Compute clean sentences + chunk grouping once
   const { sentences, chunks } = useMemo(() => {
@@ -224,16 +226,22 @@ export default function NotesTTSPlayer({ noteContent, onClose, onSentenceActive 
     }
   };
 
-  // When chunk changes, load new audio and autoplay if already playing
+  // When chunk changes (or becomes available for the first time), load new audio
+  // Guard with loadedChunkRef so prefetching OTHER chunks doesn't retrigger src assignment
+  // on the currently playing chunk (which was causing the random pause/restart bug).
   useEffect(() => {
-    if (!audioRef.current || !chunkAudioCache[currentChunkIdx]) return;
-    audioRef.current.src = chunkAudioCache[currentChunkIdx];
+    if (!audioRef.current) return;
+    const url = chunkAudioCache[currentChunkIdx];
+    if (!url) return;
+    if (loadedChunkRef.current === currentChunkIdx) return; // already loaded this chunk
+    loadedChunkRef.current = currentChunkIdx;
+    audioRef.current.src = url;
     audioRef.current.playbackRate = speed;
     if (playing || hasInteracted) {
       audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentChunkIdx, chunkAudioCache[currentChunkIdx]]);
+  }, [currentChunkIdx, chunkAudioCache]);
 
   // Seek to a specific sentence (click-to-seek)
   const seekToSentence = useCallback(async (sentenceIdx) => {
@@ -280,11 +288,88 @@ export default function NotesTTSPlayer({ noteContent, onClose, onSentenceActive 
     return () => { if (window.__notesTTSSeek === seekToSentence) delete window.__notesTTSSeek; };
   }, [seekToSentence]);
 
-  const handleProgressBarClick = (e) => {
+  // Seek by ratio (0–1). Used for click + drag. Avoids per-chunk sentence indexing
+  // so dragging works smoothly across chunk boundaries.
+  const seekToRatio = useCallback(async (ratio) => {
+    if (!chunks.length) return;
+    const clampedRatio = Math.min(Math.max(ratio, 0), 1);
+    const targetTime = clampedRatio * totalDuration * speed; // raw seconds across all chunks
+
+    // Walk chunks to find which one contains this time
+    let acc = 0;
+    let targetChunk = 0;
+    let timeInChunk = 0;
+    for (let i = 0; i < chunks.length; i++) {
+      const dur = chunkDurations[i] || chunks[i].text.length / 15;
+      if (acc + dur >= targetTime) {
+        targetChunk = i;
+        timeInChunk = targetTime - acc;
+        break;
+      }
+      acc += dur;
+      targetChunk = i;
+      timeInChunk = dur;
+    }
+
+    setHasInteracted(true);
+
+    // Load the target chunk if not cached
+    if (!chunkAudioCache[targetChunk]) {
+      try {
+        const { data } = await base44.functions.invoke('generateLectureSpeech', {
+          text: chunks[targetChunk].text,
+          chunk_index: targetChunk
+        });
+        if (!data?.audio_base64) return;
+        const blobUrl = base64ToBlobUrl(data.audio_base64, data.mime_type || 'audio/wav');
+        setChunkAudioCache(prev => ({ ...prev, [targetChunk]: blobUrl }));
+      } catch (err) {
+        console.error('Seek load failed:', err);
+        return;
+      }
+    }
+
+    // If switching chunks, update state and seek after src loads
+    if (targetChunk !== currentChunkIdx) {
+      setCurrentChunkIdx(targetChunk);
+      setActiveSentenceIdx(chunks[targetChunk].sentenceStart);
+      setTimeout(() => {
+        if (!audioRef.current) return;
+        audioRef.current.currentTime = Math.max(0, timeInChunk);
+        if (playing || hasInteracted) {
+          audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
+        }
+      }, 150);
+    } else if (audioRef.current) {
+      // Same chunk — seek immediately (smooth for drag)
+      audioRef.current.currentTime = Math.max(0, timeInChunk);
+    }
+  }, [chunks, chunkDurations, chunkAudioCache, currentChunkIdx, totalDuration, speed, playing, hasInteracted]);
+
+  const getRatioFromPointer = (clientX, rect) => {
+    return Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+  };
+
+  // Pointer-based scrubbing: drag to fast-forward/rewind smoothly
+  const handleProgressPointerDown = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
-    const targetSentence = Math.floor(ratio * sentences.length);
-    seekToSentence(Math.min(targetSentence, sentences.length - 1));
+    const el = e.currentTarget;
+    try { el.setPointerCapture(e.pointerId); } catch {}
+    setIsDragging(true);
+    seekToRatio(getRatioFromPointer(e.clientX, rect));
+  };
+
+  const handleProgressPointerMove = (e) => {
+    if (!isDragging) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    seekToRatio(getRatioFromPointer(e.clientX, rect));
+  };
+
+  const handleProgressPointerUp = (e) => {
+    if (!isDragging) return;
+    const el = e.currentTarget;
+    try { el.releasePointerCapture(e.pointerId); } catch {}
+    setIsDragging(false);
   };
 
   const skipSeconds = (delta) => {
@@ -341,18 +426,25 @@ export default function NotesTTSPlayer({ noteContent, onClose, onSentenceActive 
             {fmt(currentTime)}
           </span>
           <div
-            onClick={handleProgressBarClick}
-            className={`flex-1 h-1.5 rounded-full cursor-pointer group relative ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}
-            title="Click to seek"
+            onPointerDown={handleProgressPointerDown}
+            onPointerMove={handleProgressPointerMove}
+            onPointerUp={handleProgressPointerUp}
+            onPointerCancel={handleProgressPointerUp}
+            className={`flex-1 h-3 sm:h-4 rounded-full cursor-pointer group relative flex items-center touch-none select-none ${isDragging ? '' : ''}`}
+            title="Click or drag to seek"
+            style={{ touchAction: 'none' }}
           >
-            <div
-              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-200"
-              style={{ width: `${progressPct}%` }}
-            />
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white shadow border border-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ left: `calc(${progressPct}% - 6px)` }}
-            />
+            {/* Track */}
+            <div className={`w-full h-1.5 rounded-full relative ${isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
+              <div
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                style={{ width: `${progressPct}%`, transition: isDragging ? 'none' : 'width 0.2s' }}
+              />
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-md border-2 border-purple-500 transition-opacity ${isDragging ? 'opacity-100 scale-110' : 'opacity-0 group-hover:opacity-100'}`}
+                style={{ left: `calc(${progressPct}% - 8px)`, transition: isDragging ? 'none' : 'opacity 0.2s, transform 0.2s' }}
+              />
+            </div>
           </div>
           <span className={`text-[10px] font-mono tabular-nums flex-shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
             {fmt(totalDuration)}

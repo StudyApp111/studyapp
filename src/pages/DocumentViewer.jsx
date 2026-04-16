@@ -664,20 +664,8 @@ export default function DocumentViewer() {
               </div>
             </div>
             
-            {/* Right: Next Step + Grade + XP + Timer */}
+            {/* Right: Grade + XP + Timer */}
             <div className="flex items-center gap-3 flex-shrink-0">
-              {/* Next Step Banner */}
-              {lesson?.id && (
-                <NextStepBanner 
-                  lessonId={lesson.id} 
-                  onNavigateToStudyPlan={() => setActiveTab('studyplan')}
-                  onNavigateToTab={(tab) => setActiveTab(tab)}
-                />
-              )}
-              
-              {/* Subtle Divider */}
-              <div className="h-6 w-px bg-white/20" />
-              
               {/* Predicted Grade */}
               <AnimatedGradeBadge grade={predictedGrade} />
               
@@ -900,14 +888,6 @@ export default function DocumentViewer() {
               <div className="px-4 py-3 flex items-center justify-between gap-3">
                 <span className="text-white font-bold text-base truncate">{lesson?.course_name || 'Loading...'}</span>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Next Step Banner - Mobile */}
-                  {lesson?.id && (
-                    <NextStepBanner 
-                      lessonId={lesson.id} 
-                      onNavigateToStudyPlan={() => setActiveTab('studyplan')}
-                      onNavigateToTab={(tab) => setActiveTab(tab)}
-                    />
-                  )}
                   <div className="bg-white/15 rounded-full px-3 py-1 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-white/80" />
                     <span className="text-white text-sm font-mono font-semibold">{formatStudyTime(studyTime)}</span>

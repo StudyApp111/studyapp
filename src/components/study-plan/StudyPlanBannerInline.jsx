@@ -12,7 +12,7 @@ const TASK_ICONS = {
 
 const TASK_LABELS = {
   flashcards: "Flashcards",
-  teach_it: "Feynman",
+  teach_it: "Feynman Cards",
   review_notes: "Review Notes",
   practice_exam: "Practice Quiz"
 };
@@ -166,14 +166,14 @@ export default function StudyPlanBannerInline({ lessonId, onNavigateToStudyPlan,
       </div>
       <div className="flex-1 min-w-0 flex flex-col items-center text-center">
         <p className={`text-xs md:text-sm font-bold truncate max-w-full ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
-          Next: {label} — {remaining > 0 ? `${remaining} left` : 'Start'}
+          Next Study Task: {label}
         </p>
         <div className="flex items-center gap-2 mt-1 w-full justify-center">
           <div className={`h-1 rounded-full overflow-hidden w-24 md:w-40 ${isDark ? 'bg-white/10' : 'bg-amber-200'}`}>
             <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }} />
           </div>
           <span className={`text-[10px] ${isDark ? 'text-amber-400/70' : 'text-amber-700/70'}`}>
-            {completedTasks}/{totalTasks} tasks • {grade}
+            {completedTasks}/{totalTasks} tasks
           </span>
         </div>
       </div>
