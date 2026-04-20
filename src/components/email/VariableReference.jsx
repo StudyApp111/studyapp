@@ -34,12 +34,16 @@ const VARIABLE_GROUPS = [
       { name: "latest_lesson", desc: "Most recent lesson" },
       { name: "total_lessons", desc: "Total lessons created" },
       { name: "course_name", desc: "Alias of latest_lesson" },
+      { name: "predicted_grade_1", desc: "Predicted grade for 1st lesson" },
+      { name: "predicted_grade_2", desc: "Predicted grade for 2nd lesson" },
+      { name: "predicted_grade_3", desc: "Predicted grade for 3rd lesson" },
+      { name: "latest_predicted_grade", desc: "Predicted grade for latest lesson" },
     ]
   },
   {
     label: "Study Progress",
     vars: [
-      { name: "predicted_grade", desc: "AI predicted letter grade" },
+      { name: "predicted_grade", desc: "Latest lesson predicted grade (fallback to global)" },
       { name: "predicted_score", desc: "AI predicted score %" },
       { name: "mastery_gap", desc: "Weakest competency" },
       { name: "weak_competencies", desc: "Top 3 weak areas, comma-separated" },

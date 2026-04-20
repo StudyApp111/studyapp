@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     let assignments = [];
     const [lessonsRes, examsRes, plansRes, assignmentsRes] = await Promise.allSettled([
       base44.asServiceRole.entities.Lesson.filter({ created_by: user_email }, 'created_date', 50),
-      base44.asServiceRole.entities.Exam.filter({ created_by: user_email, completed: true }),
+      base44.asServiceRole.entities.Exam.filter({ created_by: user_email, completed: true }, '-created_date', 200),
       base44.asServiceRole.entities.StudyPlan.filter({ created_by: user_email, status: 'active' }),
       base44.asServiceRole.entities.GradedAssignment.filter({ created_by: user_email, completed: true }),
     ]);
@@ -153,13 +153,38 @@ Deno.serve(async (req) => {
       trialEndFormatted = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
-    // Lesson names (chronological — first-ever, second, third)
-    // Entity fields may be at top level OR nested inside .data depending on SDK behavior
+    // Entity field accessors
     const getLessonName = (l) => l?.course_name || l?.data?.course_name || '';
-    const lessonName1 = lessons.length >= 1 ? getLessonName(lessons[0]) : '';
-    const lessonName2 = lessons.length >= 2 ? getLessonName(lessons[1]) : '';
-    const lessonName3 = lessons.length >= 3 ? getLessonName(lessons[2]) : '';
-    const latestLesson = lessons.length > 0 ? getLessonName(lessons[lessons.length - 1]) : '';
+
+    // Build lesson name lookup by ID
+    const lessonNameById = {};
+    for (const l of lessons) {
+      lessonNameById[l.id] = getLessonName(l);
+    }
+
+    // Build per-lesson grade pairs from exams (most recent exam per unique lesson)
+    const sortedExamsDesc = [...exams].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    const seenLessonIds = new Set();
+    const lessonGradePairs = [];
+    for (const ex of sortedExamsDesc) {
+      const lid = ex.lesson_id || ex.data?.lesson_id;
+      if (!lid || seenLessonIds.has(lid)) continue;
+      const grade = ex.predicted_grade || ex.data?.predicted_grade;
+      if (!grade) continue;
+      seenLessonIds.add(lid);
+      lessonGradePairs.push({ name: lessonNameById[lid] || '', grade });
+    }
+
+    // lesson_name_1/2/3 and predicted_grade_1/2/3 from same source (always matched)
+    const lessonName1 = lessonGradePairs.length >= 1 ? lessonGradePairs[0].name : '';
+    const lessonName2 = lessonGradePairs.length >= 2 ? lessonGradePairs[1].name : '';
+    const lessonName3 = lessonGradePairs.length >= 3 ? lessonGradePairs[2].name : '';
+    const latestLesson = lessonName1 || (lessons.length > 0 ? getLessonName(lessons[lessons.length - 1]) : '');
+
+    const predictedGrade1 = lessonGradePairs.length >= 1 ? lessonGradePairs[0].grade : '';
+    const predictedGrade2 = lessonGradePairs.length >= 2 ? lessonGradePairs[1].grade : '';
+    const predictedGrade3 = lessonGradePairs.length >= 3 ? lessonGradePairs[2].grade : '';
+    const latestLessonGrade = predictedGrade1;
 
     // Format dates nicely
     const fmtDate = (d) => {
@@ -204,8 +229,14 @@ Deno.serve(async (req) => {
       total_lessons: String(lessons.length),
       course_name: latestLesson || 'your course',
 
+      // ─── Per-Lesson Predicted Grades ───
+      predicted_grade_1: predictedGrade1,
+      predicted_grade_2: predictedGrade2,
+      predicted_grade_3: predictedGrade3,
+      latest_predicted_grade: latestLessonGrade,
+
       // ─── Study Progress ───
-      predicted_grade: ud.polly_predicted_grade || '',
+      predicted_grade: latestLessonGrade || ud.polly_predicted_grade || '',
       predicted_score: ud.polly_predicted_score != null ? String(Math.round(ud.polly_predicted_score)) : '',
       mastery_gap: (ud.polly_mastery_gap || '').substring(0, 150),
       weak_competencies: activePlanCompetencies.slice(0, 3).join(', '),
