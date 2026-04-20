@@ -112,13 +112,11 @@ Deno.serve(async (req) => {
 
     // Compute derived values
     let completedExams = exams.length || ud.total_exams_completed || 0;
-    let bestGrade = '';
     let bestScore = 0;
     for (const ex of exams) {
       const score = ex.total_score ?? ex.data?.total_score ?? 0;
       if (score > bestScore) {
         bestScore = score;
-        bestGrade = ex.predicted_grade || ex.data?.predicted_grade || '';
       }
     }
     // Fallback to User entity aggregate if entity query returned 0 exams
@@ -163,16 +161,17 @@ Deno.serve(async (req) => {
     }
 
     // Build per-lesson grade pairs from exams (most recent exam per unique lesson)
+    // Uses total_score (percentage) instead of letter grades for email variables
     const sortedExamsDesc = [...exams].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     const seenLessonIds = new Set();
     const lessonGradePairs = [];
     for (const ex of sortedExamsDesc) {
       const lid = ex.lesson_id || ex.data?.lesson_id;
       if (!lid || seenLessonIds.has(lid)) continue;
-      const grade = ex.predicted_grade || ex.data?.predicted_grade;
-      if (!grade) continue;
+      const score = ex.total_score ?? ex.data?.total_score;
+      if (score == null) continue;
       seenLessonIds.add(lid);
-      lessonGradePairs.push({ name: lessonNameById[lid] || '', grade });
+      lessonGradePairs.push({ name: lessonNameById[lid] || '', score: Math.round(score) });
     }
 
     // lesson_name_1/2/3 and predicted_grade_1/2/3 from same source (always matched)
@@ -181,9 +180,9 @@ Deno.serve(async (req) => {
     const lessonName3 = lessonGradePairs.length >= 3 ? lessonGradePairs[2].name : '';
     const latestLesson = lessonName1 || (lessons.length > 0 ? getLessonName(lessons[lessons.length - 1]) : '');
 
-    const predictedGrade1 = lessonGradePairs.length >= 1 ? lessonGradePairs[0].grade : '';
-    const predictedGrade2 = lessonGradePairs.length >= 2 ? lessonGradePairs[1].grade : '';
-    const predictedGrade3 = lessonGradePairs.length >= 3 ? lessonGradePairs[2].grade : '';
+    const predictedGrade1 = lessonGradePairs.length >= 1 ? `${lessonGradePairs[0].score}%` : '';
+    const predictedGrade2 = lessonGradePairs.length >= 2 ? `${lessonGradePairs[1].score}%` : '';
+    const predictedGrade3 = lessonGradePairs.length >= 3 ? `${lessonGradePairs[2].score}%` : '';
     const latestLessonGrade = predictedGrade1;
 
     // Format dates nicely
@@ -236,13 +235,13 @@ Deno.serve(async (req) => {
       latest_predicted_grade: latestLessonGrade,
 
       // ─── Study Progress ───
-      predicted_grade: latestLessonGrade || ud.polly_predicted_grade || '',
+      predicted_grade: latestLessonGrade || (ud.polly_predicted_score != null ? `${Math.round(ud.polly_predicted_score)}%` : ''),
       predicted_score: ud.polly_predicted_score != null ? String(Math.round(ud.polly_predicted_score)) : '',
       mastery_gap: (ud.polly_mastery_gap || '').substring(0, 150),
       weak_competencies: activePlanCompetencies.slice(0, 3).join(', '),
       tasks_remaining: tasksRemaining != null ? String(tasksRemaining) : '',
       completed_exams: String(completedExams),
-      best_grade: bestGrade,
+      best_grade: bestScore > 0 ? `${Math.round(bestScore)}%` : '',
       best_score: bestScore > 0 ? String(Math.round(bestScore)) : '',
       graded_assignments: String(gradedAssignments),
 
