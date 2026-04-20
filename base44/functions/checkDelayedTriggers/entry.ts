@@ -167,22 +167,18 @@ Deno.serve(async (req) => {
       }
 
       // Email 4: session_no_followup_24h
-      // 24h after first practice session completed, no session today.
-      // "First practice session" = first study plan task completed (total_tasks_completed >= 1).
+      // Conditions: completed_exams >= 1, inactive >= 1 day, free users only, fire once.
+      // Grace period: only target users whose last_active_date is within the last 30 days
+      // to prevent mass-sending to long-inactive existing users.
       if (enabledDelayed.some(t => t.trigger_type === 'session_no_followup_24h')) {
-        const totalTasks = ud.total_tasks_completed || 0;
-        const firstTaskDate = ud.first_task_completed_date;
-        if (totalTasks >= 1 && firstTaskDate) {
-          const taskHours = hoursSince(firstTaskDate);
-          const lastActive = ud.last_active_date;
-          const lastActiveDate = lastActive ? new Date(lastActive).toISOString().split('T')[0] : null;
-          const today = now.toISOString().split('T')[0];
-          const noSessionToday = lastActiveDate !== today;
-          if (taskHours >= 24 && taskHours < 72 && noSessionToday) {
-            const trigger = enabledDelayed.find(t => t.trigger_type === 'session_no_followup_24h');
-            if (matchesPlanFilter(ud, trigger?.trigger_config?.plan_filter)) {
-              await sendTriggerEmail('session_no_followup_24h', u.email, `no_followup_24h_${u.id}`);
-            }
+        const completedExams = ud.total_exams_completed || 0;
+        const lastActive = ud.last_active_date;
+        const inactiveDaysVal = lastActive ? daysSince(lastActive) : Infinity;
+        // Grace period: skip users who have been inactive for more than 30 days
+        if (completedExams >= 1 && inactiveDaysVal >= 1 && inactiveDaysVal <= 30) {
+          const trigger = enabledDelayed.find(t => t.trigger_type === 'session_no_followup_24h');
+          if (matchesPlanFilter(ud, trigger?.trigger_config?.plan_filter)) {
+            await sendTriggerEmail('session_no_followup_24h', u.email, `no_followup_24h_${u.id}`);
           }
         }
       }
