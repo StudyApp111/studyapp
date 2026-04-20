@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { ChevronDown, ChevronRight, Copy, CheckCircle, FlaskConical, Loader2 } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { ChevronDown, ChevronRight, Copy, CheckCircle, FlaskConical, Loader2, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { base44 } from "@/api/base44Client";
 
 const VARIABLE_GROUPS = [
@@ -99,8 +99,36 @@ const VARIABLE_GROUPS = [
 
 function VariableTester({ allUsers }) {
   const [testEmail, setTestEmail] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [testing, setTesting] = useState(false);
   const [results, setResults] = useState(null);
+  const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredUsers = (allUsers || []).filter(u => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (u.full_name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
+  });
+
+  const selectedUser = testEmail ? (allUsers || []).find(u => u.email === testEmail) : null;
+
+  const handleSelect = (email) => {
+    setTestEmail(email);
+    setSearchQuery('');
+    setDropdownOpen(false);
+  };
 
   const handleTest = async () => {
     if (!testEmail) return;
@@ -126,19 +154,53 @@ function VariableTester({ allUsers }) {
         <FlaskConical className="w-3 h-3" /> Test Variables for a User
       </p>
       <div className="flex gap-2 items-end">
-        <div className="flex-1">
-          <Select value={testEmail} onValueChange={setTestEmail}>
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder="Select user to inspect..." />
-            </SelectTrigger>
-            <SelectContent>
-              {(allUsers || []).map(u => (
-                <SelectItem key={u.email} value={u.email}>
-                  {u.full_name || 'Unknown'} ({u.email})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex-1 relative" ref={dropdownRef}>
+          <div
+            className="flex items-center h-8 border rounded-md px-2 text-xs cursor-pointer bg-background hover:bg-accent/50 transition-colors"
+            onClick={() => { setDropdownOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
+          >
+            <Search className="w-3 h-3 text-muted-foreground mr-1.5 flex-shrink-0" />
+            {selectedUser && !dropdownOpen ? (
+              <div className="flex items-center gap-1 flex-1 min-w-0">
+                <span className="truncate">{selectedUser.full_name || 'Unknown'}</span>
+                <span className="text-muted-foreground truncate">({selectedUser.email})</span>
+                <button onClick={(e) => { e.stopPropagation(); setTestEmail(''); setResults(null); }} className="ml-auto flex-shrink-0">
+                  <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
+                </button>
+              </div>
+            ) : (
+              <span className="text-muted-foreground">Search by name or email...</span>
+            )}
+          </div>
+          {dropdownOpen && (
+            <div className="absolute z-50 top-9 left-0 right-0 bg-popover border rounded-md shadow-lg max-h-60 overflow-hidden flex flex-col">
+              <div className="p-1.5 border-b">
+                <Input
+                  ref={inputRef}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Type to search..."
+                  className="h-7 text-xs"
+                />
+              </div>
+              <div className="overflow-y-auto max-h-48">
+                {filteredUsers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground p-2 text-center">No users found</p>
+                ) : (
+                  filteredUsers.slice(0, 50).map(u => (
+                    <button
+                      key={u.email}
+                      onClick={() => handleSelect(u.email)}
+                      className="w-full text-left px-2 py-1.5 text-xs hover:bg-accent transition-colors flex items-center gap-1.5"
+                    >
+                      <span className="font-medium truncate">{u.full_name || 'Unknown'}</span>
+                      <span className="text-muted-foreground truncate">({u.email})</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
         <Button size="sm" variant="outline" onClick={handleTest} disabled={!testEmail || testing} className="h-8 text-xs gap-1">
           {testing ? <Loader2 className="w-3 h-3 animate-spin" /> : <FlaskConical className="w-3 h-3" />}

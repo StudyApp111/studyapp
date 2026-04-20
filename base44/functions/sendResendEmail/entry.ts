@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 /**
  * Replace all {{variable}} and {{{variable}}} placeholders in a string
@@ -65,85 +65,82 @@ Deno.serve(async (req) => {
     }
     const targetUser = users[0];
 
-    // Get learning profile
+    // Merge top-level user fields with data object for unified access
+    // User entity stores custom fields inside targetUser.data, built-ins at top level
+    const ud = { ...targetUser.data, ...targetUser };
+
+    // ── Fetch related data ──
+    // Learning profile: try get by ID, then filter, then user-cached fields
     let profile = null;
-    const profiles = await base44.asServiceRole.entities.LearningProfile.filter({
-      created_by: user_email
-    });
-    if (profiles.length > 0) profile = profiles[0];
+    const profileId = ud.learning_profile_id;
+    if (profileId) {
+      try { profile = await base44.asServiceRole.entities.LearningProfile.get(profileId); } catch (e) { console.error('[LP get]', e.message); }
+    }
+    if (!profile) {
+      try {
+        const ps = await base44.asServiceRole.entities.LearningProfile.filter({ created_by: user_email });
+        if (ps.length > 0) profile = ps[0];
+      } catch (e) { console.error('[LP filter]', e.message); }
+    }
+    if (!profile) {
+      profile = { school: ud.school || '', grade: ud.grade || '', city: ud.city || '', country: ud.country || '', study_type: ud.study_type || '' };
+    }
+    console.log('[DATA] profile.school=', profile?.school, 'profile.city=', profile?.city);
 
-    // Get ALL lessons (oldest first) for lesson_name_1, lesson_name_2, lesson_name_3
+    // Lessons, exams, study plans, assignments
     let lessons = [];
-    try {
-      lessons = await base44.asServiceRole.entities.Lesson.filter(
-        { created_by: user_email },
-        'created_date',
-        50
-      );
-    } catch (e) {
-      console.warn('Could not fetch lessons for user:', e.message);
-    }
-
-    // Get tasks_remaining from active study plan
-    let tasksRemaining = null;
-    let activePlanCompetencies = [];
-    try {
-      const plans = await base44.asServiceRole.entities.StudyPlan.filter({
-        created_by: user_email,
-        status: 'active'
-      });
-      if (plans.length > 0) {
-        const plan = plans[0];
-        if (plan.tasks) {
-          tasksRemaining = plan.tasks.filter(t => !t.completed).length;
-        }
-        if (plan.weak_competencies?.length > 0) {
-          activePlanCompetencies = plan.weak_competencies;
-        }
-      }
-    } catch (e) {
-      console.warn('Could not fetch study plans for user:', e.message);
-    }
-
-    // Get completed exam count and best grade
-    let completedExams = 0;
+    let completedExams = ud.total_exams_completed || 0;
     let bestGrade = '';
     let bestScore = 0;
+    let gradedAssignments = 0;
+    let tasksRemaining = null;
+    let activePlanCompetencies = [];
+
     try {
-      const exams = await base44.asServiceRole.entities.Exam.filter({
-        created_by: user_email,
-        completed: true
-      });
-      completedExams = exams.length;
-      for (const ex of exams) {
-        if (ex.total_score && ex.total_score > bestScore) {
-          bestScore = ex.total_score;
-          bestGrade = ex.predicted_grade || '';
+      lessons = await base44.asServiceRole.entities.Lesson.filter({ created_by: user_email }, 'created_date', 50);
+      console.log('[DATA] lessons found:', lessons.length);
+    } catch (e) { console.error('[Lesson]', e.message); }
+
+    try {
+      const exams = await base44.asServiceRole.entities.Exam.filter({ created_by: user_email, completed: true });
+      console.log('[DATA] exams found:', exams.length);
+      if (exams.length > 0) {
+        completedExams = exams.length;
+        for (const ex of exams) {
+          const score = ex.total_score || ex.data?.total_score || 0;
+          if (score > bestScore) {
+            bestScore = score;
+            bestGrade = ex.predicted_grade || ex.data?.predicted_grade || '';
+          }
         }
       }
-    } catch (e) {
-      console.warn('Could not fetch exams for user:', e.message);
-    }
+    } catch (e) { console.error('[Exam]', e.message); }
 
-    // Get graded assignment count
-    let gradedAssignments = 0;
     try {
-      const assignments = await base44.asServiceRole.entities.GradedAssignment.filter({
-        created_by: user_email,
-        completed: true
-      });
-      gradedAssignments = assignments.length;
-    } catch (e) {
-      console.warn('Could not fetch assignments for user:', e.message);
-    }
+      const plans = await base44.asServiceRole.entities.StudyPlan.filter({ created_by: user_email, status: 'active' });
+      console.log('[DATA] plans found:', plans.length);
+      if (plans.length > 0) {
+        const plan = plans[0];
+        const tasks = plan.tasks || plan.data?.tasks;
+        if (tasks) tasksRemaining = tasks.filter(t => !t.completed).length;
+        const wc = plan.weak_competencies || plan.data?.weak_competencies;
+        if (wc?.length > 0) activePlanCompetencies = wc;
+      }
+    } catch (e) { console.error('[Plan]', e.message); }
+
+    try {
+      const assignments = await base44.asServiceRole.entities.GradedAssignment.filter({ created_by: user_email, completed: true });
+      console.log('[DATA] assignments found:', assignments.length);
+      if (assignments.length > 0) gradedAssignments = assignments.length;
+    } catch (e) { console.error('[Assignment]', e.message); }
 
     // Build name parts
-    const fullName = targetUser.display_name || targetUser.full_name || '';
+    const fullName = ud.display_name || ud.full_name || '';
     const firstName = fullName.split(' ')[0] || user_email.split('@')[0];
     const lastName = fullName.split(' ').slice(1).join(' ') || '';
 
     // Trial-related variables
-    const trialEndDate = targetUser.trial_end_date || targetUser.data?.trial_end_date;
+    const trialEndDate = ud.trial_end_date;
     let trialDaysLeft = '';
     let trialEndFormatted = '';
     if (trialEndDate) {
@@ -154,10 +151,12 @@ Deno.serve(async (req) => {
     }
 
     // Lesson names (chronological — first-ever, second, third)
-    const lessonName1 = lessons.length >= 1 ? lessons[0].course_name : '';
-    const lessonName2 = lessons.length >= 2 ? lessons[1].course_name : '';
-    const lessonName3 = lessons.length >= 3 ? lessons[2].course_name : '';
-    const latestLesson = lessons.length > 0 ? lessons[lessons.length - 1].course_name : '';
+    // Entity fields may be at top level OR nested inside .data depending on SDK behavior
+    const getLessonName = (l) => l?.course_name || l?.data?.course_name || '';
+    const lessonName1 = lessons.length >= 1 ? getLessonName(lessons[0]) : '';
+    const lessonName2 = lessons.length >= 2 ? getLessonName(lessons[1]) : '';
+    const lessonName3 = lessons.length >= 3 ? getLessonName(lessons[2]) : '';
+    const latestLesson = lessons.length > 0 ? getLessonName(lessons[lessons.length - 1]) : '';
 
     // Format dates nicely
     const fmtDate = (d) => {
@@ -168,15 +167,15 @@ Deno.serve(async (req) => {
     };
 
     // Format study time
-    const totalStudyMinutes = Math.round((targetUser.time_spent_seconds || 0) / 60);
+    const totalStudyMinutes = Math.round((ud.time_spent_seconds || 0) / 60);
     const totalStudyHours = (totalStudyMinutes / 60).toFixed(1);
 
     // Days since signup
-    const signupDate = targetUser.created_date ? new Date(targetUser.created_date) : null;
+    const signupDate = ud.created_date ? new Date(ud.created_date) : null;
     const daysSinceSignup = signupDate ? Math.floor((Date.now() - signupDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
     // Days inactive
-    const lastActive = targetUser.last_active_date ? new Date(targetUser.last_active_date) : null;
+    const lastActive = ud.last_active_date ? new Date(ud.last_active_date) : null;
     const daysInactive = lastActive ? Math.floor((Date.now() - lastActive.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
     // Build COMPLETE variables object — every value is a string, empty string if unavailable
@@ -188,11 +187,11 @@ Deno.serve(async (req) => {
       email: user_email,
 
       // ─── Learning Profile ───
-      school: profile?.school || '',
-      grade: profile?.grade || '',
-      city: profile?.city || '',
-      country: profile?.country || '',
-      study_type: profile?.study_type || '',
+      school: profile?.school || profile?.data?.school || '',
+      grade: profile?.grade || profile?.data?.grade || '',
+      city: profile?.city || profile?.data?.city || '',
+      country: profile?.country || profile?.data?.country || '',
+      study_type: profile?.study_type || profile?.data?.study_type || '',
 
       // ─── Lesson / Course Names ───
       lesson_name_1: lessonName1,
@@ -203,9 +202,9 @@ Deno.serve(async (req) => {
       course_name: latestLesson || 'your course',
 
       // ─── Study Progress ───
-      predicted_grade: targetUser.polly_predicted_grade || '',
-      predicted_score: targetUser.polly_predicted_score != null ? String(Math.round(targetUser.polly_predicted_score)) : '',
-      mastery_gap: (targetUser.polly_mastery_gap || '').substring(0, 150),
+      predicted_grade: ud.polly_predicted_grade || '',
+      predicted_score: ud.polly_predicted_score != null ? String(Math.round(ud.polly_predicted_score)) : '',
+      mastery_gap: (ud.polly_mastery_gap || '').substring(0, 150),
       weak_competencies: activePlanCompetencies.slice(0, 3).join(', '),
       tasks_remaining: tasksRemaining != null ? String(tasksRemaining) : '',
       completed_exams: String(completedExams),
@@ -214,35 +213,35 @@ Deno.serve(async (req) => {
       graded_assignments: String(gradedAssignments),
 
       // ─── Gamification ───
-      level: String(targetUser.level || 1),
-      total_points: String(targetUser.total_points || 0),
-      current_streak: String(targetUser.current_streak || 0),
-      longest_streak: String(targetUser.longest_streak || 0),
-      questions_completed: String(targetUser.questions_completed || 0),
-      total_quizzes_taken: String(targetUser.total_quizzes_taken || 0),
-      average_score: String(Math.round(targetUser.average_score || 0)),
+      level: String(ud.level || 1),
+      total_points: String(ud.total_points || 0),
+      current_streak: String(ud.current_streak || 0),
+      longest_streak: String(ud.longest_streak || 0),
+      questions_completed: String(ud.questions_completed || 0),
+      total_quizzes_taken: String(ud.total_quizzes_taken || 0),
+      average_score: String(Math.round(ud.average_score || 0)),
 
       // ─── Engagement ───
       total_study_minutes: String(totalStudyMinutes),
       total_study_hours: totalStudyHours,
-      session_count: String(targetUser.session_count || 0),
-      total_logins: String(targetUser.total_logins || 0),
+      session_count: String(ud.session_count || 0),
+      total_logins: String(ud.total_logins || 0),
       days_since_signup: String(daysSinceSignup),
       days_inactive: String(daysInactive),
-      signup_date: fmtDate(targetUser.created_date),
-      last_active_date: fmtDate(targetUser.last_active_date),
-      first_visit_date: fmtDate(targetUser.first_visit_date),
+      signup_date: fmtDate(ud.created_date),
+      last_active_date: fmtDate(ud.last_active_date),
+      first_visit_date: fmtDate(ud.first_visit_date),
 
       // ─── Device & Context ───
-      device_type: targetUser.device_type || '',
-      app_type: targetUser.app_type || '',
-      operating_system: targetUser.operating_system || '',
-      browser: targetUser.browser || '',
-      timezone: targetUser.timezone || '',
-      language: targetUser.language || '',
+      device_type: ud.device_type || '',
+      app_type: ud.app_type || '',
+      operating_system: ud.operating_system || '',
+      browser: ud.browser || '',
+      timezone: ud.timezone || '',
+      language: ud.language || '',
 
       // ─── Subscription ───
-      plan_type: targetUser.subscription_plan_type || targetUser.data?.subscription_plan_type || 'free',
+      plan_type: ud.subscription_plan_type || 'free',
       trial_days_left: trialDaysLeft,
       trial_end_date: trialEndFormatted,
     };
@@ -277,11 +276,11 @@ Deno.serve(async (req) => {
         // Milestone checks
         if (template.trigger_type === 'level_milestone') {
           const mv = template.trigger_config?.milestone_value || 5;
-          if (targetUser.level !== mv) continue;
+          if (ud.level !== mv) continue;
         }
         if (template.trigger_type === 'streak_milestone') {
           const mv = template.trigger_config?.milestone_value || 7;
-          if (targetUser.current_streak !== mv) continue;
+          if (ud.current_streak !== mv) continue;
         }
       }
 
