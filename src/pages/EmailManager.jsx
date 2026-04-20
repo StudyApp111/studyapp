@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import TriggerCard from "@/components/email/TriggerCard";
+import VariableReference from "@/components/email/VariableReference";
 
 const TRIGGER_LABELS = {
   signup: "User Signs Up",
@@ -269,9 +270,7 @@ export default function EmailManager() {
               </Badge>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Variables passed (only non-empty): <code className="text-purple-600 dark:text-purple-400">name, first_name, school, grade, level, total_points, current_streak, questions_completed, plan_type, trial_days_left, trial_end_date</code>
-          </p>
+          <VariableReference allUsers={allUsers} />
         </div>
       )}
 

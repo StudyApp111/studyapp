@@ -21,15 +21,15 @@ function renderTemplate(str, vars) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { trigger_type, user_email, context, is_test } = await req.json();
+    const { trigger_type, user_email, context, is_test, dry_run } = await req.json();
 
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
       return Response.json({ error: 'RESEND_API_KEY not configured' }, { status: 500 });
     }
 
-    // For test sends, admin must be authenticated
-    if (is_test) {
+    // For test sends or dry runs, admin must be authenticated
+    if (is_test || dry_run) {
       const admin = await base44.auth.me();
       if (admin?.role !== 'admin') {
         return Response.json({ error: 'Forbidden' }, { status: 403 });
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (templates.length === 0) {
+    if (templates.length === 0 && !dry_run) {
       return Response.json({ message: 'No templates for this trigger', sent: 0 });
     }
 
@@ -72,31 +72,69 @@ Deno.serve(async (req) => {
     });
     if (profiles.length > 0) profile = profiles[0];
 
-    // Get most recent lesson for course_name
-    let courseName = null;
+    // Get ALL lessons (oldest first) for lesson_name_1, lesson_name_2, lesson_name_3
+    let lessons = [];
     try {
-      const lessons = await base44.asServiceRole.entities.Lesson.filter(
+      lessons = await base44.asServiceRole.entities.Lesson.filter(
         { created_by: user_email },
-        '-created_date',
-        1
+        'created_date',
+        50
       );
-      if (lessons.length > 0) courseName = lessons[0].course_name;
     } catch (e) {
       console.warn('Could not fetch lessons for user:', e.message);
     }
 
     // Get tasks_remaining from active study plan
     let tasksRemaining = null;
+    let activePlanCompetencies = [];
     try {
       const plans = await base44.asServiceRole.entities.StudyPlan.filter({
         created_by: user_email,
         status: 'active'
       });
-      if (plans.length > 0 && plans[0].tasks) {
-        tasksRemaining = plans[0].tasks.filter(t => !t.completed).length;
+      if (plans.length > 0) {
+        const plan = plans[0];
+        if (plan.tasks) {
+          tasksRemaining = plan.tasks.filter(t => !t.completed).length;
+        }
+        if (plan.weak_competencies?.length > 0) {
+          activePlanCompetencies = plan.weak_competencies;
+        }
       }
     } catch (e) {
       console.warn('Could not fetch study plans for user:', e.message);
+    }
+
+    // Get completed exam count and best grade
+    let completedExams = 0;
+    let bestGrade = '';
+    let bestScore = 0;
+    try {
+      const exams = await base44.asServiceRole.entities.Exam.filter({
+        created_by: user_email,
+        completed: true
+      });
+      completedExams = exams.length;
+      for (const ex of exams) {
+        if (ex.total_score && ex.total_score > bestScore) {
+          bestScore = ex.total_score;
+          bestGrade = ex.predicted_grade || '';
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch exams for user:', e.message);
+    }
+
+    // Get graded assignment count
+    let gradedAssignments = 0;
+    try {
+      const assignments = await base44.asServiceRole.entities.GradedAssignment.filter({
+        created_by: user_email,
+        completed: true
+      });
+      gradedAssignments = assignments.length;
+    } catch (e) {
+      console.warn('Could not fetch assignments for user:', e.message);
     }
 
     // Build name parts
@@ -115,42 +153,111 @@ Deno.serve(async (req) => {
       trialEndFormatted = endDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
-    // Build COMPLETE variables object with fallbacks for null values
+    // Lesson names (chronological — first-ever, second, third)
+    const lessonName1 = lessons.length >= 1 ? lessons[0].course_name : '';
+    const lessonName2 = lessons.length >= 2 ? lessons[1].course_name : '';
+    const lessonName3 = lessons.length >= 3 ? lessons[2].course_name : '';
+    const latestLesson = lessons.length > 0 ? lessons[lessons.length - 1].course_name : '';
+
+    // Format dates nicely
+    const fmtDate = (d) => {
+      if (!d) return '';
+      try {
+        return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch { return ''; }
+    };
+
+    // Format study time
+    const totalStudyMinutes = Math.round((targetUser.time_spent_seconds || 0) / 60);
+    const totalStudyHours = (totalStudyMinutes / 60).toFixed(1);
+
+    // Days since signup
+    const signupDate = targetUser.created_date ? new Date(targetUser.created_date) : null;
+    const daysSinceSignup = signupDate ? Math.floor((Date.now() - signupDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
+    // Days inactive
+    const lastActive = targetUser.last_active_date ? new Date(targetUser.last_active_date) : null;
+    const daysInactive = lastActive ? Math.floor((Date.now() - lastActive.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
+    // Build COMPLETE variables object — every value is a string, empty string if unavailable
     const userVars = {
-      // Identity
-      user_name: fullName || firstName,
+      // ─── Identity ───
       name: fullName || firstName,
       first_name: firstName,
       last_name: lastName,
       email: user_email,
-      'contact.first_name': firstName,
-      'contact.last_name': lastName,
-      'contact.email': user_email,
 
-      // Study progress — with sensible fallbacks
-      predicted_grade: targetUser.polly_predicted_grade || 'not yet determined',
-      predicted_score: targetUser.polly_predicted_score != null ? String(targetUser.polly_predicted_score) : 'not yet determined',
-      mastery_gap: targetUser.polly_mastery_gap || 'key concepts',
-      course_name: courseName || 'your course',
-      tasks_remaining: tasksRemaining != null ? String(tasksRemaining) : 'several',
-      current_streak: String(targetUser.current_streak || 0),
-
-      // Profile
+      // ─── Learning Profile ───
       school: profile?.school || '',
       grade: profile?.grade || '',
+      city: profile?.city || '',
+      country: profile?.country || '',
+      study_type: profile?.study_type || '',
 
-      // Gamification
+      // ─── Lesson / Course Names ───
+      lesson_name_1: lessonName1,
+      lesson_name_2: lessonName2,
+      lesson_name_3: lessonName3,
+      latest_lesson: latestLesson,
+      total_lessons: String(lessons.length),
+      course_name: latestLesson || 'your course',
+
+      // ─── Study Progress ───
+      predicted_grade: targetUser.polly_predicted_grade || '',
+      predicted_score: targetUser.polly_predicted_score != null ? String(Math.round(targetUser.polly_predicted_score)) : '',
+      mastery_gap: (targetUser.polly_mastery_gap || '').substring(0, 150),
+      weak_competencies: activePlanCompetencies.slice(0, 3).join(', '),
+      tasks_remaining: tasksRemaining != null ? String(tasksRemaining) : '',
+      completed_exams: String(completedExams),
+      best_grade: bestGrade,
+      best_score: bestScore > 0 ? String(Math.round(bestScore)) : '',
+      graded_assignments: String(gradedAssignments),
+
+      // ─── Gamification ───
       level: String(targetUser.level || 1),
       total_points: String(targetUser.total_points || 0),
+      current_streak: String(targetUser.current_streak || 0),
+      longest_streak: String(targetUser.longest_streak || 0),
       questions_completed: String(targetUser.questions_completed || 0),
+      total_quizzes_taken: String(targetUser.total_quizzes_taken || 0),
+      average_score: String(Math.round(targetUser.average_score || 0)),
 
-      // Subscription
+      // ─── Engagement ───
+      total_study_minutes: String(totalStudyMinutes),
+      total_study_hours: totalStudyHours,
+      session_count: String(targetUser.session_count || 0),
+      total_logins: String(targetUser.total_logins || 0),
+      days_since_signup: String(daysSinceSignup),
+      days_inactive: String(daysInactive),
+      signup_date: fmtDate(targetUser.created_date),
+      last_active_date: fmtDate(targetUser.last_active_date),
+      first_visit_date: fmtDate(targetUser.first_visit_date),
+
+      // ─── Device & Context ───
+      device_type: targetUser.device_type || '',
+      app_type: targetUser.app_type || '',
+      operating_system: targetUser.operating_system || '',
+      browser: targetUser.browser || '',
+      timezone: targetUser.timezone || '',
+      language: targetUser.language || '',
+
+      // ─── Subscription ───
       plan_type: targetUser.subscription_plan_type || targetUser.data?.subscription_plan_type || 'free',
-      trial_days_left: trialDaysLeft || '',
-      trial_end_date: trialEndFormatted || ''
+      trial_days_left: trialDaysLeft,
+      trial_end_date: trialEndFormatted,
     };
 
-    console.log('Template variables built:', JSON.stringify(userVars));
+    // Log each variable for debugging — makes test sends fully verifiable
+    console.log('=== EMAIL TEMPLATE VARIABLES ===');
+    for (const [k, v] of Object.entries(userVars)) {
+      console.log(`  ${k}: "${v}"`);
+    }
+    console.log('================================');
+
+    // Dry run mode: return all resolved variables without sending any email
+    if (dry_run) {
+      return Response.json({ variables: userVars, user_email });
+    }
 
     let sentCount = 0;
 
