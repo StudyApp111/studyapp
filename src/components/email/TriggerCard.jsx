@@ -84,6 +84,13 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
     setEditing(true);
   };
 
+  const filteredUsers = testRecipient
+    ? allUsers.filter(u =>
+        (u.full_name || '').toLowerCase().includes(testRecipient.toLowerCase()) ||
+        (u.email || '').toLowerCase().includes(testRecipient.toLowerCase())
+      ).slice(0, 5)
+    : [];
+
   const matchedTemplate = resendTemplates.find(t => t.id === trigger.resend_template_id);
 
   return (
@@ -138,31 +145,42 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
           <p className="text-xs text-muted-foreground">Sent: {trigger.send_count || 0} times</p>
 
           {/* Test Send */}
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <Label className="text-xs text-muted-foreground">Send Test</Label>
-              <Select value={testRecipient} onValueChange={setTestRecipient}>
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select user..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {allUsers.map(u => (
-                    <SelectItem key={u.email} value={u.email}>
-                      {u.full_name || 'Unknown'} ({u.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Send Test</Label>
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 relative">
+                <Input
+                  type="email"
+                  placeholder="Search or type email..."
+                  value={testRecipient}
+                  onChange={e => setTestRecipient(e.target.value)}
+                  className="h-8 text-xs pr-2"
+                />
+                {testRecipient && filteredUsers.length > 0 && !allUsers.some(u => u.email === testRecipient) && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    {filteredUsers.map(u => (
+                      <button
+                        key={u.email}
+                        className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent transition-colors"
+                        onClick={() => setTestRecipient(u.email)}
+                      >
+                        <span className="font-medium text-foreground">{u.full_name || 'Unknown'}</span>
+                        <span className="text-muted-foreground ml-1">({u.email})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSendTest}
+                disabled={!testRecipient || sendingTest}
+                className="h-8"
+              >
+                {sendingTest ? "..." : <><Send className="w-3 h-3 mr-1" /> Test</>}
+              </Button>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleSendTest}
-              disabled={!testRecipient || sendingTest}
-              className="h-8"
-            >
-              {sendingTest ? "..." : <><Send className="w-3 h-3 mr-1" /> Test</>}
-            </Button>
           </div>
 
           {testResult && (
