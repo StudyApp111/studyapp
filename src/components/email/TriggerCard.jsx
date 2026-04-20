@@ -11,7 +11,7 @@ import { Zap, Send, Trash2, Edit, AlertTriangle, ExternalLink } from "lucide-rea
 import { base44 } from "@/api/base44Client";
 
 const TRIGGER_LABELS = {
-  signup: "User Signs Up",
+  signup: "Email 0 — Welcome (instant on signup)",
   onboarding_completed: "Completes Onboarding",
   first_lesson_created: "First Lesson Created",
   first_diagnostic_completed: "First Diagnostic Completed",
@@ -19,10 +19,12 @@ const TRIGGER_LABELS = {
   first_worksheet_completed: "First Worksheet Completed",
   first_assignment_graded: "First Assignment Graded",
   lesson_all_worksheets_completed: "All Worksheets Completed",
-  signup_no_onboarding_4h: "Signed Up → No Onboarding (4h)",
-  signup_no_lesson_24h: "Onboarded → No Lesson (24h)",
-  lesson_no_diagnostic_24h: "Has Lesson → No Diagnostic (24h)",
-  diagnostic_no_studyplan_48h: "Has Diagnostic → No Study Plan (48h)",
+  signup_no_lesson_4h: "Email 1 — Lesson nudge (4h after signup, no lesson)",
+  lesson_no_diagnostic_24h: "Email 2 — Quiz nudge (24h after lesson, no quiz)",
+  quiz_no_return_24h: "Email 3 — Fear re-engagement (24h after quiz, no return)",
+  session_no_followup_24h: "Email 4 — Streak builder (24h after first session, no follow-up)",
+  upgrade_momentum: "Email 5 — Upgrade moment (threshold reached, free users)",
+  trial_expiring: "Email 6 — Trial expiry (2 days left, pro trial)",
   inactive_3_days: "Inactive 3 Days",
   inactive_7_days: "Inactive 7 Days",
   inactive_14_days: "Inactive 14 Days",
@@ -135,6 +137,23 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
             </div>
             <p className="text-xs text-muted-foreground mt-0.5 font-mono">{trigger.resend_template_id}</p>
           </div>
+
+          {/* Trigger config display */}
+          {trigger.trigger_config && Object.keys(trigger.trigger_config).length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {trigger.trigger_config.plan_filter && trigger.trigger_config.plan_filter !== 'any' && (
+                <Badge variant="outline" className="text-[10px]">Plan: {trigger.trigger_config.plan_filter}</Badge>
+              )}
+              {trigger.trigger_config.condition_field && (
+                <Badge variant="outline" className="text-[10px]">
+                  {trigger.trigger_config.condition_field} {trigger.trigger_config.condition_operator || '≥'} {trigger.trigger_config.condition_value}
+                </Badge>
+              )}
+              {trigger.trigger_config.delay_hours && (
+                <Badge variant="outline" className="text-[10px]">Delay: {trigger.trigger_config.delay_hours}h</Badge>
+              )}
+            </div>
+          )}
 
           <p className="text-xs text-muted-foreground">Sent: {trigger.send_count || 0} times</p>
 
@@ -249,6 +268,73 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Trigger Config */}
+            <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
+              <p className="text-xs font-semibold text-muted-foreground uppercase">Trigger Config (optional)</p>
+              
+              <div>
+                <Label className="text-xs">Plan Filter</Label>
+                <Select 
+                  value={editData.trigger_config?.plan_filter || 'any'} 
+                  onValueChange={v => setEditData({...editData, trigger_config: {...(editData.trigger_config || {}), plan_filter: v}})}
+                >
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any plan</SelectItem>
+                    <SelectItem value="free">Free only</SelectItem>
+                    <SelectItem value="pro_trial">Pro trial only</SelectItem>
+                    <SelectItem value="pro">Pro only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Condition Field</Label>
+                  <Select 
+                    value={editData.trigger_config?.condition_field || ''} 
+                    onValueChange={v => setEditData({...editData, trigger_config: {...(editData.trigger_config || {}), condition_field: v}})}
+                  >
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="questions_completed">questions_completed</SelectItem>
+                      <SelectItem value="current_streak">current_streak</SelectItem>
+                      <SelectItem value="total_lessons_created">total_lessons_created</SelectItem>
+                      <SelectItem value="total_exams_completed">total_exams_completed</SelectItem>
+                      <SelectItem value="session_count">session_count</SelectItem>
+                      <SelectItem value="total_logins">total_logins</SelectItem>
+                      <SelectItem value="level">level</SelectItem>
+                      <SelectItem value="trial_days_left">trial_days_left</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Operator</Label>
+                  <Select 
+                    value={editData.trigger_config?.condition_operator || 'gte'} 
+                    onValueChange={v => setEditData({...editData, trigger_config: {...(editData.trigger_config || {}), condition_operator: v}})}
+                  >
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gte">≥</SelectItem>
+                      <SelectItem value="lte">≤</SelectItem>
+                      <SelectItem value="eq">=</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Value</Label>
+                  <Input 
+                    type="number" 
+                    className="h-8 text-xs"
+                    value={editData.trigger_config?.condition_value ?? ''} 
+                    onChange={e => setEditData({...editData, trigger_config: {...(editData.trigger_config || {}), condition_value: parseInt(e.target.value) || 0}})}
+                  />
+                </div>
+              </div>
             </div>
 
           </div>

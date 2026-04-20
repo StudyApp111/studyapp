@@ -11,16 +11,18 @@
       "enum": [
         "signup",
         "onboarding_completed",
-        "signup_no_onboarding_4h",
-        "signup_no_lesson_24h",
         "first_lesson_created",
         "first_diagnostic_completed",
-        "lesson_no_diagnostic_24h",
         "first_studyplan_generated",
-        "diagnostic_no_studyplan_48h",
         "first_worksheet_completed",
         "first_assignment_graded",
         "lesson_all_worksheets_completed",
+        "signup_no_lesson_4h",
+        "lesson_no_diagnostic_24h",
+        "quiz_no_return_24h",
+        "session_no_followup_24h",
+        "upgrade_momentum",
+        "trial_expiring",
         "inactive_3_days",
         "inactive_7_days",
         "inactive_14_days",
@@ -56,11 +58,38 @@
     },
     "trigger_config": {
       "type": "object",
-      "description": "Additional config for delayed triggers",
+      "description": "Additional config for delayed/conditional triggers",
       "properties": {
         "delay_hours": {
           "type": "number",
           "description": "Delay in hours before sending (for time-delayed triggers)"
+        },
+        "condition_field": {
+          "type": "string",
+          "description": "User field to check (e.g. questions_completed, current_streak)"
+        },
+        "condition_operator": {
+          "type": "string",
+          "enum": [
+            "gte",
+            "lte",
+            "eq"
+          ],
+          "description": "Comparison operator"
+        },
+        "condition_value": {
+          "type": "number",
+          "description": "Threshold value"
+        },
+        "plan_filter": {
+          "type": "string",
+          "enum": [
+            "free",
+            "pro_trial",
+            "pro",
+            "any"
+          ],
+          "description": "Only fire for users on this plan type"
         }
       }
     }

@@ -17,7 +17,7 @@ import VariableReference from "@/components/email/VariableReference";
 
 const TRIGGER_LABELS = {
   // ─── Instant Action Triggers ───
-  signup: "User Signs Up",
+  signup: "Email 0 — Welcome (instant on signup)",
   onboarding_completed: "Completes Onboarding",
   first_lesson_created: "First Lesson Created",
   first_diagnostic_completed: "First Diagnostic Completed",
@@ -26,10 +26,13 @@ const TRIGGER_LABELS = {
   first_assignment_graded: "First Assignment Graded",
   lesson_all_worksheets_completed: "All Worksheets Completed",
   // ─── Delayed Follow-Up Triggers ───
-  signup_no_onboarding_4h: "Signed Up → No Onboarding (4h)",
-  signup_no_lesson_24h: "Onboarded → No Lesson (24h)",
-  lesson_no_diagnostic_24h: "Has Lesson → No Diagnostic (24h)",
-  diagnostic_no_studyplan_48h: "Has Diagnostic → No Study Plan (48h)",
+  signup_no_lesson_4h: "Email 1 — Lesson nudge (4h after signup, no lesson)",
+  lesson_no_diagnostic_24h: "Email 2 — Quiz nudge (24h after lesson, no quiz)",
+  quiz_no_return_24h: "Email 3 — Fear re-engagement (24h after quiz, no return)",
+  session_no_followup_24h: "Email 4 — Streak builder (24h after first session, no follow-up)",
+  // ─── Conditional Triggers ───
+  upgrade_momentum: "Email 5 — Upgrade moment (threshold reached, free users)",
+  trial_expiring: "Email 6 — Trial expiry (2 days left, pro trial)",
   // ─── Inactivity Triggers ───
   inactive_3_days: "Inactive 3 Days",
   inactive_7_days: "Inactive 7 Days",
@@ -175,11 +178,13 @@ export default function EmailManager() {
   }
 
   // Group triggers by category
-  const delayedTypes = ['signup_no_onboarding_4h', 'signup_no_lesson_24h', 'lesson_no_diagnostic_24h', 'diagnostic_no_studyplan_48h'];
+  const delayedTypes = ['signup_no_lesson_4h', 'lesson_no_diagnostic_24h', 'quiz_no_return_24h', 'session_no_followup_24h'];
+  const conditionalTypes = ['upgrade_momentum', 'trial_expiring'];
   const actionTriggers = triggers.filter(t =>
-    !t.trigger_type.startsWith('inactive_') && !delayedTypes.includes(t.trigger_type)
+    !t.trigger_type.startsWith('inactive_') && !delayedTypes.includes(t.trigger_type) && !conditionalTypes.includes(t.trigger_type)
   );
   const delayedTriggers = triggers.filter(t => delayedTypes.includes(t.trigger_type));
+  const conditionalTriggers = triggers.filter(t => conditionalTypes.includes(t.trigger_type));
   const inactivityTriggers = triggers.filter(t => t.trigger_type.startsWith('inactive_'));
 
   return (
@@ -324,6 +329,26 @@ export default function EmailManager() {
         </div>
       )}
 
+      {/* Conditional Triggers */}
+      {conditionalTriggers.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Conditional Triggers</h3>
+          <p className="text-xs text-muted-foreground mb-3">These fire when a user reaches a specific threshold (e.g. 20 questions completed, 5-day streak). Use trigger config to set conditions.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {conditionalTriggers.map(t => (
+              <TriggerCard
+                key={t.id}
+                trigger={t}
+                allUsers={allUsers}
+                resendTemplates={resendTemplates}
+                onUpdate={handleUpdateTrigger}
+                onDelete={handleDeleteTrigger}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Inactivity Triggers */}
       {inactivityTriggers.length > 0 && (
         <div className="mb-8">
@@ -406,6 +431,73 @@ export default function EmailManager() {
                   </a>.
                 </p>
               )}
+            </div>
+
+            {/* Trigger Config */}
+            <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
+              <p className="text-xs font-semibold text-muted-foreground uppercase">Trigger Config (optional)</p>
+              
+              <div>
+                <Label className="text-xs">Plan Filter</Label>
+                <Select 
+                  value={newTrigger.trigger_config?.plan_filter || 'any'} 
+                  onValueChange={v => setNewTrigger({...newTrigger, trigger_config: {...(newTrigger.trigger_config || {}), plan_filter: v}})}
+                >
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any plan</SelectItem>
+                    <SelectItem value="free">Free only</SelectItem>
+                    <SelectItem value="pro_trial">Pro trial only</SelectItem>
+                    <SelectItem value="pro">Pro only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Condition Field</Label>
+                  <Select 
+                    value={newTrigger.trigger_config?.condition_field || ''} 
+                    onValueChange={v => setNewTrigger({...newTrigger, trigger_config: {...(newTrigger.trigger_config || {}), condition_field: v}})}
+                  >
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="questions_completed">questions_completed</SelectItem>
+                      <SelectItem value="current_streak">current_streak</SelectItem>
+                      <SelectItem value="total_lessons_created">total_lessons_created</SelectItem>
+                      <SelectItem value="total_exams_completed">total_exams_completed</SelectItem>
+                      <SelectItem value="session_count">session_count</SelectItem>
+                      <SelectItem value="total_logins">total_logins</SelectItem>
+                      <SelectItem value="level">level</SelectItem>
+                      <SelectItem value="trial_days_left">trial_days_left</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Operator</Label>
+                  <Select 
+                    value={newTrigger.trigger_config?.condition_operator || 'gte'} 
+                    onValueChange={v => setNewTrigger({...newTrigger, trigger_config: {...(newTrigger.trigger_config || {}), condition_operator: v}})}
+                  >
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="gte">≥</SelectItem>
+                      <SelectItem value="lte">≤</SelectItem>
+                      <SelectItem value="eq">=</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Value</Label>
+                  <Input 
+                    type="number" 
+                    className="h-8 text-xs"
+                    value={newTrigger.trigger_config?.condition_value ?? ''} 
+                    onChange={e => setNewTrigger({...newTrigger, trigger_config: {...(newTrigger.trigger_config || {}), condition_value: parseInt(e.target.value) || 0}})}
+                  />
+                </div>
+              </div>
             </div>
 
           </div>

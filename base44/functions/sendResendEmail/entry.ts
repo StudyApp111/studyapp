@@ -276,14 +276,25 @@ Deno.serve(async (req) => {
         });
         if (existingLogs.length > 0) continue;
 
-        // Milestone checks
-        if (template.trigger_type === 'level_milestone') {
-          const mv = template.trigger_config?.milestone_value || 5;
-          if (ud.level !== mv) continue;
+        // Conditional trigger checks (plan_filter + condition from trigger_config)
+        const cfg = template.trigger_config;
+        if (cfg?.plan_filter && cfg.plan_filter !== 'any') {
+          const userPlan = ud.subscription_plan_type || 'free';
+          if (cfg.plan_filter !== userPlan) continue;
         }
-        if (template.trigger_type === 'streak_milestone') {
-          const mv = template.trigger_config?.milestone_value || 7;
-          if (ud.current_streak !== mv) continue;
+        if (cfg?.condition_field && cfg.condition_field !== 'none') {
+          let userVal;
+          if (cfg.condition_field === 'trial_days_left') {
+            const trialEnd = ud.trial_end_date;
+            if (!trialEnd) continue;
+            userVal = Math.max(0, Math.ceil((new Date(trialEnd) - new Date()) / (1000 * 60 * 60 * 24)));
+          } else {
+            userVal = Number(ud[cfg.condition_field] || 0);
+          }
+          const threshold = cfg.condition_value ?? 0;
+          const op = cfg.condition_operator || 'gte';
+          const passes = op === 'gte' ? userVal >= threshold : op === 'lte' ? userVal <= threshold : userVal === threshold;
+          if (!passes) continue;
         }
       }
 
