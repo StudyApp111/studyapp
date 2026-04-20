@@ -70,69 +70,72 @@ Deno.serve(async (req) => {
     const ud = { ...targetUser.data, ...targetUser };
 
     // ── Fetch related data ──
-    // Learning profile: try get by ID, then filter, then user-cached fields
-    let profile = null;
-    const profileId = ud.learning_profile_id;
-    if (profileId) {
-      try { profile = await base44.asServiceRole.entities.LearningProfile.get(profileId); } catch (e) { console.error('[LP get]', e.message); }
-    }
-    if (!profile) {
-      try {
-        const ps = await base44.asServiceRole.entities.LearningProfile.filter({ created_by: user_email });
-        if (ps.length > 0) profile = ps[0];
-      } catch (e) { console.error('[LP filter]', e.message); }
-    }
-    if (!profile) {
-      profile = { school: ud.school || '', grade: ud.grade || '', city: ud.city || '', country: ud.country || '', study_type: ud.study_type || '' };
-    }
-    console.log('[DATA] profile.school=', profile?.school, 'profile.city=', profile?.city);
+    // Learning profile: first try filter as service role, then fall back to user-cached fields on User entity
+    let profileData = { school: '', grade: '', city: '', country: '', study_type: '' };
+    try {
+      const profiles = await base44.asServiceRole.entities.LearningProfile.filter({ created_by: user_email });
+      if (profiles.length > 0) {
+        const p = profiles[0];
+        profileData = {
+          school: p.school || p.data?.school || '',
+          grade: p.grade || p.data?.grade || '',
+          city: p.city || p.data?.city || '',
+          country: p.country || p.data?.country || '',
+          study_type: p.study_type || p.data?.study_type || '',
+        };
+      }
+    } catch (e) { console.error('[LP]', e.message); }
+    // Fallback: if profile query returned empty, use User entity cached fields
+    if (!profileData.school) profileData.school = ud.school || '';
+    if (!profileData.city) profileData.city = ud.city || '';
+    if (!profileData.country) profileData.country = ud.country || '';
+    if (!profileData.grade) profileData.grade = ud.grade || '';
+    if (!profileData.study_type) profileData.study_type = ud.study_type || '';
 
-    // Lessons, exams, study plans, assignments
+    // Lessons, exams, study plans — fetch in parallel for speed
     let lessons = [];
-    let completedExams = ud.total_exams_completed || 0;
+    let exams = [];
+    let plans = [];
+    let assignments = [];
+    const [lessonsRes, examsRes, plansRes, assignmentsRes] = await Promise.allSettled([
+      base44.asServiceRole.entities.Lesson.filter({ created_by: user_email }, 'created_date', 50),
+      base44.asServiceRole.entities.Exam.filter({ created_by: user_email, completed: true }),
+      base44.asServiceRole.entities.StudyPlan.filter({ created_by: user_email, status: 'active' }),
+      base44.asServiceRole.entities.GradedAssignment.filter({ created_by: user_email, completed: true }),
+    ]);
+    if (lessonsRes.status === 'fulfilled') lessons = lessonsRes.value;
+    if (examsRes.status === 'fulfilled') exams = examsRes.value;
+    if (plansRes.status === 'fulfilled') plans = plansRes.value;
+    if (assignmentsRes.status === 'fulfilled') assignments = assignmentsRes.value;
+
+    console.log(`[DATA] lessons=${lessons.length}, exams=${exams.length}, plans=${plans.length}, assignments=${assignments.length}`);
+
+    // Compute derived values
+    let completedExams = exams.length || ud.total_exams_completed || 0;
     let bestGrade = '';
     let bestScore = 0;
-    let gradedAssignments = 0;
+    for (const ex of exams) {
+      const score = ex.total_score ?? ex.data?.total_score ?? 0;
+      if (score > bestScore) {
+        bestScore = score;
+        bestGrade = ex.predicted_grade || ex.data?.predicted_grade || '';
+      }
+    }
+    // Fallback to User entity aggregate if entity query returned 0 exams
+    if (exams.length === 0 && ud.total_exams_completed) {
+      completedExams = ud.total_exams_completed;
+    }
+
+    let gradedAssignments = assignments.length;
     let tasksRemaining = null;
     let activePlanCompetencies = [];
-
-    try {
-      lessons = await base44.asServiceRole.entities.Lesson.filter({ created_by: user_email }, 'created_date', 50);
-      console.log('[DATA] lessons found:', lessons.length);
-    } catch (e) { console.error('[Lesson]', e.message); }
-
-    try {
-      const exams = await base44.asServiceRole.entities.Exam.filter({ created_by: user_email, completed: true });
-      console.log('[DATA] exams found:', exams.length);
-      if (exams.length > 0) {
-        completedExams = exams.length;
-        for (const ex of exams) {
-          const score = ex.total_score || ex.data?.total_score || 0;
-          if (score > bestScore) {
-            bestScore = score;
-            bestGrade = ex.predicted_grade || ex.data?.predicted_grade || '';
-          }
-        }
-      }
-    } catch (e) { console.error('[Exam]', e.message); }
-
-    try {
-      const plans = await base44.asServiceRole.entities.StudyPlan.filter({ created_by: user_email, status: 'active' });
-      console.log('[DATA] plans found:', plans.length);
-      if (plans.length > 0) {
-        const plan = plans[0];
-        const tasks = plan.tasks || plan.data?.tasks;
-        if (tasks) tasksRemaining = tasks.filter(t => !t.completed).length;
-        const wc = plan.weak_competencies || plan.data?.weak_competencies;
-        if (wc?.length > 0) activePlanCompetencies = wc;
-      }
-    } catch (e) { console.error('[Plan]', e.message); }
-
-    try {
-      const assignments = await base44.asServiceRole.entities.GradedAssignment.filter({ created_by: user_email, completed: true });
-      console.log('[DATA] assignments found:', assignments.length);
-      if (assignments.length > 0) gradedAssignments = assignments.length;
-    } catch (e) { console.error('[Assignment]', e.message); }
+    if (plans.length > 0) {
+      const plan = plans[0];
+      const tasks = plan.tasks || plan.data?.tasks;
+      if (tasks) tasksRemaining = tasks.filter(t => !t.completed).length;
+      const wc = plan.weak_competencies || plan.data?.weak_competencies;
+      if (wc?.length > 0) activePlanCompetencies = wc;
+    }
 
     // Build name parts
     const fullName = ud.display_name || ud.full_name || '';
@@ -187,11 +190,11 @@ Deno.serve(async (req) => {
       email: user_email,
 
       // ─── Learning Profile ───
-      school: profile?.school || profile?.data?.school || '',
-      grade: profile?.grade || profile?.data?.grade || '',
-      city: profile?.city || profile?.data?.city || '',
-      country: profile?.country || profile?.data?.country || '',
-      study_type: profile?.study_type || profile?.data?.study_type || '',
+      school: profileData.school,
+      grade: profileData.grade,
+      city: profileData.city,
+      country: profileData.country,
+      study_type: profileData.study_type,
 
       // ─── Lesson / Course Names ───
       lesson_name_1: lessonName1,
