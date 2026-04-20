@@ -11,21 +11,22 @@
       "enum": [
         "signup",
         "onboarding_completed",
-        "first_diagnostic_completed",
+        "signup_no_onboarding_4h",
+        "signup_no_lesson_24h",
         "first_lesson_created",
+        "first_diagnostic_completed",
+        "lesson_no_diagnostic_24h",
+        "first_studyplan_generated",
+        "diagnostic_no_studyplan_48h",
         "first_worksheet_completed",
         "first_assignment_graded",
         "lesson_all_worksheets_completed",
-        "streak_milestone",
-        "level_milestone",
-        "trial_started",
-        "trial_day_3",
-        "trial_expiring",
         "inactive_3_days",
         "inactive_7_days",
-        "inactive_14_days"
+        "inactive_14_days",
+        "inactive_30_days"
       ],
-      "description": "What in-app action triggers this email"
+      "description": "What in-app action or delayed condition triggers this email"
     },
     "resend_template_id": {
       "type": "string",
@@ -55,10 +56,11 @@
     },
     "trigger_config": {
       "type": "object",
-      "description": "Additional config (e.g. milestone_value for streak/level triggers)",
+      "description": "Additional config for delayed triggers",
       "properties": {
-        "milestone_value": {
-          "type": "number"
+        "delay_hours": {
+          "type": "number",
+          "description": "Delay in hours before sending (for time-delayed triggers)"
         }
       }
     }

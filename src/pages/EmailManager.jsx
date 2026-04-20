@@ -16,21 +16,25 @@ import TriggerCard from "@/components/email/TriggerCard";
 import VariableReference from "@/components/email/VariableReference";
 
 const TRIGGER_LABELS = {
+  // ─── Instant Action Triggers ───
   signup: "User Signs Up",
   onboarding_completed: "Completes Onboarding",
-  first_diagnostic_completed: "First Diagnostic Completed",
   first_lesson_created: "First Lesson Created",
+  first_diagnostic_completed: "First Diagnostic Completed",
+  first_studyplan_generated: "First Study Plan Generated",
   first_worksheet_completed: "First Worksheet Completed",
   first_assignment_graded: "First Assignment Graded",
   lesson_all_worksheets_completed: "All Worksheets Completed",
-  streak_milestone: "Streak Milestone",
-  level_milestone: "Level Milestone",
-  trial_started: "Free Trial Started",
-  trial_day_3: "Trial Day 3 Reminder",
-  trial_expiring: "Trial Expiring (Last Day)",
+  // ─── Delayed Follow-Up Triggers ───
+  signup_no_onboarding_4h: "Signed Up → No Onboarding (4h)",
+  signup_no_lesson_24h: "Onboarded → No Lesson (24h)",
+  lesson_no_diagnostic_24h: "Has Lesson → No Diagnostic (24h)",
+  diagnostic_no_studyplan_48h: "Has Diagnostic → No Study Plan (48h)",
+  // ─── Inactivity Triggers ───
   inactive_3_days: "Inactive 3 Days",
   inactive_7_days: "Inactive 7 Days",
   inactive_14_days: "Inactive 14 Days",
+  inactive_30_days: "Inactive 30 Days",
 };
 
 export default function EmailManager() {
@@ -171,12 +175,11 @@ export default function EmailManager() {
   }
 
   // Group triggers by category
+  const delayedTypes = ['signup_no_onboarding_4h', 'signup_no_lesson_24h', 'lesson_no_diagnostic_24h', 'diagnostic_no_studyplan_48h'];
   const actionTriggers = triggers.filter(t =>
-    !t.trigger_type.startsWith('inactive_') && t.trigger_type !== 'streak_milestone' && t.trigger_type !== 'level_milestone'
+    !t.trigger_type.startsWith('inactive_') && !delayedTypes.includes(t.trigger_type)
   );
-  const milestoneTriggers = triggers.filter(t =>
-    t.trigger_type === 'streak_milestone' || t.trigger_type === 'level_milestone'
-  );
+  const delayedTriggers = triggers.filter(t => delayedTypes.includes(t.trigger_type));
   const inactivityTriggers = triggers.filter(t => t.trigger_type.startsWith('inactive_'));
 
   return (
@@ -301,12 +304,13 @@ export default function EmailManager() {
         </div>
       )}
 
-      {/* Milestone Triggers */}
-      {milestoneTriggers.length > 0 && (
+      {/* Delayed Follow-Up Triggers */}
+      {delayedTriggers.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Milestone Triggers</h3>
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Delayed Follow-Up Triggers</h3>
+          <p className="text-xs text-muted-foreground mb-3">These fire automatically when a user hasn't taken the next step within a time window. Checked hourly.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {milestoneTriggers.map(t => (
+            {delayedTriggers.map(t => (
               <TriggerCard
                 key={t.id}
                 trigger={t}
@@ -403,20 +407,7 @@ export default function EmailManager() {
                 </p>
               )}
             </div>
-            {(newTrigger.trigger_type === 'streak_milestone' || newTrigger.trigger_type === 'level_milestone') && (
-              <div>
-                <Label>Milestone Value</Label>
-                <Input
-                  type="number"
-                  value={newTrigger.trigger_config?.milestone_value || ''}
-                  onChange={e => setNewTrigger({
-                    ...newTrigger,
-                    trigger_config: { milestone_value: parseInt(e.target.value) || 0 }
-                  })}
-                  placeholder="e.g., 7 for 7-day streak"
-                />
-              </div>
-            )}
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>

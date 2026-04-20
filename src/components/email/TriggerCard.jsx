@@ -13,19 +13,20 @@ import { base44 } from "@/api/base44Client";
 const TRIGGER_LABELS = {
   signup: "User Signs Up",
   onboarding_completed: "Completes Onboarding",
-  first_diagnostic_completed: "First Diagnostic Completed",
   first_lesson_created: "First Lesson Created",
+  first_diagnostic_completed: "First Diagnostic Completed",
+  first_studyplan_generated: "First Study Plan Generated",
   first_worksheet_completed: "First Worksheet Completed",
   first_assignment_graded: "First Assignment Graded",
   lesson_all_worksheets_completed: "All Worksheets Completed",
-  streak_milestone: "Streak Milestone",
-  level_milestone: "Level Milestone",
-  trial_started: "Free Trial Started",
-  trial_day_3: "Trial Day 3 Reminder",
-  trial_expiring: "Trial Expiring (Last Day)",
+  signup_no_onboarding_4h: "Signed Up → No Onboarding (4h)",
+  signup_no_lesson_24h: "Onboarded → No Lesson (24h)",
+  lesson_no_diagnostic_24h: "Has Lesson → No Diagnostic (24h)",
+  diagnostic_no_studyplan_48h: "Has Diagnostic → No Study Plan (48h)",
   inactive_3_days: "Inactive 3 Days",
   inactive_7_days: "Inactive 7 Days",
   inactive_14_days: "Inactive 14 Days",
+  inactive_30_days: "Inactive 30 Days",
 };
 
 export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpdate, onDelete }) {
@@ -134,13 +135,6 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
             </div>
             <p className="text-xs text-muted-foreground mt-0.5 font-mono">{trigger.resend_template_id}</p>
           </div>
-
-          {/* Milestone config display */}
-          {(trigger.trigger_type === 'streak_milestone' || trigger.trigger_type === 'level_milestone') && (
-            <p className="text-xs text-muted-foreground">
-              Milestone value: <span className="text-foreground font-medium">{trigger.trigger_config?.milestone_value || 'Not set'}</span>
-            </p>
-          )}
 
           <p className="text-xs text-muted-foreground">Sent: {trigger.send_count || 0} times</p>
 
@@ -256,19 +250,7 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
                 </SelectContent>
               </Select>
             </div>
-            {(editData.trigger_type === 'streak_milestone' || editData.trigger_type === 'level_milestone') && (
-              <div>
-                <Label>Milestone Value</Label>
-                <Input
-                  type="number"
-                  value={editData.trigger_config?.milestone_value || ''}
-                  onChange={e => setEditData({
-                    ...editData,
-                    trigger_config: { milestone_value: parseInt(e.target.value) || 0 }
-                  })}
-                />
-              </div>
-            )}
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
