@@ -1,0 +1,175 @@
+{
+  "name": "Lesson",
+  "type": "object",
+  "properties": {
+    "course_name": {
+      "type": "string",
+      "description": "Name of the course"
+    },
+    "description": {
+      "type": "string",
+      "description": "Lesson description"
+    },
+    "url": {
+      "type": "string",
+      "description": "External resource URL"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Primary uploaded file URL (first file)"
+    },
+    "file_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "All uploaded file URLs for multi-document support"
+    },
+    "input_type": {
+      "type": "string",
+      "enum": [
+        "description",
+        "url",
+        "file"
+      ],
+      "description": "Type of lesson input"
+    },
+    "curriculum_map": {
+      "type": "object",
+      "description": "AI-generated comprehensive curriculum profile"
+    },
+    "topics": {
+      "type": "array",
+      "description": "Structured topics extracted from document content",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "key_content": {
+            "type": "string"
+          },
+          "subtopics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "key_content": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "selected_topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User-selected topic titles to focus on (limits study plan and content generation)"
+    },
+    "topic_suggestions": {
+      "type": "array",
+      "description": "AI-generated study suggestions per section with topics and formats",
+      "items": {
+        "type": "object",
+        "properties": {
+          "section_title": {
+            "type": "string"
+          },
+          "suggested_topics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "topic_title": {
+                  "type": "string"
+                },
+                "format": {
+                  "type": "string",
+                  "enum": [
+                    "Review Notes",
+                    "Flashcards",
+                    "Practice Test",
+                    "Feynman Technique"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "saved_lectures": {
+      "type": "object",
+      "description": "Saved lecture text keyed by topic title"
+    },
+    "extracted_content": {
+      "type": "string",
+      "description": "Extracted and processed content from files"
+    },
+    "compressed_content": {
+      "type": "string",
+      "description": "AI-compressed content optimized for prompt generation (<2000 chars)"
+    },
+    "total_study_time_seconds": {
+      "type": "number",
+      "description": "Total time spent studying this lesson in seconds",
+      "default": 0
+    },
+    "exam_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The date of the upcoming exam for this lesson/course"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "created",
+        "diagnostic_completed",
+        "worksheet_completed",
+        "completed"
+      ],
+      "default": "created"
+    }
+  },
+  "required": [
+    "course_name"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": [
+      {
+        "created_by": "{{user.email}}"
+      },
+      {
+        "user_condition": {
+          "role": "admin"
+        }
+      }
+    ],
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

@@ -3,30 +3,46 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { email } = await req.json();
+    const results = {};
 
-    // Test 1: asServiceRole list (no filter)
-    const allProfiles = await base44.asServiceRole.entities.LearningProfile.list('created_date', 5);
-    
-    // Test 2: asServiceRole filter by created_by
-    const filteredProfiles = await base44.asServiceRole.entities.LearningProfile.filter({ created_by: email });
+    // Test each entity separately to find which one errors
+    try {
+      const profiles = await base44.asServiceRole.entities.LearningProfile.list('created_date', 2);
+      results.LearningProfile = { count: profiles.length, ok: true };
+    } catch (e) {
+      results.LearningProfile = { error: e.message, ok: false };
+    }
 
-    // Test 3: asServiceRole list lessons
-    const allLessons = await base44.asServiceRole.entities.Lesson.list('-created_date', 3);
+    try {
+      const lessons = await base44.asServiceRole.entities.Lesson.list('-created_date', 2);
+      results.Lesson = { count: lessons.length, ok: true };
+    } catch (e) {
+      results.Lesson = { error: e.message, ok: false };
+    }
 
-    // Test 4: filter lessons
-    const filteredLessons = await base44.asServiceRole.entities.Lesson.filter({ created_by: email }, '-created_date', 3);
+    try {
+      const exams = await base44.asServiceRole.entities.Exam.list('-created_date', 2);
+      results.Exam = { count: exams.length, ok: true };
+    } catch (e) {
+      results.Exam = { error: e.message, ok: false };
+    }
 
-    return Response.json({
-      allProfiles_count: allProfiles.length,
-      allProfiles_sample: allProfiles.map(p => ({ id: p.id, created_by: p.created_by, school: p.school, data_school: p.data?.school })),
-      filteredProfiles_count: filteredProfiles.length,
-      filteredProfiles_sample: filteredProfiles.map(p => ({ id: p.id, created_by: p.created_by, school: p.school, data_school: p.data?.school })),
-      allLessons_count: allLessons.length,
-      allLessons_sample: allLessons.map(l => ({ id: l.id, created_by: l.created_by, name: l.course_name, data_name: l.data?.course_name })),
-      filteredLessons_count: filteredLessons.length,
-    });
+    try {
+      const plans = await base44.asServiceRole.entities.StudyPlan.list('-created_date', 2);
+      results.StudyPlan = { count: plans.length, ok: true };
+    } catch (e) {
+      results.StudyPlan = { error: e.message, ok: false };
+    }
+
+    try {
+      const assignments = await base44.asServiceRole.entities.GradedAssignment.list('-created_date', 2);
+      results.GradedAssignment = { count: assignments.length, ok: true };
+    } catch (e) {
+      results.GradedAssignment = { error: e.message, ok: false };
+    }
+
+    return Response.json(results);
   } catch (error) {
-    return Response.json({ error: error.message, stack: error.stack }, { status: 500 });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

@@ -263,9 +263,16 @@
     "create": {
       "created_by": "{{user.email}}"
     },
-    "read": {
-      "created_by": "{{user.email}}"
-    },
+    "read": [
+      {
+        "created_by": "{{user.email}}"
+      },
+      {
+        "user_condition": {
+          "role": "admin"
+        }
+      }
+    ],
     "update": {
       "created_by": "{{user.email}}"
     },
