@@ -160,29 +160,33 @@ Deno.serve(async (req) => {
       lessonNameById[l.id] = getLessonName(l);
     }
 
-    // Build per-lesson grade pairs from exams (most recent exam per unique lesson)
-    // Uses total_score (percentage) instead of letter grades for email variables
+    // Build lesson list sorted by most recent first (independent of exams)
+    const sortedLessons = [...lessons].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    const lessonName1 = sortedLessons.length >= 1 ? getLessonName(sortedLessons[0]) : '';
+    const lessonName2 = sortedLessons.length >= 2 ? getLessonName(sortedLessons[1]) : '';
+    const lessonName3 = sortedLessons.length >= 3 ? getLessonName(sortedLessons[2]) : '';
+    const latestLesson = lessonName1;
+
+    // Build best exam score per lesson (most recent completed exam per lesson)
     const sortedExamsDesc = [...exams].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-    const seenLessonIds = new Set();
-    const lessonGradePairs = [];
+    const gradeByLessonId = {};
     for (const ex of sortedExamsDesc) {
       const lid = ex.lesson_id || ex.data?.lesson_id;
-      if (!lid || seenLessonIds.has(lid)) continue;
+      if (!lid || gradeByLessonId[lid] != null) continue;
       const score = ex.total_score ?? ex.data?.total_score;
-      if (score == null) continue;
-      seenLessonIds.add(lid);
-      lessonGradePairs.push({ name: lessonNameById[lid] || '', score: Math.round(score) });
+      if (score != null) gradeByLessonId[lid] = Math.round(score);
     }
 
-    // lesson_name_1/2/3 and predicted_grade_1/2/3 from same source (always matched)
-    const lessonName1 = lessonGradePairs.length >= 1 ? lessonGradePairs[0].name : '';
-    const lessonName2 = lessonGradePairs.length >= 2 ? lessonGradePairs[1].name : '';
-    const lessonName3 = lessonGradePairs.length >= 3 ? lessonGradePairs[2].name : '';
-    const latestLesson = lessonName1 || (lessons.length > 0 ? getLessonName(lessons[lessons.length - 1]) : '');
-
-    const predictedGrade1 = lessonGradePairs.length >= 1 ? `${lessonGradePairs[0].score}%` : '';
-    const predictedGrade2 = lessonGradePairs.length >= 2 ? `${lessonGradePairs[1].score}%` : '';
-    const predictedGrade3 = lessonGradePairs.length >= 3 ? `${lessonGradePairs[2].score}%` : '';
+    // Map grades to the same lesson order as lesson_name_1/2/3
+    const gradeForLesson = (idx) => {
+      const lesson = sortedLessons[idx];
+      if (!lesson) return '';
+      const score = gradeByLessonId[lesson.id];
+      return score != null ? `${score}%` : '';
+    };
+    const predictedGrade1 = gradeForLesson(0);
+    const predictedGrade2 = gradeForLesson(1);
+    const predictedGrade3 = gradeForLesson(2);
     const latestLessonGrade = predictedGrade1;
 
     // Format dates nicely
