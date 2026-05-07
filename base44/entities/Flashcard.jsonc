@@ -1,0 +1,88 @@
+{
+  "name": "Flashcard",
+  "type": "object",
+  "properties": {
+    "lesson_id": {
+      "type": "string",
+      "description": "Associated lesson ID"
+    },
+    "study_plan_task_id": {
+      "type": "string",
+      "description": "The study plan task_id this flashcard was generated for (prevents duplicates)"
+    },
+    "question": {
+      "type": "string",
+      "description": "Front of the flashcard"
+    },
+    "answer": {
+      "type": "string",
+      "description": "Back of the flashcard"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Topic tags for categorization"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "default": "medium"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "learning",
+        "mastered"
+      ],
+      "default": "new"
+    },
+    "review_count": {
+      "type": "integer",
+      "default": 0,
+      "description": "Times reviewed with 'Got it'"
+    },
+    "mastered": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if review_count >= 3 with Got it"
+    },
+    "last_reviewed": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "next_review": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ease_factor": {
+      "type": "number",
+      "default": 2.5
+    }
+  },
+  "required": [
+    "lesson_id",
+    "question",
+    "answer"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

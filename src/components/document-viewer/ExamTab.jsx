@@ -813,7 +813,9 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
                 course_name: lesson.course_name
               });
               
-              console.log(`✅ Question ${idx + 1} graded: ${gradingResult.score_out_of_10}/10`);
+              console.log(`✅ Question ${idx + 1} graded: ${gradingResult.score_out_of_10}/10 (${gradingResult.verdict})`);
+              // Treat verdict as primary signal: Correct OR Partially Correct = credit
+              const isCorrect = gradingResult.verdict === 'Correct' || gradingResult.verdict === 'Partially Correct' || gradingResult.score_out_of_10 >= 6;
               return {
                 ...q,
                 ai_score_out_of_10: gradingResult.score_out_of_10,
@@ -822,7 +824,7 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
                 ai_keypoints_hit: gradingResult.keypoints_hit,
                 ai_keypoints_missed: gradingResult.keypoints_missed,
                 ai_misconception_detected: gradingResult.misconception_detected,
-                is_correct: gradingResult.score_out_of_10 >= 7
+                is_correct: isCorrect
               };
             } catch (gradingError) {
               console.error('Error grading subjective question:', gradingError);
@@ -830,9 +832,10 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
               return { ...q, is_correct: false, ai_score_out_of_10: 0, ai_rationale_short: 'Grading failed - please ask AI for help understanding this question.' };
             }
           }
-          // Already graded - use existing score
+          // Already graded - use existing score (verdict-first, then score fallback)
           const aiScore = q.ai_score_out_of_10 ?? 0;
-          return { ...q, is_correct: aiScore >= 7 };
+          const isCorrect = q.ai_verdict === 'Correct' || q.ai_verdict === 'Partially Correct' || aiScore >= 6;
+          return { ...q, is_correct: isCorrect };
         }
         
         // For objective questions, use letter-based comparison
@@ -953,7 +956,10 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
     const questionsWithGrading = exam.questions.map((q) => {
       if (isSubjectiveQuestion(q.question_type)) {
         if (q.ai_score_out_of_10 !== undefined) {
-          return { ...q, is_correct: q.ai_score_out_of_10 >= 7.5 };
+          // Verdict-first: Correct OR Partially Correct = credit (matches gradeShortAnswer rubric)
+          const aiScore = q.ai_score_out_of_10 ?? 0;
+          const isCorrect = q.ai_verdict === 'Correct' || q.ai_verdict === 'Partially Correct' || aiScore >= 6;
+          return { ...q, is_correct: isCorrect };
         }
       }
       const isCorrect = checkAnswerCorrect(q.user_answer, q.correct_answer, q.options, q.question_type);

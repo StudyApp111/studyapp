@@ -1,0 +1,76 @@
+{
+  "name": "PromoCodeRedemption",
+  "type": "object",
+  "properties": {
+    "promo_code_id": {
+      "type": "string",
+      "description": "Reference to the PromoCode entity"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of user who redeemed"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "User ID who redeemed"
+    },
+    "code_hash": {
+      "type": "string",
+      "description": "Hash of the redeemed code"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "free_access",
+        "discount_percent",
+        "discount_fixed"
+      ],
+      "description": "Type of promo applied"
+    },
+    "discount_value": {
+      "type": "number",
+      "description": "Discount value applied"
+    },
+    "access_granted_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When free access expires (for free_access type)"
+    },
+    "ip_address": {
+      "type": "string",
+      "description": "IP address for fraud detection"
+    },
+    "user_agent": {
+      "type": "string",
+      "description": "Browser info for fraud detection"
+    },
+    "redeemed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When code was redeemed"
+    }
+  },
+  "required": [
+    "promo_code_id",
+    "user_email",
+    "code_hash"
+  ],
+  "rls": {
+    "create": true,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

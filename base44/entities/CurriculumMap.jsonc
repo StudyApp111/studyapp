@@ -1,0 +1,118 @@
+{
+  "name": "CurriculumMap",
+  "type": "object",
+  "properties": {
+    "course_name": {
+      "type": "string",
+      "description": "Name of the course"
+    },
+    "school": {
+      "type": "string",
+      "description": "School name"
+    },
+    "grade": {
+      "type": "string",
+      "description": "Grade level"
+    },
+    "city": {
+      "type": "string",
+      "description": "City/region"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "create_lesson",
+        "smart_grader"
+      ],
+      "description": "Where this curriculum map was created from"
+    },
+    "curriculum_data": {
+      "type": "object",
+      "description": "The actual curriculum map data",
+      "properties": {
+        "core_competencies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "competency_weightings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "competency_name": {
+                "type": "string"
+              },
+              "weight_percentage": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "question_formats": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "frequency": {
+                "type": "string"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "high_yield_focal_points": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "common_misconceptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "course_name",
+    "curriculum_data",
+    "source"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "name": "PreMadeCourse",
+  "type": "object",
+  "properties": {
+    "course_name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "education_level": {
+      "type": "string",
+      "enum": [
+        "k12",
+        "university"
+      ],
+      "default": "university"
+    },
+    "institution": {
+      "type": "string",
+      "description": "School name for university, or geography/state/province for K-12"
+    },
+    "extracted_content": {
+      "type": "string"
+    },
+    "compressed_content": {
+      "type": "string"
+    },
+    "curriculum_map": {
+      "type": "object"
+    },
+    "topics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "key_content": {
+            "type": "string"
+          },
+          "subtopics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "key_content": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "diagnostic_questions_list": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_number": {
+            "type": "integer"
+          },
+          "question_type": {
+            "type": "string"
+          },
+          "difficulty_index": {
+            "type": "string"
+          },
+          "question_text": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "correct_answer": {
+            "type": "string"
+          },
+          "explanation": {
+            "type": "string"
+          },
+          "assessed_competencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "targeted_misconception": {
+            "type": "string"
+          },
+          "user_answer": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "is_published": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "course_name"
+  ],
+  "rls": {
+    "read": true,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -387,20 +387,22 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
         </motion.div>
       )}
 
-      {/* Show AI Feedback once graded */}
-      {!isObjective && question.ai_score_out_of_10 !== undefined && !question.ai_grading_pending && (
+      {/* Show AI Feedback once graded — verdict-first to match grading rubric */}
+      {!isObjective && question.ai_score_out_of_10 !== undefined && !question.ai_grading_pending && (() => {
+        const aiCredit = question.ai_verdict === 'Correct' || question.ai_verdict === 'Partially Correct' || question.ai_score_out_of_10 >= 6;
+        return (
         <motion.div 
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          className={`p-3 rounded-xl border ${question.ai_score_out_of_10 >= 7 ? (isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200') : (isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200')}`}
+          className={`p-3 rounded-xl border ${aiCredit ? (isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200') : (isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200')}`}
         >
           <div className="flex items-start gap-2">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${question.ai_score_out_of_10 >= 7 ? 'bg-emerald-500' : 'bg-amber-500'}`}>
-              {question.ai_score_out_of_10 >= 7 ? <CheckCircle className="w-4 h-4 text-white" /> : <Lightbulb className="w-3.5 h-3.5 text-white" />}
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${aiCredit ? 'bg-emerald-500' : 'bg-amber-500'}`}>
+              {aiCredit ? <CheckCircle className="w-4 h-4 text-white" /> : <Lightbulb className="w-3.5 h-3.5 text-white" />}
             </div>
             <div className="flex-1">
-              <p className={`text-xs font-bold ${question.ai_score_out_of_10 >= 7 ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-amber-400' : 'text-amber-700')}`}>
-                {question.ai_score_out_of_10 >= 7 ? "🎉 Excellent!" : "It's okay to guess — this helps us build your plan!"}
+              <p className={`text-xs font-bold ${aiCredit ? (isDark ? 'text-emerald-400' : 'text-emerald-700') : (isDark ? 'text-amber-400' : 'text-amber-700')}`}>
+                {aiCredit ? "🎉 Excellent!" : "It's okay to guess — this helps us build your plan!"}
               </p>
               <MathText className={`text-xs mt-1.5 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                 {question.ai_rationale_short}
@@ -408,7 +410,8 @@ export default function ExamQuestion({ question, answer, onAnswer, showFeedback 
             </div>
           </div>
         </motion.div>
-      )}
+        );
+      })()}
 
       {/* Instant Feedback for Objective Questions */}
       {hasAnswered && isObjective && (
