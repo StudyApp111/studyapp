@@ -62,37 +62,6 @@ export default function PricingPlans() {
           });
           } catch {}
 
-          // TikTok pixel
-          const trackSubscription = async () => {
-          try {
-          const user = await base44.auth.me();
-          if (user && window.ttq) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(user.id);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-            window.ttq.identify({ external_id: hashedId });
-
-            const value = planType === 'yearly' ? 131.88 : 14.99;
-            window.ttq.track('Subscribe', {
-              contents: [{
-                content_id: `pro_${planType}`,
-                content_type: 'product',
-                content_name: `Pro Subscription (${planType})`
-              }],
-              value: value,
-              currency: 'USD'
-            });
-          }
-        } catch (err) {
-          console.error('TikTok tracking error:', err);
-        }
-      };
-      
-      trackSubscription();
-
       // Google Analytics
       try {
         if (window.gtag) {
@@ -209,47 +178,6 @@ export default function PricingPlans() {
       setPromoLoading(false);
     }
   };
-
-  // Track TikTok Subscribe event when success modal shows
-  useEffect(() => {
-    if (showSuccess && !isPro) {
-      // This means they just completed checkout (trial started)
-      const trackSubscribe = async () => {
-        try {
-          if (window.ttq) {
-            const currentUser = await base44.auth.me();
-            if (currentUser) {
-              const encoder = new TextEncoder();
-              const data = encoder.encode(currentUser.id);
-              const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-              const hashArray = Array.from(new Uint8Array(hashBuffer));
-              const hashedId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-              
-              window.ttq.identify({ external_id: hashedId });
-              
-              const urlParams = new URLSearchParams(window.location.search);
-              const planType = urlParams.get('plan') || (isYearly ? 'yearly' : 'monthly');
-              const value = planType === 'yearly' ? 131.88 : 14.99;
-              
-              window.ttq.track('Subscribe', {
-                contents: [{
-                  content_id: `pro_${planType}`,
-                  content_type: 'product',
-                  content_name: `Pro Subscription (${planType})`
-                }],
-                value: value,
-                currency: 'USD'
-              });
-              console.log('TikTok Subscribe event fired from PricingPlans success');
-            }
-          }
-        } catch (err) {
-          console.error('TikTok tracking error:', err);
-        }
-      };
-      trackSubscribe();
-    }
-  }, [showSuccess]);
 
   // Success state - show ONLY when user actually has active pro access
   // showSuccess is from ?success=true after Stripe checkout - but only matters if user is actually pro
