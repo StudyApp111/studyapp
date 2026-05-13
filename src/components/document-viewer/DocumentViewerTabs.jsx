@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { FileText, ExternalLink, Copy, Highlighter, StickyNote, Search, Sparkles, X, Trash2, MessageCircle, NotebookPen } from "lucide-react";
 import NotesTab from "./NotesTab";
+import DocumentSwitcher from "./DocumentSwitcher";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -20,7 +21,13 @@ const HIGHLIGHT_COLORS = {
 
 export default function DocumentViewerTabs({ lesson }) {
   const { isDark } = useTheme();
-  const hasFile = !!lesson?.file_url;
+  // Multi-document support: use file_urls array when available, fall back to single file_url
+  const fileUrls = (lesson?.file_urls && lesson.file_urls.length > 0)
+    ? lesson.file_urls
+    : (lesson?.file_url ? [lesson.file_url] : []);
+  const hasFile = fileUrls.length > 0;
+  const [activeDocIndex, setActiveDocIndex] = useState(0);
+  const activeFileUrl = fileUrls[activeDocIndex] || lesson?.file_url || '';
   const [viewMode, setViewMode] = useState(hasFile ? "pdf" : "transcript");
   const [searchQuery, setSearchQuery] = useState("");
   const [annotations, setAnnotations] = useState([]);
@@ -52,7 +59,7 @@ export default function DocumentViewerTabs({ lesson }) {
   const pdfRetryCountRef = useRef(0);
   const maxPdfRetries = 2;
 
-  // PDF loading with timeout and auto-retry
+  // PDF loading with timeout and auto-retry — re-runs when active document changes
   useEffect(() => {
     if (hasFile && viewMode === "pdf") {
       setPdfLoaded(false);
@@ -86,7 +93,7 @@ export default function DocumentViewerTabs({ lesson }) {
         if (loadTimeoutRef.current) clearTimeout(loadTimeoutRef.current);
       };
     }
-  }, [lesson?.file_url, viewMode, hasFile]);
+  }, [activeFileUrl, viewMode, hasFile]);
 
   const loadAnnotations = async () => {
     try {
@@ -321,9 +328,10 @@ export default function DocumentViewerTabs({ lesson }) {
   }, [showToolbar, showNoteInput]);
 
   const extractedContent = lesson?.extracted_content || "";
-  const isPDF = lesson?.file_url?.toLowerCase().includes('.pdf');
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(lesson?.file_url || '');
-  const isOfficeDoc = /\.(docx?|pptx?|xlsx?)$/i.test(lesson?.file_url || '');
+  // File-type checks now run against the ACTIVE document (so switcher works for mixed file types)
+  const isPDF = activeFileUrl?.toLowerCase().includes('.pdf');
+  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(activeFileUrl || '');
+  const isOfficeDoc = /\.(docx?|pptx?|xlsx?)$/i.test(activeFileUrl || '');
 
   const handlePdfLoad = () => {
     setPdfLoaded(true);
@@ -409,6 +417,15 @@ export default function DocumentViewerTabs({ lesson }) {
             )}
           </div>
 
+          {/* Multi-document switcher — only visible when 2+ documents exist AND we're in PDF view */}
+          {viewMode === "pdf" && (
+            <DocumentSwitcher
+              fileUrls={fileUrls}
+              activeIndex={activeDocIndex}
+              onChange={setActiveDocIndex}
+            />
+          )}
+
           {/* Content Area - Match AI tutor panel height on desktop */}
           <div className="relative md:flex-1 md:overflow-hidden w-full max-w-full" style={{ minHeight: '70vh', boxSizing: 'border-box', overflowX: 'hidden' }}>
             {/* PDF View */}
@@ -447,7 +464,8 @@ export default function DocumentViewerTabs({ lesson }) {
                     )}
                     <iframe
                       ref={iframeRef}
-                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(lesson.file_url)}&embedded=true`}
+                      key={activeFileUrl}
+                      src={`https://docs.google.com/viewer?url=${encodeURIComponent(activeFileUrl)}&embedded=true`}
                       className="w-full border-0"
                       style={{ height: '100%', minHeight: '70vh', visibility: pdfLoaded ? 'visible' : 'hidden' }}
                       title="Course Document"
@@ -458,7 +476,8 @@ export default function DocumentViewerTabs({ lesson }) {
                 ) : isImage ? (
                   <div className="w-full h-full flex items-center justify-center p-8">
                     <img 
-                      src={lesson.file_url} 
+                      key={activeFileUrl}
+                      src={activeFileUrl} 
                       alt="Course Material" 
                       className="max-w-full max-h-full object-contain shadow-lg"
                     />
@@ -469,7 +488,7 @@ export default function DocumentViewerTabs({ lesson }) {
                       <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
                       <p className="text-slate-600 mb-3">Preview not available</p>
                       <Button variant="outline" asChild className="border-purple-200">
-                        <a href={lesson.file_url} target="_blank" rel="noopener noreferrer">
+                        <a href={activeFileUrl} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="w-4 h-4 mr-2" />
                           Open File
                         </a>

@@ -6,8 +6,8 @@ import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 
-// Multi-doc upload limits — Free: 3 docs, Pro: 10 docs
-const FREE_MAX_DOCS = 3;
+// Multi-doc upload limits — Free: 1 doc, Pro: 10 docs
+const FREE_MAX_DOCS = 1;
 const PRO_MAX_DOCS = 10;
 
 export default function MaterialUploader({ courseName, school, onMaterialReady, disabled = false }) {
