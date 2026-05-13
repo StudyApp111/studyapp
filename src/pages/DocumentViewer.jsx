@@ -7,7 +7,7 @@ import { ChevronLeft, Clock, Zap } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import PracticeHubTab from "@/components/document-viewer/PracticeHubTab";
-import PracticeSidebar from "@/components/document-viewer/PracticeSidebar";
+import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import MobileTabsView from "@/components/document-viewer/MobileTabsView";
 
 
@@ -234,7 +234,7 @@ export default function DocumentViewer() {
     }
   }, [location.search]);
 
-  // When lesson loads, default tab: cram if exam within 7 days, else PracticeHub (new Pillar 1 default)
+  // When lesson loads, default tab: cram if exam within 7 days, else document/notes (split-view default)
   useEffect(() => {
     if (!lesson) return;
     const urlParams = new URLSearchParams(location.search);
@@ -247,10 +247,25 @@ export default function DocumentViewer() {
           return;
         }
       }
-      // Pillar 1: Practice Hub is the new default first experience for ALL lessons
-      setActiveTab("practice");
+      // Default to document/notes (left pane shows content, right pane shows AI chat)
+      setActiveTab(hasDocument ? "doc" : "notes");
     }
   }, [lesson?.id]);
+
+  // Broadcast lesson nav state to Layout so the global sidebar can morph into LessonSideNav
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('lessonNavStateUpdate', {
+      detail: {
+        hasDocument,
+        showStudyPlanDot,
+        showFlashcardsDot,
+        showTeachItDot,
+        showExamDot,
+        isCramActive,
+        showCramTab,
+      }
+    }));
+  }, [hasDocument, showStudyPlanDot, showFlashcardsDot, showTeachItDot, showExamDot, isCramActive, showCramTab]);
 
   // Track SubmitApplication when user views their FIRST lesson
   useEffect(() => {
@@ -711,78 +726,43 @@ export default function DocumentViewer() {
       </div>
 
       <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-56px)] overflow-x-hidden">
-        {/* Desktop: Turbo-style split-pane — Document (left 2/3) + AI/Practice sidebar (right 1/3) */}
+        {/* Desktop: split-pane — Activity content (left 2/3) + dedicated AI Chat (right 1/3) */}
         <div className="hidden md:flex gap-3 h-full w-full max-w-full" style={{ isolation: 'isolate' }}>
-          {/* LEFT PANE: Document content */}
-          <div className="w-2/3 min-w-0 flex-shrink-0">
+          {/* LEFT PANE: Active activity content (driven by ?tab= from LessonSideNav) */}
+          <div className="w-2/3 min-w-0 flex-shrink-0 h-full flex flex-col">
             {!lesson ? (
               <ParsingLoader />
-            ) : hasDocument ? (
-              <div className="h-full flex flex-col">
-                <div className="px-2 pt-1">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                </div>
-                <div className="flex-1 overflow-auto scrollbar-hide">
-                  <DocumentViewerTabs lesson={lesson} />
-                </div>
-              </div>
             ) : (
-              <div className="h-full flex flex-col">
+              <>
                 <div className="px-2 pt-1">
                   <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                 </div>
                 <div className="flex-1 overflow-auto scrollbar-hide">
-                  <NotesTab lesson={lesson} />
+                  {activeTab === 'doc' && hasDocument && <DocumentViewerTabs lesson={lesson} />}
+                  {activeTab === 'notes' && <NotesTab lesson={lesson} />}
+                  {activeTab === 'practice' && <PracticeHubTab lesson={lesson} exams={exams} onNavigateToTab={(tab) => setActiveTab(tab)} />}
+                  {activeTab === 'studyplan' && <StudyPlanTab lesson={lesson} exams={exams} onNavigate={handleStudyPlanNavigate} isGeneratingPlan={isGeneratingStudyPlan} />}
+                  {activeTab === 'exam' && <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} extractedContent={extractedContent} />}
+                  {activeTab === 'flashcards' && <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />}
+                  {activeTab === 'teachit' && <TeachItTab lesson={lesson} />}
+                  {activeTab === 'learn' && (contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />)}
+                  {activeTab === 'cram' && showCramTab && (contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />)}
                 </div>
-              </div>
+              </>
             )}
           </div>
 
-          {/* RIGHT PANE: AI Chat + Practice Sidebar */}
+          {/* RIGHT PANE: Dedicated AI Chat — always-on, full height */}
           <div className="w-1/3 flex-shrink-0 flex flex-col" style={{ height: '100%' }}>
-            <PracticeSidebar
-              lesson={lesson}
-              exams={exams}
+            <AITutorPanel
               messages={messages}
               setMessages={setMessages}
-              aiInput={aiInput}
-              setAiInput={setAiInput}
-              aiLoading={aiLoading}
-              setAiLoading={setAiLoading}
-              activeActivity={activeTab !== 'doc' && activeTab !== 'notes' ? activeTab : null}
-              onSelectActivity={(id) => setActiveTab(id)}
-              onBackToHub={() => setActiveTab(hasDocument ? 'doc' : 'notes')}
-              showStudyPlanDot={showStudyPlanDot}
-              showFlashcardsDot={showFlashcardsDot}
-              showTeachItDot={showTeachItDot}
-              showExamDot={showExamDot}
-              isCramActive={isCramActive}
-              showCramTab={showCramTab}
-              isDark={isDark}
-            >
-              {/* Activity content rendered as children when an activity is active */}
-              {activeTab === 'practice' && (
-                <PracticeHubTab lesson={lesson} exams={exams} onNavigateToTab={(tab) => setActiveTab(tab)} />
-              )}
-              {activeTab === 'studyplan' && (
-                <StudyPlanTab lesson={lesson} exams={exams} onNavigate={handleStudyPlanNavigate} isGeneratingPlan={isGeneratingStudyPlan} />
-              )}
-              {activeTab === 'exam' && (
-                <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} extractedContent={extractedContent} />
-              )}
-              {activeTab === 'flashcards' && (
-                <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
-              )}
-              {activeTab === 'teachit' && (
-                <TeachItTab lesson={lesson} />
-              )}
-              {activeTab === 'learn' && (
-                contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />
-              )}
-              {activeTab === 'cram' && showCramTab && (
-                contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />
-              )}
-            </PracticeSidebar>
+              input={aiInput}
+              setInput={setAiInput}
+              isLoading={aiLoading}
+              setIsLoading={setAiLoading}
+              lesson={lesson}
+            />
           </div>
         </div>
 

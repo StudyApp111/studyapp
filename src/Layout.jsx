@@ -47,6 +47,8 @@ const initGoogleAnalytics = () => {
 // BrowserCompatibilityBanner removed — in-app browser detection now handled inline in onboarding sign-in step
 import FeedbackModal from "@/components/feedback/FeedbackModal.jsx";
 import AITutorFloatingButton from "@/components/modals/AITutorFloatingButton.jsx";
+import LessonSideNav from "@/components/document-viewer/LessonSideNav";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { AITutorProvider } from "@/components/ai-tutor/AITutorContext";
 import AITutorSheet from "@/components/ai-tutor/AITutorSheet";
@@ -229,6 +231,24 @@ function LayoutContent({ children, currentPageName }) {
   const isDocumentViewerPage = currentPageName === "DocumentViewer" || pathLower.includes("documentviewer");
   const isHomePage = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
 
+  // Lesson-aware sidebar swap: when inside a lesson, replace global nav items with lesson activities.
+  // We listen to lesson-specific notification dots dispatched by DocumentViewer.
+  const [lessonNavState, setLessonNavState] = React.useState({
+    hasDocument: false,
+    showStudyPlanDot: false,
+    showFlashcardsDot: false,
+    showTeachItDot: false,
+    showExamDot: false,
+    isCramActive: false,
+    showCramTab: false,
+  });
+
+  React.useEffect(() => {
+    const handler = (e) => setLessonNavState((prev) => ({ ...prev, ...(e.detail || {}) }));
+    window.addEventListener('lessonNavStateUpdate', handler);
+    return () => window.removeEventListener('lessonNavStateUpdate', handler);
+  }, []);
+
   const onboardingDone = user?.onboarding_completed || user?.data?.onboarding_completed;
   const isAdmin = user?.role === 'admin';
   // Show navigation if user exists AND (onboarding done OR admin)
@@ -272,6 +292,29 @@ function LayoutContent({ children, currentPageName }) {
               </Link>
             </div>
 
+            {/* Lesson-aware swap: show LessonSideNav inside a lesson, otherwise global nav */}
+            <AnimatePresence mode="wait">
+              {isDocumentViewerPage ? (
+                <LessonSideNav
+                  key="lesson"
+                  isDark={isDark}
+                  hasDocument={lessonNavState.hasDocument}
+                  showStudyPlanDot={lessonNavState.showStudyPlanDot}
+                  showFlashcardsDot={lessonNavState.showFlashcardsDot}
+                  showTeachItDot={lessonNavState.showTeachItDot}
+                  showExamDot={lessonNavState.showExamDot}
+                  isCramActive={lessonNavState.isCramActive}
+                  showCramTab={lessonNavState.showCramTab}
+                />
+              ) : (
+                <motion.div
+                  key="global"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col flex-1"
+                >
             {/* Upload Button */}
             <div className="px-2 py-3">
               <Link
@@ -335,6 +378,9 @@ function LayoutContent({ children, currentPageName }) {
                 <span className="text-[9px] font-medium text-center leading-tight px-1 truncate">Theme</span>
               </button>
               </nav>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Bottom: Settings + Profile */}
             <div className="p-2 space-y-1">
