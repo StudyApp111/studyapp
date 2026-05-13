@@ -126,22 +126,33 @@ export default function CreateLesson() {
         lessonData.file_urls = materialData.files.map(f => f.url);
         lessonData.input_type = "file";
         
-        // Extract content from files BEFORE creating lesson
-        console.log("📄 Extracting content from", materialData.files.length, "file(s)...");
+        // Extract content from ALL files in parallel
+        // Multi-doc strategy: "Keep separate, AI sees all" — we label each extracted
+        // document with its filename header so downstream LLM prompts (compression,
+        // exam gen, topic suggestions, flashcards, notes, teach-it) know which content
+        // came from which source. The concatenated corpus stays in extracted_content
+        // so no backend function changes are needed.
+        console.log("📄 Extracting content from", materialData.files.length, "file(s) in parallel...");
         try {
           const extractionResults = await Promise.allSettled(
             materialData.files.map(f => {
-              console.log("📤 Calling extractDocumentContent for:", f.url);
+              console.log("📤 Calling extractDocumentContent for:", f.name || f.url);
               return base44.functions.invoke('extractDocumentContent', { file_url: f.url });
             })
           );
           
+          // Build labeled corpus: each doc gets a clear header so AI can attribute content
           const extractedParts = extractionResults
-            .filter(r => r.status === 'fulfilled' && r.value?.data?.extracted_content)
-            .map(r => r.value.data.extracted_content);
+            .map((r, idx) => {
+              if (r.status !== 'fulfilled' || !r.value?.data?.extracted_content) return null;
+              const file = materialData.files[idx];
+              const docLabel = `Document ${idx + 1}: ${file?.name || `file_${idx + 1}`}`;
+              return `=== ${docLabel} ===\n\n${r.value.data.extracted_content}`;
+            })
+            .filter(Boolean);
           
-          extractedContent = extractedParts.join("\n\n--- NEXT DOCUMENT ---\n\n").trim();
-          console.log("✅ Extracted content length:", extractedContent.length, "chars");
+          extractedContent = extractedParts.join("\n\n").trim();
+          console.log("✅ Extracted content length:", extractedContent.length, "chars from", extractedParts.length, "doc(s)");
           
           // Mark step 1 complete
           setStepStatuses(prev => ({ ...prev, extracted: true }));

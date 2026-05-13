@@ -1,12 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, FileText, Type, Loader2, X, CheckCircle, Lightbulb, ArrowRight } from "lucide-react";
+import { Upload, FileText, Type, Loader2, X, CheckCircle, Lightbulb, ArrowRight, Plus, Crown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useSubscription } from "@/components/subscription/SubscriptionContext";
+
+// Multi-doc upload limits — Free: 3 docs, Pro: 10 docs
+const FREE_MAX_DOCS = 3;
+const PRO_MAX_DOCS = 10;
 
 export default function MaterialUploader({ courseName, school, onMaterialReady, disabled = false }) {
   const { isDark } = useTheme();
+  const { isPro, triggerUpgradeModal } = useSubscription();
+  const maxDocs = isPro() ? PRO_MAX_DOCS : FREE_MAX_DOCS;
   const [activeTab, setActiveTab] = useState("upload");
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [pastedNotes, setPastedNotes] = useState("");
@@ -52,7 +59,21 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
 
   const handleFileChange = async (e) => {
     const files = Array.from(e.target.files);
+    // Reset input value so the same file(s) can be re-selected if removed
+    if (fileInputRef.current) fileInputRef.current.value = "";
     if (files.length === 0) return;
+
+    // Enforce per-tier document count limit BEFORE upload (avoids wasted uploads)
+    const remainingSlots = maxDocs - uploadedFiles.length;
+    if (remainingSlots <= 0) {
+      setFileSizeError(`You've reached the ${maxDocs}-document limit${isPro() ? '' : ' for free accounts'}.`);
+      if (!isPro()) triggerUpgradeModal('multi_doc');
+      return;
+    }
+    if (files.length > remainingSlots) {
+      setFileSizeError(`Only ${remainingSlots} more document${remainingSlots === 1 ? '' : 's'} can be added (limit: ${maxDocs}).`);
+      return;
+    }
 
     // Validate file size
     const oversized = files.find(f => f.size > MAX_FILE_SIZE);
@@ -63,19 +84,19 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
     setFileSizeError("");
 
     setIsUploading(true);
-    const newFiles = [];
-
-    for (const file of files) {
-      try {
+    // Upload all files in parallel for speed (was sequential)
+    const uploadResults = await Promise.allSettled(
+      files.map(async (file) => {
         const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        newFiles.push({
-          name: file.name,
-          url: file_url,
-          size: file.size
-        });
-      } catch (error) {
-        console.error("Error uploading file:", error);
-      }
+        return { name: file.name, url: file_url, size: file.size };
+      })
+    );
+    const newFiles = uploadResults
+      .filter(r => r.status === 'fulfilled')
+      .map(r => r.value);
+    const failedCount = uploadResults.length - newFiles.length;
+    if (failedCount > 0) {
+      setFileSizeError(`${failedCount} file${failedCount === 1 ? '' : 's'} failed to upload. Please try again.`);
     }
 
     const allFiles = [...uploadedFiles, ...newFiles];
@@ -159,6 +180,7 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
           <input
             ref={fileInputRef}
             type="file"
+            multiple
             accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.png,.jpg,.jpeg,.webp,.gif,.bmp,.tiff"
             onChange={handleFileChange}
             className="hidden"
@@ -189,7 +211,10 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
                   <div>
                     <p className={`font-bold text-xl mb-1 ${isDark ? 'text-white' : 'text-purple-900'}`}>Drop your files here</p>
                     <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-purple-700/70'}`}>PDF, Word, PowerPoint, Images</p>
-                    <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-purple-700/50'}`}>Max 20 MB per file</p>
+                    <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-purple-700/50'}`}>
+                      Up to {maxDocs} documents · 20 MB per file
+                      {!isPro() && <span className={`ml-1 ${isDark ? 'text-amber-300' : 'text-amber-600'}`}>(Pro: 10)</span>}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2 text-purple-300 text-sm font-medium">
                     <span>Tap to browse</span>
@@ -200,6 +225,22 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
             </button>
           ) : (
             <div className="space-y-3">
+              {/* File count header */}
+              <div className="flex items-center justify-between px-1">
+                <span className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                  {uploadedFiles.length} of {maxDocs} document{uploadedFiles.length === 1 ? '' : 's'}
+                </span>
+                {!isPro() && uploadedFiles.length >= FREE_MAX_DOCS && (
+                  <button
+                    type="button"
+                    onClick={() => triggerUpgradeModal('multi_doc')}
+                    className="flex items-center gap-1 text-xs font-bold text-amber-500 hover:text-amber-400"
+                  >
+                    <Crown className="w-3 h-3" /> Unlock 10 with Pro
+                  </button>
+                )}
+              </div>
+
               {uploadedFiles.map((file, idx) => (
                 <div key={idx} className="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-xl">
                   <div className="w-12 h-12 rounded-xl bg-emerald-500/30 flex items-center justify-center">
@@ -219,6 +260,31 @@ export default function MaterialUploader({ courseName, school, onMaterialReady, 
                 </div>
               ))}
 
+              {/* Add more button — disabled at limit */}
+              {uploadedFiles.length < maxDocs ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className={`w-full border-2 border-dashed rounded-xl p-4 transition-all flex items-center justify-center gap-2 ${isDark ? 'border-purple-400/40 hover:border-purple-400 text-purple-300' : 'border-purple-300 hover:border-purple-500 text-purple-700'}`}
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="font-medium">Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span className="font-medium">Add another document</span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                <div className={`text-center text-xs py-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+                  {isPro() ? `Maximum of ${maxDocs} documents reached.` : `Free plan limit reached. Upgrade to Pro for up to ${PRO_MAX_DOCS} documents.`}
+                </div>
+              )}
             </div>
           )}
         </div>
