@@ -59,6 +59,7 @@ import { ThemeProvider, useTheme } from "@/components/theme/ThemeProvider";
 import { Moon, Sun } from "lucide-react";
 import { GuestSessionProvider, useGuestSession } from "@/components/guest/GuestSessionContext";
 import GuestTimerLockout from "@/components/guest/GuestTimerLockout";
+import GlobalBadgeListener from "@/components/gamification/GlobalBadgeListener";
 
 const navigationItems = [
         {
@@ -599,6 +600,9 @@ function LayoutContent({ children, currentPageName }) {
 
         {/* Guest Timer Lockout */}
         <GuestTimerLockout />
+
+        {/* Global badge unlock celebrations — fires from any page when awardDailyXP unlocks a badge */}
+        <GlobalBadgeListener />
 
         </div>
         </SidebarProvider>

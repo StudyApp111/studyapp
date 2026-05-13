@@ -16,6 +16,8 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import MathText from "@/components/math/MathText";
 import CustomizeGenerationModal from "@/components/modals/CustomizeGenerationModal";
 import LockedTeachItInput from "@/components/teach-it/LockedTeachItInput";
+import RewardBurst from "@/components/gamification/RewardBurst";
+import { XP_REWARDS } from "@/lib/gamification";
 
 export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const { canDoTask, incrementTaskCount, triggerUpgradeModal, isPro } = useSubscription();
@@ -31,6 +33,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const [showSetsList, setShowSetsList] = useState(true);
   const [showCustomize, setShowCustomize] = useState(false);
   const [currentSetCardIds, setCurrentSetCardIds] = useState(null); // IDs of cards in the active set
+  const [burst, setBurst] = useState({ count: 0, intensity: 'medium', xp: 0, label: '' });
   const tabContainerRef = useRef(null);
 
   const isGeneratingRef = useRef(false);
@@ -333,9 +336,17 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
         }).catch(err => console.warn('Polly trigger failed:', err.message));
       }
 
-      const xpAmount = gradingResult.score >= 90 ? 20 : gradingResult.score >= 75 ? 15 : 10;
-      await awardDailyXP(xpAmount, "Taught a concept!");
-      setXpToast({ show: true, xp: xpAmount, reason: "Taught a concept!" });
+      // XP + visual burst — large burst for excellent (>=90), medium for passing (>=75), no burst below
+      const score = gradingResult.score;
+      const isExcellent = score >= 90;
+      const isPass = score >= 75;
+      const xpAmount = isExcellent ? XP_REWARDS.teachit_excellent : isPass ? XP_REWARDS.teachit_pass : 10;
+      const label = isExcellent ? 'Excellent!' : isPass ? 'Got it!' : 'Keep trying';
+      if (isPass) {
+        setBurst(b => ({ count: b.count + 1, intensity: isExcellent ? 'large' : 'medium', xp: xpAmount, label }));
+      }
+      await awardDailyXP(xpAmount, label, { event: 'teachit_completed', score });
+      setXpToast({ show: true, xp: xpAmount, reason: label });
 
       // Trigger grade micro-movement in header
       window.dispatchEvent(new CustomEvent('studyActivityCompleted'));
@@ -523,6 +534,8 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   return (
     <div ref={tabContainerRef} className={`relative flex flex-col w-full max-w-full pb-8 ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
+      {/* High-fidelity reward burst — fires when grading score >= 75 */}
+      <RewardBurst trigger={burst.count} intensity={burst.intensity} xp={burst.xp} label={burst.label} />
       {/* XP Toast - positioned within this container */}
       <AnimatePresence>
         {xpToast.show && (

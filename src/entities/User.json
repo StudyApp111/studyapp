@@ -26,9 +26,34 @@
       "type": "number",
       "default": 0
     },
+    "longest_streak": {
+      "type": "number",
+      "default": 0
+    },
+    "streak_freezes": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of streak freezes the user has banked"
+    },
     "last_activity_date": {
       "type": "string",
       "format": "date"
+    },
+    "total_xp": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime XP earned across all sessions"
+    },
+    "level": {
+      "type": "number",
+      "default": 1,
+      "description": "Current student level derived from total_xp"
+    },
+    "badges_earned": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "IDs of badges the user has unlocked"
     }
   },
   "required": []

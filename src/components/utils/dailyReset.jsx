@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { levelFromXP, computeNewBadges } from "@/lib/gamification";
 
 // Get today's date in YYYY-MM-DD format (user's local timezone)
 export const getTodayDateString = () => {
@@ -150,32 +151,105 @@ export const recordDailyActivity = async (activityType, amount = 1) => {
 };
 
 /**
- * Award XP and update daily XP counter
+ * Award XP and update daily + lifetime XP counters.
+ * Also recomputes level, checks for newly-unlocked badges, and emits window events
+ * so any visible UI (toasts, headers) can react without prop drilling.
+ *
+ * @param {number} amount  - XP to award
+ * @param {string} reason  - Short label (e.g. "Mastered flashcard")
+ * @param {object} ctx     - Optional event context for badge checks
+ *                           e.g. { event: 'flashcard_reviewed', score: 100 }
  */
-export const awardDailyXP = async (amount, reason = '') => {
+export const awardDailyXP = async (amount, reason = '', ctx = {}) => {
   try {
-    // Check authentication first
     const isAuth = await base44.auth.isAuthenticated();
     if (!isAuth) return { success: false };
-    
+
     const user = await base44.auth.me();
     if (!user) return { success: false };
-    
+
     const newDailyXP = (user.daily_xp || 0) + amount;
-    const newTotalXP = (user.total_points || 0) + amount;
-    
-    await base44.auth.updateMe({
+    const newTotalXP = (user.total_xp || user.total_points || 0) + amount;
+    const oldLevel = levelFromXP(user.total_xp || user.total_points || 0);
+    const newLevel = levelFromXP(newTotalXP);
+    const leveledUp = newLevel > oldLevel;
+
+    // Compute newly unlocked badges (against the projected post-update state).
+    const projectedUser = {
+      ...user,
+      total_xp: newTotalXP,
       daily_xp: newDailyXP,
-      total_points: newTotalXP
-    });
-    
-    return { 
-      success: true, 
-      dailyXP: newDailyXP, 
-      totalXP: newTotalXP 
+    };
+    const newBadges = computeNewBadges(projectedUser, ctx);
+    const allBadgeIds = [
+      ...(user.badges_earned || []),
+      ...newBadges.map(b => b.id),
+    ];
+
+    const updatePayload = {
+      daily_xp: newDailyXP,
+      total_xp: newTotalXP,
+      total_points: newTotalXP, // keep legacy field in sync
+      level: newLevel,
+    };
+    if (newBadges.length > 0) {
+      updatePayload.badges_earned = allBadgeIds;
+    }
+    await base44.auth.updateMe(updatePayload);
+
+    // Fire visual events. UI components subscribe and react.
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('xpAwarded', {
+        detail: { amount, reason, totalXP: newTotalXP, dailyXP: newDailyXP, level: newLevel },
+      }));
+      if (leveledUp) {
+        window.dispatchEvent(new CustomEvent('levelUp', { detail: { level: newLevel } }));
+      }
+      newBadges.forEach(badge => {
+        window.dispatchEvent(new CustomEvent('badgeUnlocked', { detail: { badge } }));
+      });
+    }
+
+    return {
+      success: true,
+      dailyXP: newDailyXP,
+      totalXP: newTotalXP,
+      level: newLevel,
+      leveledUp,
+      newBadges,
     };
   } catch (error) {
     console.error('Error awarding XP:', error);
     return { success: false };
+  }
+};
+
+/**
+ * Trigger a badge check without awarding XP. Used after events like
+ * "completed diagnostic" or "grade updated" that should unlock badges
+ * independent of an XP award.
+ */
+export const checkBadges = async (ctx = {}) => {
+  try {
+    const isAuth = await base44.auth.isAuthenticated();
+    if (!isAuth) return [];
+    const user = await base44.auth.me();
+    if (!user) return [];
+
+    const newBadges = computeNewBadges(user, ctx);
+    if (newBadges.length === 0) return [];
+
+    const allBadgeIds = [...(user.badges_earned || []), ...newBadges.map(b => b.id)];
+    await base44.auth.updateMe({ badges_earned: allBadgeIds });
+
+    if (typeof window !== 'undefined') {
+      newBadges.forEach(badge => {
+        window.dispatchEvent(new CustomEvent('badgeUnlocked', { detail: { badge } }));
+      });
+    }
+    return newBadges;
+  } catch (error) {
+    console.error('Error checking badges:', error);
+    return [];
   }
 };

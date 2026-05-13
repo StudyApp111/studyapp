@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import XPGainToast from "@/components/gamification/XPGainToast";
+import RewardBurst from "@/components/gamification/RewardBurst";
 import AskAIButton from "@/components/ai-tutor/AskAIButton";
 import { recordDailyActivity, awardDailyXP } from "@/components/utils/dailyReset";
+import { XP_REWARDS } from "@/lib/gamification";
 import FlashcardSetsList from "./FlashcardSetsList";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -39,6 +41,8 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   const [sessionComplete, setSessionComplete] = useState(false);
   const [currentSetStart, setCurrentSetStart] = useState(0);
   const [currentSetEnd, setCurrentSetEnd] = useState(0);
+  // RewardBurst trigger — incrementing this fires a fresh burst
+  const [burst, setBurst] = useState({ count: 0, intensity: 'medium', xp: 0, label: '' });
 
   const isGeneratingRef = useRef(false);
   const pendingStudyTaskRef = useRef(null);
@@ -322,9 +326,16 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         }
       }
       
-      // Trigger grade micro-movement on good/excellent reviews
+      // Award XP + visual burst on good/excellent reviews
       if (rating === 'good' || rating === 'excellent') {
         window.dispatchEvent(new CustomEvent('studyActivityCompleted'));
+        const xpAmount = rating === 'excellent' ? XP_REWARDS.flashcard_excellent : XP_REWARDS.flashcard_good;
+        const label = rating === 'excellent' ? 'Mastered!' : 'Got it!';
+        // Fire visual burst immediately (don't wait for the network call)
+        setBurst(b => ({ count: b.count + 1, intensity: rating === 'excellent' ? 'large' : 'medium', xp: xpAmount, label }));
+        // Award XP in the background; awardDailyXP also fires badge events globally
+        awardDailyXP(xpAmount, label, { event: 'flashcard_reviewed', score: rating === 'excellent' ? 100 : 80 });
+        recordDailyActivity('flashcards', 1);
       }
     } catch (error) {
       console.error("Error updating flashcard:", error);
@@ -723,7 +734,9 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
 
   return (
     <div className={`space-y-3 px-3 py-3 pb-8 w-full max-w-full md:max-w-lg mx-auto relative ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ boxSizing: 'border-box', overflowX: 'hidden' }}>
-      {/* Celebration modal removed */}
+      {/* High-fidelity reward burst — fires on Good/Excellent ratings */}
+      <RewardBurst trigger={burst.count} intensity={burst.intensity} xp={burst.xp} label={burst.label} />
+      
 
       {/* Header */}
       <div className="flex items-center justify-between">

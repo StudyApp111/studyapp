@@ -10,6 +10,7 @@ import { UpgradeButton } from "@/components/subscription/UpgradeBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
+import GamificationHeader from "@/components/gamification/GamificationHeader";
 import { handleDailyReset } from "@/components/utils/dailyReset";
 import LearningTrajectory from "@/components/home/LearningTrajectory";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -546,8 +547,10 @@ export default function Home() {
 
           {/* Right Column - Goals */}
           <div className="space-y-4">
+            <GamificationHeader user={user} dailyXP={dailyXP} />
+
             <LearningTrajectory studyPlans={studyPlans} lessons={lessons} />
-            
+
             <DailyChallenge 
               studyMinutes={studyMinutesToday}
               questionsAnswered={questionsToday}
