@@ -73,7 +73,13 @@ export default function Home() {
         setFlashcardsToday(resetResult.flashcardsToday ?? currentUser.flashcards_today ?? 0);
 
         try {
-          const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
+          // Filter to current user explicitly — admins have RLS access to ALL profiles,
+          // so an unfiltered list would return another user's school name.
+          const profiles = await base44.entities.LearningProfile.filter(
+            { created_by: currentUser.email },
+            '-created_date',
+            1
+          );
           if (profiles.length > 0) {
             setLearningProfile(profiles[0]);
           }
@@ -92,28 +98,34 @@ export default function Home() {
 
   const isOnboarded = !!user && !showOnboarding;
 
+  // Scope all personal data queries to the current user's email.
+  // Admin users have RLS read access to ALL records (needed for admin dashboards),
+  // so we must explicitly filter by created_by here to avoid showing other users' data
+  // on the personal Home screen.
+  const userEmail = user?.email;
+
   const { data: lessons = [], isLoading: lessonsLoading, refetch: refetchLessons } = useQuery({
-    queryKey: ['lessons'],
-    queryFn: () => base44.entities.Lesson.list('-created_date', 10),
+    queryKey: ['lessons', userEmail],
+    queryFn: () => base44.entities.Lesson.filter({ created_by: userEmail }, '-created_date', 10),
     staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: isOnboarded,
+    enabled: isOnboarded && !!userEmail,
   });
 
   const { data: allExams = [], refetch: refetchExams } = useQuery({
-    queryKey: ['exams'],
-    queryFn: () => base44.entities.Exam.list('-created_date', 20),
+    queryKey: ['exams', userEmail],
+    queryFn: () => base44.entities.Exam.filter({ created_by: userEmail }, '-created_date', 20),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: isOnboarded,
+    enabled: isOnboarded && !!userEmail,
   });
 
   const { data: studyPlans = [], refetch: refetchPlans } = useQuery({
-    queryKey: ['studyPlans'],
-    queryFn: () => base44.entities.StudyPlan.filter({ status: 'active' }, '-created_date', 20),
+    queryKey: ['studyPlans', userEmail],
+    queryFn: () => base44.entities.StudyPlan.filter({ status: 'active', created_by: userEmail }, '-created_date', 20),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
-    enabled: isOnboarded,
+    enabled: isOnboarded && !!userEmail,
   });
 
   const { data: preMadeCourses = [], isLoading: preMadeLoading, refetch: refetchCourses } = useQuery({
@@ -217,7 +229,12 @@ export default function Home() {
       setQuestionsToday(resetResult.questionsToday ?? currentUser.questions_today ?? 0);
       setFlashcardsToday(resetResult.flashcardsToday ?? currentUser.flashcards_today ?? 0);
       try {
-        const profiles = await base44.entities.LearningProfile.list('-created_date', 1);
+        // Scope to current user — admins can read all profiles via RLS otherwise.
+        const profiles = await base44.entities.LearningProfile.filter(
+          { created_by: currentUser.email },
+          '-created_date',
+          1
+        );
         if (profiles.length > 0) setLearningProfile(profiles[0]);
       } catch {}
     } catch {}
