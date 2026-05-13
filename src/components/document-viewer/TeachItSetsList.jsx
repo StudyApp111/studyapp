@@ -137,15 +137,20 @@ export default function TeachItSetsList({ cards, onSelectCard, onGenerateNew }) 
         })}
       </div>
 
-      {/* Generate New */}
-      <Button
-        variant="outline"
-        onClick={onGenerateNew}
-        className={`w-full mt-4 border-2 border-dashed ${isDark ? 'border-purple-500/30 hover:border-purple-500/50 hover:bg-purple-600/10 text-purple-400' : 'border-purple-300 hover:border-purple-400 hover:bg-purple-50'}`}
-      >
-        <RefreshCw className="w-4 h-4 mr-2" />
-        Generate New Cards
-      </Button>
+      {/* Generate New — primary CTA */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+        <Button
+          onClick={onGenerateNew}
+          className="w-full h-14 rounded-2xl font-bold text-base shadow-lg bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white border-0"
+        >
+          <Brain className="w-5 h-5 mr-2" />
+          Create a New Feynman Set
+          <ChevronRight className="w-5 h-5 ml-2" />
+        </Button>
+        <p className={`text-center text-[11px] mt-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+          Pick topics, difficulty, and how many concepts to teach
+        </p>
+      </motion.div>
     </div>
   );
 }

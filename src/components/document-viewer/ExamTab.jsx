@@ -1343,6 +1343,19 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
     
     return (
         <div className="px-3 md:px-6 py-3 w-full max-w-full mx-auto space-y-3 md:space-y-4 pb-8" style={{ boxSizing: 'border-box', overflowX: 'hidden', maxWidth: '100vw' }}>
+        {/* Create Practice Quiz CTA — always visible at top so it's never missing */}
+        <CreatePracticeQuizButton
+          lesson={lesson}
+          extractedContent={extractedContent}
+          diagnosticCompleted={!!diagnosticExam?.completed}
+          onExamCreated={(newExam) => {
+            setExam(newExam);
+            setCurrentQuestion(0);
+            hasAutoSelectedRef.current = true;
+            if (onExamComplete) onExamComplete();
+          }}
+        />
+
         {/* Practice Exams Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
           <div>
@@ -1533,19 +1546,6 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             })()}
           </div>
         </div>
-
-        {/* Create Practice Quiz Button - below Official Exams, only when diagnostic is done */}
-        <CreatePracticeQuizButton 
-          lesson={lesson}
-          extractedContent={extractedContent}
-          diagnosticCompleted={!!diagnosticExam?.completed}
-          onExamCreated={(newExam) => {
-            setExam(newExam);
-            setCurrentQuestion(0);
-            hasAutoSelectedRef.current = true;
-            if (onExamComplete) onExamComplete();
-          }}
-        />
 
       </div>
     );

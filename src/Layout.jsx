@@ -368,8 +368,14 @@ function LayoutContent({ children, currentPageName }) {
 
               {/* Upgrade Badge */}
               <UpgradeNavBadge isDark={isDark} />
+              </nav>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-              {/* Theme Toggle */}
+            {/* Bottom: Theme + Admin + Settings + Profile */}
+            <div className="p-2 space-y-1">
+              {/* Theme Toggle — sits right above Admin / Settings for easy access */}
               <button
                 onClick={toggleTheme}
                 className={`relative w-full min-h-[44px] py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'}`}
@@ -378,13 +384,7 @@ function LayoutContent({ children, currentPageName }) {
                 {isDark ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
                 <span className="text-[9px] font-medium text-center leading-tight px-1 truncate">Theme</span>
               </button>
-              </nav>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
-            {/* Bottom: Settings + Profile */}
-            <div className="p-2 space-y-1">
               {/* Admin Dashboard (if admin) */}
               {user?.role === 'admin' && (
                 <Link

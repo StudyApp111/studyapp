@@ -57,31 +57,29 @@ export default function CreatePracticeQuizButton({ lesson, extractedContent, onE
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 4 }}
+        initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-3"
       >
         <Button
           onClick={() => setShowCustomize(true)}
           disabled={isGenerating}
-          className={`w-full h-11 rounded-xl font-semibold text-sm shadow-md ${
-            isDark 
-              ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white' 
-              : 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white'
-          }`}
+          className="w-full h-14 rounded-2xl font-bold text-base shadow-lg bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white border-0"
         >
           {isGenerating ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               Creating Quiz...
             </>
           ) : (
             <>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Practice Quiz
+              <Sparkles className="w-5 h-5 mr-2" />
+              Create a New Practice Quiz
             </>
           )}
         </Button>
+        <p className={`text-center text-[11px] mt-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+          Pick topics, difficulty, and number of questions
+        </p>
       </motion.div>
 
       <CustomizeGenerationModal

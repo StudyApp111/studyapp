@@ -48,20 +48,17 @@ export default function DocumentViewer() {
   const { isDark } = useTheme();
   const [activeTab, setActiveTabState] = useState("practice");
 
-  // Single setter that keeps both local state and the URL ?tab= param in sync.
-  // LessonSideNav reads the active tab from the URL, so without this the sidebar
-  // would highlight the wrong icon when tabs change via in-page interactions
-  // (Next Step banner, study plan CTAs, etc.).
+  // Single setter that keeps local state and the URL `?tab=` param in sync via
+  // React Router. LessonSideNav (which reads `tab` from useLocation) re-renders
+  // immediately because navigate triggers a location change — no popstate hacks.
   const setActiveTab = React.useCallback((tab) => {
     setActiveTabState(tab);
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') !== tab) {
       params.set('tab', tab);
-      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
-      // Notify side nav (which keys off location.search) that the URL changed.
-      window.dispatchEvent(new Event('popstate'));
+      navigate(`${window.location.pathname}?${params.toString()}`, { replace: true });
     }
-  }, []);
+  }, [navigate]);
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -689,14 +686,8 @@ export default function DocumentViewer() {
       <div className="hidden md:block sticky top-0 z-10 w-full">
         <div className="bg-gradient-to-r from-purple-800 via-purple-700 to-indigo-700 px-4 py-2.5 shadow-lg">
           <div className="flex items-center justify-between gap-4">
-            {/* Left: Back + Course Name */}
+            {/* Left: Course Name (back arrow removed — sidebar Home icon handles navigation) */}
             <div className="flex items-center gap-3 flex-shrink-0 min-w-0">
-              <button
-                onClick={handleBackNavigation}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-white/80 hover:text-white flex-shrink-0"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
               <div className={`backdrop-blur-sm px-4 py-1 rounded-full border ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-purple-200'}`}>
                 <span className={`font-semibold text-sm truncate block max-w-[280px] ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {lesson?.course_name}

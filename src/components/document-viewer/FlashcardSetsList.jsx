@@ -133,15 +133,20 @@ export default function FlashcardSetsList({ cards, onSelectSet, onGenerateNew })
         })}
       </div>
 
-      {/* Generate New */}
-      <Button
-        variant="outline"
-        onClick={onGenerateNew}
-        className={`w-full mt-4 border-2 border-dashed ${isDark ? 'border-amber-500/30 hover:border-amber-500/50 hover:bg-amber-600/10 text-amber-400' : 'border-amber-300 hover:border-amber-400 hover:bg-amber-50'}`}
-      >
-        <RotateCcw className="w-4 h-4 mr-2" />
-        Generate New Set
-      </Button>
+      {/* Generate New — primary CTA */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+        <Button
+          onClick={onGenerateNew}
+          className="w-full h-14 rounded-2xl font-bold text-base shadow-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0"
+        >
+          <Zap className="w-5 h-5 mr-2" />
+          Create a New Flashcard Set
+          <ChevronRight className="w-5 h-5 ml-2" />
+        </Button>
+        <p className={`text-center text-[11px] mt-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+          Pick topics, difficulty, and number of cards
+        </p>
+      </motion.div>
     </div>
   );
 }
