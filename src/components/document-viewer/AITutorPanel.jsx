@@ -64,29 +64,11 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
       
       setMessages([{
         role: "assistant",
-        content: `👋 Hey there! I'm **Polly**, your personal AI study assistant for **${courseName}**.${pollyInsight}
+        content: `Hey! I'm **Polly** — your AI study buddy for **${courseName}**.${pollyInsight}
 
----
+👉 Start with the **5-question diagnostic** in the Practice tab. I'll use it to predict your grade and build a personalized study plan.
 
-### 🎯 Your first step: Take the Diagnostic Quiz
-
-Head over to the **Practice** tab and complete the **5-question diagnostic**. Don't worry if you don't know the answers — that's the whole point!
-
-I use your responses to **predict your grade** and pinpoint exactly where you need to focus.
-
----
-
-### ✨ Once you finish, here's what unlocks:
-
-- 📊 A **custom Study Plan** built around your weak spots
-- 🃏 **AI Flashcards** that target what you need to memorize
-- 🧠 **Feynman Cards** to test if you *truly* understand concepts
-- 📝 **Practice Quizzes** with instant feedback
-- 📖 **Smart Notes** & **Voice Lectures** generated from your materials
-
----
-
-I'll be right here to explain anything, quiz you, or help you study. **Let's start with the diagnostic — tap the Practice tab!** 🚀`
+Ask me anything along the way — I can explain concepts, quiz you, or help you study smarter. 🚀`
       }]);
     };
     loadChatHistory();
@@ -243,14 +225,14 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
 
   return (
     <div className={`flex-1 rounded-xl shadow-xl border flex flex-col overflow-hidden relative z-10 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-purple-200'}`} style={{ height: '100%' }}>
-      {/* Header */}
-      <div className={`rounded-t-xl px-4 py-3 flex items-center gap-3 shadow-lg flex-shrink-0 relative z-20 ${isDark ? 'bg-gradient-to-r from-purple-700 to-purple-800' : 'bg-gradient-to-r from-purple-600 to-indigo-600'}`}>
+      {/* Header — unified purple→indigo gradient (matches lesson header & sidebar accents) */}
+      <div className="rounded-t-xl px-4 py-3 flex items-center gap-3 flex-shrink-0 relative z-20 bg-gradient-to-r from-purple-600 to-indigo-600">
         <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
           <Sparkles className="w-4 h-4 text-white" />
         </div>
         <div>
           <h3 className="font-bold text-white text-sm">Polly</h3>
-          <p className="text-xs text-white/80">Your AI study buddy</p>
+          <p className="text-[11px] text-white/80">Your AI study buddy</p>
         </div>
       </div>
 
@@ -356,7 +338,7 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input with Quick Action Pills */}
+      {/* Sticky composer — quick action pills + prominent input, always accessible */}
       <div className={`p-3 border-t rounded-b-xl flex-shrink-0 space-y-2 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-200'}`}>
         {/* Quick Actions Pills - Hidden when limit reached */}
         {!isLimitReached && (
@@ -366,7 +348,7 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
               key={action.label}
               onClick={() => handleSend(action.prompt)}
               disabled={isLoading}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all text-[11px] font-medium whitespace-nowrap ${isDark ? 'bg-purple-600/20 border-purple-500/30 hover:bg-purple-600/30 hover:border-purple-500/50 text-purple-300' : 'bg-purple-100 border-purple-200 hover:bg-purple-200 text-purple-700'}`}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all text-[11px] font-medium whitespace-nowrap ${isDark ? 'bg-purple-600/15 border-purple-500/25 hover:bg-purple-600/25 text-purple-300' : 'bg-purple-50 border-purple-200 hover:bg-purple-100 text-purple-700'}`}
             >
               <action.icon className="w-3 h-3" />
               {action.label}
@@ -374,21 +356,22 @@ I'll be right here to explain anything, quiz you, or help you study. **Let's sta
           ))}
         </div>
         )}
-        
-        <div className="flex gap-2">
-          <Input
+
+        {/* Prominent input row — clear focus ring, bigger send button */}
+        <div className={`flex items-center gap-2 rounded-2xl border px-2 py-1.5 transition-all focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 ${isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'} ${isLimitReached ? 'opacity-50' : ''}`}>
+          <input
             value={isLimitReached ? '' : input}
             onChange={(e) => !isLimitReached && setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && !isLimitReached && handleSend()}
-            placeholder={isLimitReached ? "Upgrade to continue chatting..." : (hasDocument ? "Ask about your document..." : "Ask me anything...")}
+            placeholder={isLimitReached ? "Upgrade to continue chatting..." : (hasDocument ? "Ask about your document…" : "Ask me anything…")}
             disabled={isLoading || isLimitReached}
-            className={`flex-1 focus-visible:ring-purple-500 text-[13px] rounded-xl h-10 ${isDark ? 'bg-white/5 border-white/10 text-slate-200 placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'} ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`flex-1 bg-transparent border-0 outline-none focus:outline-none focus:ring-0 text-[13px] px-2 py-1.5 ${isDark ? 'text-slate-200 placeholder:text-slate-500' : 'text-slate-900 placeholder:text-slate-400'} ${isLimitReached ? 'cursor-not-allowed' : ''}`}
           />
           <Button
             onClick={() => handleSend()}
             disabled={isLoading || !input.trim() || isLimitReached}
             size="icon"
-            className={`bg-gradient-to-br from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 rounded-xl shadow-md h-9 w-9 ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className="bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md h-9 w-9 flex-shrink-0 disabled:opacity-40"
           >
             <Send className="w-3.5 h-3.5" />
           </Button>
