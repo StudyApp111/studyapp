@@ -4,9 +4,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target, StickyNote, Brain, Headphones, FlameKindling } from "lucide-react";
+import { FileText, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target, StickyNote, Brain, Headphones, FlameKindling, Sparkles } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
+import PracticeHubTab from "@/components/document-viewer/PracticeHubTab";
 
 
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
@@ -45,7 +46,7 @@ export default function DocumentViewer() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState("doc");
+  const [activeTab, setActiveTab] = useState("practice");
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -233,7 +234,7 @@ export default function DocumentViewer() {
     }
   }, [location.search]);
 
-  // When lesson loads, default tab: cram if exam within 7 days, else doc/studyplan
+  // When lesson loads, default tab: cram if exam within 7 days, else PracticeHub (new Pillar 1 default)
   useEffect(() => {
     if (!lesson) return;
     const urlParams = new URLSearchParams(location.search);
@@ -246,8 +247,8 @@ export default function DocumentViewer() {
           return;
         }
       }
-      const lessonHasDoc = lesson.file_url || lesson.file_urls?.length > 0;
-      setActiveTab(lessonHasDoc ? "doc" : "studyplan");
+      // Pillar 1: Practice Hub is the new default first experience for ALL lessons
+      setActiveTab("practice");
     }
   }, [lesson?.id]);
 
@@ -730,6 +731,14 @@ export default function DocumentViewer() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
               <div className="flex-shrink-0 relative z-0 overflow-x-auto scrollbar-hide">
                 <TabsList className={`flex w-max min-w-full border p-1 gap-1 h-auto rounded-lg ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
+                {/* Pillar 1: Practice Hub — new default first experience */}
+                <TabsTrigger
+                  value="practice"
+                  className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-600 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-pink-400 data-[state=inactive]:bg-pink-500/10' : 'data-[state=inactive]:text-pink-700 data-[state=inactive]:bg-pink-50'}`}
+                >
+                  <Sparkles className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-xs font-medium">Practice</span>
+                </TabsTrigger>
                 {hasDocument && (
                   <TabsTrigger 
                     value="doc"
@@ -776,7 +785,7 @@ export default function DocumentViewer() {
                   >
                     {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
                     <Zap className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Practice</span>
+                    <span className="text-xs font-medium">Quizzes</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="learn"
@@ -799,6 +808,14 @@ export default function DocumentViewer() {
               </div>
 
               <div className="w-full flex-1 overflow-auto scrollbar-hide">
+                {/* Pillar 1: Practice Hub tab content */}
+                <TabsContent value="practice" className="mt-0 p-0 h-full">
+                  <PracticeHubTab
+                    lesson={lesson}
+                    exams={exams}
+                    onNavigateToTab={(tab) => setActiveTab(tab)}
+                  />
+                </TabsContent>
                 {hasDocument && (
                   <TabsContent value="doc" className="mt-0 p-0 h-full">
                     {!lesson ? (
@@ -899,6 +916,14 @@ export default function DocumentViewer() {
               <div className={`backdrop-blur-sm px-2 py-1.5 border-b ${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-purple-200'}`}>
                 <div className="overflow-x-auto scrollbar-hide">
                   <TabsList className={`flex w-max min-w-full border p-0.5 h-auto rounded-lg shadow-sm gap-0.5 ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
+                    {/* Pillar 1: Practice Hub — new default first experience */}
+                    <TabsTrigger
+                      value="practice"
+                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-pink-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-pink-400 data-[state=inactive]:bg-pink-500/10' : 'data-[state=inactive]:text-pink-700 data-[state=inactive]:bg-pink-50'}`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-semibold">Practice</span>
+                    </TabsTrigger>
                     {hasDocument && (
                       <TabsTrigger 
                         value="doc"
@@ -945,7 +970,7 @@ export default function DocumentViewer() {
                     >
                       {showExamDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                       <Zap className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Practice</span>
+                      <span className="text-[10px] font-semibold">Quizzes</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="learn"
@@ -974,6 +999,14 @@ export default function DocumentViewer() {
 
             {/* Scrollable content area */}
             <div className="overflow-x-hidden w-full pb-28 scrollbar-hide" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 112px)' }}>
+              {/* Pillar 1: Practice Hub tab content */}
+              <TabsContent value="practice" className="mt-0 p-0 w-full overflow-x-hidden">
+                <PracticeHubTab
+                  lesson={lesson}
+                  exams={exams}
+                  onNavigateToTab={(tab) => setActiveTab(tab)}
+                />
+              </TabsContent>
               {hasDocument && (
                 <TabsContent value="doc" className="mt-0 p-0 w-full overflow-x-hidden">
                   {!lesson ? (
@@ -1061,18 +1094,7 @@ export default function DocumentViewer() {
         )}
       </div>
 
-      {/* Topic Confirmation Modal - rendered once globally */}
-      {lesson && hasDocument && !diagnosticCompleted && (
-        <TopicConfirmationBanner
-          lesson={lesson}
-          diagnosticReady={!!((exams || []).find(e => e.exam_number === 1 && e.exam_type !== 'practice' && e.questions?.length > 0))}
-          diagnosticCompleted={diagnosticCompleted}
-          onGoToDiagnostic={() => {
-            window.dispatchEvent(new CustomEvent('startDiagnosticExam', { detail: { examNumber: 1 } }));
-            setActiveTab('exam');
-          }}
-        />
-      )}
+      {/* Topic Confirmation Modal removed — diagnostic is no longer the forced first step (Pillar 1) */}
 
       {/* Full-screen confetti on task completion */}
       <ConfettiEffect show={showTaskConfetti} onComplete={() => setShowTaskConfetti(false)} />
