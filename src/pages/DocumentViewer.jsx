@@ -46,18 +46,17 @@ export default function DocumentViewer() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
-  const [activeTab, setActiveTabState] = useState("practice");
+  // URL is the single source of truth for the active tab.
+  // Both the sidebar (LessonSideNav) and this page derive activeTab from
+  // `?tab=` in the URL, so they can never drift out of sync.
+  const urlTab = new URLSearchParams(location.search).get('tab');
+  const activeTab = urlTab || "practice";
 
-  // Single setter that keeps local state and the URL `?tab=` param in sync via
-  // React Router. LessonSideNav (which reads `tab` from useLocation) re-renders
-  // immediately because navigate triggers a location change — no popstate hacks.
   const setActiveTab = React.useCallback((tab) => {
-    setActiveTabState(tab);
     const params = new URLSearchParams(window.location.search);
-    if (params.get('tab') !== tab) {
-      params.set('tab', tab);
-      navigate(`${window.location.pathname}?${params.toString()}`, { replace: true });
-    }
+    if (params.get('tab') === tab) return;
+    params.set('tab', tab);
+    navigate(`${window.location.pathname}?${params.toString()}`, { replace: true });
   }, [navigate]);
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -235,30 +234,21 @@ export default function DocumentViewer() {
   // Track first lesson view (SubmitApplication)
   const hasTrackedFirstLesson = useRef(false);
   
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const tabParam = urlParams.get('tab');
-    if (tabParam) {
-      setActiveTab(tabParam);
-    }
-  }, [location.search]);
-
-  // When lesson loads, default tab: cram if exam within 7 days, else document/notes (split-view default)
+  // Set default tab once lesson loads (only if URL has no ?tab=).
+  // URL is the source of truth, so we just push the default into it.
   useEffect(() => {
     if (!lesson) return;
     const urlParams = new URLSearchParams(location.search);
-    const tabParam = urlParams.get('tab');
-    if (!tabParam) {
-      if (showCramTab && lesson.exam_date) {
-        const days = differenceInCalendarDays(new Date(lesson.exam_date), new Date());
-        if (days >= 0 && days <= 7 && diagnosticCompleted) {
-          setActiveTab("cram");
-          return;
-        }
+    if (urlParams.get('tab')) return;
+
+    if (showCramTab && lesson.exam_date) {
+      const days = differenceInCalendarDays(new Date(lesson.exam_date), new Date());
+      if (days >= 0 && days <= 7 && diagnosticCompleted) {
+        setActiveTab("cram");
+        return;
       }
-      // Default to document/notes (left pane shows content, right pane shows AI chat)
-      setActiveTab(hasDocument ? "doc" : "notes");
     }
+    setActiveTab(hasDocument ? "doc" : "notes");
   }, [lesson?.id]);
 
   // Broadcast lesson nav state to Layout so the global sidebar can morph into LessonSideNav

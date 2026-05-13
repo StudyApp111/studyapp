@@ -51,9 +51,8 @@ export default function CreatePracticeQuizButton({ lesson, extractedContent, onE
     }
   };
 
-  // Hide the button if diagnostic is not yet completed
-  if (!diagnosticCompleted) return null;
-
+  // Always show — user can create a practice quiz at any time, even before
+  // the diagnostic, because they may want to practice specific topics first.
   return (
     <>
       <motion.div

@@ -3,9 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import {
-  FileText, BookMarked, Zap, Brain, Target, Headphones, FlameKindling, Moon, Sun
+  FileText, BookMarked, Zap, Brain, Target, Headphones, FlameKindling
 } from "lucide-react";
-import { useTheme } from "@/components/theme/ThemeProvider";
 
 /**
  * LessonSideNav — Replaces the global sidebar items when user is inside a lesson.
@@ -24,7 +23,6 @@ export default function LessonSideNav({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { toggleTheme } = useTheme();
 
   const urlParams = new URLSearchParams(location.search);
   const lessonId = urlParams.get('id') || urlParams.get('lessonId');
@@ -89,18 +87,6 @@ export default function LessonSideNav({
             </motion.button>
           );
         })}
-
-        {/* Theme toggle — always available inside lesson */}
-        <button
-          onClick={toggleTheme}
-          className={`relative w-full min-h-[44px] py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all mt-2 ${
-            isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
-          }`}
-          title={isDark ? 'Light Mode' : 'Dark Mode'}
-        >
-          {isDark ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
-          <span className="text-[9px] font-medium text-center leading-tight px-1 truncate">Theme</span>
-        </button>
       </nav>
     </motion.div>
   );
