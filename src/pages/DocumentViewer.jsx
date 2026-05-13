@@ -325,6 +325,18 @@ export default function DocumentViewer() {
     return () => window.removeEventListener('studyTaskCompleted', handleTaskCompleted);
   }, []);
 
+  // Listen for diagnostic completion → immediately update header grade badge
+  // (avoids race where DB read in loadLesson runs before predicted_grade is committed)
+  useEffect(() => {
+    const handlePollyComplete = (e) => {
+      if (e.detail?.predicted_grade) {
+        setPredictedGrade(e.detail.predicted_grade);
+      }
+    };
+    window.addEventListener('pollyDiagnosticComplete', handlePollyComplete);
+    return () => window.removeEventListener('pollyDiagnosticComplete', handlePollyComplete);
+  }, []);
+
   useEffect(() => {
     const handleSwitchToStudyPlan = () => setActiveTab('studyplan');
     const handleSwitchToExam = () => setActiveTab('exam');

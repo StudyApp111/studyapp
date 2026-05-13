@@ -259,15 +259,17 @@ export default function StudyPlanTab({ lesson, exams, onNavigate, isGeneratingPl
     };
 
     const tab = formatMap[topic.format] || "flashcards";
-    const taskTitle = `${section.section_title}: ${topic.topic_title}`;
     
-    // Find the matching study plan task to get the real task_id
+    // Find the matching study plan task to get its real task_id and index for labeling
+    const typeMap = { "Review Notes": "review_notes", "Flashcards": "flashcards", "Practice Test": "practice_exam", "Feynman Technique": "teach_it" };
     const matchingPlanTask = studyPlan?.tasks?.find(t => {
-      const typeMap = { "Review Notes": "review_notes", "Flashcards": "flashcards", "Practice Test": "practice_exam", "Feynman Technique": "teach_it" };
       return t.task_type === typeMap[topic.format] && 
         (t.focus_topics?.includes(topic.topic_title) || t.title?.includes(topic.topic_title));
     });
     const taskId = matchingPlanTask?.task_id || `${section.section_title}_${topic.topic_title}_${tab}`;
+    const taskIndex = matchingPlanTask ? (studyPlan.tasks.findIndex(t => t.task_id === matchingPlanTask.task_id) + 1) : null;
+    const shortDesc = `${section.section_title}: ${topic.topic_title}`;
+    const taskTitle = taskIndex ? `Study Plan Task #${taskIndex} — ${shortDesc}` : shortDesc;
     
     // Switch tab first, then dispatch event after a tick so the tab component is mounted
     onNavigate(tab);

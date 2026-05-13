@@ -367,13 +367,12 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
     }
   };
 
-  const handleRegenerate = async () => {
-    // Generate a new set without deleting existing sets
+  const handleRegenerate = () => {
+    // Open the customize modal so user picks topics/difficulty/amount before generating.
     setCurrentCardIndex(0);
     setUserAnswer("");
     setShowFeedback(false);
-    setShowSetsList(false);
-    await generateCards();
+    setShowCustomize(true);
   };
 
   const checkIfTaskCompleted = async (taskType, completedCount) => {
@@ -434,17 +433,27 @@ Return a score (0-100), feedback (2-3 sentences), strengths array (what they did
 
   if (cards.length > 0 && showSetsList) {
     return (
-      <TeachItSetsList 
-        cards={cards}
-        onSelectCard={(idx, setCardIds) => {
-          setCurrentCardIndex(idx);
-          setUserAnswer(cards[idx].user_answer || "");
-          setShowFeedback(cards[idx].completed);
-          setCurrentSetCardIds(setCardIds || null);
-          setShowSetsList(false);
-        }}
-        onGenerateNew={handleRegenerate}
-      />
+      <>
+        <TeachItSetsList 
+          cards={cards}
+          onSelectCard={(idx, setCardIds) => {
+            setCurrentCardIndex(idx);
+            setUserAnswer(cards[idx].user_answer || "");
+            setShowFeedback(cards[idx].completed);
+            setCurrentSetCardIds(setCardIds || null);
+            setShowSetsList(false);
+          }}
+          onGenerateNew={handleRegenerate}
+        />
+        <CustomizeGenerationModal
+          open={showCustomize}
+          onOpenChange={setShowCustomize}
+          type="teach_it"
+          lessonId={lesson?.id}
+          compressedContent={lesson?.compressed_content || extractedContent}
+          onGenerate={(opts) => generateCards(opts)}
+        />
+      </>
     );
   }
 

@@ -157,7 +157,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
         course_name: lesson.course_name,
         content: contentForFlashcards,
         focus_topics: topicsToFocus || [],
-        amount: Math.min(customOptions?.amount || 10, 10),
+        amount: customOptions?.amount || 10,
         difficulty: customOptions?.difficulty || 'mixed',
         custom_instructions: customOptions?.custom_instructions || ''
       });
@@ -419,12 +419,13 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     setCurrentIndex(prev => prev < maxEnd ? prev + 1 : currentSetStart);
   };
 
-  const handleRegenerate = async () => {
-    // Generate a new set without deleting existing sets
+  const handleRegenerate = () => {
+    // Always open the customize modal so user picks topics/difficulty/amount.
+    // Direct generation only happens via study plan task events (which carry their own params).
     setCurrentIndex(0);
     setIsFlipped(false);
     setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
-    await handleGenerate();
+    setShowCustomize(true);
   };
 
   // Reload cards from DB when returning to sets list to get fresh mastered status
@@ -467,25 +468,33 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
   // Show list view when cards exist and showSetsList is true
   if (cards && cards.length > 0 && showSetsList) {
     return (
-      <FlashcardSetsList 
-        cards={cards}
-        onSelectSet={(cardIds) => {
-          // cardIds is the array of card IDs in this set
-          // Find the indices in our cards array that match these IDs
-          const idSet = new Set(cardIds);
-          const indices = cards.map((c, i) => idSet.has(c.id) ? i : -1).filter(i => i >= 0);
-          if (indices.length === 0) return;
-          
-          setCurrentIndex(indices[0]);
-          setCurrentSetStart(indices[0]);
-          setCurrentSetEnd(indices[indices.length - 1]);
-          setIsFlipped(false);
-          setShowSetsList(false);
-          setSessionComplete(false);
-          setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
-        }}
-        onGenerateNew={handleRegenerate}
-      />
+      <>
+        <FlashcardSetsList 
+          cards={cards}
+          onSelectSet={(cardIds) => {
+            const idSet = new Set(cardIds);
+            const indices = cards.map((c, i) => idSet.has(c.id) ? i : -1).filter(i => i >= 0);
+            if (indices.length === 0) return;
+            
+            setCurrentIndex(indices[0]);
+            setCurrentSetStart(indices[0]);
+            setCurrentSetEnd(indices[indices.length - 1]);
+            setIsFlipped(false);
+            setShowSetsList(false);
+            setSessionComplete(false);
+            setSessionStats({ total: 0, bad: 0, okay: 0, good: 0, excellent: 0 });
+          }}
+          onGenerateNew={handleRegenerate}
+        />
+        <CustomizeGenerationModal
+          open={showCustomize}
+          onOpenChange={setShowCustomize}
+          type="flashcards"
+          lessonId={lesson?.id}
+          compressedContent={lesson?.compressed_content || extractedContent}
+          onGenerate={(opts) => handleGenerate(opts)}
+        />
+      </>
     );
   }
 
