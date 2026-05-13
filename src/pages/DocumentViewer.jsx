@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronLeft, Loader2, Clock, BookMarked, Flame, Zap, Users, NotebookPen, Lightbulb, ChevronRight, Target, StickyNote, Brain, Headphones, FlameKindling, Sparkles } from "lucide-react";
+import { ChevronLeft, Clock, Zap } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import PracticeHubTab from "@/components/document-viewer/PracticeHubTab";
+import PracticeSidebar from "@/components/document-viewer/PracticeSidebar";
+import MobileTabsView from "@/components/document-viewer/MobileTabsView";
 
 
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
@@ -17,7 +18,6 @@ import StudyPlanTab from "@/components/study-plan/StudyPlanTab";
 import NextStepBanner from "@/components/study-plan/NextStepBanner";
 import StudyPlanBannerInline from "@/components/study-plan/StudyPlanBannerInline";
 import PomodoroTimer from "@/components/document-viewer/PomodoroTimer";
-import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import ParsingLoader from "@/components/document-viewer/ParsingLoader";
 import NotesTab from "@/components/document-viewer/NotesTab";
 import StudySessionTracker from "@/components/gamification/StudySessionTracker";
@@ -711,372 +711,105 @@ export default function DocumentViewer() {
       </div>
 
       <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-56px)] overflow-x-hidden">
-        {/* Desktop: Flex container for AI tutor + tabs */}
+        {/* Desktop: Turbo-style split-pane — Document (left 2/3) + AI/Practice sidebar (right 1/3) */}
         <div className="hidden md:flex gap-3 h-full w-full max-w-full" style={{ isolation: 'isolate' }}>
-          {/* AI Tutor Panel - Left side, 1/3 width */}
-          <div className="w-1/3 flex-shrink-0">
-            <AITutorPanel 
+          {/* LEFT PANE: Document content */}
+          <div className="w-2/3 min-w-0 flex-shrink-0">
+            {!lesson ? (
+              <ParsingLoader />
+            ) : hasDocument ? (
+              <div className="h-full flex flex-col">
+                <div className="px-2 pt-1">
+                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
+                </div>
+                <div className="flex-1 overflow-auto scrollbar-hide">
+                  <DocumentViewerTabs lesson={lesson} />
+                </div>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col">
+                <div className="px-2 pt-1">
+                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
+                </div>
+                <div className="flex-1 overflow-auto scrollbar-hide">
+                  <NotesTab lesson={lesson} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT PANE: AI Chat + Practice Sidebar */}
+          <div className="w-1/3 flex-shrink-0 flex flex-col" style={{ height: '100%' }}>
+            <PracticeSidebar
+              lesson={lesson}
+              exams={exams}
               messages={messages}
               setMessages={setMessages}
-              input={aiInput}
-              setInput={setAiInput}
-              isLoading={aiLoading}
-              setIsLoading={setAiLoading}
-              lesson={lesson}
-            />
-          </div>
-          
-          {/* Tabs - Right side, 2/3 width */}
-          <div className="w-2/3 min-w-0 relative z-0">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-2 h-full flex flex-col">
-              <div className="flex-shrink-0 relative z-0 overflow-x-auto scrollbar-hide">
-                <TabsList className={`flex w-max min-w-full border p-1 gap-1 h-auto rounded-lg ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
-                {/* Pillar 1: Practice Hub — new default first experience */}
-                <TabsTrigger
-                  value="practice"
-                  className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-600 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-pink-400 data-[state=inactive]:bg-pink-500/10' : 'data-[state=inactive]:text-pink-700 data-[state=inactive]:bg-pink-50'}`}
-                >
-                  <Sparkles className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs font-medium">Practice</span>
-                </TabsTrigger>
-                {hasDocument && (
-                  <TabsTrigger 
-                    value="doc"
-                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    <FileText className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Doc</span>
-                  </TabsTrigger>
-                )}
-                <TabsTrigger 
-                  value="studyplan"
-                  className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-amber-400/80 data-[state=inactive]:bg-amber-500/10' : 'data-[state=inactive]:text-amber-700 data-[state=inactive]:bg-amber-50'}`}
-                >
-                  {showStudyPlanDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                  <Target className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs font-medium">Study Plan</span>
-                </TabsTrigger>
-                  <TabsTrigger 
-                    value="notes"
-                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    <StickyNote className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Notes</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="teachit"
-                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    {showTeachItDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                    <Brain className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Feynman</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="flashcards"
-                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    {showFlashcardsDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                    <BookMarked className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Flashcards</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="exam"
-                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    {showExamDot && <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
-                    <Zap className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Quizzes</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="learn"
-                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap rounded-md ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                  >
-                    <Headphones className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Learn</span>
-                  </TabsTrigger>
-                  {showCramTab && (
-                  <TabsTrigger 
-                    value="cram"
-                    className={`flex-shrink-0 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white flex items-center justify-center gap-1.5 px-4 py-2 h-auto whitespace-nowrap relative rounded-md ${isCramActive ? 'data-[state=inactive]:bg-orange-500/20 data-[state=inactive]:text-orange-400 ring-1 ring-orange-500/40' : isDark ? 'data-[state=inactive]:text-orange-400/80 data-[state=inactive]:bg-orange-500/10' : 'data-[state=inactive]:text-orange-700 data-[state=inactive]:bg-orange-50'}`}
-                  >
-                    {isCramActive && <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse" />}
-                    <FlameKindling className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-medium">Cram</span>
-                  </TabsTrigger>
-                  )}
-                </TabsList>
-              </div>
-
-              <div className="w-full flex-1 overflow-auto scrollbar-hide">
-                {/* Pillar 1: Practice Hub tab content */}
-                <TabsContent value="practice" className="mt-0 p-0 h-full">
-                  <PracticeHubTab
-                    lesson={lesson}
-                    exams={exams}
-                    onNavigateToTab={(tab) => setActiveTab(tab)}
-                  />
-                </TabsContent>
-                {hasDocument && (
-                  <TabsContent value="doc" className="mt-0 p-0 h-full">
-                    {!lesson ? (
-                      <ParsingLoader />
-                    ) : (
-                      <div className="h-full flex flex-col">
-                        <div className="px-2 pt-2">
-                          <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                        </div>
-                        <div className="flex-1">
-                          <DocumentViewerTabs lesson={lesson} />
-                        </div>
-                      </div>
-                    )}
-                  </TabsContent>
-                )}
-
-                <TabsContent value="studyplan" className="mt-0 p-0 h-full">
-                  <StudyPlanTab 
-                    lesson={lesson} 
-                    exams={exams} 
-                    onNavigate={handleStudyPlanNavigate}
-                    isGeneratingPlan={isGeneratingStudyPlan}
-                  />
-                </TabsContent>
-
-                <TabsContent value="notes" className="mt-0 p-0 h-full">
-                  <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                  </div>
-                  <NotesTab lesson={lesson} />
-                </TabsContent>
-
-                <TabsContent value="exam" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                  </div>
-                  <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} extractedContent={extractedContent} />
-                </TabsContent>
-
-
-
-                <TabsContent value="flashcards" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                  </div>
-                  <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
-                </TabsContent>
-
-                <TabsContent value="teachit" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                  </div>
-                  <TeachItTab lesson={lesson} />
-                </TabsContent>
-
-                <TabsContent value="learn" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  <div className="px-2 pt-2">
-                    <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                  </div>
-                  {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
-                </TabsContent>
-
-                {showCramTab && (
-                <TabsContent value="cram" forceMount className="mt-0 p-0 h-full data-[state=inactive]:hidden">
-                  {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />}
-                </TabsContent>
-                )}
-
-              </div>
-            </Tabs>
-          </div>
-          </div>
-        
-        {/* Mobile: Tabs + info bar at top */}
-        <div className="md:hidden flex flex-col w-full overflow-x-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col w-full overflow-x-hidden flex-1">
-            {/* Fixed tabs + info bar */}
-            <div 
-              className="fixed left-0 right-0 z-40 bg-gradient-to-r from-purple-800 to-purple-700"
-              style={{ 
-                top: '0px',
-                paddingTop: 'env(safe-area-inset-top, 0px)'
-              }}
+              aiInput={aiInput}
+              setAiInput={setAiInput}
+              aiLoading={aiLoading}
+              setAiLoading={setAiLoading}
+              activeActivity={activeTab !== 'doc' && activeTab !== 'notes' ? activeTab : null}
+              onSelectActivity={(id) => setActiveTab(id)}
+              onBackToHub={() => setActiveTab(hasDocument ? 'doc' : 'notes')}
+              showStudyPlanDot={showStudyPlanDot}
+              showFlashcardsDot={showFlashcardsDot}
+              showTeachItDot={showTeachItDot}
+              showExamDot={showExamDot}
+              isCramActive={isCramActive}
+              showCramTab={showCramTab}
+              isDark={isDark}
             >
-              {/* Info strip - course and timer */}
-              <div className="px-4 py-3 flex items-center justify-between gap-3">
-                <span className="text-white font-bold text-base truncate">{lesson?.course_name || 'Loading...'}</span>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="bg-white/15 rounded-full px-3 py-1 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-white/80" />
-                    <span className="text-white text-sm font-mono font-semibold">{formatStudyTime(studyTime)}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Tabs bar */}
-              <div className={`backdrop-blur-sm px-2 py-1.5 border-b ${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-purple-200'}`}>
-                <div className="overflow-x-auto scrollbar-hide">
-                  <TabsList className={`flex w-max min-w-full border p-0.5 h-auto rounded-lg shadow-sm gap-0.5 ${isDark ? 'bg-[#1a1a2e] border-white/10' : 'bg-white border-purple-200'}`}>
-                    {/* Pillar 1: Practice Hub — new default first experience */}
-                    <TabsTrigger
-                      value="practice"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-pink-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-pink-400 data-[state=inactive]:bg-pink-500/10' : 'data-[state=inactive]:text-pink-700 data-[state=inactive]:bg-pink-50'}`}
-                    >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Practice</span>
-                    </TabsTrigger>
-                    {hasDocument && (
-                      <TabsTrigger 
-                        value="doc"
-                        className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                      >
-                        <FileText className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-semibold">Doc</span>
-                      </TabsTrigger>
-                    )}
-                    <TabsTrigger 
-                      value="studyplan"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-amber-400/80 data-[state=inactive]:bg-amber-500/10' : 'data-[state=inactive]:text-amber-700 data-[state=inactive]:bg-amber-50'}`}
-                    >
-                      {showStudyPlanDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                      <Target className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Plan</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="notes"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                    >
-                      <StickyNote className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Notes</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="teachit"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                    >
-                      {showTeachItDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                      <Brain className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Feynman</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="flashcards"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                    >
-                      {showFlashcardsDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                      <BookMarked className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Flash</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="exam"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                    >
-                      {showExamDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                      <Zap className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Quizzes</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="learn"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}
-                    >
-                      <Headphones className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Learn</span>
-                    </TabsTrigger>
-                    {showCramTab && (
-                    <TabsTrigger 
-                      value="cram"
-                      className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isCramActive ? 'data-[state=inactive]:bg-orange-500/20 data-[state=inactive]:text-orange-400 ring-1 ring-orange-500/40' : isDark ? 'data-[state=inactive]:text-orange-400/80 data-[state=inactive]:bg-orange-500/10' : 'data-[state=inactive]:text-orange-700 data-[state=inactive]:bg-orange-50'}`}
-                    >
-                      {isCramActive && <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse" />}
-                      <FlameKindling className="w-3.5 h-3.5" />
-                      <span className="text-[10px] font-semibold">Cram</span>
-                    </TabsTrigger>
-                    )}
-                  </TabsList>
-                </div>
-              </div>
-            </div>
-            
-            {/* Spacer for fixed tabs + info */}
-            <div style={{ height: 'calc(env(safe-area-inset-top, 0px) + 100px)' }} />
-
-            {/* Scrollable content area */}
-            <div className="overflow-x-hidden w-full pb-28 scrollbar-hide" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 112px)' }}>
-              {/* Pillar 1: Practice Hub tab content */}
-              <TabsContent value="practice" className="mt-0 p-0 w-full overflow-x-hidden">
-                <PracticeHubTab
-                  lesson={lesson}
-                  exams={exams}
-                  onNavigateToTab={(tab) => setActiveTab(tab)}
-                />
-              </TabsContent>
-              {hasDocument && (
-                <TabsContent value="doc" className="mt-0 p-0 w-full overflow-x-hidden">
-                  {!lesson ? (
-                    <ParsingLoader />
-                  ) : (
-                    <>
-                      <div className="px-2 pt-2">
-                        <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                      </div>
-                      <DocumentViewerTabs lesson={lesson} />
-                    </>
-                  )}
-                </TabsContent>
+              {/* Activity content rendered as children when an activity is active */}
+              {activeTab === 'practice' && (
+                <PracticeHubTab lesson={lesson} exams={exams} onNavigateToTab={(tab) => setActiveTab(tab)} />
               )}
-
-              <TabsContent value="studyplan" className="mt-0 p-0 w-full overflow-x-hidden">
-                <StudyPlanTab 
-                  lesson={lesson} 
-                  exams={exams} 
-                  onNavigate={handleStudyPlanNavigate}
-                  isGeneratingPlan={isGeneratingStudyPlan}
-                />
-              </TabsContent>
-
-              <TabsContent value="notes" className="mt-0 p-0 w-full overflow-x-hidden">
-                <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                </div>
-                <NotesTab lesson={lesson} />
-              </TabsContent>
-
-              <TabsContent value="exam" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                </div>
+              {activeTab === 'studyplan' && (
+                <StudyPlanTab lesson={lesson} exams={exams} onNavigate={handleStudyPlanNavigate} isGeneratingPlan={isGeneratingStudyPlan} />
+              )}
+              {activeTab === 'exam' && (
                 <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} extractedContent={extractedContent} />
-              </TabsContent>
-
-
-
-              <TabsContent value="flashcards" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                </div>
-                <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
-              </TabsContent>
-
-              <TabsContent value="teachit" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                </div>
-                <TeachItTab lesson={lesson} />
-              </TabsContent>
-
-              <TabsContent value="learn" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                <div className="px-2 pt-2">
-                  <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
-                </div>
-                {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
-              </TabsContent>
-
-              {showCramTab && (
-              <TabsContent value="cram" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
-                {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />}
-              </TabsContent>
               )}
-
-            </div>
-          </Tabs>
+              {activeTab === 'flashcards' && (
+                <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />
+              )}
+              {activeTab === 'teachit' && (
+                <TeachItTab lesson={lesson} />
+              )}
+              {activeTab === 'learn' && (
+                contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />
+              )}
+              {activeTab === 'cram' && showCramTab && (
+                contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />
+              )}
+            </PracticeSidebar>
+          </div>
         </div>
+
+        {/* Mobile view — extracted to component for maintainability */}
+        <MobileTabsView
+          lesson={lesson}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          studyTime={studyTime}
+          formatStudyTime={formatStudyTime}
+          hasDocument={hasDocument}
+          contentLocked={contentLocked}
+          isCramActive={isCramActive}
+          daysUntilExam={daysUntilExam}
+          showCramTab={showCramTab}
+          showStudyPlanDot={showStudyPlanDot}
+          showFlashcardsDot={showFlashcardsDot}
+          showTeachItDot={showTeachItDot}
+          showExamDot={showExamDot}
+          exams={exams}
+          extractedContent={extractedContent}
+          isGeneratingStudyPlan={isGeneratingStudyPlan}
+          handleStudyPlanNavigate={handleStudyPlanNavigate}
+          handleExamComplete={handleExamComplete}
+          isDark={isDark}
+        />
+
       </div>
 
       {/* Pomodoro Timer - Mobile only */}
