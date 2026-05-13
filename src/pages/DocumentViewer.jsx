@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, Clock, Zap } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
-import PracticeHubTab from "@/components/document-viewer/PracticeHubTab";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
 import MobileTabsView from "@/components/document-viewer/MobileTabsView";
 
@@ -49,8 +48,12 @@ export default function DocumentViewer() {
   // URL is the single source of truth for the active tab.
   // Both the sidebar (LessonSideNav) and this page derive activeTab from
   // `?tab=` in the URL, so they can never drift out of sync.
+  // Note: the fallback must NOT be a real tab id — we use null to mean
+  // "no tab yet, render nothing" until the default-tab effect picks one.
+  // (Previously this fell back to "practice" which rendered the unwanted
+  // Practice Session hub on every tab navigation gap.)
   const urlTab = new URLSearchParams(location.search).get('tab');
-  const activeTab = urlTab || "practice";
+  const activeTab = urlTab;
 
   const setActiveTab = React.useCallback((tab) => {
     const params = new URLSearchParams(window.location.search);
@@ -745,7 +748,6 @@ export default function DocumentViewer() {
                 <div className="flex-1 overflow-auto scrollbar-hide">
                   {activeTab === 'doc' && hasDocument && <DocumentViewerTabs lesson={lesson} />}
                   {activeTab === 'notes' && <NotesTab lesson={lesson} />}
-                  {activeTab === 'practice' && <PracticeHubTab lesson={lesson} exams={exams} onNavigateToTab={(tab) => setActiveTab(tab)} />}
                   {activeTab === 'studyplan' && <StudyPlanTab lesson={lesson} exams={exams} onNavigate={handleStudyPlanNavigate} isGeneratingPlan={isGeneratingStudyPlan} />}
                   {activeTab === 'exam' && <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} extractedContent={extractedContent} />}
                   {activeTab === 'flashcards' && <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />}
