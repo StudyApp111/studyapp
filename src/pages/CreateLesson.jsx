@@ -305,16 +305,10 @@ export default function CreateLesson() {
       }
 
 
-      // Fire-and-forget: Auto-generate Practice Session (Pillar 1: flashcards + quiz + teach-it)
-      // This is the NEW DEFAULT first experience. Diagnostic still fires for users who want it.
-      console.log("🎯 Triggering auto practice session + diagnostic + topic suggestions in background...");
-      base44.functions.invoke('autoGeneratePracticeSession', { lesson_id: lesson.id })
-        .then(result => {
-          if (result?.data?.success) {
-            console.log("✅ Practice session generated:", result.data);
-          }
-        })
-        .catch(err => console.error("❌ Practice session error:", err.message));
+      // Auto-generation of flashcards/teach-it/quizzes is DISABLED at creation time.
+      // User now picks what to generate via the customize modal in each tab on first visit.
+      // The diagnostic exam still auto-generates so the topic confirmation flow can lead into it.
+      console.log("🎯 Triggering diagnostic exam + topic suggestions (no content pre-generation)...");
 
       base44.functions.invoke('autoGenerateExam1', { lesson_id: lesson.id })
         .then(examResult => {

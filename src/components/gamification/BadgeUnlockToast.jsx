@@ -3,8 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trophy } from "lucide-react";
 
 /**
- * Dramatic badge unlock celebration. Shows for ~3.5s then auto-dismisses.
- * Pass a badge object: { id, label, description, emoji }
+ * Badge unlock celebration — purple/indigo theme to match the app.
+ * Positioning:
+ *   - Mobile: drops in from the top of the screen.
+ *   - Desktop: pinned to the top header area (below the sticky lesson banner)
+ *     so it feels embedded, not screen-spanning.
+ * Shows ~3.5s then auto-dismisses.
  */
 export default function BadgeUnlockToast({ badge, onComplete }) {
   const [visible, setVisible] = useState(false);
@@ -26,29 +30,30 @@ export default function BadgeUnlockToast({ badge, onComplete }) {
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed inset-x-0 top-20 z-[300] flex items-start justify-center pointer-events-none px-4"
-          initial={{ opacity: 0, y: -40 }}
+          // Mobile: top-4. Desktop: top-14 so it nests just under the lesson header bar.
+          className="fixed inset-x-0 top-4 md:top-14 z-[300] flex items-start justify-center pointer-events-none px-4"
+          initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -40 }}
-          transition={{ type: "spring", stiffness: 400, damping: 24 }}
+          exit={{ opacity: 0, y: -30 }}
+          transition={{ type: "spring", stiffness: 400, damping: 26 }}
         >
           <motion.div
-            className="relative bg-gradient-to-br from-amber-400 via-yellow-400 to-orange-500 rounded-2xl shadow-2xl border-2 border-white/60 px-5 py-4 flex items-center gap-3 max-w-sm w-full pointer-events-auto"
-            animate={{ rotate: [-1, 1, -1, 0] }}
+            className="relative bg-gradient-to-br from-purple-600 via-indigo-600 to-pink-600 rounded-2xl shadow-2xl border border-white/20 px-4 py-3 flex items-center gap-3 max-w-sm w-full pointer-events-auto"
+            animate={{ rotate: [-0.5, 0.5, -0.5, 0] }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            {/* Sparkle ring */}
+            {/* Sparkle ring — soft purple */}
             {[...Array(8)].map((_, i) => {
               const angle = (i / 8) * Math.PI * 2;
               return (
                 <motion.div
                   key={i}
-                  className="absolute text-yellow-200"
+                  className="absolute text-purple-200"
                   style={{ left: "50%", top: "50%", fontSize: 14 }}
                   initial={{ scale: 0, x: 0, y: 0, opacity: 0 }}
                   animate={{
                     scale: [0, 1, 0],
-                    x: Math.cos(angle) * 80,
+                    x: Math.cos(angle) * 90,
                     y: Math.sin(angle) * 50,
                     opacity: [0, 1, 0],
                   }}
@@ -60,17 +65,17 @@ export default function BadgeUnlockToast({ badge, onComplete }) {
             })}
 
             <motion.div
-              className="w-14 h-14 rounded-2xl bg-white/30 backdrop-blur-sm flex items-center justify-center text-3xl flex-shrink-0 shadow-inner border border-white/50"
-              animate={{ scale: [0, 1.3, 1], rotate: [0, 15, -15, 0] }}
+              className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl flex-shrink-0 shadow-inner border border-white/30"
+              animate={{ scale: [0, 1.25, 1], rotate: [0, 12, -12, 0] }}
               transition={{ duration: 0.6 }}
             >
-              {badge.emoji || <Trophy className="w-7 h-7 text-white" />}
+              {badge.emoji || <Trophy className="w-6 h-6 text-white" />}
             </motion.div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-900/70">Badge Unlocked</p>
-              <p className="text-lg font-black text-slate-900 leading-tight">{badge.label}</p>
-              <p className="text-xs text-slate-800/80 leading-snug">{badge.description}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/80">Badge Unlocked</p>
+              <p className="text-base font-black text-white leading-tight">{badge.label}</p>
+              <p className="text-xs text-white/80 leading-snug truncate">{badge.description}</p>
             </div>
           </motion.div>
         </motion.div>

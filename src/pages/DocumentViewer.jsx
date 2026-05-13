@@ -46,7 +46,22 @@ export default function DocumentViewer() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
-  const [activeTab, setActiveTab] = useState("practice");
+  const [activeTab, setActiveTabState] = useState("practice");
+
+  // Single setter that keeps both local state and the URL ?tab= param in sync.
+  // LessonSideNav reads the active tab from the URL, so without this the sidebar
+  // would highlight the wrong icon when tabs change via in-page interactions
+  // (Next Step banner, study plan CTAs, etc.).
+  const setActiveTab = React.useCallback((tab) => {
+    setActiveTabState(tab);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') !== tab) {
+      params.set('tab', tab);
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+      // Notify side nav (which keys off location.search) that the URL changed.
+      window.dispatchEvent(new Event('popstate'));
+    }
+  }, []);
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -97,12 +112,9 @@ export default function DocumentViewer() {
   const getSessionElapsed = () => Math.floor((Date.now() - (sessionStartTimeRef.current || Date.now())) / 1000);
 
   const handleBackNavigation = () => {
-    // Go back to previous page; fall back to Home if no history
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate(createPageUrl("Home"));
-    }
+    // Always go to Home — predictable behavior. history.back() is unreliable
+    // because the user may have arrived via a direct link or after sign-up redirect.
+    navigate(createPageUrl("Home"));
   };
 
   // Check if lesson has a document
@@ -819,7 +831,15 @@ export default function DocumentViewer() {
         )}
       </div>
 
-      {/* Topic Confirmation Modal removed — diagnostic is no longer the forced first step (Pillar 1) */}
+      {/* Topic Confirmation Modal — shown after lesson creation once topics are extracted */}
+      {lesson && (
+        <TopicConfirmationBanner
+          lesson={lesson}
+          onGoToDiagnostic={() => setActiveTab('exam')}
+          diagnosticReady={diagnosticExamReady}
+          diagnosticCompleted={diagnosticCompleted}
+        />
+      )}
 
       {/* Full-screen confetti on task completion */}
       <ConfettiEffect show={showTaskConfetti} onComplete={() => setShowTaskConfetti(false)} />
