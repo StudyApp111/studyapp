@@ -1,10 +1,11 @@
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, FileText, BookMarked, Zap, Brain, Target, Headphones, FlameKindling
+  FileText, BookMarked, Zap, Brain, Target, Headphones, FlameKindling, Moon, Sun
 } from "lucide-react";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 /**
  * LessonSideNav — Replaces the global sidebar items when user is inside a lesson.
@@ -23,6 +24,7 @@ export default function LessonSideNav({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toggleTheme } = useTheme();
 
   const urlParams = new URLSearchParams(location.search);
   const lessonId = urlParams.get('id') || urlParams.get('lessonId');
@@ -55,24 +57,10 @@ export default function LessonSideNav({
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="flex flex-col h-full"
+      className="flex flex-col h-full flex-1"
     >
-      {/* Back to Home */}
-      <div className="px-2 py-3">
-        <Link
-          to={createPageUrl("Home")}
-          className={`w-full min-h-[44px] py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${
-            isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-          }`}
-          title="Back to Home"
-        >
-          <ArrowLeft className="w-5 h-5 flex-shrink-0" />
-          <span className="text-[9px] font-medium text-center leading-tight px-1 truncate">Home</span>
-        </Link>
-      </div>
-
-      {/* Lesson activities */}
-      <nav className="flex-1 flex flex-col items-center gap-1 px-2 py-2">
+      {/* Lesson activities — logo at top of sidebar (in Layout) handles Home navigation */}
+      <nav className="flex-1 flex flex-col items-center gap-1 px-2 py-3">
         {items.map((item, idx) => {
           const isActive = currentTab === item.id;
           const Icon = item.icon;
@@ -101,6 +89,18 @@ export default function LessonSideNav({
             </motion.button>
           );
         })}
+
+        {/* Theme toggle — always available inside lesson */}
+        <button
+          onClick={toggleTheme}
+          className={`relative w-full min-h-[44px] py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all mt-2 ${
+            isDark ? 'text-slate-400 hover:bg-white/5 hover:text-slate-200' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+          }`}
+          title={isDark ? 'Light Mode' : 'Dark Mode'}
+        >
+          {isDark ? <Sun className="w-5 h-5 flex-shrink-0" /> : <Moon className="w-5 h-5 flex-shrink-0" />}
+          <span className="text-[9px] font-medium text-center leading-tight px-1 truncate">Theme</span>
+        </button>
       </nav>
     </motion.div>
   );
