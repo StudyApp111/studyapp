@@ -193,7 +193,6 @@ export default function EditableNoteContent({ content, onSave, isDark, toolbarAc
           border: none;
           border-bottom: 1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgb(226 232 240)"};
           padding: 6px 8px;
-          padding-right: ${toolbarActions ? "220px" : "8px"};
           position: sticky;
           top: 0;
           background: ${isDark ? "#12121a" : "#fff"};
@@ -205,21 +204,42 @@ export default function EditableNoteContent({ content, onSave, isDark, toolbarAc
           max-width: 100%;
           overflow-x: hidden;
         }
+        /* Bottom-pinned action bar — sticky to bottom of the editor's own
+           column. Confined to the editor's parent so it doesn't span the AI
+           chat pane on desktop. position:sticky keeps it inside whatever
+           scroll container the editor lives in. */
+        .turbo-editor {
+          padding-bottom: 56px; /* room for the sticky action bar */
+        }
         .turbo-editor .toolbar-actions {
-          position: absolute;
-          top: 50%;
-          right: 8px;
-          transform: translateY(-50%);
+          position: sticky;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
           display: flex;
           align-items: center;
-          gap: 6px;
-          z-index: 5;
+          justify-content: flex-end;
+          gap: 8px;
+          padding: 10px 14px;
+          background: ${isDark ? "rgba(18,18,26,0.96)" : "rgba(255,255,255,0.96)"};
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border-top: 1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgb(226 232 240)"};
+          z-index: 30;
         }
-        /* Mobile: compact single-row toolbar, action buttons drop below, no horizontal overflow */
+        /* Mobile inside the lesson: lift the action bar above the fixed
+           lesson bottom nav (~60px + iOS home indicator). */
+        @media (max-width: 767px) {
+          .turbo-editor .toolbar-actions {
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
+            padding: 8px 12px;
+          }
+        }
+        /* Mobile: compact single-row top toolbar, no horizontal overflow */
         @media (max-width: 640px) {
           .turbo-editor .ql-toolbar.ql-snow {
             padding: 6px 8px;
-            padding-right: 8px; /* action buttons move to their own row */
             gap: 2px;
             overflow-x: auto;
             flex-wrap: nowrap;
@@ -229,17 +249,6 @@ export default function EditableNoteContent({ content, onSave, isDark, toolbarAc
           .turbo-editor .ql-toolbar.ql-snow .ql-formats {
             margin-right: 8px !important;
             flex-shrink: 0;
-          }
-          .turbo-editor .toolbar-actions {
-            position: static;
-            transform: none;
-            top: auto;
-            right: auto;
-            padding: 6px 8px;
-            border-bottom: 1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgb(226 232 240)"};
-            background: ${isDark ? "#12121a" : "#fff"};
-            justify-content: flex-end;
-            flex-wrap: wrap;
           }
         }
         .turbo-editor .ql-container.ql-snow { border: none; font-family: inherit; max-width: 100%; }
