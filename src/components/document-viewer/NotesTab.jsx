@@ -258,7 +258,7 @@ export default function NotesTab({ lesson, onViewDocument }) {
   }
 
   return (
-    <div className={`flex flex-col relative w-full max-w-full overflow-x-hidden ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
+    <div className={`flex flex-col relative w-full max-w-full overflow-x-hidden ${isDark ? 'bg-[#0a0a12]' : 'bg-white'}`}>
       <CustomizeGenerationModal
         open={customizeOpen}
         onOpenChange={setCustomizeOpen}
@@ -270,8 +270,8 @@ export default function NotesTab({ lesson, onViewDocument }) {
       />
 
       {note ? (
-        <div className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden ${isDark ? 'bg-[#12121a]' : 'bg-white'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
-          <div className={`px-4 sm:px-8 py-2 ${isDark ? 'bg-[#12121a]' : 'bg-white'} min-h-full`} style={{ userSelect: 'text', WebkitUserSelect: 'text', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+        <div className={`flex-1 min-w-0 w-full max-w-full overflow-x-hidden ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+          <div className={`px-1 sm:px-8 py-2 w-full max-w-full ${isDark ? 'bg-[#12121a]' : 'bg-white'} min-h-full`} style={{ userSelect: 'text', WebkitUserSelect: 'text', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
             <EditableNoteContent
               key={note.id}
               content={note.content}

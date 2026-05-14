@@ -193,54 +193,62 @@ export default function MobileLessonView({
 }
 
 /**
- * Persistent full-screen overlay. Stays mounted (display:none when closed)
- * so internal component state — quiz progress, selected flashcard, chat
- * history — survives close/reopen cycles.
+ * Persistent full-screen overlay. Stays mounted at all times so internal
+ * component state (quiz progress, selected flashcard, chat history) survives
+ * close/reopen. We use a `motion.div` with `animate` driven by `open` — this
+ * way the slide-up animation plays correctly without unmounting children,
+ * and `pointer-events`/`visibility` ensure it's truly inert when closed.
  */
 function Overlay({ open, title, onClose, isDark, children }) {
+  const surfaceBg = isDark ? 'bg-[#0a0a12]' : 'bg-white';
   return (
-    <div
-      className={`fixed inset-0 z-50 ${isDark ? 'bg-[#0a0a12]' : 'bg-white'} ${open ? '' : 'hidden'}`}
+    <motion.div
+      initial={false}
+      animate={{
+        y: open ? 0 : '100%',
+        opacity: open ? 1 : 0,
+      }}
+      transition={{
+        type: 'tween',
+        ease: open ? [0.22, 1, 0.36, 1] : 'easeIn', // easeOutExpo on open, snappy on close
+        duration: 0.28,
+      }}
       style={{
+        pointerEvents: open ? 'auto' : 'none',
+        visibility: open ? 'visible' : 'hidden',
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
+      className={`fixed inset-0 z-50 flex flex-col ${surfaceBg}`}
       aria-hidden={!open}
     >
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute inset-0 flex flex-col"
-          >
-            {/* Overlay header */}
-            <div className={`flex-shrink-0 flex items-center justify-between px-3 py-2.5 border-b ${
-              isDark ? 'border-white/10 bg-[#12121a]' : 'border-slate-200 bg-white'
-            }`}>
-              <p className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {title}
-              </p>
-              <button
-                onClick={onClose}
-                aria-label="Close"
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
-                  isDark ? 'text-slate-200 hover:bg-white/10' : 'text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {/* Overlay header — z-10 keeps it above scrolling body; large hit-area X */}
+      <div
+        className={`relative z-10 flex-shrink-0 flex items-center justify-between gap-2 px-3 h-14 border-b ${
+          isDark ? 'border-white/10' : 'border-slate-200'
+        } ${surfaceBg}`}
+      >
+        <p className={`font-bold text-base truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          {title}
+        </p>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          type="button"
+          // 44×44 hit area, icon centered. Explicit type="button" + relative z-index
+          // guarantees the click lands on this button (not the scrolling content beneath).
+          className={`relative z-10 w-11 h-11 -mr-2 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+            isDark ? 'text-slate-200 hover:bg-white/10 active:bg-white/15' : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200'
+          }`}
+        >
+          <X className="w-6 h-6 pointer-events-none" />
+        </button>
+      </div>
 
-            {/* Overlay body — single scroll context, no horizontal scroll */}
-            <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+      {/* Overlay body — single surface (no grey/white split), single scroll context */}
+      <div className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden ${surfaceBg}`}>
+        {children}
+      </div>
+    </motion.div>
   );
 }

@@ -238,13 +238,16 @@ Just tell me what you'd like to do next! 🚀`
             <Sparkles className={`w-3.5 h-3.5 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
             <span className={`text-[12px] font-semibold ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>Polly AI</span>
           </div>
-          <div className="min-w-0 hidden sm:flex flex-col leading-tight">
+          <div className="min-w-0 flex flex-col leading-tight">
             <span className={`text-[12px] font-semibold truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
               {lesson?.course_name || 'Your AI tutor'}
             </span>
             <span className={`text-[10px] flex items-center gap-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-              Online · knows your document
+              <span className="relative flex w-1.5 h-1.5">
+                <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-500 opacity-70 animate-ping" />
+                <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              </span>
+              Online · Knows Your Document
             </span>
           </div>
         </div>
