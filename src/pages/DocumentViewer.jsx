@@ -29,6 +29,7 @@ import ConfettiEffect from "@/components/gamification/ConfettiEffect";
 import PostSessionSummary from "@/components/document-viewer/PostSessionSummary";
 import AnimatedGradeBadge from "@/components/document-viewer/AnimatedGradeBadge";
 import CramModeTab from "@/components/document-viewer/CramModeTab";
+import LessonOnboardingTour from "@/components/document-viewer/LessonOnboardingTour";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
@@ -703,7 +704,9 @@ export default function DocumentViewer() {
             {/* Right: Grade + XP + Timer */}
             <div className="flex items-center gap-3 flex-shrink-0">
               {/* Predicted Grade */}
-              <AnimatedGradeBadge grade={predictedGrade} />
+              <div data-tour="grade-badge">
+                <AnimatedGradeBadge grade={predictedGrade} />
+              </div>
               
               {/* Subtle Divider */}
               <div className="h-6 w-px bg-white/20" />
@@ -837,6 +840,10 @@ export default function DocumentViewer() {
 
       {/* Post-Diagnostic Paywall for free authenticated users only (guests get GuestSignUpModal instead) */}
       {lesson?.id && !isGuest && <PostDiagnosticPaywall lessonId={lesson.id} />}
+
+      {/* First-time guided tour — fires once, highlights Study Plan + Predicted Grade
+          on desktop and the Quizzes tab on mobile to drive diagnostic completion. */}
+      <LessonOnboardingTour lessonReady={!!lesson?.id} />
 
       {/* Post-Session Summary */}
       <PostSessionSummary

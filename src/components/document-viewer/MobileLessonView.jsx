@@ -134,6 +134,7 @@ export default function MobileLessonView({
                 key={t.id}
                 onClick={() => openOverlay(t.id)}
                 aria-label={t.label}
+                data-tour={t.id === 'exam' ? 'exam-tab' : undefined}
                 className={`flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-lg transition-colors ${
                   isActive
                     ? 'text-purple-500'

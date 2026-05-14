@@ -67,6 +67,7 @@ export default function LessonSideNav({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: 0.05 + idx * 0.03 }}
               onClick={() => setTab(item.id)}
+              data-tour={item.id === 'studyplan' ? 'studyplan-tab' : undefined}
               className={`relative w-full min-h-[44px] py-3 rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${
                 isActive
                   ? 'bg-purple-600/20 text-purple-400 shadow-sm'
