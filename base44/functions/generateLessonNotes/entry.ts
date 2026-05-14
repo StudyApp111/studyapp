@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { lesson_content, note_type, custom_instructions } = await req.json();
+        const { lesson_content, note_type, custom_instructions, topics, difficulty } = await req.json();
 
         if (!lesson_content) {
             return Response.json({ error: 'Lesson content is required' }, { status: 400 });
@@ -149,8 +149,29 @@ Create test-focused study material with:
 Focus on what professors test. Include potential exam questions. Add strategic study tips.`;
         }
 
+        // Topic scoping — limit the note to ONLY the selected topics if any were chosen.
+        if (Array.isArray(topics) && topics.length > 0) {
+            const topicList = topics.slice(0, 20).map(t => `- ${t}`).join('\n');
+            systemPrompt += `\n\nTOPIC SCOPE (CRITICAL):
+The student has selected SPECIFIC topics to focus on. Generate notes ONLY for the following topics. Ignore everything else in the source material. Do not introduce topics that are not on this list.
+${topicList}`;
+        }
+
+        // Depth/difficulty calibration
+        if (difficulty) {
+            const depthGuide = {
+                easy:   "Calibrate depth for a beginner. Use plain language, simple examples, and define every technical term inline.",
+                medium: "Calibrate depth for an average undergraduate. Assume basic background; include moderate detail and one worked example per concept.",
+                hard:   "Calibrate depth for an advanced student preparing for a tough exam. Include nuance, edge cases, multi-step examples, and address common misconceptions explicitly.",
+                mixed:  "Mix depth across sections: introduce foundationally, then push into advanced detail, edge cases, and exam-style insights."
+            };
+            if (depthGuide[difficulty]) {
+                systemPrompt += `\n\nDEPTH: ${depthGuide[difficulty]}`;
+            }
+        }
+
         if (custom_instructions) {
-            systemPrompt += `\n\nAdditional User Instructions: ${custom_instructions.substring(0, 500)}`;
+            systemPrompt += `\n\nAdditional User Instructions (the student wrote this — honor it): ${custom_instructions.substring(0, 500)}`;
         }
 
         const payload = {
