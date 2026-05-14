@@ -10,9 +10,9 @@ import { UpgradeButton } from "@/components/subscription/UpgradeBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import DailyChallenge from "@/components/gamification/DailyChallenge";
-import GamificationHeader from "@/components/gamification/GamificationHeader";
-import { handleDailyReset } from "@/components/utils/dailyReset";
+import { handleDailyReset, getTodayDateString } from "@/components/utils/dailyReset";
 import LearningTrajectory from "@/components/home/LearningTrajectory";
+import TodaysQuestStrip from "@/components/home/TodaysQuestStrip";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import OnboardingModal from "@/components/onboarding-v2/OnboardingModal";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
@@ -25,6 +25,7 @@ export default function Home() {
   const { isDark } = useTheme();
   const [user, setUser] = useState(null);
   const [dailyXP, setDailyXP] = useState(0);
+  const [dailyGoalTarget, setDailyGoalTarget] = useState(30);
   const [studyMinutesToday, setStudyMinutesToday] = useState(0);
   const [questionsToday, setQuestionsToday] = useState(0);
   const [flashcardsToday, setFlashcardsToday] = useState(0);
@@ -69,6 +70,7 @@ export default function Home() {
 
         setUser(currentUser);
         setDailyXP(resetResult.dailyXP ?? currentUser.daily_xp ?? 0);
+        setDailyGoalTarget(resetResult.dailyGoalTarget ?? currentUser.daily_goal_target ?? 30);
         setStudyMinutesToday(resetResult.studyMinutesToday ?? currentUser.study_minutes_today ?? 0);
         setQuestionsToday(resetResult.questionsToday ?? currentUser.questions_today ?? 0);
         setFlashcardsToday(resetResult.flashcardsToday ?? currentUser.flashcards_today ?? 0);
@@ -226,6 +228,7 @@ export default function Home() {
       const currentUser = resetResult.user || await base44.auth.me();
       setUser(currentUser);
       setDailyXP(resetResult.dailyXP ?? currentUser.daily_xp ?? 0);
+      setDailyGoalTarget(resetResult.dailyGoalTarget ?? currentUser.daily_goal_target ?? 30);
       setStudyMinutesToday(resetResult.studyMinutesToday ?? currentUser.study_minutes_today ?? 0);
       setQuestionsToday(resetResult.questionsToday ?? currentUser.questions_today ?? 0);
       setFlashcardsToday(resetResult.flashcardsToday ?? currentUser.flashcards_today ?? 0);
@@ -339,6 +342,15 @@ export default function Home() {
 
       <div className="p-4 md:p-8 max-w-6xl mx-auto pb-32 md:pb-10">
 
+        {/* Today's Quest — retention surface (streak, freezes, daily XP, level) */}
+        <div className="mb-6">
+          <TodaysQuestStrip
+            user={user}
+            dailyXP={dailyXP}
+            dailyGoalTarget={dailyGoalTarget}
+            activeToday={user?.last_active_date?.split('T')[0] === getTodayDateString()}
+          />
+        </div>
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -547,8 +559,6 @@ export default function Home() {
 
           {/* Right Column - Goals */}
           <div className="space-y-4">
-            <GamificationHeader user={user} dailyXP={dailyXP} />
-
             <LearningTrajectory studyPlans={studyPlans} lessons={lessons} />
 
             <DailyChallenge 

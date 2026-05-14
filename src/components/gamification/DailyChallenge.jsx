@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Target, Zap, CheckCircle2, Clock, BookOpen, Brain } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { awardDailyXP, getTodayDateString } from "@/components/utils/dailyReset";
 
 const DAILY_CHALLENGES = [
   { id: 'study_10', title: 'Study for 10 minutes', xp: 15, icon: Clock, target: 10 },
@@ -29,6 +30,22 @@ export default function DailyChallenge({
 
   const isComplete = (challenge) => getProgress(challenge.id) >= challenge.target;
   const completedCount = DAILY_CHALLENGES.filter(isComplete).length;
+
+  // Award XP exactly once per challenge per day. The dedup key inside
+  // awardDailyXP guarantees idempotency even if this component re-mounts
+  // or the counters jitter — so daily challenges are no longer "visual only."
+  const awardedRef = useRef(new Set());
+  useEffect(() => {
+    DAILY_CHALLENGES.forEach((c) => {
+      if (isComplete(c) && !awardedRef.current.has(c.id)) {
+        awardedRef.current.add(c.id);
+        const dedupKey = `daily_challenge:${c.id}:${getTodayDateString()}`;
+        awardDailyXP(c.xp, c.title, { event: 'daily_challenge_completed', dedupKey });
+        onChallengeComplete?.(c);
+      }
+    });
+    // Intentionally depending on the counter inputs only.
+  }, [studyMinutes, questionsAnswered, flashcardsReviewed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Compact version for sidebar
   if (compact) {

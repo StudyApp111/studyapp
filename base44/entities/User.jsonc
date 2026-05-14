@@ -113,22 +113,32 @@
     "level": {
       "type": "number",
       "default": 1,
-      "description": "User's current level"
+      "description": "User's current level (derived from total_xp; kept in sync by awardDailyXP)"
     },
     "total_points": {
       "type": "number",
       "default": 0,
-      "description": "Total XP points"
+      "description": "Legacy lifetime XP \u2014 kept in sync with total_xp"
+    },
+    "total_xp": {
+      "type": "number",
+      "default": 0,
+      "description": "Lifetime XP. Source of truth for level & rank."
     },
     "current_streak": {
       "type": "number",
       "default": 0,
-      "description": "Current study streak in days"
+      "description": "Current consecutive-day study streak"
     },
     "longest_streak": {
       "type": "number",
       "default": 0,
-      "description": "Longest study streak achieved"
+      "description": "Longest streak ever achieved"
+    },
+    "streak_freezes": {
+      "type": "number",
+      "default": 0,
+      "description": "Banked streak freezes (max 2). Auto-consumed on a missed day to preserve the streak."
     },
     "last_study_date": {
       "type": "string",
@@ -157,22 +167,43 @@
         }
       },
       "default": [],
-      "description": "Earned badges"
+      "description": "Legacy badge objects (kept for back-compat)"
+    },
+    "badges_earned": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Source of truth: IDs of badges the user has unlocked (see lib/gamification.js BADGES)"
     },
     "daily_xp": {
       "type": "number",
       "default": 0,
-      "description": "XP earned today"
+      "description": "XP earned today (resets at local midnight)"
     },
     "daily_goal": {
       "type": "number",
       "default": 50,
-      "description": "Daily XP goal"
+      "description": "Legacy field \u2014 see daily_goal_target"
+    },
+    "daily_goal_target": {
+      "type": "number",
+      "default": 30,
+      "description": "Today's XP goal. Adaptive: 30 (default) \u2192 50 (7-day streak) \u2192 75 (30-day streak). Recomputed on daily reset."
     },
     "weekly_xp": {
       "type": "number",
       "default": 0,
       "description": "XP earned this week"
+    },
+    "xp_event_keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Rolling window of recent XP-event idempotency keys (last 50). Prevents double-award on retries / double-clicks / strict-mode double mounts."
     },
     "total_flashcards_mastered": {
       "type": "number",
@@ -259,7 +290,8 @@
       "type": "string"
     },
     "last_daily_reset_date": {
-      "type": "string"
+      "type": "string",
+      "description": "Last local-date string (YYYY-MM-DD) when daily counters were reset"
     },
     "study_minutes_today": {
       "type": "number",

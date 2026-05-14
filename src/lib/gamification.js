@@ -46,8 +46,21 @@ export const getRank = (level) => {
   return rank;
 };
 
-// ─── DAILY XP GOAL ───────────────────────────────────────────────────────────
-export const DAILY_XP_GOAL = 50;
+// ─── DAILY XP GOAL (ADAPTIVE LADDER) ─────────────────────────────────────────
+// Goal scales with streak so it never feels trivial for power users and never
+// feels punishing for newcomers. Recomputed on the daily reset.
+export const DAILY_XP_GOAL = 50; // legacy export — kept so existing imports compile
+
+export const getAdaptiveDailyGoal = (currentStreak = 0) => {
+  if (currentStreak >= 30) return 75;
+  if (currentStreak >= 7) return 50;
+  return 30;
+};
+
+// ─── STREAK FREEZES ──────────────────────────────────────────────────────────
+export const STREAK_FREEZE_MAX = 2;
+// Grant a freeze every N-day milestone (1 freeze per milestone, capped at MAX).
+export const STREAK_FREEZE_GRANT_EVERY = 7;
 
 // ─── BADGES ──────────────────────────────────────────────────────────────────
 // Each badge has an id (stable), label, description, emoji, and a check(user, ctx) fn.
