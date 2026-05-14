@@ -26,9 +26,11 @@ import posthog from "posthog-js";
  *  - data-tour="exam-tab"      → Quizzes button (mobile overlay nav)
  */
 
-const STORAGE_KEY = "lesson_tour_completed_v1";
+const STORAGE_KEY = "lesson_tour_views_v1"; // integer count of times shown
+const MAX_VIEWS = 3;
+const SEEN_LESSONS_KEY = "lesson_tour_seen_lessons_v1"; // JSON array of lesson IDs already shown
 
-export default function LessonOnboardingTour({ lessonReady }) {
+export default function LessonOnboardingTour({ lessonReady, lessonId }) {
   const { isDark } = useTheme();
   const [step, setStep] = useState(0);
   const [active, setActive] = useState(false);
@@ -74,21 +76,36 @@ export default function LessonOnboardingTour({ lessonReady }) {
         },
       ];
 
-  // Trigger the tour once the lesson is mounted and DOM is ready.
+  // Trigger the tour at the start of each NEW lesson, up to MAX_VIEWS times
+  // total per user (ever). Two gates:
+  //   1) Lifetime view count must be < MAX_VIEWS.
+  //   2) This specific lesson ID must not have already shown the tour
+  //      (prevents the tour from re-firing on revisits to the same lesson).
   useEffect(() => {
-    if (!lessonReady) return;
-    if (localStorage.getItem(STORAGE_KEY)) return;
+    if (!lessonReady || !lessonId) return;
+
+    const views = parseInt(localStorage.getItem(STORAGE_KEY) || "0", 10);
+    if (views >= MAX_VIEWS) return;
+
+    let seen = [];
+    try {
+      seen = JSON.parse(localStorage.getItem(SEEN_LESSONS_KEY) || "[]");
+    } catch {}
+    if (seen.includes(lessonId)) return;
 
     // Delay so anchors mount (sidebar morph, header render) before measuring.
     const t = setTimeout(() => {
       setActive(true);
       try {
-        posthog?.capture("lesson_tour_started", { is_mobile: isMobile });
+        posthog?.capture("lesson_tour_started", {
+          is_mobile: isMobile,
+          view_number: views + 1,
+        });
       } catch {}
     }, 900);
 
     return () => clearTimeout(t);
-  }, [lessonReady, isMobile]);
+  }, [lessonReady, lessonId, isMobile]);
 
   // Measure the current anchor whenever step changes or window resizes.
   const measure = useCallback(() => {
@@ -121,12 +138,27 @@ export default function LessonOnboardingTour({ lessonReady }) {
   }, [active, measure]);
 
   const finish = useCallback(() => {
-    localStorage.setItem(STORAGE_KEY, "1");
+    // Increment lifetime view count and mark this lesson as seen.
+    const views = parseInt(localStorage.getItem(STORAGE_KEY) || "0", 10);
+    localStorage.setItem(STORAGE_KEY, String(views + 1));
+
+    if (lessonId) {
+      let seen = [];
+      try {
+        seen = JSON.parse(localStorage.getItem(SEEN_LESSONS_KEY) || "[]");
+      } catch {}
+      if (!seen.includes(lessonId)) seen.push(lessonId);
+      localStorage.setItem(SEEN_LESSONS_KEY, JSON.stringify(seen));
+    }
+
     setActive(false);
     try {
-      posthog?.capture("lesson_tour_completed", { steps_seen: step + 1 });
+      posthog?.capture("lesson_tour_completed", {
+        steps_seen: step + 1,
+        view_number: views + 1,
+      });
     } catch {}
-  }, [step]);
+  }, [step, lessonId]);
 
   const next = () => {
     if (step + 1 >= steps.length) {

@@ -841,9 +841,10 @@ export default function DocumentViewer() {
       {/* Post-Diagnostic Paywall for free authenticated users only (guests get GuestSignUpModal instead) */}
       {lesson?.id && !isGuest && <PostDiagnosticPaywall lessonId={lesson.id} />}
 
-      {/* First-time guided tour — fires once, highlights Study Plan + Predicted Grade
-          on desktop and the Quizzes tab on mobile to drive diagnostic completion. */}
-      <LessonOnboardingTour lessonReady={!!lesson?.id} />
+      {/* Guided tour — fires on each NEW lesson up to 3 times total per user,
+          highlighting Study Plan + Predicted Grade on desktop and the Quizzes
+          tab on mobile to drive diagnostic completion. */}
+      <LessonOnboardingTour lessonReady={!!lesson?.id} lessonId={lesson?.id} />
 
       {/* Post-Session Summary */}
       <PostSessionSummary
