@@ -136,7 +136,7 @@ export default function NotesTab({ lesson, onViewDocument }) {
   const generateNotes = async (currentSettings = settings) => {
     const taskCheck = await canDoTask('review_notes');
     if (!taskCheck.allowed) {
-      triggerUpgradeModal('tasks');
+      triggerUpgradeModal('notes');
       return;
     }
 

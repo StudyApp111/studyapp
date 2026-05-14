@@ -3,16 +3,58 @@ import { base44 } from '@/api/base44Client';
 
 const SubscriptionContext = createContext(null);
 
-// Free tier limits — lifetime caps for free users
+// =============================================================================
+// FREE TIER — Per-feature DAILY caps (Duolingo-style). Resets every 24h.
+// =============================================================================
+// Single source of truth. If you want to tune limits, edit this object.
+export const FREE_DAILY_LIMITS = {
+  lessons: 1,          // 1 new lesson per day
+  flashcards: 1,       // 1 flashcard generation per day
+  practice_quiz: 1,    // 1 practice quiz per day
+  notes: 1,            // 1 note generation per day
+  teach_it: 1,         // 1 teach-it set per day
+  learn_lectures: 1,   // 1 lecture generation per day
+  ai_messages: 5,      // 5 Polly chat messages per day
+  diagnostic: 3,       // diagnostics stay generous (they're the "aha" moment)
+  assignments: 1       // 1 graded assignment per day
+};
+
+// User-friendly labels — used by the upgrade modal to explain what was hit.
+export const FEATURE_LABELS = {
+  lessons: 'Lesson uploads',
+  flashcards: 'Flashcard generations',
+  practice_quiz: 'Practice quizzes',
+  notes: 'AI notes',
+  teach_it: 'Teach-It sets',
+  learn_lectures: 'AI lectures',
+  ai_messages: 'AI tutor messages',
+  diagnostic: 'Diagnostic exams',
+  assignments: 'Graded assignments'
+};
+
+// Map each feature → the user counter field on the User entity.
+const FEATURE_COUNTER_FIELDS = {
+  lessons: 'daily_lessons_count',
+  flashcards: 'daily_flashcards_count',
+  practice_quiz: 'daily_practice_quiz_count',
+  notes: 'daily_notes_count',
+  teach_it: 'daily_teachit_count',
+  learn_lectures: 'daily_learn_lectures_count',
+  ai_messages: 'daily_ai_messages_count',
+  diagnostic: 'daily_diagnostic_exams_count',
+  assignments: 'daily_assignments_count'
+};
+
+// Backward-compat: legacy lifetime limits referenced by older code.
 export const FREE_TIER_LIMITS = {
-  lessons_total: 1,           // 1 lesson ever
-  flashcard_sets_total: 1,    // 1 flashcard generation per lesson
-  teachit_sets_total: 1,      // 1 teach-it generation per lesson
-  practice_quizzes_total: 1,  // 1 practice quiz per lesson
-  polly_messages_total: 10,   // 10 Polly chat messages ever
-  diagnostic_exams_per_day: 3,  // diagnostics stay generous
-  ai_messages_per_day: 10,    // kept for backward compat (not used for paywall)
-  assignments_total: 1        // 1 assignment graded ever
+  lessons_total: FREE_DAILY_LIMITS.lessons,
+  flashcard_sets_total: FREE_DAILY_LIMITS.flashcards,
+  teachit_sets_total: FREE_DAILY_LIMITS.teach_it,
+  practice_quizzes_total: FREE_DAILY_LIMITS.practice_quiz,
+  polly_messages_total: FREE_DAILY_LIMITS.ai_messages,
+  diagnostic_exams_per_day: FREE_DAILY_LIMITS.diagnostic,
+  ai_messages_per_day: FREE_DAILY_LIMITS.ai_messages,
+  assignments_total: FREE_DAILY_LIMITS.assignments
 };
 
 export function SubscriptionProvider({ children }) {
@@ -30,7 +72,6 @@ export function SubscriptionProvider({ children }) {
     try {
       const isAuthenticated = await base44.auth.isAuthenticated();
       if (!isAuthenticated) {
-        // Not logged in — don't set user, just stop loading
         setLoading(false);
         return;
       }
@@ -59,22 +100,15 @@ export function SubscriptionProvider({ children }) {
   const isNativeApp = () => {
     if (typeof window === 'undefined') return false;
     const ua = navigator.userAgent || navigator.vendor || window.opera;
-    
-    // Check for common app wrappers
     if (window.ReactNativeWebView || window.Capacitor || window.cordova || window.PhoneGap || window.Android) {
       return true;
     }
-
-    // iOS WebView (not Safari, Chrome, Firefox, Edge, etc.)
     const isIOS = /(iPhone|iPod|iPad)/i.test(ua);
     const isWebKit = /AppleWebKit/i.test(ua);
     const isSafari = /Safari/i.test(ua);
     const isOtherBrowser = /(CriOS|FxiOS|EdgiOS|OPiOS|mercury)/i.test(ua);
     const isIOSWebView = isIOS && isWebKit && !isSafari && !isOtherBrowser;
-
-    // Android WebView
     const isAndroidWebView = /wv\)/i.test(ua);
-
     return isIOSWebView || isAndroidWebView;
   };
 
@@ -90,47 +124,31 @@ export function SubscriptionProvider({ children }) {
     const trialEnd = getUserField('trial_end_date');
     const promoUntil = getUserField('promo_access_until');
     
-    // Cancelled users immediately lose access (no grace period for trials)
     if (status === 'cancelled') {
       if (endDate) {
         const end = new Date(endDate);
-        if (end > now && tier === 'pro') {
-          return true; // Still in paid grace period
-        }
+        if (end > now && tier === 'pro') return true;
       }
       return false;
     }
     
-    // Check for active trial first
     if (status === 'trialing' && trialEnd) {
-      if (new Date(trialEnd) > now) {
-        return true;
-      }
+      if (new Date(trialEnd) > now) return true;
     }
     
-    // Must have pro tier AND active status
     if (tier !== 'pro') return false;
     if (status !== 'active') return false;
     
-    // Check promo access expiry first
     if (promoUntil) {
-      if (new Date(promoUntil) < now) {
-        return false;
-      }
+      if (new Date(promoUntil) < now) return false;
       return true;
     }
     
-    // Check subscription end date for paid subscriptions
-    if (endDate) {
-      if (new Date(endDate) < now) {
-        return false;
-      }
-    }
+    if (endDate && new Date(endDate) < now) return false;
     
     return true;
   };
   
-  // Check if user is in trial
   const isInTrial = () => {
     if (!user) return false;
     if (getUserField('subscription_status') !== 'trialing') return false;
@@ -139,18 +157,15 @@ export function SubscriptionProvider({ children }) {
     return new Date(trialEnd) > new Date();
   };
   
-  // Get trial remaining days
   const getTrialRemainingDays = () => {
     const trialEnd = getUserField('trial_end_date');
     if (!trialEnd) return null;
     if (getUserField('subscription_status') !== 'trialing') return null;
-    
     const diffTime = new Date(trialEnd) - new Date();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
 
-  // Get remaining promo days
   const getPromoRemainingDays = () => {
     const promoUntil = getUserField('promo_access_until');
     if (!promoUntil) return null;
@@ -159,7 +174,9 @@ export function SubscriptionProvider({ children }) {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  // Check and reset counters - 24h rolling window
+  // =============================================================================
+  // DAILY COUNTER RESET — 24h rolling window. Idempotent + cheap.
+  // =============================================================================
   const checkAndResetCounters = async () => {
     let currentUser;
     try {
@@ -169,133 +186,127 @@ export function SubscriptionProvider({ children }) {
       return null;
     }
     if (!currentUser) return null;
-    
-    const now = new Date();
-    let updates = {};
-    let needsUpdate = false;
 
-    // Daily counter reset - 24h rolling window
+    const now = new Date();
     const resetTs = currentUser.daily_reset_timestamp || currentUser.data?.daily_reset_timestamp;
     const dailyResetTime = resetTs ? new Date(resetTs) : null;
-    
-    if (!dailyResetTime) {
-      updates.daily_reset_timestamp = now.toISOString();
-      updates.daily_ai_messages_count = 0;
-      updates.daily_lessons_count = 0;
-      updates.daily_diagnostic_exams_count = 0;
-      needsUpdate = true;
-    } else if ((now.getTime() - dailyResetTime.getTime()) >= 24 * 60 * 60 * 1000) {
-      updates.daily_ai_messages_count = 0;
-      updates.daily_lessons_count = 0;
-      updates.daily_diagnostic_exams_count = 0;
-      updates.daily_reset_timestamp = now.toISOString();
-      needsUpdate = true;
-    }
 
-    if (needsUpdate) {
-      await base44.auth.updateMe(updates);
-      return await refreshUser();
-    }
-    return currentUser;
+    const needsReset = !dailyResetTime ||
+      (now.getTime() - dailyResetTime.getTime()) >= 24 * 60 * 60 * 1000;
+
+    if (!needsReset) return currentUser;
+
+    // Reset ALL per-feature daily counters at once.
+    const updates = { daily_reset_timestamp: now.toISOString() };
+    Object.values(FEATURE_COUNTER_FIELDS).forEach((field) => { updates[field] = 0; });
+    await base44.auth.updateMe(updates);
+    return await refreshUser();
   };
 
-  // Upload/Create Lesson - 1 ever for free, unlimited for pro
-  const canUpload = async () => {
-    if (isPro()) return { allowed: true };
+  // =============================================================================
+  // UNIFIED FEATURE GATE — single API for all paywalled features.
+  // =============================================================================
+  // Returns { allowed, current, limit, remaining, feature }.
+  // Pro users always allowed. Free users checked against FREE_DAILY_LIMITS.
+  const canUseFeature = async (feature) => {
+    if (isPro()) return { allowed: true, feature };
+
+    const limit = FREE_DAILY_LIMITS[feature];
+    const field = FEATURE_COUNTER_FIELDS[feature];
+    if (limit === undefined || !field) {
+      // Unknown feature → fail-open (never block on misconfiguration).
+      return { allowed: true, feature };
+    }
+
     const currentUser = await checkAndResetCounters();
-    if (!currentUser) return { allowed: true }; // Fail open: don't block if we can't load user
-    
-    const totalLessons = currentUser.total_lessons_created || currentUser.daily_lessons_count || 0;
-    const allowed = totalLessons < FREE_TIER_LIMITS.lessons_total;
-    
+    if (!currentUser) return { allowed: true, feature };
+
+    const current = currentUser[field] || currentUser.data?.[field] || 0;
+    const allowed = current < limit;
+
     return {
       allowed,
-      current: totalLessons,
-      limit: FREE_TIER_LIMITS.lessons_total,
-      remaining: Math.max(0, FREE_TIER_LIMITS.lessons_total - totalLessons)
+      current,
+      limit,
+      remaining: Math.max(0, limit - current),
+      feature
     };
   };
 
-  // Tasks - unlimited for first lesson
-  const canDoTask = async (taskType = null) => {
-    return { allowed: true };
-  };
-  
-  // Diagnostic Exams - unlimited for first lesson
-  const canTakeDiagnostic = async () => {
-    return { allowed: true };
-  };
+  // Bump a feature's daily counter. Safe for pro users (also tracks usage stats).
+  const incrementFeatureUsage = async (feature) => {
+    const field = FEATURE_COUNTER_FIELDS[feature];
+    if (!field) return;
 
-  // Polly chat: unlimited for first lesson
-  const canSendAIMessage = async () => {
-    return { allowed: true };
-  };
-
-  const canGradeAssignment = async () => {
-    if (isPro()) return { allowed: true };
-    const currentUser = await checkAndResetCounters();
-    if (!currentUser) return { allowed: true };
-    
-    const count = currentUser.total_assignments_graded || 0;
-    const limit = FREE_TIER_LIMITS.assignments_total;
-    return { allowed: count < limit, current: count, limit, requiresPro: count >= limit };
-  };
-
-  // Increment counters
-  const incrementUploadCount = async () => {
-    // Track usage for all users (including native apps) so limits enforce on web
     const freshUser = await checkAndResetCounters();
     if (!freshUser) return;
-    const newCount = (freshUser.total_lessons_created || freshUser.daily_lessons_count || 0) + 1;
-    await base44.auth.updateMe({ total_lessons_created: newCount, daily_lessons_count: newCount });
-    await refreshUser();
-  };
-  
-  const incrementDiagnosticCount = async () => {
-    const freshUser = await checkAndResetCounters();
-    if (!freshUser) return;
-    const newCount = (freshUser.daily_diagnostic_exams_count || 0) + 1;
-    await base44.auth.updateMe({ daily_diagnostic_exams_count: newCount });
-    await refreshUser();
-  };
 
-  const incrementTaskCount = async (taskType = null) => {
-    const freshUser = await checkAndResetCounters();
-    if (!freshUser) return;
-    const updates = { total_tasks_used: (freshUser.total_tasks_used || 0) + 1 };
-    if (taskType) {
-      const fieldMap = {
-        flashcards: 'total_flashcard_sets',
-        teach_it: 'total_teachit_sets',
-        practice_exam: 'total_practice_quizzes',
-        review_notes: 'total_note_generations'
-      };
-      const field = fieldMap[taskType];
-      if (field) updates[field] = (freshUser[field] || 0) + 1;
-    }
+    const newCount = (freshUser[field] || 0) + 1;
+    const updates = { [field]: newCount };
+
+    // Maintain legacy lifetime counters so historical analytics still work.
+    const legacyMap = {
+      lessons: 'total_lessons_created',
+      flashcards: 'total_flashcard_sets',
+      practice_quiz: 'total_practice_quizzes',
+      notes: 'total_note_generations',
+      teach_it: 'total_teachit_sets',
+      ai_messages: 'total_polly_messages',
+      assignments: 'total_assignments_graded'
+    };
+    const legacyField = legacyMap[feature];
+    if (legacyField) updates[legacyField] = (freshUser[legacyField] || 0) + 1;
+
     await base44.auth.updateMe(updates);
     await refreshUser();
   };
-  
-  const incrementAIMessageCount = async () => {
-    const freshUser = await checkAndResetCounters();
-    if (!freshUser) return;
-    const newCount = (freshUser.total_polly_messages || freshUser.daily_ai_messages_count || 0) + 1;
-    await base44.auth.updateMe({ total_polly_messages: newCount, daily_ai_messages_count: newCount });
-    await refreshUser();
+
+  // =============================================================================
+  // LEGACY API — preserved so existing callers don't break.
+  // =============================================================================
+  const canUpload = async () => {
+    const r = await canUseFeature('lessons');
+    return { ...r, requiresPro: !r.allowed };
   };
 
-  const incrementAssignmentCount = async () => {
-    const freshUser = await checkAndResetCounters();
-    if (!freshUser) return;
-    const newCount = (freshUser.total_assignments_graded || 0) + 1;
-    await base44.auth.updateMe({ total_assignments_graded: newCount });
-    await refreshUser();
+  // taskType: 'flashcards' | 'teach_it' | 'practice_exam' | 'review_notes'
+  const canDoTask = async (taskType = null) => {
+    const map = {
+      flashcards: 'flashcards',
+      teach_it: 'teach_it',
+      practice_exam: 'practice_quiz',
+      review_notes: 'notes'
+    };
+    const feature = map[taskType];
+    if (!feature) return { allowed: true };
+    return await canUseFeature(feature);
   };
 
-  // Trigger upgrade modal with optional callback
+  const canTakeDiagnostic = async () => canUseFeature('diagnostic');
+  const canSendAIMessage = async () => canUseFeature('ai_messages');
+  const canGradeAssignment = async () => {
+    const r = await canUseFeature('assignments');
+    return { ...r, requiresPro: !r.allowed };
+  };
+
+  const incrementUploadCount      = async () => incrementFeatureUsage('lessons');
+  const incrementDiagnosticCount  = async () => incrementFeatureUsage('diagnostic');
+  const incrementAIMessageCount   = async () => incrementFeatureUsage('ai_messages');
+  const incrementAssignmentCount  = async () => incrementFeatureUsage('assignments');
+  const incrementTaskCount = async (taskType = null) => {
+    const map = {
+      flashcards: 'flashcards',
+      teach_it: 'teach_it',
+      practice_exam: 'practice_quiz',
+      review_notes: 'notes'
+    };
+    const feature = map[taskType];
+    if (feature) await incrementFeatureUsage(feature);
+  };
+
+  // Trigger upgrade modal with optional callback + reason context.
   const triggerUpgradeModal = (reason, options = {}) => {
-    setUpgradeReason(reason);
+    setUpgradeReason(reason || 'default');
     setShowUpgradeModal(true);
     if (options.onSuccess) {
       setUpgradeCallback(() => options.onSuccess);
@@ -309,6 +320,10 @@ export function SubscriptionProvider({ children }) {
     isInTrial,
     getTrialRemainingDays,
     refreshUser,
+    // New unified API
+    canUseFeature,
+    incrementFeatureUsage,
+    // Legacy API (kept working)
     canUpload,
     canDoTask,
     canTakeDiagnostic,
@@ -319,13 +334,17 @@ export function SubscriptionProvider({ children }) {
     incrementTaskCount,
     incrementAIMessageCount,
     incrementAssignmentCount,
+    // Modal control
     triggerUpgradeModal,
     showUpgradeModal,
     setShowUpgradeModal,
     upgradeReason,
     upgradeCallback,
     setUpgradeCallback,
+    // Constants
     FREE_TIER_LIMITS,
+    FREE_DAILY_LIMITS,
+    FEATURE_LABELS,
     getPromoRemainingDays
   };
 

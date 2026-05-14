@@ -96,11 +96,11 @@ export default function CreateLesson() {
     try {
       // Skip subscription checks for guests
       if (!isGuest) {
-        // Check upload limit FIRST
+        // Check daily upload limit (1 lesson/day for free users)
         const uploadCheck = await canUpload();
         if (!uploadCheck.allowed) {
           setIsSubmitting(false);
-          triggerUpgradeModal('uploads');
+          triggerUpgradeModal('lessons');
           return;
         }
       }

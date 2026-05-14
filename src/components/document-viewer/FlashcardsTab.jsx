@@ -141,7 +141,7 @@ export default function FlashcardsTab({ lesson, extractedContent, focusTopics })
     
     const taskCheck = await canDoTask('flashcards');
     if (!taskCheck.allowed) {
-      triggerUpgradeModal('tasks');
+      triggerUpgradeModal('flashcards');
       return;
     }
     

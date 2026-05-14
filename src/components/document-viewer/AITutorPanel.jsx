@@ -167,20 +167,11 @@ Just tell me what you'd like to do next! 🚀`
 
     setIsLoading(true);
 
-    // Check per-lesson free limit
-    const currentUserCount = messages.filter(m => m.role === 'user').length;
-    if (!isPro() && currentUserCount >= FREE_POLLY_LIMIT) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Check global AI message limit BEFORE sending
+    // Single source of truth for the AI-message daily cap (5/day for free).
     const aiCheck = await canSendAIMessage();
-    console.log('🔒 AITutorPanel: canSendAIMessage result:', aiCheck);
-    
     if (!aiCheck.allowed) {
       setIsLoading(false);
-      triggerUpgradeModal('ai_message');
+      triggerUpgradeModal('ai_messages');
       return;
     }
 
@@ -225,9 +216,17 @@ Just tell me what you'd like to do next! 🚀`
 
   const hasDocument = lesson?.extracted_content || lesson?.file_url;
 
-  const FREE_POLLY_LIMIT = 5;
-  const userMessageCount = messages.filter(m => m.role === 'user').length;
-  const isLimitReached = !isPro() && userMessageCount >= FREE_POLLY_LIMIT;
+  // Daily-cap awareness — re-checked after each send. The inline upgrade prompt
+  // shows as soon as the user runs out of their daily AI-message allowance.
+  const [isLimitReached, setIsLimitReached] = React.useState(false);
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const r = await canSendAIMessage();
+      if (!cancelled) setIsLimitReached(!r.allowed && !isPro());
+    })();
+    return () => { cancelled = true; };
+  }, [messages.length, isPro]);
 
   return (
     <div className={`flex-1 rounded-xl shadow-xl border flex flex-col overflow-hidden relative z-10 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-purple-200'}`} style={{ height: '100%' }}>

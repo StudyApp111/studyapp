@@ -10,7 +10,7 @@ import LearnTopicList from "./LearnTopicList";
 import LecturePlayer from "./LecturePlayer";
 
 export default function LearnTab({ lesson, extractedContent, onNavigateToExam }) {
-  const { isPro, triggerUpgradeModal } = useSubscription();
+  const { isPro, triggerUpgradeModal, canUseFeature, incrementFeatureUsage } = useSubscription();
   const { isDark } = useTheme();
 
   const [topics, setTopics] = useState([]);
@@ -50,6 +50,12 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
 
   const loadTopics = async () => {
     if (!lesson?.id) return;
+    // Soft-gate: free users can generate AI lectures up to their daily cap.
+    const gate = await canUseFeature('learn_lectures');
+    if (!gate.allowed) {
+      triggerUpgradeModal('learn_lectures');
+      return;
+    }
     setLoadingTopics(true);
     setErrorMsg(null);
     try {
@@ -74,6 +80,8 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
       if (data?.topics) {
         setTopics(data.topics);
         await base44.entities.Lesson.update(lesson.id, { topics: data.topics });
+        // Count this generation against the free daily cap (no-op for Pro).
+        incrementFeatureUsage('learn_lectures').catch(() => {});
       }
     } catch (err) {
       console.error("Error loading topics:", err);
@@ -90,26 +98,34 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
   };
 
   const handleSelectTopic = async (idx) => {
-    setSelectedTopicIdx(idx);
-    
-    // Check in-memory cache first
+    // Check in-memory cache first — cached lectures don't count against the cap.
     if (lectureCache.current[idx]) {
+      setSelectedTopicIdx(idx);
       setLecture(lectureCache.current[idx]);
       setLoadingLecture(false);
       return;
     }
 
-    // Check if already saved on the lesson entity
+    // Check saved-on-lesson lectures — same, no generation needed.
     const topic = topics[idx];
     const savedLectures = lesson?.saved_lectures || {};
     if (savedLectures[topic.title]) {
       const saved = savedLectures[topic.title];
+      setSelectedTopicIdx(idx);
       setLecture(saved);
       lectureCache.current[idx] = saved;
       setLoadingLecture(false);
       return;
     }
-    
+
+    // Soft-gate: generating a fresh lecture costs 1 use of the daily cap.
+    const gate = await canUseFeature('learn_lectures');
+    if (!gate.allowed) {
+      triggerUpgradeModal('learn_lectures');
+      return;
+    }
+
+    setSelectedTopicIdx(idx);
     setLecture(null);
     setLoadingLecture(true);
 
@@ -124,6 +140,7 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
       if (data?.lecture) {
         setLecture(data.lecture);
         lectureCache.current[idx] = data.lecture;
+        incrementFeatureUsage('learn_lectures').catch(() => {});
       }
     } catch (err) {
       console.error("Error generating lecture:", err);
@@ -158,39 +175,6 @@ export default function LearnTab({ lesson, extractedContent, onNavigateToExam })
       setTimeout(() => onNavigateToExam(), 50);
     }
   };
-
-  // Paywall for free users
-  if (!isPro()) {
-    return (
-      <div className={`flex items-center justify-center p-4 pb-8 min-h-[400px] ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`}>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md"
-        >
-          <Card className={`backdrop-blur-xl border-2 shadow-2xl overflow-hidden ${isDark ? 'bg-[#12121a]/95 border-purple-500/30' : 'bg-white/95 border-purple-200'}`}>
-            <div className="bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 px-5 py-6 text-center">
-              <Lock className="w-12 h-12 text-white/80 mx-auto mb-3" />
-              <h3 className="text-xl font-black text-white mb-1">AI Voice Lectures</h3>
-              <p className="text-purple-100 text-xs">Pro feature</p>
-            </div>
-            <div className="p-5 text-center">
-              <p className={`mb-5 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                Get AI-generated voice lectures that explain each topic from your material in detail, with key concepts and examples.
-              </p>
-              <Button
-                onClick={() => triggerUpgradeModal('default')}
-                className="w-full h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Unlock Learn Tab
-              </Button>
-            </div>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
 
   // Show lecture player if a topic is selected
   if (selectedTopicIdx !== null) {

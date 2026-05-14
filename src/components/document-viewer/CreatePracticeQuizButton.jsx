@@ -20,7 +20,7 @@ export default function CreatePracticeQuizButton({ lesson, extractedContent, onE
     
     const taskCheck = await canDoTask('practice_exam');
     if (!taskCheck.allowed) {
-      triggerUpgradeModal('tasks');
+      triggerUpgradeModal('practice_quiz');
       return;
     }
     

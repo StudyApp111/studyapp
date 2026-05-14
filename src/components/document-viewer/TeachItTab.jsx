@@ -136,7 +136,7 @@ export default function TeachItTab({ lesson, focusTopics, extractedContent }) {
   const generateCards = async (customOptions = null) => {
     if (isGeneratingRef.current) return;
     const taskCheck = await canDoTask('teach_it');
-    if (!taskCheck.allowed) { triggerUpgradeModal('tasks'); return; }
+    if (!taskCheck.allowed) { triggerUpgradeModal('teach_it'); return; }
     
     isGeneratingRef.current = true;
     setIsGenerating(true);
