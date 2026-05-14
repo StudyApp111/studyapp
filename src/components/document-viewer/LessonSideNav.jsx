@@ -35,11 +35,10 @@ export default function LessonSideNav({
     navigate(`${createPageUrl("DocumentViewer")}?${params.toString()}`, { replace: true });
   };
 
-  // Notes is now the primary landing surface. If a document was uploaded the user
-  // can still see it via the "Doc" item, but notes takes the top spot.
+  // Notes is the primary landing surface. The source document is reachable
+  // via a "Document" button inside the notes toolbar — no dedicated tab needed.
   const items = [
     { id: 'notes', label: 'Notes', icon: FileText },
-    ...(hasDocument ? [{ id: 'doc', label: 'Doc', icon: FileText }] : []),
     { id: 'flashcards', label: 'Flashcards', icon: BookMarked, dot: showFlashcardsDot },
     { id: 'exam', label: 'Quizzes', icon: Zap, dot: showExamDot },
     { id: 'teachit', label: 'Teach It', icon: Brain, dot: showTeachItDot },

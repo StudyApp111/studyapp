@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, Copy, Check, Sparkles, ChevronLeft, ChevronRight as ChevronRightIcon, BookOpen, Zap, FileText, GraduationCap } from "lucide-react";
+import { Loader2, RefreshCw, Copy, Check, Sparkles, ChevronLeft, ChevronRight as ChevronRightIcon, BookOpen, Zap, FileText, GraduationCap, FileSearch } from "lucide-react";
 import CustomizeGenerationModal from "@/components/modals/CustomizeGenerationModal";
 import EditableNoteContent from "@/components/document-viewer/EditableNoteContent";
 import { toast } from "sonner";
@@ -26,7 +26,8 @@ const TYPE_CONFIG = {
   "default": { icon: Sparkles, color: "text-violet-600", bg: "bg-violet-50", border: "border-violet-100" }
 };
 
-export default function NotesTab({ lesson }) {
+export default function NotesTab({ lesson, onViewDocument }) {
+  const hasDocument = !!(lesson?.file_url || lesson?.file_urls?.length);
   const { isDark } = useTheme();
   const { canDoTask, incrementTaskCount, triggerUpgradeModal, isPro } = useSubscription();
   const [note, setNote] = useState(null);
@@ -269,59 +270,8 @@ export default function NotesTab({ lesson }) {
       />
 
       {note ? (
-        <div className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden ${isDark ? 'bg-[#0a0a12]' : 'bg-slate-50'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
-          {/* Sticky action bar — distinct background, stays visible while scrolling */}
-          <div className={`sticky top-0 z-20 flex items-center justify-end gap-2 px-3 py-2 border-b backdrop-blur ${isDark ? 'bg-[#12121a]/95 border-white/10' : 'bg-white/95 border-slate-200'}`}>
-            {allNotes.length > 1 && (
-              <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white'}`}>
-                <button
-                  onClick={() => {
-                    const newIdx = Math.min(currentNoteIndex + 1, allNotes.length - 1);
-                    setCurrentNoteIndex(newIdx);
-                    setNote(allNotes[newIdx]);
-                  }}
-                  disabled={currentNoteIndex >= allNotes.length - 1}
-                  className={`p-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-slate-100 text-slate-600'}`}
-                  title="Older version"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
-                <span className={`text-[11px] font-medium tabular-nums ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  {currentNoteIndex + 1}/{allNotes.length}
-                </span>
-                <button
-                  onClick={() => {
-                    const newIdx = Math.max(currentNoteIndex - 1, 0);
-                    setCurrentNoteIndex(newIdx);
-                    setNote(allNotes[newIdx]);
-                  }}
-                  disabled={currentNoteIndex <= 0}
-                  className={`p-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-slate-100 text-slate-600'}`}
-                  title="Newer version"
-                >
-                  <ChevronRightIcon className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-            <button
-              onClick={copyToClipboard}
-              title="Copy notes"
-              className={`h-8 w-8 rounded-md border flex items-center justify-center ${isDark ? 'text-slate-300 border-white/10 bg-white/5 hover:bg-white/10' : 'text-slate-600 border-slate-200 bg-white hover:bg-slate-50'}`}
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={() => setCustomizeOpen(true)}
-              title="Regenerate with custom options"
-              className="h-8 px-3 rounded-md bg-purple-600 hover:bg-purple-700 text-white shadow-sm shadow-purple-500/30 flex items-center gap-1.5 text-xs font-semibold"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Regenerate</span>
-            </button>
-          </div>
-
-          {/* Editor — full width, no TOC, no nested card */}
-          <div className={`px-4 sm:px-8 py-4 ${isDark ? 'bg-[#12121a]' : 'bg-white'} min-h-full`} style={{ userSelect: 'text', WebkitUserSelect: 'text', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+        <div className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden ${isDark ? 'bg-[#12121a]' : 'bg-white'}`} style={{ maxHeight: 'calc(100vh - 140px)' }}>
+          <div className={`px-4 sm:px-8 py-2 ${isDark ? 'bg-[#12121a]' : 'bg-white'} min-h-full`} style={{ userSelect: 'text', WebkitUserSelect: 'text', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
             <EditableNoteContent
               key={note.id}
               content={note.content}
@@ -332,6 +282,66 @@ export default function NotesTab({ lesson }) {
                 setAllNotes(prev => prev.map(n => n.id === note.id ? nextNote : n));
               }}
               isDark={isDark}
+              toolbarActions={
+                <>
+                  {hasDocument && onViewDocument && (
+                    <button
+                      onClick={onViewDocument}
+                      title="View source document"
+                      className={`h-7 px-2 rounded-md border flex items-center gap-1 text-[11px] font-semibold ${isDark ? 'text-slate-300 border-white/10 bg-white/5 hover:bg-white/10' : 'text-slate-700 border-slate-200 bg-white hover:bg-slate-50'}`}
+                    >
+                      <FileSearch className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Document</span>
+                    </button>
+                  )}
+                  {allNotes.length > 1 && (
+                    <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-md border ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white'}`}>
+                      <button
+                        onClick={() => {
+                          const newIdx = Math.min(currentNoteIndex + 1, allNotes.length - 1);
+                          setCurrentNoteIndex(newIdx);
+                          setNote(allNotes[newIdx]);
+                        }}
+                        disabled={currentNoteIndex >= allNotes.length - 1}
+                        className={`p-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-slate-100 text-slate-600'}`}
+                        title="Older version"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <span className={`text-[11px] font-medium tabular-nums ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {currentNoteIndex + 1}/{allNotes.length}
+                      </span>
+                      <button
+                        onClick={() => {
+                          const newIdx = Math.max(currentNoteIndex - 1, 0);
+                          setCurrentNoteIndex(newIdx);
+                          setNote(allNotes[newIdx]);
+                        }}
+                        disabled={currentNoteIndex <= 0}
+                        className={`p-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10 text-slate-300' : 'hover:bg-slate-100 text-slate-600'}`}
+                        title="Newer version"
+                      >
+                        <ChevronRightIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                  <button
+                    onClick={copyToClipboard}
+                    title="Copy notes"
+                    className={`h-7 w-7 rounded-md border flex items-center justify-center ${isDark ? 'text-slate-300 border-white/10 bg-white/5 hover:bg-white/10' : 'text-slate-600 border-slate-200 bg-white hover:bg-slate-50'}`}
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    onClick={() => setCustomizeOpen(true)}
+                    title="Regenerate with custom options"
+                    className="h-7 px-2.5 rounded-md bg-purple-600 hover:bg-purple-700 text-white shadow-sm shadow-purple-500/30 flex items-center gap-1 text-[11px] font-semibold"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Regenerate</span>
+                  </button>
+                </>
+              }
             />
           </div>
         </div>

@@ -750,12 +750,12 @@ export default function DocumentViewer() {
                 </div>
                 <div className="flex-1 overflow-auto scrollbar-hide">
                   {activeTab === 'doc' && hasDocument && <DocumentViewerTabs lesson={lesson} />}
-                  {activeTab === 'notes' && <NotesTab lesson={lesson} />}
+                  {activeTab === 'notes' && <NotesTab lesson={lesson} onViewDocument={hasDocument ? () => setActiveTab('doc') : undefined} />}
                   {activeTab === 'studyplan' && <StudyPlanTab lesson={lesson} exams={exams} onNavigate={handleStudyPlanNavigate} isGeneratingPlan={isGeneratingStudyPlan} />}
                   {activeTab === 'exam' && <ExamTab lesson={lesson} exams={exams} onExamComplete={handleExamComplete} extractedContent={extractedContent} />}
                   {activeTab === 'flashcards' && <FlashcardsTab lesson={lesson} extractedContent={extractedContent} />}
                   {activeTab === 'teachit' && <TeachItTab lesson={lesson} />}
-                  {activeTab === 'learn' && (contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />)}
+                  {activeTab === 'learn' && <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
                   {activeTab === 'cram' && showCramTab && (contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />)}
                 </div>
               </>

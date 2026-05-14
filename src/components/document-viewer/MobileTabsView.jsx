@@ -70,12 +70,6 @@ export default function MobileTabsView({
                   <Sparkles className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-semibold">Practice</span>
                 </TabsTrigger>
-                {hasDocument && (
-                  <TabsTrigger value="doc" className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-600 data-[state=active]:to-purple-700 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all ${isDark ? 'data-[state=inactive]:text-slate-400' : 'data-[state=inactive]:text-slate-600'}`}>
-                    <FileText className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-semibold">Doc</span>
-                  </TabsTrigger>
-                )}
                 <TabsTrigger value="studyplan" className={`flex-shrink-0 data-[state=active]:bg-gradient-to-br data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-sm flex items-center justify-center gap-1 py-1.5 px-3 rounded-md transition-all relative ${isDark ? 'data-[state=inactive]:text-amber-400/80 data-[state=inactive]:bg-amber-500/10' : 'data-[state=inactive]:text-amber-700 data-[state=inactive]:bg-amber-50'}`}>
                   {showStudyPlanDot && <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full" />}
                   <Target className="w-3.5 h-3.5" />
@@ -143,7 +137,7 @@ export default function MobileTabsView({
             <div className="px-2 pt-2">
               <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={setActiveTab} currentTab={activeTab} />
             </div>
-            <NotesTab lesson={lesson} />
+            <NotesTab lesson={lesson} onViewDocument={hasDocument ? () => setActiveTab('doc') : undefined} />
           </TabsContent>
           <TabsContent value="exam" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">
             <div className="px-2 pt-2">
@@ -167,7 +161,7 @@ export default function MobileTabsView({
             <div className="px-2 pt-2">
               <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={setActiveTab} currentTab={activeTab} />
             </div>
-            {contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
+            <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />
           </TabsContent>
           {showCramTab && (
             <TabsContent value="cram" forceMount className="mt-0 p-0 w-full overflow-x-hidden data-[state=inactive]:hidden">

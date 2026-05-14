@@ -133,7 +133,7 @@ const TOOLBAR = [
   ["link", "clean"],
 ];
 
-export default function EditableNoteContent({ content, onSave, isDark }) {
+export default function EditableNoteContent({ content, onSave, isDark, toolbarActions = null }) {
   // Convert markdown → HTML once when content arrives. Re-runs when switching notes.
   const initialHtml = useMemo(() => markdownToHtml(content || ""), [content]);
   const [html, setHtml] = useState(initialHtml);
@@ -193,11 +193,25 @@ export default function EditableNoteContent({ content, onSave, isDark }) {
           border: none;
           border-bottom: 1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgb(226 232 240)"};
           padding: 8px 4px;
+          padding-right: ${toolbarActions ? "220px" : "4px"};
           position: sticky;
-          top: 48px;
+          top: 0;
           background: ${isDark ? "#12121a" : "#fff"};
           z-index: 4;
           border-radius: 0;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+        .turbo-editor .toolbar-actions {
+          position: absolute;
+          top: 50%;
+          right: 8px;
+          transform: translateY(-50%);
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          z-index: 5;
         }
         .turbo-editor .ql-container.ql-snow { border: none; font-family: inherit; }
         .turbo-editor .ql-editor {
@@ -254,6 +268,9 @@ export default function EditableNoteContent({ content, onSave, isDark }) {
         modules={{ toolbar: TOOLBAR }}
         placeholder="Start writing your notes…"
       />
+      {toolbarActions && (
+        <div className="toolbar-actions">{toolbarActions}</div>
+      )}
     </div>
   );
 }
