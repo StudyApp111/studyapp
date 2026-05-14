@@ -59,16 +59,23 @@ function markdownToHtml(md) {
   const ulBuf = [];
   const olBuf = [];
 
+  // A markdown table row: contains at least one pipe and is not a separator line.
+  // We accept both fully-piped (|a|b|) and pipe-separated (a|b) forms — the LLM
+  // sometimes drops the outer pipes, which used to break rendering entirely.
+  const isTableRow = (l) => /\|/.test(l) && !/^\s*\|?[-:|\s]+\|?\s*$/.test(l);
+  const isTableSeparator = (l) => /^\s*\|?\s*:?-{2,}:?(\s*\|\s*:?-{2,}:?)+\s*\|?\s*$/.test(l);
+  const splitRow = (l) => l.trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim());
+
   while (i < lines.length) {
     const line = lines[i];
-    // Tables
-    if (/^\s*\|.+\|\s*$/.test(line) && i + 1 < lines.length && /^\s*\|?[-:|\s]+\|?\s*$/.test(lines[i + 1])) {
+    // Tables — header row + dash separator + body rows
+    if (isTableRow(line) && i + 1 < lines.length && isTableSeparator(lines[i + 1])) {
       flushList(ulBuf, false); flushList(olBuf, true);
-      const headerCells = line.trim().replace(/^\||\|$/g, "").split("|").map(c => inlineFormat(c.trim()));
+      const headerCells = splitRow(line).map(c => inlineFormat(c));
       i += 2;
       const rows = [];
-      while (i < lines.length && /^\s*\|.+\|\s*$/.test(lines[i])) {
-        rows.push(lines[i].trim().replace(/^\||\|$/g, "").split("|").map(c => inlineFormat(c.trim())));
+      while (i < lines.length && isTableRow(lines[i])) {
+        rows.push(splitRow(lines[i]).map(c => inlineFormat(c)));
         i++;
       }
       out.push(
@@ -126,7 +133,7 @@ const TOOLBAR = [
   ["link", "clean"],
 ];
 
-export default function EditableNoteContent({ content, onSave, isDark, toolbarActions = null }) {
+export default function EditableNoteContent({ content, onSave, isDark }) {
   // Convert markdown → HTML once when content arrives. Re-runs when switching notes.
   const initialHtml = useMemo(() => markdownToHtml(content || ""), [content]);
   const [html, setHtml] = useState(initialHtml);
@@ -185,28 +192,13 @@ export default function EditableNoteContent({ content, onSave, isDark, toolbarAc
         .turbo-editor .ql-toolbar.ql-snow {
           border: none;
           border-bottom: 1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgb(226 232 240)"};
-          padding: 8px 130px 8px 4px;
+          padding: 8px 4px;
           position: sticky;
-          top: 0;
+          top: 48px;
           background: ${isDark ? "#12121a" : "#fff"};
-          z-index: 5;
-          border-radius: 8px 8px 0 0;
+          z-index: 4;
+          border-radius: 0;
         }
-        .turbo-editor .toolbar-actions {
-          position: sticky;
-          top: 0;
-          z-index: 6;
-          float: right;
-          margin-top: -50px;
-          margin-right: 8px;
-          height: 0;
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          gap: 6px;
-          pointer-events: none;
-        }
-        .turbo-editor .toolbar-actions > * { pointer-events: auto; }
         .turbo-editor .ql-container.ql-snow { border: none; font-family: inherit; }
         .turbo-editor .ql-editor {
           padding: 24px 8px;
@@ -262,11 +254,6 @@ export default function EditableNoteContent({ content, onSave, isDark, toolbarAc
         modules={{ toolbar: TOOLBAR }}
         placeholder="Start writing your notes…"
       />
-      {toolbarActions && (
-        <div className="toolbar-actions" style={{ position: "absolute", top: 8, right: 8, marginTop: 0, height: "auto" }}>
-          {toolbarActions}
-        </div>
-      )}
     </div>
   );
 }

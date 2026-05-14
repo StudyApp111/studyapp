@@ -50,7 +50,10 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
     }
   }, [lesson?.id]);
 
-  if (topLevelTopics.length === 0 || dismissed || diagnosticCompleted) return null;
+  // If the user already confirmed topics for this lesson (selected_topics is saved),
+  // don't show the flow again — they've been through it.
+  const alreadyConfirmed = Array.isArray(lesson?.selected_topics) && lesson.selected_topics.length > 0;
+  if (topLevelTopics.length === 0 || dismissed || diagnosticCompleted || alreadyConfirmed) return null;
 
   const toggleSection = (title) => {
     setDeselectedSections(prev => {

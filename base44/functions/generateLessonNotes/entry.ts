@@ -110,10 +110,11 @@ Create publication-quality study notes with rich visual structure. Use this form
    - When listing definitions (vocab, dates, formulas), put them in a > blockquote so they render as a styled callout. Example:
      > **Cache** – a storage place for provisions such as food, often built on supports in the wilderness.
      > **Winter bear** – a term used by characters for a bear that is active during winter.
-4. **Tables** — when you have comparative data, parallel concepts, formulas-vs-uses, characters-vs-traits, dates-vs-events, or any structured pairing, use a markdown table. Example:
+4. **Tables** — when you have comparative data, parallel concepts, formulas-vs-uses, characters-vs-traits, dates-vs-events, or any structured pairing, use a markdown table. EVERY table row MUST start with a pipe AND end with a pipe, AND each row MUST be on its own line with a real newline between rows. NEVER put multiple rows on a single line. The separator row MUST use dashes between pipes. Example (note the leading/trailing pipes on every line and the newlines):
    | Character | Role | Key Trait |
    |---|---|---|
    | Raymond | Co-traveler | Practical, calm |
+   | Gary | Antagonist | Reckless |
 5. **Examples & Applications** — at least one ## section with concrete real-world examples
 6. **Common Mistakes** — pitfalls students typically encounter
 7. **✅ Quick Review** — closing checklist of must-know items
