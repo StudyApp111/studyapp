@@ -235,6 +235,7 @@ function LayoutContent({ children, currentPageName }) {
   // Lesson-aware sidebar swap: when inside a lesson, replace global nav items with lesson activities.
   // We listen to lesson-specific notification dots dispatched by DocumentViewer.
   const [lessonNavState, setLessonNavState] = React.useState({
+    insideLesson: false,
     hasDocument: false,
     showStudyPlanDot: false,
     showFlashcardsDot: false,
@@ -261,8 +262,12 @@ function LayoutContent({ children, currentPageName }) {
   );
   
   const pagesWithCustomNav = ["Worksheet"];
-  const showMobileHeader = showNavigation && !isDocumentViewerPage && !isHomePage;
-  const showMobileBottomNav = (showNavigation && !pagesWithCustomNav.includes(currentPageName)) || isGuestOnActivePage;
+  // While inside a lesson, MobileLessonView owns the entire mobile chrome
+  // (top bar with back chevron + bottom nav with Chat/Flashcards/Quizzes/Teach It).
+  // Hide the global mobile header and global mobile bottom nav to avoid a
+  // double-stacked UI and to maximize 9:16 content area.
+  const showMobileHeader = showNavigation && !isDocumentViewerPage && !isHomePage && !lessonNavState.insideLesson;
+  const showMobileBottomNav = ((showNavigation && !pagesWithCustomNav.includes(currentPageName)) || isGuestOnActivePage) && !lessonNavState.insideLesson;
   const isMainTab = ["Home", "LessonHistory", "SmartGrader", "CreateLesson"].includes(currentPageName);
 
 
@@ -586,8 +591,9 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-        {/* Floating AI Tutor Button */}
-        {showNavigation && <AITutorFloatingButton hidden={false} />}
+        {/* Floating AI Tutor Button — hidden inside a lesson on mobile because
+            the lesson's bottom nav already has a dedicated Chat tab. */}
+        {showNavigation && <AITutorFloatingButton hidden={lessonNavState.insideLesson} />}
 
         {/* Feedback Modal */}
         <FeedbackModal open={feedbackModalOpen} onOpenChange={setFeedbackModalOpen} />

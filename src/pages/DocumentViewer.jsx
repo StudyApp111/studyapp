@@ -7,7 +7,7 @@ import { ChevronLeft, Clock, Zap } from "lucide-react";
 import DocumentViewerTabs from "@/components/document-viewer/DocumentViewerTabs";
 import ExamTab from "@/components/document-viewer/ExamTab";
 import AITutorPanel from "@/components/document-viewer/AITutorPanel";
-import MobileTabsView from "@/components/document-viewer/MobileTabsView";
+import MobileLessonView from "@/components/document-viewer/MobileLessonView";
 
 
 import FlashcardsTab from "@/components/document-viewer/FlashcardsTab";
@@ -257,10 +257,13 @@ export default function DocumentViewer() {
     setActiveTab("notes");
   }, [lesson?.id]);
 
-  // Broadcast lesson nav state to Layout so the global sidebar can morph into LessonSideNav
+  // Broadcast lesson nav state to Layout so the global sidebar can morph into
+  // LessonSideNav AND the mobile chrome (header + bottom nav) can hide while
+  // inside a lesson — the lesson owns its own mobile shell (MobileLessonView).
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('lessonNavStateUpdate', {
       detail: {
+        insideLesson: true,
         hasDocument,
         showStudyPlanDot,
         showFlashcardsDot,
@@ -270,6 +273,12 @@ export default function DocumentViewer() {
         showCramTab,
       }
     }));
+    return () => {
+      // Clear flag when leaving the page so Home gets its bottom nav back.
+      window.dispatchEvent(new CustomEvent('lessonNavStateUpdate', {
+        detail: { insideLesson: false }
+      }));
+    };
   }, [hasDocument, showStudyPlanDot, showFlashcardsDot, showTeachItDot, showExamDot, isCramActive, showCramTab]);
 
   // Track SubmitApplication when user views their FIRST lesson
@@ -776,28 +785,24 @@ export default function DocumentViewer() {
           </div>
         </div>
 
-        {/* Mobile view — extracted to component for maintainability */}
-        <MobileTabsView
+        {/* Mobile view — Notes is the base, 4 overlay tabs (Chat / Flashcards / Quizzes / Teach It) */}
+        <MobileLessonView
           lesson={lesson}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           studyTime={studyTime}
           formatStudyTime={formatStudyTime}
           hasDocument={hasDocument}
-          contentLocked={contentLocked}
-          isCramActive={isCramActive}
-          daysUntilExam={daysUntilExam}
-          showCramTab={showCramTab}
-          showStudyPlanDot={showStudyPlanDot}
-          showFlashcardsDot={showFlashcardsDot}
-          showTeachItDot={showTeachItDot}
-          showExamDot={showExamDot}
           exams={exams}
           extractedContent={extractedContent}
-          isGeneratingStudyPlan={isGeneratingStudyPlan}
-          handleStudyPlanNavigate={handleStudyPlanNavigate}
           handleExamComplete={handleExamComplete}
           isDark={isDark}
+          messages={messages}
+          setMessages={setMessages}
+          aiInput={aiInput}
+          setAiInput={setAiInput}
+          aiLoading={aiLoading}
+          setAiLoading={setAiLoading}
         />
 
       </div>
