@@ -100,15 +100,25 @@ CONTENT STRUCTURE:`;
 
         if (note_type === 'Detailed Notes') {
             systemPrompt += `
-Create comprehensive, well-organized study notes with:
-1. **Introduction** - Brief overview of the topic
-2. **Key Concepts** - Main ideas with detailed explanations
-3. **Important Definitions** - Glossary of essential terms
-4. **Examples & Applications** - Real-world examples and use cases
-5. **Common Mistakes** - Pitfalls to avoid
-6. **Quick Review** - Bullet-point summary at the end
+Create publication-quality study notes with rich visual structure. Use this format:
 
-Use visual hierarchy to make scanning easy. Bold key terms on first mention. Add plenty of examples.`;
+1. **# Document Title** (with emoji) — one H1 for the whole note
+2. **Key Points** — open with a short H3 "Key Points" section listing 3-5 bullet takeaways the student must know
+3. **Major Sections** — break the document into 2-5 ## H2 sections, each with a section-appropriate emoji
+   - Under each H2, use ### H3 subsections to organize content
+   - Use bullet lists for key facts. NEST sub-bullets when there's hierarchy (e.g., "Survival Decisions:" → individual decisions)
+   - When listing definitions (vocab, dates, formulas), put them in a > blockquote so they render as a styled callout. Example:
+     > **Cache** – a storage place for provisions such as food, often built on supports in the wilderness.
+     > **Winter bear** – a term used by characters for a bear that is active during winter.
+4. **Tables** — when you have comparative data, parallel concepts, formulas-vs-uses, characters-vs-traits, dates-vs-events, or any structured pairing, use a markdown table. Example:
+   | Character | Role | Key Trait |
+   |---|---|---|
+   | Raymond | Co-traveler | Practical, calm |
+5. **Examples & Applications** — at least one ## section with concrete real-world examples
+6. **Common Mistakes** — pitfalls students typically encounter
+7. **✅ Quick Review** — closing checklist of must-know items
+
+Bold every key term on first mention. Mark 5-12 of the most important domain terms with [[term]] inline so they become clickable AI links. Aim for dense but scannable — use every formatting tool available.`;
         } else if (note_type === 'Cheat Sheet') {
             systemPrompt += `
 Create a scannable, high-density reference guide with:
