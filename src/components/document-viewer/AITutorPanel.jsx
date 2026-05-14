@@ -62,13 +62,19 @@ export default function AITutorPanel({ messages, setMessages, input, setInput, i
         }
       } catch (err) {}
       
+      // Turbo-style welcome: short greeting + bulleted suggestion list.
+      // Markdown renders these as clean bullets — much cleaner than a paragraph blob.
       setMessages([{
         role: "assistant",
-        content: `Hey! I'm **Polly** — your AI study buddy for **${courseName}**.${pollyInsight}
+        content: `Hey! I'm **Polly**, your AI study buddy for **${courseName}**.${pollyInsight}
 
-👉 Start with the **5-question diagnostic** in the Practice tab. I'll use it to predict your grade and build a personalized study plan.
+How can I help you today?
 
-Ask me anything along the way — I can explain concepts, quiz you, or help you study smarter. 🚀`
+- Ask me anything about your notes or document
+- Need a study tool? I can spin up flashcards, a quiz, or a Feynman session
+- Ready to start? Take the **5-question diagnostic** in the Quizzes tab and I'll predict your grade
+
+Just tell me what you'd like to do next! 🚀`
       }]);
     };
     loadChatHistory();
@@ -225,21 +231,19 @@ Ask me anything along the way — I can explain concepts, quiz you, or help you 
 
   return (
     <div className={`flex-1 rounded-xl shadow-xl border flex flex-col overflow-hidden relative z-10 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-purple-200'}`} style={{ height: '100%' }}>
-      {/* Header — unified purple→indigo gradient (matches lesson header & sidebar accents) */}
-      <div className="rounded-t-xl px-4 py-3 flex items-center gap-3 flex-shrink-0 relative z-20 bg-gradient-to-r from-purple-600 to-indigo-600">
-        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-          <Sparkles className="w-4 h-4 text-white" />
-        </div>
-        <div>
-          <h3 className="font-bold text-white text-sm">Polly</h3>
-          <p className="text-[11px] text-white/80">Your AI study buddy</p>
+      {/* Header — minimal Turbo-style: white surface with a small branded pill.
+          Drops the heavy purple gradient bar that was visually overpowering. */}
+      <div className={`flex items-center justify-between px-3 py-2.5 flex-shrink-0 relative z-20 border-b ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-100'}`}>
+        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${isDark ? 'bg-purple-500/15 border-purple-400/25' : 'bg-purple-50 border-purple-200'}`}>
+          <Sparkles className={`w-3.5 h-3.5 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
+          <span className={`text-[12px] font-semibold ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>Polly AI</span>
         </div>
       </div>
 
       {/* Quick Actions - Always visible above input as pills */}
 
-      {/* Messages */}
-      <div className={`flex-1 overflow-y-auto p-3 space-y-2.5 ${isDark ? 'bg-gradient-to-b from-purple-900/10 to-[#12121a]' : 'bg-slate-50'}`}>
+      {/* Messages — clean white surface (Turbo-style), no gradient distraction */}
+      <div className={`flex-1 overflow-y-auto p-3 space-y-2 ${isDark ? 'bg-[#0f0f17]' : 'bg-white'}`}>
         {messages.map((msg, idx) => (
           <motion.div
             key={idx}
@@ -249,15 +253,15 @@ Ask me anything along the way — I can explain concepts, quiz you, or help you 
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-3 py-2 ${
+              className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white shadow-md'
-                  : isDark ? 'bg-[#1a1a2e] text-slate-200 shadow-sm border border-white/10' : 'bg-white text-slate-800 shadow-sm border border-slate-200'
+                  ? (isDark ? 'bg-purple-600/20 text-purple-100 border border-purple-500/30' : 'bg-purple-50 text-purple-900 border border-purple-100')
+                  : isDark ? 'bg-transparent text-slate-200' : 'bg-transparent text-slate-800'
               }`}
             >
               {msg.role === 'assistant' ? (
                 <ReactMarkdown 
-                  className="text-[13px] leading-relaxed prose prose-sm max-w-none [&>p]:my-1 [&>ul]:my-1.5 [&>ul]:ml-3 [&>ol]:my-1.5 [&>ol]:ml-3 [&>li]:my-0.5"
+                  className={`text-[13px] leading-relaxed prose prose-sm max-w-none [&>p]:my-1.5 [&>ul]:my-2 [&>ul]:ml-4 [&>ul]:list-disc [&>ol]:my-2 [&>ol]:ml-4 [&>li]:my-1 [&_strong]:font-semibold ${isDark ? '[&_strong]:text-white [&>ul]:marker:text-purple-400' : '[&_strong]:text-slate-900 [&>ul]:marker:text-purple-500'}`}
                   components={{
                     p: ({ children }) => {
                       const text = typeof children === 'string' ? children : 

@@ -36,16 +36,35 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Service configuration error' }, { status: 500 });
         }
 
-        let systemPrompt = `You are an expert academic tutor writing high-quality, publication-ready study notes. Generate "${note_type}" in Markdown.
+        let systemPrompt = `You are an expert academic tutor writing high-quality, publication-ready study notes inspired by the best note-taking apps (Turbo AI, Notion). Generate "${note_type}" in Markdown.
 
-FORMATTING:
-- # H1 for the document title (one only)
-- ## H2 for major sections
-- ### H3 for subsections
+VISUAL FORMATTING (THIS IS WHAT MAKES NOTES BEAUTIFUL):
+- # H1 with a relevant emoji at the start for the document title (one only). Example: "# 📚 Photosynthesis Overview"
+- ## H2 with a section-appropriate emoji for major sections. Examples:
+    "## 🌱 Key Concepts"
+    "## 🧪 Examples & Applications"
+    "## ⚡ Quick Facts"
+    "## ⚠️ Common Mistakes"
+    "## 📖 Important Definitions"
+    "## 🎯 Why It Matters"
+    "## 🔑 Quick Review"
+    Pick emojis that match the section topic, not random ones. One emoji per heading.
+- ### H3 for subsections (no emoji on H3 unless it really clarifies meaning)
 - **Bold** every key term on first mention
 - Use - bullet points for lists; 1. 2. 3. for ordered steps
 - Use > blockquotes for critical "remember this" callouts
 - Separate major sections with ---
+
+INLINE TERM HYPERLINKS (CRITICAL — TURBO-STYLE):
+For 5-12 of the MOST important domain-specific terms in the entire note, wrap them inline with double brackets so the app renders them as clickable purple links that open an AI explanation. Use this syntax: [[term]]
+- Wrap each important term ONCE, on its first significant use.
+- Wrap proper nouns, technical concepts, formulas, named entities — NOT common English words.
+- Examples:
+    "The [[Calvin cycle]] converts CO₂ into glucose using ATP from the light reactions."
+    "Athens established the world's first [[direct democracy]] around 508 BCE."
+    "The [[derivative]] of a function measures its instantaneous rate of change."
+- Do NOT wrap terms inside headings, code blocks, or already-bold text.
+- Do NOT wrap the same term multiple times — only its first key use.
 
 CONTENT QUALITY — ABSOLUTE RULES (VIOLATIONS WILL RUIN THE OUTPUT):
 

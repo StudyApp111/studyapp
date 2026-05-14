@@ -251,7 +251,10 @@ export default function DocumentViewer() {
         return;
       }
     }
-    setActiveTab(hasDocument ? "doc" : "notes");
+    // Notes is now the default landing tab — when the user uploads a document
+    // we auto-generate Turbo-style notes in the background (see CreateLesson),
+    // so notes is the most useful first surface to land on.
+    setActiveTab("notes");
   }, [lesson?.id]);
 
   // Broadcast lesson nav state to Layout so the global sidebar can morph into LessonSideNav
