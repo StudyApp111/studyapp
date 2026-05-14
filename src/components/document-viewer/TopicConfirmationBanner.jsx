@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { CheckCircle2, Sparkles, ArrowRight, FolderOpen, Clock, Loader2 } from "lucide-react";
+import { CheckCircle2, Sparkles, ArrowRight, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import posthog from "posthog-js";
@@ -13,7 +12,6 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   const { isGuest, guestData } = useGuestSession();
   const { isDark } = useTheme();
   const [dismissed, setDismissed] = useState(false);
-  const [step, setStep] = useState(1);
   const [deselectedSections, setDeselectedSections] = useState(new Set());
   const [deselectedSubtopics, setDeselectedSubtopics] = useState(new Set());
 
@@ -112,6 +110,11 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
   const selectedSections = topLevelTopics.filter(t => !deselectedSections.has(t.title));
   const selectedCount = selectedSections.length;
 
+  const closeDismiss = () => {
+    localStorage.setItem(dismissKey, 'true');
+    setDismissed(true);
+  };
+
   const handleConfirmTopics = async () => {
     try {
       const deviceInfo = detectDeviceInfo();
@@ -134,7 +137,7 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
         }
       });
     });
-    
+
     // For guests, use backend function; for auth users, use direct entity update
     if (isGuest && guestData?.fingerprint) {
       try {
@@ -149,25 +152,11 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
     } else {
       await base44.entities.Lesson.update(lesson.id, { selected_topics: allTitles });
     }
-    
+
     window.dispatchEvent(new Event('reloadLesson'));
-    setStep(2);
-  };
-
-  const closeDismiss = () => {
-    localStorage.setItem(dismissKey, 'true');
-    setDismissed(true);
-  };
-
-  const handleStartDiagnostic = () => {
+    // Skip the diagnostic prompt step — go directly to the diagnostic tab.
     closeDismiss();
     onGoToDiagnostic();
-  };
-
-  const handleSkipDiagnostic = () => {
-    localStorage.setItem(`diagnostic_skipped_${lesson?.id}`, 'true');
-    closeDismiss();
-    window.dispatchEvent(new CustomEvent('diagnosticSkipped', { detail: { lessonId: lesson.id } }));
   };
 
   const allDeselected = deselectedSections.size === topLevelTopics.length;
@@ -179,34 +168,23 @@ export default function TopicConfirmationBanner({ lesson, onGoToDiagnostic, diag
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogTitle className="sr-only">{step === 1 ? 'Topics Found' : 'Start Diagnostic'}</DialogTitle>
-        <DialogDescription className="sr-only">{step === 1 ? 'Review topics' : 'Take diagnostic'}</DialogDescription>
+        <DialogTitle className="sr-only">Topics Found</DialogTitle>
+        <DialogDescription className="sr-only">Review topics extracted from your document</DialogDescription>
 
-        {/* Progress dots */}
-        <div className="flex items-center justify-center gap-2 pt-4 pb-1">
-          <div className={`h-1.5 rounded-full transition-all duration-300 ${step === 1 ? 'w-6 bg-emerald-500' : 'w-1.5 bg-white/20'}`} />
-          <div className={`h-1.5 rounded-full transition-all duration-300 ${step === 2 ? 'w-6 bg-emerald-500' : 'w-1.5 bg-white/20'}`} />
-        </div>
+        <div className="pt-2" />
 
-        {step === 1 ? (
-          <Step1Topics
-            lesson={lesson}
-            topLevelTopics={topLevelTopics}
-            deselectedSections={deselectedSections}
-            deselectedSubtopics={deselectedSubtopics}
-            toggleSection={toggleSection}
-            toggleSubtopic={toggleSubtopic}
-            handleDeselectAll={handleDeselectAll}
-            allDeselected={allDeselected}
-            selectedCount={selectedCount}
-            onConfirm={handleConfirmTopics}
-          />
-        ) : (
-          <Step2Diagnostic
-            onStart={handleStartDiagnostic}
-            onSkip={handleSkipDiagnostic}
-          />
-        )}
+        <Step1Topics
+          lesson={lesson}
+          topLevelTopics={topLevelTopics}
+          deselectedSections={deselectedSections}
+          deselectedSubtopics={deselectedSubtopics}
+          toggleSection={toggleSection}
+          toggleSubtopic={toggleSubtopic}
+          handleDeselectAll={handleDeselectAll}
+          allDeselected={allDeselected}
+          selectedCount={selectedCount}
+          onConfirm={handleConfirmTopics}
+        />
       </DialogContent>
     </Dialog>
   );
@@ -304,115 +282,6 @@ function Step1Topics({ lesson, topLevelTopics, deselectedSections, deselectedSub
           {allDeselected ? 'Select All' : 'Deselect All'}
         </button>
       </div>
-    </div>
-  );
-}
-
-/* ─── Step 2: Diagnostic prompt ─── */
-function Step2Diagnostic({ onStart, onSkip }) {
-  const [revealed, setRevealed] = useState(false);
-  const [isStarting, setIsStarting] = useState(false);
-  const timerRef = useRef(null);
-
-  const handlePointerDown = () => {
-    setRevealed(true);
-    if (timerRef.current) clearTimeout(timerRef.current);
-  };
-  const handlePointerUp = () => {
-    timerRef.current = setTimeout(() => setRevealed(false), 2000);
-  };
-  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
-
-  const handleStartClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isStarting) return;
-    setIsStarting(true);
-    console.log('🎯 Start Quiz clicked');
-    // Small delay to ensure UI feedback
-    setTimeout(() => {
-      onStart();
-    }, 50);
-  };
-
-  return (
-    <div className="px-5 pb-5 pt-2 text-center">
-      {/* Blurred grade pill */}
-      <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex justify-center mb-4 sm:mb-5">
-        <div
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
-          className="relative inline-flex items-center gap-2 px-4 py-2 rounded-xl border bg-emerald-900/30 border-emerald-500/30 cursor-pointer select-none touch-none"
-        >
-          <div
-            className="absolute inset-0 rounded-xl z-10 transition-all duration-300"
-            style={{
-              backdropFilter: revealed ? 'blur(0px)' : 'blur(4px)',
-              WebkitBackdropFilter: revealed ? 'blur(0px)' : 'blur(4px)',
-              background: revealed ? 'transparent' : 'rgba(255,255,255,0.03)',
-            }}
-          />
-          <span className="text-2xl font-black text-emerald-400 select-none">A</span>
-          <span className="text-sm font-bold select-none text-emerald-300">??%</span>
-          <div className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300">
-            Unlock <ArrowRight className="w-3 h-3 inline -mt-px" />
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Desktop copy */}
-      <div className="hidden sm:block">
-        <h2 className="text-xl font-black mb-2 text-white">Unlock Your Predicted Grade</h2>
-        <p className="text-sm mb-4 text-slate-400">Answer 5 questions to see:</p>
-        <div className="space-y-2 mb-4 max-w-[280px] mx-auto text-left">
-          {['Your predicted exam grade', 'Exactly what topics to study', 'Custom study plan to get you to an A+'].map((t, i) => (
-            <div key={i} className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-              <span className="text-sm font-medium text-slate-200">{t}</span>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs mb-5 flex items-center justify-center gap-1.5 text-slate-500">
-          <Clock className="w-3.5 h-3.5" /> Takes 3 minutes • Unlocks full app
-        </p>
-      </div>
-
-      {/* Mobile copy */}
-      <div className="block sm:hidden">
-        <h2 className="text-lg font-black mb-3 text-white">Unlock Your Grade</h2>
-        <div className="space-y-1.5 mb-3 max-w-[200px] mx-auto text-left">
-          {['5 questions', '3 minutes', 'Full predictions'].map((t, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-              <span className="text-sm font-medium text-slate-200">{t}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* CTA - use native button with explicit touch handling */}
-      <button
-        type="button"
-        onClick={handleStartClick}
-        onTouchEnd={handleStartClick}
-        disabled={isStarting}
-        className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:from-emerald-700 active:to-teal-800 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 disabled:opacity-70 touch-manipulation"
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-      >
-        {isStarting ? 'Starting...' : 'Start 5-Question Quiz'} <ArrowRight className="w-4 h-4" />
-      </button>
-
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSkip(); }}
-        onTouchEnd={(e) => { e.preventDefault(); onSkip(); }}
-        className="w-full text-center text-[11px] mt-2.5 py-2 font-medium text-slate-600 hover:text-slate-500 touch-manipulation"
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-      >
-        <span className="hidden sm:inline">Skip for now (you'll miss out on your study plan)</span>
-        <span className="sm:hidden">Skip (basic only)</span>
-      </button>
     </div>
   );
 }
