@@ -126,7 +126,7 @@ const TOOLBAR = [
   ["link", "clean"],
 ];
 
-export default function EditableNoteContent({ content, onSave, isDark }) {
+export default function EditableNoteContent({ content, onSave, isDark, toolbarActions = null }) {
   // Convert markdown → HTML once when content arrives. Re-runs when switching notes.
   const initialHtml = useMemo(() => markdownToHtml(content || ""), [content]);
   const [html, setHtml] = useState(initialHtml);
@@ -181,16 +181,32 @@ export default function EditableNoteContent({ content, onSave, isDark }) {
   return (
     <div ref={containerRef} className={`turbo-editor ${isDark ? "dark" : ""}`}>
       <style>{`
+        .turbo-editor { position: relative; }
         .turbo-editor .ql-toolbar.ql-snow {
           border: none;
           border-bottom: 1px solid ${isDark ? "rgba(255,255,255,0.08)" : "rgb(226 232 240)"};
-          padding: 8px 4px;
+          padding: 8px 130px 8px 4px;
           position: sticky;
           top: 0;
           background: ${isDark ? "#12121a" : "#fff"};
           z-index: 5;
           border-radius: 8px 8px 0 0;
         }
+        .turbo-editor .toolbar-actions {
+          position: sticky;
+          top: 0;
+          z-index: 6;
+          float: right;
+          margin-top: -50px;
+          margin-right: 8px;
+          height: 0;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 6px;
+          pointer-events: none;
+        }
+        .turbo-editor .toolbar-actions > * { pointer-events: auto; }
         .turbo-editor .ql-container.ql-snow { border: none; font-family: inherit; }
         .turbo-editor .ql-editor {
           padding: 24px 8px;
@@ -246,6 +262,11 @@ export default function EditableNoteContent({ content, onSave, isDark }) {
         modules={{ toolbar: TOOLBAR }}
         placeholder="Start writing your notes…"
       />
+      {toolbarActions && (
+        <div className="toolbar-actions" style={{ position: "absolute", top: 8, right: 8, marginTop: 0, height: "auto" }}>
+          {toolbarActions}
+        </div>
+      )}
     </div>
   );
 }

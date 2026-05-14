@@ -21,12 +21,12 @@ const DIFFICULTIES = [
   { id: "mixed", label: "Mixed", description: "Adaptive — easy, medium, and hard" },
 ];
 
-// Per-type configuration: title, item label, amount range
+// Per-type configuration: title, item label, amount range, feature flags
 const TYPE_CONFIG = {
-  practice_quiz: { title: "Practice Quiz Settings", itemLabel: "questions", min: 5, max: 15, defaultAmount: 10, supportsAmount: true, supportsQuestionTypes: true },
-  flashcards:    { title: "Flashcard Settings",     itemLabel: "flashcards", min: 5, max: 20, defaultAmount: 10, supportsAmount: true },
-  teach_it:      { title: "Teach It Settings",      itemLabel: "teach it cards", min: 3, max: 10, defaultAmount: 5, supportsAmount: true },
-  notes:         { title: "Notes Settings",         itemLabel: "notes", supportsAmount: false },
+  practice_quiz: { title: "Practice Quiz Settings", itemLabel: "questions", min: 5, max: 15, defaultAmount: 10, supportsAmount: true, supportsQuestionTypes: true, supportsDifficulty: true },
+  flashcards:    { title: "Flashcard Settings",     itemLabel: "flashcards", min: 5, max: 20, defaultAmount: 10, supportsAmount: true, supportsDifficulty: true },
+  teach_it:      { title: "Teach It Settings",      itemLabel: "teach it cards", min: 3, max: 10, defaultAmount: 5, supportsAmount: true, supportsDifficulty: true },
+  notes:         { title: "Notes Settings",         itemLabel: "notes", supportsAmount: false, supportsDifficulty: false },
 };
 
 const CUSTOM_INSTRUCTIONS_LIMIT = 200;
@@ -181,7 +181,7 @@ Return a JSON object with a "topics" array. Each topic should have:
   if (showTopicPicker) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className={`sm:max-w-[500px] max-h-[85vh] p-0 gap-0 overflow-hidden rounded-2xl flex flex-col ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+        <DialogContent hideCloseButton className={`sm:max-w-[500px] max-h-[85vh] p-0 gap-0 overflow-hidden rounded-2xl flex flex-col ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
           <DialogTitle className="sr-only">Select Topics</DialogTitle>
           <DialogDescription className="sr-only">Choose which topics to focus on</DialogDescription>
           <TopicPickerView
@@ -202,7 +202,7 @@ Return a JSON object with a "topics" array. Each topic should have:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`sm:max-w-[500px] max-h-[85vh] p-0 gap-0 overflow-y-auto rounded-2xl ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
+      <DialogContent hideCloseButton className={`sm:max-w-[500px] max-h-[85vh] p-0 gap-0 overflow-y-auto rounded-2xl ${isDark ? 'bg-[#12121a]' : 'bg-white'}`}>
         {/* Header */}
         <div className={`px-5 pt-5 pb-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
           <div>
@@ -210,7 +210,13 @@ Return a JSON object with a "topics" array. Each topic should have:
               {config.title}
             </DialogTitle>
             <DialogDescription className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Pick topics, difficulty{config.supportsAmount ? `, and number of ${config.itemLabel}` : ''}
+              {(() => {
+                const parts = ["Pick topics"];
+                if (config.supportsDifficulty) parts.push("difficulty");
+                if (config.supportsAmount) parts.push(`number of ${config.itemLabel}`);
+                if (parts.length === 1) parts.push("add custom instructions");
+                return parts.length === 2 ? parts.join(" and ") : parts.slice(0, -1).join(", ") + ", and " + parts.slice(-1);
+              })()}
             </DialogDescription>
           </div>
           <button onClick={() => onOpenChange(false)} className={`p-1.5 rounded-lg ${isDark ? 'hover:bg-white/10' : 'hover:bg-slate-100'}`}>
@@ -253,7 +259,8 @@ Return a JSON object with a "topics" array. Each topic should have:
             )}
           </div>
 
-          {/* Difficulty — always shown */}
+          {/* Difficulty — hidden for notes */}
+          {config.supportsDifficulty && (
           <div className="space-y-2.5">
             <Label className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               Difficulty
@@ -282,6 +289,7 @@ Return a JSON object with a "topics" array. Each topic should have:
               })}
             </div>
           </div>
+          )}
 
           {/* Question Types — Practice Quiz only */}
           {config.supportsQuestionTypes && (
@@ -376,10 +384,13 @@ Return a JSON object with a "topics" array. Each topic should have:
         {/* Footer */}
         <div className={`px-5 py-4 border-t flex items-center gap-3 ${isDark ? 'border-white/10' : 'border-slate-200'}`}>
           <p className={`flex-1 text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-            {config.supportsAmount
-              ? `${amount} ${config.itemLabel} · ${DIFFICULTIES.find(d => d.id === difficulty)?.label || 'Mixed'}`
-              : `${DIFFICULTIES.find(d => d.id === difficulty)?.label || 'Mixed'} difficulty`
-            }
+            {(() => {
+              const bits = [];
+              if (config.supportsAmount) bits.push(`${amount} ${config.itemLabel}`);
+              if (config.supportsDifficulty) bits.push(`${DIFFICULTIES.find(d => d.id === difficulty)?.label || 'Mixed'} difficulty`);
+              if (selectedTopics.length > 0) bits.push(`${selectedTopics.length} topics`);
+              return bits.length ? bits.join(" · ") : "Ready to generate";
+            })()}
           </p>
           <Button
             variant="ghost"
