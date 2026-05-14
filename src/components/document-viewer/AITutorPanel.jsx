@@ -231,12 +231,22 @@ Just tell me what you'd like to do next! 🚀`
 
   return (
     <div className={`flex-1 rounded-xl shadow-xl border flex flex-col overflow-hidden relative z-10 ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-purple-200'}`} style={{ height: '100%' }}>
-      {/* Header — minimal Turbo-style: white surface with a small branded pill.
-          Drops the heavy purple gradient bar that was visually overpowering. */}
+      {/* Header — branded pill on the left + course context, with a live status dot */}
       <div className={`flex items-center justify-between px-3 py-2.5 flex-shrink-0 relative z-20 border-b ${isDark ? 'bg-[#12121a] border-white/10' : 'bg-white border-slate-100'}`}>
-        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${isDark ? 'bg-purple-500/15 border-purple-400/25' : 'bg-purple-50 border-purple-200'}`}>
-          <Sparkles className={`w-3.5 h-3.5 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
-          <span className={`text-[12px] font-semibold ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>Polly AI</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border flex-shrink-0 ${isDark ? 'bg-purple-500/15 border-purple-400/25' : 'bg-purple-50 border-purple-200'}`}>
+            <Sparkles className={`w-3.5 h-3.5 ${isDark ? 'text-purple-300' : 'text-purple-600'}`} />
+            <span className={`text-[12px] font-semibold ${isDark ? 'text-purple-200' : 'text-purple-700'}`}>Polly AI</span>
+          </div>
+          <div className="min-w-0 hidden sm:flex flex-col leading-tight">
+            <span className={`text-[12px] font-semibold truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+              {lesson?.course_name || 'Your AI tutor'}
+            </span>
+            <span className={`text-[10px] flex items-center gap-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+              Online · knows your document
+            </span>
+          </div>
         </div>
       </div>
 

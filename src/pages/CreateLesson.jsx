@@ -320,8 +320,8 @@ export default function CreateLesson() {
 
       // Auto-generate Detailed Notes in the background — ONLY when the user
       // actually uploaded a document (we have meaningful extracted content).
-      // Notes is now the default landing tab, so this primes that surface so
-      // the user sees beautiful Turbo-style notes the moment they land.
+      // Notes is the default landing tab, so this primes the surface ahead
+      // of time. NotesTab also self-heals if this didn't fire successfully.
       if (lessonData.input_type === 'file' && extractedContent && extractedContent.length > 200) {
         console.log("📝 Auto-generating Detailed Notes in background...");
         base44.functions.invoke('generateLessonNotes', {
