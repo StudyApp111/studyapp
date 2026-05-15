@@ -17,12 +17,15 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import OnboardingModal from "@/components/onboarding-v2/OnboardingModal";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import PullToRefresh from "@/components/ui/PullToRefresh";
+import { useIsMobile } from "@/hooks/use-mobile";
+import ContinueOnDesktopCard from "@/components/subscription/ContinueOnDesktopCard";
 import posthog from 'posthog-js';
 import { detectDeviceInfo } from "@/components/utils/userTracking";
 
 export default function Home() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const isMobile = useIsMobile();
   const [user, setUser] = useState(null);
   const [dailyXP, setDailyXP] = useState(0);
   const [dailyGoalTarget, setDailyGoalTarget] = useState(30);
@@ -567,6 +570,16 @@ export default function Home() {
               flashcardsReviewed={flashcardsToday}
               compact={false}
             />
+
+            {/* Mobile-only: surface the full desktop study workspace.
+                Some of StudyApp's most impactful surfaces — the interactive
+                predicted-grade dashboard, the customizable study plan editor,
+                and the side-by-side document + AI tutor workspace — are built
+                for a larger screen. Let mobile users send themselves a link so
+                they can open it on a laptop/tablet whenever they have one. */}
+            {isMobile && (
+              <ContinueOnDesktopCard reason="desktop_features" variant="inline" />
+            )}
           </div>
         </div>
       </div>

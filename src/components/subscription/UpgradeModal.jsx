@@ -9,11 +9,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useSubscription, FEATURE_LABELS, FREE_DAILY_LIMITS } from './SubscriptionContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
+import ContinueOnDesktopCard from './ContinueOnDesktopCard';
 import posthog from 'posthog-js';
 
 export default function UpgradeModal({ open, onOpenChange, reason = 'default' }) {
-  const { refreshUser } = useSubscription();
+  const { refreshUser, user } = useSubscription();
   const { isDark } = useTheme();
+  const isMobile = useIsMobile();
   
   const [isYearly, setIsYearly] = useState(true);
   const [showPromoInput, setShowPromoInput] = useState(false);
@@ -179,6 +182,42 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
             <X className="w-5 h-5" />
           </button>
 
+          {/* ── MOBILE PATH ──────────────────────────────────────────────
+             On a phone, we don't surface in-app subscription mechanics.
+             Instead we offer to email the user a link to continue their
+             StudyApp session on a computer — that's where the full
+             experience (predicted grade dashboard, custom study plans,
+             side-by-side workspace) actually lives.
+             This is product/experience messaging, NOT a "buy elsewhere"
+             pitch, which keeps us aligned with App Store / Play Store
+             review guidelines. */}
+          {isMobile ? (
+            <>
+              <div className="flex-1 sm:flex-none" />
+              <div className="px-5 pt-10 pb-3 text-center">
+                <h2 className={`text-2xl font-black mb-2 leading-tight ${t.heading}`}>
+                  You've made great progress today
+                </h2>
+                <p className={`text-sm ${t.sub}`}>
+                  {featureLabel
+                    ? `You've used your free ${featureLabel.toLowerCase()} for today. The full StudyApp study experience lives on your computer — let's get you there.`
+                    : 'The full StudyApp study experience lives on your computer — let\'s get you there.'}
+                </p>
+              </div>
+              <div className="px-5 pb-5">
+                <ContinueOnDesktopCard
+                  reason="limit_reached"
+                  variant="modal"
+                  userEmail={user?.email}
+                />
+                <p className={`text-center text-[11px] mt-4 leading-relaxed ${t.priceMuted}`}>
+                  Keep exploring StudyApp here on your phone — you can come back tomorrow when your daily activities reset.
+                </p>
+              </div>
+              <div className="flex-1 sm:flex-none" />
+            </>
+          ) : (
+            <>
           {/* Spacer on mobile so content centers nicely */}
           <div className="flex-1 sm:flex-none" />
 
@@ -298,6 +337,8 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
 
           {/* Bottom spacer on mobile */}
           <div className="flex-1 sm:flex-none" />
+            </>
+          )}
         </motion.div>
       </DialogContent>
     </Dialog>

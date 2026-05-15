@@ -18,6 +18,8 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import CreatePracticeQuizButton from "./CreatePracticeQuizButton";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 import { detectDeviceInfo } from "@/components/utils/userTracking";
+import { useIsMobile } from "@/hooks/use-mobile";
+import ContinueOnDesktopCard from "@/components/subscription/ContinueOnDesktopCard";
 
 const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
@@ -130,6 +132,7 @@ const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
 export default function ExamTab({ lesson, exams, onExamComplete, extractedContent }) {
   const { isDark } = useTheme();
   const { isGuest, guestData, markGuestDiagnosticCompleted } = useGuestSession();
+  const isMobile = useIsMobile();
   const [exam, setExam] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -1343,7 +1346,9 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
     
     return (
         <div className="px-3 md:px-6 py-3 w-full max-w-full mx-auto space-y-3 md:space-y-4 pb-8" style={{ boxSizing: 'border-box', overflowX: 'hidden', maxWidth: '100vw' }}>
-        {/* Create Practice Quiz CTA — always visible at top so it's never missing */}
+        {/* Create Practice Quiz CTA — always visible at top so it's never missing.
+            Practice quizzes work fully on mobile; the diagnostic + predicted grade
+            experience is the part that lives on desktop (see card below). */}
         <CreatePracticeQuizButton
           lesson={lesson}
           extractedContent={extractedContent}
@@ -1355,6 +1360,34 @@ export default function ExamTab({ lesson, exams, onExamComplete, extractedConten
             if (onExamComplete) onExamComplete();
           }}
         />
+
+        {/* Mobile-only: explain that the diagnostic + predicted grade dashboard
+            + custom study plan live on the full desktop experience. We do NOT
+            block practice quiz creation above — only the grade-prediction flow
+            requires the larger workspace to be meaningful. */}
+        {isMobile && !diagnosticExam?.completed && (
+          <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-purple-900/15 border-purple-500/30' : 'bg-purple-50 border-purple-200'}`}>
+            <div className="px-4 pt-4 pb-2">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <Lock className="w-3.5 h-3.5 text-white" />
+                </div>
+                <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Predicted Grade & Study Plan — on desktop
+                </h3>
+              </div>
+              <p className={`text-xs leading-relaxed ${isDark ? 'text-purple-100/80' : 'text-purple-900/80'}`}>
+                The diagnostic generates your <strong>Predicted Grade</strong> for <strong>{lesson?.course_name || 'this course'}</strong> and builds a custom study plan around your weak spots. Both are interactive dashboards built for a larger screen — open StudyApp on your laptop or tablet to take the diagnostic and see your grade prediction.
+              </p>
+            </div>
+            <div className="px-4 pb-4 pt-2">
+              <ContinueOnDesktopCard
+                reason="desktop_features"
+                variant="inline"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Practice Exams Section - Show first if they exist */}
         {sortedPracticeExams.length > 0 && (
