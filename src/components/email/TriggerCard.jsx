@@ -29,6 +29,7 @@ const TRIGGER_LABELS = {
   inactive_7_days: "Inactive 7 Days",
   inactive_14_days: "Inactive 14 Days",
   inactive_30_days: "Inactive 30 Days",
+  desktop_link_request: "Continue on Web (mobile → desktop link)",
 };
 
 export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpdate, onDelete }) {
@@ -82,10 +83,18 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
       name: trigger.name,
       trigger_type: trigger.trigger_type,
       resend_template_id: trigger.resend_template_id,
+      subject: trigger.subject || '',
+      body: trigger.body || '',
       trigger_config: trigger.trigger_config || {}
     });
     setEditing(true);
   };
+
+  // Some triggers send via Resend Template ID (designed in Resend),
+  // others (like desktop_link_request) send with inline subject+body that's
+  // edited directly in this dashboard. We show the right editor accordingly.
+  const isInlineTemplate = !trigger.resend_template_id && (trigger.subject || trigger.body)
+    || trigger.trigger_type === 'desktop_link_request';
 
   const filteredUsers = testRecipient
     ? allUsers.filter(u =>
@@ -119,24 +128,36 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* Resend Template Info */}
-          <div className="p-3 rounded-lg bg-muted/50 border">
-            <p className="text-xs text-muted-foreground mb-1">Resend Template</p>
-            <div className="flex items-center gap-2">
-              <p className="text-sm text-foreground font-medium">
-                {matchedTemplate?.name || trigger.resend_template_name || 'Unknown template'}
+          {/* Template Info — Resend template OR inline subject/body */}
+          {isInlineTemplate ? (
+            <div className="p-3 rounded-lg bg-muted/50 border">
+              <p className="text-xs text-muted-foreground mb-1">Inline Template (edited here)</p>
+              <p className="text-sm text-foreground font-medium truncate">
+                {trigger.subject || '— no subject set —'}
               </p>
-              <a 
-                href="https://resend.com/templates" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-purple-500 hover:text-purple-400"
-              >
-                <ExternalLink className="w-3 h-3" />
-              </a>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                {trigger.body ? trigger.body.replace(/<[^>]+>/g, ' ').slice(0, 120) + '…' : '— no body set —'}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5 font-mono">{trigger.resend_template_id}</p>
-          </div>
+          ) : (
+            <div className="p-3 rounded-lg bg-muted/50 border">
+              <p className="text-xs text-muted-foreground mb-1">Resend Template</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-foreground font-medium">
+                  {matchedTemplate?.name || trigger.resend_template_name || 'Unknown template'}
+                </p>
+                <a 
+                  href="https://resend.com/templates" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-purple-500 hover:text-purple-400"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 font-mono">{trigger.resend_template_id}</p>
+            </div>
+          )}
 
           {/* Trigger config display */}
           {trigger.trigger_config && Object.keys(trigger.trigger_config).length > 0 && (
@@ -255,20 +276,49 @@ export default function TriggerCard({ trigger, allUsers, resendTemplates, onUpda
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Resend Template</Label>
-              <Select value={editData.resend_template_id || ''} onValueChange={v => {
-                const t = resendTemplates.find(rt => rt.id === v);
-                setEditData({...editData, resend_template_id: v, resend_template_name: t?.name || ''});
-              }}>
-                <SelectTrigger><SelectValue placeholder="Select template" /></SelectTrigger>
-                <SelectContent>
-                  {resendTemplates.map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {isInlineTemplate ? (
+              <>
+                <div>
+                  <Label>Subject</Label>
+                  <Input
+                    value={editData.subject || ''}
+                    onChange={e => setEditData({ ...editData, subject: e.target.value })}
+                    placeholder="e.g., Continue StudyApp on your computer"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Supports <code>{'{{name}}'}</code>, <code>{'{{first_name}}'}</code>, <code>{'{{desktop_url}}'}</code>
+                  </p>
+                </div>
+                <div>
+                  <Label>HTML Body</Label>
+                  <textarea
+                    value={editData.body || ''}
+                    onChange={e => setEditData({ ...editData, body: e.target.value })}
+                    rows={10}
+                    placeholder="<p>Hi {{first_name}}, ...</p>"
+                    className="w-full font-mono text-xs rounded-md border bg-background px-3 py-2 resize-y"
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    HTML allowed. Placeholders: <code>{'{{name}}'}</code>, <code>{'{{first_name}}'}</code>, <code>{'{{desktop_url}}'}</code>
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div>
+                <Label>Resend Template</Label>
+                <Select value={editData.resend_template_id || ''} onValueChange={v => {
+                  const t = resendTemplates.find(rt => rt.id === v);
+                  setEditData({...editData, resend_template_id: v, resend_template_name: t?.name || ''});
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Select template" /></SelectTrigger>
+                  <SelectContent>
+                    {resendTemplates.map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Trigger Config */}
             <div className="border rounded-lg p-3 space-y-3 bg-muted/30">

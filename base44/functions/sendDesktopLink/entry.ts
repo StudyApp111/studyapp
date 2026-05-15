@@ -4,58 +4,31 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
  * sendDesktopLink — emails the authenticated user a one-tap link to continue
  * their StudyApp session on a larger screen (laptop / tablet / desktop).
  *
- * Why this exists:
- *  - The full StudyApp experience (predicted grade chart, custom study plans,
- *    side-by-side document + AI tutor, interactive timeline) is built for
- *    desktop and doesn't fit in a phone form factor.
- *  - When a mobile user reaches a daily feature limit, we offer to email them
- *    a link to pick up exactly where they left off on a bigger device.
- *  - This is positioned as a product/experience continuation — NOT as a
- *    workaround for app-store payment policies.
+ * Source of truth for copy:
+ *   AutomaticEmail record with trigger_type = "desktop_link_request".
+ *   Admins edit subject + body in the Email Manager dashboard.
+ *   Supported placeholders in subject + body:
+ *     {{name}}         — user's full name (or "there")
+ *     {{first_name}}   — user's first name (or "there")
+ *     {{desktop_url}}  — https://app.studyappai.com
  *
- * Auth: requires authenticated user (uses base44 SDK auth).
- * Email transport: Resend (RESEND_API_KEY env var).
+ * If no AutomaticEmail record is found, we fall back to the built-in default
+ * copy below so the feature never breaks even on a fresh database.
+ *
+ * Auth: requires authenticated user.
+ * Transport: Resend (RESEND_API_KEY env var).
  */
-Deno.serve(async (req) => {
-  try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    if (!resendApiKey) {
-      return Response.json({ error: 'Email service not configured' }, { status: 500 });
-    }
+const DESKTOP_URL = 'https://app.studyappai.com';
 
-    const { reason } = await req.json().catch(() => ({}));
-
-    const firstName = (user.full_name || user.display_name || '').split(' ')[0] || 'there';
-    const desktopUrl = 'https://app.studyappai.com';
-
-    // Reason-aware subject + lead line. Keep messaging product-focused — we
-    // talk about the richer experience, not about subscription mechanics.
-    const reasonCopy = {
-      limit_reached: {
-        subject: 'Pick up your StudyApp session on your computer',
-        lead: "You've made great progress today on your phone. To keep going without limits, open StudyApp on your computer — that's where the full study experience lives.",
-      },
-      desktop_features: {
-        subject: 'Your StudyApp Predicted Grade dashboard is ready on desktop',
-        lead: "Your predicted grade, custom study plan, and side-by-side document view all live on the full desktop experience. Open the link below on your computer to dive in.",
-      },
-      default: {
-        subject: 'Continue StudyApp on your computer',
-        lead: "Here's a quick link to open StudyApp on your computer, where you'll find the full study experience — interactive predicted-grade charts, customizable study plans, and the side-by-side document workspace.",
-      },
-    };
-    const copy = reasonCopy[reason] || reasonCopy.default;
-
-    const html = `
+// Built-in fallback template. Kept identical in spirit to the original
+// hardcoded copy so behaviour is unchanged for installs that haven't seeded
+// the AutomaticEmail row yet.
+const DEFAULT_SUBJECT = 'Continue StudyApp on your computer';
+const DEFAULT_BODY = `
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>${copy.subject}</title></head>
+<head><meta charset="utf-8"><title>{{subject}}</title></head>
 <body style="margin:0;padding:0;background:#f6f5fb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1e1b2e;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f5fb;padding:40px 16px;">
     <tr><td align="center">
@@ -67,10 +40,10 @@ Deno.serve(async (req) => {
         </td></tr>
         <tr><td style="padding:16px 32px 8px 32px;">
           <h1 style="margin:0 0 16px 0;font-size:22px;font-weight:800;line-height:1.3;color:#1e1b2e;">
-            Hey ${firstName}, your full study workspace is one click away
+            Hey {{first_name}}, your full study workspace is one click away
           </h1>
           <p style="margin:0 0 20px 0;font-size:15px;line-height:1.55;color:#475569;">
-            ${copy.lead}
+            Here's a quick link to open StudyApp on your computer, where you'll find the full study experience — interactive predicted-grade charts, customizable study plans, and the side-by-side document workspace.
           </p>
           <div style="background:#faf7ff;border:1px solid #ede4ff;border-radius:12px;padding:16px 18px;margin:0 0 24px 0;">
             <p style="margin:0 0 10px 0;font-size:13px;font-weight:700;color:#6d28d9;text-transform:uppercase;letter-spacing:0.05em;">
@@ -84,14 +57,14 @@ Deno.serve(async (req) => {
           </div>
         </td></tr>
         <tr><td align="center" style="padding:0 32px 8px 32px;">
-          <a href="${desktopUrl}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px;box-shadow:0 4px 12px rgba(124,58,237,0.3);">
+          <a href="{{desktop_url}}" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 28px;border-radius:12px;box-shadow:0 4px 12px rgba(124,58,237,0.3);">
             Open StudyApp on my computer
           </a>
         </td></tr>
         <tr><td align="center" style="padding:12px 32px 32px 32px;">
           <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.5;">
             Tip: open this email on your laptop or desktop and click the button above.<br/>
-            Or visit <a href="${desktopUrl}" style="color:#7c3aed;text-decoration:none;">app.studyappai.com</a> directly.
+            Or visit <a href="{{desktop_url}}" style="color:#7c3aed;text-decoration:none;">app.studyappai.com</a> directly.
           </p>
         </td></tr>
         <tr><td style="padding:0 32px 32px 32px;border-top:1px solid #f1f5f9;">
@@ -105,6 +78,60 @@ Deno.serve(async (req) => {
 </body>
 </html>`.trim();
 
+// Replace {{var}} placeholders in a string. Simple, no regex foot-guns.
+function applyVars(template, vars) {
+  if (!template) return '';
+  let out = template;
+  for (const [k, v] of Object.entries(vars)) {
+    out = out.split(`{{${k}}}`).join(v ?? '');
+  }
+  return out;
+}
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      return Response.json({ error: 'Email service not configured' }, { status: 500 });
+    }
+
+    // Load the admin-editable record (service role — admins set RLS to admin-only).
+    let template = null;
+    try {
+      const matches = await base44.asServiceRole.entities.AutomaticEmail.filter({
+        trigger_type: 'desktop_link_request',
+      });
+      if (Array.isArray(matches) && matches.length > 0) {
+        template = matches[0];
+      }
+    } catch (e) {
+      console.warn('sendDesktopLink: could not load AutomaticEmail record, using fallback', e?.message);
+    }
+
+    const firstName = (user.full_name || user.display_name || '').split(' ')[0] || 'there';
+    const fullName = user.full_name || user.display_name || 'there';
+
+    const vars = {
+      name: fullName,
+      first_name: firstName,
+      desktop_url: DESKTOP_URL,
+    };
+
+    // Prefer admin-edited copy; fall back to built-in default.
+    const rawSubject = (template?.subject && template.subject.trim()) || DEFAULT_SUBJECT;
+    const rawBody    = (template?.body    && template.body.trim())    || DEFAULT_BODY;
+
+    const subject = applyVars(rawSubject, vars);
+    // Inject the rendered subject so {{subject}} placeholder in the default
+    // template's <title> tag resolves nicely.
+    const html = applyVars(rawBody, { ...vars, subject });
+
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -115,7 +142,7 @@ Deno.serve(async (req) => {
         from: 'StudyApp.AI <updates@updates.studyappai.com>',
         reply_to: 'info@studyappai.com',
         to: [user.email],
-        subject: copy.subject,
+        subject,
         html,
       }),
     });
@@ -126,7 +153,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Failed to send email' }, { status: 502 });
     }
 
-    return Response.json({ success: true, email: user.email });
+    // Bump send_count for admin visibility (best-effort, never blocks the send).
+    if (template?.id) {
+      try {
+        await base44.asServiceRole.entities.AutomaticEmail.update(template.id, {
+          send_count: (template.send_count || 0) + 1,
+        });
+      } catch (e) {
+        console.warn('sendDesktopLink: could not increment send_count', e?.message);
+      }
+    }
+
+    return Response.json({ success: true, email: user.email, source: template ? 'dashboard' : 'fallback' });
   } catch (error) {
     console.error('sendDesktopLink error:', error);
     return Response.json({ error: error.message }, { status: 500 });

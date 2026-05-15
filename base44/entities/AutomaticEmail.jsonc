@@ -26,7 +26,8 @@
         "inactive_3_days",
         "inactive_7_days",
         "inactive_14_days",
-        "inactive_30_days"
+        "inactive_30_days",
+        "desktop_link_request"
       ],
       "description": "What in-app action or delayed condition triggers this email"
     },

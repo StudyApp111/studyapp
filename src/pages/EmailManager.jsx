@@ -38,6 +38,8 @@ const TRIGGER_LABELS = {
   inactive_7_days: "Inactive 7 Days",
   inactive_14_days: "Inactive 14 Days",
   inactive_30_days: "Inactive 30 Days",
+  // ─── On-Demand Triggers (fired explicitly from product UI) ───
+  desktop_link_request: "Continue on Web (mobile → desktop link)",
 };
 
 export default function EmailManager() {
@@ -180,11 +182,16 @@ export default function EmailManager() {
   // Group triggers by category
   const delayedTypes = ['signup_no_lesson_4h', 'lesson_no_diagnostic_24h', 'quiz_no_return_24h', 'session_no_followup_24h'];
   const conditionalTypes = ['upgrade_momentum', 'trial_expiring'];
+  const onDemandTypes = ['desktop_link_request'];
   const actionTriggers = triggers.filter(t =>
-    !t.trigger_type.startsWith('inactive_') && !delayedTypes.includes(t.trigger_type) && !conditionalTypes.includes(t.trigger_type)
+    !t.trigger_type.startsWith('inactive_') &&
+    !delayedTypes.includes(t.trigger_type) &&
+    !conditionalTypes.includes(t.trigger_type) &&
+    !onDemandTypes.includes(t.trigger_type)
   );
   const delayedTriggers = triggers.filter(t => delayedTypes.includes(t.trigger_type));
   const conditionalTriggers = triggers.filter(t => conditionalTypes.includes(t.trigger_type));
+  const onDemandTriggers = triggers.filter(t => onDemandTypes.includes(t.trigger_type));
   const inactivityTriggers = triggers.filter(t => t.trigger_type.startsWith('inactive_'));
 
   return (
@@ -336,6 +343,26 @@ export default function EmailManager() {
           <p className="text-xs text-muted-foreground mb-3">These fire when a user reaches a specific threshold (e.g. 20 questions completed, 5-day streak). Use trigger config to set conditions.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {conditionalTriggers.map(t => (
+              <TriggerCard
+                key={t.id}
+                trigger={t}
+                allUsers={allUsers}
+                resendTemplates={resendTemplates}
+                onUpdate={handleUpdateTrigger}
+                onDelete={handleDeleteTrigger}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* On-Demand Triggers — fired explicitly by product UI (not by user activity) */}
+      {onDemandTriggers.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">On-Demand Triggers</h3>
+          <p className="text-xs text-muted-foreground mb-3">Fired explicitly from a product UI surface (e.g. when a mobile user taps "Email me the desktop link"). Subject & body are edited inline here.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {onDemandTriggers.map(t => (
               <TriggerCard
                 key={t.id}
                 trigger={t}
