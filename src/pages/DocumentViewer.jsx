@@ -788,25 +788,33 @@ export default function DocumentViewer() {
           </div>
         </div>
 
-        {/* Mobile view — Notes is the base, 4 overlay tabs (Chat / Flashcards / Quizzes / Teach It) */}
-        <MobileLessonView
-          lesson={lesson}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          studyTime={studyTime}
-          formatStudyTime={formatStudyTime}
-          hasDocument={hasDocument}
-          exams={exams}
-          extractedContent={extractedContent}
-          handleExamComplete={handleExamComplete}
-          isDark={isDark}
-          messages={messages}
-          setMessages={setMessages}
-          aiInput={aiInput}
-          setAiInput={setAiInput}
-          aiLoading={aiLoading}
-          setAiLoading={setAiLoading}
-        />
+        {/* Mobile view — Notes is the base, 4 overlay tabs (Chat / Flashcards / Quizzes / Teach It).
+            Render a full-screen loader while the lesson is still being fetched
+            so the user never sees a near-blank screen on mobile. */}
+        {!lesson ? (
+          <div className="md:hidden fixed inset-0 z-30 flex items-center justify-center bg-white dark:bg-[#0a0a12]">
+            <ParsingLoader title="Loading your lesson" description="Hang tight, we're getting everything ready..." />
+          </div>
+        ) : (
+          <MobileLessonView
+            lesson={lesson}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            studyTime={studyTime}
+            formatStudyTime={formatStudyTime}
+            hasDocument={hasDocument}
+            exams={exams}
+            extractedContent={extractedContent}
+            handleExamComplete={handleExamComplete}
+            isDark={isDark}
+            messages={messages}
+            setMessages={setMessages}
+            aiInput={aiInput}
+            setAiInput={setAiInput}
+            aiLoading={aiLoading}
+            setAiLoading={setAiLoading}
+          />
+        )}
 
       </div>
 
