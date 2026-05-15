@@ -1,19 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Zap, Crown, Gift } from 'lucide-react';
+import { Zap, Crown, Gift, Monitor } from 'lucide-react';
 import { useSubscription } from './SubscriptionContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-// Compact badge for sidebar/nav
+// =============================================================================
+// UPGRADE BADGES — sidebar / header CTAs for non-Pro users.
+//
+// IMPORTANT: On mobile we never link to /PricingPlans and never use the word
+// "Upgrade". Instead we open the soft UpgradeModal (which on mobile shows the
+// "Continue on Desktop" experience) so app users never see subscription
+// purchase mechanics inside the native app shell. This keeps us aligned with
+// App Store / Play Store review guidelines.
+// =============================================================================
+
+// Compact badge for the desktop sidebar.
+// (Mobile users don't see the desktop sidebar — see Layout.jsx — so this stays
+// as the original "Upgrade" CTA for the laptop/desktop product surface.)
 export function UpgradeNavBadge() {
   const { isDark } = useTheme();
-  const { isPro, getPromoRemainingDays } = useSubscription();
-  
+  const { isPro, getPromoRemainingDays, triggerUpgradeModal } = useSubscription();
+  const isMobile = useIsMobile();
+
   const promoDaysLeft = getPromoRemainingDays?.();
   const hasActivePromo = promoDaysLeft !== null && promoDaysLeft >= 0;
-  
-  // Show promo countdown if active promo
+
+  // Active promo countdown — same UX on every device.
   if (hasActivePromo) {
     return (
       <Link
@@ -26,7 +40,7 @@ export function UpgradeNavBadge() {
       </Link>
     );
   }
-  
+
   if (isPro()) {
     return (
       <div
@@ -39,6 +53,24 @@ export function UpgradeNavBadge() {
     );
   }
 
+  // Mobile path — opens the soft modal (Continue on Desktop), no navigation,
+  // no "Upgrade" / "Pro" language.
+  if (isMobile) {
+    return (
+      <button
+        type="button"
+        onClick={() => triggerUpgradeModal('default')}
+        className="relative w-full min-h-[44px] py-3 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex flex-col items-center justify-center gap-1 shadow-lg shadow-purple-500/30 active:scale-95 transition-transform group"
+        title="Continue on a computer"
+        aria-label="Continue on a computer"
+      >
+        <Monitor className="w-5 h-5 text-white flex-shrink-0" />
+        <span className="text-[9px] font-bold text-white text-center leading-tight px-1 truncate">On Web</span>
+      </button>
+    );
+  }
+
+  // Desktop path — full pricing page experience.
   return (
     <Link
       to={createPageUrl("PricingPlans")}
@@ -52,10 +84,11 @@ export function UpgradeNavBadge() {
   );
 }
 
-// Button for header/home
+// Pill button used inline on Home / headers.
 export function UpgradeButton({ compact = false }) {
-  const { isPro } = useSubscription();
-  
+  const { isPro, triggerUpgradeModal } = useSubscription();
+  const isMobile = useIsMobile();
+
   if (isPro()) {
     return (
       <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-white ${compact ? 'text-xs' : 'text-sm'}`}>
@@ -65,6 +98,22 @@ export function UpgradeButton({ compact = false }) {
     );
   }
 
+  // Mobile — soft "Continue on Web" pill, opens the desktop-link modal.
+  if (isMobile) {
+    return (
+      <button
+        type="button"
+        onClick={() => triggerUpgradeModal('default')}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 active:scale-95 text-white shadow-lg shadow-purple-500/20 transition-transform ${compact ? 'text-xs' : 'text-sm'}`}
+        aria-label="Continue on a computer"
+      >
+        <Monitor className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
+        <span className="font-bold">Continue on Web</span>
+      </button>
+    );
+  }
+
+  // Desktop — keep the original Upgrade pill linking to pricing.
   return (
     <Link
       to={createPageUrl("PricingPlans")}

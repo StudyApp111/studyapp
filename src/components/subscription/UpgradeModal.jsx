@@ -196,22 +196,20 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
               <div className="flex-1 sm:flex-none" />
               <div className="px-5 pt-10 pb-3 text-center">
                 <h2 className={`text-2xl font-black mb-2 leading-tight ${t.heading}`}>
-                  You've made great progress today
+                  Continue on a bigger screen
                 </h2>
                 <p className={`text-sm ${t.sub}`}>
-                  {featureLabel
-                    ? `You've used your free ${featureLabel.toLowerCase()} for today. The full StudyApp study experience lives on your computer — let's get you there.`
-                    : 'The full StudyApp study experience lives on your computer — let\'s get you there.'}
+                  Your predicted-grade dashboard, custom study plan editor, and side-by-side document workspace are built for desktop. We can email you a one-tap link to pick up your session there.
                 </p>
               </div>
               <div className="px-5 pb-5">
                 <ContinueOnDesktopCard
-                  reason="limit_reached"
+                  reason="desktop_features"
                   variant="modal"
                   userEmail={user?.email}
                 />
                 <p className={`text-center text-[11px] mt-4 leading-relaxed ${t.priceMuted}`}>
-                  Keep exploring StudyApp here on your phone — you can come back tomorrow when your daily activities reset.
+                  You can keep using StudyApp here on your phone anytime.
                 </p>
               </div>
               <div className="flex-1 sm:flex-none" />
