@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useCallback } from "react";
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Target, TrendingUp, Zap, X, ArrowRight } from "lucide-react";
@@ -49,32 +49,39 @@ export default function LessonOnboardingTour({ lessonReady, lessonId }) {
   // (the two premium features the user almost never finds). Mobile highlights
   // the Quizzes tab — because that's the path to unlocking predictions, and
   // Study Plan isn't reachable on mobile by design.
-  const steps = isMobile
-    ? [
-        {
-          anchor: "exam-tab",
-          icon: Zap,
-          title: "Unlock your predicted grade",
-          body: "Take a quick diagnostic quiz to get your AI-predicted exam score and personalized study plan.",
-          placement: "top",
-        },
-      ]
-    : [
-        {
-          anchor: "studyplan-tab",
-          icon: Target,
-          title: "Your AI Study Plan",
-          body: "Personalized tasks generated from your weakest topics — built to take you from your current grade to an A+.",
-          placement: "right",
-        },
-        {
-          anchor: "grade-badge",
-          icon: TrendingUp,
-          title: "Predicted exam grade",
-          body: "After your diagnostic, see exactly what you'd score on the real exam — and watch it climb as you study.",
-          placement: "bottom",
-        },
-      ];
+  //
+  // CRITICAL: memoized by `isMobile` so the array identity is STABLE across
+  // renders. Without this, `steps` was a new reference every render, which
+  // invalidated `measure`'s useCallback, which re-fired the useLayoutEffect,
+  // which called setRect, which re-rendered → infinite loop (React error #185).
+  const steps = useMemo(() => (
+    isMobile
+      ? [
+          {
+            anchor: "exam-tab",
+            icon: Zap,
+            title: "Unlock your predicted grade",
+            body: "Take a quick diagnostic quiz to get your AI-predicted exam score and personalized study plan.",
+            placement: "top",
+          },
+        ]
+      : [
+          {
+            anchor: "studyplan-tab",
+            icon: Target,
+            title: "Your AI Study Plan",
+            body: "Personalized tasks generated from your weakest topics — built to take you from your current grade to an A+.",
+            placement: "right",
+          },
+          {
+            anchor: "grade-badge",
+            icon: TrendingUp,
+            title: "Predicted exam grade",
+            body: "After your diagnostic, see exactly what you'd score on the real exam — and watch it climb as you study.",
+            placement: "bottom",
+          },
+        ]
+  ), [isMobile]);
 
   // Trigger the tour at the start of each NEW lesson, up to MAX_VIEWS times
   // total per user (ever). Two gates:
@@ -108,18 +115,31 @@ export default function LessonOnboardingTour({ lessonReady, lessonId }) {
   }, [lessonReady, lessonId, isMobile]);
 
   // Measure the current anchor whenever step changes or window resizes.
+  // Only commits a new rect when values actually changed, otherwise we'd
+  // schedule a re-render on every scroll/resize tick.
   const measure = useCallback(() => {
     if (!active) return;
     const current = steps[step];
     if (!current) return;
     const el = document.querySelector(`[data-tour="${current.anchor}"]`);
     if (!el) {
-      // Anchor missing — skip this step gracefully.
-      setRect(null);
+      setRect((prev) => (prev === null ? prev : null));
       return;
     }
     const r = el.getBoundingClientRect();
-    setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+    const next = { top: r.top, left: r.left, width: r.width, height: r.height };
+    setRect((prev) => {
+      if (
+        prev &&
+        prev.top === next.top &&
+        prev.left === next.left &&
+        prev.width === next.width &&
+        prev.height === next.height
+      ) {
+        return prev;
+      }
+      return next;
+    });
   }, [active, step, steps]);
 
   useLayoutEffect(() => {
