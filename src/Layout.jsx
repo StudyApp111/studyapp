@@ -21,6 +21,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import { trackUserSession, trackSessionDuration, detectDeviceInfo } from "@/components/utils/userTracking";
 import { logError } from "@/components/utils/errorLogger";
+import { installGlobalErrorHandlers } from "@/components/utils/globalErrorHandler";
 import { PostHogProvider } from '@posthog/react';
 import posthog from 'posthog-js';
 
@@ -103,37 +104,14 @@ function LayoutContent({ children, currentPageName }) {
   const pathLowerEarly = location.pathname.toLowerCase();
   const isHomePageEarly = currentPageName === "Home" || location.pathname === createPageUrl("Home") || location.pathname === "/" || location.pathname === "";
 
-  // Global window-level error logging — catches uncaught exceptions and
-  // unhandled promise rejections so they end up in ErrorLog instead of
-  // disappearing into the console (where most users never look). Mounted
-  // once at the Layout level so it runs for the entire app lifetime.
-  React.useEffect(() => {
-    const onError = (e) => {
-      logError("window_error", e.error || e.message || "Unknown error", {
-        filename: e.filename,
-        lineno: e.lineno,
-        colno: e.colno,
-      });
-    };
-    const onUnhandledRejection = (e) => {
-      const reason = e.reason;
-      logError(
-        "unhandled_rejection",
-        reason instanceof Error ? reason : new Error(String(reason)),
-        { reason_type: typeof reason }
-      );
-    };
-    window.addEventListener("error", onError);
-    window.addEventListener("unhandledrejection", onUnhandledRejection);
-    return () => {
-      window.removeEventListener("error", onError);
-      window.removeEventListener("unhandledrejection", onUnhandledRejection);
-    };
-  }, []);
-
   React.useEffect(() => {
     // Initialize Analytics
     initGoogleAnalytics();
+
+    // Install global error listeners — captures runtime crashes and
+    // unhandled promise rejections that would otherwise leave users
+    // with a blank screen and no telemetry.
+    installGlobalErrorHandlers();
 
     let cleanup;
     (async () => {

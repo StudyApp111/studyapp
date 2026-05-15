@@ -30,6 +30,7 @@ import PostSessionSummary from "@/components/document-viewer/PostSessionSummary"
 import AnimatedGradeBadge from "@/components/document-viewer/AnimatedGradeBadge";
 import CramModeTab from "@/components/document-viewer/CramModeTab";
 import LessonOnboardingTour from "@/components/document-viewer/LessonOnboardingTour";
+import ErrorBoundary from "@/components/utils/ErrorBoundary";
 import { useSubscription } from "@/components/subscription/SubscriptionContext";
 import { useGuestSession } from "@/components/guest/GuestSessionContext";
 
@@ -749,14 +750,16 @@ export default function DocumentViewer() {
       </div>
 
       <div className="w-full max-w-full px-2 py-2 relative md:h-[calc(100vh-56px)] overflow-x-hidden">
-        {/* Desktop: split-pane — Activity content (left 2/3) + dedicated AI Chat (right 1/3) */}
+        {/* Desktop: split-pane — Activity content (left 2/3) + dedicated AI Chat (right 1/3).
+            Wrapped in ErrorBoundary so any tab crash falls back gracefully instead
+            of taking down the whole page. */}
         <div className="hidden md:flex gap-3 h-full w-full max-w-full" style={{ isolation: 'isolate' }}>
           {/* LEFT PANE: Active activity content (driven by ?tab= from LessonSideNav) */}
           <div className="w-2/3 min-w-0 flex-shrink-0 h-full flex flex-col">
             {!lesson ? (
               <ParsingLoader />
             ) : (
-              <>
+              <ErrorBoundary scope="desktop_lesson_tabs">
                 <div className="px-2 pt-1">
                   <StudyPlanBannerInline lessonId={lesson?.id} onNavigateToStudyPlan={() => setActiveTab('studyplan')} onNavigateToTab={(tab) => setActiveTab(tab)} currentTab={activeTab} />
                 </div>
@@ -770,7 +773,7 @@ export default function DocumentViewer() {
                   {activeTab === 'learn' && <LearnTab lesson={lesson} extractedContent={extractedContent} onNavigateToExam={() => setActiveTab('exam')} />}
                   {activeTab === 'cram' && showCramTab && (contentLocked ? <DiagnosticLockOverlay onGoToPractice={() => setActiveTab('exam')} /> : <CramModeTab lesson={lesson} isCramActive={isCramActive} daysUntilExam={daysUntilExam} />)}
                 </div>
-              </>
+              </ErrorBoundary>
             )}
           </div>
 
@@ -789,32 +792,34 @@ export default function DocumentViewer() {
         </div>
 
         {/* Mobile view — Notes is the base, 4 overlay tabs (Chat / Flashcards / Quizzes / Teach It).
-            Render a full-screen loader while the lesson is still being fetched
-            so the user never sees a near-blank screen on mobile. */}
-        {!lesson ? (
-          <div className="md:hidden fixed inset-0 z-30 flex items-center justify-center bg-white dark:bg-[#0a0a12]">
-            <ParsingLoader title="Loading your lesson" description="Hang tight, we're getting everything ready..." />
-          </div>
-        ) : (
-          <MobileLessonView
-            lesson={lesson}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            studyTime={studyTime}
-            formatStudyTime={formatStudyTime}
-            hasDocument={hasDocument}
-            exams={exams}
-            extractedContent={extractedContent}
-            handleExamComplete={handleExamComplete}
-            isDark={isDark}
-            messages={messages}
-            setMessages={setMessages}
-            aiInput={aiInput}
-            setAiInput={setAiInput}
-            aiLoading={aiLoading}
-            setAiLoading={setAiLoading}
-          />
-        )}
+            Wrapped in ErrorBoundary so a crash inside any tab surfaces a fallback
+            instead of leaving the user on a blank screen. */}
+        <ErrorBoundary scope="mobile_lesson_view">
+          {!lesson ? (
+            <div className="md:hidden w-full">
+              <ParsingLoader title="Loading your lesson" description="Just a moment…" />
+            </div>
+          ) : (
+            <MobileLessonView
+              lesson={lesson}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              studyTime={studyTime}
+              formatStudyTime={formatStudyTime}
+              hasDocument={hasDocument}
+              exams={exams}
+              extractedContent={extractedContent}
+              handleExamComplete={handleExamComplete}
+              isDark={isDark}
+              messages={messages}
+              setMessages={setMessages}
+              aiInput={aiInput}
+              setAiInput={setAiInput}
+              aiLoading={aiLoading}
+              setAiLoading={setAiLoading}
+            />
+          )}
+        </ErrorBoundary>
 
       </div>
 
