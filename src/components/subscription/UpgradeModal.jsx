@@ -10,7 +10,7 @@ import { base44 } from '@/api/base44Client';
 import { useSubscription, FEATURE_LABELS, FREE_DAILY_LIMITS } from './SubscriptionContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
-import ContinueOnDesktopCard from './ContinueOnDesktopCard';
+import MobileContinueOnDesktopSheet from './MobileContinueOnDesktopSheet';
 import posthog from 'posthog-js';
 
 export default function UpgradeModal({ open, onOpenChange, reason = 'default' }) {
@@ -154,70 +154,42 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
         shadow: 'shadow-2xl'
       };
 
+  // ── MOBILE: render the dedicated conversion-optimized bottom sheet.
+  // Kept as a separate component so the desktop pricing modal stays focused
+  // on subscription mechanics and the mobile sheet stays focused on the one
+  // job that matters there: getting the user back on a laptop ASAP.
+  if (isMobile) {
+    return (
+      <MobileContinueOnDesktopSheet
+        open={open}
+        onOpenChange={handleClose}
+        userEmail={user?.email}
+        reason={reason}
+      />
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className="
           p-0 border-0 bg-transparent overflow-hidden [&>button]:hidden
-          w-screen max-w-none h-[100dvh] rounded-none
-          sm:w-[calc(100vw-24px)] sm:max-w-sm sm:h-auto sm:rounded-2xl
+          w-[calc(100vw-24px)] max-w-sm rounded-2xl
         "
-        style={{
-          // Respect iOS safe area on the full-screen mobile sheet.
-          paddingTop: 'env(safe-area-inset-top, 0px)',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)'
-        }}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`relative ${t.surface} ${t.shadow} h-full sm:h-auto rounded-none sm:rounded-2xl flex flex-col sm:block overflow-y-auto sm:overflow-visible`}
+          className={`relative ${t.surface} ${t.shadow} rounded-2xl block overflow-visible`}
         >
-          {/* Close — 44×44 tap target, positioned outside iOS gesture zone */}
+          {/* Close — positioned outside the dialog's hidden close button */}
           <button 
             onClick={handleClose}
             aria-label="Close"
-            className={`absolute top-3 right-3 z-20 w-11 h-11 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-colors ${t.closeBtn}`}
+            className={`absolute top-3 right-3 z-20 w-9 h-9 rounded-full flex items-center justify-center transition-colors ${t.closeBtn}`}
           >
             <X className="w-5 h-5" />
           </button>
-
-          {/* ── MOBILE PATH ──────────────────────────────────────────────
-             On a phone, we don't surface in-app subscription mechanics.
-             Instead we offer to email the user a link to continue their
-             StudyApp session on a computer — that's where the full
-             experience (predicted grade dashboard, custom study plans,
-             side-by-side workspace) actually lives.
-             This is product/experience messaging, NOT a "buy elsewhere"
-             pitch, which keeps us aligned with App Store / Play Store
-             review guidelines. */}
-          {isMobile ? (
-            <>
-              <div className="flex-1 sm:flex-none" />
-              <div className="px-5 pt-10 pb-3 text-center">
-                <h2 className={`text-2xl font-black mb-2 leading-tight ${t.heading}`}>
-                  Continue on a bigger screen
-                </h2>
-                <p className={`text-sm ${t.sub}`}>
-                  Your predicted-grade dashboard, custom study plan editor, and side-by-side document workspace are built for desktop. We can email you a one-tap link to pick up your session there.
-                </p>
-              </div>
-              <div className="px-5 pb-5">
-                <ContinueOnDesktopCard
-                  reason="desktop_features"
-                  variant="modal"
-                  userEmail={user?.email}
-                />
-                <p className={`text-center text-[11px] mt-4 leading-relaxed ${t.priceMuted}`}>
-                  You can keep using StudyApp here on your phone anytime.
-                </p>
-              </div>
-              <div className="flex-1 sm:flex-none" />
-            </>
-          ) : (
-            <>
-          {/* Spacer on mobile so content centers nicely */}
-          <div className="flex-1 sm:flex-none" />
 
           <div className="px-5 pt-7 sm:pt-5 pb-3 text-center">
             <h2 className={`text-2xl sm:text-xl font-black mb-1.5 leading-tight ${t.heading}`}>
@@ -332,11 +304,6 @@ export default function UpgradeModal({ open, onOpenChange, reason = 'default' })
               )}
             </AnimatePresence>
           </div>
-
-          {/* Bottom spacer on mobile */}
-          <div className="flex-1 sm:flex-none" />
-            </>
-          )}
         </motion.div>
       </DialogContent>
     </Dialog>
