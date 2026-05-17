@@ -1,9 +1,20 @@
 import React from "react";
 import { Lock } from "lucide-react";
 import { useTheme } from "@/components/theme/ThemeProvider";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-export default function LockedFlashcardOverlay({ totalCards }) {
+/**
+ * Locked-state visual overlay shown ON TOP of locked flashcards. This is a
+ * pure visual indicator — the actionable upgrade CTA lives in
+ * FlashcardUpgradeBanner directly below the card, which is already
+ * mobile-aware (routes through the soft "Continue on Desktop" modal).
+ *
+ * We only adjust the label here so the language matches what the user sees
+ * on the CTA: "Continue on desktop" on phone, "Upgrade to unlock" on desktop.
+ */
+export default function LockedFlashcardOverlay() {
   const { isDark } = useTheme();
+  const isMobile = useIsMobile();
 
   return (
     <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl overflow-hidden">
@@ -15,7 +26,7 @@ export default function LockedFlashcardOverlay({ totalCards }) {
           <Lock className={`w-5 h-5 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
         </div>
         <span className={`text-xs font-semibold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>
-          Upgrade to unlock
+          {isMobile ? 'Continue on desktop' : 'Upgrade to unlock'}
         </span>
       </div>
     </div>
