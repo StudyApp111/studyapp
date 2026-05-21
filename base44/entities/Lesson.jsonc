@@ -134,6 +134,15 @@
       "format": "date",
       "description": "The date of the upcoming exam for this lesson/course"
     },
+    "notes_generation_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "complete",
+        "failed"
+      ],
+      "description": "Status of the background auto-generation of Detailed Notes triggered at lesson creation. NotesTab reads this to know whether to wait for the in-flight job vs. show empty state vs. fire its own generation."
+    },
     "status": {
       "type": "string",
       "enum": [

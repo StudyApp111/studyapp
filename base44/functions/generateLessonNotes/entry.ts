@@ -17,15 +17,18 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 }
 
 Deno.serve(async (req) => {
+    console.log('=== generateLessonNotes Function Start ===');
     try {
         const base44 = createClientFromRequest(req);
         const user = await base44.auth.me();
 
         if (!user) {
+            console.warn('❌ generateLessonNotes: unauthorized request');
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { lesson_content, note_type, custom_instructions, topics, difficulty } = await req.json();
+        console.log(`✅ generateLessonNotes input — user: ${user.email}, note_type: ${note_type}, content_length: ${lesson_content?.length || 0}, topics_count: ${topics?.length || 0}`);
 
         if (!lesson_content) {
             return Response.json({ error: 'Lesson content is required' }, { status: 400 });
@@ -211,13 +214,15 @@ ${topicList}`;
         const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!generatedText) {
+            console.error('❌ generateLessonNotes: Gemini returned no content');
             return Response.json({ error: 'No content generated' }, { status: 500 });
         }
 
+        console.log(`✅ generateLessonNotes complete — output_length: ${generatedText.length}`);
         return Response.json({ content: generatedText });
 
     } catch (error) {
-        console.error('Error in generateLessonNotes:', error);
+        console.error('❌ generateLessonNotes error:', error.message, error.stack);
         return Response.json({ error: 'Internal server error', message: error.message }, { status: 500 });
     }
 });

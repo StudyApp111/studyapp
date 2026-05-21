@@ -50,7 +50,9 @@ export default function NotesTab({ lesson, onViewDocument }) {
     if (lesson?.id) loadNotes();
   }, [lesson?.id]);
 
-  // Listen for the background auto-generation event fired by CreateLesson
+  // Listen for the background auto-generation event fired by CreateLesson.
+  // When CreateLesson finishes the bg job (success OR failure), it dispatches
+  // this event so the open NotesTab can refresh from the DB immediately.
   useEffect(() => {
     if (!lesson?.id) return;
     const handler = (e) => {
@@ -62,17 +64,45 @@ export default function NotesTab({ lesson, onViewDocument }) {
 
   // Self-healing auto-generation — runs ONCE per lesson per browser session,
   // and ONLY after the initial load has finished and confirmed no notes exist.
-  // Gating on `initialLoading` (not a synchronously-set flag) prevents the
-  // race where the effect fires before `loadNotes` returns existing notes.
+  //
+  // CRITICAL: respect `lesson.notes_generation_status`. If CreateLesson kicked
+  // off a background generation (status='pending'), we MUST wait for it —
+  // racing it would trigger the upgrade modal (user has no quota left) AND
+  // cause duplicate notes when both finish. Only auto-generate here if the
+  // background job already finished without producing a note (status==='failed'
+  // OR status was never set, meaning this is an old/imported lesson).
   const hasUploadedContent = !!(lesson?.file_url || lesson?.file_urls?.length);
   const hasExtractedContent = (lesson?.extracted_content?.length || 0) > 200;
+  const bgNotesPending = lesson?.notes_generation_status === 'pending';
   useEffect(() => {
     if (initialLoading || note || isLoading) return;
     if (!hasUploadedContent || !hasExtractedContent) return;
+    if (bgNotesPending) return; // CreateLesson is still working — wait for the event
     if (autoGenerationLocks.has(lesson.id)) return;
     autoGenerationLocks.add(lesson.id);
     generateNotes(settings);
-  }, [initialLoading, !!note, isLoading, hasUploadedContent, hasExtractedContent, lesson?.id]);
+  }, [initialLoading, !!note, isLoading, hasUploadedContent, hasExtractedContent, bgNotesPending, lesson?.id]);
+
+  // Poll for the bg job's terminal status (defensive: in case the user
+  // navigated away from CreateLesson mid-job, the event was missed, and
+  // we're sitting on a stale `pending` lesson).
+  useEffect(() => {
+    if (!lesson?.id || !bgNotesPending) return;
+    const interval = setInterval(async () => {
+      try {
+        const fresh = await base44.entities.Lesson.filter({ id: lesson.id });
+        const status = fresh?.[0]?.notes_generation_status;
+        if (status && status !== 'pending') {
+          clearInterval(interval);
+          loadNotes();
+          // Force the parent lesson prop to refresh too by dispatching the
+          // standard reload event the DocumentViewer listens for.
+          window.dispatchEvent(new CustomEvent('reloadLesson'));
+        }
+      } catch {}
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [lesson?.id, bgNotesPending]);
 
   // Study-task handler — guards against re-firing on every tab switch.
   useEffect(() => {
@@ -245,6 +275,17 @@ export default function NotesTab({ lesson, onViewDocument }) {
       <EducationalLoader
         title="Crafting Your Notes"
         description={`Our AI is synthesizing your ${(settings.noteType || 'notes').toLowerCase()} now...`}
+      />
+    );
+  }
+
+  // Background auto-generation from CreateLesson is in flight — show the
+  // same friendly loader instead of an empty state or duplicate generation.
+  if (!note && bgNotesPending) {
+    return (
+      <EducationalLoader
+        title="Crafting Your Notes"
+        description="Reading your document and writing your first set of notes..."
       />
     );
   }
