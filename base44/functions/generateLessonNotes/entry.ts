@@ -113,11 +113,27 @@ Create publication-quality study notes with rich visual structure. Use this form
    - When listing definitions (vocab, dates, formulas), put them in a > blockquote so they render as a styled callout. Example:
      > **Cache** – a storage place for provisions such as food, often built on supports in the wilderness.
      > **Winter bear** – a term used by characters for a bear that is active during winter.
-4. **Tables** — when you have comparative data, parallel concepts, formulas-vs-uses, characters-vs-traits, dates-vs-events, or any structured pairing, use a markdown table. EVERY table row MUST start with a pipe AND end with a pipe, AND each row MUST be on its own line with a real newline between rows. NEVER put multiple rows on a single line. The separator row MUST use dashes between pipes. Example (note the leading/trailing pipes on every line and the newlines):
+4. **Comparative content (CRITICAL RENDERING RULES)** — When you have comparative data, parallel concepts, formulas-vs-uses, characters-vs-traits, or dates-vs-events:
+
+   **PREFER definition-list style bullets** (safer to render across all clients):
+   - **Negative Freedom** — Freedom from external obstacles. *Thinker:* John Locke. *Paradox:* Can lead to extreme inequality.
+   - **Positive Freedom** — Capacity to act on one's fundamental desires. *Thinker:* G.W.F. Hegel. *Paradox:* Requires institutions that may themselves become oppressive.
+
+   **ONLY use a markdown table if you can guarantee perfect formatting:**
+   - Every row MUST start with \`|\` and end with \`|\`.
+   - Every row MUST be on its OWN line, separated by an ACTUAL NEWLINE character.
+   - Row 2 MUST be the separator: \`|---|---|---|\` (one \`---\` per column).
+   - NEVER concatenate rows on a single line.
+   - NEVER omit the header separator row.
+   - If you are not certain you can produce all of the above correctly, USE THE BULLET STYLE INSTEAD.
+
+   Correct table example (each row on its own line):
+   \`\`\`
    | Character | Role | Key Trait |
    |---|---|---|
    | Raymond | Co-traveler | Practical, calm |
    | Gary | Antagonist | Reckless |
+   \`\`\`
 5. **Examples & Applications** — at least one ## section with concrete real-world examples
 6. **Common Mistakes** — pitfalls students typically encounter
 7. **✅ Quick Review** — closing checklist of must-know items

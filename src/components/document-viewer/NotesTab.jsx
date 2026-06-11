@@ -83,24 +83,29 @@ export default function NotesTab({ lesson, onViewDocument }) {
     generateNotes(settings);
   }, [initialLoading, !!note, isLoading, hasUploadedContent, hasExtractedContent, bgNotesPending, lesson?.id]);
 
-  // Poll for the bg job's terminal status (defensive: in case the user
-  // navigated away from CreateLesson mid-job, the event was missed, and
-  // we're sitting on a stale `pending` lesson).
+  // Poll for the bg job's terminal status AND for newly-saved notes. We poll
+  // both because the lesson prop comes from the parent and may not refresh
+  // immediately. We reload notes as soon as ANY note exists for this lesson —
+  // that's the user-visible signal that the bg job finished.
   useEffect(() => {
     if (!lesson?.id || !bgNotesPending) return;
     const interval = setInterval(async () => {
       try {
-        const fresh = await base44.entities.Lesson.filter({ id: lesson.id });
+        const [fresh, notes] = await Promise.all([
+          base44.entities.Lesson.filter({ id: lesson.id }),
+          base44.entities.LessonNote.filter({ lesson_id: lesson.id }, '-created_date', 1),
+        ]);
         const status = fresh?.[0]?.notes_generation_status;
-        if (status && status !== 'pending') {
+        const hasNote = notes?.length > 0;
+        if (hasNote || (status && status !== 'pending')) {
           clearInterval(interval);
-          loadNotes();
-          // Force the parent lesson prop to refresh too by dispatching the
-          // standard reload event the DocumentViewer listens for.
+          await loadNotes();
+          // Tell the parent to refresh the lesson prop too so bgNotesPending
+          // clears at the parent level.
           window.dispatchEvent(new CustomEvent('reloadLesson'));
         }
       } catch {}
-    }, 3000);
+    }, 2500);
     return () => clearInterval(interval);
   }, [lesson?.id, bgNotesPending]);
 
@@ -142,8 +147,12 @@ export default function NotesTab({ lesson, onViewDocument }) {
   const [allNotes, setAllNotes] = useState([]);
   const [currentNoteIndex, setCurrentNoteIndex] = useState(0);
 
+  // Only show the initial spinner on the FIRST load for this lesson — subsequent
+  // reloads (from auto-gen event, polling, or tab re-mount) should refresh in
+  // the background without flashing the spinner over already-rendered notes.
+  const hasLoadedOnceRef = React.useRef(false);
   const loadNotes = async () => {
-    setInitialLoading(true);
+    if (!hasLoadedOnceRef.current) setInitialLoading(true);
     try {
       const notes = await base44.entities.LessonNote.filter({ lesson_id: lesson.id }, '-created_date', 50);
       if (notes && notes.length > 0) {
@@ -159,6 +168,7 @@ export default function NotesTab({ lesson, onViewDocument }) {
     } catch (error) {
       console.error("Error loading notes:", error);
     } finally {
+      hasLoadedOnceRef.current = true;
       setInitialLoading(false);
     }
   };
@@ -281,7 +291,9 @@ export default function NotesTab({ lesson, onViewDocument }) {
 
   // Background auto-generation from CreateLesson is in flight — show the
   // same friendly loader instead of an empty state or duplicate generation.
-  if (!note && bgNotesPending) {
+  // Also covers the "between bg-job finished and parent re-fetched lesson"
+  // race — if there's no note AND we've never finished a load, keep waiting.
+  if (!note && (bgNotesPending || !hasLoadedOnceRef.current)) {
     return (
       <EducationalLoader
         title="Crafting Your Notes"
@@ -290,7 +302,7 @@ export default function NotesTab({ lesson, onViewDocument }) {
     );
   }
 
-  if (initialLoading) {
+  if (initialLoading && !note) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className={`w-6 h-6 animate-spin ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
