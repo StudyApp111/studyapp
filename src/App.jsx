@@ -13,6 +13,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { clearChunkReloadMarkers } from '@/lib/lazyWithReload';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -135,6 +136,13 @@ const AuthenticatedApp = () => {
 
 
 function App() {
+  // App mounted successfully → any lazy chunk that reloaded earlier this session
+  // has now recovered. Clear the one-shot reload markers so a FUTURE deploy in
+  // the same session can trigger its own guarded reload if needed.
+  React.useEffect(() => {
+    clearChunkReloadMarkers();
+    try { sessionStorage.removeItem('chunk_reload_window'); } catch {}
+  }, []);
 
   return (
     <ErrorBoundary>

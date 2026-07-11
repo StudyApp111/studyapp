@@ -1,7 +1,12 @@
 import React from 'react';
+import { lazyWithReload } from '@/lib/lazyWithReload';
 
-const LazyAdminPreMadeCourses = React.lazy(() => import('../pages/AdminPreMadeCourses'));
-const LazyDocumentViewer = React.lazy(() => import('../pages/DocumentViewer'));
+// lazyWithReload: if a dynamic import fails because the browser is holding a
+// stale bundle after a redeploy (old chunk hashes now 404), it triggers ONE
+// guarded full-page reload to fetch the fresh index.html — instead of crashing
+// into the error boundary. See src/lib/lazyWithReload.js.
+const LazyAdminPreMadeCourses = lazyWithReload(() => import('../pages/AdminPreMadeCourses'), 'AdminPreMadeCourses');
+const LazyDocumentViewer = lazyWithReload(() => import('../pages/DocumentViewer'), 'DocumentViewer');
 
 const LazyFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">

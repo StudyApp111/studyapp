@@ -1,5 +1,23 @@
 import { logError } from "@/components/utils/errorLogger";
 
+// Detects the stale-bundle chunk-load failure that occurs after a redeploy
+// changes chunk hashes (old URLs 404). Shared with lazyWithReload's matcher.
+const isChunkLoadMessage = (msg = "") =>
+  /Failed to fetch dynamically imported module|Unable to preload CSS|error loading dynamically imported module|Importing a module script failed/i.test(
+    msg
+  );
+
+// One guarded reload for chunk errors surfaced at the window level (e.g. via
+// module prefetch), mirroring lazyWithReload. Returns true if it reloaded.
+const maybeReloadForStaleChunk = (msg) => {
+  if (!isChunkLoadMessage(msg)) return false;
+  const key = "chunk_reload_window";
+  if (sessionStorage.getItem(key)) return false;
+  sessionStorage.setItem(key, "1");
+  window.location.reload();
+  return true;
+};
+
 /**
  * Installs window-level error listeners ONCE per session. Captures:
  *  - `window.error`         → uncaught synchronous errors
@@ -32,6 +50,9 @@ export function installGlobalErrorHandlers() {
     const msg = e?.message || "";
     if (msg.includes("ResizeObserver loop")) return;
 
+    // Stale bundle after redeploy — reload once instead of logging a crash.
+    if (maybeReloadForStaleChunk(msg)) return;
+
     const key = `err:${msg}`;
     if (!shouldLog(key)) return;
 
@@ -45,6 +66,10 @@ export function installGlobalErrorHandlers() {
   window.addEventListener("unhandledrejection", (e) => {
     const reason = e?.reason;
     const msg = (reason && (reason.message || String(reason))) || "Unknown rejection";
+
+    // Stale bundle after redeploy — reload once instead of logging a crash.
+    if (maybeReloadForStaleChunk(msg)) return;
+
     const key = `rej:${msg}`;
     if (!shouldLog(key)) return;
 
