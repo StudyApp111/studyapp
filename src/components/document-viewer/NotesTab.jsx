@@ -50,9 +50,31 @@ export default function NotesTab({ lesson, onViewDocument }) {
     if (lesson?.id) loadNotes();
   }, [lesson?.id]);
 
+  // REAL-TIME: subscribe to LessonNote changes for this lesson. This is the
+  // reliable, device-agnostic mechanism that makes a newly-generated note
+  // (including the CreateLesson background job) appear the instant it's saved —
+  // no page refresh, no tab-switch, no dependency on the parent lesson prop
+  // being re-fetched. Fires for creates from ANY source (bg job, this tab, or
+  // another open tab on the same account).
+  useEffect(() => {
+    if (!lesson?.id) return;
+    let cancelled = false;
+    const unsubscribe = base44.entities.LessonNote.subscribe((event) => {
+      if (cancelled) return;
+      // Only react to notes belonging to THIS lesson.
+      if (event?.data?.lesson_id && event.data.lesson_id !== lesson.id) return;
+      // A note was created/updated/deleted for this lesson — reload the list.
+      loadNotes();
+    });
+    return () => {
+      cancelled = true;
+      try { unsubscribe?.(); } catch {}
+    };
+  }, [lesson?.id]);
+
   // Listen for the background auto-generation event fired by CreateLesson.
-  // When CreateLesson finishes the bg job (success OR failure), it dispatches
-  // this event so the open NotesTab can refresh from the DB immediately.
+  // Belt-and-suspenders alongside the realtime subscription: if the event
+  // reaches us first (same tab that started the job), refresh immediately.
   useEffect(() => {
     if (!lesson?.id) return;
     const handler = (e) => {
@@ -83,12 +105,13 @@ export default function NotesTab({ lesson, onViewDocument }) {
     generateNotes(settings);
   }, [initialLoading, !!note, isLoading, hasUploadedContent, hasExtractedContent, bgNotesPending, lesson?.id]);
 
-  // Poll for the bg job's terminal status AND for newly-saved notes. We poll
-  // both because the lesson prop comes from the parent and may not refresh
-  // immediately. We reload notes as soon as ANY note exists for this lesson —
-  // that's the user-visible signal that the bg job finished.
+  // FALLBACK POLL — only active while we have NO note yet AND the bg job is
+  // pending. The realtime subscription above is the primary path; this catches
+  // the rare case where the websocket didn't deliver (flaky network / mobile
+  // background tab). Driven off "do we actually have a note" rather than the
+  // parent prop, so it self-terminates the moment a note lands from any source.
   useEffect(() => {
-    if (!lesson?.id || !bgNotesPending) return;
+    if (!lesson?.id || !bgNotesPending || note) return;
     const interval = setInterval(async () => {
       try {
         const [fresh, notes] = await Promise.all([
@@ -107,7 +130,7 @@ export default function NotesTab({ lesson, onViewDocument }) {
       } catch {}
     }, 2500);
     return () => clearInterval(interval);
-  }, [lesson?.id, bgNotesPending]);
+  }, [lesson?.id, bgNotesPending, note]);
 
   // Study-task handler — guards against re-firing on every tab switch.
   useEffect(() => {
@@ -157,13 +180,26 @@ export default function NotesTab({ lesson, onViewDocument }) {
       const notes = await base44.entities.LessonNote.filter({ lesson_id: lesson.id }, '-created_date', 50);
       if (notes && notes.length > 0) {
         setAllNotes(notes);
-        setNote(notes[0]);
-        setCurrentNoteIndex(0);
-        setSettings({
+        // Preserve the note the user is currently viewing if it still exists
+        // (e.g. a realtime reload shouldn't yank them back to the newest note).
+        setNote((prev) => {
+          if (!prev) return notes[0];
+          const stillThere = notes.find((n) => n.id === prev.id);
+          return stillThere || notes[0];
+        });
+        setCurrentNoteIndex((prevIdx) => {
+          // keep index valid
+          return prevIdx < notes.length ? prevIdx : 0;
+        });
+        setSettings((prev) => ({
           noteType: notes[0].note_type,
           customInstructions: notes[0].custom_instructions || "",
-          topics: []
-        });
+          topics: prev?.topics || []
+        }));
+      } else {
+        // No notes exist — make sure we don't keep a stale note around.
+        setAllNotes([]);
+        setNote(null);
       }
     } catch (error) {
       console.error("Error loading notes:", error);
@@ -290,10 +326,13 @@ export default function NotesTab({ lesson, onViewDocument }) {
   }
 
   // Background auto-generation from CreateLesson is in flight — show the
-  // same friendly loader instead of an empty state or duplicate generation.
-  // Also covers the "between bg-job finished and parent re-fetched lesson"
-  // race — if there's no note AND we've never finished a load, keep waiting.
-  if (!note && (bgNotesPending || !hasLoadedOnceRef.current)) {
+  // friendly loader instead of the empty state. Covers: (a) bg job still
+  // pending, (b) first load hasn't finished, (c) the brief window where a bg
+  // job was triggered (uploaded doc + extractable content) but the note hasn't
+  // been saved yet — in all these cases a note is imminently arriving via the
+  // realtime subscription, so we must NOT flash the "Generate Notes" empty CTA.
+  const awaitingBackgroundNote = !note && (bgNotesPending || !hasLoadedOnceRef.current);
+  if (awaitingBackgroundNote) {
     return (
       <EducationalLoader
         title="Crafting Your Notes"
