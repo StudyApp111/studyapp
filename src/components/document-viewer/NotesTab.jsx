@@ -40,6 +40,12 @@ export default function NotesTab({ lesson, onViewDocument }) {
   });
   const [copied, setCopied] = useState(false);
 
+  // Synchronous in-flight guard. `isLoading` is React state and updates
+  // asynchronously, so two rapid clicks can both pass the `if (isLoading)`
+  // check before the first re-render — creating duplicate notes. This ref
+  // flips synchronously, closing that window at the root.
+  const generatingRef = React.useRef(false);
+
   // `initialLoading` starts true and flips to false only AFTER loadNotes finishes.
   // Auto-generation must wait for this — otherwise it fires while notes are still
   // being fetched, causing duplicate regenerations on lesson re-open.
@@ -210,18 +216,29 @@ export default function NotesTab({ lesson, onViewDocument }) {
   };
 
   const generateNotes = async (currentSettings = settings) => {
+    // Root-cause duplicate guard: bail synchronously if a generation is already
+    // running, before any await yields control back to the event loop.
+    if (generatingRef.current) return;
+
     const taskCheck = await canDoTask('review_notes');
     if (!taskCheck.allowed) {
       triggerUpgradeModal('notes');
       return;
     }
 
+    generatingRef.current = true;
     setIsLoading(true);
+    // Mark the lesson as generating so a mid-flight close leaves a recoverable
+    // 'pending' state (NotesTab waits for it on re-open instead of showing an
+    // empty CTA). Fire-and-forget — never block note generation on this write.
+    base44.entities.Lesson.update(lesson.id, { notes_generation_status: 'pending' }).catch(() => {});
     try {
       const content = lesson.compressed_content || lesson.extracted_content || lesson.description;
       if (!content) {
         toast.error("No lesson content available to generate notes.");
         setIsLoading(false);
+        generatingRef.current = false;
+        base44.entities.Lesson.update(lesson.id, { notes_generation_status: 'failed' }).catch(() => {});
         return;
       }
 
@@ -248,6 +265,7 @@ export default function NotesTab({ lesson, onViewDocument }) {
         setAllNotes(freshNotes);
         setNote(newNote);
         setCurrentNoteIndex(0);
+        base44.entities.Lesson.update(lesson.id, { notes_generation_status: 'complete' }).catch(() => {});
         toast.success(`${currentSettings.noteType || "Notes"} generated!`);
 
         // Mark the specific review_notes task as complete in study plan
@@ -289,8 +307,10 @@ export default function NotesTab({ lesson, onViewDocument }) {
       }
     } catch (error) {
       console.error("Error generating notes:", error);
+      base44.entities.Lesson.update(lesson.id, { notes_generation_status: 'failed' }).catch(() => {});
       toast.error("Failed to generate notes. Please try again.");
     } finally {
+      generatingRef.current = false;
       setIsLoading(false);
     }
   };
@@ -445,9 +465,15 @@ export default function NotesTab({ lesson, onViewDocument }) {
             </div>
 
             <h2 className={`text-2xl md:text-3xl font-bold mb-2 tracking-tight ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>Note Generator</h2>
-            <p className={`text-sm md:text-base mb-6 leading-relaxed px-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-              Transform your lesson content into structured study materials in seconds.
-            </p>
+            {lesson?.notes_generation_status === 'failed' ? (
+              <p className={`text-sm md:text-base mb-6 leading-relaxed px-2 font-medium ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                We couldn't generate your notes last time. Tap below to try again.
+              </p>
+            ) : (
+              <p className={`text-sm md:text-base mb-6 leading-relaxed px-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                Transform your lesson content into structured study materials in seconds.
+              </p>
+            )}
 
             <div className="flex flex-col gap-2 w-full">
               <Button
