@@ -1,0 +1,44 @@
+{
+  "name": "Check Delayed Triggers + Inactivity Emails",
+  "description": "Runs every hour to check for users who signed up but didn't onboard, didn't create lessons, didn't complete diagnostics, etc. Also handles inactivity emails (3, 7, 14, 30 days).",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "interval",
+      "cron_expression": null,
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": 1,
+      "interval_unit": "hours",
+      "interval_anchor": "2026-04-20T18:02:04.436000",
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "check_delayed_triggers_inactivity_emails",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "checkDelayedTriggers",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "checkDelayedTriggers"
+  }
+}
